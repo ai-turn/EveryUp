@@ -563,9 +563,9 @@ WantedBy=multi-user.target
   -e MT_API_KEY="${displayKey}" \\
   -e MT_FILE="/var/log/myapp/*.log" \\
   --restart unless-stopped \\
-  ghcr.io/mt-monitoring/log-agent:latest`}</pre>
+  aiturn/mt-log-agent:latest`}</pre>
               <button
-                onClick={() => copy(`docker run -d --name mt-log-agent \\\n  -v /var/log/myapp:/var/log/myapp:ro \\\n  -e MT_ENDPOINT="${window.location.origin}" \\\n  -e MT_API_KEY="${displayKey}" \\\n  -e MT_FILE="/var/log/myapp/*.log" \\\n  --restart unless-stopped \\\n  ghcr.io/mt-monitoring/log-agent:latest`)}
+                onClick={() => copy(`docker run -d --name mt-log-agent \\\n  -v /var/log/myapp:/var/log/myapp:ro \\\n  -e MT_ENDPOINT="${window.location.origin}" \\\n  -e MT_API_KEY="${displayKey}" \\\n  -e MT_FILE="/var/log/myapp/*.log" \\\n  --restart unless-stopped \\\n  aiturn/mt-log-agent:latest`)}
                 className="absolute top-2 right-2 p-1.5 rounded-md bg-slate-700 hover:bg-slate-600 transition-colors text-slate-300"
                 title={t('services.integration.snippets.copy')}
               >
