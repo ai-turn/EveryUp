@@ -3,6 +3,7 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { DemoBanner } from './DemoBanner';
+import { BottomNavMobile } from './BottomNav.mobile';
 import { useSidebar } from '../../contexts/SidebarContext';
 import { SidePanel } from './SidePanel';
 import { useSidePanel } from '../../contexts/SidePanelContext';
@@ -21,11 +22,14 @@ export function MainLayout() {
 
       {/* 2. Middle Area (Sidebar + Content + SidePanel) */}
       <div className="flex flex-1 overflow-hidden relative">
-        <Sidebar />
+        {/* Sidebar: lg+ 전용 */}
+        <div className="hidden lg:flex">
+          <Sidebar />
+        </div>
 
         <main className="flex-1 flex flex-col overflow-hidden relative min-w-0 bg-white dark:bg-bg-main-dark transition-all duration-500 ease-in-out">
-          {/* Toolbar Area */}
-          <div className="h-12 border-b border-slate-100 dark:border-ui-border-dark flex items-center px-2 shrink-0 gap-4">
+          {/* Toolbar Area: lg+ 전용 (모바일은 BottomNav로 네비게이션) */}
+          <div className="hidden lg:flex h-12 border-b border-slate-100 dark:border-ui-border-dark items-center px-2 shrink-0 gap-4">
             <button
               onClick={toggleSidebar}
               className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark transition-colors"
@@ -39,7 +43,8 @@ export function MainLayout() {
 
           <div className="flex-1 overflow-y-auto scroll-smooth">
             <div className="flex flex-col min-h-full">
-              <div className="p-6 md:p-8 space-y-8 flex-1">
+              {/* 모바일에서 하단 BottomNav 높이(h-16)만큼 패딩 추가 */}
+              <div className="p-4 sm:p-6 md:p-8 pb-20 lg:pb-8 space-y-8 flex-1">
                 <Outlet />
               </div>
               <Footer />
@@ -55,6 +60,9 @@ export function MainLayout() {
 
         <SidePanel />
       </div>
+
+      {/* Bottom Navigation: 모바일 전용 (lg 미만) */}
+      <BottomNavMobile />
     </div>
   );
 }

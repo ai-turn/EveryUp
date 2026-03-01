@@ -175,7 +175,7 @@ export function NotificationHistoryTab() {
             <select
               value={statusFilter}
               onChange={(e) => handleStatusFilterChange(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-ui-border-dark rounded-lg bg-white dark:bg-bg-dark text-gray-900 dark:text-white"
+              className="px-3 py-2 border border-gray-300 dark:border-ui-border-dark rounded-lg bg-white dark:bg-bg-surface-dark text-gray-900 dark:text-white"
             >
               <option value="all">{t('alerts.history.statusAll')}</option>
               <option value="sent">{t('alerts.history.statusSent')}</option>
@@ -191,7 +191,7 @@ export function NotificationHistoryTab() {
             <select
               value={typeFilter}
               onChange={(e) => handleTypeFilterChange(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-ui-border-dark rounded-lg bg-white dark:bg-bg-dark text-gray-900 dark:text-white"
+              className="px-3 py-2 border border-gray-300 dark:border-ui-border-dark rounded-lg bg-white dark:bg-bg-surface-dark text-gray-900 dark:text-white"
             >
               <option value="all">{t('alerts.history.typeAll')}</option>
               <option value="resource">{t('alerts.history.typeResource')}</option>
@@ -217,7 +217,7 @@ export function NotificationHistoryTab() {
       <div className="bg-white dark:bg-bg-surface-dark rounded-lg shadow-sm border border-gray-200 dark:border-ui-border-dark overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-ui-border-dark">
-            <thead className="bg-gray-50 dark:bg-bg-dark">
+            <thead className="bg-gray-50 dark:bg-bg-surface-dark">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   {t('alerts.history.status')}
