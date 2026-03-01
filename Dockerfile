@@ -34,7 +34,7 @@ RUN pnpm run build
 FROM --platform=$BUILDPLATFORM golang:1.24-alpine AS backend
 
 ARG TARGETOS=linux
-ARG TARGETARCH=amd64
+ARG TARGETARCH
 
 WORKDIR /build/backend
 
