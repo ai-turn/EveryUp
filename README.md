@@ -36,26 +36,20 @@ mt-app/
 
 ### Docker로 배포 (권장)
 
-**1. 환경 변수 설정**
+**1. 환경 변수 설정 (선택)**
 
 ```bash
 cp .env.example .env
-# .env 파일을 열어 GitHub OAuth 정보 입력
+# 필요 시 .env 파일에서 타임존 등 선택 옵션 수정
 ```
 
 | 변수 | 설명 | 필수 |
 |------|------|:----:|
-| `MT_AUTH_GITHUB_CLIENTID` | GitHub OAuth App Client ID | ✅ |
-| `MT_AUTH_GITHUB_CLIENTSECRET` | GitHub OAuth App Client Secret | ✅ |
-| `MT_AUTH_GITHUB_REDIRECTURL` | OAuth 콜백 URL | ✅ |
 | `TZ` | 타임존 (기본: `UTC`) | |
 | `MT_SERVER_PORT` | 서버 포트 (기본: `3001`) | |
 
-> **암호화 키와 JWT 시크릿은 별도 설정이 필요 없습니다.** 앱이 최초 실행 시 자동 생성하여 DB에 저장합니다.
-
-**GitHub OAuth App 등록** ([github.com/settings/developers](https://github.com/settings/developers) → New OAuth App):
-- Homepage URL: `http://YOUR_HOST:3001`
-- Authorization callback URL: `http://YOUR_HOST:3001/api/v1/auth/github/callback`
+> **별도 계정 설정이 필요 없습니다.** 처음 실행 후 브라우저에서 관리자 계정을 직접 생성합니다.
+> **암호화 키와 JWT 시크릿도 별도 설정 없이** 앱이 최초 실행 시 자동 생성하여 DB에 저장합니다.
 
 **2. 실행**
 
@@ -63,7 +57,7 @@ cp .env.example .env
 docker compose up -d
 ```
 
-→ http://localhost:3001 에서 접속
+→ http://localhost:3001 접속 후 관리자 계정 생성
 
 **3. 상태 확인**
 
@@ -81,7 +75,6 @@ docker run -d \
   --name mt-monitoring \
   -p 3001:3001 \
   -v mt-data:/app/data \
-  -e MT_SECURITY_ADMINPASSWORD=your-strong-password \
   -e TZ=Asia/Seoul \
   your-dockerhub-user/mt-monitoring:latest
 ```
@@ -127,7 +120,6 @@ docker run -d \
 
 | 문서 | 설명 |
 |------|------|
-| [doc/DOCKER_BUILD.md](doc/DOCKER_BUILD.md) | Docker 빌드 & 멀티 플랫폼 배포 가이드 |
 | [backend/README.md](backend/README.md) | 백엔드 API 및 설정 문서 |
 | [log-agent/README.md](log-agent/README.md) | 로그 에이전트 배포 가이드 |
 
