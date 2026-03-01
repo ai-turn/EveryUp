@@ -71,6 +71,10 @@ docker compose logs -f
 ### Docker Hub에서 직접 실행
 
 ```bash
+# 이미지 받기
+docker pull aiturn/mt-monitoring:latest
+
+# 실행
 docker run -d \
   --name mt-monitoring \
   -p 3001:3001 \
