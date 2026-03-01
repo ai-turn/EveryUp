@@ -5,6 +5,9 @@ export const env = {
   // Mock 데이터 사용 여부
   useMock: import.meta.env.VITE_USE_MOCK === 'true',
 
+  // 라이브 데모 모드 (GitHub Pages)
+  isDemoMode: import.meta.env.VITE_DEMO_MODE === 'true',
+
   // API Base URL
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1',
 
@@ -17,6 +20,7 @@ export const env = {
 declare global {
   interface ImportMetaEnv {
     VITE_USE_MOCK: string;
+    VITE_DEMO_MODE: string;
     VITE_API_BASE_URL: string;
     VITE_API_TARGET: string;
   }

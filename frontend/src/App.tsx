@@ -15,9 +15,12 @@ import {
   LoginPage,
 } from './pages';
 import { useAuth } from './contexts/AuthContext';
+import { env } from './config/env';
 
 function ProtectedRoute() {
   const { isAuthenticated } = useAuth();
+  // 데모 모드에서는 인증 없이 통과
+  if (env.isDemoMode) return <Outlet />;
   return isAuthenticated
     ? <Outlet />
     : <Navigate to="/login" replace state={{ from: location.pathname }} />;
@@ -25,7 +28,7 @@ function ProtectedRoute() {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <NetworkStatusBanner />
       <div className="bg-background-light dark:bg-bg-main-dark text-slate-900 dark:text-text-base-dark transition-colors duration-200">
         <Routes>

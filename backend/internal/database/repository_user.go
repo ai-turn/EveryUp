@@ -60,3 +60,22 @@ func (r *UserRepository) FindByID(id int64) (*models.User, error) {
 	}
 	return u, nil
 }
+
+// Upsert creates the user if not found, or updates the password hash if the user already exists.
+func (r *UserRepository) Upsert(username, passwordHash, role string) (*models.User, error) {
+	existing, err := r.FindByUsername(username)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+	if err == sql.ErrNoRows {
+		return r.Create(username, passwordHash, role)
+	}
+	_, err = DB.Exec(
+		`UPDATE users SET password_hash = ? WHERE username = ?`,
+		passwordHash, existing.Username,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("update password: %w", err)
+	}
+	return r.FindByUsername(existing.Username)
+}

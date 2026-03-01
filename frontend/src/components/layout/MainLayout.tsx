@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Footer } from './Footer';
+import { DemoBanner } from './DemoBanner';
 import { useSidebar } from '../../contexts/SidebarContext';
 import { SidePanel } from './SidePanel';
 import { useSidePanel } from '../../contexts/SidePanelContext';
@@ -12,6 +13,9 @@ export function MainLayout() {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-background-light dark:bg-bg-main-dark">
+      {/* 0. Demo Banner (only in demo mode) */}
+      <DemoBanner />
+
       {/* 1. Header (Full Width) */}
       <Header />
 
