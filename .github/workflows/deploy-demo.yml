@@ -42,6 +42,10 @@ jobs:
           VITE_BASE_PATH: /EveryUp/
         run: pnpm run build
 
+      # GitHub Pages SPA 라우팅: 모든 경로에서 index.html을 서빙
+      - name: Create 404.html for SPA routing
+        run: cp frontend/dist/index.html frontend/dist/404.html
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

@@ -32,7 +32,8 @@ function App() {
       <NetworkStatusBanner />
       <div className="bg-background-light dark:bg-bg-main-dark text-slate-900 dark:text-text-base-dark transition-colors duration-200">
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
+          {/* 데모 모드에서는 /login 접근 시 홈으로 리다이렉트 */}
+          <Route path="/login" element={env.isDemoMode ? <Navigate to="/" replace /> : <LoginPage />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<MainLayout />}>
               <Route index element={<DashboardPage />} />
