@@ -1,5 +1,6 @@
 // API Service Layer
 import { env } from '../config/env';
+import { mockRouter } from './mockRouter';
 
 // API 응답 표준 래퍼 타입
 interface ApiResponse<T> {
@@ -19,6 +20,8 @@ class ApiService {
   }
 
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    if (env.useMock) return mockRouter<T>(endpoint, options?.method);
+
     const token = localStorage.getItem('everyup_jwt_token');
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       headers: {
