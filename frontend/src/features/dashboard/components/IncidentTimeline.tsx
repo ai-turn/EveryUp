@@ -43,7 +43,7 @@ export function IncidentTimeline() {
       events={events}
       emptyMessage={t('dashboard.timeline.empty')}
       action={{
-        label: t('dashboard.timelineViewHistory'),
+        label: t('dashboard.timeline.history'),
         onClick: () => console.log('View history clicked')
       }}
     />

@@ -10,7 +10,7 @@ export const mockIncidents: Incident[] = [
     time: '12:45:02 PM',
     type: 'error',
     serviceName: 'Auth Service',
-    message: 'transitioned from <span class="text-emerald-500 font-medium">Healthy</span> to <span class="text-red-500 font-medium">Degraded</span>',
+    message: 'transitioned from Healthy to Degraded',
   },
   {
     id: '2',
