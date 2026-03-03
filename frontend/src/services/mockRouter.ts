@@ -66,6 +66,48 @@ const mockApiServices: Service[] = mockServices.map((s) => ({
   scheduleType: 'interval' as const,
 }));
 
+const mockLogServices: Service[] = [
+  {
+    id: '1',
+    name: 'API Gateway',
+    type: 'log' as const,
+    interval: 0,
+    timeout: 0,
+    isActive: true,
+    status: 'healthy',
+    uptime: 99.8,
+    responseTime: 0,
+    tags: ['prod'],
+    scheduleType: 'interval' as const,
+  },
+  {
+    id: '2',
+    name: 'Auth Service',
+    type: 'log' as const,
+    interval: 0,
+    timeout: 0,
+    isActive: true,
+    status: 'unhealthy',
+    uptime: 98.5,
+    responseTime: 0,
+    tags: ['prod'],
+    scheduleType: 'interval' as const,
+  },
+  {
+    id: '5',
+    name: 'Payment Worker',
+    type: 'log' as const,
+    interval: 0,
+    timeout: 0,
+    isActive: true,
+    status: 'healthy',
+    uptime: 99.9,
+    responseTime: 0,
+    tags: ['prod'],
+    scheduleType: 'interval' as const,
+  },
+];
+
 // ── Metrics ───────────────────────────────────────────────────────────────────
 
 const mockMetricsSummary: MetricsSummary = {
@@ -341,7 +383,7 @@ export function mockRouter<T>(endpoint: string, method = 'GET'): T {
   // /services/:id
   if (/^\/services\/[^/?]+$/.test(endpoint)) return mockApiServices[0] as T;
   // /services
-  if (endpoint.startsWith('/services')) return mockApiServices as T;
+  if (endpoint.startsWith('/services')) return [...mockApiServices, ...mockLogServices] as T;
 
   if (endpoint.startsWith('/logs')) return filterLogs(endpoint) as T;
   if (endpoint.startsWith('/incidents')) return mockIncidentList as T;
