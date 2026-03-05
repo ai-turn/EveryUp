@@ -32,6 +32,11 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	api.Post("/auth/setup", authHandler.Setup)
 	api.Post("/auth/login", authHandler.Login)
 
+	// Ingest routes — API Key auth, registered BEFORE JWT group to avoid interception
+	logIngestHandler := handlers.NewLogIngestHandler()
+	ingest := api.Group("/logs", middleware.ApiKeyAuth())
+	ingest.Post("/ingest", logIngestHandler.Ingest)
+
 	// JWT-protected management routes
 	local := api.Group("", middleware.JWTAuth())
 
@@ -126,11 +131,6 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	local.Get("/notification-history/stats", notificationHistoryHandler.GetStats)
 	local.Get("/notification-history/:id", notificationHistoryHandler.GetByID)
 	local.Delete("/notification-history/cleanup", notificationHistoryHandler.Cleanup)
-
-	// Ingest routes — API Key auth, open to external logging libraries
-	logIngestHandler := handlers.NewLogIngestHandler()
-	ingest := api.Group("/logs", middleware.ApiKeyAuth())
-	ingest.Post("/ingest", logIngestHandler.Ingest)
 
 	// Serve static files for frontend (SPA fallback)
 	app.Use("/", filesystem.New(filesystem.Config{
