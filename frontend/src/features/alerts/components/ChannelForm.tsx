@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from '../../../components/common';
 import { api, type CreateNotificationChannelData, type NotificationChannel, type TelegramConfig, type DiscordConfig } from '../../../services/api';
 import { useSidePanel } from '../../../contexts/SidePanelContext';
+import { SetupGuide } from './SetupGuide';
 
 const channelSchema = z.object({
     name: z.string().min(2, 'Name is too short'),
@@ -162,21 +163,22 @@ export function ChannelForm({ onSuccess, channel }: ChannelFormProps) {
                                 placeholder={t('alerts.modal.chatIdPlaceholder')}
                                 className={`w-full px-4 py-2 bg-slate-50 dark:bg-ui-hover-dark border ${errors.chatId ? 'border-red-500' : 'border-slate-200 dark:border-ui-border-dark'} rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm font-mono dark:text-white`}
                             />
-                            <p className="text-[10px] text-slate-500">
-                                {t('alerts.modal.chatIdHelp')} <code className="bg-slate-200 dark:bg-ui-active-dark px-1 rounded">https://api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code>
-                            </p>
                         </div>
+                        <SetupGuide type="telegram" />
                     </>
                 ) : (
-                    <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('alerts.modal.webhookUrl')}</label>
-                        <input
-                            {...register('webhookUrl')}
-                            placeholder={t('alerts.modal.webhookUrlPlaceholder')}
-                            className={`w-full px-4 py-2 bg-slate-50 dark:bg-ui-hover-dark border ${errors.webhookUrl ? 'border-red-500' : 'border-slate-200 dark:border-ui-border-dark'} rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm font-mono dark:text-white`}
-                        />
-                        {errors.webhookUrl && <p className="text-[10px] text-red-500 font-medium">{errors.webhookUrl.message}</p>}
-                    </div>
+                    <>
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('alerts.modal.webhookUrl')}</label>
+                            <input
+                                {...register('webhookUrl')}
+                                placeholder={t('alerts.modal.webhookUrlPlaceholder')}
+                                className={`w-full px-4 py-2 bg-slate-50 dark:bg-ui-hover-dark border ${errors.webhookUrl ? 'border-red-500' : 'border-slate-200 dark:border-ui-border-dark'} rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm font-mono dark:text-white`}
+                            />
+                            {errors.webhookUrl && <p className="text-[10px] text-red-500 font-medium">{errors.webhookUrl.message}</p>}
+                        </div>
+                        <SetupGuide type="discord" />
+                    </>
                 )}
             </div>
 

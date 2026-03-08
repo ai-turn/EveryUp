@@ -186,6 +186,7 @@ See [log-agent/README.md](log-agent/README.md) for more details.
 | [backend/README.md](backend/README.md) | Backend API and configuration reference |
 | [frontend/README.md](frontend/README.md) | Frontend dev setup and page structure |
 | [log-agent/README.md](log-agent/README.md) | Log agent deployment guide |
+| [docs/NOTIFICATION_SETUP.md](docs/NOTIFICATION_SETUP.md) | Telegram & Discord channel setup guide |
 
 ---
 

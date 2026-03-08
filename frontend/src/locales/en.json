@@ -687,6 +687,23 @@
             "telegram": "Telegram",
             "discord": "Discord"
         },
+        "guide": {
+            "title": "How to get the required keys?",
+            "detailLink": "View detailed guide",
+            "telegram": {
+                "step1": "Open Telegram and search for @BotFather",
+                "step2": "Send /newbot and follow the prompts to create a bot",
+                "step3": "Copy the Bot Token provided by BotFather",
+                "step4": "Send a message to your bot, then visit https://api.telegram.org/bot<TOKEN>/getUpdates to find your Chat ID",
+                "tip": "For group chats, the Chat ID starts with a minus sign (e.g. -100123456789). Add the bot to the group first, then check getUpdates."
+            },
+            "discord": {
+                "step1": "Open Discord Server Settings → Integrations → Webhooks",
+                "step2": "Click \"New Webhook\", choose the target channel, and set a name",
+                "step3": "Click \"Copy Webhook URL\" and paste it above",
+                "tip": "Each webhook is tied to a specific channel. Create separate webhooks if you want alerts in multiple channels."
+            }
+        },
         "validation": {
             "nameRequired": "Name is too short",
             "invalidUrl": "Invalid URL",

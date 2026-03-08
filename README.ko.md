@@ -186,6 +186,7 @@ docker run -d \
 | [backend/README.md](backend/README.md) | 백엔드 API 및 설정 문서 |
 | [frontend/README.md](frontend/README.md) | 프론트엔드 개발 환경 및 페이지 구조 |
 | [log-agent/README.md](log-agent/README.md) | 로그 에이전트 배포 가이드 |
+| [docs/NOTIFICATION_SETUP.ko.md](docs/NOTIFICATION_SETUP.ko.md) | 텔레그램 & 디스코드 채널 설정 가이드 |
 
 ---
 
