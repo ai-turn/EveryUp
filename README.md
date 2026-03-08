@@ -71,9 +71,12 @@ If you've cloned this repository, you can use Docker Compose:
 ```bash
 git clone https://github.com/AI-turn/EveryUp.git
 cd EveryUp
-cp .env.example .env   # set MT_ADMIN_PASSWORD and other options
 docker compose up -d
 ```
+
+Open **http://localhost:3001** and create your admin account in the browser. No pre-configuration required.
+
+> To customize port, timezone, or pre-seed an admin account via env vars, copy `.env.example` to `.env` before starting.
 
 Check status:
 
@@ -89,10 +92,11 @@ docker compose logs -f
 **Backend**
 ```bash
 cd backend
-cp .env.example .env   # edit MT_ADMIN_PASSWORD before first run
 go run ./cmd/server
 # → http://localhost:3001
 ```
+
+> Optionally copy `backend/.env.example` to `backend/.env` to pre-configure port, timezone, or admin credentials.
 
 **Frontend**
 ```bash

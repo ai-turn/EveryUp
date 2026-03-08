@@ -71,9 +71,12 @@ docker run -d \
 ```bash
 git clone https://github.com/AI-turn/EveryUp.git
 cd EveryUp
-cp .env.example .env   # MT_ADMIN_PASSWORD 등 설정 후
 docker compose up -d
 ```
+
+**http://localhost:3001** 접속 후 브라우저에서 관리자 계정을 생성합니다. 별도 사전 설정이 필요 없습니다.
+
+> 포트, 타임존, 관리자 계정을 미리 설정하려면 시작 전에 `.env.example`을 `.env`로 복사하세요.
 
 상태 확인:
 
@@ -89,10 +92,11 @@ docker compose logs -f
 **백엔드**
 ```bash
 cd backend
-cp .env.example .env   # 최초 실행 전 MT_ADMIN_PASSWORD 수정
 go run ./cmd/server
 # → http://localhost:3001
 ```
+
+> 포트, 타임존, 관리자 계정을 미리 지정하려면 `backend/.env.example`을 `backend/.env`로 복사하세요.
 
 **프론트엔드**
 ```bash
