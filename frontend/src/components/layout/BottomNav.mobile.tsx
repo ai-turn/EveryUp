@@ -22,7 +22,10 @@ export function BottomNavMobile() {
   }
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 h-16 bg-white dark:bg-bg-main-dark border-t border-slate-200 dark:border-ui-border-dark flex items-stretch">
+    <nav
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white dark:bg-bg-main-dark border-t border-slate-200 dark:border-ui-border-dark flex items-stretch"
+      style={{ height: 'calc(4rem + env(safe-area-inset-bottom, 0px))', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+    >
       {navItems.map((item) => (
         <Link
           key={item.href}

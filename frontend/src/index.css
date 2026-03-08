@@ -162,6 +162,19 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Safe Area: 모바일 브라우저 하단바 + BottomNav 겹침 방지 */
+@layer utilities {
+  .pb-safe-bottom {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Marquee: 모바일 DemoBanner 텍스트 스크롤 */
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
 /* Custom Scrollbar: 사이드패널 등 스크롤 영역 */
 @layer utilities {
   .custom-scrollbar {

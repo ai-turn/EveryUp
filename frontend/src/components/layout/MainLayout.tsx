@@ -43,8 +43,8 @@ export function MainLayout() {
 
           <div className="flex-1 overflow-y-auto scroll-smooth">
             <div className="flex flex-col min-h-full">
-              {/* 모바일에서 하단 BottomNav 높이(h-16)만큼 패딩 추가 */}
-              <div className="p-4 sm:p-6 md:p-8 pb-20 lg:pb-8 space-y-8 flex-1">
+              {/* 모바일: BottomNav(4rem) + safe-area-inset-bottom, 데스크톱: 2rem */}
+              <div className="p-4 sm:p-6 md:p-8 pb-safe-bottom lg:pb-8! space-y-8 flex-1">
                 <Outlet />
               </div>
               <Footer />
