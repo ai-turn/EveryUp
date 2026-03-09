@@ -25,6 +25,8 @@
 | **Logs** | Unified log viewer, search, log agent collection |
 | **Real-time Streaming** | WebSocket-based live metric updates |
 
+![Dashboard](docs/images/dashboard.png)
+
 ---
 
 ## Project Structure

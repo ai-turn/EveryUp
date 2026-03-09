@@ -25,6 +25,8 @@
 | **로그** | 통합 로그 뷰어, 검색, 로그 에이전트 수집 |
 | **실시간 스트리밍** | WebSocket 기반 메트릭 실시간 업데이트 |
 
+![Dashboard](docs/images/dashboard.png)
+
 ---
 
 ## 프로젝트 구조
