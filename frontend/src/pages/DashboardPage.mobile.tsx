@@ -16,25 +16,36 @@ const logLevelBadge: Record<string, string> = {
 
 const statusColors: Record<string, { dot: string; text: string }> = {
   healthy:   { dot: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400' },
-  degraded:  { dot: 'bg-amber-500',   text: 'text-amber-600 dark:text-amber-400' },
+  online:    { dot: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400' },
   warning:   { dot: 'bg-amber-500',   text: 'text-amber-600 dark:text-amber-400' },
-  offline:   { dot: 'bg-red-500',     text: 'text-red-600 dark:text-red-400' },
+  degraded:  { dot: 'bg-red-500',     text: 'text-red-600 dark:text-red-400' },
   unhealthy: { dot: 'bg-red-500',     text: 'text-red-600 dark:text-red-400' },
+  critical:  { dot: 'bg-red-500',     text: 'text-red-600 dark:text-red-400' },
+  error:     { dot: 'bg-red-500',     text: 'text-red-600 dark:text-red-400' },
+  offline:   { dot: 'bg-slate-400',   text: 'text-slate-400 dark:text-text-dim-dark' },
   unknown:   { dot: 'bg-slate-400',   text: 'text-slate-400 dark:text-text-dim-dark' },
 };
 
 const resourceStatusDot: Record<string, string> = {
-  healthy: 'bg-emerald-500',
-  warning: 'bg-amber-500',
-  critical: 'bg-red-500',
-  error: 'bg-red-500',
+  healthy:   'bg-emerald-500',
+  warning:   'bg-amber-500',
+  degraded:  'bg-red-500',
+  unhealthy: 'bg-red-500',
+  critical:  'bg-red-500',
+  error:     'bg-red-500',
+  offline:   'bg-slate-400',
+  unknown:   'bg-slate-400',
 };
 
 const resourceStatusText: Record<string, string> = {
-  healthy: 'text-emerald-600 dark:text-emerald-400',
-  warning: 'text-amber-600 dark:text-amber-400',
-  critical: 'text-red-600 dark:text-red-400',
-  error: 'text-red-600 dark:text-red-400',
+  healthy:   'text-emerald-600 dark:text-emerald-400',
+  warning:   'text-amber-600 dark:text-amber-400',
+  degraded:  'text-red-600 dark:text-red-400',
+  unhealthy: 'text-red-600 dark:text-red-400',
+  critical:  'text-red-600 dark:text-red-400',
+  error:     'text-red-600 dark:text-red-400',
+  offline:   'text-slate-400 dark:text-text-dim-dark',
+  unknown:   'text-slate-400 dark:text-text-dim-dark',
 };
 
 export function DashboardMobile() {
