@@ -93,6 +93,11 @@ docker compose logs -f
 
 **Prerequisites:** [Go 1.24+](https://go.dev/dl/), [Node.js 22+](https://nodejs.org/), [pnpm](https://pnpm.io/installation)
 
+```bash
+git clone https://github.com/AI-turn/EveryUp.git
+cd EveryUp
+```
+
 **Backend**
 ```bash
 cd backend

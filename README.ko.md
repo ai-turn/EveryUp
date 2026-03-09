@@ -93,6 +93,11 @@ docker compose logs -f
 
 **사전 준비:** [Go 1.24+](https://go.dev/dl/), [Node.js 22+](https://nodejs.org/), [pnpm](https://pnpm.io/installation)
 
+```bash
+git clone https://github.com/AI-turn/EveryUp.git
+cd EveryUp
+```
+
 **백엔드**
 ```bash
 cd backend
