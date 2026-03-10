@@ -1,6 +1,8 @@
 /* Google Material Symbols & Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+
+/* Pretendard Variable — self-hosted, CSP-safe */
+@import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
 
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
@@ -88,8 +90,7 @@ body {
   margin: 0;
   background-color: var(--app-bg);
   color: var(--app-text);
-  /*font-family: 'Inter', system-ui, sans-serif;*/
-  font-family: "Inter", sans-serif;
+  font-family: 'Pretendard Variable', system-ui, sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
   -webkit-font-smoothing: antialiased;
 }
