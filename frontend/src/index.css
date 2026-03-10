@@ -1,5 +1,5 @@
-/* Google Material Symbols & Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+/* Material Symbols Outlined Variable — self-hosted, CSP-safe */
+@import '@fontsource-variable/material-symbols-outlined';
 
 /* Pretendard Variable — self-hosted, CSP-safe */
 @import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
@@ -105,6 +105,7 @@ body {
 
 /* Icon Styling */
 .material-symbols-outlined {
+  font-family: 'Material Symbols Outlined Variable', sans-serif;
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   vertical-align: middle;
   display: inline-block;
