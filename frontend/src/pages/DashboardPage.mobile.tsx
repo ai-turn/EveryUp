@@ -155,8 +155,8 @@ export function DashboardMobile() {
             </div>
           ) : !services || services.length === 0 ? (
             <div className="py-6 text-center">
-              <IconHealthCheck size={28} className="text-slate-300 dark:text-text-dim-dark" />
-              <p className="text-xs text-slate-400 dark:text-text-muted-dark mt-1">
+              <IconHealthCheck size={28} className="text-slate-300 dark:text-text-dim-dark block mx-auto" />
+              <p className="text-xs font-medium text-slate-400 dark:text-text-muted-dark mt-2">
                 {t('dashboard.emptyState')}
               </p>
             </div>
@@ -196,17 +196,15 @@ export function DashboardMobile() {
           <div className="flex items-center gap-2">
             <IconLogs size={18} className="text-primary" />
             <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-              {t('dashboard.logServices.title', { defaultValue: 'Log Services' })}
+              {t('nav.logs')}
             </h2>
           </div>
-          {logServices.length > 0 && (
-            <button
-              onClick={() => navigate('/logs')}
-              className="text-xs font-semibold text-primary"
-            >
-              {t('common.viewMore', { defaultValue: 'View More' })}
-            </button>
-          )}
+          <button
+            onClick={() => navigate('/logs')}
+            className="text-xs font-semibold text-primary cursor-pointer"
+          >
+            {t('common.viewMore', { defaultValue: 'View More' })}
+          </button>
         </div>
         <div className="px-3 pb-3">
           {logLoading ? (
@@ -217,16 +215,13 @@ export function DashboardMobile() {
             </div>
           ) : logServices.length === 0 ? (
             <div className="py-6 text-center">
-              <IconLogs size={28} className="text-slate-300 dark:text-text-dim-dark mx-auto" />
-              <p className="text-xs text-slate-400 dark:text-text-muted-dark mt-1">
-                {t('dashboard.logServices.empty', { defaultValue: 'No log services yet' })}
+              <IconLogs size={28} className="text-slate-300 dark:text-text-dim-dark block mx-auto" />
+              <p className="text-xs font-medium text-slate-400 dark:text-text-muted-dark mt-2">
+                {t('dashboard.logServices.empty')}
               </p>
-              <button
-                onClick={() => navigate('/logs')}
-                className="mt-2 text-xs font-semibold text-primary"
-              >
-                {t('dashboard.logServices.add', { defaultValue: 'Add log service' })} →
-              </button>
+              <p className="text-xs text-slate-300 dark:text-text-dim-dark mt-0.5">
+                {t('dashboard.logServices.emptyDesc')}
+              </p>
             </div>
           ) : (
             <div className="space-y-2">

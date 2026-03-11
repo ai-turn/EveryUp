@@ -50,7 +50,7 @@ export function LogServicesGrid() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <h2 className="text-base font-bold text-slate-900 dark:text-white">
-            {t('dashboard.logServices.title', { defaultValue: 'Log Services' })}
+            {t('nav.logs')}
           </h2>
           {!loading && services.length > 0 && (
             <span className="text-xs font-semibold text-slate-500 dark:text-text-muted-dark bg-slate-100 dark:bg-ui-hover-dark px-2 py-0.5 rounded-full">
