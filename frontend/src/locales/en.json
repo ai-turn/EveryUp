@@ -110,7 +110,9 @@
             "overallUptime": "Overall Uptime"
         },
         "healthCheck": {
-            "title": "Health Check"
+            "title": "Health Check",
+            "empty": "No health check services registered.",
+            "emptyDesc": "Add a service to start monitoring URL status and response times."
         },
         "infrastructure": {
             "title": "Infrastructure",

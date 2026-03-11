@@ -95,8 +95,8 @@ export function ServiceHealthGrid({
       {!loading && !error && (!services || services.length === 0) && (
         <EmptyState
           icon="monitor_heart"
-          title={t('dashboard.emptyState')}
-          description={t('dashboard.emptyStateDesc', { defaultValue: 'Add your first service to start monitoring.' })}
+          title={t('dashboard.healthCheck.empty')}
+          description={t('dashboard.healthCheck.emptyDesc')}
           action={{
             label: t('dashboard.addService'),
             onClick: onAddClick ?? (() => navigate('/healthcheck')),

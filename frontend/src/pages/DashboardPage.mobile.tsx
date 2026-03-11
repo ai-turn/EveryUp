@@ -157,7 +157,10 @@ export function DashboardMobile() {
             <div className="py-6 text-center">
               <IconHealthCheck size={28} className="text-slate-300 dark:text-text-dim-dark block mx-auto" />
               <p className="text-xs font-medium text-slate-400 dark:text-text-muted-dark mt-2">
-                {t('dashboard.emptyState')}
+                {t('dashboard.healthCheck.empty')}
+              </p>
+              <p className="text-xs text-slate-300 dark:text-text-dim-dark mt-0.5">
+                {t('dashboard.healthCheck.emptyDesc')}
               </p>
             </div>
           ) : (

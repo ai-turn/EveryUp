@@ -111,7 +111,9 @@
             "overallUptime": "전체 가동률"
         },
         "healthCheck": {
-            "title": "헬스체크"
+            "title": "헬스체크",
+            "empty": "등록된 헬스체크 서비스가 없습니다.",
+            "emptyDesc": "서비스를 추가하여 URL 상태와 응답 시간을 모니터링하세요."
         },
         "infrastructure": {
             "title": "인프라",
