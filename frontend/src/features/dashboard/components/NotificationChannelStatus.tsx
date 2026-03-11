@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from '../../../components/common';
+import { IconAlerts } from '../../../components/icons/SidebarIcons';
 import { useNotificationChannels } from '../../../hooks/useData';
 
 const CHANNEL_META: Record<string, { icon: string; color: string; bg: string }> = {
@@ -21,7 +22,7 @@ export function NotificationChannelStatus() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2">
-          <MaterialIcon name="notifications_active" className="text-xl text-primary" />
+          <IconAlerts size={20} className="text-primary" />
           <h2 className="text-base font-bold text-slate-900 dark:text-white">
             {t('dashboard.notifications.title')}
           </h2>
@@ -60,7 +61,7 @@ export function NotificationChannelStatus() {
       {!loading && totalCount === 0 && (
         <div className="flex flex-col items-center justify-center py-8 text-center">
           <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-ui-hover-dark flex items-center justify-center mb-3">
-            <MaterialIcon name="notifications_off" className="text-2xl text-slate-400" />
+            <IconAlerts size={24} className="text-slate-400" />
           </div>
           <p className="text-sm font-medium text-slate-500 dark:text-text-muted-dark">
             {t('dashboard.notifications.empty')}
@@ -101,12 +102,12 @@ export function NotificationChannelStatus() {
 
                 {/* Status Badge */}
                 {channel.isEnabled ? (
-                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-lime-500/10 text-lime-600 dark:text-lime-400 text-[11px] font-bold shrink-0">
+                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-lime-500/10 text-lime-600 dark:text-lime-400 text-xs font-bold shrink-0">
                     <span className="w-1.5 h-1.5 rounded-full bg-lime-500 animate-pulse" />
                     {t('dashboard.notifications.active')}
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-200 dark:bg-ui-active-dark text-slate-500 dark:text-text-muted-dark text-[11px] font-bold shrink-0">
+                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-200 dark:bg-ui-active-dark text-slate-500 dark:text-text-muted-dark text-xs font-bold shrink-0">
                     <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                     {t('dashboard.notifications.inactive')}
                   </span>

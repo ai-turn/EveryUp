@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { MaterialIcon } from '../../../components/common';
+import { IconAlerts } from '../../../components/icons/SidebarIcons';
 import { api, type AlertRule } from '../../../services/api';
 
 const SEVERITY_COLOR: Record<string, { text: string; bg: string; dot: string }> = {
@@ -40,7 +41,7 @@ export function AlertRulesStatus() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2">
-          <MaterialIcon name="rule" className="text-xl text-primary" />
+          <IconAlerts size={20} className="text-primary" />
           <h2 className="text-base font-bold text-slate-900 dark:text-white">
             {t('dashboard.alertRules.title')}
           </h2>
@@ -99,7 +100,7 @@ export function AlertRulesStatus() {
                   className={`flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-ui-hover-dark/60 transition-colors ${!rule.isEnabled ? 'opacity-50' : ''}`}
                 >
                   <div className={`w-8 h-8 rounded-lg ${sev.bg} flex items-center justify-center shrink-0`}>
-                    <span className={`text-[10px] font-bold ${sev.text}`}>{metricLabel}</span>
+                    <span className={`text-xs font-bold ${sev.text}`}>{metricLabel}</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-slate-800 dark:text-text-base-dark truncate">
@@ -110,12 +111,12 @@ export function AlertRulesStatus() {
                     </p>
                   </div>
                   {rule.isEnabled ? (
-                    <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-lime-500/10 text-lime-600 dark:text-lime-400 text-[11px] font-bold shrink-0">
+                    <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-lime-500/10 text-lime-600 dark:text-lime-400 text-xs font-bold shrink-0">
                       <span className="w-1.5 h-1.5 rounded-full bg-lime-500 animate-pulse" />
                       {t('dashboard.alertRules.active')}
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-200 dark:bg-ui-active-dark text-slate-500 dark:text-text-muted-dark text-[11px] font-bold shrink-0">
+                    <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-200 dark:bg-ui-active-dark text-slate-500 dark:text-text-muted-dark text-xs font-bold shrink-0">
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                       {t('dashboard.alertRules.inactive')}
                     </span>

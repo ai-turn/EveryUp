@@ -197,9 +197,9 @@ export function InfraForm({ onSuccess, host }: InfraFormProps) {
                             className={`${inputClass(!!errors.id)} ${isEditMode ? 'opacity-50 cursor-not-allowed' : ''}`}
                         />
                         {errors.id ? (
-                            <p className="text-[10px] text-red-500 font-medium">{errors.id.message}</p>
+                            <p className="text-xs text-red-500 font-medium">{errors.id.message}</p>
                         ) : (
-                            <p className="text-[10px] text-slate-400">{t('monitoring.modal.idHint')}</p>
+                            <p className="text-xs text-slate-400">{t('monitoring.modal.idHint')}</p>
                         )}
                     </div>
                     <div className="space-y-1">
@@ -209,7 +209,7 @@ export function InfraForm({ onSuccess, host }: InfraFormProps) {
                             placeholder={t('monitoring.modal.hostNamePlaceholder')}
                             className={inputClass(!!errors.name)}
                         />
-                        {errors.name && <p className="text-[10px] text-red-500 font-medium">{errors.name.message}</p>}
+                        {errors.name && <p className="text-xs text-red-500 font-medium">{errors.name.message}</p>}
                     </div>
                 </div>
 
@@ -264,7 +264,7 @@ export function InfraForm({ onSuccess, host }: InfraFormProps) {
                             placeholder={t('monitoring.modal.ipPlaceholder')}
                             className={inputClass(!!errors.ip)}
                         />
-                        {errors.ip && <p className="text-[10px] text-red-500 font-medium">{errors.ip.message}</p>}
+                        {errors.ip && <p className="text-xs text-red-500 font-medium">{errors.ip.message}</p>}
                     </div>
                     <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('monitoring.modal.port')}</label>
@@ -306,7 +306,7 @@ export function InfraForm({ onSuccess, host }: InfraFormProps) {
                                     placeholder={t('monitoring.modal.sshUserPlaceholder')}
                                     className={inputClass(!!errors.sshUser)}
                                 />
-                                {errors.sshUser && <p className="text-[10px] text-red-500 font-medium">{errors.sshUser.message}</p>}
+                                {errors.sshUser && <p className="text-xs text-red-500 font-medium">{errors.sshUser.message}</p>}
                             </div>
                             <div className="space-y-1">
                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('monitoring.modal.sshPort')}</label>
@@ -389,13 +389,13 @@ export function InfraForm({ onSuccess, host }: InfraFormProps) {
                                         {...register('sshKey')}
                                         placeholder={isEditMode ? t('monitoring.modal.sshKeyChangePlaceholder') : t('monitoring.modal.sshKeyPlaceholder')}
                                         rows={4}
-                                        className="w-full px-4 py-3 bg-transparent outline-none resize-none font-mono text-[11px] dark:text-white"
+                                        className="w-full px-4 py-3 bg-transparent outline-none resize-none font-mono text-xs dark:text-white"
                                     />
                                 </div>
                                 {ppkWarning && (
                                     <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 flex items-start gap-2">
                                         <MaterialIcon name="warning" className="text-sm text-amber-500 shrink-0 mt-0.5" />
-                                        <p className="text-[10px] text-amber-700 dark:text-amber-400 font-medium">{t('monitoring.modal.sshKeyPpkDetected')}</p>
+                                        <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">{t('monitoring.modal.sshKeyPpkDetected')}</p>
                                     </div>
                                 )}
                             </div>
@@ -437,7 +437,7 @@ export function InfraForm({ onSuccess, host }: InfraFormProps) {
                                     <MaterialIcon name="check_circle" className="text-lg" />
                                     {t('monitoring.modal.connectionSuccess')}
                                 </div>
-                                <div className="text-[11px] text-slate-600 dark:text-text-muted-dark space-y-1 font-medium">
+                                <div className="text-xs text-slate-600 dark:text-text-muted-dark space-y-1 font-medium">
                                     {testResult.hostname && <p>Hostname: {testResult.hostname}</p>}
                                     {testResult.platform && <p>OS: {testResult.platform}</p>}
                                     <p>{t('monitoring.modal.latency')}: <span className="text-primary font-bold">{testResult.latencyMs}ms</span></p>
@@ -451,7 +451,7 @@ export function InfraForm({ onSuccess, host }: InfraFormProps) {
                                     <MaterialIcon name="error" className="text-lg" />
                                     {t('monitoring.modal.connectionFailed')}
                                 </div>
-                                <p className="text-[11px] text-red-500/80 font-medium leading-relaxed">{testError}</p>
+                                <p className="text-xs text-red-500/80 font-medium leading-relaxed">{testError}</p>
                             </div>
                         )}
                     </div>

@@ -132,7 +132,7 @@ export function LogListPage() {
           <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* HTTP Appender */}
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-text-muted-dark bg-slate-100 dark:bg-ui-hover-dark px-2 py-1 rounded-md">
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-text-muted-dark bg-slate-100 dark:bg-ui-hover-dark px-2 py-1 rounded-md">
                 <MaterialIcon name="http" className="text-xs" />
                 HTTP Appender
               </span>
@@ -142,7 +142,7 @@ export function LogListPage() {
                 { name: 'ASP.NET', lang: '.NET', color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' },
                 { name: 'FastAPI', lang: 'Python', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' },
               ].map((fw) => (
-                <span key={fw.name} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${fw.color}`}>
+                <span key={fw.name} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${fw.color}`}>
                   {fw.name}
                   <span className="opacity-60">({fw.lang})</span>
                 </span>
@@ -150,7 +150,7 @@ export function LogListPage() {
             </div>
             {/* Log Agent */}
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-text-muted-dark bg-slate-100 dark:bg-ui-hover-dark px-2 py-1 rounded-md">
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-text-muted-dark bg-slate-100 dark:bg-ui-hover-dark px-2 py-1 rounded-md">
                 <MaterialIcon name="smart_toy" className="text-xs" />
                 Log Agent
               </span>
@@ -159,7 +159,7 @@ export function LogListPage() {
                 { name: 'systemd', lang: 'VM/EC2', color: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300' },
                 { name: 'Fluent Bit', lang: 'Config', color: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300' },
               ].map((lib) => (
-                <span key={lib.name} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${lib.color}`}>
+                <span key={lib.name} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${lib.color}`}>
                   {lib.name}
                   <span className="opacity-60">({lib.lang})</span>
                 </span>

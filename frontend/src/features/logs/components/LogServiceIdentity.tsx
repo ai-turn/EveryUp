@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
 import { MaterialIcon } from '../../../components/common';
+import { IconLogs } from '../../../components/icons/SidebarIcons';
 import { Service } from '../../../services/api';
 
 interface Props {
@@ -21,7 +22,7 @@ function InfoChip({ icon, label, value, accent }: { icon: string; label: string;
   return (
     <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark">
       <MaterialIcon name={icon} className={`text-sm ${accent ? 'text-primary' : 'text-slate-400 dark:text-text-dim-dark'}`} />
-      <span className="text-[11px] text-slate-400 dark:text-text-dim-dark font-medium">{label}</span>
+      <span className="text-xs text-slate-400 dark:text-text-dim-dark font-medium">{label}</span>
       <span className="text-xs font-bold text-slate-700 dark:text-text-base-dark">{value}</span>
     </div>
   );
@@ -46,14 +47,14 @@ export function LogServiceIdentity({ service, onSettingsClick }: Props) {
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-8 bg-slate-100/50 dark:bg-bg-surface-dark/30 p-6 rounded-xl border border-slate-200 dark:border-chart-surface">
       {/* Icon */}
       <div className="bg-primary/20 rounded-xl p-4 sm:p-6 flex items-center justify-center border border-primary/30 shrink-0">
-        <MaterialIcon name="article" className="text-4xl sm:text-5xl text-primary" />
+        <IconLogs size={48} className="text-primary" />
       </div>
 
       <div className="flex-1 min-w-0">
         {/* Name + type badge */}
         <div className="flex items-center gap-3 mb-1.5">
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white truncate">{service.name}</h1>
-          <span className="shrink-0 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-wider">
+          <span className="shrink-0 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
             LOG
           </span>
         </div>
@@ -90,7 +91,7 @@ export function LogServiceIdentity({ service, onSettingsClick }: Props) {
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-slate-100 dark:bg-ui-hover-dark hover:border-primary/40 hover:bg-primary/5 transition-all group"
           >
             <MaterialIcon name="filter_alt" className="text-sm text-slate-400 dark:text-text-dim-dark group-hover:text-primary transition-colors" />
-            <span className="text-[11px] text-slate-400 dark:text-text-dim-dark font-medium">{t('logServices.identity.levelFilter')}</span>
+            <span className="text-xs text-slate-400 dark:text-text-dim-dark font-medium">{t('logServices.identity.levelFilter')}</span>
 
             {acceptAll ? (
               <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
@@ -103,9 +104,9 @@ export function LogServiceIdentity({ service, onSettingsClick }: Props) {
                   return (
                     <span
                       key={lvl}
-                      className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded border text-[10px] font-bold uppercase ${s.text} ${s.bg}`}
+                      className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded border text-xs font-bold uppercase ${s.text} ${s.bg}`}
                     >
-                      <MaterialIcon name={s.icon} className="text-[10px]" />
+                      <MaterialIcon name={s.icon} className="text-xs" />
                       {lvl}
                     </span>
                   );

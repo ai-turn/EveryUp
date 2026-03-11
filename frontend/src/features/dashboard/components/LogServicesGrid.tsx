@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon, EmptyState } from '../../../components/common';
+import { IconLogs } from '../../../components/icons/SidebarIcons';
 import { LogServiceCard } from '../../logs';
 import { api, Service, LogEntry } from '../../../services/api';
 
@@ -49,7 +50,7 @@ export function LogServicesGrid() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <MaterialIcon name="article" className="text-xl text-primary" />
+          <IconLogs size={20} className="text-primary" />
           <h2 className="text-base font-bold text-slate-900 dark:text-white">
             {t('dashboard.logServices.title', { defaultValue: 'Log Services' })}
           </h2>

@@ -124,7 +124,7 @@ export function ChannelForm({ onSuccess, channel }: ChannelFormProps) {
                         placeholder={t('alerts.modal.namePlaceholder')}
                         className={`w-full px-4 py-2 bg-slate-50 dark:bg-ui-hover-dark border ${errors.name ? 'border-red-500' : 'border-slate-200 dark:border-ui-border-dark'} rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm dark:text-white`}
                     />
-                    {errors.name && <p className="text-[10px] text-red-500 font-medium">{errors.name.message}</p>}
+                    {errors.name && <p className="text-xs text-red-500 font-medium">{errors.name.message}</p>}
                 </div>
 
                 <div className="space-y-1">
@@ -154,7 +154,7 @@ export function ChannelForm({ onSuccess, channel }: ChannelFormProps) {
                                 placeholder={t('alerts.modal.botTokenPlaceholder')}
                                 className={`w-full px-4 py-2 bg-slate-50 dark:bg-ui-hover-dark border ${errors.botToken ? 'border-red-500' : 'border-slate-200 dark:border-ui-border-dark'} rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm font-mono dark:text-white`}
                             />
-                            {errors.botToken && <p className="text-[10px] text-red-500 font-medium">{errors.botToken.message}</p>}
+                            {errors.botToken && <p className="text-xs text-red-500 font-medium">{errors.botToken.message}</p>}
                         </div>
                         <div className="space-y-1">
                             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('alerts.modal.chatId')}</label>
@@ -175,7 +175,7 @@ export function ChannelForm({ onSuccess, channel }: ChannelFormProps) {
                                 placeholder={t('alerts.modal.webhookUrlPlaceholder')}
                                 className={`w-full px-4 py-2 bg-slate-50 dark:bg-ui-hover-dark border ${errors.webhookUrl ? 'border-red-500' : 'border-slate-200 dark:border-ui-border-dark'} rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm font-mono dark:text-white`}
                             />
-                            {errors.webhookUrl && <p className="text-[10px] text-red-500 font-medium">{errors.webhookUrl.message}</p>}
+                            {errors.webhookUrl && <p className="text-xs text-red-500 font-medium">{errors.webhookUrl.message}</p>}
                         </div>
                         <SetupGuide type="discord" />
                     </>

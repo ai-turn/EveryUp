@@ -202,7 +202,7 @@ export function AlertsDesktop() {
                       <div className="flex items-center gap-2">
                         <h3 className="font-bold text-slate-900 dark:text-white truncate">{channel.name}</h3>
                         {!channel.isEnabled && (
-                          <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-slate-200 dark:bg-ui-active-dark text-slate-500 dark:text-text-muted-dark rounded-full">
+                          <span className="px-2 py-0.5 text-xs font-bold uppercase tracking-wider bg-slate-200 dark:bg-ui-active-dark text-slate-500 dark:text-text-muted-dark rounded-full">
                             {t('common.disabled', { defaultValue: 'Disabled' })}
                           </span>
                         )}

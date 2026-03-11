@@ -238,7 +238,7 @@ export function InfraDetailMobile({ hostId }: InfraDetailMobileProps) {
                     <span className="text-sm font-semibold text-slate-800 dark:text-text-base-dark truncate">
                       {proc.name}
                     </span>
-                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${statusClass}`}>
+                    <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-full ${statusClass}`}>
                       {proc.status}
                     </span>
                   </div>

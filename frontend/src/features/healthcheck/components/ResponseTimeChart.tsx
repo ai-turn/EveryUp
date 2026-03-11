@@ -147,13 +147,13 @@ export function ResponseTimeChart({ serviceId, refreshKey, timeout }: ResponseTi
       <div className="flex">
         {/* Y-Axis Labels */}
         <div className="flex flex-col justify-between h-64 pr-3 shrink-0 text-right">
-          <span className="text-[10px] tabular-nums text-slate-400 dark:text-text-dim-dark font-medium leading-none">
+          <span className="text-xs tabular-nums text-slate-400 dark:text-text-dim-dark font-medium leading-none">
             {maxValue >= 1000 ? `${(maxValue / 1000).toFixed(1)}s` : `${Math.round(maxValue)}ms`}
           </span>
-          <span className="text-[10px] tabular-nums text-slate-400 dark:text-text-dim-dark font-medium leading-none">
+          <span className="text-xs tabular-nums text-slate-400 dark:text-text-dim-dark font-medium leading-none">
             {maxValue >= 2000 ? `${(maxValue / 2000).toFixed(1)}s` : `${Math.round(maxValue / 2)}ms`}
           </span>
-          <span className="text-[10px] tabular-nums text-slate-400 dark:text-text-dim-dark font-medium leading-none">
+          <span className="text-xs tabular-nums text-slate-400 dark:text-text-dim-dark font-medium leading-none">
             0
           </span>
         </div>
@@ -174,7 +174,7 @@ export function ResponseTimeChart({ serviceId, refreshKey, timeout }: ResponseTi
               style={{ bottom: `${Math.min((timeout / maxValue) * 100, 96)}%` }}
             >
               <div className="relative border-t-2 border-dashed border-amber-400 dark:border-amber-500 w-full">
-                <span className="absolute right-0 bottom-1 text-[10px] font-bold text-amber-500 dark:text-amber-400 bg-white dark:bg-chart-bg px-1 rounded leading-none">
+                <span className="absolute right-0 bottom-1 text-xs font-bold text-amber-500 dark:text-amber-400 bg-white dark:bg-chart-bg px-1 rounded leading-none">
                   {t('services.detail.chart.timeout')}{' '}
                   {timeout >= 1000 ? `${timeout / 1000}s` : `${timeout}ms`}
                 </span>

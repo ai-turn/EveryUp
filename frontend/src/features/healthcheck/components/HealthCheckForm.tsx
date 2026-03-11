@@ -381,7 +381,7 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
                                         key={idx}
                                         type="button"
                                         onClick={() => setScheduledWeekday(idx)}
-                                        className={`px-2 py-1 rounded text-[10px] font-bold transition-all ${scheduledWeekday === idx ? 'bg-primary text-white' : 'bg-slate-100 dark:bg-ui-active-dark text-slate-500'}`}
+                                        className={`px-2 py-1 rounded text-xs font-bold transition-all ${scheduledWeekday === idx ? 'bg-primary text-white' : 'bg-slate-100 dark:bg-ui-active-dark text-slate-500'}`}
                                     >
                                         {day.substring(0, 3)}
                                     </button>
@@ -405,7 +405,7 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
                                 min="0" max="59"
                             />
                         </div>
-                        <div className="p-3 bg-primary/5 border border-primary/10 rounded-lg text-[11px] text-primary font-medium">
+                        <div className="p-3 bg-primary/5 border border-primary/10 rounded-lg text-xs text-primary font-medium">
                             {cronPreviewText}
                         </div>
                     </div>

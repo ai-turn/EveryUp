@@ -87,6 +87,7 @@ export function HealthCheckPage() {
         statusFilter={statusFilter}
         refreshKey={refreshKey}
         navigateTo={(id) => `/healthcheck/${id}`}
+        onAddClick={handleAddService}
       />
     </>
   );

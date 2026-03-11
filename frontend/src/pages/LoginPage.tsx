@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import { env } from '../config/env'
 import { MaterialIcon } from '../components/common'
+import { IconHealthCheck } from '../components/icons/SidebarIcons'
 
 export function LoginPage() {
   const { login, isAuthenticated } = useAuth()
@@ -81,7 +82,7 @@ export function LoginPage() {
         {/* Logo / Title */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-4">
-            <MaterialIcon name="monitor_heart" className="text-3xl text-primary" />
+            <IconHealthCheck size={28} className="text-primary" />
           </div>
           <div className="text-2xl font-bold text-primary tracking-tight mb-1">EveryUp</div>
           <h2 className="text-sm font-semibold text-slate-900 dark:text-white">

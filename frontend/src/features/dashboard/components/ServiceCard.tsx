@@ -34,7 +34,7 @@ export function ServiceCard({ service, onClick }: ServiceCardProps) {
         </div>
         <div className="flex items-center gap-1.5">
           {service.isActive === false && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold uppercase bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
               {t('common.pause')}
             </span>
           )}
@@ -45,11 +45,11 @@ export function ServiceCard({ service, onClick }: ServiceCardProps) {
       {/* Metrics */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
-          <p className="text-[10px] text-slate-500 uppercase font-semibold">{t('services.detail.metrics.responseTime')}</p>
+          <p className="text-xs text-slate-500 uppercase font-semibold">{t('services.detail.metrics.responseTime')}</p>
           <p className="text-lg font-bold tabular-nums">{service.latency}</p>
         </div>
         <div>
-          <p className="text-[10px] text-slate-500 uppercase font-semibold">{t('services.detail.uptime')}</p>
+          <p className="text-xs text-slate-500 uppercase font-semibold">{t('services.detail.uptime')}</p>
           <p className="text-lg font-bold tabular-nums">{service.uptime}</p>
         </div>
       </div>
@@ -57,7 +57,7 @@ export function ServiceCard({ service, onClick }: ServiceCardProps) {
       {/* Footer badges */}
       <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-ui-border-dark/50">
         {service.type && (
-          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+          <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${
             service.type === 'http'
               ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
               : 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
@@ -66,8 +66,8 @@ export function ServiceCard({ service, onClick }: ServiceCardProps) {
           </span>
         )}
         {service.interval != null && (
-          <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark">
-            <MaterialIcon name="schedule" className="text-[10px]" />
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark">
+            <MaterialIcon name="schedule" className="text-xs" />
             {formatInterval(service.interval)}
           </span>
         )}

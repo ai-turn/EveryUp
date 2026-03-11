@@ -38,13 +38,13 @@ export function IntegrationCard({
             <div
               className={`size-12 rounded-lg ${iconBg} flex items-center justify-center ${iconColor} border border-current/20`}
             >
-              <MaterialIcon name={icon} className="text-[32px]" />
+              <MaterialIcon name={icon} className="text-3xl" />
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <p className="text-slate-900 dark:text-white text-lg font-bold">{name}</p>
                 <span
-                  className={`px-2 py-0.5 rounded ${statusColor} text-[10px] font-bold uppercase tracking-wider`}
+                  className={`px-2 py-0.5 rounded ${statusColor} text-xs font-bold uppercase tracking-wider`}
                 >
                   {status}
                 </span>

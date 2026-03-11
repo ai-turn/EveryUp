@@ -110,7 +110,7 @@ function FailureRow({ metric, dateLocale }: FailureRowProps) {
           >
             {relative}
           </span>
-          <p className="text-[11px] text-slate-400 dark:text-text-dim-dark">{absolute}</p>
+          <p className="text-xs text-slate-400 dark:text-text-dim-dark">{absolute}</p>
         </div>
 
         {/* Spacer */}
@@ -120,13 +120,13 @@ function FailureRow({ metric, dateLocale }: FailureRowProps) {
         <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
           {/* Status code */}
           {metric.statusCode != null && (
-            <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
+            <span className="px-2 py-0.5 rounded text-xs font-bold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
               HTTP {metric.statusCode}
             </span>
           )}
 
           {/* Response time */}
-          <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-secondary-dark">
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-secondary-dark">
             <MaterialIcon name="timer" className="text-xs" />
             {Math.round(metric.responseTime)}ms
           </span>

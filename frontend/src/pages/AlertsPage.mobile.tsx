@@ -133,19 +133,19 @@ export function AlertsMobile() {
       {stats && (
         <div className="flex gap-3 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
           <div className="shrink-0 flex-1 min-w-[100px] bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-3">
-            <p className="text-[11px] font-medium text-slate-500 dark:text-text-muted-dark">
+            <p className="text-xs font-medium text-slate-500 dark:text-text-muted-dark">
               {t('alerts.history.stats.successRate', { defaultValue: 'Success' })}
             </p>
             <p className="text-xl font-bold text-slate-900 dark:text-white">{stats.successRate.toFixed(0)}%</p>
           </div>
           <div className="shrink-0 flex-1 min-w-[100px] bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-3">
-            <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+            <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
               {t('alerts.history.stats.sent', { defaultValue: 'Sent' })}
             </p>
             <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{stats.totalSent}</p>
           </div>
           <div className="shrink-0 flex-1 min-w-[100px] bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-3">
-            <p className="text-[11px] font-medium text-red-500">
+            <p className="text-xs font-medium text-red-500">
               {t('alerts.history.stats.failed', { defaultValue: 'Failed' })}
             </p>
             <p className="text-xl font-bold text-red-500">{stats.totalFailed}</p>
@@ -168,7 +168,7 @@ export function AlertsMobile() {
             <MaterialIcon name={tab.icon} className="text-sm" />
             {tab.label}
             {tab.count !== undefined && (
-              <span className="text-[10px] bg-slate-200 dark:bg-ui-active-dark px-1.5 py-0.5 rounded-full">
+              <span className="text-xs bg-slate-200 dark:bg-ui-active-dark px-1.5 py-0.5 rounded-full">
                 {tab.count}
               </span>
             )}
@@ -269,7 +269,7 @@ export function AlertsMobile() {
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-9 h-9 rounded-lg ${sev.bg} flex items-center justify-center shrink-0`}>
-                      <span className={`text-[10px] font-bold ${sev.text}`}>
+                      <span className={`text-xs font-bold ${sev.text}`}>
                         {rule.metric?.toUpperCase().slice(0, 3)}
                       </span>
                     </div>
@@ -320,10 +320,10 @@ export function AlertsMobile() {
                         {item.message}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] text-slate-400 dark:text-text-dim-dark">
+                        <span className="text-xs text-slate-400 dark:text-text-dim-dark">
                           {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true, locale: dateLocale })}
                         </span>
-                        <span className="text-[10px] capitalize text-slate-400 dark:text-text-dim-dark">
+                        <span className="text-xs capitalize text-slate-400 dark:text-text-dim-dark">
                           {item.channelType}
                         </span>
                       </div>

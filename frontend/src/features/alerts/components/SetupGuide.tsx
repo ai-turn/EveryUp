@@ -52,7 +52,7 @@ export function SetupGuide({ type }: SetupGuideProps) {
                     <ol className="mt-3 space-y-2">
                         {steps.map((step, i) => (
                             <li key={i} className="flex gap-2 text-xs text-slate-600 dark:text-text-secondary-dark">
-                                <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center">
+                                <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
                                     {i + 1}
                                 </span>
                                 <span className="pt-0.5">{step}</span>
@@ -63,7 +63,7 @@ export function SetupGuide({ type }: SetupGuideProps) {
                     {tip && (
                         <div className="flex gap-2 px-2.5 py-2 rounded-md bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
                             <MaterialIcon name="lightbulb" className="text-sm text-amber-500 shrink-0 mt-0.5" />
-                            <p className="text-[11px] text-amber-700 dark:text-amber-400">{tip}</p>
+                            <p className="text-xs text-amber-700 dark:text-amber-400">{tip}</p>
                         </div>
                     )}
 

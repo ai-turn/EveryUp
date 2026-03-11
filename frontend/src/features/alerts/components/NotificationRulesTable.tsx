@@ -49,7 +49,7 @@ export function NotificationRulesTable() {
     <div className="mt-12">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-slate-900 dark:text-white text-[20px] font-bold leading-tight tracking-[-0.015em]">
+        <h2 className="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-[-0.015em]">
           {t('alerts.rulesTitle')}
         </h2>
         <p className="text-slate-500 text-sm">{t('alerts.rulesDesc')}</p>
@@ -79,12 +79,12 @@ export function NotificationRulesTable() {
               <tr key={rule.id}>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <MaterialIcon name={rule.icon} className={`${rule.iconColor} text-[20px]`} />
+                    <MaterialIcon name={rule.icon} className={`${rule.iconColor} text-xl`} />
                     <div>
                       <p className="text-sm font-bold dark:text-white">
                         {ruleLabelMap[rule.eventType] ? t(ruleLabelMap[rule.eventType]) : rule.eventType}
                       </p>
-                      <p className="text-[11px] text-slate-500">
+                      <p className="text-xs text-slate-500">
                         {ruleDescMap[rule.description] ? t(ruleDescMap[rule.description]) : rule.description}
                       </p>
                     </div>

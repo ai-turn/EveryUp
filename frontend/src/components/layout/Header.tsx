@@ -36,7 +36,7 @@ export function Header() {
                 <div className="flex items-center gap-1 bg-slate-100 dark:bg-bg-surface-dark p-1 rounded-lg">
                     <button
                         onClick={() => changeLanguage('ko')}
-                        className={`px-2.5 py-1.5 text-[10px] font-bold rounded-md transition-all ${i18n.language.startsWith('ko')
+                        className={`px-2.5 py-1.5 text-xs font-bold rounded-md transition-all ${i18n.language.startsWith('ko')
                             ? 'bg-white dark:bg-ui-hover-dark text-primary shadow-sm'
                             : 'text-slate-500 hover:text-slate-700 dark:text-text-muted-dark dark:hover:text-white'
                             }`}
@@ -45,7 +45,7 @@ export function Header() {
                     </button>
                     <button
                         onClick={() => changeLanguage('en')}
-                        className={`px-2 py-1 text-[10px] font-bold rounded-md transition-all ${i18n.language.startsWith('en')
+                        className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${i18n.language.startsWith('en')
                             ? 'bg-white dark:bg-ui-hover-dark text-primary shadow-sm'
                             : 'text-slate-500 hover:text-slate-700 dark:text-text-muted-dark dark:hover:text-white'
                             }`}

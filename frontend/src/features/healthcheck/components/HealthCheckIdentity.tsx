@@ -34,7 +34,7 @@ function InfoChip({ icon, label, value, accent }: InfoChipProps) {
   return (
     <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark">
       <MaterialIcon name={icon} className={`text-sm ${accent ? 'text-primary' : 'text-slate-400 dark:text-text-dim-dark'}`} />
-      <span className="text-[11px] text-slate-400 dark:text-text-dim-dark font-medium">{label}</span>
+      <span className="text-xs text-slate-400 dark:text-text-dim-dark font-medium">{label}</span>
       <span className="text-xs font-bold text-slate-700 dark:text-text-base-dark">{value}</span>
     </div>
   );

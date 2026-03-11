@@ -620,7 +620,7 @@ docker run -d \\
                 <h4 className="text-sm font-bold text-slate-900 dark:text-white">
                   {t('services.integration.agent.quickStart', { defaultValue: 'Quick Start' })}
                 </h4>
-                <p className="text-[11px] text-slate-500 dark:text-text-muted-dark">
+                <p className="text-xs text-slate-500 dark:text-text-muted-dark">
                   {t('services.integration.agent.quickStartDesc', { defaultValue: 'Pull and run the Log Agent with a single command.' })}
                 </p>
               </div>
@@ -648,7 +648,7 @@ docker run -d \\
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Left: language/variant tabs (horizontal scroll on mobile, vertical on sm+) */}
           <div className="sm:shrink-0 sm:w-36">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-text-dim-dark mb-2 px-2 hidden sm:block">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-text-dim-dark mb-2 px-2 hidden sm:block">
               {activeCategory === 'http-appender' ? 'Framework' : 'Deploy'}
             </p>
             <div className="flex sm:flex-col gap-1 overflow-x-auto pb-1 sm:pb-0">
@@ -669,7 +669,7 @@ docker run -d \\
 
             {/* Method description hint */}
             <div className="pt-3 hidden sm:block">
-              <p className="text-[10px] text-slate-400 dark:text-text-dim-dark leading-relaxed px-2">
+              <p className="text-xs text-slate-400 dark:text-text-dim-dark leading-relaxed px-2">
                 {activeCategory === 'http-appender'
                   ? t('services.integration.snippets.httpAppenderDesc', { defaultValue: 'Add a transport to your app code. Best when you control the source.' })
                   : t('services.integration.snippets.agentDesc', { defaultValue: 'Tail log files and forward. Best for servers or containers.' })

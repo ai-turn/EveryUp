@@ -116,7 +116,7 @@ export function UptimeCalendar({ serviceId, refreshKey }: UptimeCalendarProps) {
       </div>
 
       {/* Date Range */}
-      <div className="flex justify-between text-slate-400 dark:text-text-chart-dim text-[10px] font-bold uppercase tracking-wider mb-6">
+      <div className="flex justify-between text-slate-400 dark:text-text-chart-dim text-xs font-bold uppercase tracking-wider mb-6">
         <span>{t('common.daysAgo', { count: 90 })}</span>
         <span>{t('common.today')}</span>
       </div>

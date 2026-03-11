@@ -1,14 +1,24 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { MaterialIcon } from '../common';
+import { ComponentType, SVGProps } from 'react';
+import {
+  IconDashboard,
+  IconHealthCheck,
+  IconLogs,
+  IconInfra,
+  IconAlerts,
+  IconSettings,
+} from '../icons/SidebarIcons';
 
-const navItems = [
-  { icon: 'home',          labelKey: 'nav.dashboard',   href: '/' },
-  { icon: 'monitor_heart', labelKey: 'nav.healthcheck', href: '/healthcheck' },
-  { icon: 'article',       labelKey: 'nav.logs',        href: '/logs' },
-  { icon: 'dns',           labelKey: 'nav.monitoring',  href: '/infra' },
-  { icon: 'notifications', labelKey: 'nav.alerts',      href: '/alerts' },
-  { icon: 'settings',      labelKey: 'nav.settings',    href: '/settings' },
+type IconComponent = ComponentType<SVGProps<SVGSVGElement> & { size?: number }>;
+
+const navItems: { Icon: IconComponent; labelKey: string; href: string }[] = [
+  { Icon: IconDashboard,    labelKey: 'nav.dashboard',   href: '/' },
+  { Icon: IconHealthCheck,  labelKey: 'nav.healthcheck', href: '/healthcheck' },
+  { Icon: IconLogs,         labelKey: 'nav.logs',        href: '/logs' },
+  { Icon: IconInfra,        labelKey: 'nav.monitoring',  href: '/infra' },
+  { Icon: IconAlerts,       labelKey: 'nav.alerts',      href: '/alerts' },
+  { Icon: IconSettings,     labelKey: 'nav.settings',    href: '/settings' },
 ];
 
 export function BottomNavMobile() {
@@ -38,8 +48,8 @@ export function BottomNavMobile() {
             }
           `}
         >
-          <MaterialIcon name={item.icon} className="text-[20px]" />
-          <span className="text-[11px] font-medium">{t(item.labelKey)}</span>
+          <item.Icon size={20} />
+          <span className="text-xs font-medium">{t(item.labelKey)}</span>
         </Link>
       ))}
     </nav>

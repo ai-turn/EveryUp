@@ -91,10 +91,11 @@ body {
   background-color: var(--app-bg);
   color: var(--app-text);
   font-family: 'Pretendard Variable', system-ui, sans-serif;
+  font-weight: 400;
   transition: background-color 0.3s ease, color 0.3s ease;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: auto;
+  -moz-osx-font-smoothing: auto;
+  text-rendering: optimizeSpeed;
   font-optical-sizing: auto;
 }
 

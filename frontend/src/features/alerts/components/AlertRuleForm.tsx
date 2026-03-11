@@ -392,7 +392,7 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                             className={`flex flex-col items-center gap-1.5 p-2 sm:p-3 border-2 rounded-xl transition-all ${conditionPreset === p ? 'border-primary bg-primary/10 text-primary' : 'border-slate-100 dark:border-ui-border-dark text-slate-500'
                                 }`}>
                             <MaterialIcon name={p === 'normal' ? 'check_circle' : p === 'error' ? 'warning' : 'tune'} />
-                            <span className="text-[10px] font-bold uppercase">{p}</span>
+                            <span className="text-xs font-bold uppercase">{p}</span>
                         </button>
                     ))}
                 </div>
@@ -401,7 +401,7 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                     <div className="mt-3 flex items-center justify-between p-3 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-xl">
                         <div>
                             <p className="text-xs font-bold text-slate-700 dark:text-white">{t('alerts.rules.consecutiveChecks')}</p>
-                            <p className="text-[11px] text-slate-400">{t('alerts.rules.consecutiveChecksHint')}</p>
+                            <p className="text-xs text-slate-400">{t('alerts.rules.consecutiveChecksHint')}</p>
                         </div>
                         <input
                             type="number"
@@ -416,7 +416,7 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                 {conditionPreset === 'custom' && (
                     <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-xl mb-4">
                         <div>
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t('alerts.rules.operator')}</label>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{t('alerts.rules.operator')}</label>
                             <select {...register('operator')} className="w-full bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-lg px-2 py-1.5 text-sm dark:text-white">
                                 <option value="gt">&gt;</option>
                                 <option value="gte">&ge;</option>
@@ -426,7 +426,7 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t('alerts.rules.customInputThreshold')}</label>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{t('alerts.rules.customInputThreshold')}</label>
                             <input type="number" value={customThreshold} onChange={e => {
                                 setCustomThreshold(e.target.value);
                                 const n = parseFloat(e.target.value);
@@ -437,23 +437,23 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                 )}
 
                 <div className="flex flex-wrap items-center gap-1.5 px-3 py-2.5 bg-slate-900 dark:bg-slate-950 rounded-xl border border-slate-700/60">
-                    <span className="text-slate-500 font-mono text-[11px]">IF</span>
-                    <code className="px-2 py-0.5 bg-sky-500/20 text-sky-300 rounded text-[11px] font-mono">{metricName}</code>
-                    <code className="px-1.5 py-0.5 bg-slate-700 text-slate-300 rounded text-[11px] font-mono">{OPERATOR_SYMBOLS[watchedOperator] ?? watchedOperator}</code>
-                    <code className="px-2 py-0.5 bg-red-500/20 text-red-300 rounded text-[11px] font-mono">{watchedThreshold}{thresholdUnit}</code>
+                    <span className="text-slate-500 font-mono text-xs">IF</span>
+                    <code className="px-2 py-0.5 bg-sky-500/20 text-sky-300 rounded text-xs font-mono">{metricName}</code>
+                    <code className="px-1.5 py-0.5 bg-slate-700 text-slate-300 rounded text-xs font-mono">{OPERATOR_SYMBOLS[watchedOperator] ?? watchedOperator}</code>
+                    <code className="px-2 py-0.5 bg-red-500/20 text-red-300 rounded text-xs font-mono">{watchedThreshold}{thresholdUnit}</code>
                     {isEndpoint ? (
                         <>
-                            <span className="text-slate-600 font-mono text-[11px]">FAILS</span>
-                            <code className="px-2 py-0.5 bg-slate-700 text-slate-300 rounded text-[11px] font-mono">{watchedDuration}×</code>
+                            <span className="text-slate-600 font-mono text-xs">FAILS</span>
+                            <code className="px-2 py-0.5 bg-slate-700 text-slate-300 rounded text-xs font-mono">{watchedDuration}×</code>
                         </>
                     ) : (
                         <>
-                            <span className="text-slate-600 font-mono text-[11px]">FOR</span>
-                            <code className="px-2 py-0.5 bg-slate-700 text-slate-300 rounded text-[11px] font-mono">{watchedDuration}min</code>
+                            <span className="text-slate-600 font-mono text-xs">FOR</span>
+                            <code className="px-2 py-0.5 bg-slate-700 text-slate-300 rounded text-xs font-mono">{watchedDuration}min</code>
                         </>
                     )}
-                    <span className="text-slate-600 font-mono text-[11px]">ON</span>
-                    <code className="px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded text-[11px] font-mono max-w-32 truncate">{targetLabel}</code>
+                    <span className="text-slate-600 font-mono text-xs">ON</span>
+                    <code className="px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded text-xs font-mono max-w-32 truncate">{targetLabel}</code>
                 </div>
             </section>
 
@@ -465,7 +465,7 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                         <div className="grid grid-cols-3 gap-2">
                             {(['critical', 'warning', 'info'] as const).map(s => (
                                 <button key={s} type="button" onClick={() => setValue('severity', s)}
-                                    className={`py-2 text-[11px] font-bold rounded-lg border-2 transition-all ${watch('severity') === s ? 'border-primary bg-primary/10 text-primary' : 'border-slate-100 dark:border-ui-border-dark text-slate-500'
+                                    className={`py-2 text-xs font-bold rounded-lg border-2 transition-all ${watch('severity') === s ? 'border-primary bg-primary/10 text-primary' : 'border-slate-100 dark:border-ui-border-dark text-slate-500'
                                         }`}>
                                     {s.toUpperCase()}
                                 </button>
@@ -491,7 +491,7 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                     <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
                             {t('alerts.rules.alertPayload')}
-                            <span className="ml-2 text-[10px] font-normal text-slate-400 normal-case">{t('alerts.rules.alertPayloadHint')}</span>
+                            <span className="ml-2 text-xs font-normal text-slate-400 normal-case">{t('alerts.rules.alertPayloadHint')}</span>
                         </label>
                         <div className="rounded-xl overflow-hidden border border-slate-700">
                             {/* Terminal title bar */}
@@ -501,10 +501,10 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                                     <span className="w-2.5 h-2.5 rounded-full bg-[#FFBD2E]" />
                                     <span className="w-2.5 h-2.5 rounded-full bg-[#28C840]" />
                                 </div>
-                                <span className="text-[10px] text-slate-500 font-mono ml-1">notification_payload.json</span>
+                                <span className="text-xs text-slate-500 font-mono ml-1">notification_payload.json</span>
                             </div>
                             {/* JSON body */}
-                            <div className="bg-[#1E1E2E] px-4 py-3 font-mono text-[11px] leading-6 select-none overflow-x-auto">
+                            <div className="bg-[#1E1E2E] px-4 py-3 font-mono text-xs leading-6 select-none overflow-x-auto">
                                 <span className="text-[#6272A4]">{'{'}</span>
                                 <div className="pl-4 space-y-px">
                                     <div>
@@ -579,9 +579,9 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                             onChange={e => setCustomMessage(e.target.value)}
                             rows={2}
                             placeholder={buildDefaultMessage(watchedMetric, watchedOperator, watchedThreshold, watchedDuration)}
-                            className="w-full px-3 py-2.5 bg-[#1E1E2E] border border-slate-700 rounded-xl text-[12px] font-mono text-[#50FA7B] outline-none focus:border-primary resize-none placeholder:text-[#44475A]"
+                            className="w-full px-3 py-2.5 bg-[#1E1E2E] border border-slate-700 rounded-xl text-xs font-mono text-[#50FA7B] outline-none focus:border-primary resize-none placeholder:text-[#44475A]"
                         />
-                        <p className="mt-1 text-[10px] text-slate-400 font-mono">
+                        <p className="mt-1 text-xs text-slate-400 font-mono">
                             <span className="text-[#6272A4]">// vars: </span>
                             {isEndpoint
                                 ? <span className="text-[#BD93F9]">{'{service_name}'} {'{value}'} {'{threshold}'} {'{metric}'}</span>

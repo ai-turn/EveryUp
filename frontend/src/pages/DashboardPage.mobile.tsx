@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from '../components/common';
+import { IconHealthCheck, IconLogs, IconInfra, IconAlerts, IconSettings } from '../components/icons/SidebarIcons';
 import { useDashboardKPI, useDashboardServices, useDashboardIncidents, useMonitoringResources, useNotificationChannels } from '../hooks/useData';
 import { api, type Service, type LogEntry } from '../services/api';
 import { incidentTypeConfig } from '../mocks/configs';
@@ -112,14 +113,14 @@ export function DashboardMobile() {
               onClick={kpi.href ? () => navigate(kpi.href!) : undefined}
               className={`shrink-0 flex-1 min-w-[110px] bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-3 ${kpi.href ? 'active:scale-95 cursor-pointer' : ''}`}
             >
-              <p className="text-[11px] font-medium text-slate-500 dark:text-text-muted-dark truncate">
+              <p className="text-xs font-medium text-slate-500 dark:text-text-muted-dark truncate">
                 {kpiLabelMap[kpi.label] ? t(kpiLabelMap[kpi.label]) : kpi.label}
               </p>
               <p className={`text-xl font-bold ${kpiColors[kpi.color] || 'text-slate-900 dark:text-white'}`}>
                 {kpi.value}
               </p>
               {kpi.subValue && (
-                <p className="text-[10px] text-slate-400 dark:text-text-dim-dark">{kpi.subValue}</p>
+                <p className="text-xs text-slate-400 dark:text-text-dim-dark">{kpi.subValue}</p>
               )}
             </div>
           ))
@@ -130,7 +131,7 @@ export function DashboardMobile() {
       <section className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl">
         <div className="flex items-center justify-between p-4 pb-0">
           <div className="flex items-center gap-2">
-            <MaterialIcon name="monitor_heart" className="text-lg text-primary" />
+            <IconHealthCheck size={18} className="text-primary" />
             <h2 className="text-sm font-bold text-slate-900 dark:text-white">
               {t('dashboard.healthCheck.title')}
             </h2>
@@ -151,7 +152,7 @@ export function DashboardMobile() {
             </div>
           ) : !services || services.length === 0 ? (
             <div className="py-6 text-center">
-              <MaterialIcon name="monitor_heart" className="text-3xl text-slate-300 dark:text-text-dim-dark" />
+              <IconHealthCheck size={28} className="text-slate-300 dark:text-text-dim-dark" />
               <p className="text-xs text-slate-400 dark:text-text-muted-dark mt-1">
                 {t('dashboard.emptyState')}
               </p>
@@ -191,7 +192,7 @@ export function DashboardMobile() {
         <section className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl">
           <div className="flex items-center justify-between p-4 pb-3">
             <div className="flex items-center gap-2">
-              <MaterialIcon name="article" className="text-lg text-primary" />
+              <IconLogs size={18} className="text-primary" />
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">
                 {t('dashboard.logServices.title', { defaultValue: 'Log Services' })}
               </h2>
@@ -224,18 +225,18 @@ export function DashboardMobile() {
                   <div className="flex items-center gap-2 pl-4">
                     {latest ? (
                       <>
-                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase shrink-0 ${logLevelBadge[latest.level]}`}>
+                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded uppercase shrink-0 ${logLevelBadge[latest.level]}`}>
                           {latest.level === 'warning' ? 'WARN' : latest.level.toUpperCase()}
                         </span>
-                        <span className="text-[11px] text-slate-500 dark:text-text-muted-dark flex-1 truncate">
+                        <span className="text-xs text-slate-500 dark:text-text-muted-dark flex-1 truncate">
                           {latest.message}
                         </span>
-                        <span className="text-[10px] text-slate-400 dark:text-text-dim-dark shrink-0">
+                        <span className="text-xs text-slate-400 dark:text-text-dim-dark shrink-0">
                           {relativeTime(latest.createdAt)}
                         </span>
                       </>
                     ) : (
-                      <span className="text-[11px] text-slate-400 dark:text-text-dim-dark italic">
+                      <span className="text-xs text-slate-400 dark:text-text-dim-dark italic">
                         {t('dashboard.logServices.noLogs', { defaultValue: 'No logs yet' })}
                       </span>
                     )}
@@ -252,7 +253,7 @@ export function DashboardMobile() {
         <section className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl">
           <div className="flex items-center justify-between p-4 pb-0">
             <div className="flex items-center gap-2">
-              <MaterialIcon name="dns" className="text-lg text-primary" />
+              <IconInfra size={18} className="text-primary" />
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">
                 {t('dashboard.infrastructure.title', { defaultValue: 'Infrastructure' })}
               </h2>
@@ -278,7 +279,7 @@ export function DashboardMobile() {
                       {res.name}
                     </p>
                   </div>
-                  <span className={`text-[11px] font-bold capitalize ${resourceStatusText[res.status] || 'text-slate-400'}`}>
+                  <span className={`text-xs font-bold capitalize ${resourceStatusText[res.status] || 'text-slate-400'}`}>
                     {res.status}
                   </span>
                 </button>
@@ -295,13 +296,13 @@ export function DashboardMobile() {
           className="flex items-center gap-3 p-4 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl active:scale-95 transition-transform"
         >
           <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-            <MaterialIcon name="notifications_active" className="text-xl text-amber-500" />
+            <IconAlerts size={20} className="text-amber-500" />
           </div>
           <div className="text-left">
             <p className="text-sm font-bold text-slate-900 dark:text-white">
               {t('nav.alerts')}
             </p>
-            <p className="text-[11px] text-slate-400 dark:text-text-dim-dark">
+            <p className="text-xs text-slate-400 dark:text-text-dim-dark">
               {(channels || []).filter(c => c.isEnabled).length} {t('dashboard.notifications.active')}
             </p>
           </div>
@@ -311,13 +312,13 @@ export function DashboardMobile() {
           className="flex items-center gap-3 p-4 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl active:scale-95 transition-transform"
         >
           <div className="w-10 h-10 rounded-lg bg-slate-500/10 flex items-center justify-center">
-            <MaterialIcon name="settings" className="text-xl text-slate-500" />
+            <IconSettings size={20} className="text-slate-500" />
           </div>
           <div className="text-left">
             <p className="text-sm font-bold text-slate-900 dark:text-white">
               {t('nav.settings')}
             </p>
-            <p className="text-[11px] text-slate-400 dark:text-text-dim-dark">
+            <p className="text-xs text-slate-400 dark:text-text-dim-dark">
               {t('alerts.features.channels')}
             </p>
           </div>
@@ -352,7 +353,7 @@ export function DashboardMobile() {
                       <span className="text-slate-500 dark:text-text-muted-dark">{incident.message}</span>
                     </p>
                   </div>
-                  <span className="text-[10px] text-slate-400 dark:text-text-dim-dark shrink-0 mt-0.5">
+                  <span className="text-xs text-slate-400 dark:text-text-dim-dark shrink-0 mt-0.5">
                     {incident.time}
                   </span>
                 </div>

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon, EmptyState } from '../../../components/common';
+import { IconInfra } from '../../../components/icons/SidebarIcons';
 import { InfraCard } from '../../infra/components/InfraCard';
 import { useMonitoringResources } from '../../../hooks/useData';
 
@@ -20,7 +21,7 @@ export function ResourceStatusGrid() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <MaterialIcon name="dns" className="text-xl text-primary" />
+          <IconInfra size={20} className="text-primary" />
           <h2 className="text-base font-bold text-slate-900 dark:text-white">
             {t('dashboard.infrastructure.title', { defaultValue: 'Infrastructure' })}
           </h2>

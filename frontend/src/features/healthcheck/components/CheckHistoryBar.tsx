@@ -75,7 +75,7 @@ export function CheckHistoryBar({ serviceId, refreshKey }: CheckHistoryBarProps)
             }`}>
               {successRate}%
             </span>
-            <p className="text-[11px] text-slate-400 dark:text-text-muted-dark">
+            <p className="text-xs text-slate-400 dark:text-text-muted-dark">
               {t('services.detail.checkHistory.successRate')}
             </p>
           </div>
@@ -107,15 +107,15 @@ export function CheckHistoryBar({ serviceId, refreshKey }: CheckHistoryBarProps)
                       {m.status === 'success' ? t('common.online') : t('common.offline')}
                     </div>
                     <div className="text-slate-300">{Math.round(m.responseTime)}ms</div>
-                    {m.statusCode && <div className="text-slate-400 text-[10px]">HTTP {m.statusCode}</div>}
-                    <div className="text-slate-400 text-[10px] mt-0.5">{new Date(m.checkedAt).toLocaleString()}</div>
+                    {m.statusCode && <div className="text-slate-400 text-xs">HTTP {m.statusCode}</div>}
+                    <div className="text-slate-400 text-xs mt-0.5">{new Date(m.checkedAt).toLocaleString()}</div>
                   </div>
                   <div className="w-2 h-2 bg-slate-900 dark:bg-slate-700 rotate-45 mx-auto -mt-1" />
                 </div>
               </div>
             ))}
           </div>
-          <div className="flex justify-between mt-2 text-[11px] text-slate-400 dark:text-text-dim-dark">
+          <div className="flex justify-between mt-2 text-xs text-slate-400 dark:text-text-dim-dark">
             <span>{t('services.detail.checkHistory.oldest', { count: SLOT_COUNT })}</span>
             <span>{t('services.detail.checkHistory.latest')}</span>
           </div>

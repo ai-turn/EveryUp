@@ -52,15 +52,15 @@ function TargetBadge({ rule, services, hosts }: TargetBadgeProps) {
     if (rule.serviceId) {
       const svc = services.find(s => s.id === rule.serviceId);
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400 max-w-30">
-          <MaterialIcon name="http" className="text-[10px]" />
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold rounded-full bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400 max-w-30">
+          <MaterialIcon name="http" className="text-xs" />
           <span className="truncate">{svc?.name ?? rule.serviceId}</span>
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 text-slate-500 dark:bg-ui-hover-dark dark:text-text-muted-dark">
-        <MaterialIcon name="public" className="text-[10px]" />
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold rounded-full bg-slate-100 text-slate-500 dark:bg-ui-hover-dark dark:text-text-muted-dark">
+        <MaterialIcon name="public" className="text-xs" />
         {t('alerts.rules.allServices')}
       </span>
     );
@@ -69,15 +69,15 @@ function TargetBadge({ rule, services, hosts }: TargetBadgeProps) {
   if (rule.hostId) {
     const host = hosts.find(h => h.id === rule.hostId);
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-400 max-w-30">
-        <MaterialIcon name="dns" className="text-[10px]" />
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold rounded-full bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-400 max-w-30">
+        <MaterialIcon name="dns" className="text-xs" />
         <span className="truncate">{host?.name ?? rule.hostId}</span>
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 text-slate-500 dark:bg-ui-hover-dark dark:text-text-muted-dark">
-      <MaterialIcon name="public" className="text-[10px]" />
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold rounded-full bg-slate-100 text-slate-500 dark:bg-ui-hover-dark dark:text-text-muted-dark">
+      <MaterialIcon name="public" className="text-xs" />
       {t('alerts.rules.allHosts')}
     </span>
   );
@@ -224,12 +224,12 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                     <h3 className="font-bold text-slate-900 dark:text-white truncate">{rule.name}</h3>
-                    <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full ${sev.badge}`}>
+                    <span className={`px-2 py-0.5 text-xs font-bold uppercase tracking-wider rounded-full ${sev.badge}`}>
                       {rule.severity}
                     </span>
                     <TargetBadge rule={rule} services={services} hosts={hosts} />
                     {rule.id.startsWith('preset-') && (
-                      <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 dark:bg-ui-hover-dark dark:text-text-muted-dark rounded-full">
+                      <span className="px-2 py-0.5 text-xs font-bold uppercase tracking-wider bg-slate-100 text-slate-500 dark:bg-ui-hover-dark dark:text-text-muted-dark rounded-full">
                         {t('alerts.rules.preset')}
                       </span>
                     )}

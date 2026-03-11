@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon, EmptyState } from '../../../components/common';
+import { IconHealthCheck } from '../../../components/icons/SidebarIcons';
 import { ServiceCard } from './ServiceCard';
 import { useDashboardServices } from '../../../hooks/useData';
 import { ServiceCardSkeleton } from '../../../components/skeleton';
@@ -14,6 +15,7 @@ interface ServiceHealthGridProps {
   refreshKey?: number;
   navigateTo?: (serviceId: string) => string;
   maxItems?: number;
+  onAddClick?: () => void;
 }
 
 export function ServiceHealthGrid({
@@ -24,6 +26,7 @@ export function ServiceHealthGrid({
   refreshKey = 0,
   navigateTo = (id) => `/healthcheck/${id}`,
   maxItems,
+  onAddClick,
 }: ServiceHealthGridProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -52,7 +55,7 @@ export function ServiceHealthGrid({
       {!hideHeader && (
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <MaterialIcon name="monitor_heart" className="text-xl text-primary" />
+            <IconHealthCheck size={20} className="text-primary" />
             <h2 className="text-base font-bold text-slate-900 dark:text-white">
               {t('dashboard.healthCheck.title')}
             </h2>
@@ -98,7 +101,7 @@ export function ServiceHealthGrid({
           description={t('dashboard.emptyStateDesc', { defaultValue: 'Add your first service to start monitoring.' })}
           action={{
             label: t('dashboard.addService'),
-            onClick: () => navigate('/healthcheck'),
+            onClick: onAddClick ?? (() => navigate('/healthcheck')),
           }}
         />
       )}

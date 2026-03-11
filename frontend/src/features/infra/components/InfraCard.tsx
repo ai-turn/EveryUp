@@ -44,7 +44,7 @@ export function InfraCard({ resource, onClick }: InfraCardProps) {
                 </div>
                 <div className="flex items-center gap-1.5">
                     {resource.isActive === false && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-bold uppercase bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
                             {t('common.pause')}
                         </span>
                     )}
@@ -59,18 +59,18 @@ export function InfraCard({ resource, onClick }: InfraCardProps) {
                     {resource.isRemote && resource.sshPort ? `:${resource.sshPort}` : ''}
                 </span>
                 <div className="flex items-center gap-1.5">
-                    <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${typeBadgeColors[resource.type]}`}>
-                        <MaterialIcon name={typeIcons[resource.type]} className="text-[10px]" />
+                    <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${typeBadgeColors[resource.type]}`}>
+                        <MaterialIcon name={typeIcons[resource.type]} className="text-xs" />
                         {t(`monitoring.resourceTypes.${resource.type}`)}
                     </span>
                     {resource.isRemote ? (
-                        <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
-                            <MaterialIcon name="key" className="text-[10px]" />
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
+                            <MaterialIcon name="key" className="text-xs" />
                             SSH
                         </span>
                     ) : (
-                        <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                            <MaterialIcon name="computer" className="text-[10px]" />
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                            <MaterialIcon name="computer" className="text-xs" />
                             LOCAL
                         </span>
                     )}

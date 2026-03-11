@@ -40,7 +40,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   return (
     <div className={`flex items-center gap-2 px-2 py-1 rounded ${colors.bg} ${colors.text}`}>
       <span className={`status-pulse ${colors.pulse}`} />
-      <span className="text-[10px] font-bold uppercase">{t(labelKey, { defaultValue: status })}</span>
+      <span className="text-xs font-bold uppercase">{t(labelKey, { defaultValue: status })}</span>
     </div>
   );
 }

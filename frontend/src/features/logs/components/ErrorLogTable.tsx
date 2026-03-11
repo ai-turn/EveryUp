@@ -271,7 +271,7 @@ export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
                   </td>
                   <td className="py-4 px-2">
                     <span
-                      className={`font-bold px-2 py-0.5 rounded border text-[10px] uppercase ${
+                      className={`font-bold px-2 py-0.5 rounded border text-xs uppercase ${
                         levelBadgeStyle[log.level] || levelBadgeStyle.info
                       }`}
                     >

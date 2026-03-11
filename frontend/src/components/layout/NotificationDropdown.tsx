@@ -60,7 +60,7 @@ function NotificationItem({ item, isUnread, lang, onRead }: NotificationItemProp
       <div className="shrink-0 mt-0.5">
         <MaterialIcon
           name={typeIcon}
-          className="text-text-muted dark:text-text-muted-dark text-[18px]"
+          className="text-text-muted dark:text-text-muted-dark text-lg"
         />
       </div>
 
@@ -70,12 +70,12 @@ function NotificationItem({ item, isUnread, lang, onRead }: NotificationItemProp
           {item.message}
         </p>
         <div className="flex items-center gap-2 mt-1">
-          <MaterialIcon name={statusIcon.name} className={`text-[12px] ${statusIcon.className}`} />
-          <span className="text-[10px] text-text-dim dark:text-text-dim-dark">
+          <MaterialIcon name={statusIcon.name} className={`text-xs ${statusIcon.className}`} />
+          <span className="text-xs text-text-dim dark:text-text-dim-dark">
             {timeAgo(item.createdAt, lang)}
           </span>
           {item.serviceName && (
-            <span className="text-[10px] text-text-dim dark:text-text-dim-dark truncate">
+            <span className="text-xs text-text-dim dark:text-text-dim-dark truncate">
               · {item.serviceName}
             </span>
           )}
@@ -101,7 +101,7 @@ function Badge({ count }: BadgeProps) {
   const label = count > 9 ? '9+' : String(count);
   return (
     <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 flex items-center justify-center
-      bg-error text-white text-[9px] font-bold rounded-full leading-none border border-white dark:border-bg-main-dark">
+      bg-error text-white text-xs font-bold rounded-full leading-none border border-white dark:border-bg-main-dark">
       {label}
     </span>
   );
@@ -177,7 +177,7 @@ export function NotificationDropdown({ open, onClose, onToggle }: NotificationDr
                 {t('notificationBell.title')}
               </span>
               {unreadCount > 0 && (
-                <span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+                <span className="text-xs font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
                   {unreadCount > 9 ? '9+' : unreadCount} {t('notificationBell.unreadLabel')}
                 </span>
               )}
@@ -185,7 +185,7 @@ export function NotificationDropdown({ open, onClose, onToggle }: NotificationDr
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
-                className="text-[11px] text-primary hover:text-primary-hover transition-colors cursor-pointer"
+                className="text-xs text-primary hover:text-primary-hover transition-colors cursor-pointer"
               >
                 {t('notificationBell.markAllRead')}
               </button>

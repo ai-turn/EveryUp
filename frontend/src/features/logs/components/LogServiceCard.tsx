@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon, StatusBadge } from '../../../components/common';
+import { IconLogs } from '../../../components/icons/SidebarIcons';
 import { Service, LogEntry } from '../../../services/api';
 import { relativeTime } from '../../../utils/formatters';
 
@@ -26,7 +27,7 @@ export function LogServiceCard({ service, latestLog, onClick }: LogServiceCardPr
       {/* Header: icon + name + status badge */}
       <div className="flex items-center gap-3 mb-3">
         <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-ui-hover-dark flex items-center justify-center shrink-0">
-          <MaterialIcon name="article" className="text-primary" />
+          <IconLogs size={20} className="text-primary" />
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-bold text-sm truncate text-slate-900 dark:text-white">{service.name}</h3>
@@ -39,13 +40,13 @@ export function LogServiceCard({ service, latestLog, onClick }: LogServiceCardPr
       <div className="flex items-center gap-2 pt-3 border-t border-slate-100 dark:border-ui-border-dark/50">
         {latestLog ? (
           <>
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase shrink-0 ${levelBadge[latestLog.level] ?? 'bg-slate-400 text-white'}`}>
+            <span className={`text-xs font-bold px-1.5 py-0.5 rounded uppercase shrink-0 ${levelBadge[latestLog.level] ?? 'bg-slate-400 text-white'}`}>
               {latestLog.level === 'warning' ? 'WARN' : latestLog.level.toUpperCase()}
             </span>
             <span className="text-xs text-slate-500 dark:text-text-muted-dark flex-1 truncate">
               {latestLog.message}
             </span>
-            <span className="text-[10px] text-slate-400 dark:text-text-dim-dark shrink-0">
+            <span className="text-xs text-slate-400 dark:text-text-dim-dark shrink-0">
               {relativeTime(latestLog.createdAt)}
             </span>
           </>

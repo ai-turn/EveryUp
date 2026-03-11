@@ -9,7 +9,7 @@ export function NotificationChannels() {
     <>
       {/* Section Header */}
       <div className="flex items-center justify-between mb-4 mt-8">
-        <h2 className="text-slate-900 dark:text-white text-[20px] font-bold leading-tight tracking-[-0.015em]">
+        <h2 className="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-[-0.015em]">
           {t('alerts.channelsTitle')}
         </h2>
         <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
@@ -42,7 +42,7 @@ export function NotificationChannels() {
             </div>
             <div className="flex items-end">
               <button className="flex items-center justify-center rounded-lg h-10 px-4 bg-slate-100 dark:bg-ui-hover-dark text-slate-700 dark:text-text-secondary-dark text-sm font-medium border border-slate-200 dark:border-ui-border-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors w-full md:w-fit">
-                <MaterialIcon name="sync" className="text-[18px] mr-2" />
+                <MaterialIcon name="sync" className="text-lg mr-2" />
                 <span>{t('alerts.slack.reconnect')}</span>
               </button>
             </div>
@@ -66,11 +66,11 @@ export function NotificationChannels() {
             <div className="flex flex-wrap gap-2 p-2 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark">
               <div className="flex items-center gap-1.5 px-2 py-1 bg-primary text-white text-xs font-medium rounded-md">
                 <span>dev-ops@company.com</span>
-                <MaterialIcon name="close" className="text-[14px] cursor-pointer" />
+                <MaterialIcon name="close" className="text-sm cursor-pointer" />
               </div>
               <div className="flex items-center gap-1.5 px-2 py-1 bg-primary text-white text-xs font-medium rounded-md">
                 <span>alerts@company.com</span>
-                <MaterialIcon name="close" className="text-[14px] cursor-pointer" />
+                <MaterialIcon name="close" className="text-sm cursor-pointer" />
               </div>
               <input
                 type="text"

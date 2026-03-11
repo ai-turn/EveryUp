@@ -81,7 +81,7 @@ export function ProcessTable({ hostId }: ProcessTableProps) {
                 </td>
                 <td className="px-3 py-3 sm:px-5 sm:py-4">
                   <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold ${processStatusConfig[process.status]}`}
+                    className={`px-2 py-0.5 rounded text-xs font-bold ${processStatusConfig[process.status]}`}
                   >
                     {process.status}
                   </span>
