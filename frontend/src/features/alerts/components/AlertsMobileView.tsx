@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
 import { MaterialIcon } from '../../../components/common';
+import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import type { NotificationChannel, AlertRule, NotificationHistory, NotificationStats } from '../../../services/api';
 
 type MobileTab = 'channels' | 'rules' | 'history';
@@ -23,10 +24,10 @@ interface AlertsMobileViewProps {
   onTestChannel: (id: string) => void;
 }
 
-const channelIcons: Record<string, { icon: string; color: string; bg: string }> = {
-  telegram: { icon: 'send', color: 'text-sky-500', bg: 'bg-sky-500/10' },
-  discord: { icon: 'sports_esports', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-  slack: { icon: 'tag', color: 'text-purple-500', bg: 'bg-purple-500/10' },
+const channelColors: Record<string, { color: string; bg: string }> = {
+  telegram: { color: 'text-sky-500', bg: 'bg-sky-500/10' },
+  discord: { color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+  slack: { color: 'text-purple-500', bg: 'bg-purple-500/10' },
 };
 
 const severityColors: Record<string, { text: string; bg: string }> = {
@@ -145,7 +146,7 @@ export function AlertsMobileView({
             </div>
           ) : (
             channels.map(channel => {
-              const meta = channelIcons[channel.type] ?? channelIcons.discord;
+              const meta = channelColors[channel.type] ?? channelColors.discord;
               return (
                 <div
                   key={channel.id}
@@ -153,7 +154,7 @@ export function AlertsMobileView({
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${meta.bg}`}>
-                      <MaterialIcon name={meta.icon} className={`text-xl ${meta.color}`} />
+                      <ChannelIcon type={channel.type} size={20} className={meta.color} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{channel.name}</p>

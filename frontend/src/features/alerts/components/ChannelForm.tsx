@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from '../../../components/common';
+import { IconTelegram, IconDiscord, IconSlack } from '../../../components/icons/ChannelIcons';
 import { api, type CreateNotificationChannelData, type NotificationChannel, type TelegramConfig, type DiscordConfig, type SlackConfig } from '../../../services/api';
 import { useSidePanel } from '../../../contexts/SidePanelContext';
 import { SetupGuide } from './SetupGuide';
@@ -135,17 +136,17 @@ export function ChannelForm({ onSuccess, channel }: ChannelFormProps) {
                     <div className="flex gap-2">
                         <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all ${selectedType === 'telegram' ? 'bg-[#26A5E4]/10 border-[#26A5E4] text-[#26A5E4] font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500'}`}>
                             <input {...register('type')} type="radio" value="telegram" className="hidden" />
-                            <MaterialIcon name="send" className="text-lg" />
+                            <IconTelegram size={18} />
                             {t('alerts.modal.telegram')}
                         </label>
                         <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all ${selectedType === 'discord' ? 'bg-[#5865F2]/10 border-[#5865F2] text-[#5865F2] font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500'}`}>
                             <input {...register('type')} type="radio" value="discord" className="hidden" />
-                            <MaterialIcon name="sports_esports" className="text-lg" />
+                            <IconDiscord size={18} />
                             {t('alerts.modal.discord')}
                         </label>
                         <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all ${selectedType === 'slack' ? 'bg-[#4A154B]/10 border-[#4A154B] text-[#4A154B] font-bold dark:bg-[#E01E5A]/10 dark:border-[#E01E5A] dark:text-[#E01E5A]' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500'}`}>
                             <input {...register('type')} type="radio" value="slack" className="hidden" />
-                            <MaterialIcon name="tag" className="text-lg" />
+                            <IconSlack size={18} />
                             {t('alerts.modal.slack')}
                         </label>
                     </div>

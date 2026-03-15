@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from '../../../components/common';
+import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { api, NotificationHistory, NotificationHistoryFilter, NotificationStats } from '../../../services/api';
 import { formatDistanceToNow } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
@@ -278,10 +279,7 @@ export function NotificationHistoryTab() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <MaterialIcon
-                          name={item.channelType === 'discord' ? 'sports_esports' : item.channelType === 'slack' ? 'tag' : 'send'}
-                          className="text-lg"
-                        />
+                        <ChannelIcon type={item.channelType} size={18} className="text-slate-500 dark:text-text-muted-dark" />
                         <span className="text-sm text-gray-900 dark:text-white">
                           {item.channelName}
                         </span>

@@ -1,4 +1,5 @@
 import { MaterialIcon, PageHeader } from '../../../components/common';
+import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { AlertRulesTab } from './AlertRulesTab';
 import { NotificationHistoryTab } from './NotificationHistoryTab';
 import type { NotificationChannel } from '../../../services/api';
@@ -25,12 +26,6 @@ const channelStyles: Record<string, { bg: string; text: string }> = {
   telegram: { bg: 'bg-sky-500/10', text: 'text-sky-500' },
   discord: { bg: 'bg-indigo-500/10', text: 'text-indigo-400' },
   slack: { bg: 'bg-purple-500/10', text: 'text-purple-500' },
-};
-
-const getChannelIcon = (type: string) => {
-  if (type === 'telegram') return 'send';
-  if (type === 'slack') return 'tag';
-  return 'sports_esports';
 };
 
 export function AlertsDesktopView({
@@ -142,9 +137,10 @@ export function AlertsDesktopView({
                     <div
                       className={`w-12 h-12 rounded-lg flex items-center justify-center ${(channelStyles[channel.type] ?? channelStyles.discord).bg}`}
                     >
-                      <MaterialIcon
-                        name={getChannelIcon(channel.type)}
-                        className={`text-2xl ${(channelStyles[channel.type] ?? channelStyles.discord).text}`}
+                      <ChannelIcon
+                        type={channel.type}
+                        size={24}
+                        className={(channelStyles[channel.type] ?? channelStyles.discord).text}
                       />
                     </div>
                     <div className="flex-1 min-w-0">
