@@ -16,7 +16,7 @@
             "title": "Health Check",
             "empty": "No health checks registered.",
             "emptyDesc": "Add a health check to start monitoring URL status and response times.",
-            "addService": "Add Service"
+            "add": "Add Health Check"
         },
         "infrastructure": {
             "title": "Infrastructure",
@@ -28,7 +28,7 @@
             "title": "Logs",
             "empty": "No logs registered",
             "emptyDesc": "Add a log to collect and analyze error logs from your APIs.",
-            "addService": "Add Log Service"
+            "add": "Add Log"
         },
         "timeline": {
             "title": "Fault History",

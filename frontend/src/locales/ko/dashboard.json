@@ -16,7 +16,7 @@
             "title": "헬스체크",
             "empty": "등록된 헬스체크가 없습니다.",
             "emptyDesc": "헬스체크를 추가하여 URL 상태와 응답 시간을 모니터링하세요.",
-            "addService": "서비스 추가"
+            "add": "헬스체크 추가"
         },
         "infrastructure": {
             "title": "인프라",
@@ -28,7 +28,7 @@
             "title": "로그",
             "empty": "등록된 로그가 없습니다",
             "emptyDesc": "로그를 추가하여 API 오류를 수집하고 분석하세요.",
-            "addService": "로그 서비스 추가"
+            "add": "로그 추가"
         },
         "timeline": {
             "title": "장애 이력",
