@@ -39,9 +39,9 @@ export function IconDiscord({ size = 20, ...props }: IconProps) {
 }
 
 /**
- * Slack — 해시(#) 기반 로고.
- * 공식 로고의 4색 교차 막대를 단순화한 해시 형태.
- * 둥근 끝(strokeLinecap round)으로 Slack 특유의 부드러운 느낌을 표현.
+ * Slack — 풍차 형태의 공식 로고.
+ * 4개의 둥근 알약(pill)이 중심을 기준으로 풍차처럼 배치된 형태.
+ * 각 pill에 동그란 점이 붙어 Slack 특유의 실루엣을 형성.
  */
 export function IconSlack({ size = 20, ...props }: IconProps) {
   return (
@@ -49,18 +49,26 @@ export function IconSlack({ size = 20, ...props }: IconProps) {
       width={size}
       height={size}
       viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      fill="currentColor"
       {...props}
     >
-      {/* 4개의 L자 쌍 — Slack 공식 로고 구조 */}
-      <path d="M14.5 2c-.83 0-1.5.67-1.5 1.5v5c0 .83.67 1.5 1.5 1.5H20c.83 0 1.5-.67 1.5-1.5S20.83 7 20 7h-4V3.5c0-.83-.67-1.5-1.5-1.5z" fill="currentColor" stroke="none" />
-      <path d="M9.5 12c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 19.33 8 18.5V14h4.5z" fill="currentColor" stroke="none" />
-      <path d="M22 14.5c0-.83-.67-1.5-1.5-1.5h-5c-.83 0-1.5.67-1.5 1.5S14.67 16 15.5 16H20v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-5z" fill="currentColor" stroke="none" />
-      <path d="M2 9.5C2 10.33 2.67 11 3.5 11h5c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8H4V4.5C4 3.67 3.33 3 2.5 3S1 3.67 1 4.5v5z" fill="currentColor" stroke="none" />
+      {/* 좌상 — 세로 pill + 점 */}
+      <rect x="3.5" y="7" width="3" height="7" rx="1.5" />
+      <rect x="6.5" y="3.5" width="3" height="3" rx="1.5" />
+      {/* 우상 — 가로 pill + 점 */}
+      <rect x="14" y="3.5" width="7" height="3" rx="1.5" />
+      <rect x="17.5" y="6.5" width="3" height="3" rx="1.5" />
+      {/* 우하 — 세로 pill + 점 */}
+      <rect x="17.5" y="10" width="3" height="7" rx="1.5" />
+      <rect x="14.5" y="17.5" width="3" height="3" rx="1.5" />
+      {/* 좌하 — 가로 pill + 점 */}
+      <rect x="3" y="17.5" width="7" height="3" rx="1.5" />
+      <rect x="3.5" y="14.5" width="3" height="3" rx="1.5" />
+      {/* 중앙 교차 */}
+      <rect x="6.5" y="10" width="4.5" height="3" rx="1.5" />
+      <rect x="13" y="10" width="4.5" height="3" rx="1.5" />
+      <rect x="9.5" y="6.5" width="3" height="4.5" rx="1.5" />
+      <rect x="11.5" y="13" width="3" height="4.5" rx="1.5" />
     </svg>
   );
 }
