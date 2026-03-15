@@ -189,6 +189,14 @@ const mockChannels: NotificationChannel[] = [
     isEnabled: true,
     createdAt: new Date(Date.now() - 20 * 86_400_000).toISOString(),
   },
+  {
+    id: '3',
+    name: '#incidents Slack',
+    type: 'slack',
+    config: JSON.stringify({ webhookUrl: 'https://hooks.slack.com/services/...' }),
+    isEnabled: true,
+    createdAt: new Date(Date.now() - 10 * 86_400_000).toISOString(),
+  },
 ];
 
 // ── Hosts ─────────────────────────────────────────────────────────────────────
@@ -272,7 +280,7 @@ const mockAlertRules: AlertRule[] = [
     isEnabled: true,
     isSystem: true,
     cooldown: 300,
-    channelIds: ['1', '2'],
+    channelIds: ['1', '2', '3'],
     createdAt: new Date(Date.now() - 30 * 86_400_000).toISOString(),
     updatedAt: new Date(Date.now() - 2 * 86_400_000).toISOString(),
   },
@@ -344,18 +352,33 @@ const mockNotificationHistory: NotificationHistoryResponse = {
       retryCount: 3,
       createdAt: new Date(Date.now() - 6 * 3600_000).toISOString(),
     },
+    {
+      id: 4,
+      channelId: '3',
+      channelName: '#incidents Slack',
+      channelType: 'slack',
+      alertType: 'endpoint',
+      severity: 'warning',
+      serviceId: '1',
+      serviceName: 'API Gateway',
+      message: 'Response time exceeded 2000ms threshold',
+      status: 'sent',
+      retryCount: 0,
+      createdAt: new Date(Date.now() - 2 * 3600_000).toISOString(),
+      sentAt: new Date(Date.now() - 2 * 3600_000 + 600).toISOString(),
+    },
   ],
-  total: 3,
+  total: 4,
   limit: 50,
   offset: 0,
 };
 
 const mockNotificationStats: NotificationStats = {
-  totalSent: 142,
-  totalFailed: 8,
-  successRate: 94.7,
-  byChannel: { 'Ops Telegram': 89, '#alerts Discord': 53 },
-  byAlertType: { resource: 76, healthcheck: 54, log: 12 },
+  totalSent: 178,
+  totalFailed: 9,
+  successRate: 95.2,
+  byChannel: { 'Ops Telegram': 89, '#alerts Discord': 53, '#incidents Slack': 36 },
+  byAlertType: { resource: 76, healthcheck: 54, endpoint: 36, log: 12 },
 };
 
 // ── Settings ──────────────────────────────────────────────────────────────────
