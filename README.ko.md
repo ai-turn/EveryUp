@@ -57,19 +57,22 @@ docker run -d \
 
 ### Docker Compose로 실행
 
-저장소를 클론하고 명령어 하나로 시작합니다.
+compose 파일을 받아서 바로 시작합니다.
 
 ```bash
-git clone https://github.com/AI-turn/EveryUp.git
-cd EveryUp
+curl -O https://raw.githubusercontent.com/AI-turn/EveryUp/main/docker-compose.yml
 docker compose up -d
 ```
 
-> **소스에서 직접 빌드합니다.** 미리 빌드된 Docker Hub 이미지를 사용하려면 `docker-compose.yml`을 열어 `build:` 블록을 `image: aiturn/everyup:latest`로 교체하세요.
-
 **http://localhost:3001** 접속 후 브라우저에서 관리자 계정을 생성합니다. 별도 사전 설정이 필요 없습니다.
 
-> 포트, 타임존, 관리자 계정을 미리 설정하려면 시작 전에 `.env.example`을 `.env`로 복사하세요.
+> 포트, 타임존, 관리자 계정을 미리 설정하려면 `.env.example`도 받아서 수정한 뒤 시작하세요.
+> ```bash
+> curl -O https://raw.githubusercontent.com/AI-turn/EveryUp/main/.env.example
+> cp .env.example .env
+> # .env 수정 후:
+> docker compose up -d
+> ```
 
 상태 확인:
 

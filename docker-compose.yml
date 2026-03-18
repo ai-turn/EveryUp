@@ -1,11 +1,10 @@
 services:
   everyup:
-    # To use a pre-built image from Docker Hub instead of building locally:
-    #   image: aiturn/everyup:latest
-    # To build from source:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: aiturn/everyup:latest
+    # To build from source instead of using the pre-built image:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
     container_name: everyup
     ports:
       - "${MT_SERVER_PORT:-3001}:3001"

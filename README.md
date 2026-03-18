@@ -57,19 +57,22 @@ The image supports both `linux/amd64` and `linux/arm64` — Docker automatically
 
 ### Run with Docker Compose
 
-Clone the repository and start with a single command:
+Download the compose file and start:
 
 ```bash
-git clone https://github.com/AI-turn/EveryUp.git
-cd EveryUp
+curl -O https://raw.githubusercontent.com/AI-turn/EveryUp/main/docker-compose.yml
 docker compose up -d
 ```
 
-> **Builds the image from source.** To use the pre-built Docker Hub image instead, open `docker-compose.yml` and replace the `build:` block with `image: aiturn/everyup:latest`.
-
 Open **http://localhost:3001** and create your admin account in the browser. No pre-configuration required.
 
-> To customize port, timezone, or pre-seed an admin account, copy `.env.example` to `.env` before starting.
+> To customize port, timezone, or pre-seed an admin account, also download `.env.example`, copy it to `.env`, and edit before starting:
+> ```bash
+> curl -O https://raw.githubusercontent.com/AI-turn/EveryUp/main/.env.example
+> cp .env.example .env
+> # edit .env, then:
+> docker compose up -d
+> ```
 
 Check status:
 
