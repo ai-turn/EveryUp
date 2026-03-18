@@ -144,27 +144,6 @@ docker cp everyup:/app/data/monitoring.db ./monitoring.db.bak
 
 ---
 
-## 업그레이드
-
-**Docker:**
-```bash
-docker pull aiturn/everyup:latest
-docker stop everyup && docker rm everyup
-docker run -d \
-  --name everyup \
-  -p 3001:3001 \
-  -v everyup-data:/app/data \
-  aiturn/everyup:latest
-```
-
-**Docker Compose:**
-```bash
-docker compose pull && docker compose up -d
-```
-
-> 데이터는 `everyup-data` 볼륨에 저장되며 업그레이드 시에도 유지됩니다.
-
----
 
 ## 로그 에이전트
 
