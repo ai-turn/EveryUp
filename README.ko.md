@@ -39,6 +39,9 @@
 
 ```bash
 docker pull aiturn/everyup:latest
+```
+
+```bash
 docker run -d \
   --name everyup \
   -p 3001:3001 \
@@ -89,10 +92,14 @@ cd EveryUp
 **백엔드**
 ```bash
 cd backend
-cp .env.example .env   # 로컬 개발용 CORS 설정(:5173) 포함
 go run ./cmd/server
 # → http://localhost:3001
 ```
+
+> 로컬 개발 시 CORS 설정이 필요하면 `.env.example`을 `.env`로 복사하세요.
+> - Linux / macOS: `cp .env.example .env`
+> - Windows (PowerShell): `Copy-Item .env.example .env`
+> - Windows (CMD): `copy .env.example .env`
 
 **프론트엔드**
 ```bash
@@ -154,6 +161,10 @@ docker cp everyup:/app/data/monitoring.db ./monitoring.db.bak
 EveryUp 대시보드 → **헬스체크 → 서비스 상세 → Integration** 탭에서 API 키를 발급받습니다.
 
 **2. 에이전트 실행**
+
+```bash
+docker pull aiturn/everyup-log-agent:latest
+```
 
 ```bash
 docker run -d \

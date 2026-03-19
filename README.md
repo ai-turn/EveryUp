@@ -39,6 +39,9 @@ Supports `linux/amd64` and `linux/arm64` — Docker automatically pulls the corr
 
 ```bash
 docker pull aiturn/everyup:latest
+```
+
+```bash
 docker run -d \
   --name everyup \
   -p 3001:3001 \
@@ -89,10 +92,14 @@ cd EveryUp
 **Backend**
 ```bash
 cd backend
-cp .env.example .env   # includes CORS config for local dev (port 5173)
 go run ./cmd/server
 # → http://localhost:3001
 ```
+
+> Copy `.env.example` to `.env` before running if you need custom CORS settings for local dev (port 5173).
+> - Linux / macOS: `cp .env.example .env`
+> - Windows (PowerShell): `Copy-Item .env.example .env`
+> - Windows (CMD): `copy .env.example .env`
 
 **Frontend**
 ```bash
@@ -154,6 +161,10 @@ Deploy `everyup-log-agent` on any server to collect logs from external services.
 In the EveryUp dashboard, go to **Health Check → Service detail → Integration** tab to generate an API key.
 
 **2. Run the agent**
+
+```bash
+docker pull aiturn/everyup-log-agent:latest
+```
 
 ```bash
 docker run -d \
