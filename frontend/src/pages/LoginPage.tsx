@@ -167,7 +167,7 @@ export function LoginPage() {
 
           {/* Recovery panel — absolutely positioned to the right, outside of flow */}
           {!isSetup && showForgot && (
-            <div className="absolute top-0 left-full ml-4 w-96 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl shadow-sm p-5 space-y-4">
+            <div className="absolute bottom-0 left-full ml-4 w-96 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl shadow-sm p-5 space-y-4">
               <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 {t('login.forgotPassword')}
               </p>
