@@ -270,7 +270,7 @@
       setStatus('', 'Sending…');
 
       try {
-        const res = await fetch('/cgi-bin/log.sh', {
+        const res = await fetch('/log', {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain' },
           body: line

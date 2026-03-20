@@ -39,8 +39,7 @@ export MT_LOG_LEVEL MT_FILE MT_TLS MT_HOST MT_PORT
 # Start test console web UI (busybox httpd) when MT_TEST=true
 if [ "${MT_TEST:-false}" = "true" ]; then
   mkdir -p /var/log/app
-  /bin/httpd -p "${MT_TEST_PORT:-8080}" -h /test/www
-  echo "[test-ui] Log Agent Test Console started on http://0.0.0.0:${MT_TEST_PORT:-8080}"
+  /test/server &
 fi
 
 exec /fluent-bit/bin/fluent-bit -c "${MT_CONFIG:-/fluent-bit/etc/fluent-bit.conf}"
