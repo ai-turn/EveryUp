@@ -54,7 +54,21 @@ MT_TEST=false
 MT_TEST_PORT=8080
 ```
 
-`docker-compose.yml`은 `.env`를 자동으로 읽습니다. 별도 수정 없이 그대로 사용하면 됩니다.
+`docker-compose.yml`:
+
+```yaml
+services:
+  mt-log-agent:
+    image: aiturn/everyup-log-agent:latest
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: true
+    ports:
+      - "${MT_TEST_PORT:-8080}:${MT_TEST_PORT:-8080}"
+    volumes:
+      - ${LOG_PATH:-/var/log/app}:/var/log/app
+```
 
 ### 3. 실행
 
