@@ -25,14 +25,19 @@ Fluent Bit 기반 로그 수집 에이전트입니다.
 
 ## 빠른 시작
 
+### 1. 이미지 받기
+
 ```bash
 docker pull aiturn/everyup-log-agent:latest
-cp .env.example .env
-# .env 파일을 열어 값을 채운 뒤
-docker compose up -d
 ```
 
-`.env` 설정:
+### 2. 환경 설정
+
+`.env.example`을 복사하여 값을 채웁니다.
+
+```bash
+cp .env.example .env
+```
 
 ```dotenv
 # 필수
@@ -47,6 +52,25 @@ MT_FILE=/var/log/app/*.log
 MT_LOG_LEVEL=info
 MT_TEST=false
 MT_TEST_PORT=8080
+```
+
+`docker-compose.yml`은 `.env`를 자동으로 읽습니다. 별도 수정 없이 그대로 사용하면 됩니다.
+
+### 3. 실행
+
+```bash
+docker compose up -d
+```
+
+### 4. Docker Run (Compose 없이 바로 실행)
+
+```bash
+docker run -d \
+  --name everyup-log-agent \
+  -v /path/to/your/app/logs:/var/log/app:ro \
+  -e MT_ENDPOINT=http://your-everyup-server:3001 \
+  -e MT_API_KEY=mt_your_api_key_here \
+  aiturn/everyup-log-agent:latest
 ```
 
 ---
