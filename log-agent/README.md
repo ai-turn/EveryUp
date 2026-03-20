@@ -118,12 +118,39 @@ docker compose up -d
 
 전송된 로그는 `/var/log/app/test.log`에 기록되고 Fluent Bit이 EveryUp으로 전달합니다.
 
+### 별도 서버에서 테스트하기 (기본 시나리오)
+
+log agent를 실제 운영처럼 **EveryUp과 다른 서버**에서 실행하는 방법입니다.
+네트워크 설정 없이 `MT_ENDPOINT`에 EveryUp 서버의 IP 또는 도메인을 바로 지정합니다.
+
+```yaml
+# docker-compose.test.yml (log agent가 실행될 서버에서 작성)
+services:
+  mt-log-agent:
+    image: aiturn/everyup-log-agent:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - MT_TEST=true
+      - MT_ENDPOINT=http://<everyup-서버-IP>:3001
+      - MT_API_KEY=mt_your_api_key_here
+```
+
+```bash
+docker compose -f docker-compose.test.yml up
+```
+
+`http://<이-서버-IP>:8080` 접속 후 버튼을 클릭하면 EveryUp 대시보드 Logs 탭에 로그가 수신됩니다.
+
+> EveryUp 서버의 방화벽에서 **3001 포트 인바운드**가 허용되어 있어야 합니다.
+
+---
+
 ### 같은 서버의 별도 Compose에서 테스트하기
 
-EveryUp과 같은 머신에서 log agent를 별도 compose로 띄워 테스트할 수 있습니다.
-코드 경로는 실제 원격 서버에서 보내는 것과 동일합니다.
+EveryUp과 같은 머신에서 log agent를 별도 compose로 띄울 때는 추가 네트워크 설정이 필요합니다.
 
-#### 방법 A — host.docker.internal 경유 (간단)
+#### 방법 A — host.docker.internal 경유
 
 ```yaml
 # docker-compose.test.yml
