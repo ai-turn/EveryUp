@@ -9,12 +9,6 @@ import type { Service } from '../../../services/api';
 
 type TabKey = 'logs' | 'integration' | 'settings';
 
-const statusBadge: Record<string, { bg: string; text: string; dot: string }> = {
-  healthy:   { bg: 'bg-emerald-500/10', text: 'text-emerald-500', dot: 'bg-emerald-500' },
-  unhealthy: { bg: 'bg-red-500/10',     text: 'text-red-500',     dot: 'bg-red-500' },
-  degraded:  { bg: 'bg-amber-500/10',   text: 'text-amber-500',   dot: 'bg-amber-500' },
-  unknown:   { bg: 'bg-slate-500/10',   text: 'text-slate-500',   dot: 'bg-slate-400' },
-};
 
 interface LogDetailMobileViewProps {
   service: Service;
@@ -63,8 +57,6 @@ export function LogDetailMobileView({
 }: LogDetailMobileViewProps) {
   const { t } = useTranslation(['logs', 'common']);
   const navigate = useNavigate();
-  const sc = statusBadge[service.status] ?? statusBadge.unknown;
-
   const tabs: { key: TabKey; label: string; icon: string }[] = [
     { key: 'logs', label: t('logServices.detail.tabs.logs'), icon: 'article' },
     { key: 'integration', label: t('logServices.detail.tabs.integration'), icon: 'integration_instructions' },
@@ -102,18 +94,6 @@ export function LogDetailMobileView({
             <MaterialIcon name="delete" className="text-lg" />
           </button>
         </div>
-      </div>
-
-      {/* Title */}
-      <div>
-        <h1 className="text-xl font-black text-slate-900 dark:text-white">{service.name}</h1>
-        <span className={`inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-0.5 rounded-full ${sc.bg} ${sc.text} text-xs font-bold uppercase tracking-wider`}>
-          <span className="relative flex h-2 w-2">
-            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${sc.dot} opacity-75`} />
-            <span className={`relative inline-flex rounded-full h-2 w-2 ${sc.dot}`} />
-          </span>
-          {t(`common.${service.status}`)}
-        </span>
       </div>
 
       {/* Service Identity */}

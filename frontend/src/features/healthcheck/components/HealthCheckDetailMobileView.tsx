@@ -27,12 +27,6 @@ interface HealthCheckDetailMobileViewProps {
   getIdentityStatus: (status: Service['status']) => 'online' | 'offline' | 'degraded';
 }
 
-const statusBadge: Record<string, { bg: string; text: string; dot: string }> = {
-  healthy:   { bg: 'bg-emerald-500/10', text: 'text-emerald-500', dot: 'bg-emerald-500' },
-  unhealthy: { bg: 'bg-red-500/10',     text: 'text-red-500',     dot: 'bg-red-500' },
-  degraded:  { bg: 'bg-amber-500/10',   text: 'text-amber-500',   dot: 'bg-amber-500' },
-  unknown:   { bg: 'bg-slate-500/10',   text: 'text-slate-500',   dot: 'bg-slate-400' },
-};
 
 export function HealthCheckDetailMobileView({
   service,
@@ -52,8 +46,6 @@ export function HealthCheckDetailMobileView({
   const { t } = useTranslation(['healthcheck', 'common']);
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<MobileTab>('overview');
-
-  const sc = statusBadge[service.status] ?? statusBadge.unknown;
 
   const tabs: { key: MobileTab; label: string; icon: string }[] = [
     { key: 'overview', label: t('common.overview', { defaultValue: 'Overview' }), icon: 'info' },
@@ -99,23 +91,6 @@ export function HealthCheckDetailMobileView({
           >
             <MaterialIcon name="delete" className="text-lg" />
           </button>
-        </div>
-      </div>
-
-      {/* Title */}
-      <div>
-        <h1 className="text-xl font-black text-slate-900 dark:text-white">{service.name}</h1>
-        <div className="flex items-center gap-2 mt-1.5">
-          <span className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${sc.bg} ${sc.text} text-xs font-bold uppercase tracking-wider`}>
-            <span className="relative flex h-2 w-2">
-              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${sc.dot} opacity-75`} />
-              <span className={`relative inline-flex rounded-full h-2 w-2 ${sc.dot}`} />
-            </span>
-            {t(`common.${service.status}`)}
-          </span>
-          <p className="text-sm text-slate-500 dark:text-text-muted-dark truncate">
-            {service.url || service.host || '-'}
-          </p>
         </div>
       </div>
 
