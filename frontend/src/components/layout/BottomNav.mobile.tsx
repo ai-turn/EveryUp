@@ -2,7 +2,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ComponentType, SVGProps } from 'react';
 import {
-  IconDashboard,
   IconHealthCheck,
   IconLogs,
   IconInfra,
@@ -13,7 +12,6 @@ import {
 type IconComponent = ComponentType<SVGProps<SVGSVGElement> & { size?: number }>;
 
 const navItems: { Icon: IconComponent; labelKey: string; href: string }[] = [
-  { Icon: IconDashboard,    labelKey: 'nav.dashboard',   href: '/' },
   { Icon: IconHealthCheck,  labelKey: 'nav.healthcheck', href: '/healthcheck' },
   { Icon: IconLogs,         labelKey: 'nav.logs',        href: '/logs' },
   { Icon: IconInfra,        labelKey: 'nav.monitoring',  href: '/infra' },
@@ -48,8 +46,8 @@ export function BottomNavMobile() {
             }
           `}
         >
-          <item.Icon size={20} />
-          <span className="text-xs font-medium">{t(item.labelKey)}</span>
+          <item.Icon size={23} />
+          <span className="text-sm font-medium">{t(item.labelKey)}</span>
         </Link>
       ))}
     </nav>
