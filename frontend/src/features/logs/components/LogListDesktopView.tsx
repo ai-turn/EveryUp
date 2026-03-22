@@ -1,11 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon, PageHeader, EmptyState } from '../../../components/common';
 import { LogServiceCard } from './LogServiceCard';
-import type { Service } from '../../../services/api';
+import type { Service, LogEntry } from '../../../services/api';
 
 interface LogListDesktopViewProps {
   services: Service[];
   filteredServices: Service[];
+  latestLogs: Record<string, LogEntry | null>;
   loading: boolean;
   error: string | null;
   searchQuery: string;
@@ -17,6 +18,7 @@ interface LogListDesktopViewProps {
 export function LogListDesktopView({
   services,
   filteredServices,
+  latestLogs,
   loading,
   error,
   searchQuery,
@@ -70,7 +72,7 @@ export function LogListDesktopView({
               { step: 3, title: t('logs.guide.step3.title', { defaultValue: 'Start Receiving Logs' }), desc: t('logs.guide.step3.desc', { defaultValue: 'Error and warning logs will be collected automatically. Alert rules will trigger notifications via Telegram or Discord.' }) },
             ].map(({ step, title, desc }) => (
               <div key={step} className="flex gap-3 p-4 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-xl">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white text-sm font-bold flex-shrink-0">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white text-sm font-bold shrink-0">
                   {step}
                 </div>
                 <div>
@@ -168,6 +170,7 @@ export function LogListDesktopView({
             <LogServiceCard
               key={service.id}
               service={service}
+              latestLog={latestLogs[service.id]}
               onClick={() => onServiceClick(service.id)}
             />
           ))}

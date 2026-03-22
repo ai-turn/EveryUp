@@ -134,36 +134,51 @@ function DesktopLayout(props: InfraDetailViewProps) {
       {/* Breadcrumbs & Actions */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
         <Breadcrumbs items={[{ label: t('common.backToList'), href: '/infra' }]} />
-        <div className="flex gap-2">
-          <button className="flex items-center justify-center rounded-lg h-10 px-3 sm:px-4 bg-slate-100 dark:bg-bg-surface-dark border border-transparent dark:border-ui-border-dark text-slate-900 dark:text-white text-sm font-bold hover:bg-slate-200 dark:hover:bg-ui-hover-dark transition-colors gap-2">
-            <MaterialIcon name="download" className="text-lg" />
-            <span className="hidden sm:inline">{t('infra.exportReport')}</span>
-          </button>
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-chart-surface rounded-lg p-1">
+          <div className="relative group">
+            <button className="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-600 dark:text-text-secondary-dark">
+              <MaterialIcon name="download" className="text-lg" />
+            </button>
+            <div className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 dark:bg-slate-700 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
+              {t('infra.exportReport')}
+            </div>
+          </div>
+
+          {host && !isLocal && (
+            <>
+              <div className="w-px h-5 bg-slate-300 dark:bg-ui-active-dark mx-0.5" />
+              <div className="flex items-center gap-2 px-2 py-1">
+                <Toggle checked={host.isActive} onChange={onPauseResume} />
+                <span className="hidden sm:inline text-xs text-slate-400 dark:text-text-muted-dark">
+                  {host.isActive ? t('infra.active') : t('infra.paused')}
+                </span>
+              </div>
+            </>
+          )}
+
           {host && (
             <>
-              {!isLocal && (
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-chart-surface rounded-lg">
-                  <Toggle checked={host.isActive} onChange={onPauseResume} />
-                  <span className="hidden sm:inline text-sm font-medium text-slate-700 dark:text-text-secondary-dark">
-                    {host.isActive ? t('infra.active') : t('infra.paused')}
-                  </span>
+              <div className="w-px h-5 bg-slate-300 dark:bg-ui-active-dark mx-0.5" />
+              <div className="relative group">
+                <button onClick={onEdit} className="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-600 dark:text-text-secondary-dark">
+                  <MaterialIcon name="edit" className="text-lg" />
+                </button>
+                <div className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 dark:bg-slate-700 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
+                  {t('infra.editHost')}
                 </div>
-              )}
-              <button
-                onClick={onEdit}
-                className="flex items-center justify-center rounded-lg h-10 px-3 sm:px-4 bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-colors gap-2 cursor-pointer active:scale-95"
-              >
-                <MaterialIcon name="edit" className="text-lg" />
-                <span className="hidden sm:inline">{t('infra.editHost')}</span>
-              </button>
-              <button
-                onClick={onDeleteDialogOpen}
-                disabled={isLocal}
-                className="flex items-center justify-center rounded-lg h-10 px-3 sm:px-4 bg-red-500 dark:bg-red-600 text-white text-sm font-bold hover:bg-red-600 dark:hover:bg-red-700 transition-colors gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
-              >
-                <MaterialIcon name="delete" className="text-lg" />
-                <span className="hidden sm:inline">{t('infra.deleteHost')}</span>
-              </button>
+              </div>
+              <div className="relative group">
+                <button
+                  onClick={onDeleteDialogOpen}
+                  disabled={isLocal}
+                  className="p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-red-500 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <MaterialIcon name="delete" className="text-lg" />
+                </button>
+                <div className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 dark:bg-slate-700 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
+                  {t('infra.deleteHost')}
+                </div>
+              </div>
             </>
           )}
         </div>

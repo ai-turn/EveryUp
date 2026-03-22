@@ -6,7 +6,7 @@ import { useIsMobile } from '../hooks/useMediaQuery';
 import { LogServiceForm } from '../features/logs';
 import { LogListDesktopView } from '../features/logs/components/LogListDesktopView';
 import { LogListMobileView } from '../features/logs/components/LogListMobileView';
-import { api, Service } from '../services/api';
+import { api, Service, LogEntry } from '../services/api';
 
 export function LogListPage() {
   const { t } = useTranslation(['logs', 'healthcheck', 'common']);
@@ -18,12 +18,22 @@ export function LogListPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [latestLogs, setLatestLogs] = useState<Record<string, LogEntry | null>>({});
 
   const fetchServices = useCallback(async () => {
     try {
       const data = await api.getServices();
-      setServices(data.filter((s) => s.type === 'log'));
+      const logServices = data.filter((s) => s.type === 'log');
+      setServices(logServices);
       setError(null);
+      logServices.forEach(async (svc) => {
+        try {
+          const logs = await api.getServiceLogs(svc.id, { limit: '1' });
+          setLatestLogs((prev) => ({ ...prev, [svc.id]: logs[0] ?? null }));
+        } catch {
+          setLatestLogs((prev) => ({ ...prev, [svc.id]: null }));
+        }
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch services');
     } finally {
@@ -50,6 +60,7 @@ export function LogListPage() {
   const sharedProps = {
     services,
     filteredServices,
+    latestLogs,
     loading,
     error,
     searchQuery,

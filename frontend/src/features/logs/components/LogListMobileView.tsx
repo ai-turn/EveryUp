@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon, EmptyState } from '../../../components/common';
 import { LogServiceCard } from './LogServiceCard';
-import type { Service } from '../../../services/api';
+import type { Service, LogEntry } from '../../../services/api';
 
 interface LogListMobileViewProps {
   services: Service[];
   filteredServices: Service[];
+  latestLogs: Record<string, LogEntry | null>;
   loading: boolean;
   error: string | null;
   searchQuery: string;
@@ -18,6 +19,7 @@ interface LogListMobileViewProps {
 export function LogListMobileView({
   services,
   filteredServices,
+  latestLogs,
   loading,
   error,
   searchQuery,
@@ -131,6 +133,7 @@ export function LogListMobileView({
             <LogServiceCard
               key={service.id}
               service={service}
+              latestLog={latestLogs[service.id]}
               onClick={() => onServiceClick(service.id)}
             />
           ))}
