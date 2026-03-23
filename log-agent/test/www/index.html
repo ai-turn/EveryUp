@@ -3,337 +3,963 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Log Agent — Test Console</title>
+  <title>Log Agent — Test Console · EveryUp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0F172A;
+      --surface:   #1E293B;
+      --surface-2: #293548;
+      --border:    #334155;
+      --border-2:  #3D4F66;
+      --text:      #F1F5F9;
+      --muted:     #94A3B8;
+      --dim:       #64748B;
+      --green:     #22C55E;
+      --green-dim: #16A34A;
+      --green-bg:  rgba(34,197,94,0.1);
+      --amber:     #F59E0B;
+      --amber-bg:  rgba(245,158,11,0.1);
+      --red:       #EF4444;
+      --red-bg:    rgba(239,68,68,0.1);
+      --blue:      #3B82F6;
+      --blue-bg:   rgba(59,130,246,0.1);
+      --radius:    10px;
+      --mono:      'JetBrains Mono', 'Menlo', monospace;
+      --sans:      'Plus Jakarta Sans', system-ui, sans-serif;
+    }
+
+    html { font-size: 16px; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f0f4f8;
-      color: #1e293b;
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
-    }
-
-    /* Header */
-    .header {
-      background: #0f172a;
-      color: #f1f5f9;
-      padding: 0 24px;
-      height: 54px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .header-badge {
-      background: #3b76c9;
-      color: white;
-      font-size: 10px;
-      font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 4px;
-      letter-spacing: 0.08em;
-    }
-    .header-title {
-      font-size: 15px;
-      font-weight: 600;
-    }
-    .header-meta {
-      margin-left: auto;
-      font-size: 12px;
-      color: #475569;
-      font-family: 'Menlo', 'Consolas', monospace;
-    }
-
-    /* Layout */
-    .container {
-      max-width: 780px;
-      margin: 28px auto;
-      padding: 0 16px;
       display: flex;
       flex-direction: column;
+      line-height: 1.6;
+    }
+
+    /* ─── Scrollbar ─────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--dim); }
+
+    /* ─── Header ────────────────────────────────────── */
+    .topbar {
+      height: 56px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(15,23,42,0.9);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
       gap: 16px;
     }
 
-    /* Card */
-    .card {
-      background: white;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 20px 24px;
+    .topbar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
     }
-    .card-label {
-      font-size: 11px;
+
+    .logo-icon {
+      width: 30px;
+      height: 30px;
+      background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .logo-icon svg { width: 16px; height: 16px; }
+
+    .logo-name {
+      font-size: 15px;
       font-weight: 700;
-      color: #94a3b8;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 14px;
+      color: var(--text);
     }
 
-    /* Input row */
-    .input-row { display: flex; gap: 8px; }
-    .input {
-      flex: 1;
-      padding: 9px 13px;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: 14px;
-      color: #1e293b;
-      background: #f8fafc;
-      outline: none;
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    .input:focus {
-      border-color: #3b76c9;
-      background: white;
-      box-shadow: 0 0 0 3px rgba(59,118,201,0.1);
+    .logo-sep {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      margin: 0 4px;
     }
 
-    /* Buttons */
-    .btn-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-    .btn {
-      padding: 8px 20px;
-      border: 1.5px solid transparent;
-      border-radius: 8px;
+    .logo-sub {
       font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.12s;
+      font-weight: 500;
+      color: var(--muted);
     }
-    .btn:active { transform: scale(0.96); }
-    .btn-info  { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
-    .btn-warn  { background: #fffbeb; color: #d97706; border-color: #fde68a; }
-    .btn-error { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
-    .btn-info:hover  { background: #dbeafe; }
-    .btn-warn:hover  { background: #fef3c7; }
-    .btn-error:hover { background: #fee2e2; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-    /* Status bar */
-    .status {
+    .topbar-status {
+      margin-left: auto;
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-top: 12px;
-      padding: 8px 12px;
-      border-radius: 8px;
       font-size: 13px;
-      background: #f8fafc;
-      border: 1px solid #f1f5f9;
-      min-height: 36px;
-      transition: all 0.2s;
+      font-weight: 500;
     }
-    .status.ok    { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
-    .status.error { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
-    .status-dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: #cbd5e1; flex-shrink: 0; transition: background 0.2s;
-    }
-    .status.ok    .status-dot { background: #10b981; }
-    .status.error .status-dot { background: #ef4444; }
 
-    /* Log list */
-    .log-header {
+    .status-pill {
       display: flex;
       align-items: center;
-      margin-bottom: 12px;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: 1px solid;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.2s;
     }
-    .log-count {
-      margin-left: auto;
-      background: #f1f5f9;
-      color: #64748b;
+
+    .status-pill.ready {
+      color: var(--green);
+      border-color: rgba(34,197,94,0.3);
+      background: var(--green-bg);
+    }
+
+    .status-pill.sending {
+      color: var(--blue);
+      border-color: rgba(59,130,246,0.3);
+      background: var(--blue-bg);
+    }
+
+    .status-pill.error {
+      color: var(--red);
+      border-color: rgba(239,68,68,0.3);
+      background: var(--red-bg);
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .live-dot.pulse {
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    /* ─── Layout ─────────────────────────────────────── */
+    .page {
+      flex: 1;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 28px 24px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ─── Stats Row ──────────────────────────────────── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .stat-card:hover { border-color: var(--border-2); }
+
+    .stat-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .stat-icon svg { width: 18px; height: 18px; }
+    .stat-icon.total { background: rgba(148,163,184,0.1); color: var(--muted); }
+    .stat-icon.info  { background: var(--blue-bg);  color: var(--blue); }
+    .stat-icon.warn  { background: var(--amber-bg); color: var(--amber); }
+    .stat-icon.error { background: var(--red-bg);   color: var(--red); }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 2px;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      font-family: var(--mono);
+      line-height: 1;
+      transition: all 0.2s;
+    }
+
+    /* ─── Main Grid ──────────────────────────────────── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    /* ─── Panel ──────────────────────────────────────── */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .panel-icon svg { width: 14px; height: 14px; }
+
+    .panel-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      flex: 1;
+    }
+
+    .panel-badge {
       font-size: 11px;
       font-weight: 600;
       padding: 2px 8px;
-      border-radius: 20px;
+      border-radius: 999px;
+      background: rgba(148,163,184,0.1);
+      color: var(--muted);
+      font-family: var(--mono);
     }
-    .clear-btn {
-      background: none; border: none; cursor: pointer;
-      color: #94a3b8; font-size: 12px;
-      padding: 2px 8px; border-radius: 4px; margin-left: 6px;
-    }
-    .clear-btn:hover { background: #f1f5f9; color: #64748b; }
 
-    .log-list {
-      list-style: none;
-      max-height: 340px;
-      overflow-y: auto;
-    }
-    .log-empty {
-      text-align: center;
-      color: #94a3b8;
-      padding: 36px 16px;
-      font-size: 14px;
-    }
-    .log-item {
-      display: flex;
-      align-items: baseline;
-      gap: 10px;
-      padding: 7px 0;
-      border-bottom: 1px solid #f8fafc;
-      font-size: 13px;
-    }
-    .log-item:last-child { border-bottom: none; }
-    .log-lvl {
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 0.05em;
-      padding: 2px 6px;
-      border-radius: 4px;
-      flex-shrink: 0;
-      min-width: 42px;
-      text-align: center;
-    }
-    .lvl-info  { background: #eff6ff; color: #2563eb; }
-    .lvl-warn  { background: #fffbeb; color: #d97706; }
-    .lvl-error { background: #fef2f2; color: #dc2626; }
-    .log-msg  { flex: 1; color: #374151; word-break: break-all; font-family: 'Menlo', 'Consolas', monospace; font-size: 12px; }
-    .log-time { font-size: 11px; color: #94a3b8; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+    .panel-body { padding: 20px; }
 
-    /* Info box */
-    .info-box {
-      background: #f0f9ff;
-      border: 1px solid #bae6fd;
+    /* ─── Send Form ──────────────────────────────────── */
+    .field-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    .input-wrap {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .msg-input {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
       border-radius: 8px;
-      padding: 12px 16px;
+      font-family: var(--sans);
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .msg-input::placeholder { color: var(--dim); }
+
+    .msg-input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(34,197,94,0.12);
+    }
+
+    .level-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .level-btn {
+      padding: 10px 8px;
+      border: 1.5px solid;
+      border-radius: 8px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .level-btn:active { transform: scale(0.97); }
+    .level-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .level-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    .level-btn.info  {
+      background: var(--blue-bg);
+      color: var(--blue);
+      border-color: rgba(59,130,246,0.35);
+    }
+    .level-btn.info:hover:not(:disabled) {
+      background: rgba(59,130,246,0.18);
+      border-color: var(--blue);
+    }
+
+    .level-btn.warn  {
+      background: var(--amber-bg);
+      color: var(--amber);
+      border-color: rgba(245,158,11,0.35);
+    }
+    .level-btn.warn:hover:not(:disabled) {
+      background: rgba(245,158,11,0.18);
+      border-color: var(--amber);
+    }
+
+    .level-btn.error {
+      background: var(--red-bg);
+      color: var(--red);
+      border-color: rgba(239,68,68,0.35);
+    }
+    .level-btn.error:hover:not(:disabled) {
+      background: rgba(239,68,68,0.18);
+      border-color: var(--red);
+    }
+
+    /* ─── Send Result ────────────────────────────────── */
+    .send-result {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      min-height: 44px;
+      transition: all 0.2s;
+    }
+
+    .send-result.ok    { border-color: rgba(34,197,94,0.3);  background: rgba(34,197,94,0.07); }
+    .send-result.fail  { border-color: rgba(239,68,68,0.3);  background: rgba(239,68,68,0.07); }
+
+    .result-icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .result-icon.ok   { color: var(--green); }
+    .result-icon.fail { color: var(--red); }
+    .result-icon.idle { color: var(--dim); }
+
+    .result-icon svg { width: 16px; height: 16px; }
+
+    .result-text {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+      flex: 1;
+    }
+
+    .result-text.ok   { color: #86efac; }
+    .result-text.fail { color: #fca5a5; }
+
+    /* ─── Info callout ───────────────────────────────── */
+    .callout {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: rgba(59,130,246,0.07);
+      border: 1px solid rgba(59,130,246,0.2);
       font-size: 12px;
-      color: #0369a1;
+      color: #93C5FD;
       line-height: 1.6;
     }
-    .info-box code {
-      background: #e0f2fe;
+
+    .callout code {
+      background: rgba(59,130,246,0.15);
       padding: 1px 5px;
-      border-radius: 3px;
-      font-family: 'Menlo', 'Consolas', monospace;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: #BAE6FD;
+    }
+
+    /* ─── Log Terminal ───────────────────────────────── */
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .terminal-dots {
+      display: flex;
+      gap: 5px;
+    }
+
+    .terminal-dots span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .dot-r { background: #FF5F57; }
+    .dot-y { background: #FEBC2E; }
+    .dot-g { background: #28C840; }
+
+    .terminal-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--dim);
+      font-family: var(--mono);
+      flex: 1;
+      text-align: center;
+    }
+
+    .clear-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--dim);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: var(--sans);
+    }
+
+    .clear-btn svg { width: 12px; height: 12px; }
+    .clear-btn:hover { color: var(--muted); border-color: var(--border-2); background: var(--surface-2); }
+
+    .terminal-body {
+      background: #0B1120;
+      min-height: 420px;
+      max-height: 520px;
+      overflow-y: auto;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      padding: 12px 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .terminal-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--dim);
+      padding: 40px;
+      text-align: center;
+      gap: 12px;
+    }
+
+    .terminal-empty svg {
+      width: 36px;
+      height: 36px;
+      opacity: 0.3;
+    }
+
+    .terminal-empty p {
+      font-family: var(--sans);
+      font-size: 13px;
+    }
+
+    .log-row {
+      display: flex;
+      align-items: baseline;
+      gap: 0;
+      padding: 3px 16px;
+      line-height: 1.6;
+      transition: background 0.1s;
+      animation: slide-in 0.2s ease-out;
+      cursor: default;
+    }
+
+    @keyframes slide-in {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .log-row:hover { background: rgba(255,255,255,0.03); }
+
+    .log-ts {
+      color: #475569;
+      white-space: nowrap;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    .log-sep {
+      color: #334155;
+      padding: 0 6px;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    .log-lvl {
+      font-weight: 500;
+      flex-shrink: 0;
+      min-width: 38px;
+      text-align: left;
+    }
+
+    .log-lvl.info  { color: #60A5FA; }
+    .log-lvl.warn  { color: #FCD34D; }
+    .log-lvl.error { color: #F87171; }
+
+    .log-msg {
+      color: #CBD5E1;
+      margin-left: 10px;
+      word-break: break-word;
+    }
+
+    /* ─── Keyboard hint ──────────────────────────────── */
+    .kbd-hint {
+      padding: 10px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .kbd-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--dim);
+    }
+
+    kbd {
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 2px 6px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-2);
+      border-radius: 4px;
+      color: var(--muted);
+    }
+
+    /* ─── Footer ─────────────────────────────────────── */
+    .footer {
+      padding: 20px 24px 0;
+      text-align: center;
+      font-size: 12px;
+      color: var(--dim);
+    }
+
+    /* ─── Responsive ─────────────────────────────────── */
+    @media (max-width: 768px) {
+      .topbar { padding: 0 16px; }
+      .page { padding: 16px 16px 32px; gap: 16px; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .main-grid { grid-template-columns: 1fr; }
+      .terminal-body { min-height: 300px; max-height: 380px; }
+    }
+
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .logo-sub { display: none; }
+      .logo-sep { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .live-dot.pulse { animation: none; }
+      .log-row { animation: none; }
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <span class="header-badge">LOG AGENT</span>
-    <span class="header-title">Test Console</span>
-    <span class="header-meta" id="header-meta">loading...</span>
-  </div>
 
-  <div class="container">
-
-    <div class="info-box">
-      Logs are written to <code>/var/log/app/test.log</code> inside the container.
-      Fluent Bit picks them up and forwards to your EveryUp server via <code>MT_ENDPOINT</code>.
+  <!-- ─── Top Bar ─── -->
+  <header class="topbar">
+    <div class="topbar-logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 4h12M2 8h8M2 12h10" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="logo-name">EveryUp</span>
+      <div class="logo-sep"></div>
+      <span class="logo-sub">Log Agent</span>
     </div>
 
-    <div class="card">
-      <div class="card-label">Send Test Log</div>
-      <div class="input-row">
-        <input class="input" id="msg" type="text"
-               placeholder="Log message..."
-               value="Test log from UI"
-               onkeydown="if(event.key==='Enter') sendLog(lastLevel||'info')">
+    <div class="topbar-status">
+      <div class="status-pill ready" id="status-pill">
+        <span class="live-dot pulse" id="live-dot"></span>
+        <span id="status-text">Ready</span>
       </div>
-      <div class="btn-row">
-        <button class="btn btn-info"  id="btn-info"  onclick="sendLog('info')">▸ INFO</button>
-        <button class="btn btn-warn"  id="btn-warn"  onclick="sendLog('warn')">▸ WARN</button>
-        <button class="btn btn-error" id="btn-error" onclick="sendLog('error')">▸ ERROR</button>
+    </div>
+  </header>
+
+  <!-- ─── Page Content ─── -->
+  <main class="page">
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon total">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+          </svg>
+        </div>
+        <div>
+          <div class="stat-label">Total Sent</div>
+          <div class="stat-value" id="cnt-total">0</div>
+        </div>
       </div>
-      <div class="status" id="status">
-        <div class="status-dot"></div>
-        <span id="status-msg">Ready — click a button to send a test log</span>
+
+      <div class="stat-card">
+        <div class="stat-icon info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+        </div>
+        <div>
+          <div class="stat-label">Info</div>
+          <div class="stat-value" id="cnt-info">0</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon warn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div>
+          <div class="stat-label">Warn</div>
+          <div class="stat-value" id="cnt-warn">0</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon error">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
+        </div>
+        <div>
+          <div class="stat-label">Error</div>
+          <div class="stat-value" id="cnt-error">0</div>
+        </div>
       </div>
     </div>
 
-    <div class="card">
-      <div class="log-header">
-        <span class="card-label" style="margin-bottom:0">Sent Logs</span>
-        <span class="log-count" id="log-count">0</span>
-        <button class="clear-btn" onclick="clearLogs()">Clear</button>
-      </div>
-      <ul class="log-list" id="log-list">
-        <li class="log-empty">No logs sent yet.</li>
-      </ul>
-    </div>
+    <!-- Main Grid -->
+    <div class="main-grid">
 
-  </div>
+      <!-- Left: Send Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-icon" style="background:var(--green-bg);color:var(--green);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </div>
+          <span class="panel-title">Send Test Log</span>
+        </div>
+
+        <div class="panel-body">
+          <div class="field-label">Message</div>
+          <div class="input-wrap">
+            <input
+              class="msg-input"
+              id="msg"
+              type="text"
+              placeholder="Enter a log message..."
+              value="Test log from console"
+              aria-label="Log message"
+              autocomplete="off"
+            >
+          </div>
+
+          <div class="field-label">Level</div>
+          <div class="level-grid">
+            <button class="level-btn info" id="btn-info" onclick="sendLog('info')" aria-label="Send INFO log">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+              INFO
+            </button>
+            <button class="level-btn warn" id="btn-warn" onclick="sendLog('warn')" aria-label="Send WARN log">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              WARN
+            </button>
+            <button class="level-btn error" id="btn-error" onclick="sendLog('error')" aria-label="Send ERROR log">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+              </svg>
+              ERROR
+            </button>
+          </div>
+
+          <!-- Result -->
+          <div class="send-result" id="send-result">
+            <span class="result-icon idle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </span>
+            <span class="result-text" id="result-text">Click a level button to send a test log</span>
+          </div>
+
+          <!-- Info callout -->
+          <div class="callout">
+            Logs are written to <code>/var/log/app/test.log</code> inside the container.
+            Fluent Bit picks them up and forwards to your EveryUp server.
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Terminal -->
+      <div class="panel">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot-r"></span>
+            <span class="dot-y"></span>
+            <span class="dot-g"></span>
+          </div>
+          <span class="terminal-title" id="terminal-title">log-stream — /var/log/app/test.log</span>
+          <button class="clear-btn" onclick="clearLogs()" aria-label="Clear log output">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.96"/>
+            </svg>
+            Clear
+          </button>
+        </div>
+
+        <div class="terminal-body" id="terminal-body" role="log" aria-live="polite" aria-label="Log output">
+          <div class="terminal-empty" id="terminal-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+            </svg>
+            <p>No logs sent yet.<br>Use the panel on the left to send a test log.</p>
+          </div>
+        </div>
+
+        <div class="kbd-hint">
+          <div class="kbd-item">
+            <kbd>Enter</kbd> <span>Send last level</span>
+          </div>
+          <div class="kbd-item">
+            <kbd>I</kbd> <span>INFO</span>
+          </div>
+          <div class="kbd-item">
+            <kbd>W</kbd> <span>WARN</span>
+          </div>
+          <div class="kbd-item">
+            <kbd>E</kbd> <span>ERROR</span>
+          </div>
+          <div class="kbd-item">
+            <kbd>Esc</kbd> <span>Clear</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /main-grid -->
+  </main>
+
+  <footer class="footer">
+    <p>EveryUp Log Agent Test Console &mdash; <span id="footer-host"></span></p>
+  </footer>
 
   <script>
-    const logs = [];
-    let lastLevel = 'info';
+    // ── State ──────────────────────────────────────────────────
+    const counts = { total: 0, info: 0, warn: 0, error: 0 };
     let sending = false;
+    let lastLevel = 'info';
 
+    // ── Elements ───────────────────────────────────────────────
+    const statusPill  = document.getElementById('status-pill');
+    const statusText  = document.getElementById('status-text');
+    const liveDot     = document.getElementById('live-dot');
+    const termBody    = document.getElementById('terminal-body');
+    const termEmpty   = document.getElementById('terminal-empty');
+    const resultBox   = document.getElementById('send-result');
+    const resultText  = document.getElementById('result-text');
+    const msgInput    = document.getElementById('msg');
+
+    // ── Init ───────────────────────────────────────────────────
+    document.getElementById('footer-host').textContent = location.host || 'localhost:8080';
+
+    // ── Send ───────────────────────────────────────────────────
     async function sendLog(level) {
       if (sending) return;
       lastLevel = level;
 
-      const msg = document.getElementById('msg').value.trim() || 'Test log message';
+      const msg = msgInput.value.trim() || 'Test log message';
       const ts  = new Date().toISOString();
-      const line = JSON.stringify({ level, message: msg, timestamp: ts, source: 'test-ui' }) + '\n';
+      const payload = JSON.stringify({ level, message: msg, timestamp: ts, source: 'test-console' }) + '\n';
 
       setSending(true);
-      setStatus('', 'Sending…');
+      setStatus('sending', 'Sending…');
 
       try {
         const res = await fetch('/log', {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain' },
-          body: line
+          body: payload,
         });
+
         if (res.ok) {
-          pushLog(level, msg, ts);
-          setStatus('ok', 'Sent · ' + level.toUpperCase() + ' · "' + truncate(msg, 60) + '"');
+          appendLog(level, msg, ts);
+          counts.total++;
+          counts[level]++;
+          updateStats();
+          setResult('ok', `Sent · ${level.toUpperCase()} · "${truncate(msg, 55)}"`);
+          setStatus('ready', 'Ready');
         } else {
-          setStatus('error', 'HTTP ' + res.status + ' — check agent container logs');
+          setResult('fail', `HTTP ${res.status} — check container logs`);
+          setStatus('error', 'Error');
+          setTimeout(() => setStatus('ready', 'Ready'), 3000);
         }
       } catch (e) {
-        setStatus('error', 'Connection failed: ' + e.message);
+        setResult('fail', `Connection failed: ${e.message}`);
+        setStatus('error', 'Error');
+        setTimeout(() => setStatus('ready', 'Ready'), 3000);
       } finally {
         setSending(false);
       }
     }
 
+    // ── Terminal ───────────────────────────────────────────────
+    function appendLog(level, msg, ts) {
+      if (termEmpty.parentNode === termBody) termBody.removeChild(termEmpty);
+
+      const time = new Date(ts).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+      const row = document.createElement('div');
+      row.className = 'log-row';
+      row.innerHTML =
+        `<span class="log-ts">${time}</span>` +
+        `<span class="log-sep">│</span>` +
+        `<span class="log-lvl ${level}">${level.toUpperCase()}</span>` +
+        `<span class="log-msg">${esc(msg)}</span>`;
+
+      termBody.appendChild(row);
+      termBody.scrollTop = termBody.scrollHeight;
+    }
+
+    function clearLogs() {
+      termBody.innerHTML = '';
+      termBody.appendChild(termEmpty);
+      counts.total = 0; counts.info = 0; counts.warn = 0; counts.error = 0;
+      updateStats();
+      setResult('idle', 'Click a level button to send a test log');
+    }
+
+    // ── UI helpers ─────────────────────────────────────────────
     function setSending(v) {
       sending = v;
-      ['info','warn','error'].forEach(l => {
+      ['info', 'warn', 'error'].forEach(l => {
         document.getElementById('btn-' + l).disabled = v;
       });
     }
 
-    function pushLog(level, msg, ts) {
-      logs.unshift({ level, msg, ts });
-      renderLogs();
+    function setStatus(state, label) {
+      statusPill.className = 'status-pill ' + state;
+      statusText.textContent = label;
+      liveDot.className = 'live-dot' + (state === 'ready' ? ' pulse' : '');
     }
 
-    function clearLogs() {
-      logs.length = 0;
-      renderLogs();
-    }
-
-    function renderLogs() {
-      const ul = document.getElementById('log-list');
-      document.getElementById('log-count').textContent = logs.length;
-      if (!logs.length) {
-        ul.innerHTML = '<li class="log-empty">No logs sent yet.</li>';
-        return;
+    function setResult(state, msg) {
+      resultBox.className = 'send-result' + (state === 'ok' ? ' ok' : state === 'fail' ? ' fail' : '');
+      resultText.className = 'result-text' + (state === 'ok' ? ' ok' : state === 'fail' ? ' fail' : '');
+      resultText.textContent = msg;
+      // icon
+      const icon = resultBox.querySelector('.result-icon');
+      icon.className = 'result-icon ' + (state === 'ok' ? 'ok' : state === 'fail' ? 'fail' : 'idle');
+      if (state === 'ok') {
+        icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      } else if (state === 'fail') {
+        icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+      } else {
+        icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
       }
-      ul.innerHTML = logs.map(function(l) {
-        return '<li class="log-item">'
-          + '<span class="log-lvl lvl-' + l.level + '">' + l.level.toUpperCase() + '</span>'
-          + '<span class="log-msg">' + esc(l.msg) + '</span>'
-          + '<span class="log-time">' + new Date(l.ts).toLocaleTimeString() + '</span>'
-          + '</li>';
-      }).join('');
     }
 
-    function setStatus(cls, msg) {
-      const el = document.getElementById('status');
-      el.className = 'status' + (cls ? ' ' + cls : '');
-      document.getElementById('status-msg').textContent = msg;
+    function updateStats() {
+      document.getElementById('cnt-total').textContent = counts.total;
+      document.getElementById('cnt-info').textContent  = counts.info;
+      document.getElementById('cnt-warn').textContent  = counts.warn;
+      document.getElementById('cnt-error').textContent = counts.error;
     }
 
     function truncate(s, n) { return s.length > n ? s.slice(0, n) + '…' : s; }
     function esc(s) {
-      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    document.getElementById('header-meta').textContent =
-      location.host || ('port ' + (location.port || '8080'));
+    // ── Keyboard shortcuts ─────────────────────────────────────
+    document.addEventListener('keydown', e => {
+      const tag = document.activeElement.tagName;
+      if (tag === 'INPUT') {
+        if (e.key === 'Enter') { sendLog(lastLevel); }
+        return;
+      }
+      if (e.key === 'i' || e.key === 'I') sendLog('info');
+      if (e.key === 'w' || e.key === 'W') sendLog('warn');
+      if (e.key === 'e' || e.key === 'E') sendLog('error');
+      if (e.key === 'Escape') clearLogs();
+    });
   </script>
 </body>
 </html>

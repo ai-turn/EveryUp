@@ -1,5 +1,5 @@
 #!/bin/sh
-# Parse MT_ENDPOINT URL into host/port/tls components for Fluent Bit.
+# Parse LOG_AGENT_ENDPOINT URL into host/port/tls components for Fluent Bit.
 # Uses only POSIX shell built-ins (no sed/awk) for maximum portability.
 #
 # Supported URL formats:
@@ -11,14 +11,14 @@
 # Known limitations:
 #   - IPv6 addresses (e.g. [::1]:3001) are not supported
 #   - URL credentials (user:pass@host) are not supported
-#   - Use MT_HOST / MT_PORT / MT_TLS directly for unsupported formats
+#   - Use LOG_AGENT_HOST / LOG_AGENT_PORT / LOG_AGENT_TLS directly for unsupported formats
 
-if [ -n "$MT_ENDPOINT" ]; then
+if [ -n "$LOG_AGENT_ENDPOINT" ]; then
   # Detect TLS from scheme
-  case "$MT_ENDPOINT" in
-    https://*) MT_TLS="on";  _stripped="${MT_ENDPOINT#https://}" ;;
-    http://*)  MT_TLS="off"; _stripped="${MT_ENDPOINT#http://}" ;;
-    *)         MT_TLS="off"; _stripped="$MT_ENDPOINT" ;;
+  case "$LOG_AGENT_ENDPOINT" in
+    https://*) LOG_AGENT_TLS="on";  _stripped="${LOG_AGENT_ENDPOINT#https://}" ;;
+    http://*)  LOG_AGENT_TLS="off"; _stripped="${LOG_AGENT_ENDPOINT#http://}" ;;
+    *)         LOG_AGENT_TLS="off"; _stripped="$LOG_AGENT_ENDPOINT" ;;
   esac
 
   # Remove path component: "host:port/path" → "host:port"
@@ -27,34 +27,34 @@ if [ -n "$MT_ENDPOINT" ]; then
   # Extract host and port
   case "$_hostport" in
     *:*)
-      MT_HOST="${_hostport%%:*}"
-      MT_PORT="${_hostport##*:}"
+      LOG_AGENT_HOST="${_hostport%%:*}"
+      LOG_AGENT_PORT="${_hostport##*:}"
       ;;
     *)
-      MT_HOST="$_hostport"
-      if [ "$MT_TLS" = "on" ]; then MT_PORT=443; else MT_PORT=80; fi
+      LOG_AGENT_HOST="$_hostport"
+      if [ "$LOG_AGENT_TLS" = "on" ]; then LOG_AGENT_PORT=443; else LOG_AGENT_PORT=80; fi
       ;;
   esac
 
-  export MT_TLS MT_HOST MT_PORT
+  export LOG_AGENT_TLS LOG_AGENT_HOST LOG_AGENT_PORT
 fi
 
 # Default values (set only if unset)
-: "${MT_LOG_LEVEL:=info}"
-: "${MT_FILE:=/var/log/app/*.log}"
-: "${MT_TLS:=off}"
-: "${MT_TLS_VERIFY:=off}"
-: "${MT_HOST:=localhost}"
-: "${MT_PORT:=3001}"
-: "${MT_RETRY_LIMIT:=3}"
-export MT_LOG_LEVEL MT_FILE MT_TLS MT_TLS_VERIFY MT_HOST MT_PORT MT_RETRY_LIMIT
+: "${LOG_AGENT_LEVEL:=info}"
+: "${LOG_AGENT_FILE:=/var/log/app/*.log}"
+: "${LOG_AGENT_TLS:=off}"
+: "${LOG_AGENT_TLS_VERIFY:=off}"
+: "${LOG_AGENT_HOST:=localhost}"
+: "${LOG_AGENT_PORT:=3001}"
+: "${LOG_AGENT_RETRY_LIMIT:=3}"
+export LOG_AGENT_LEVEL LOG_AGENT_FILE LOG_AGENT_TLS LOG_AGENT_TLS_VERIFY LOG_AGENT_HOST LOG_AGENT_PORT LOG_AGENT_RETRY_LIMIT
 
-# Start test console web UI when MT_TEST=true
-# WARNING: This starts an unauthenticated HTTP server on MT_TEST_PORT (default 8080).
-# Never set MT_TEST=true in production environments.
-if [ "${MT_TEST:-false}" = "true" ]; then
+# Start test console web UI when LOG_AGENT_WEB_CONSOLE=true
+# WARNING: This starts an unauthenticated HTTP server on LOG_AGENT_WEB_CONSOLE_PORT (default 8080).
+# Never set LOG_AGENT_WEB_CONSOLE=true in production environments.
+if [ "${LOG_AGENT_WEB_CONSOLE:-false}" = "true" ]; then
   mkdir -p /var/log/app
   /test/server &
 fi
 
-exec /fluent-bit/bin/fluent-bit -c "${MT_CONFIG:-/fluent-bit/etc/fluent-bit.conf}"
+exec /fluent-bit/bin/fluent-bit -c "${LOG_AGENT_CONFIG:-/fluent-bit/etc/fluent-bit.conf}"

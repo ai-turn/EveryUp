@@ -26,7 +26,7 @@ FROM fluent/fluent-bit:3.2
 COPY --from=prep /conf/fluent-bit.conf   /fluent-bit/etc/fluent-bit.conf
 COPY --from=prep /conf/stdin.conf        /fluent-bit/etc/stdin.conf
 COPY --from=prep /conf/parsers.conf      /fluent-bit/etc/parsers.conf
-COPY --from=prep /conf/mt_transform.lua  /fluent-bit/etc/mt_transform.lua
+COPY --from=prep /conf/transform.lua     /fluent-bit/etc/transform.lua
 COPY --from=prep /entrypoint.sh          /entrypoint.sh
 
 # Shell (needed by entrypoint.sh shebang)
@@ -38,17 +38,17 @@ COPY --from=gobuilder /build/test-server /test/server
 COPY --from=prep /test/www/              /test/www/
 
 # Default environment variables
-ENV MT_LOG_LEVEL=info
-ENV MT_FILE=/var/log/app/*.log
-ENV MT_HOST=localhost
-ENV MT_PORT=3001
-ENV MT_TLS=off
-ENV MT_TLS_VERIFY=on
-ENV MT_API_KEY=changeme
+ENV LOG_AGENT_LEVEL=info
+ENV LOG_AGENT_FILE=/var/log/app/*.log
+ENV LOG_AGENT_HOST=localhost
+ENV LOG_AGENT_PORT=3001
+ENV LOG_AGENT_TLS=off
+ENV LOG_AGENT_TLS_VERIFY=on
+ENV LOG_AGENT_API_KEY=changeme
 
-# Test mode (disabled by default)
-ENV MT_TEST=false
-ENV MT_TEST_PORT=8080
+# Test console (disabled by default)
+ENV LOG_AGENT_WEB_CONSOLE=false
+ENV LOG_AGENT_WEB_CONSOLE_PORT=8080
 
 EXPOSE 8080
 

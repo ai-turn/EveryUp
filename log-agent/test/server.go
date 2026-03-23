@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	port := os.Getenv("MT_TEST_PORT")
+	port := os.Getenv("LOG_AGENT_WEB_CONSOLE_PORT")
 	if port == "" {
 		port = "8080"
 	}

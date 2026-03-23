@@ -1,11 +1,12 @@
 services:
   mt-log-agent:
+    build: .
     image: aiturn/everyup-log-agent:latest
     restart: unless-stopped
     env_file:
       - path: .env
         required: true
     ports:
-      - "${MT_TEST_PORT:-8080}:${MT_TEST_PORT:-8080}"
+      - "${LOG_AGENT_WEB_CONSOLE_PORT:-8080}:${LOG_AGENT_WEB_CONSOLE_PORT:-8080}"
     volumes:
-      - ${LOG_PATH:-/var/log/app}:/var/log/app
+      - ${LOG_AGENT_PATH:-/var/log/app}:/var/log/app

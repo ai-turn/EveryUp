@@ -1,8 +1,8 @@
--- mt_transform.lua
+-- transform.lua
 -- Transforms Fluent Bit records into EveryUp native format:
 --   { "level": "error|warn|info", "message": "...", "metadata": {...} }
 
-function mt_transform(tag, timestamp, record)
+function transform(tag, timestamp, record)
     local entry = {}
 
     -- Extract message from common fields

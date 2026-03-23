@@ -19,11 +19,15 @@ Supports `linux/amd64` and `linux/arm64` — Docker automatically pulls the corr
 ### Docker
 
 ```bash
+docker pull aiturn/everyup-log-agent:latest
+```
+
+```bash
 docker run -d \
   --name everyup-log-agent \
   -v /path/to/your/app/logs:/var/log/app:ro \
-  -e MT_ENDPOINT=http://your-everyup-server:3001 \
-  -e MT_API_KEY=mt_your_api_key \
+  -e LOG_AGENT_ENDPOINT=http://your-everyup-server:3001 \
+  -e LOG_AGENT_API_KEY=la_your_api_key \
   --restart unless-stopped \
   aiturn/everyup-log-agent:latest
 ```
@@ -32,9 +36,9 @@ docker run -d \
 
 `.env`:
 ```dotenv
-MT_ENDPOINT=http://your-everyup-server:3001
-MT_API_KEY=mt_your_api_key
-LOG_PATH=/path/to/your/app/logs
+LOG_AGENT_ENDPOINT=http://your-everyup-server:3001
+LOG_AGENT_API_KEY=la_your_api_key
+LOG_AGENT_PATH=/path/to/your/app/logs
 ```
 
 `docker-compose.yml`:
@@ -45,7 +49,7 @@ services:
     restart: unless-stopped
     env_file: .env
     volumes:
-      - ${LOG_PATH}:/var/log/app:ro
+      - ${LOG_AGENT_PATH}:/var/log/app:ro
 ```
 
 ```bash
@@ -58,15 +62,35 @@ docker compose up -d
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `MT_ENDPOINT` | EveryUp server URL | — |
-| `MT_API_KEY` | Service API key **(required)** | — |
-| `MT_FILE` | Log file path (glob supported) | `/var/log/app/*.log` |
-| `MT_LOG_LEVEL` | Log level (`debug`, `info`, `warn`, `error`) | `info` |
-| `MT_RETRY_LIMIT` | Retry count on failure (`0` = unlimited) | `3` |
+| `LOG_AGENT_ENDPOINT` | EveryUp server URL **(required)** | — |
+| `LOG_AGENT_API_KEY` | Service API key **(required)** | — |
+| `LOG_AGENT_FILE` | Log file path (glob supported) | `/var/log/app/*.log` |
+| `LOG_AGENT_LEVEL` | Log level (`debug`, `info`, `warn`, `error`) | `info` |
+| `LOG_AGENT_RETRY_LIMIT` | Retry count on failure (`0` = unlimited) | `3` |
+| `LOG_AGENT_PATH` | Host log directory (mounted to `/var/log/app`) | — |
 
-> **`MT_ENDPOINT` URL parsing:**
+> **`LOG_AGENT_ENDPOINT` URL parsing:**
 > - `http://192.168.1.10:3001` → host=192.168.1.10, port=3001, tls=off
 > - `https://monitoring.example.com` → host=monitoring.example.com, port=443, tls=on
+
+---
+
+## Web Console (Test Mode)
+
+A browser-based console for sending test logs. Useful for verifying the agent is configured correctly.
+
+> **Warning:** Never enable in production — it starts an unauthenticated HTTP server.
+
+```dotenv
+LOG_AGENT_WEB_CONSOLE=true
+LOG_AGENT_WEB_CONSOLE_PORT=8080
+```
+
+```bash
+docker compose up
+```
+
+Open `http://localhost:8080` to send test logs and watch the live stream.
 
 ---
 
@@ -108,9 +132,9 @@ Non-JSON lines are collected as-is. The full line becomes `message` and level is
   ```
   If no files appear, your volume path is misconfigured.
 
-- **Check file extension** — default pattern is `/var/log/app/*.log`. If your app uses a different extension, set `MT_FILE`:
+- **Check file extension** — default pattern is `/var/log/app/*.log`. If your app uses a different extension, set `LOG_AGENT_FILE`:
   ```
-  MT_FILE=/var/log/app/*
+  LOG_AGENT_FILE=/var/log/app/*
   ```
 
 - **App must write to a file** — containers typically log to stdout/stderr only. Configure your app to also write logs to a file (e.g. `/var/log/app/app.log`).
@@ -132,5 +156,5 @@ Non-JSON lines are collected as-is. The full line becomes `message` and level is
 
 - **Enable debug logging**
   ```
-  MT_LOG_LEVEL=debug
+  LOG_AGENT_LEVEL=debug
   ```
