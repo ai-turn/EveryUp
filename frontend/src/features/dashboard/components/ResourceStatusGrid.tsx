@@ -13,7 +13,6 @@ export function ResourceStatusGrid() {
 
   const items = resources || [];
   const displayItems = items.slice(0, MAX_ITEMS);
-  const hasMore = items.length > MAX_ITEMS;
 
   return (
     <div>
@@ -29,13 +28,15 @@ export function ResourceStatusGrid() {
             </span>
           )}
         </div>
-        <button
-          onClick={() => navigate('/infra', { state: { openAddModal: true } })}
-          className="flex items-center gap-2 px-3 py-2 min-h-9 rounded-lg bg-primary text-white text-sm font-medium transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
-        >
-          <MaterialIcon name="add" className="text-sm" />
-          {t('dashboard.infrastructure.add')}
-        </button>
+        {!loading && !error && items.length > 0 && (
+          <button
+            onClick={() => navigate('/infra')}
+            className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+          >
+            {t('common.viewMore', { defaultValue: 'Go to' })}
+            <MaterialIcon name="arrow_forward" className="text-sm" />
+          </button>
+        )}
       </div>
 
       {/* Error */}
@@ -86,18 +87,6 @@ export function ResourceStatusGrid() {
         </div>
       )}
 
-      {/* View More */}
-      {!loading && hasMore && (
-        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-ui-border-dark/50 text-center">
-          <button
-            onClick={() => navigate('/infra')}
-            className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
-          >
-            {t('common.viewMore', { defaultValue: 'View More' })}
-            <MaterialIcon name="arrow_forward" className="text-sm" />
-          </button>
-        </div>
-      )}
 
       <div className="mt-6 mx-6 h-px bg-slate-200 dark:bg-ui-border-dark" />
     </div>

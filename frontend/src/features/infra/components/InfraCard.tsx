@@ -25,7 +25,7 @@ export function InfraCard({ resource, onClick }: InfraCardProps) {
         <div
             onClick={onClick}
             className="p-6 rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark
-                 hover:border-primary/50 hover:shadow-lg cursor-pointer transition-all flex flex-col justify-between"
+                 hover:border-primary/50 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 cursor-pointer transition-all duration-150 flex flex-col justify-between"
         >
             <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">

@@ -1,4 +1,3 @@
-export { KPISummary } from './components/KPISummary';
 export { ServiceHealthGrid } from './components/ServiceHealthGrid';
 export { ResourceStatusGrid } from './components/ResourceStatusGrid';
 export { LogServicesGrid } from './components/LogServicesGrid';

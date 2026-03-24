@@ -24,12 +24,3 @@ export interface Incident {
   serviceName: string;
   message: string;
 }
-
-export interface KPIData {
-  label: string;
-  value: string;
-  subValue: string;
-  color: 'primary' | 'red' | 'emerald';
-  /** Optional navigation target — card becomes clickable when set */
-  href?: string;
-}

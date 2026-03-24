@@ -45,7 +45,6 @@ export function ServiceHealthGrid({
   });
 
   const displayServices = maxItems ? filteredServices.slice(0, maxItems) : filteredServices;
-  const hasMore = maxItems ? filteredServices.length > maxItems : false;
 
   return (
     <div>
@@ -62,15 +61,15 @@ export function ServiceHealthGrid({
               </span>
             )}
           </div>
-          <div className="flex gap-2">
+          {!loading && !error && services && services.length > 0 && (
             <button
-              onClick={() => navigate('/healthcheck', { state: { openAddModal: true } })}
-              className="flex items-center gap-2 px-3 py-2 min-h-9 rounded-lg bg-primary text-white text-sm font-medium transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
+              onClick={() => navigate('/healthcheck')}
+              className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
             >
-              <MaterialIcon name="add" className="text-sm" />
-              {t('dashboard.healthCheck.add')}
+              {t('common.viewMore', { defaultValue: 'Go to' })}
+              <MaterialIcon name="arrow_forward" className="text-sm" />
             </button>
-          </div>
+          )}
         </div>
       )}
 
@@ -118,18 +117,6 @@ export function ServiceHealthGrid({
         </div>
       )}
 
-      {/* View More */}
-      {!loading && !error && hasMore && (
-        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-ui-border-dark/50 text-center">
-          <button
-            onClick={() => navigate('/healthcheck')}
-            className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
-          >
-            {t('common.viewMore', { defaultValue: 'View More' })}
-            <MaterialIcon name="arrow_forward" className="text-sm" />
-          </button>
-        </div>
-      )}
 
       {/* No search results */}
       {!loading && !error && services && services.length > 0 && filteredServices.length === 0 && (

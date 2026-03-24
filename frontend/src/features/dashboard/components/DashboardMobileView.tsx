@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { IconHealthCheck, IconLogs, IconInfra } from '../../../components/icons/SidebarIcons';
-import { useDashboardKPI, useDashboardServices, useMonitoringResources } from '../../../hooks/useData';
+import { useDashboardServices, useMonitoringResources } from '../../../hooks/useData';
 import { api, type Service, type LogEntry } from '../../../services/api';
 import { relativeTime } from '../../../utils/formatters';
 import { IncidentTimeline } from './IncidentTimeline';
@@ -50,7 +50,6 @@ const resourceStatusText: Record<string, string> = {
 export function DashboardMobileView() {
   const { t } = useTranslation(['dashboard', 'logs', 'common']);
   const navigate = useNavigate();
-  const { data: kpiData, loading: kpiLoading } = useDashboardKPI();
   const { data: services, loading: svcLoading } = useDashboardServices();
   const { data: resources, loading: resourceLoading } = useMonitoringResources();
   const [logServices, setLogServices] = useState<Service[]>([]);
@@ -84,87 +83,8 @@ export function DashboardMobileView() {
     });
   }, [logServices]);
 
-  const kpiValueColorMap: Record<string, string> = {
-    primary: 'text-primary',
-    red: 'text-red-500 dark:text-red-400',
-    emerald: 'text-emerald-600 dark:text-emerald-400',
-    amber: 'text-amber-600 dark:text-amber-400',
-  };
-
-  const kpiLabelMap: Record<string, string> = {
-    'Total Services': 'dashboard.kpi.totalServices',
-    'Active Alerts': 'dashboard.kpi.criticalAlerts',
-    'Global Uptime': 'dashboard.kpi.overallUptime',
-  };
-
-  const alertsItem = (kpiData || []).find(k => k.label === 'Active Alerts');
-  const uptimeItem = (kpiData || []).find(k => k.label === 'Global Uptime');
-  const isCritical = alertsItem?.color === 'red';
-  const isDegraded = !isCritical && parseFloat(String(uptimeItem?.value ?? '100')) < 99;
-  const mobileStatusKey = isCritical ? 'critical' : isDegraded ? 'degraded' : 'operational';
-
-  const mobileStatusConfig = {
-    operational: { dot: 'bg-emerald-500', label: 'OPERATIONAL', labelColor: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10' },
-    degraded:    { dot: 'bg-amber-500',   label: 'DEGRADED',    labelColor: 'text-amber-600 dark:text-amber-400',   bg: 'bg-amber-500/10'   },
-    critical:    { dot: 'bg-red-500',     label: 'CRITICAL',    labelColor: 'text-red-600 dark:text-red-400',       bg: 'bg-red-500/10'     },
-  };
-  const mobileStatus = mobileStatusConfig[mobileStatusKey];
-
   return (
     <div className="space-y-4">
-      {/* System Status Banner */}
-      {kpiLoading ? (
-        <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-4 animate-pulse">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-ui-hover-dark" />
-              <div className="h-4 w-24 bg-slate-200 dark:bg-ui-hover-dark rounded" />
-            </div>
-            <div className="flex gap-4">
-              {[1, 2, 3].map(i => <div key={i} className="h-5 w-10 bg-slate-200 dark:bg-ui-hover-dark rounded" />)}
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl px-4 py-3">
-          <div className="flex items-center justify-between gap-3">
-            {/* Status */}
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className={`w-8 h-8 rounded-lg ${mobileStatus.bg} flex items-center justify-center shrink-0`}>
-                <span className="relative flex w-2 h-2">
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${mobileStatus.dot} opacity-60`} />
-                  <span className={`relative inline-flex rounded-full w-2 h-2 ${mobileStatus.dot}`} />
-                </span>
-              </div>
-              <p className={`text-xs font-bold uppercase tracking-widest truncate ${mobileStatus.labelColor}`}>
-                {mobileStatus.label}
-              </p>
-            </div>
-            {/* Stats */}
-            <div className="flex items-center divide-x divide-slate-200 dark:divide-ui-border-dark shrink-0">
-              {(kpiData || []).map((kpi, i) => (
-                <div
-                  key={kpi.label}
-                  onClick={kpi.href ? () => navigate(kpi.href!) : undefined}
-                  className={[
-                    i === 0 ? 'pr-3' : i === (kpiData?.length ?? 1) - 1 ? 'pl-3' : 'px-3',
-                    'text-right',
-                    kpi.href ? 'cursor-pointer active:opacity-70' : '',
-                  ].join(' ')}
-                >
-                  <p className={`text-base font-bold tabular-nums leading-none ${kpiValueColorMap[kpi.color]}`}>
-                    {kpi.value}
-                  </p>
-                  <p className="text-[10px] text-slate-400 dark:text-text-dim-dark mt-0.5 whitespace-nowrap">
-                    {kpiLabelMap[kpi.label] ? t(kpiLabelMap[kpi.label]) : kpi.label}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Services Quick Status */}
       <section>
         <div className="flex items-center justify-between p-4 pb-0">

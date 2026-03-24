@@ -48,16 +48,3 @@ type TimeSeriesPoint struct {
 	ResponseTime int       `json:"responseTime"`
 	Status       string    `json:"status"`
 }
-
-// DashboardSummary represents the dashboard KPI summary
-type DashboardSummary struct {
-	TotalServices     int     `json:"totalServices"`
-	HealthyServices   int     `json:"healthyServices"`
-	UnhealthyServices int     `json:"unhealthyServices"`
-	AvgResponseTime   float64 `json:"avgResponseTime"`
-	OverallUptime     float64 `json:"overallUptime"`
-	CriticalAlerts    int     `json:"criticalAlerts"`
-	// CriticalServiceID is set when there is exactly one active incident,
-	// so the frontend can navigate directly to that service's detail page.
-	CriticalServiceID string `json:"criticalServiceId,omitempty"`
-}

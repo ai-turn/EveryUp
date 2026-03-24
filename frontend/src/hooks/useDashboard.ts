@@ -1,37 +1,6 @@
 import { api } from '../services/api';
 import { useDataFetch } from './useDataFetch';
-import { mockKPIData, mockServices, mockIncidents } from '../mocks/dashboard';
-
-export function useDashboardKPI() {
-  return useDataFetch(mockKPIData, async () => {
-    const summary = await api.getDashboardSummary();
-    return [
-      {
-        label: 'Total Services',
-        value: `${summary.healthyServices}/${summary.totalServices}`,
-        subValue: `${Math.round((summary.healthyServices / summary.totalServices) * 100)}% Active`,
-        color: 'primary' as const,
-      },
-      {
-        label: 'Active Alerts',
-        value: summary.criticalAlerts.toString(),
-        subValue: summary.criticalAlerts > 0 ? 'Requires attention' : 'All clear',
-        color: summary.criticalAlerts > 0 ? 'red' as const : 'emerald' as const,
-        href: summary.criticalAlerts === 0
-          ? undefined
-          : summary.criticalServiceId
-            ? `/services/${summary.criticalServiceId}?tab=logs`
-            : '/alerts',
-      },
-      {
-        label: 'Global Uptime',
-        value: `${summary.overallUptime.toFixed(2)}%`,
-        subValue: 'Last 24 hours',
-        color: 'emerald' as const,
-      },
-    ];
-  });
-}
+import { mockServices, mockIncidents } from '../mocks/dashboard';
 
 export function useDashboardServices() {
   return useDataFetch(mockServices, async () => {

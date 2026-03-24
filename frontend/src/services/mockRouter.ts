@@ -12,7 +12,6 @@ import { mockGauges } from '../mocks/infra';
 import { mockResources } from '../mocks/infra/resourceList.mock';
 
 import type {
-  DashboardSummary,
   TimelineItem,
   Service,
   MetricsSummary,
@@ -32,15 +31,6 @@ import type {
 } from './api';
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
-
-const mockDashboardSummary: DashboardSummary = {
-  totalServices: 24,
-  healthyServices: 22,
-  unhealthyServices: 2,
-  avgResponseTime: 124,
-  overallUptime: 99.98,
-  criticalAlerts: 3,
-};
 
 const mockTimeline: TimelineItem[] = mockDashboardIncidents.map((i) => ({
   id: i.id,
@@ -394,7 +384,6 @@ export function mockRouter<T>(endpoint: string, method = 'GET'): T {
   // Mutations in mock mode: return success silently
   if (method !== 'GET') return null as T;
 
-  if (endpoint === '/dashboard/summary') return mockDashboardSummary as T;
   if (endpoint === '/dashboard/timeline') return mockTimeline as T;
 
   // /services/:id/metrics/summary

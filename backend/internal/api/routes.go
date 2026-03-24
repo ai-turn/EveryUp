@@ -72,7 +72,6 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 
 	// Dashboard endpoints
 	dashboardHandler := handlers.NewDashboardHandler()
-	local.Get("/dashboard/summary", dashboardHandler.GetSummary)
 	local.Get("/dashboard/timeline", dashboardHandler.GetTimeline)
 
 	// Incidents
