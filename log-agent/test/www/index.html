@@ -323,7 +323,7 @@
     }
 
     .level-btn {
-      padding: 10px 8px;
+      padding: 12px 8px;
       border: 1.5px solid;
       border-radius: 8px;
       font-family: var(--sans);
@@ -630,7 +630,7 @@
   <header class="topbar">
     <div class="topbar-logo">
       <div class="logo-icon">
-        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M2 4h12M2 8h8M2 12h10" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
         </svg>
       </div>
@@ -642,7 +642,7 @@
     <div class="topbar-status">
       <div class="status-pill ready" id="status-pill">
         <span class="live-dot pulse" id="live-dot"></span>
-        <span id="status-text">Ready</span>
+        <span id="status-text" aria-live="polite" aria-atomic="true">Ready</span>
       </div>
     </div>
   </header>
@@ -654,49 +654,49 @@
     <div class="stats-row">
       <div class="stat-card">
         <div class="stat-icon total">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
           </svg>
         </div>
         <div>
           <div class="stat-label">Total Sent</div>
-          <div class="stat-value" id="cnt-total">0</div>
+          <div class="stat-value" id="cnt-total" aria-live="polite" aria-atomic="true">0</div>
         </div>
       </div>
 
       <div class="stat-card">
         <div class="stat-icon info">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
           </svg>
         </div>
         <div>
           <div class="stat-label">Info</div>
-          <div class="stat-value" id="cnt-info">0</div>
+          <div class="stat-value" id="cnt-info" aria-live="polite" aria-atomic="true">0</div>
         </div>
       </div>
 
       <div class="stat-card">
         <div class="stat-icon warn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
         </div>
         <div>
           <div class="stat-label">Warn</div>
-          <div class="stat-value" id="cnt-warn">0</div>
+          <div class="stat-value" id="cnt-warn" aria-live="polite" aria-atomic="true">0</div>
         </div>
       </div>
 
       <div class="stat-card">
         <div class="stat-icon error">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
           </svg>
         </div>
         <div>
           <div class="stat-label">Error</div>
-          <div class="stat-value" id="cnt-error">0</div>
+          <div class="stat-value" id="cnt-error" aria-live="polite" aria-atomic="true">0</div>
         </div>
       </div>
     </div>
@@ -708,7 +708,7 @@
       <div class="panel">
         <div class="panel-header">
           <div class="panel-icon" style="background:var(--green-bg);color:var(--green);">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
             </svg>
           </div>
@@ -716,7 +716,7 @@
         </div>
 
         <div class="panel-body">
-          <div class="field-label">Message</div>
+          <label for="msg" class="field-label">Message</label>
           <div class="input-wrap">
             <input
               class="msg-input"
@@ -732,19 +732,19 @@
           <div class="field-label">Level</div>
           <div class="level-grid">
             <button class="level-btn info" id="btn-info" onclick="sendLog('info')" aria-label="Send INFO log">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
               </svg>
               INFO
             </button>
             <button class="level-btn warn" id="btn-warn" onclick="sendLog('warn')" aria-label="Send WARN log">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
               </svg>
               WARN
             </button>
             <button class="level-btn error" id="btn-error" onclick="sendLog('error')" aria-label="Send ERROR log">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
               </svg>
               ERROR
@@ -754,7 +754,7 @@
           <!-- Result -->
           <div class="send-result" id="send-result">
             <span class="result-icon idle">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
             </span>
@@ -779,7 +779,7 @@
           </div>
           <span class="terminal-title" id="terminal-title">log-stream — /var/log/app/test.log</span>
           <button class="clear-btn" onclick="clearLogs()" aria-label="Clear log output">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.96"/>
             </svg>
             Clear
@@ -788,7 +788,7 @@
 
         <div class="terminal-body" id="terminal-body" role="log" aria-live="polite" aria-label="Log output">
           <div class="terminal-empty" id="terminal-empty">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
             </svg>
             <p>No logs sent yet.<br>Use the panel on the left to send a test log.</p>
@@ -928,11 +928,11 @@
       const icon = resultBox.querySelector('.result-icon');
       icon.className = 'result-icon ' + (state === 'ok' ? 'ok' : state === 'fail' ? 'fail' : 'idle');
       if (state === 'ok') {
-        icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+        icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
       } else if (state === 'fail') {
-        icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+        icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
       } else {
-        icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+        icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
       }
     }
 
