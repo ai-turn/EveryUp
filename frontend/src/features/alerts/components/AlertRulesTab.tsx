@@ -96,6 +96,8 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
   const [hosts, setHosts] = useState<Host[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadData = async () => {
     try {
@@ -144,14 +146,18 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm(t('alerts.rules.deleteConfirm'))) return;
+  const handleDeleteConfirm = async () => {
+    if (!deleteTargetId) return;
+    setIsDeleting(true);
     try {
-      await api.deleteAlertRule(id);
+      await api.deleteAlertRule(deleteTargetId);
       toast.success(t('alerts.rules.deleted'));
+      setDeleteTargetId(null);
       loadData();
     } catch {
       toast.error(t('alerts.rules.deleteFailed'));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -272,8 +278,9 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                   </button>
                   {!rule.isSystem && (
                     <button
-                      onClick={() => handleDelete(rule.id)}
-                      className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
+                      onClick={() => setDeleteTargetId(rule.id)}
+                      disabled={isDeleting}
+                      className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all disabled:opacity-50"
                       title="Delete"
                     >
                       <MaterialIcon name="delete" />
@@ -285,6 +292,57 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
           })
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {deleteTargetId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+          >
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-ui-border-dark flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 bg-red-100 dark:bg-red-900/20 rounded-full">
+                <MaterialIcon name="warning" className="text-red-600 dark:text-red-400 text-xl" />
+              </div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">{t('alerts.rules.deleteConfirmTitle')}</h2>
+            </div>
+            <div className="p-6">
+              <p className="text-slate-600 dark:text-text-muted-dark mb-2">
+                {t('alerts.rules.deleteConfirmMessage', { name: rules.find(r => r.id === deleteTargetId)?.name ?? deleteTargetId })}
+              </p>
+              <p className="text-sm text-slate-500 dark:text-text-dim-dark">
+                {t('alerts.rules.deleteConfirmWarning')}
+              </p>
+            </div>
+            <div className="px-6 pb-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setDeleteTargetId(null)}
+                disabled={isDeleting}
+                className="flex-1 py-2 rounded-lg border border-slate-200 dark:border-ui-border-dark text-slate-600 dark:text-text-muted-dark font-bold hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-all disabled:opacity-50"
+              >
+                {t('common:cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteConfirm}
+                disabled={isDeleting}
+                className="flex-1 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-all shadow-md active:scale-95 disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <MaterialIcon name="delete" className="text-lg" />
+                    {t('common:delete')}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

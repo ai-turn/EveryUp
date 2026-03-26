@@ -51,6 +51,7 @@
         "toast": {
             "paused": "Host monitoring paused",
             "resumed": "Host monitoring resumed",
+            "created": "Host created successfully",
             "updated": "Host updated successfully",
             "deleted": "Host deleted successfully",
             "cannotDeleteLocal": "Cannot delete local host",

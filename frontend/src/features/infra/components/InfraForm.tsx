@@ -172,7 +172,7 @@ export function InfraForm({ onSuccess, host }: InfraFormProps) {
             } else {
                 await api.createHost(data as any);
             }
-            toast.success(t('infra.toast.updated'));
+            toast.success(t(isEditMode ? 'infra.toast.updated' : 'infra.toast.created'));
             onSuccess();
             closePanel();
         } catch (error) {
