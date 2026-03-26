@@ -47,19 +47,22 @@ func (h *HealthHandler) Health(c *fiber.Ctx) error {
 	runtime.ReadMemStats(&memStats)
 
 	return c.JSON(fiber.Map{
-		"status":         "healthy",
-		"version":        Version,
-		"uptime":         uptimeStr,
-		"database":       dbStatus,
-		"activeServices": activeServices,
-		"memory": fiber.Map{
-			"alloc":      formatBytes(memStats.Alloc),
-			"totalAlloc": formatBytes(memStats.TotalAlloc),
-			"sys":        formatBytes(memStats.Sys),
-		},
-		"go": fiber.Map{
-			"version":    runtime.Version(),
-			"goroutines": runtime.NumGoroutine(),
+		"success": true,
+		"data": fiber.Map{
+			"status":         "healthy",
+			"version":        Version,
+			"uptime":         uptimeStr,
+			"database":       dbStatus,
+			"activeServices": activeServices,
+			"memory": fiber.Map{
+				"alloc":      formatBytes(memStats.Alloc),
+				"totalAlloc": formatBytes(memStats.TotalAlloc),
+				"sys":        formatBytes(memStats.Sys),
+			},
+			"go": fiber.Map{
+				"version":    runtime.Version(),
+				"goroutines": runtime.NumGoroutine(),
+			},
 		},
 	})
 }

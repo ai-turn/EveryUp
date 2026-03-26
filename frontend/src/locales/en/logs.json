@@ -42,7 +42,7 @@
         "filter": {
             "all": "All",
             "error": "Error",
-            "warning": "Warning",
+            "warn": "Warning",
             "info": "Info"
         },
         "table": {

@@ -156,10 +156,10 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
             }
 
             if (isEditMode && service) {
-                await api.updateService(service.id, submitData as any);
+                await api.updateService(service.id, submitData);
                 toast.success(t('healthcheck.toast.updated'));
             } else {
-                await api.createService(submitData as any);
+                await api.createService(submitData);
                 toast.success(t('healthcheck.toast.added'));
             }
             onSuccess();

@@ -481,8 +481,15 @@ func TestHealth(t *testing.T) {
 	if err := json.Unmarshal(body, &result); err != nil {
 		t.Fatalf("parse body: %v", err)
 	}
-	if result["status"] != "healthy" {
-		t.Errorf("status = %v, want healthy", result["status"])
+	if result["success"] != true {
+		t.Errorf("success = %v, want true", result["success"])
+	}
+	data, ok := result["data"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("data field missing or not an object")
+	}
+	if data["status"] != "healthy" {
+		t.Errorf("status = %v, want healthy", data["status"])
 	}
 }
 

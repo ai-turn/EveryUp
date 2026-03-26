@@ -42,7 +42,7 @@
         "filter": {
             "all": "전체",
             "error": "에러",
-            "warning": "경고",
+            "warn": "경고",
             "info": "정보"
         },
         "table": {

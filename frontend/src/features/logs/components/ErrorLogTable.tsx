@@ -13,20 +13,20 @@ interface ErrorLogTableProps {
 
 const LIMIT_STEP = 50;
 
-const LEVEL_FILTERS = ['all', 'error', 'warning', 'info'] as const;
+const LEVEL_FILTERS = ['all', 'error', 'warn', 'info'] as const;
 type LevelFilter = (typeof LEVEL_FILTERS)[number];
 
 const levelBadgeStyle: Record<string, string> = {
   error:
     'bg-red-500/10 border-red-500/30 text-red-500 dark:bg-red-500/20 dark:border-red-500/40 dark:text-red-400',
-  warning:
+  warn:
     'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:bg-amber-500/20 dark:border-amber-500/40 dark:text-amber-400',
   info: 'bg-blue-500/10 border-blue-500/30 text-blue-600 dark:bg-blue-500/20 dark:border-blue-500/40 dark:text-blue-400',
 };
 
 const levelDotStyle: Record<string, string> = {
   error: 'bg-red-500',
-  warning: 'bg-amber-500',
+  warn: 'bg-amber-500',
   info: 'bg-blue-500',
 };
 
@@ -40,7 +40,7 @@ export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
   const [levelFilter, setLevelFilter] = useState<LevelFilter>('all');
   const [isPaused, setIsPaused] = useState(false);
   const [formatMode, setFormatMode] = useState<'raw' | 'pretty'>('raw');
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [limit, setLimit] = useState(LIMIT_STEP);
   const { copy } = useCopyToClipboard();
 
@@ -80,11 +80,11 @@ export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
   const levelCounts: Record<LevelFilter, number> = {
     all: logs.length,
     error: logs.filter((l) => l.level === 'error').length,
-    warning: logs.filter((l) => l.level === 'warning').length,
+    warn: logs.filter((l) => l.level === 'warn').length,
     info: logs.filter((l) => l.level === 'info').length,
   };
 
-  const toggleRow = (id: string) => {
+  const toggleRow = (id: number) => {
     setExpandedRows((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(id)) {
@@ -197,7 +197,7 @@ export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
                     ? 'bg-slate-800 dark:bg-ui-active-dark text-white border-slate-700 dark:border-ui-border-dark'
                     : level === 'error'
                     ? 'bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/40'
-                    : level === 'warning'
+                    : level === 'warn'
                     ? 'bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-500/40'
                     : 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/40'
                   : 'bg-transparent text-slate-500 dark:text-text-muted-dark border-slate-200 dark:border-ui-border-dark hover:border-slate-300 dark:hover:border-ui-active-dark'

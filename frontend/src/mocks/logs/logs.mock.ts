@@ -12,7 +12,7 @@ const m = (minutesAgo: number) => new Date(now - minutesAgo * 60 * 1000).toISOSt
 export const mockLogEntries: LogEntry[] = [
   // ── API Gateway (id: 1) ────────────────────────────────────────────────────
   {
-    id: 'log-001',
+    id: 1,
     serviceId: '1',
     serviceName: 'API Gateway',
     level: 'error',
@@ -21,16 +21,16 @@ export const mockLogEntries: LogEntry[] = [
     createdAt: m(1),
   },
   {
-    id: 'log-002',
+    id: 2,
     serviceId: '1',
     serviceName: 'API Gateway',
-    level: 'warning',
+    level: 'warn',
     message: 'Rate limit exceeded for client IP 203.0.113.42 — throttling to 10 req/s',
     source: 'internal',
     createdAt: m(3),
   },
   {
-    id: 'log-003',
+    id: 3,
     serviceId: '1',
     serviceName: 'API Gateway',
     level: 'info',
@@ -39,7 +39,7 @@ export const mockLogEntries: LogEntry[] = [
     createdAt: m(5),
   },
   {
-    id: 'log-004',
+    id: 4,
     serviceId: '1',
     serviceName: 'API Gateway',
     level: 'error',
@@ -49,17 +49,17 @@ export const mockLogEntries: LogEntry[] = [
     createdAt: m(12),
   },
   {
-    id: 'log-005',
+    id: 5,
     serviceId: '1',
     serviceName: 'API Gateway',
-    level: 'warning',
+    level: 'warn',
     message: 'Slow upstream response: GET /api/v1/users/search took 3240ms (threshold: 1000ms)',
     source: 'internal',
     metadata: { path: '/api/v1/users/search', duration_ms: 3240, threshold_ms: 1000 },
     createdAt: m(18),
   },
   {
-    id: 'log-006',
+    id: 6,
     serviceId: '1',
     serviceName: 'API Gateway',
     level: 'info',
@@ -68,7 +68,7 @@ export const mockLogEntries: LogEntry[] = [
     createdAt: m(30),
   },
   {
-    id: 'log-007',
+    id: 7,
     serviceId: '1',
     serviceName: 'API Gateway',
     level: 'error',
@@ -78,7 +78,7 @@ export const mockLogEntries: LogEntry[] = [
     createdAt: m(45),
   },
   {
-    id: 'log-008',
+    id: 8,
     serviceId: '1',
     serviceName: 'API Gateway',
     level: 'info',
@@ -89,7 +89,7 @@ export const mockLogEntries: LogEntry[] = [
 
   // ── Auth Service (id: 2) ───────────────────────────────────────────────────
   {
-    id: 'log-009',
+    id: 9,
     serviceId: '2',
     serviceName: 'Auth Service',
     level: 'error',
@@ -99,17 +99,17 @@ export const mockLogEntries: LogEntry[] = [
     createdAt: m(2),
   },
   {
-    id: 'log-010',
+    id: 10,
     serviceId: '2',
     serviceName: 'Auth Service',
-    level: 'warning',
+    level: 'warn',
     message: 'Login attempt with expired credentials — user: admin@example.com',
     source: 'external',
     metadata: { email: 'admin@example.com', expiredAt: '2025-02-01T09:00:00Z' },
     createdAt: m(8),
   },
   {
-    id: 'log-011',
+    id: 11,
     serviceId: '2',
     serviceName: 'Auth Service',
     level: 'error',
@@ -119,7 +119,7 @@ export const mockLogEntries: LogEntry[] = [
     createdAt: m(15),
   },
   {
-    id: 'log-012',
+    id: 12,
     serviceId: '2',
     serviceName: 'Auth Service',
     level: 'info',
@@ -128,17 +128,17 @@ export const mockLogEntries: LogEntry[] = [
     createdAt: m(22),
   },
   {
-    id: 'log-013',
+    id: 13,
     serviceId: '2',
     serviceName: 'Auth Service',
-    level: 'warning',
+    level: 'warn',
     message: 'Brute-force detection: 8 failed login attempts from 198.51.100.77 in 2 minutes',
     source: 'internal',
     metadata: { ip: '198.51.100.77', attempts: 8, windowSeconds: 120 },
     createdAt: m(35),
   },
   {
-    id: 'log-014',
+    id: 14,
     serviceId: '2',
     serviceName: 'Auth Service',
     level: 'info',
@@ -149,7 +149,7 @@ export const mockLogEntries: LogEntry[] = [
 
   // ── User Database (id: 3) ─────────────────────────────────────────────────
   {
-    id: 'log-015',
+    id: 15,
     serviceId: '3',
     serviceName: 'User Database',
     level: 'error',
@@ -159,17 +159,17 @@ export const mockLogEntries: LogEntry[] = [
     createdAt: m(4),
   },
   {
-    id: 'log-016',
+    id: 16,
     serviceId: '3',
     serviceName: 'User Database',
-    level: 'warning',
+    level: 'warn',
     message: 'Slow query detected: SELECT * FROM users WHERE email LIKE took 2100ms (index missing)',
     source: 'internal',
     metadata: { query: 'SELECT * FROM users WHERE email LIKE ?', duration_ms: 2100, table: 'users' },
     createdAt: m(14),
   },
   {
-    id: 'log-017',
+    id: 17,
     serviceId: '3',
     serviceName: 'User Database',
     level: 'info',
@@ -179,17 +179,17 @@ export const mockLogEntries: LogEntry[] = [
     createdAt: m(40),
   },
   {
-    id: 'log-018',
+    id: 18,
     serviceId: '3',
     serviceName: 'User Database',
-    level: 'warning',
+    level: 'warn',
     message: 'Replication lag exceeded 500ms on standby replica-02 (current: 823ms)',
     source: 'internal',
     metadata: { replica: 'replica-02', lagMs: 823, thresholdMs: 500 },
     createdAt: m(55),
   },
   {
-    id: 'log-019',
+    id: 19,
     serviceId: '3',
     serviceName: 'User Database',
     level: 'info',
@@ -198,7 +198,7 @@ export const mockLogEntries: LogEntry[] = [
     createdAt: m(120),
   },
   {
-    id: 'log-020',
+    id: 20,
     serviceId: '3',
     serviceName: 'User Database',
     level: 'error',
@@ -210,17 +210,17 @@ export const mockLogEntries: LogEntry[] = [
 
   // ── Redis Cache (id: 4) ───────────────────────────────────────────────────
   {
-    id: 'log-021',
+    id: 21,
     serviceId: '4',
     serviceName: 'Redis Cache',
-    level: 'warning',
+    level: 'warn',
     message: 'Memory usage at 87% of maxmemory — LRU eviction policy active',
     source: 'internal',
     metadata: { usedMemoryMB: 870, maxMemoryMB: 1000, evictionPolicy: 'allkeys-lru' },
     createdAt: m(7),
   },
   {
-    id: 'log-022',
+    id: 22,
     serviceId: '4',
     serviceName: 'Redis Cache',
     level: 'info',
@@ -229,7 +229,7 @@ export const mockLogEntries: LogEntry[] = [
     createdAt: m(25),
   },
   {
-    id: 'log-023',
+    id: 23,
     serviceId: '4',
     serviceName: 'Redis Cache',
     level: 'error',
@@ -239,7 +239,7 @@ export const mockLogEntries: LogEntry[] = [
     createdAt: m(70),
   },
   {
-    id: 'log-024',
+    id: 24,
     serviceId: '4',
     serviceName: 'Redis Cache',
     level: 'info',
@@ -251,7 +251,7 @@ export const mockLogEntries: LogEntry[] = [
 
   // ── Payment Worker (id: 5) ────────────────────────────────────────────────
   {
-    id: 'log-025',
+    id: 25,
     serviceId: '5',
     serviceName: 'Payment Worker',
     level: 'error',
@@ -261,17 +261,17 @@ export const mockLogEntries: LogEntry[] = [
     createdAt: m(6),
   },
   {
-    id: 'log-026',
+    id: 26,
     serviceId: '5',
     serviceName: 'Payment Worker',
-    level: 'warning',
+    level: 'warn',
     message: 'Payment retry queue backlog: 47 pending jobs (threshold: 20)',
     source: 'internal',
     metadata: { pendingJobs: 47, threshold: 20, oldestJobAgeSeconds: 420 },
     createdAt: m(20),
   },
   {
-    id: 'log-027',
+    id: 27,
     serviceId: '5',
     serviceName: 'Payment Worker',
     level: 'info',
@@ -281,7 +281,7 @@ export const mockLogEntries: LogEntry[] = [
     createdAt: m(28),
   },
   {
-    id: 'log-028',
+    id: 28,
     serviceId: '5',
     serviceName: 'Payment Worker',
     level: 'error',
@@ -291,7 +291,7 @@ export const mockLogEntries: LogEntry[] = [
     createdAt: m(50),
   },
   {
-    id: 'log-029',
+    id: 29,
     serviceId: '5',
     serviceName: 'Payment Worker',
     level: 'info',
@@ -302,17 +302,17 @@ export const mockLogEntries: LogEntry[] = [
 
   // ── Search Index (id: 6) ──────────────────────────────────────────────────
   {
-    id: 'log-030',
+    id: 30,
     serviceId: '6',
     serviceName: 'Search Index',
-    level: 'warning',
+    level: 'warn',
     message: 'Index shard imbalance: shard-04 holds 34% of total docs (expected ≤20%)',
     source: 'internal',
     metadata: { shard: 'shard-04', docPercent: 34, expectedMax: 20 },
     createdAt: m(9),
   },
   {
-    id: 'log-031',
+    id: 31,
     serviceId: '6',
     serviceName: 'Search Index',
     level: 'error',
@@ -322,7 +322,7 @@ export const mockLogEntries: LogEntry[] = [
     createdAt: m(17),
   },
   {
-    id: 'log-032',
+    id: 32,
     serviceId: '6',
     serviceName: 'Search Index',
     level: 'info',
@@ -332,17 +332,17 @@ export const mockLogEntries: LogEntry[] = [
     createdAt: m(33),
   },
   {
-    id: 'log-033',
+    id: 33,
     serviceId: '6',
     serviceName: 'Search Index',
-    level: 'warning',
+    level: 'warn',
     message: 'Query cache hit rate dropped to 41% — cache size may need adjustment',
     source: 'internal',
     metadata: { cacheHitRate: 0.41, cacheSizeMB: 256 },
     createdAt: m(65),
   },
   {
-    id: 'log-034',
+    id: 34,
     serviceId: '6',
     serviceName: 'Search Index',
     level: 'info',
@@ -351,7 +351,7 @@ export const mockLogEntries: LogEntry[] = [
     createdAt: m(130),
   },
   {
-    id: 'log-035',
+    id: 35,
     serviceId: '6',
     serviceName: 'Search Index',
     level: 'error',

@@ -42,7 +42,7 @@ export function LogServiceForm({ onSuccess }: LogServiceFormProps) {
                 id,
                 name,
                 type: 'log',
-            } as any);
+            });
             onSuccess();
             closePanel();
             navigate(`/logs/${id}?tab=integration`, {

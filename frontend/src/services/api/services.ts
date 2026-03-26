@@ -5,7 +5,7 @@ import type { RequestFn } from './base';
 export interface Service {
   id: string;
   name: string;
-  type: 'http' | 'tcp' | 'log';
+  type: 'http' | 'tcp' | 'icmp' | 'log';
   url?: string;
   host?: string;
   port?: number;
@@ -14,7 +14,7 @@ export interface Service {
   timeout: number;
   expectedStatus?: number;
   isActive: boolean;
-  status: 'healthy' | 'unhealthy' | 'unknown';
+  status: 'healthy' | 'unhealthy' | 'degraded' | 'unknown';
   lastCheckedAt?: string;
   tags?: string[];
   apiKey?: string;
@@ -30,7 +30,8 @@ export interface Service {
 
 export interface CreateServiceData {
   name: string;
-  type: 'http' | 'tcp' | 'log';
+  id: string;
+  type: 'http' | 'tcp' | 'icmp' | 'log';
   url?: string;
   host?: string;
   port?: number;
@@ -87,13 +88,13 @@ export interface UptimeParams {
 }
 
 export interface LogEntry {
-  id: string;
+  id: number;
   serviceId: string;
   serviceName?: string;
-  level: 'info' | 'warning' | 'error';
+  level: 'info' | 'warn' | 'error';
   message: string;
   metadata?: Record<string, unknown>;
-  source?: 'internal' | 'external';
+  source?: 'internal' | 'external' | 'agent';
   fingerprint?: string;
   createdAt: string;
 }
@@ -116,9 +117,11 @@ export interface Incident {
 }
 
 export interface HealthStatus {
-  status: 'ok' | 'error';
+  status: 'healthy';
+  version: string;
+  uptime: string;
   database: 'connected' | 'disconnected';
-  uptime: number;
+  activeServices: number;
 }
 
 // --- API ---

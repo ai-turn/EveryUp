@@ -67,7 +67,7 @@ export function useServiceErrorLogs(serviceId: string) {
       const logs = await api.getServiceLogs(serviceId, { level: 'error' });
       const levelMap: Record<string, 'CRITICAL' | 'WARNING' | 'INFO'> = {
         error: 'CRITICAL',
-        warning: 'WARNING',
+        warn: 'WARNING',
         info: 'INFO',
       };
       return logs.map((log) => ({

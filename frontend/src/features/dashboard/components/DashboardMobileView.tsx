@@ -8,9 +8,9 @@ import { relativeTime } from '../../../utils/formatters';
 import { IncidentTimeline } from './IncidentTimeline';
 
 const logLevelBadge: Record<string, string> = {
-  error:   'bg-red-500 text-white',
-  warning: 'bg-amber-500 text-white',
-  info:    'bg-blue-500 text-white',
+  error: 'bg-red-500 text-white',
+  warn:  'bg-amber-500 text-white',
+  info:  'bg-blue-500 text-white',
 };
 
 const statusColors: Record<string, { dot: string; text: string }> = {
@@ -203,7 +203,7 @@ export function DashboardMobileView() {
                       {latest ? (
                         <>
                           <span className={`text-xs font-bold px-1.5 py-0.5 rounded uppercase shrink-0 ${logLevelBadge[latest.level]}`}>
-                            {latest.level === 'warning' ? 'WARN' : latest.level.toUpperCase()}
+                            {latest.level.toUpperCase()}
                           </span>
                           <span className="text-xs text-slate-500 dark:text-text-muted-dark flex-1 truncate">
                             {latest.message}

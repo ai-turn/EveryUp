@@ -91,7 +91,7 @@ export interface CreateNotificationChannelData {
 // --- Notification History Types ---
 
 export type NotificationStatus = 'sent' | 'failed' | 'pending';
-export type NotificationAlertType = 'resource' | 'healthcheck' | 'log' | 'scheduled';
+export type NotificationAlertType = 'resource' | 'healthcheck' | 'log' | 'scheduled' | 'endpoint';
 
 export interface NotificationHistory {
   id: number;

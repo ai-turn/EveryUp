@@ -39,6 +39,7 @@ const ALERT_TYPE_ICON: Record<NotificationAlertType, string> = {
   healthcheck: 'monitor_heart',
   log: 'description',
   scheduled: 'schedule',
+  endpoint: 'http',
 };
 
 // ─── Notification Item ───────────────────────────────────────────────────────
