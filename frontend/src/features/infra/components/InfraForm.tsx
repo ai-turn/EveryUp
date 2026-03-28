@@ -144,7 +144,7 @@ export function InfraForm({ onSuccess, host }: InfraFormProps) {
         try {
             const result = await api.testSSHConnection({
                 ip: values.ip,
-                sshPort: values.sshPort || 22,
+                sshPort: Number(values.sshPort) || 22,
                 sshUser: values.sshUser,
                 sshAuthType: values.sshAuthType,
                 sshPassword: values.sshPassword,
