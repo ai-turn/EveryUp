@@ -140,7 +140,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             <h3 className="text-base font-semibold text-slate-900 dark:text-white">
               {t('healthcheck.integration.apiKey.title')}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-text-muted-dark">
+            <p className="text-sm text-slate-500 dark:text-text-muted-dark">
               {t('healthcheck.integration.apiKey.description')}
             </p>
           </div>
@@ -153,7 +153,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
         </div>
 
         <div className="flex items-center justify-between">
-          <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+          <p className="text-sm text-amber-600 dark:text-amber-400 flex items-center gap-1">
             <MaterialIcon name="warning" className="text-sm" />
             {t('healthcheck.integration.apiKey.warning')}
           </p>
@@ -183,7 +183,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             <h3 className="text-base font-semibold text-slate-900 dark:text-white">
               {t('healthcheck.integration.endpoint.title')}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-text-muted-dark">
+            <p className="text-sm text-slate-500 dark:text-text-muted-dark">
               {t('healthcheck.integration.endpoint.description')}
             </p>
           </div>
@@ -231,7 +231,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             <h3 className="text-base font-semibold text-slate-900 dark:text-white">
               {t('healthcheck.integration.connectionTest.title', { defaultValue: 'Connection Test' })}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-text-muted-dark">
+            <p className="text-sm text-slate-500 dark:text-text-muted-dark">
               {t('healthcheck.integration.connectionTest.description', { defaultValue: 'Verify network connectivity and API key before integrating.' })}
             </p>
           </div>
@@ -254,7 +254,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
         </div>
 
         <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
-          <p className="text-xs text-emerald-700 dark:text-emerald-300 flex items-start gap-1.5">
+          <p className="text-sm text-emerald-700 dark:text-emerald-300 flex items-start gap-1.5">
             <MaterialIcon name="check_circle" className="text-sm mt-0.5 shrink-0" />
             {t('healthcheck.integration.connectionTest.successHint', { defaultValue: 'If connected successfully, the server responds with HTTP 200. If you get a timeout or connection refused, check your firewall outbound rules and server inbound rules.' })}
           </p>
@@ -305,7 +305,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
                 <h4 className="text-sm font-bold text-slate-900 dark:text-white">
                   {t('healthcheck.integration.agent.quickStart', { defaultValue: 'Quick Start' })}
                 </h4>
-                <p className="text-xs text-slate-500 dark:text-text-muted-dark">
+                <p className="text-sm text-slate-500 dark:text-text-muted-dark">
                   {t('healthcheck.integration.agent.quickStartDesc', { defaultValue: 'Pull and run the Log Agent with a single command.' })}
                 </p>
               </div>
@@ -346,7 +346,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             </div>
 
             <div className="pt-3 hidden sm:block">
-              <p className="text-xs text-slate-400 dark:text-text-dim-dark leading-relaxed px-2">
+              <p className="text-sm text-slate-400 dark:text-text-dim-dark leading-relaxed px-2">
                 {activeCategory === 'http-appender'
                   ? t('healthcheck.integration.snippets.httpAppenderDesc', { defaultValue: 'Add a transport to your app code. Best when you control the source.' })
                   : t('healthcheck.integration.snippets.agentDesc', { defaultValue: 'Tail log files and forward. Best for servers or containers.' })
@@ -385,7 +385,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             <h3 className="text-sm font-semibold text-slate-700 dark:text-text-secondary-dark">
               Nginx Reverse Proxy
             </h3>
-            <p className="text-xs text-slate-400 dark:text-text-dim-dark">
+            <p className="text-sm text-slate-400 dark:text-text-dim-dark">
               Nginx 뒤에서 운영 시 Authorization 헤더 전달 설정 · 선택 사항
             </p>
           </div>
@@ -399,7 +399,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           <div className="px-5 pb-5 border-t border-slate-100 dark:border-ui-border-dark pt-4">
             <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg flex items-start gap-2">
               <MaterialIcon name="warning" className="text-sm text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
-              <p className="text-xs text-amber-700 dark:text-amber-300">
+              <p className="text-sm text-amber-700 dark:text-amber-300">
                 Nginx 기본 설정은 <code className="font-mono bg-amber-100 dark:bg-amber-900/40 px-1 rounded">Authorization</code> 헤더를 백엔드로 전달하지 않습니다.{' '}
                 아래 <code className="font-mono bg-amber-100 dark:bg-amber-900/40 px-1 rounded">proxy_set_header</code> 설정을 반드시 추가하세요.
               </p>

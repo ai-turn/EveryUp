@@ -57,7 +57,7 @@ export function LogListDesktopView({
               <h3 className="text-base font-semibold text-slate-900 dark:text-white">
                 {t('logs.guide.title', { defaultValue: 'How to Collect Logs' })}
               </h3>
-              <p className="text-xs text-slate-500 dark:text-text-muted-dark">
+              <p className="text-sm text-slate-500 dark:text-text-muted-dark">
                 {t('logs.guide.subtitle', { defaultValue: 'Collect error logs from your API servers with minimal setup — no SDK required.' })}
               </p>
             </div>
@@ -75,7 +75,7 @@ export function LogListDesktopView({
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{title}</h4>
-                  <p className="text-xs text-slate-500 dark:text-text-muted-dark leading-relaxed">{desc}</p>
+                  <p className="text-sm text-slate-500 dark:text-text-muted-dark leading-relaxed">{desc}</p>
                 </div>
               </div>
             ))}
