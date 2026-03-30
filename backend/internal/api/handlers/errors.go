@@ -19,6 +19,27 @@ const (
 	ErrCodeToken    = "TOKEN_ERROR"
 	ErrCodeSend     = "SEND_ERROR"
 	ErrCodeQuery    = "QUERY_ERROR"
+
+	// Common request errors
+	ErrCodeInvalidRequest = "INVALID_REQUEST"
+	ErrCodeInvalidInput   = "INVALID_INPUT"
+	ErrCodeValidation     = "VALIDATION_ERROR"
+	ErrCodeNotFound       = "NOT_FOUND"
+	ErrCodeForbidden      = "FORBIDDEN"
+
+	// Settings errors
+	ErrCodeConfigUnavailable = "CONFIG_UNAVAILABLE"
+	ErrCodeUpdateFailed      = "UPDATE_FAILED"
+
+	// SSH connection errors
+	ErrCodeSSHConnectionRefused = "SSH_CONNECTION_REFUSED"
+	ErrCodeSSHHostNotFound      = "SSH_HOST_NOT_FOUND"
+	ErrCodeSSHTimeout           = "SSH_TIMEOUT"
+	ErrCodeSSHAuthFailed        = "SSH_AUTH_FAILED"
+	ErrCodeSSHHandshakeFailed   = "SSH_HANDSHAKE_FAILED"
+	ErrCodeSSHHostKeyFailed     = "SSH_HOST_KEY_FAILED"
+	ErrCodeSSHPermissionDenied  = "SSH_PERMISSION_DENIED"
+	ErrCodeSSHFailed            = "SSH_CONNECTION_FAILED"
 )
 
 // internalError logs the full error server-side and returns a generic message to the client.
@@ -59,6 +80,36 @@ func genericMessage(code string) string {
 		return "Failed to send the notification"
 	case "QUERY_ERROR":
 		return "Failed to query data"
+	case ErrCodeInvalidRequest:
+		return "Invalid request"
+	case ErrCodeInvalidInput:
+		return "Invalid input value"
+	case ErrCodeValidation:
+		return "Validation failed"
+	case ErrCodeNotFound:
+		return "Requested item not found"
+	case ErrCodeForbidden:
+		return "Permission denied"
+	case ErrCodeConfigUnavailable:
+		return "Server configuration unavailable"
+	case ErrCodeUpdateFailed:
+		return "Failed to save settings"
+	case ErrCodeSSHConnectionRefused:
+		return "SSH connection refused"
+	case ErrCodeSSHHostNotFound:
+		return "SSH host not found"
+	case ErrCodeSSHTimeout:
+		return "SSH connection timed out"
+	case ErrCodeSSHAuthFailed:
+		return "SSH authentication failed"
+	case ErrCodeSSHHandshakeFailed:
+		return "SSH handshake failed"
+	case ErrCodeSSHHostKeyFailed:
+		return "SSH host key verification failed"
+	case ErrCodeSSHPermissionDenied:
+		return "SSH permission denied"
+	case ErrCodeSSHFailed:
+		return "SSH connection failed"
 	default:
 		return "An internal error occurred"
 	}

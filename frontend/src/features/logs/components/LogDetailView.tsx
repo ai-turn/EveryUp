@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
 import type { Locale } from 'date-fns';
 import { toast } from 'react-hot-toast';
+import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon, Toggle } from '../../../components/common';
 import { Breadcrumbs } from '../../../components/layout/Breadcrumbs';
 import { useIsMobile } from '../../../hooks/useMediaQuery';
@@ -255,7 +256,7 @@ function DesktopLayout(props: LogDetailViewProps) {
       setIsRenameOpen(false);
       toast.success(t('common.saved', { defaultValue: 'Saved' }));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('common.error', { defaultValue: 'Error' }));
+      toast.error(getErrorMessage(err));
     } finally {
       setIsRenaming(false);
     }
@@ -419,7 +420,7 @@ function MobileLayout(props: LogDetailViewProps) {
       setIsRenameOpen(false);
       toast.success(t('common.saved', { defaultValue: 'Saved' }));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('common.error', { defaultValue: 'Error' }));
+      toast.error(getErrorMessage(err));
     } finally {
       setIsRenaming(false);
     }

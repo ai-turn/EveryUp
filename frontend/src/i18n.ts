@@ -11,6 +11,7 @@ import koLogs from './locales/ko/logs.json';
 import koInfra from './locales/ko/infra.json';
 import koAlerts from './locales/ko/alerts.json';
 import koSettings from './locales/ko/settings.json';
+import koErrors from './locales/ko/errors.json';
 
 // English
 import enCommon from './locales/en/common.json';
@@ -21,6 +22,7 @@ import enLogs from './locales/en/logs.json';
 import enInfra from './locales/en/infra.json';
 import enAlerts from './locales/en/alerts.json';
 import enSettings from './locales/en/settings.json';
+import enErrors from './locales/en/errors.json';
 
 i18n
   .use(LanguageDetector)
@@ -36,6 +38,7 @@ i18n
         infra: koInfra,
         alerts: koAlerts,
         settings: koSettings,
+        errors: koErrors,
       },
       en: {
         common: enCommon,
@@ -46,6 +49,7 @@ i18n
         infra: enInfra,
         alerts: enAlerts,
         settings: enSettings,
+        errors: enErrors,
       },
     },
     defaultNS: 'common',

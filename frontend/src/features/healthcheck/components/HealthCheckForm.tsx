@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
 import { api, Service } from '../../../services/api';
 import { useSidePanel } from '../../../contexts/SidePanelContext';
@@ -165,7 +166,7 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
             onSuccess();
             closePanel();
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : `Failed to ${isEditMode ? 'update' : 'add'} service`);
+            toast.error(getErrorMessage(error));
         }
     };
 

@@ -1,5 +1,6 @@
 import { env } from '../../config/env';
 import { mockRouter } from '../mockRouter';
+import { ApiError } from '../../utils/errors';
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -30,17 +31,23 @@ export function createRequestFn(): RequestFn {
     if (response.status === 401) {
       localStorage.removeItem('everyup_user');
       window.location.href = '/login';
-      throw new Error('Unauthorized');
+      throw new ApiError('Unauthorized', 'UNAUTHORIZED', 401);
     }
 
-    if (!response.ok) {
-      throw new Error(`HTTP Error: ${response.status}`);
+    // Parse JSON regardless of HTTP status to extract structured error codes
+    let json: ApiResponse<T>;
+    try {
+      json = await response.json();
+    } catch {
+      throw new ApiError(`HTTP Error: ${response.status}`, 'UNKNOWN_ERROR', response.status);
     }
-
-    const json: ApiResponse<T> = await response.json();
 
     if (!json.success) {
-      throw new Error(json.error?.message || 'API Error');
+      throw new ApiError(
+        json.error?.message || 'API Error',
+        json.error?.code || 'UNKNOWN_ERROR',
+        response.status,
+      );
     }
 
     return json.data as T;

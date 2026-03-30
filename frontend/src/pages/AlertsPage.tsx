@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
+import { getErrorMessage } from '../utils/errors';
 import { api, type NotificationChannel, type AlertRule, type NotificationHistory, type NotificationStats } from '../services/api';
 import { useSidePanel } from '../contexts/SidePanelContext';
 import { ChannelForm } from '../features/alerts/components/ChannelForm';
@@ -31,8 +32,8 @@ export function AlertsPage() {
     try {
       const data = await api.getNotificationChannels();
       setChannels(data);
-    } catch {
-      toast.error(t('alerts.loadFailed'));
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
@@ -42,8 +43,8 @@ export function AlertsPage() {
     try {
       const data = await api.getAlertRules();
       setRules(data);
-    } catch {
-      toast.error(t('alerts.loadFailed'));
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setRulesLoading(false);
     }
@@ -53,8 +54,8 @@ export function AlertsPage() {
     try {
       const response = await api.getNotificationHistory({ limit: 30, offset: 0 });
       setHistory(response.items || []);
-    } catch {
-      toast.error(t('alerts.loadFailed'));
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setHistoryLoading(false);
     }
@@ -85,8 +86,8 @@ export function AlertsPage() {
         prev.map(ch => ch.id === id ? { ...ch, isEnabled: result.isEnabled } : ch)
       );
       toast.success(result.isEnabled ? t('alerts.channelEnabled') : t('alerts.channelDisabled'));
-    } catch {
-      toast.error(t('alerts.toggleFailed'));
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setTogglingIds(prev => {
         const next = new Set(prev);
@@ -102,8 +103,8 @@ export function AlertsPage() {
       await api.deleteNotificationChannel(id);
       toast.success(t('alerts.channelDeleted'));
       loadChannels();
-    } catch {
-      toast.error(t('alerts.deleteFailed'));
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   };
 
@@ -111,8 +112,8 @@ export function AlertsPage() {
     try {
       await api.testNotificationChannel(id);
       toast.success(t('alerts.testSent'));
-    } catch {
-      toast.error(t('alerts.testFailed'));
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   };
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
+import { getErrorMessage } from '../utils/errors';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useIsMobile } from '../hooks/useMediaQuery';
@@ -48,8 +49,8 @@ export function SettingsPage() {
     try {
       await api.updateSettings({ retention: { metrics: metricsRetention, logs: logsRetention } });
       toast.success(t('settings.saved'));
-    } catch {
-      toast.error(t('settings.saveError'));
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setSavingRetention(false);
     }
@@ -62,8 +63,8 @@ export function SettingsPage() {
       toast.success(t('settings.accountReset.success'));
       logout();
       navigate('/login');
-    } catch {
-      toast.error(t('settings.accountReset.error'));
+    } catch (error) {
+      toast.error(getErrorMessage(error));
       setResetting(false);
     }
   };

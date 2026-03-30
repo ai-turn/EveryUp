@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
+import { getErrorMessage } from '../utils/errors';
 import { useHost } from '../hooks/useData';
 import { useSidePanel } from '../contexts/SidePanelContext';
 import { api } from '../services/api';
@@ -48,7 +49,7 @@ export function InfraDetailPage() {
       }
       refetch();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('infra.toast.updateFailed'));
+      toast.error(getErrorMessage(error));
     } finally {
       setIsPausing(false);
     }
@@ -62,7 +63,7 @@ export function InfraDetailPage() {
       toast.success(t('infra.toast.deleted'));
       navigate('/infra');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('infra.toast.deleteFailed'));
+      toast.error(getErrorMessage(error));
       setIsDeleting(false);
     }
   };

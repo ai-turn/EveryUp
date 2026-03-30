@@ -67,22 +67,14 @@ func (h *NotificationHistoryHandler) GetAll(c *fiber.Ctx) error {
 	}
 	filter.Offset = offset
 
-	// Get history
 	histories, err := h.repo.GetAll(filter)
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{
-			"success": false,
-			"error":   "Failed to fetch notification history",
-		})
+		return internalError(c, ErrCodeFetch, err)
 	}
 
-	// Get total count
 	total, err := h.repo.GetCount(filter)
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{
-			"success": false,
-			"error":   "Failed to count notifications",
-		})
+		return internalError(c, ErrCodeFetch, err)
 	}
 
 	return c.JSON(fiber.Map{
@@ -101,24 +93,27 @@ func (h *NotificationHistoryHandler) GetAll(c *fiber.Ctx) error {
 func (h *NotificationHistoryHandler) GetByID(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
-		return c.Status(400).JSON(fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"success": false,
-			"error":   "Invalid ID",
+			"error": fiber.Map{
+				"code":    ErrCodeInvalidInput,
+				"message": genericMessage(ErrCodeInvalidInput),
+			},
 		})
 	}
 
 	history, err := h.repo.GetByID(id)
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{
-			"success": false,
-			"error":   "Failed to fetch notification",
-		})
+		return internalError(c, ErrCodeFetch, err)
 	}
 
 	if history == nil {
-		return c.Status(404).JSON(fiber.Map{
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"success": false,
-			"error":   "Notification not found",
+			"error": fiber.Map{
+				"code":    ErrCodeNotFound,
+				"message": genericMessage(ErrCodeNotFound),
+			},
 		})
 	}
 
@@ -140,10 +135,7 @@ func (h *NotificationHistoryHandler) GetStats(c *fiber.Ctx) error {
 
 	stats, err := h.repo.GetStats(days)
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{
-			"success": false,
-			"error":   "Failed to fetch statistics",
-		})
+		return internalError(c, ErrCodeFetch, err)
 	}
 
 	return c.JSON(fiber.Map{
@@ -164,10 +156,7 @@ func (h *NotificationHistoryHandler) Cleanup(c *fiber.Ctx) error {
 
 	deleted, err := h.repo.DeleteOlderThan(days)
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{
-			"success": false,
-			"error":   "Failed to cleanup history",
-		})
+		return internalError(c, ErrCodeDelete, err)
 	}
 
 	return c.JSON(fiber.Map{

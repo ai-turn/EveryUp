@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
 import { api, Host, type SSHTestResult } from '../../../services/api';
 import { useSidePanel } from '../../../contexts/SidePanelContext';
@@ -154,7 +155,7 @@ export function InfraForm({ onSuccess, host }: InfraFormProps) {
             setTestResult(result);
             toast.success(t('infra.modal.connectionSuccess'));
         } catch (error) {
-            const msg = error instanceof Error ? error.message : t('infra.modal.connectionFailed');
+            const msg = getErrorMessage(error);
             setTestError(msg);
             toast.error(msg);
         } finally {
@@ -176,7 +177,7 @@ export function InfraForm({ onSuccess, host }: InfraFormProps) {
             onSuccess();
             closePanel();
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : t('infra.toast.updateFailed'));
+            toast.error(getErrorMessage(error));
         }
     };
 

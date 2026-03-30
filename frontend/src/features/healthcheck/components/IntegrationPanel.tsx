@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
+import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
 import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
 import { api, Service } from '../../../services/api';
@@ -72,8 +73,8 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
       onApiKeyRegenerated(newKey, newMasked);
       setRevealedKey(newKey);
       toast.success(t('healthcheck.integration.toast.regenerated'));
-    } catch {
-      toast.error(t('healthcheck.integration.toast.regenerateFailed'));
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setIsRegenerating(false);
     }

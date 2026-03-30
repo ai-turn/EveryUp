@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams, useLocation } from 'react-rout
 import { useTranslation } from 'react-i18next';
 import { ko, enUS } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
+import { getErrorMessage } from '../utils/errors';
 import { MaterialIcon } from '../components/common';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
@@ -99,7 +100,7 @@ export function LogDetailPage() {
       toast.success(t('healthcheck.toast.deleted', { defaultValue: 'Service deleted successfully' }));
       navigate('/logs');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('healthcheck.toast.deleteFailed', { defaultValue: 'Failed to delete service' }));
+      toast.error(getErrorMessage(err));
       setIsDeleting(false);
     }
   };

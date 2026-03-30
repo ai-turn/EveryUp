@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -100,11 +101,12 @@ func (h *SSHTestHandler) TestConnection(c *fiber.Ctx) error {
 	latency := time.Since(start).Milliseconds()
 
 	if err != nil {
-		return c.JSON(fiber.Map{
+		code := classifySSHError(err)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"success": false,
 			"error": fiber.Map{
-				"code":    "SSH_CONNECTION_FAILED",
-				"message": err.Error(),
+				"code":    code,
+				"message": genericMessage(code),
 			},
 		})
 	}
@@ -191,6 +193,31 @@ func buildAuthMethods(authType models.SSHAuthType, password, keyContent, keyPath
 			return []ssh.AuthMethod{ssh.Password(password)}, nil
 		}
 		return nil, fmt.Errorf("sshAuthType is required (password, key, or key_file)")
+	}
+}
+
+// classifySSHError maps a Go SSH error to a structured error code.
+// The frontend resolves the code to a user-facing localized message.
+func classifySSHError(err error) string {
+	msg := err.Error()
+	c := strings.Contains
+	switch {
+	case c(msg, "connection refused"):
+		return ErrCodeSSHConnectionRefused
+	case c(msg, "no such host") || c(msg, "no route to host") || c(msg, "name or service not known"):
+		return ErrCodeSSHHostNotFound
+	case c(msg, "i/o timeout") || c(msg, "connection timed out") || c(msg, "deadline exceeded"):
+		return ErrCodeSSHTimeout
+	case c(msg, "unable to authenticate") || c(msg, "no supported methods remain"):
+		return ErrCodeSSHAuthFailed
+	case c(msg, "handshake failed"):
+		return ErrCodeSSHHandshakeFailed
+	case c(msg, "host key verification failed") || c(msg, "knownhosts"):
+		return ErrCodeSSHHostKeyFailed
+	case c(msg, "permission denied"):
+		return ErrCodeSSHPermissionDenied
+	default:
+		return ErrCodeSSHFailed
 	}
 }
 

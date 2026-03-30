@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
 import {
     api,
@@ -121,8 +122,8 @@ function SystemRuleEditor({ rule, channels, onSuccess }: { rule: AlertRule; chan
             toast.success(t('alerts.rules.updated'));
             onSuccess();
             closePanel();
-        } catch {
-            toast.error(t('alerts.rules.updateFailed'));
+        } catch (error) {
+            toast.error(getErrorMessage(error));
         } finally {
             setIsSubmitting(false);
         }
@@ -316,8 +317,8 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
             }
             onSuccess();
             closePanel();
-        } catch {
-            toast.error(t(isEdit ? 'alerts.rules.updateFailed' : 'alerts.rules.createFailed'));
+        } catch (error) {
+            toast.error(getErrorMessage(error));
         }
     };
 

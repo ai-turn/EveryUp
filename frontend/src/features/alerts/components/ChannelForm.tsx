@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
 import { IconTelegram, IconDiscord, IconSlack } from '../../../components/icons/ChannelIcons';
 import { api, type CreateNotificationChannelData, type NotificationChannel, type TelegramConfig, type DiscordConfig, type SlackConfig } from '../../../services/api';
@@ -100,7 +101,7 @@ export function ChannelForm({ onSuccess, channel }: ChannelFormProps) {
                         await api.testNotificationChannel(created.id);
                         toast.success(t('alerts.testSent'));
                     } catch (error) {
-                        toast.error(t('alerts.testFailed'));
+                        toast.error(getErrorMessage(error));
                     } finally {
                         setIsTesting(false);
                     }
@@ -110,7 +111,7 @@ export function ChannelForm({ onSuccess, channel }: ChannelFormProps) {
             onSuccess();
             closePanel();
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : t('alerts.addFailed'));
+            toast.error(getErrorMessage(error));
         }
     };
 

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
+import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
 import { useSidePanel } from '../../../contexts/SidePanelContext';
 import { api } from '../../../services/api';
@@ -50,7 +51,7 @@ export function LogServiceForm({ onSuccess }: LogServiceFormProps) {
             });
             toast.success(t('logServices.toast.createdGuide', { defaultValue: 'Service created! Copy the integration code below to start collecting logs.' }), { duration: 5000 });
         } catch (err) {
-            toast.error(err instanceof Error ? err.message : t('logServices.toast.createFailed', { defaultValue: 'Failed to create log service' }));
+            toast.error(getErrorMessage(err));
         } finally {
             setSubmitting(false);
         }

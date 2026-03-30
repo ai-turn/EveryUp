@@ -19,7 +19,10 @@ func (h *SettingsHandler) Get(c *fiber.Ctx) error {
 	if cfg == nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"success": false,
-			"error":   "config not available",
+			"error": fiber.Map{
+				"code":    ErrCodeConfigUnavailable,
+				"message": genericMessage(ErrCodeConfigUnavailable),
+			},
 		})
 	}
 	return c.JSON(fiber.Map{
@@ -53,7 +56,10 @@ func (h *SettingsHandler) Update(c *fiber.Ctx) error {
 	if cfg == nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"success": false,
-			"error":   "config not available",
+			"error": fiber.Map{
+				"code":    ErrCodeConfigUnavailable,
+				"message": genericMessage(ErrCodeConfigUnavailable),
+			},
 		})
 	}
 
@@ -61,7 +67,10 @@ func (h *SettingsHandler) Update(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"success": false,
-			"error":   "invalid request body",
+			"error": fiber.Map{
+				"code":    ErrCodeInvalidRequest,
+				"message": genericMessage(ErrCodeInvalidRequest),
+			},
 		})
 	}
 
@@ -88,7 +97,10 @@ func (h *SettingsHandler) Update(c *fiber.Ctx) error {
 	if err := config.UpdateSettings(consecutiveFailures, metricsRetention, logsRetention); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"success": false,
-			"error":   "failed to save settings: " + err.Error(),
+			"error": fiber.Map{
+				"code":    ErrCodeUpdateFailed,
+				"message": genericMessage(ErrCodeUpdateFailed),
+			},
 		})
 	}
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
 import { api, type AlertRule, type NotificationChannel, type Service, type Host } from '../../../services/api';
 import { useSidePanel } from '../../../contexts/SidePanelContext';
@@ -111,8 +112,8 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
       setChannels(channelsData);
       setServices(servicesData);
       setHosts(hostsData);
-    } catch {
-      toast.error(t('alerts.rules.loadFailed'));
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
@@ -135,8 +136,8 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
         prev.map(r => r.id === id ? { ...r, isEnabled: result.isEnabled } : r)
       );
       toast.success(result.isEnabled ? t('alerts.rules.ruleEnabled') : t('alerts.rules.ruleDisabled'));
-    } catch {
-      toast.error(t('alerts.rules.toggleFailed'));
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setTogglingIds(prev => {
         const next = new Set(prev);
@@ -154,8 +155,8 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
       toast.success(t('alerts.rules.deleted'));
       setDeleteTargetId(null);
       loadData();
-    } catch {
-      toast.error(t('alerts.rules.deleteFailed'));
+    } catch (error) {
+      toast.error(getErrorMessage(error));
     } finally {
       setIsDeleting(false);
     }

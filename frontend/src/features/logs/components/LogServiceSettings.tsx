@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
+import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
 import { api, Service } from '../../../services/api';
 
@@ -53,7 +54,7 @@ export function LogServiceSettings({ service, onSuccess }: Props) {
       onSuccess(updated);
       toast.success(t('logServices.settings.saved'));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t('common.errorGeneric'));
+      toast.error(getErrorMessage(err));
     } finally {
       setSaving(false);
     }
