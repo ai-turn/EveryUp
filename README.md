@@ -1,5 +1,8 @@
-# EveryUp
-
+```
+╔═╗ ╦  ╦╔═╗ ╦═╗ ╦ ╦ ╦ ╦ ╔═╗
+║╣  ╚╗╔╝║╣  ╠╦╝ ╚╦╝ ║ ║ ╠═╝
+╚═╝  ╚╝ ╚═╝ ╩╚═  ╩  ╚═╝ ╩
+```
 > Monitor your services, servers, and APIs from a single self-hosted dashboard. Get real-time alerts on Telegram, Discord, or Slack when something goes down.
 
 [한국어](README.ko.md) | **English**

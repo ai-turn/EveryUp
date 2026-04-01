@@ -31,10 +31,11 @@ export const mockIncidents: Incident[] = [
   },
   {
     id: '4',
-    time: '10:55:00 AM',
-    type: 'info',
-    serviceName: 'System',
-    message: 'Weekly maintenance scheduled for Saturday 02:00 UTC',
+    time: '10:55:33 AM',
+    type: 'warning',
+    serviceName: 'Payment Worker',
+    message: 'response time exceeded threshold (2.4s)',
+    serviceId: '4',
   },
   {
     id: '5',

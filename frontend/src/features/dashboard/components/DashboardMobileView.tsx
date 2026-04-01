@@ -126,7 +126,7 @@ export function DashboardMobileView() {
                   <button
                     key={svc.id}
                     onClick={() => navigate(`/healthcheck/${svc.id}`)}
-                    className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-ui-hover-dark active:bg-slate-100 dark:active:bg-ui-active-dark transition-colors text-left"
+                    className="w-full flex items-center gap-3 py-2.5 pl-2.5 pr-1 rounded-lg hover:bg-slate-50 dark:hover:bg-ui-hover-dark active:bg-slate-100 dark:active:bg-ui-active-dark transition-colors text-left"
                   >
                     <span className={`w-2 h-2 rounded-full shrink-0 ${sc.dot}`} />
                     <div className="flex-1 min-w-0">
@@ -275,7 +275,7 @@ export function DashboardMobileView() {
                 <button
                   key={res.id}
                   onClick={() => navigate(`/infra/${res.id}`)}
-                  className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-ui-hover-dark active:bg-slate-100 dark:active:bg-ui-active-dark transition-colors text-left cursor-pointer"
+                  className="w-full flex items-center gap-3 py-2.5 pl-2.5 pr-1 rounded-lg hover:bg-slate-50 dark:hover:bg-ui-hover-dark active:bg-slate-100 dark:active:bg-ui-active-dark transition-colors text-left cursor-pointer"
                 >
                   <span className={`w-2 h-2 rounded-full shrink-0 ${resourceStatusDot[res.status] || 'bg-slate-400'}`} />
                   <div className="flex-1 min-w-0">
