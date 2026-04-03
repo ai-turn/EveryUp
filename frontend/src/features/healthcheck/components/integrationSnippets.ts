@@ -156,8 +156,8 @@ export function buildAgentSnippets(hostname: string, port: string, isHttps: bool
 
 [INPUT]
     name            tail
-    path            /var/log/myapp/app.log
-    tag             mt.logs
+    path            /var/log/app/app.log
+    tag             log-agent.logs
     read_from_head  false
     refresh_interval 5
     rotate_wait     30
@@ -166,49 +166,49 @@ export function buildAgentSnippets(hostname: string, port: string, isHttps: bool
 
 [FILTER]
     name            lua
-    match           mt.logs
-    script          /fluent-bit/etc/mt_transform.lua
-    call            mt_transform
+    match           log-agent.logs
+    script          /fluent-bit/etc/transform.lua
+    call            transform
 
 [OUTPUT]
     name            http
-    match           mt.logs
+    match           log-agent.logs
     host            ${hostname}
     port            ${port}
     uri             /api/v1/logs/ingest
     format          json
     json_date_key   false
     header          Authorization Bearer ${displayKey}
-    header          X-MT-Source agent
+    header          X-Log-Agent-Source agent
     header          Content-Type application/json
     tls             ${isHttps ? 'on' : 'off'}
     tls.verify      off
     retry_limit     3`,
 
     docker_sidecar: `# docker-compose.yml — Sidecar 패턴
-# 앱과 Fluent Bit Agent가 로그 볼륨을 공유합니다
+# 앱과 Log Agent가 로그 볼륨을 공유합니다
 
 services:
   myapp:
     image: myapp:latest
     volumes:
-      - app-logs:/var/log/myapp
+      - app-logs:/var/log/app   # 앱이 여기에 로그 파일 생성
 
   everyup-agent:
     image: aiturn/everyup-log-agent:latest
     volumes:
-      - app-logs:/var/log/myapp:ro
+      - app-logs:/var/log/app:ro  # 컨테이너 내부 경로는 /var/log/app
     environment:
-      MT_ENDPOINT: "${ingestUrl}"
-      MT_API_KEY: "${displayKey}"
-      MT_FILE: "/var/log/myapp/app.log"
+      - LOG_AGENT_ENDPOINT=${origin}
+      - LOG_AGENT_API_KEY=${displayKey}
+      # LOG_AGENT_FILE 기본값: /var/log/app/*.log
     restart: unless-stopped
 
 volumes:
   app-logs:`,
 
     docker_pipe: `# Docker Pipe 모드
-# 컨테이너 stdout/stderr를 Fluent Bit으로 파이프
+# 컨테이너 stdout/stderr를 Log Agent로 파이프
 
 services:
   myapp:
@@ -218,9 +218,9 @@ services:
   everyup-agent:
     image: aiturn/everyup-log-agent:latest
     environment:
-      MT_ENDPOINT: "${ingestUrl}"
-      MT_API_KEY: "${displayKey}"
-      MT_CONFIG: "/fluent-bit/etc/stdin.conf"
+      - LOG_AGENT_ENDPOINT=${origin}
+      - LOG_AGENT_API_KEY=${displayKey}
+      - LOG_AGENT_CONFIG=/fluent-bit/etc/stdin.conf
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     entrypoint: >
@@ -228,37 +228,37 @@ services:
       /entrypoint.sh"
     restart: unless-stopped`,
 
-    systemd: `# /etc/systemd/system/mt-fluent-bit.service
-# VM/EC2에서 Fluent Bit을 systemd 서비스로 실행
+    systemd: `# /etc/systemd/system/everyup-log-agent.service
+# VM/베어메탈에서 Log Agent를 systemd 서비스로 실행
 
 [Unit]
-Description=MT Log Agent (Fluent Bit)
+Description=EveryUp Log Agent (Fluent Bit)
 After=network.target
 
 [Service]
 Type=simple
 ExecStart=/opt/fluent-bit/bin/fluent-bit \\
-  -c /etc/mt-agent/fluent-bit.conf
+  -c /etc/everyup-agent/fluent-bit.conf
 Restart=always
 RestartSec=5
-EnvironmentFile=/etc/mt-agent/env
+EnvironmentFile=/etc/everyup-agent/env
 
 [Install]
 WantedBy=multi-user.target
 
-# --- /etc/mt-agent/env ---
-# MT_HOST=${hostname}
-# MT_PORT=${port}
-# MT_TLS=${isHttps ? 'on' : 'off'}
-# MT_API_KEY=${displayKey}
-# MT_FILE=/var/log/myapp/app.log
-# MT_LOG_LEVEL=info
+# --- /etc/everyup-agent/env ---
+# LOG_AGENT_HOST=${hostname}
+# LOG_AGENT_PORT=${port}
+# LOG_AGENT_TLS=${isHttps ? 'on' : 'off'}
+# LOG_AGENT_API_KEY=${displayKey}
+# LOG_AGENT_FILE=/var/log/myapp/app.log
+# LOG_AGENT_LEVEL=info
 
 # 설치:
 # curl -sL https://packages.fluentbit.io/install.sh | sh
-# sudo cp fluent-bit.conf /etc/mt-agent/
-# sudo systemctl enable mt-fluent-bit
-# sudo systemctl start mt-fluent-bit`,
+# sudo cp fluent-bit.conf /etc/everyup-agent/
+# sudo systemctl enable everyup-log-agent
+# sudo systemctl start everyup-log-agent`,
   };
 }
 
@@ -332,10 +332,9 @@ docker run -d \\
 
 export function buildAgentQuickStart(displayKey: string, origin: string): string {
   return `docker run -d --name everyup-log-agent \\
-  -v /var/log/myapp:/var/log/myapp:ro \\
-  -e MT_ENDPOINT="${origin}" \\
-  -e MT_API_KEY="${displayKey}" \\
-  -e MT_FILE="/var/log/myapp/*.log" \\
+  -v /path/to/your/app/logs:/var/log/app:ro \\
+  -e LOG_AGENT_ENDPOINT="${origin}" \\
+  -e LOG_AGENT_API_KEY="${displayKey}" \\
   --restart unless-stopped \\
   aiturn/everyup-log-agent:latest`;
 }

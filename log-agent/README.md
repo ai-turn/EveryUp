@@ -34,45 +34,49 @@ docker run -d \
   aiturn/everyup-log-agent:latest
 ```
 
-### Docker Compose
+### Adding to an existing Docker Compose project
 
-**1.** Pull the image:
+Add the agent as a service directly in your `docker-compose.yml`. Set environment variables inline to avoid conflicts with your project's existing `.env` file:
 
-```bash
-docker pull aiturn/everyup-log-agent:latest
-```
+```yaml
+services:
+  your-app:
+    # ... your existing services
 
-**2.** Create `.env` — fill in your values before starting:
-
-```bash
-cp .env.example .env
-```
-
-Or create it manually:
-
-```dotenv
-LOG_AGENT_ENDPOINT=http://your-everyup-server:3001
-LOG_AGENT_API_KEY=la_your_api_key
-LOG_AGENT_PATH=/path/to/your/app/logs
+  everyup-log-agent:
+    image: aiturn/everyup-log-agent:latest
+    restart: unless-stopped
+    environment:
+      - LOG_AGENT_ENDPOINT=http://your-everyup-server:3001
+      - LOG_AGENT_API_KEY=la_your_api_key
+    volumes:
+      - /path/to/your/app/logs:/var/log/app:ro
 ```
 
 > `LOG_AGENT_ENDPOINT` and `LOG_AGENT_API_KEY` are required. The agent will not start without them.
 
-**3.** Create `docker-compose.yml`:
+If you prefer to keep secrets out of `docker-compose.yml`, use a separate named file (e.g. `log-agent.env`) and reference it explicitly:
 
 ```yaml
-services:
-  everyup-log-agent:
-    image: aiturn/everyup-log-agent:latest
-    restart: unless-stopped
-    env_file: .env
-    volumes:
-      - ${LOG_AGENT_PATH}:/var/log/app:ro
+    env_file: log-agent.env
 ```
 
-**4.** Start:
+Then start with:
 
 ```bash
+docker compose up -d
+```
+
+### Standalone Docker Compose
+
+If you are running the agent on its own (not alongside your app), you can use the provided `docker-compose.yml` from this repo. Pull and start:
+
+```bash
+docker pull aiturn/everyup-log-agent:latest
+
+LOG_AGENT_ENDPOINT=http://your-everyup-server:3001 \
+LOG_AGENT_API_KEY=la_your_api_key \
+LOG_AGENT_PATH=/path/to/your/app/logs \
 docker compose up -d
 ```
 
@@ -88,10 +92,19 @@ docker compose up -d
 | `LOG_AGENT_LEVEL` | Log level (`debug`, `info`, `warn`, `error`) | `info` |
 | `LOG_AGENT_RETRY_LIMIT` | Retry count on failure (`0` = unlimited) | `3` |
 | `LOG_AGENT_PATH` | Host log directory (mounted to `/var/log/app`) | — |
+| `LOG_AGENT_WEB_CONSOLE` | Enable test console UI | `false` |
+| `LOG_AGENT_WEB_CONSOLE_PORT` | Test console port | `8080` |
+| `LOG_AGENT_HOST` | Override parsed host from `LOG_AGENT_ENDPOINT` | — |
+| `LOG_AGENT_PORT` | Override parsed port from `LOG_AGENT_ENDPOINT` | — |
+| `LOG_AGENT_TLS` | TLS on/off (`on`/`off`), overrides parsed value | `off` |
+| `LOG_AGENT_TLS_VERIFY` | Verify TLS certificate (`on`/`off`) | `off` |
+| `LOG_AGENT_CONFIG` | Fluent Bit config file path | `/fluent-bit/etc/fluent-bit.conf` |
 
 > **`LOG_AGENT_ENDPOINT` URL parsing:**
 > - `http://192.168.1.10:3001` → host=192.168.1.10, port=3001, tls=off
 > - `https://monitoring.example.com` → host=monitoring.example.com, port=443, tls=on
+>
+> For unsupported URL formats (e.g. IPv6, user:pass@host), skip `LOG_AGENT_ENDPOINT` and set `LOG_AGENT_HOST`, `LOG_AGENT_PORT`, `LOG_AGENT_TLS` directly.
 
 ---
 
@@ -101,16 +114,57 @@ A browser-based console for sending test logs. Useful for verifying the agent is
 
 > **Warning:** Never enable in production — it starts an unauthenticated HTTP server.
 
-```dotenv
-LOG_AGENT_WEB_CONSOLE=true
-LOG_AGENT_WEB_CONSOLE_PORT=8080
+Add to your service's `environment` block and expose the port:
+
+```yaml
+    environment:
+      - LOG_AGENT_ENDPOINT=http://your-everyup-server:3001
+      - LOG_AGENT_API_KEY=la_your_api_key
+      - LOG_AGENT_WEB_CONSOLE=true
+      - LOG_AGENT_WEB_CONSOLE_PORT=8080  # optional, default 8080
+    ports:
+      - "8080:8080"
 ```
 
-```bash
-docker compose up
+### Accessing the console when nginx is your reverse proxy
+
+The web console makes requests to `/log` using a relative URL, so the browser must reach the test console server directly — not through nginx. nginx only handles the ports it listens on (typically 80/443). The `ports: "8080:8080"` binding connects the host directly to the container at the OS network level, bypassing nginx entirely.
+
+**Option 1 — Direct port access (recommended)**
+
+Access the console via the host IP and port, skipping nginx:
+
+```
+http://<server-ip>:8080
 ```
 
-Open `http://localhost:8080` to send test logs and watch the live stream.
+> **Firewall note:** nginx being a reverse proxy does not block this port — nginx only handles traffic on the ports it explicitly listens on (80/443). However, your cloud security group or OS firewall typically allows only 80/443 by default, so **you must open the console port explicitly**:
+> - AWS: EC2 Security Group → add inbound rule for the port
+> - GCP: VPC Firewall Rules → add allow rule for the port
+> - Linux (ufw): `ufw allow 8080`
+> - Linux (iptables): `iptables -A INPUT -p tcp --dport 8080 -j ACCEPT`
+>
+> Remember to close the port again after testing.
+
+**Option 2 — Proxy through nginx**
+
+If the server is not directly reachable (e.g. behind a load balancer), add location blocks to your nginx config to proxy both the page and the `/log` endpoint:
+
+```nginx
+location /log-console/ {
+    proxy_pass http://everyup-log-agent:8080/;
+    proxy_set_header Host $host;
+}
+
+location /log {
+    proxy_pass http://everyup-log-agent:8080/log;
+    proxy_set_header Host $host;
+}
+```
+
+`everyup-log-agent` must be on the same Docker network as nginx for the service name to resolve.
+
+Then start and open `http://localhost:8080` (Option 1) or `https://your-domain/log-console/` (Option 2) to send test logs and watch the live stream.
 
 ---
 
