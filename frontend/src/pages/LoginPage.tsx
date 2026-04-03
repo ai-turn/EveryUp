@@ -213,6 +213,17 @@ docker volume rm everyup-data
 docker compose up -d`}
                   </pre>
                 </div>
+
+                {/* GitHub README link */}
+                <a
+                  href="https://github.com/ai-turn/EveryUp#readme"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-text-dim-dark hover:text-primary dark:hover:text-primary transition-colors"
+                >
+                  <MaterialIcon name="open_in_new" className="text-sm" />
+                  GitHub README
+                </a>
               </div>
             )}
           </div>{/* end relative wrapper */}
