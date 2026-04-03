@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -17,6 +18,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/log", handleLog)
+	mux.HandleFunc("/config", handleConfig)
 	mux.Handle("/", http.FileServer(http.Dir("/test/www")))
 
 	addr := ":" + port
@@ -25,6 +27,30 @@ func main() {
 		fmt.Fprintf(os.Stderr, "server error: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+func maskAPIKey(key string) string {
+	if len(key) == 0 {
+		return "(not set)"
+	}
+	if len(key) <= 8 {
+		return "****"
+	}
+	return key[:4] + strings.Repeat("*", len(key)-7) + key[len(key)-3:]
+}
+
+func handleConfig(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	endpoint := os.Getenv("LOG_AGENT_ENDPOINT")
+	if endpoint == "" {
+		endpoint = "(not set)"
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	fmt.Fprintf(w, `{"endpoint":%q,"apiKey":%q}`, endpoint, maskAPIKey(os.Getenv("LOG_AGENT_API_KEY")))
 }
 
 func handleLog(w http.ResponseWriter, r *http.Request) {

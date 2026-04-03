@@ -16,6 +16,18 @@ const msgInput    = document.getElementById('msg');
 // ── Init ───────────────────────────────────────────────────
 document.getElementById('footer-host').textContent = location.host || 'localhost:8080';
 
+// Load config from server and populate config bar
+fetch('/config')
+  .then(r => r.json())
+  .then(cfg => {
+    document.getElementById('cfg-endpoint').textContent = cfg.endpoint || '(not set)';
+    document.getElementById('cfg-apikey').textContent   = cfg.apiKey  || '(not set)';
+  })
+  .catch(() => {
+    document.getElementById('cfg-endpoint').textContent = '(unavailable)';
+    document.getElementById('cfg-apikey').textContent   = '(unavailable)';
+  });
+
 // ── Send ───────────────────────────────────────────────────
 async function sendLog(level) {
   if (sending) return;
