@@ -82,14 +82,14 @@ export function LoginPage() {
       <div>
         {/* Logo / Title */}
         <div className="text-center mb-8 w-96">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-4">
-            <IconHealthCheck size={28} className="text-primary" />
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 mb-4">
+            <IconHealthCheck size={24} className="text-primary" />
           </div>
           <div className="text-2xl font-bold text-primary tracking-tight mb-1">EveryUp</div>
-          <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">
             {isSetup ? t('login.setupTitle') : t('login.loginTitle')}
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+          <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
             {isSetup ? t('login.setupSubtitle') : t('login.loginSubtitle')}
           </p>
         </div>
@@ -166,7 +166,7 @@ export function LoginPage() {
             {/* Recovery panel — outside card div, bottom-aligned with card border */}
             {!isSetup && showForgot && (
               <div className="animate-slide-in-right absolute bottom-0 left-full ml-4 w-96 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl shadow-sm p-5 space-y-4">
-                <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                   {t('login.forgotPassword')}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-text-muted-dark">
@@ -175,14 +175,14 @@ export function LoginPage() {
 
                 {/* Method 1: Env var */}
                 <div className="space-y-1.5">
-                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                     {t('login.recoveryMethod1Title')}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-text-muted-dark">
                     {t('login.recoveryMethod1Desc')}
                   </p>
                   <div className="space-y-1">
-                    <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">① {t('login.recoveryMethod1Step1')}</p>
+                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">① {t('login.recoveryMethod1Step1')}</p>
                     <pre className="text-[11px] bg-slate-50 dark:bg-bg-main-dark border border-slate-200 dark:border-ui-border-dark rounded-lg p-2.5 overflow-x-auto text-slate-700 dark:text-slate-300 leading-relaxed">
 {`# docker-compose.yml
 environment:
@@ -192,13 +192,13 @@ environment:
 docker compose restart`}
                     </pre>
                   </div>
-                  <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">② {t('login.recoveryMethod1Step2')}</p>
-                  <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">③ {t('login.recoveryMethod1Step3')}</p>
+                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">② {t('login.recoveryMethod1Step2')}</p>
+                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">③ {t('login.recoveryMethod1Step3')}</p>
                 </div>
 
                 {/* Method 2: Remove data volume */}
                 <div className="space-y-1.5">
-                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                     {t('login.recoveryMethod2Title')}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-text-muted-dark">
