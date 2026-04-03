@@ -181,15 +181,19 @@ export function LoginPage() {
                   <p className="text-xs text-slate-500 dark:text-text-muted-dark">
                     {t('login.recoveryMethod1Desc')}
                   </p>
-                  <pre className="text-[11px] bg-slate-50 dark:bg-bg-main-dark border border-slate-200 dark:border-ui-border-dark rounded-lg p-2.5 overflow-x-auto text-slate-700 dark:text-slate-300 leading-relaxed">
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">① {t('login.recoveryMethod1Step1')}</p>
+                    <pre className="text-[11px] bg-slate-50 dark:bg-bg-main-dark border border-slate-200 dark:border-ui-border-dark rounded-lg p-2.5 overflow-x-auto text-slate-700 dark:text-slate-300 leading-relaxed">
 {`# docker-compose.yml
 environment:
   MT_ADMIN_USERNAME: admin
   MT_ADMIN_PASSWORD: newpassword
 
-# 재시작
 docker compose restart`}
-                  </pre>
+                    </pre>
+                  </div>
+                  <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">② {t('login.recoveryMethod1Step2')}</p>
+                  <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">③ {t('login.recoveryMethod1Step3')}</p>
                 </div>
 
                 {/* Method 2: Remove data volume */}
