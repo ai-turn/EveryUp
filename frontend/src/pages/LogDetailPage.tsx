@@ -97,7 +97,7 @@ export function LogDetailPage() {
     setIsDeleting(true);
     try {
       await api.deleteService(service.id);
-      toast.success(t('healthcheck.toast.deleted', { defaultValue: 'Service deleted successfully' }));
+      toast.success(t('logs.toast.deleted'));
       navigate('/logs');
     } catch (err) {
       toast.error(getErrorMessage(err));

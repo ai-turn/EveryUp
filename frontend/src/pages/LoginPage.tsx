@@ -165,7 +165,7 @@ export function LoginPage() {
 
             {/* Recovery panel — outside card div, bottom-aligned with card border */}
             {!isSetup && showForgot && (
-              <div className="absolute bottom-0 left-full ml-4 w-96 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl shadow-sm p-5 space-y-4">
+              <div className="animate-slide-in-right absolute bottom-0 left-full ml-4 w-96 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl shadow-sm p-5 space-y-4">
                 <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                   {t('login.forgotPassword')}
                 </p>
@@ -187,12 +187,12 @@ environment:
   MT_ADMIN_USERNAME: admin
   MT_ADMIN_PASSWORD: newpassword
 
-# then restart
+# 재시작
 docker compose restart`}
                   </pre>
                 </div>
 
-                {/* Method 2: Docker exec */}
+                {/* Method 2: Remove data volume */}
                 <div className="space-y-1.5">
                   <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                     {t('login.recoveryMethod2Title')}
@@ -201,12 +201,12 @@ docker compose restart`}
                     {t('login.recoveryMethod2Desc')}
                   </p>
                   <pre className="text-[11px] bg-slate-50 dark:bg-bg-main-dark border border-slate-200 dark:border-ui-border-dark rounded-lg p-2.5 overflow-x-auto text-slate-700 dark:text-slate-300 leading-relaxed">
-{`docker exec -it everyup \\
-  sqlite3 /app/data/everyup.db \\
-  "DELETE FROM users;"
+{`# 컨테이너 중지 후 데이터 볼륨 삭제
+docker compose down
+docker volume rm everyup-data
 
-# then restart
-docker compose restart`}
+# 재시작 — 초기 설정 화면으로 돌아옴
+docker compose up -d`}
                   </pre>
                 </div>
               </div>

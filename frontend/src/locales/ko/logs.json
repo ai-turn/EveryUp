@@ -70,7 +70,8 @@
         "toast": {
             "created": "로그가 추가되었습니다",
             "createdGuide": "로그가 추가되었습니다! 아래 연동 코드를 복사하여 로그 수집을 시작하세요.",
-            "createFailed": "로그 추가에 실패했습니다"
+            "createFailed": "로그 추가에 실패했습니다",
+            "deleted": "로그 서비스가 삭제되었습니다"
         },
         "guide": {
             "recommended": "추천",

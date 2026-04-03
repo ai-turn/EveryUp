@@ -70,7 +70,8 @@
         "toast": {
             "created": "Log added successfully",
             "createdGuide": "Log added! Copy the integration code below to start collecting logs.",
-            "createFailed": "Failed to add log"
+            "createFailed": "Failed to add log",
+            "deleted": "Log service deleted successfully"
         },
         "guide": {
             "recommended": "Recommended",
