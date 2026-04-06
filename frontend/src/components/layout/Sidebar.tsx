@@ -50,7 +50,7 @@ export function Sidebar() {
                 title={isCollapsed ? t(item.labelKey) : undefined}
                 className={`
                   flex items-center rounded-lg transition-all duration-200
-                  ${isCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-3 py-3'}
+                  ${isCollapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5'}
                   ${isActive
                     ? 'bg-primary/10 text-primary'
                     : 'text-slate-600 dark:text-text-muted-dark hover:bg-slate-100 dark:hover:bg-ui-hover-dark dark:hover:text-white'
@@ -58,12 +58,12 @@ export function Sidebar() {
                 `}
               >
                 <item.Icon
-                  size={isCollapsed ? 24 : 22}
+                  size={isCollapsed ? 22 : 20}
                   className="shrink-0 transition-all duration-200"
                 />
                 <span
                   className={`
-                    text-base font-medium whitespace-nowrap overflow-hidden transition-all duration-300
+                    text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300
                     ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}
                   `}
                 >

@@ -12,6 +12,105 @@ interface IntegrationPanelProps {
   onApiKeyRegenerated: (newKey: string, maskedKey: string) => void;
 }
 
+// ── 재사용: 스텝 카드 헤더 ──────────────────────────────────────────────────
+
+interface StepHeaderProps {
+  step: number;
+  icon: string;
+  accentClass: string;       // 아이콘 bg / 색
+  iconColorClass: string;    // 아이콘 색
+  stepColorClass: string;    // "STEP N" 레이블 색
+  title: string;
+  description?: string;
+}
+
+function StepHeader({ step, icon, accentClass, iconColorClass, stepColorClass, title, description }: StepHeaderProps) {
+  return (
+    <div className="flex items-start gap-3 mb-5">
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${accentClass}`}>
+        <MaterialIcon name={icon} className={`text-xl ${iconColorClass}`} />
+      </div>
+      <div>
+        <p className={`text-[10px] font-bold tracking-widest uppercase mb-0.5 ${stepColorClass}`}>
+          Step {step}
+        </p>
+        <h3 className="text-base font-bold text-slate-900 dark:text-white leading-tight">{title}</h3>
+        {description && (
+          <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{description}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── 재사용: 코드 블록 ─────────────────────────────────────────────────────────
+
+function CodeBlock({
+  code,
+  onCopy,
+  copyTitle,
+  size = 'sm',
+  minHeight,
+}: {
+  code: string;
+  onCopy: () => void;
+  copyTitle: string;
+  size?: 'xs' | 'sm';
+  minHeight?: string;
+}) {
+  return (
+    <div className="relative">
+      <pre
+        className={`p-4 bg-slate-900 dark:bg-slate-950 rounded-xl overflow-x-auto leading-relaxed whitespace-pre ${
+          size === 'xs' ? 'text-xs text-slate-300' : 'text-sm text-slate-200'
+        }`}
+        style={minHeight ? { minHeight } : undefined}
+      >
+        <code>{code}</code>
+      </pre>
+      <button
+        onClick={onCopy}
+        title={copyTitle}
+        className="absolute top-3 right-3 p-1.5 rounded-lg bg-slate-700/80 hover:bg-slate-600 transition-colors text-slate-400 hover:text-slate-200 cursor-pointer"
+      >
+        <MaterialIcon name="content_copy" className="text-sm" />
+      </button>
+    </div>
+  );
+}
+
+// ── 탭 토글 ──────────────────────────────────────────────────────────────────
+
+function SegmentedControl<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { key: T; label: string }[];
+  value: T;
+  onChange: (v: T) => void;
+}) {
+  return (
+    <div className="flex gap-1 bg-slate-100 dark:bg-ui-hover-dark p-1 rounded-lg w-fit">
+      {options.map((opt) => (
+        <button
+          key={opt.key}
+          onClick={() => onChange(opt.key)}
+          className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+            value === opt.key
+              ? 'bg-white dark:bg-ui-active-dark text-slate-900 dark:text-white shadow-sm'
+              : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
+
 export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPanelProps) {
   const { t } = useTranslation(['healthcheck', 'common']);
   const { copy } = useCopyToClipboard();
@@ -19,8 +118,8 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
   const [showConfirm, setShowConfirm] = useState(false);
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
   const [revealCountdown, setRevealCountdown] = useState(0);
-  const [activeCategory, setActiveCategory] = useState<'http-appender' | 'agent'>('http-appender');
-  const [activeSnippet, setActiveSnippet] = useState<string>('express');
+  const [activeCategory, setActiveCategory] = useState<'http-appender' | 'agent'>('agent');
+  const [activeSnippet, setActiveSnippet] = useState<string>('config');
   const [activeNginxTab, setActiveNginxTab] = useState<'nginx_conf' | 'docker_compose' | 'docker_run'>('nginx_conf');
   const [showNginx, setShowNginx] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -33,7 +132,6 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
   const isHttps = window.location.protocol === 'https:';
   const origin = window.location.origin;
 
-  // Build snippet data
   const httpAppenderSnippets = buildHttpAppenderSnippets(hostname, port, isHttps, displayKey, ingestUrl);
   const agentSnippets = buildAgentSnippets(hostname, port, isHttps, displayKey, ingestUrl, origin);
   const nginxSnippets = buildNginxSnippets(hostname);
@@ -99,69 +197,51 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
 
   const handleCategoryChange = (cat: 'http-appender' | 'agent') => {
     setActiveCategory(cat);
-    setActiveSnippet(cat === 'http-appender' ? 'express' : 'config');
+    setActiveSnippet(cat === 'agent' ? 'config' : 'express');
   };
+
+  const curlCmd = `curl -X POST ${ingestUrl} \\
+  -H "Authorization: Bearer ${maskedKey !== '—' ? maskedKey : displayKey}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"level":"info","message":"Connection test","service":"${service.id}"}'`;
+
+  const curlCopyCmd = `curl -X POST ${ingestUrl} \\\n  -H "Authorization: Bearer ${displayKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"level":"info","message":"Connection test","service":"${service.id}"}'`;
 
   return (
     <div className="space-y-4">
 
-      {/* ── Step flow indicator ── */}
-      <div className="flex items-center gap-0 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-4 overflow-x-auto">
-        {[
-          { num: 1, label: 'API Key', icon: 'key' },
-          { num: 2, label: 'Endpoint', icon: 'upload' },
-          { num: 3, label: 'Test', icon: 'cable' },
-          { num: 4, label: 'Integrate', icon: 'code' },
-        ].map((step, i) => (
-          <div key={step.num} className="flex items-center gap-0 shrink-0">
-            <div className="flex items-center gap-2 px-3 py-1.5">
-              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-xs font-bold shrink-0">
-                {step.num}
-              </span>
-              <MaterialIcon name={step.icon} className="text-sm text-slate-500 dark:text-text-muted-dark" />
-              <span className="text-sm font-medium text-slate-700 dark:text-text-secondary-dark whitespace-nowrap">
-                {step.label}
-              </span>
-            </div>
-            {i < 3 && (
-              <MaterialIcon name="chevron_right" className="text-slate-300 dark:text-ui-border-dark mx-1 shrink-0" />
-            )}
-          </div>
-        ))}
-      </div>
-
       {/* ── Step 1: API Key ── */}
       <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-6">
-        <div className="flex items-center gap-3 mb-5">
-          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-xs font-bold shrink-0">1</span>
-          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10">
-            <MaterialIcon name="key" className="text-lg text-primary" />
-          </div>
-          <div>
-            <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-              {t('healthcheck.integration.apiKey.title')}
-            </h3>
-            <p className="text-sm text-slate-500 dark:text-text-muted-dark">
-              {t('healthcheck.integration.apiKey.description')}
-            </p>
-          </div>
-        </div>
+        <StepHeader
+          step={1}
+          icon="key"
+          accentClass="bg-primary/10"
+          iconColorClass="text-primary"
+          stepColorClass="text-primary/70"
+          title={t('healthcheck.integration.apiKey.title')}
+          description={t('healthcheck.integration.apiKey.description')}
+        />
 
-        <div className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-ui-hover-dark rounded-lg font-mono text-sm mb-4">
-          <span className="flex-1 text-slate-700 dark:text-text-base-dark truncate">
+        {/* Masked key display */}
+        <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 dark:bg-ui-hover-dark rounded-xl font-mono text-sm mb-4 border border-slate-100 dark:border-ui-border-dark">
+          <MaterialIcon name="lock" className="text-sm text-slate-400 dark:text-text-dim-dark shrink-0" />
+          <span className="flex-1 text-slate-700 dark:text-text-base-dark truncate select-all">
             {maskedKey}
+          </span>
+          <span className="text-[10px] font-semibold text-slate-400 dark:text-text-dim-dark bg-slate-100 dark:bg-ui-active-dark px-2 py-0.5 rounded-md shrink-0">
+            MASKED
           </span>
         </div>
 
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-amber-600 dark:text-amber-400 flex items-center gap-1">
-            <MaterialIcon name="warning" className="text-sm" />
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+            <MaterialIcon name="warning" className="text-sm shrink-0" />
             {t('healthcheck.integration.apiKey.warning')}
           </p>
           <button
             onClick={() => setShowConfirm(true)}
             disabled={isRegenerating}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50 shrink-0 cursor-pointer"
           >
             {isRegenerating ? (
               <MaterialIcon name="sync" className="text-sm animate-spin" />
@@ -175,209 +255,172 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
 
       {/* ── Step 2: Ingest Endpoint ── */}
       <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-xs font-bold shrink-0">2</span>
-          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-green-100 dark:bg-green-900/30">
-            <MaterialIcon name="upload" className="text-lg text-green-600 dark:text-green-400" />
-          </div>
-          <div>
-            <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-              {t('healthcheck.integration.endpoint.title')}
-            </h3>
-            <p className="text-sm text-slate-500 dark:text-text-muted-dark">
-              {t('healthcheck.integration.endpoint.description')}
-            </p>
-          </div>
-        </div>
+        <StepHeader
+          step={2}
+          icon="upload"
+          accentClass="bg-green-100 dark:bg-green-900/30"
+          iconColorClass="text-green-600 dark:text-green-400"
+          stepColorClass="text-green-600/80 dark:text-green-400/80"
+          title={t('healthcheck.integration.endpoint.title')}
+          description={t('healthcheck.integration.endpoint.description')}
+        />
 
-        <div className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-ui-hover-dark rounded-lg font-mono text-sm mb-3">
+        {/* Endpoint URL */}
+        <div className="flex items-center gap-2 px-3 py-2.5 bg-slate-50 dark:bg-ui-hover-dark rounded-xl font-mono text-sm mb-3 border border-slate-100 dark:border-ui-border-dark">
           <span className="text-xs font-bold text-white bg-green-600 px-2 py-0.5 rounded shrink-0">POST</span>
-          <span className="flex-1 text-slate-700 dark:text-text-base-dark truncate">{ingestUrl}</span>
+          <span className="flex-1 text-slate-700 dark:text-text-base-dark truncate text-xs">{ingestUrl}</span>
           <button
             onClick={() => copy(ingestUrl)}
-            className="shrink-0 p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-500 dark:text-text-muted-dark"
+            className="shrink-0 p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+            title={t('common.copyToClipboard')}
           >
-            <MaterialIcon name="content_copy" className="text-base" />
+            <MaterialIcon name="content_copy" className="text-sm" />
           </button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-1">
-          <span className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-text-muted-dark">
-            <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
-            error
-            <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 ml-2" />
-            warn
+        {/* Feature tags */}
+        <div className="flex flex-wrap gap-2">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/8 dark:bg-red-500/10 text-xs text-red-600 dark:text-red-400 font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+            error · warn
           </span>
-          <span className="text-slate-300 dark:text-ui-border-dark select-none">·</span>
-          <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-text-muted-dark">
-            <MaterialIcon name="auto_awesome" className="text-sm text-blue-400" />
-            {t('healthcheck.integration.endpoint.formatInfo', { defaultValue: 'Formats auto-detected' })}
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/8 dark:bg-blue-500/10 text-xs text-blue-600 dark:text-blue-400 font-medium">
+            <MaterialIcon name="auto_awesome" className="text-xs" />
+            {t('healthcheck.integration.endpoint.formatInfo', { defaultValue: '포맷 자동 감지' })}
           </span>
-          <span className="text-slate-300 dark:text-ui-border-dark select-none">·</span>
-          <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-text-muted-dark">
-            <MaterialIcon name="layers" className="text-sm text-blue-400" />
-            {t('healthcheck.integration.endpoint.batchInfo', { defaultValue: 'Batch up to 100 logs/req' })}
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-500/8 dark:bg-slate-500/10 text-xs text-slate-600 dark:text-text-muted-dark font-medium">
+            <MaterialIcon name="layers" className="text-xs" />
+            {t('healthcheck.integration.endpoint.batchInfo', { defaultValue: '배치 최대 100건/req' })}
           </span>
         </div>
       </div>
 
       {/* ── Step 3: Connection Test ── */}
       <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-xs font-bold shrink-0">3</span>
-          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
-            <MaterialIcon name="cable" className="text-lg text-emerald-600 dark:text-emerald-400" />
-          </div>
-          <div>
-            <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-              {t('healthcheck.integration.connectionTest.title', { defaultValue: 'Connection Test' })}
-            </h3>
-            <p className="text-sm text-slate-500 dark:text-text-muted-dark">
-              {t('healthcheck.integration.connectionTest.description', { defaultValue: 'Verify network connectivity and API key before integrating.' })}
-            </p>
-          </div>
-        </div>
+        <StepHeader
+          step={3}
+          icon="cable"
+          accentClass="bg-emerald-100 dark:bg-emerald-900/30"
+          iconColorClass="text-emerald-600 dark:text-emerald-400"
+          stepColorClass="text-emerald-600/80 dark:text-emerald-400/80"
+          title={t('healthcheck.integration.connectionTest.title', { defaultValue: 'Connection Test' })}
+          description={t('healthcheck.integration.connectionTest.description', { defaultValue: '코드 연동 전 연결 상태를 먼저 확인하세요.' })}
+        />
 
-        <div className="relative">
-          <pre className="p-4 bg-slate-900 dark:bg-bg-main-dark rounded-lg text-sm text-slate-200 overflow-x-auto leading-relaxed">
-            <code>{`curl -X POST ${ingestUrl} \\
-  -H "Authorization: Bearer ${maskedKey !== '—' ? maskedKey : displayKey}" \\
-  -H "Content-Type: application/json" \\
-  -d '{"level":"info","message":"Connection test","service":"${service.id}"}'`}</code>
-          </pre>
-          <button
-            onClick={() => copy(`curl -X POST ${ingestUrl} \\\n  -H "Authorization: Bearer ${displayKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"level":"info","message":"Connection test","service":"${service.id}"}'`)}
-            className="absolute top-2 right-2 p-1.5 rounded-md bg-slate-700/50 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
-            title={t('common.copyToClipboard')}
-          >
-            <MaterialIcon name="content_copy" className="text-base" />
-          </button>
-        </div>
+        <CodeBlock
+          code={curlCmd}
+          onCopy={() => copy(curlCopyCmd)}
+          copyTitle={t('common.copyToClipboard')}
+          size="sm"
+        />
 
-        <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
-          <p className="text-sm text-emerald-700 dark:text-emerald-300 flex items-start gap-1.5">
-            <MaterialIcon name="check_circle" className="text-sm mt-0.5 shrink-0" />
-            {t('healthcheck.integration.connectionTest.successHint', { defaultValue: 'If connected successfully, the server responds with HTTP 200. If you get a timeout or connection refused, check your firewall outbound rules and server inbound rules.' })}
+        <div className="mt-3 flex items-start gap-2 px-3 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
+          <MaterialIcon name="check_circle" className="text-sm text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+          <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">
+            {t('healthcheck.integration.connectionTest.successHint', {
+              defaultValue: 'HTTP 200이 오면 연결 성공. 실패 시 방화벽의 아웃바운드(443/80) 규칙을 확인하세요.',
+            })}
           </p>
         </div>
       </div>
 
-      {/* ── Step 4: Code Snippets (2-column) ── */}
+      {/* ── Step 4: Code Snippets ── */}
       <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-6">
-        <div className="flex items-center gap-3 mb-5">
-          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-xs font-bold shrink-0">4</span>
-          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-purple-100 dark:bg-purple-900/30">
-            <MaterialIcon name="code" className="text-lg text-purple-600 dark:text-purple-400" />
-          </div>
-          <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-            {t('healthcheck.integration.snippets.title')}
-          </h3>
-        </div>
+        <StepHeader
+          step={4}
+          icon="code"
+          accentClass="bg-purple-100 dark:bg-purple-900/30"
+          iconColorClass="text-purple-600 dark:text-purple-400"
+          stepColorClass="text-purple-600/80 dark:text-purple-400/80"
+          title={t('healthcheck.integration.snippets.title')}
+          description={t('healthcheck.integration.snippets.description', { defaultValue: '서비스에 로그 전송을 연결합니다. Log Agent 방식을 권장합니다.' })}
+        />
 
         {/* Category toggle */}
-        <div className="flex gap-1 mb-5 bg-slate-100 dark:bg-ui-hover-dark p-1 rounded-lg w-fit">
-          {[
-            { key: 'http-appender' as const, label: t('healthcheck.integration.snippets.httpAppender'), icon: 'http' },
-            { key: 'agent' as const, label: t('healthcheck.integration.snippets.agent'), icon: 'smart_toy' },
-          ].map((cat) => (
-            <button
-              key={cat.key}
-              onClick={() => handleCategoryChange(cat.key)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                activeCategory === cat.key
-                  ? 'bg-white dark:bg-ui-active-dark text-slate-900 dark:text-white shadow-sm'
-                  : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
-              }`}
-            >
-              <MaterialIcon name={cat.icon} className="text-sm" />
-              {cat.label}
-            </button>
-          ))}
+        <div className="mb-5">
+          <SegmentedControl
+            options={[
+              { key: 'agent' as const, label: t('healthcheck.integration.snippets.agent') },
+              { key: 'http-appender' as const, label: t('healthcheck.integration.snippets.httpAppender') },
+            ]}
+            value={activeCategory}
+            onChange={handleCategoryChange}
+          />
+          <p className="mt-2 text-xs text-slate-500 dark:text-text-muted-dark pl-1">
+            {activeCategory === 'http-appender'
+              ? t('healthcheck.integration.snippets.httpAppenderDesc', { defaultValue: '앱 코드에 전송 트랜스포트를 추가합니다. 소스를 직접 제어할 때 적합.' })
+              : t('healthcheck.integration.snippets.agentDesc', { defaultValue: '로그 파일을 테일링해 전송합니다. 서버·컨테이너 환경에 적합.' })
+            }
+          </p>
         </div>
 
         {/* Agent Quick Start */}
         {activeCategory === 'agent' && (
-          <div className="mb-5 border border-cyan-200 dark:border-cyan-800/50 bg-cyan-50 dark:bg-cyan-900/20 rounded-xl p-4">
+          <div className="mb-5 border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark rounded-xl p-4">
             <div className="flex items-center gap-2 mb-3">
-              <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-cyan-100 dark:bg-cyan-800/40">
-                <MaterialIcon name="deployed_code" className="text-base text-cyan-600 dark:text-cyan-400" />
+              <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-white dark:bg-ui-active-dark">
+                <MaterialIcon name="rocket_launch" className="text-base text-slate-500 dark:text-text-muted-dark" />
               </div>
               <div>
                 <h4 className="text-sm font-bold text-slate-900 dark:text-white">
                   {t('healthcheck.integration.agent.quickStart', { defaultValue: 'Quick Start' })}
                 </h4>
-                <p className="text-sm text-slate-500 dark:text-text-muted-dark">
-                  {t('healthcheck.integration.agent.quickStartDesc', { defaultValue: 'Pull and run the Log Agent with a single command.' })}
+                <p className="text-xs text-slate-500 dark:text-text-muted-dark">
+                  {t('healthcheck.integration.agent.quickStartDesc', { defaultValue: '명령어 하나로 Log Agent를 실행합니다.' })}
                 </p>
               </div>
             </div>
-            <div className="relative">
-              <pre className="p-3 bg-slate-900 dark:bg-slate-950 rounded-lg text-xs text-slate-300 overflow-x-auto leading-relaxed whitespace-pre">{agentQuickStartCmd}</pre>
-              <button
-                onClick={() => copy(agentQuickStartCmd)}
-                className="absolute top-2 right-2 p-1.5 rounded-md bg-slate-700 hover:bg-slate-600 transition-colors text-slate-300"
-                title={t('healthcheck.integration.snippets.copy')}
-              >
-                <MaterialIcon name="content_copy" className="text-sm" />
-              </button>
-            </div>
+            <CodeBlock
+              code={agentQuickStartCmd}
+              onCopy={() => copy(agentQuickStartCmd)}
+              copyTitle={t('healthcheck.integration.snippets.copy')}
+              size="xs"
+            />
           </div>
         )}
 
         {/* 2-column: sidebar tabs + code */}
         <div className="flex flex-col sm:flex-row gap-4">
-          <div className="sm:shrink-0 sm:w-36">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-text-dim-dark mb-2 px-2 hidden sm:block">
+          {/* Sidebar */}
+          <div className="sm:shrink-0 sm:w-40">
+            <p className="text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-text-dim-dark mb-2 px-1 hidden sm:block">
               {activeCategory === 'http-appender' ? 'Framework' : 'Deploy'}
             </p>
-            <div className="flex sm:flex-col gap-1 overflow-x-auto pb-1 sm:pb-0">
-            {currentTabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveSnippet(tab.key)}
-                className={`shrink-0 sm:w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                  activeSnippet === tab.key
-                    ? 'bg-primary/10 text-primary dark:text-primary font-semibold'
-                    : 'text-slate-500 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-            </div>
-
-            <div className="pt-3 hidden sm:block">
-              <p className="text-sm text-slate-400 dark:text-text-dim-dark leading-relaxed px-2">
-                {activeCategory === 'http-appender'
-                  ? t('healthcheck.integration.snippets.httpAppenderDesc', { defaultValue: 'Add a transport to your app code. Best when you control the source.' })
-                  : t('healthcheck.integration.snippets.agentDesc', { defaultValue: 'Tail log files and forward. Best for servers or containers.' })
-                }
-              </p>
+            <div className="flex sm:flex-col gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
+              {currentTabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveSnippet(tab.key)}
+                  className={`shrink-0 sm:w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                    activeSnippet === tab.key
+                      ? 'bg-primary/10 text-primary dark:text-primary font-semibold'
+                      : 'text-slate-500 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
           </div>
 
+          {/* Code pane */}
           <div className="flex-1 min-w-0">
-            <div className="relative h-full">
-              <pre className="p-4 bg-slate-900 dark:bg-slate-950 rounded-lg text-xs text-slate-300 overflow-x-auto leading-relaxed whitespace-pre h-full min-h-50">
-                {currentSnippets[activeSnippet]}
-              </pre>
-              <button
-                onClick={() => copy(currentSnippets[activeSnippet])}
-                className="absolute top-3 right-3 p-1.5 rounded-md bg-slate-700 hover:bg-slate-600 transition-colors text-slate-300"
-                title={t('healthcheck.integration.snippets.copy')}
-              >
-                <MaterialIcon name="content_copy" className="text-sm" />
-              </button>
-            </div>
+            <CodeBlock
+              code={currentSnippets[activeSnippet]}
+              onCopy={() => copy(currentSnippets[activeSnippet])}
+              copyTitle={t('healthcheck.integration.snippets.copy')}
+              size="xs"
+              minHeight="200px"
+            />
           </div>
         </div>
       </div>
 
-      {/* ── Optional: Nginx Reverse Proxy (collapsible) ── */}
+      {/* ── Nginx Reverse Proxy (collapsible) ── */}
       <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
         <button
           onClick={() => setShowNginx((v) => !v)}
-          className="w-full flex items-center gap-3 p-5 hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors text-left"
+          className="w-full flex items-center gap-3 px-5 py-4 hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors text-left cursor-pointer"
         >
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-ui-hover-dark shrink-0">
             <MaterialIcon name="dns" className="text-base text-slate-500 dark:text-text-muted-dark" />
@@ -386,8 +429,8 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             <h3 className="text-sm font-semibold text-slate-700 dark:text-text-secondary-dark">
               Nginx Reverse Proxy
             </h3>
-            <p className="text-sm text-slate-400 dark:text-text-dim-dark">
-              Nginx 뒤에서 운영 시 Authorization 헤더 전달 설정 · 선택 사항
+            <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-0.5">
+              {t('healthcheck.integration.nginx.desc', { defaultValue: 'Authorization 헤더 전달 설정 — 선택 사항' })}
             </p>
           </div>
           <MaterialIcon
@@ -397,47 +440,34 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
         </button>
 
         {showNginx && (
-          <div className="px-5 pb-5 border-t border-slate-100 dark:border-ui-border-dark pt-4">
-            <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg flex items-start gap-2">
+          <div className="px-5 pb-5 border-t border-slate-100 dark:border-ui-border-dark pt-4 space-y-3">
+            <div className="flex items-start gap-2 px-3 py-2.5 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
               <MaterialIcon name="warning" className="text-sm text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
-              <p className="text-sm text-amber-700 dark:text-amber-300">
-                Nginx 기본 설정은 <code className="font-mono bg-amber-100 dark:bg-amber-900/40 px-1 rounded">Authorization</code> 헤더를 백엔드로 전달하지 않습니다.{' '}
-                아래 <code className="font-mono bg-amber-100 dark:bg-amber-900/40 px-1 rounded">proxy_set_header</code> 설정을 반드시 추가하세요.
+              <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
+                Nginx 기본 설정은{' '}
+                <code className="font-mono bg-amber-100 dark:bg-amber-900/40 px-1 rounded">Authorization</code>{' '}
+                헤더를 백엔드로 전달하지 않습니다.{' '}
+                <code className="font-mono bg-amber-100 dark:bg-amber-900/40 px-1 rounded">proxy_set_header</code>{' '}
+                설정을 반드시 추가하세요.
               </p>
             </div>
 
-            <div className="flex gap-1 mb-3 bg-slate-100 dark:bg-ui-hover-dark p-1 rounded-lg w-fit">
-              {([
-                { key: 'nginx_conf', label: 'nginx.conf' },
-                { key: 'docker_compose', label: 'Docker Compose' },
-                { key: 'docker_run', label: 'Docker Run' },
-              ] as const).map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveNginxTab(tab.key)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                    activeNginxTab === tab.key
-                      ? 'bg-white dark:bg-ui-active-dark text-slate-900 dark:text-white shadow-sm'
-                      : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+            <SegmentedControl
+              options={[
+                { key: 'nginx_conf' as const, label: 'nginx.conf' },
+                { key: 'docker_compose' as const, label: 'Docker Compose' },
+                { key: 'docker_run' as const, label: 'Docker Run' },
+              ]}
+              value={activeNginxTab}
+              onChange={setActiveNginxTab}
+            />
 
-            <div className="relative">
-              <pre className="p-4 bg-slate-900 dark:bg-slate-950 rounded-lg text-xs text-slate-300 overflow-x-auto leading-relaxed whitespace-pre">
-                {nginxSnippets[activeNginxTab]}
-              </pre>
-              <button
-                onClick={() => copy(nginxSnippets[activeNginxTab])}
-                className="absolute top-3 right-3 p-1.5 rounded-md bg-slate-700 hover:bg-slate-600 transition-colors text-slate-300"
-                title={t('common.copyToClipboard')}
-              >
-                <MaterialIcon name="content_copy" className="text-sm" />
-              </button>
-            </div>
+            <CodeBlock
+              code={nginxSnippets[activeNginxTab]}
+              onCopy={() => copy(nginxSnippets[activeNginxTab])}
+              copyTitle={t('common.copyToClipboard')}
+              size="xs"
+            />
           </div>
         )}
       </div>
@@ -462,13 +492,13 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             <div className="flex gap-3 mt-2">
               <button
                 onClick={() => setShowConfirm(false)}
-                className="flex-1 px-4 py-2.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark text-slate-700 dark:text-text-secondary-dark font-semibold text-sm hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors"
+                className="flex-1 px-4 py-2.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark text-slate-700 dark:text-text-secondary-dark font-semibold text-sm hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors cursor-pointer"
               >
                 {t('common.cancel')}
               </button>
               <button
                 onClick={handleRegenerate}
-                className="flex-1 px-4 py-2.5 rounded-lg bg-red-600 text-white font-semibold text-sm hover:bg-red-700 transition-colors"
+                className="flex-1 px-4 py-2.5 rounded-lg bg-red-600 text-white font-semibold text-sm hover:bg-red-700 transition-colors cursor-pointer"
               >
                 {t('healthcheck.integration.apiKey.confirmAction')}
               </button>
@@ -495,13 +525,13 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               </div>
             </div>
 
-            <div className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-ui-hover-dark rounded-lg font-mono text-sm mb-4">
+            <div className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-ui-hover-dark rounded-xl font-mono text-sm mb-4 border border-slate-100 dark:border-ui-border-dark">
               <span className="flex-1 text-slate-700 dark:text-text-base-dark break-all select-all">
                 {revealedKey}
               </span>
               <button
                 onClick={() => copy(revealedKey)}
-                className="shrink-0 p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-500 dark:text-text-muted-dark"
+                className="shrink-0 p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-500 dark:text-text-muted-dark cursor-pointer"
                 title={t('healthcheck.integration.apiKey.copy')}
               >
                 <MaterialIcon name="content_copy" className="text-base" />
@@ -510,7 +540,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
 
             <button
               onClick={dismissRevealedKey}
-              className="w-full px-4 py-2.5 rounded-lg bg-primary text-white font-semibold text-sm hover:bg-primary/90 transition-colors"
+              className="w-full px-4 py-2.5 rounded-lg bg-primary text-white font-semibold text-sm hover:bg-primary/90 transition-colors cursor-pointer"
             >
               {t('healthcheck.integration.apiKey.revealConfirm')}
               {revealCountdown > 0 && ` (${revealCountdown}s)`}
