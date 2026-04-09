@@ -72,7 +72,26 @@ func ApiKeyAuth() fiber.Handler {
 
 		// 1. Check in-memory cache
 		if cached, ok := apiKeyCache.Load(hash); ok {
-			c.Locals("service", cached.(*models.Service))
+			service := cached.(*models.Service)
+			if service.Type != models.ServiceTypeLog {
+				return c.Status(403).JSON(fiber.Map{
+					"success": false,
+					"error": fiber.Map{
+						"code":    "FORBIDDEN",
+						"message": "API key is not allowed for log ingestion",
+					},
+				})
+			}
+			if !service.IsActive {
+				return c.Status(403).JSON(fiber.Map{
+					"success": false,
+					"error": fiber.Map{
+						"code":    "FORBIDDEN",
+						"message": "Service is inactive",
+					},
+				})
+			}
+			c.Locals("service", service)
 			return c.Next()
 		}
 
@@ -94,6 +113,26 @@ func ApiKeyAuth() fiber.Handler {
 				"error": fiber.Map{
 					"code":    "UNAUTHORIZED",
 					"message": "Invalid API key",
+				},
+			})
+		}
+
+		if service.Type != models.ServiceTypeLog {
+			return c.Status(403).JSON(fiber.Map{
+				"success": false,
+				"error": fiber.Map{
+					"code":    "FORBIDDEN",
+					"message": "API key is not allowed for log ingestion",
+				},
+			})
+		}
+
+		if !service.IsActive {
+			return c.Status(403).JSON(fiber.Map{
+				"success": false,
+				"error": fiber.Map{
+					"code":    "FORBIDDEN",
+					"message": "Service is inactive",
 				},
 			})
 		}

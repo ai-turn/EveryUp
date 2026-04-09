@@ -610,6 +610,64 @@ func TestLogIngest_InvalidApiKey(t *testing.T) {
 	}
 }
 
+func TestLogIngest_RejectsNonLogServiceApiKey(t *testing.T) {
+	ts := setupTestServer(t)
+	token := ts.setupAdmin(t, "admin", "testpass123")
+	auth := authHeader(token)
+
+	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
+		"id":   "http-svc-1",
+		"name": "HTTP Service",
+		"type": "http",
+		"url":  "https://example.com",
+	}, auth...)
+
+	var svc struct {
+		ApiKey string `json:"apiKey"`
+	}
+	json.Unmarshal(createResult.Data, &svc)
+
+	resp, _ := ts.doRequest(t, "POST", "/api/v1/logs/ingest", map[string]interface{}{
+		"level":   "error",
+		"message": "Should be rejected",
+	}, "Authorization", "Bearer "+svc.ApiKey)
+
+	if resp.StatusCode != 403 {
+		t.Errorf("status = %d, want 403 for non-log service API key", resp.StatusCode)
+	}
+}
+
+func TestLogIngest_RejectsInactiveLogService(t *testing.T) {
+	ts := setupTestServer(t)
+	token := ts.setupAdmin(t, "admin", "testpass123")
+	auth := authHeader(token)
+
+	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
+		"id":   "log-inactive-1",
+		"name": "Inactive Log Service",
+		"type": "log",
+	}, auth...)
+
+	var svc struct {
+		ApiKey string `json:"apiKey"`
+	}
+	json.Unmarshal(createResult.Data, &svc)
+
+	_, pauseResult := ts.doRequest(t, "POST", "/api/v1/services/log-inactive-1/pause", nil, auth...)
+	if !pauseResult.Success {
+		t.Fatalf("pause failed: %v", pauseResult.Error)
+	}
+
+	resp, _ := ts.doRequest(t, "POST", "/api/v1/logs/ingest", map[string]interface{}{
+		"level":   "error",
+		"message": "Should be rejected while inactive",
+	}, "Authorization", "Bearer "+svc.ApiKey)
+
+	if resp.StatusCode != 403 {
+		t.Errorf("status = %d, want 403 for inactive log service", resp.StatusCode)
+	}
+}
+
 func TestLogIngest_BatchLimit(t *testing.T) {
 	ts := setupTestServer(t)
 	token := ts.setupAdmin(t, "admin", "testpass123")

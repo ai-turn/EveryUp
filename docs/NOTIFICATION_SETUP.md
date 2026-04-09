@@ -52,7 +52,7 @@ The Chat ID tells EveryUp where to deliver messages. It works for private chats,
 
 1. Go to **Alerts → Add Channel → Telegram**.
 2. Enter a display name, paste the **Bot Token** and **Chat ID**.
-3. Click **Save** — a test notification is sent automatically to verify the connection.
+3. Click **Save** — when creating a new channel, EveryUp sends a test notification automatically to verify the connection.
 
 ---
 
@@ -63,7 +63,7 @@ The Chat ID tells EveryUp where to deliver messages. It works for private chats,
 | `getUpdates` returns empty `[]` | The bot hasn't received any messages yet. Send it a message and try again. |
 | Bot doesn't respond in a group | Enable group access: in BotFather, send `/mybots` → select your bot → Bot Settings → Group Privacy → Turn off. |
 | `401 Unauthorized` | Bot Token is invalid or revoked. Generate a new one via `/token` in BotFather. |
-| Test notification not delivered | Double-check the Chat ID. For groups/channels, make sure the bot has been added and has send permission. |
+| Test notification not delivered | Double-check the Chat ID. For groups/channels, make sure the bot has been added and has send permission. Use the **Test** button on the channel card to retry after updating the settings. |
 
 ---
 
@@ -87,7 +87,7 @@ The Chat ID tells EveryUp where to deliver messages. It works for private chats,
 
 1. Go to **Alerts → Add Channel → Discord**.
 2. Enter a display name and paste the **Webhook URL**.
-3. Click **Save** — a test notification is sent automatically.
+3. Click **Save** — when creating a new channel, EveryUp sends a test notification automatically.
 
 ---
 
@@ -98,6 +98,7 @@ The Chat ID tells EveryUp where to deliver messages. It works for private chats,
 | `Invalid Webhook Token` error | The URL is incomplete or malformed. Paste the full URL starting with `https://discord.com/api/webhooks/`. |
 | Test notification not received | The webhook may have been deleted. Verify it still exists under Server Settings → Integrations → Webhooks. |
 | `404 Unknown Webhook` | Webhook was deleted. Create a new one and update the URL in EveryUp. |
+| `Webhook URL must use HTTPS` or domain validation error | EveryUp only accepts official Discord HTTPS webhook URLs on allowed Discord domains. |
 | Rate limited | Discord enforces per-webhook rate limits. This is temporary — EveryUp will retry automatically. |
 
 ---
@@ -130,7 +131,7 @@ The Chat ID tells EveryUp where to deliver messages. It works for private chats,
 
 1. Go to **Alerts → Add Channel → Slack**.
 2. Enter a display name and paste the **Webhook URL**.
-3. Click **Save** — a test notification is sent automatically.
+3. Click **Save** — when creating a new channel, EveryUp sends a test notification automatically.
 
 ---
 
@@ -141,13 +142,14 @@ The Chat ID tells EveryUp where to deliver messages. It works for private chats,
 | `404` or `invalid_payload` error | The Webhook URL is invalid or the app was uninstalled. Re-create the webhook from your Slack app settings. |
 | Test notification not received | Make sure the bot hasn't been removed from the channel. Check the channel's **Integrations** tab. |
 | `channel_not_found` | The target channel was deleted or renamed. Add a new webhook pointing to the correct channel. |
+| `Webhook URL must use HTTPS` or domain validation error | EveryUp only accepts official Slack HTTPS webhook URLs on `hooks.slack.com`. |
 | Messages delayed | Slack may occasionally queue messages during high traffic. EveryUp will retry automatically with exponential backoff. |
 
 ---
 
 ## General Notes
 
-- EveryUp sends a **test notification** automatically whenever a new channel is saved. Use the **Test** button on any channel card to re-send it at any time.
+- EveryUp sends a **test notification** automatically when a new channel is created. Use the **Test** button on any existing channel card to send it again after edits.
 - Channels can be **toggled on/off** independently without deleting them.
 - Multiple channels can be assigned to a single **Alert Rule** for simultaneous delivery.
 - Alert Rules define the conditions (CPU threshold, error rate, etc.) and which channels receive the notification.

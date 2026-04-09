@@ -57,13 +57,7 @@ docker run -d \
 
 ### Docker Compose
 
-**1.** Pull the image:
-
-```bash
-docker pull aiturn/everyup:latest
-```
-
-**2.** Create `.env` — all variables are optional. Skip this file entirely if the defaults are fine.
+**1.** Create `.env` — all variables are optional. Skip this file entirely if the defaults are fine.
 
 ```bash
 # Linux / macOS
@@ -82,7 +76,9 @@ Or create it manually with the variables you want to override:
 # TZ=Asia/Seoul
 ```
 
-**3.** Create `docker-compose.yml`:
+> If `MT_ADMIN_USERNAME` and `MT_ADMIN_PASSWORD` are both set, EveryUp creates or resets that admin account on every startup. Leave them unset after the initial setup unless you intentionally want to pre-seed or reset the admin login.
+
+**2.** Create `docker-compose.yml`:
 
 ```yaml
 services:
@@ -102,7 +98,7 @@ volumes:
   everyup-data:
 ```
 
-**4.** Start:
+**3.** Start:
 
 ```bash
 docker compose up -d

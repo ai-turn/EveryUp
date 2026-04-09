@@ -11,7 +11,7 @@ Go (Fiber) + SQLite + WebSocket 기반 모니터링 백엔드 서버
 
 ## 빠른 시작
 
-### 로컬 실행
+### 로컬 개발
 
 ```bash
 # 의존성 설치
@@ -26,10 +26,11 @@ air
 
 ### Docker
 
+기본 이미지에는 바로 실행 가능한 기본 `config.json`이 포함되어 있으므로, 처음에는 추가 마운트 없이 시작할 수 있습니다.
+
 **Linux / macOS**
 ```bash
 docker run -d -p 3001:3001 \
-  -v "$(pwd)/config.json:/app/config.json:ro" \
   -v mt-data:/app/data \
   aiturn/everyup:latest
 ```
@@ -37,10 +38,11 @@ docker run -d -p 3001:3001 \
 **Windows (PowerShell)**
 ```powershell
 docker run -d -p 3001:3001 `
-  -v "${PWD}/config.json:/app/config.json:ro" `
   -v mt-data:/app/data `
   aiturn/everyup:latest
 ```
+
+커스텀 설정이 필요할 때만 `config.json`을 `/app/config.json`으로 마운트하세요.
 
 ## 설정
 
@@ -60,11 +62,12 @@ docker run -d -p 3001:3001 `
     "encryptionKey": "your-32-byte-key-here"
   },
   "system": {
-    "collectionInterval": 10,
+    "collectInterval": 5,
     "ssh": {
-      "connectionTimeout": "10s",
-      "commandTimeout": "5s",
-      "keepAliveInterval": "30s"
+      "connectionTimeout": 10,
+      "commandTimeout": 5,
+      "maxReconnectAttempts": 10,
+      "keepAliveInterval": 30
     }
   }
 }
@@ -185,7 +188,7 @@ cmd/server/          — 진입점
 internal/
 ├── collector/       — MetricCollector 인터페이스 (로컬/SSH)
 ├── database/        — SQLite 레포지토리 (도메인별 분리)
-├── handlers/        — HTTP 핸들러 (Fiber)
+├── api/             — 라우트, 미들웨어, HTTP 핸들러
 ├── models/          — 도메인 모델
 └── crypto/          — AES-256-GCM 암호화 (SSH 자격증명)
 ```

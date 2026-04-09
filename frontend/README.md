@@ -1,8 +1,10 @@
-# MT App — Frontend
+# EveryUp Frontend
 
 React + Vite + TypeScript + Tailwind CSS 기반 모니터링 대시보드입니다.
 
-## 개발 환경 실행
+## 빠른 시작
+
+**사전 준비:** [Node.js 22+](https://nodejs.org/), [pnpm](https://pnpm.io/installation)
 
 ```bash
 # 의존성 설치
@@ -12,7 +14,7 @@ pnpm install
 pnpm dev
 ```
 
-백엔드 없이 UI 개발 시 Mock 데이터를 활성화합니다.
+백엔드 없이 UI만 확인하려면 Mock 데이터를 활성화하세요.
 
 **Linux / macOS**
 ```bash
@@ -33,7 +35,8 @@ set VITE_USE_MOCK=true && pnpm dev
 
 | 변수 | 기본값 | 설명 |
 |------|--------|------|
-| `VITE_API_BASE_URL` | `http://localhost:3001/api/v1` | 백엔드 API URL |
+| `VITE_API_BASE_URL` | `http://localhost:3001/api/v1` | 백엔드 API 기본 경로. 로컬 개발에서는 `.env.example`처럼 `/api/v1`로 두고 Vite 프록시를 사용하는 것을 권장 |
+| `VITE_API_TARGET` | `http://localhost:3001` | Vite 개발 서버가 프록시할 실제 백엔드 주소 |
 | `VITE_USE_MOCK` | `false` | Mock 데이터 사용 여부 |
 
 ## 주요 페이지
@@ -41,10 +44,10 @@ set VITE_USE_MOCK=true && pnpm dev
 | 경로 | 설명 |
 |------|------|
 | `/` | 대시보드 (KPI, 서비스 현황, 인시던트) |
-| `/services` | 서비스 목록 및 헬스체크 관리 |
-| `/services/:id` | 서비스 상세 (메트릭, 로그, 통합 설정) |
-| `/monitoring` | 인프라 리스트 (서버/DB/컨테이너) |
-| `/monitoring/:id` | 인프라 상세 (CPU/메모리/디스크/프로세스) |
+| `/healthcheck` | 서비스 목록 및 헬스체크 관리 |
+| `/healthcheck/:serviceId` | 서비스 상세 (메트릭, 로그, 통합 설정) |
+| `/infra` | 인프라 리스트 (서버/DB/컨테이너) |
+| `/infra/:resourceId` | 인프라 상세 (CPU/메모리/디스크/프로세스) |
 | `/logs` | 통합 로그 뷰어 |
 | `/alerts` | 알림 채널 및 규칙 관리 |
 | `/settings` | 시스템 설정 |
@@ -62,5 +65,5 @@ set VITE_USE_MOCK=true && pnpm dev
 
 ```bash
 pnpm build
-# dist/ 폴더에 정적 파일 생성
+# 정적 파일이 dist/ 폴더에 생성됩니다.
 ```

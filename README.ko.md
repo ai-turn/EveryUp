@@ -51,13 +51,7 @@ docker run -d \
 
 ### Docker Compose
 
-**1.** 이미지 Pull:
-
-```bash
-docker pull aiturn/everyup:latest
-```
-
-**2.** `.env` 파일 생성 — 모든 항목은 선택 사항입니다. 기본값으로 충분하다면 이 파일 없이 진행해도 됩니다.
+**1.** `.env` 파일 생성 — 모든 항목은 선택 사항입니다. 기본값으로 충분하다면 이 파일 없이 진행해도 됩니다.
 
 ```bash
 # Linux / macOS
@@ -76,7 +70,9 @@ Copy-Item .env.example .env
 # TZ=Asia/Seoul
 ```
 
-**3.** `docker-compose.yml` 생성:
+> `MT_ADMIN_USERNAME`와 `MT_ADMIN_PASSWORD`를 함께 설정하면 EveryUp은 시작할 때마다 해당 관리자 계정을 생성하거나 비밀번호를 다시 설정합니다. 초기 계정을 미리 만들거나 비밀번호를 재설정하려는 경우가 아니라면, 최초 설정 이후에는 비워 두는 것을 권장합니다.
+
+**2.** `docker-compose.yml` 생성:
 
 ```yaml
 services:
@@ -96,7 +92,7 @@ volumes:
   everyup-data:
 ```
 
-**4.** 시작:
+**3.** 시작:
 
 ```bash
 docker compose up -d

@@ -43,7 +43,7 @@ fi
 : "${LOG_AGENT_LEVEL:=info}"
 : "${LOG_AGENT_FILE:=/var/log/app/*.log}"
 : "${LOG_AGENT_TLS:=off}"
-: "${LOG_AGENT_TLS_VERIFY:=off}"
+: "${LOG_AGENT_TLS_VERIFY:=on}"
 : "${LOG_AGENT_HOST:=localhost}"
 : "${LOG_AGENT_PORT:=3001}"
 : "${LOG_AGENT_RETRY_LIMIT:=3}"

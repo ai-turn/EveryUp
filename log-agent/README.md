@@ -18,6 +18,8 @@ Supports `linux/amd64` and `linux/arm64` — Docker automatically pulls the corr
 
 ## Quick Start
 
+Choose the setup that matches your deployment.
+
 ### Docker
 
 ```bash
@@ -69,18 +71,23 @@ docker compose up -d
 
 ### Standalone Docker Compose
 
-If you are running the agent on its own (not alongside your app), you can use the provided `docker-compose.yml` from this repo. Pull and start:
+If you are running the agent on its own, use the provided `docker-compose.yml` from this repo together with a local `.env` file:
 
 ```bash
-docker pull aiturn/everyup-log-agent:latest
+# Linux / macOS
+cp .env.example .env
 
-LOG_AGENT_ENDPOINT=http://your-everyup-server:3001 \
-LOG_AGENT_API_KEY=la_your_api_key \
-LOG_AGENT_PATH=/path/to/your/app/logs \
+# Windows (PowerShell)
+Copy-Item .env.example .env
+```
+
+Update `.env` with your EveryUp server URL, API key, and log path, then start the agent:
+
+```bash
 docker compose up -d
 ```
 
----
+--- 
 
 ## Configuration
 
@@ -110,7 +117,7 @@ docker compose up -d
 
 ## Web Console (Test Mode)
 
-A browser-based console for sending test logs. Useful for verifying the agent is configured correctly.
+A browser-based console for sending test logs. Use it to confirm that the agent is configured correctly.
 
 > **Warning:** Never enable in production — it starts an unauthenticated HTTP server.
 

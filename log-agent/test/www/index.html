@@ -3,222 +3,180 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Log Agent — Test Console · EveryUp</title>
+  <title>EveryUp Log Agent Test Console</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.new.css">
 </head>
 <body>
-
-  <!-- ─── Top Bar ─── -->
   <header class="topbar">
-    <div class="topbar-logo">
-      <div class="logo-icon">
-        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M2 4h12M2 8h8M2 12h10" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 4h12M2 8h8M2 12h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
         </svg>
       </div>
-      <span class="logo-name">EveryUp</span>
-      <div class="logo-sep"></div>
-      <span class="logo-sub">Log Agent</span>
+      <div class="brand-copy">
+        <span class="brand-name">EveryUp Log Agent</span>
+        <span class="brand-sub">Local test console</span>
+      </div>
     </div>
 
-    <div class="topbar-status">
+    <div class="statusbar">
       <div class="status-pill ready" id="status-pill">
         <span class="live-dot pulse" id="live-dot"></span>
-        <span id="status-text" aria-live="polite" aria-atomic="true">Ready</span>
+        <span id="status-text" aria-live="polite" aria-atomic="true">Idle</span>
       </div>
     </div>
   </header>
 
-  <!-- ─── Config Bar ─── -->
-  <div class="config-bar">
+  <div class="config-strip">
     <div class="config-item">
-      <span class="config-label">ENDPOINT</span>
-      <span class="config-value" id="cfg-endpoint">—</span>
+      <span class="config-label">endpoint</span>
+      <span class="config-value" id="cfg-endpoint">-</span>
     </div>
-    <div class="config-sep"></div>
     <div class="config-item">
-      <span class="config-label">API KEY</span>
-      <span class="config-value mono" id="cfg-apikey">—</span>
+      <span class="config-label">api key</span>
+      <span class="config-value mono" id="cfg-apikey">-</span>
+    </div>
+    <div class="config-item">
+      <span class="config-label">host</span>
+      <span class="config-value mono" id="footer-host">-</span>
     </div>
   </div>
 
-  <!-- ─── Page Content ─── -->
   <main class="page">
-
-    <!-- Stats Row -->
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-icon total">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-          </svg>
-        </div>
-        <div>
-          <div class="stat-label">Total Sent</div>
-          <div class="stat-value" id="cnt-total" aria-live="polite" aria-atomic="true">0</div>
-        </div>
+    <section class="intro">
+      <div>
+        <p class="eyebrow">Manual injector</p>
+        <h1>Write a test log into the agent's local file queue.</h1>
+        <p class="intro-copy">
+          This page confirms that the test server accepted your payload and wrote it to
+          <code>/var/log/app/test.log</code>. Forwarding from Fluent Bit to EveryUp is not verified here.
+        </p>
       </div>
-
-      <div class="stat-card">
-        <div class="stat-icon info">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
-          </svg>
-        </div>
-        <div>
-          <div class="stat-label">Info</div>
-          <div class="stat-value" id="cnt-info" aria-live="polite" aria-atomic="true">0</div>
-        </div>
+      <div class="intro-flags">
+        <span class="flag flag-warn">No auth</span>
+        <span class="flag">Local write only</span>
       </div>
+    </section>
 
+    <section class="stats-row" aria-label="Send counters">
       <div class="stat-card">
-        <div class="stat-icon warn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-        </div>
-        <div>
-          <div class="stat-label">Warn</div>
-          <div class="stat-value" id="cnt-warn" aria-live="polite" aria-atomic="true">0</div>
-        </div>
+        <span class="stat-label">writes</span>
+        <span class="stat-value" id="cnt-total" aria-live="polite" aria-atomic="true">0</span>
       </div>
-
       <div class="stat-card">
-        <div class="stat-icon error">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
-          </svg>
-        </div>
-        <div>
-          <div class="stat-label">Error</div>
-          <div class="stat-value" id="cnt-error" aria-live="polite" aria-atomic="true">0</div>
-        </div>
+        <span class="stat-label">info</span>
+        <span class="stat-value" id="cnt-info" aria-live="polite" aria-atomic="true">0</span>
       </div>
-    </div>
+      <div class="stat-card">
+        <span class="stat-label">warn</span>
+        <span class="stat-value" id="cnt-warn" aria-live="polite" aria-atomic="true">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">error</span>
+        <span class="stat-value" id="cnt-error" aria-live="polite" aria-atomic="true">0</span>
+      </div>
+    </section>
 
-    <!-- Main Grid -->
-    <div class="main-grid">
-
-      <!-- Left: Send Panel -->
-      <div class="panel">
+    <section class="main-grid">
+      <section class="panel compose-panel" aria-labelledby="send-panel-title">
         <div class="panel-header">
-          <div class="panel-icon" style="background:var(--green-bg);color:var(--green);">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-            </svg>
+          <div>
+            <p class="panel-kicker">Input</p>
+            <h2 class="panel-title" id="send-panel-title">Write test payload</h2>
           </div>
-          <span class="panel-title">Send Test Log</span>
         </div>
 
         <div class="panel-body">
           <label for="msg" class="field-label">Message</label>
-          <div class="input-wrap">
-            <input
-              class="msg-input"
-              id="msg"
-              type="text"
-              placeholder="Enter a log message..."
-              value="Test log from console"
-              aria-label="Log message"
-              autocomplete="off"
-            >
+          <input
+            class="msg-input"
+            id="msg"
+            type="text"
+            placeholder="Example: checkout-api returned 503"
+            value="Test log from console"
+            aria-label="Log message"
+            autocomplete="off"
+          >
+
+          <div class="field-group">
+            <div class="field-label">Level</div>
+            <div class="level-grid">
+              <button class="level-btn info" id="btn-info" onclick="sendLog('info')" aria-label="Write INFO log">
+                <span class="btn-name">INFO</span>
+                <span class="btn-copy">Routine event</span>
+              </button>
+              <button class="level-btn warn" id="btn-warn" onclick="sendLog('warn')" aria-label="Write WARN log">
+                <span class="btn-name">WARN</span>
+                <span class="btn-copy">Needs attention</span>
+              </button>
+              <button class="level-btn error" id="btn-error" onclick="sendLog('error')" aria-label="Write ERROR log">
+                <span class="btn-name">ERROR</span>
+                <span class="btn-copy">Failure signal</span>
+              </button>
+            </div>
           </div>
 
-          <div class="field-label">Level</div>
-          <div class="level-grid">
-            <button class="level-btn info" id="btn-info" onclick="sendLog('info')" aria-label="Send INFO log">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
-              </svg>
-              INFO
-            </button>
-            <button class="level-btn warn" id="btn-warn" onclick="sendLog('warn')" aria-label="Send WARN log">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-              </svg>
-              WARN
-            </button>
-            <button class="level-btn error" id="btn-error" onclick="sendLog('error')" aria-label="Send ERROR log">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
-              </svg>
-              ERROR
-            </button>
-          </div>
-
-          <!-- Result -->
           <div class="send-result" id="send-result">
             <span class="result-icon idle">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
             </span>
-            <span class="result-text" id="result-text">Click a level button to send a test log</span>
+            <div class="result-copy">
+              <span class="result-label">Result</span>
+              <span class="result-text" id="result-text">Ready to append a test line into the local queue file.</span>
+            </div>
           </div>
 
-          <!-- Info callout -->
-          <div class="callout">
-            Logs are written to <code>/var/log/app/test.log</code> inside the container.
-            Fluent Bit picks them up and forwards to your EveryUp server.
+          <div class="note-stack">
+            <div class="note note-warn">
+              <strong>Local scope:</strong> a successful action here means the test server wrote to
+              <code>/var/log/app/test.log</code>. It does not confirm upstream delivery.
+            </div>
+            <div class="note">
+              <strong>Exposure:</strong> keep this console on a trusted network. It is a convenience tool, not a hardened admin surface.
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <!-- Right: Terminal -->
-      <div class="panel">
-        <div class="terminal-header">
-          <div class="terminal-dots">
-            <span class="dot-r"></span>
-            <span class="dot-y"></span>
-            <span class="dot-g"></span>
+      <section class="panel terminal-panel" aria-labelledby="terminal-panel-title">
+        <div class="panel-header terminal-top">
+          <div>
+            <p class="panel-kicker">Output</p>
+            <h2 class="panel-title" id="terminal-panel-title">Local write history</h2>
           </div>
-          <span class="terminal-title" id="terminal-title">log-stream — /var/log/app/test.log</span>
-          <button class="clear-btn" onclick="clearLogs()" aria-label="Clear log output">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.96"/>
-            </svg>
-            Clear
-          </button>
+          <button class="clear-btn" onclick="clearLogs()" aria-label="Clear local write history">Clear</button>
         </div>
 
-        <div class="terminal-body" id="terminal-body" role="log" aria-live="polite" aria-label="Log output">
+        <div class="terminal-meta">
+          <span class="mono">target: /var/log/app/test.log</span>
+          <span class="terminal-meta-sep"></span>
+          <span>Browser-side history of accepted writes</span>
+        </div>
+
+        <div class="terminal-body" id="terminal-body" role="log" aria-live="polite" aria-label="Local write history">
           <div class="terminal-empty" id="terminal-empty">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
-            </svg>
-            <p>No logs sent yet.<br>Use the panel on the left to send a test log.</p>
+            <p>No writes yet.</p>
+            <p class="terminal-empty-sub">Pick a level on the left to append a test entry.</p>
           </div>
         </div>
 
         <div class="kbd-hint">
-          <div class="kbd-item">
-            <kbd>Enter</kbd> <span>Send last level</span>
-          </div>
-          <div class="kbd-item">
-            <kbd>I</kbd> <span>INFO</span>
-          </div>
-          <div class="kbd-item">
-            <kbd>W</kbd> <span>WARN</span>
-          </div>
-          <div class="kbd-item">
-            <kbd>E</kbd> <span>ERROR</span>
-          </div>
-          <div class="kbd-item">
-            <kbd>Esc</kbd> <span>Clear</span>
-          </div>
+          <div class="kbd-item"><kbd>Enter</kbd><span>Send last level</span></div>
+          <div class="kbd-item"><kbd>I</kbd><span>Info</span></div>
+          <div class="kbd-item"><kbd>W</kbd><span>Warn</span></div>
+          <div class="kbd-item"><kbd>E</kbd><span>Error</span></div>
+          <div class="kbd-item"><kbd>Esc</kbd><span>Clear</span></div>
         </div>
-      </div>
-
-    </div><!-- /main-grid -->
+      </section>
+    </section>
   </main>
 
-  <footer class="footer">
-    <p>EveryUp Log Agent Test Console &mdash; <span id="footer-host"></span></p>
-  </footer>
-
-  <script src="app.js"></script>
+  <script src="app.new.js"></script>
 </body>
 </html>

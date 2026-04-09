@@ -384,6 +384,9 @@ func (h *ServiceHandler) Pause(c *fiber.Ctx) error {
 
 	// Update scheduler (will remove the entry)
 	service.IsActive = false
+	if service.ApiKey != "" {
+		middleware.PutApiKeyCache(service.ApiKey, service)
+	}
 	h.scheduler.UpdateService(service)
 
 	return c.JSON(fiber.Map{
@@ -417,6 +420,9 @@ func (h *ServiceHandler) Resume(c *fiber.Ctx) error {
 
 	// Update scheduler (will add the entry)
 	service.IsActive = true
+	if service.ApiKey != "" {
+		middleware.PutApiKeyCache(service.ApiKey, service)
+	}
 	h.scheduler.UpdateService(service)
 
 	return c.JSON(fiber.Map{
