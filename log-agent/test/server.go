@@ -19,8 +19,14 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/log", handleLog)
 	mux.HandleFunc("/config", handleConfig)
-	mux.HandleFunc("/", serveTestUI)
-	mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("/test/www"))))
+	fs := http.FileServer(http.Dir("/test/www"))
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			http.ServeFile(w, r, "/test/www/index.html")
+			return
+		}
+		fs.ServeHTTP(w, r)
+	})
 
 	addr := ":" + port
 	fmt.Fprintf(os.Stdout, "[test-ui] Log Agent Test Console started on http://0.0.0.0%s\n", addr)
@@ -30,13 +36,6 @@ func main() {
 	}
 }
 
-func serveTestUI(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
-	http.ServeFile(w, r, "/test/www/index.html")
-}
 
 func maskAPIKey(key string) string {
 	if len(key) == 0 {
