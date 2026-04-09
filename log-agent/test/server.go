@@ -21,8 +21,6 @@ func main() {
 	mux.HandleFunc("/config", handleConfig)
 	mux.HandleFunc("/", serveTestUI)
 	mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("/test/www"))))
-	mux.Handle("/app.new.js", http.FileServer(http.Dir("/test/www")))
-	mux.Handle("/style.new.css", http.FileServer(http.Dir("/test/www")))
 
 	addr := ":" + port
 	fmt.Fprintf(os.Stdout, "[test-ui] Log Agent Test Console started on http://0.0.0.0%s\n", addr)
@@ -37,7 +35,7 @@ func serveTestUI(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	http.ServeFile(w, r, "/test/www/index.new.html")
+	http.ServeFile(w, r, "/test/www/index.html")
 }
 
 func maskAPIKey(key string) string {
