@@ -1,7 +1,7 @@
 {
     "logs": {
         "title": "Logs",
-        "subtitle": "Collect and analyze error logs from your API servers via logging libraries",
+        "subtitle": "Collect, review, and analyze application logs in one place",
         "features": {
             "errorTracking": "Error Tracking",
             "alertTrigger": "Alert Trigger",
@@ -9,19 +9,19 @@
         },
         "guide": {
             "title": "How to Collect Logs",
-            "subtitle": "Collect error logs from your API servers with minimal setup — no SDK required.",
+            "subtitle": "Start collecting logs with your existing logger configuration or log files. No separate SDK is required.",
             "supported": "Supported:",
             "step1": {
-                "title": "Add Log",
-                "desc": "Click \"Add Log\" and enter a name. An API key will be generated automatically for authentication."
+                "title": "Create a Log Service",
+                "desc": "Click \"Add Log\" and create a service name. A dedicated API key is generated automatically for that service."
             },
             "step2": {
-                "title": "Choose Collection Method",
-                "desc": "Go to the Integration tab and choose your method — HTTP Appender for direct library integration, or Log Agent for file-based collection via Docker."
+                "title": "Choose an Integration Method",
+                "desc": "Open the Integration tab and choose the method that fits your environment. Use HTTP Appender when you can edit app code, or Log Agent when you want to collect log files or stdout from servers and containers."
             },
             "step3": {
-                "title": "Start Receiving Logs",
-                "desc": "Error and warning logs will be collected automatically. Alert rules will trigger notifications via Telegram or Discord."
+                "title": "Review Logs and Add Alerts",
+                "desc": "Collected logs appear in the log list right away. If needed, add Telegram or Discord alert rules for error and warn logs."
             }
         },
         "pause": "Pause Stream",
@@ -55,12 +55,12 @@
     "logServices": {
         "viewLogs": "View Logs",
         "empty": "No logs added yet",
-        "emptyDesc": "Add a log to start collecting error logs via logging libraries.",
+        "emptyDesc": "Add a log service, then start collecting logs with HTTP Appender or Log Agent.",
         "add": {
             "title": "Add Log",
             "submit": "Add Log",
-            "infoTitle": "Log Collection",
-            "infoDesc": "Collect error logs via HTTP Appender or Fluent Bit Agent. An API key will be generated automatically."
+            "infoTitle": "Log Collection Service",
+            "infoDesc": "Create a log service to generate an API key automatically. Then choose HTTP Appender or Log Agent in the Integration tab and connect your app."
         },
         "validation": {
             "idRequired": "ID is required (min 2 chars)",
@@ -77,8 +77,8 @@
             "recommended": "Recommended",
             "universal": "Any Language",
             "loggingLibrary": {
-                "title": "Logging Library Integration",
-                "desc": "Configure HTTP Appender in your existing logging library (Winston, Logback, Serilog, etc.) to automatically collect error logs.",
+                "title": "Send Directly From App Code",
+                "desc": "Add HTTP sending to your existing logging library such as Winston, Logback, or Serilog. This is usually the easiest option when you can modify application code.",
                 "tags": {
                     "autoSend": "Auto Send",
                     "asyncBatch": "Async Batch",
@@ -86,8 +86,8 @@
                 }
             },
             "http": {
-                "title": "HTTP POST Direct",
-                "desc": "Send logs directly via HTTP POST from any language or platform. Use the API key for authentication with Bearer token.",
+                "title": "Direct HTTP POST",
+                "desc": "Send logs with plain HTTP POST from any language or platform. This works well for scripts or custom log forwarding logic.",
                 "tags": {
                     "restApi": "REST API",
                     "bearerAuth": "Bearer Auth",
@@ -100,7 +100,7 @@
             "apiKey": "API Key",
             "createdAt": "Created",
             "levelFilter": "Log Level",
-            "acceptAll": "Accept All",
+            "acceptAll": "All Levels",
             "levelFilterHint": "Click to go to the Settings tab"
         },
         "detail": {
@@ -119,19 +119,19 @@
             "revealTitle": "New API Key Generated",
             "revealDesc": "Copy your new API key now. It will not be shown again.",
             "revealConfirm": "Done",
-            "revealOnce": "This key is shown only once. Copy it now — you won't be able to see it again."
+            "revealOnce": "This key is shown only once. Copy it now - you won't be able to see it again."
         },
         "settings": {
             "levelFilterTitle": "Log Level Filter",
-            "levelFilterDesc": "Choose which log levels this log accepts. Filtered levels are silently dropped at the ingest endpoint — your log agent won't see errors.",
+            "levelFilterDesc": "Choose which log levels this service stores. Unselected levels are silently dropped at ingest time and do not count as agent errors.",
             "acceptAll": "Accept all levels",
-            "acceptAllDesc": "error, warn, info — collect everything (default)",
+            "acceptAllDesc": "error, warn, info - collect everything (default)",
             "custom": "Custom selection",
             "customDesc": "Only collect selected levels",
             "selectAtLeastOne": "Select at least one log level.",
             "saved": "Log level filter saved.",
-            "summaryAll": "Collecting: error · warn · info",
-            "summaryNone": "No levels selected — nothing will be collected",
+            "summaryAll": "Collecting: error / warn / info",
+            "summaryNone": "No levels selected - nothing will be collected",
             "summaryCollecting": "Collecting"
         }
     }

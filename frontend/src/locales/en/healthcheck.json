@@ -132,7 +132,7 @@
         "integration": {
             "apiKey": {
                 "title": "API Key",
-                "description": "Authentication key used when sending logs from external sources",
+                "description": "Authentication key used by your app or agent when sending logs.",
                 "show": "Show key",
                 "hide": "Hide key",
                 "copy": "Copy",
@@ -144,32 +144,32 @@
                 "revealTitle": "New API Key Generated",
                 "revealDesc": "Copy your new API key now. It will not be shown again.",
                 "revealConfirm": "Done",
-                "revealOnce": "This key is shown only once. Copy it now — you won't be able to see it again."
+                "revealOnce": "This key is shown only once. Copy it now - you won't be able to see it again."
             },
             "endpoint": {
                 "title": "Log Ingest Endpoint",
-                "description": "Send POST requests to this URL to ingest logs",
+                "description": "Your logger or agent sends POST requests to this URL to ingest logs.",
                 "logIngest": "Log Ingestion",
-                "formatInfo": "Send logs as-is from your logging library. No format conversion needed — the server recognizes all major formats automatically.",
-                "batchInfo": "Supports batch ingestion: send up to 100 logs per request."
+                "formatInfo": "You can send logs in the format your logging library already produces. The server recognizes major formats automatically.",
+                "batchInfo": "Batch ingestion is supported: send up to 100 logs in a single request."
             },
             "connectionTest": {
                 "title": "Connection Test",
-                "description": "Verify network connectivity and API key before integrating.",
+                "description": "Verify network connectivity and the API key before wiring this into your app.",
                 "successHint": "If connected successfully, the server responds with HTTP 200. If you get a timeout or connection refused, check your firewall outbound rules and server inbound rules."
             },
             "snippets": {
-                "title": "Code Examples",
+                "title": "Integration Examples",
                 "copy": "Copy code",
                 "httpAppender": "HTTP Appender",
-                "httpAppenderDesc": "Add a logging transport to your app code. Logs are sent directly to the API — best for applications where you control the source code.",
+                "httpAppenderDesc": "Add HTTP log sending to your application code. This is the best fit when you can edit the source code and already use a logging library.",
                 "agent": "Log Agent",
-                "agentDesc": "Deploy a Fluent Bit agent that tails log files and forwards them. Best for servers, containers, or apps that write logs to files or stdout.",
+                "agentDesc": "Deploy a Fluent Bit based agent to collect log files or stdout and forward them. This is a good fit when you cannot modify app code or want to attach logging at the server or container level.",
                 "agentConfig": "Config File"
             },
             "agent": {
                 "quickStart": "Quick Start",
-                "quickStartDesc": "Pull and run the Log Agent with a single command."
+                "quickStartDesc": "Fastest example for mounting log files into /var/log/app and starting the Log Agent."
             },
             "toast": {
                 "regenerated": "API key regenerated successfully",

@@ -1,17 +1,5 @@
 {
     "dashboard": {
-        "title": "모니터링 대시보드",
-        "subtitle": "서비스 및 인프라의 실시간 상태 개요",
-        "addService": "서비스 추가",
-        "serviceAdded": "서비스가 성공적으로 추가되었습니다.",
-        "emptyState": "모니터링 중인 항목이 없습니다. 첫 항목을 추가하여 시작하세요.",
-        "emptyStateDesc": "헬스체크, 로그, 인프라를 추가하여 모니터링을 시작하세요.",
-        "kpi": {
-            "totalServices": "전체 서비스",
-            "avgResponseTime": "평균 응답 시간",
-            "criticalAlerts": "심각한 알림",
-            "overallUptime": "전체 가동률"
-        },
         "healthCheck": {
             "title": "헬스체크",
             "empty": "등록된 헬스체크가 없습니다.",
@@ -49,10 +37,7 @@
             "empty": "구성된 알림 규칙이 없습니다",
             "add": "규칙 추가",
             "active": "활성",
-            "inactive": "비활성",
-            "builtIn": "내장",
-            "enabled": "{{count}}개 활성",
-            "serverReboot": "서버 재부팅"
+            "inactive": "비활성"
         }
     }
 }

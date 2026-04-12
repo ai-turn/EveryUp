@@ -1,17 +1,5 @@
 {
     "dashboard": {
-        "title": "Monitoring Dashboard",
-        "subtitle": "Real-time overview of your services and infrastructure",
-        "addService": "Add Service",
-        "serviceAdded": "Service added successfully",
-        "emptyState": "Nothing to monitor yet. Add your first item to get started.",
-        "emptyStateDesc": "Add health checks, logs, or infrastructure to start monitoring.",
-        "kpi": {
-            "totalServices": "Total Services",
-            "avgResponseTime": "Avg Response Time",
-            "criticalAlerts": "Critical Alerts",
-            "overallUptime": "Overall Uptime"
-        },
         "healthCheck": {
             "title": "Health Check",
             "empty": "No health checks registered.",
@@ -49,10 +37,7 @@
             "empty": "No alert rules configured",
             "add": "Add Rule",
             "active": "Active",
-            "inactive": "Inactive",
-            "builtIn": "Built-in",
-            "enabled": "{{count}} enabled",
-            "serverReboot": "Server Reboot"
+            "inactive": "Inactive"
         }
     }
 }
