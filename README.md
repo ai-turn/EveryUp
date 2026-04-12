@@ -1,6 +1,9 @@
-<img src="docs/images/ascci.png" alt="EveryUp" width="480">
+# EveryUp — Self-Hosted Monitoring Dashboard
 
-> Monitor your services, servers, and APIs from a single self-hosted dashboard. Get real-time alerts on Telegram, Discord, or Slack when something goes down.
+<img src="docs/images/ascci.png" alt="EveryUp — self-hosted uptime and infrastructure monitoring" width="480">
+
+Open-source uptime monitoring, server metrics, log collection, and alerting in one self-hosted dashboard.
+No Prometheus, no Grafana, no cloud required — just a single binary and a SQLite file.
 
 [한국어](README.ko.md) | **English**
 
@@ -17,12 +20,12 @@
 
 ## Why EveryUp?
 
-Most monitoring tools solve one problem. EveryUp combines uptime checks, server metrics, log collection, and alerting into a **single self-hosted binary** — no Prometheus, no Grafana, no Redis required.
+Most server monitoring tools solve one problem. EveryUp combines uptime checks, infrastructure metrics, log collection, and alerting into a **single self-hosted binary** — making it a lightweight open-source alternative to Uptime Kuma + Grafana + a log aggregator.
 
 - **Zero external dependencies** — Go binary + SQLite, runs anywhere Docker runs
-- **Privacy-first** — your data never leaves your own infrastructure
-- **One dashboard** — health checks, infra metrics, logs, and alerts in one place
-- **Open source** — MIT licensed, self-hostable in minutes
+- **Privacy-first** — your monitoring data never leaves your own infrastructure
+- **One dashboard** — health checks, server metrics, logs, and alerts in one place
+- **Free and open source** — MIT licensed, self-hostable in minutes
 
 ---
 
@@ -30,11 +33,11 @@ Most monitoring tools solve one problem. EveryUp combines uptime checks, server 
 
 | Feature | Description |
 |---------|-------------|
-| **Health Check** | HTTP/TCP health checks, uptime tracking, latency trends |
+| **Uptime Monitoring** | HTTP/TCP health checks, uptime tracking, latency trends |
 | **Infrastructure** | Real-time CPU/memory/disk/network collection (local + SSH remote) |
 | **API Metrics** | Per-endpoint traffic, error rate, and response time analysis |
 | **Alerts** | Telegram / Discord / Slack integration, threshold-based rules |
-| **Logs** | Unified log viewer, search, log agent collection |
+| **Log Management** | Unified log viewer, search, log agent collection |
 | **Real-time Streaming** | WebSocket-based live metric updates |
 
 ---
@@ -51,7 +54,7 @@ Most monitoring tools solve one problem. EveryUp combines uptime checks, server 
 
 ## Quick Start
 
-> **No pre-configuration needed.** On first launch, create your admin account directly in the browser. Encryption keys and JWT secrets are auto-generated on first run.
+No pre-configuration needed. On first launch, create your admin account directly in the browser. Encryption keys and JWT secrets are auto-generated on first run.
 
 Supports `linux/amd64` and `linux/arm64` — Docker automatically pulls the correct variant.
 
@@ -201,7 +204,7 @@ docker cp everyup:/app/data/monitoring.db ./monitoring.db.bak
 
 ## Log Agent
 
-Deploy `everyup-log-agent` on any server to collect logs from external services.
+Deploy `everyup-log-agent` on any server to collect logs from external services and forward them to your EveryUp dashboard.
 
 **1. Get an API key**
 
