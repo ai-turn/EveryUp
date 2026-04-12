@@ -28,6 +28,8 @@ async function sendLog(level) {
   if (sending) return;
 
   lastLevel = level;
+  ['info', 'warn', 'error'].forEach(l => document.getElementById(`btn-${l}`).classList.remove('active'));
+  document.getElementById(`btn-${level}`).classList.add('active');
   const msg = msgInput.value.trim() || "Test log message";
   const ts = new Date().toISOString();
   const payload =
