@@ -1,4 +1,4 @@
-# EveryUp
+<img src="docs/images/ascci.png" alt="EveryUp" width="480">
 
 > 서비스, 서버, API를 하나의 셀프 호스팅 대시보드에서 모니터링하세요. 장애 발생 시 Telegram, Discord 또는 Slack으로 실시간 알림을 받을 수 있습니다.
 
@@ -9,8 +9,20 @@
 ![Go](https://img.shields.io/badge/Go-1.24-00ADD8?logo=go)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker)
+![Docker Pulls](https://img.shields.io/docker/pulls/aiturn/everyup)
 
 **[라이브 데모 보기 →](https://ai-turn.github.io/EveryUp/)**
+
+---
+
+## EveryUp을 선택하는 이유
+
+대부분의 모니터링 도구는 하나의 문제만 해결합니다. EveryUp은 업타임 체크, 서버 메트릭, 로그 수집, 알림을 **단일 셀프 호스팅 바이너리**로 통합합니다 — Prometheus, Grafana, Redis 불필요.
+
+- **외부 의존성 제로** — Go 바이너리 + SQLite, Docker가 실행되는 어디서나 동작
+- **프라이버시 우선** — 데이터가 내 인프라 밖으로 나가지 않음
+- **하나의 대시보드** — 헬스체크, 인프라 메트릭, 로그, 알림을 한 곳에서
+- **오픈소스** — MIT 라이선스, 몇 분 만에 셀프 호스팅 가능
 
 ---
 
@@ -25,7 +37,15 @@
 | **로그** | 통합 로그 뷰어, 검색, 로그 에이전트 수집 |
 | **실시간 스트리밍** | WebSocket 기반 메트릭 실시간 업데이트 |
 
-![Dashboard](docs/images/dashboard.png)
+---
+
+## 스크린샷
+
+![EveryUp 대시보드 — 헬스체크, 인프라, 알림 현황](docs/images/dashboard.png)
+
+![로그인 페이지](docs/images/login.png)
+
+![로그 에이전트 개요](docs/images/log-agent-overview.png)
 
 ---
 
@@ -98,8 +118,6 @@ volumes:
 docker compose up -d
 ```
 
----
-
 **http://localhost:3001** 접속 후 관리자 계정을 생성합니다.
 
 ---
@@ -131,6 +149,12 @@ cd frontend
 pnpm install
 pnpm dev
 # → http://localhost:5173
+```
+
+**백엔드 테스트 실행**
+```bash
+cd backend
+go test ./internal/api/handlers/ -v
 ```
 
 **프로젝트 구조**
@@ -174,7 +198,6 @@ docker cp everyup:/app/data/monitoring.db ./monitoring.db.bak
 ```
 
 ---
-
 
 ## 로그 에이전트
 
@@ -221,7 +244,10 @@ docker run -d \
 
 버그 리포트나 기능 제안은 [GitHub Issues](https://github.com/ai-turn/EveryUp/issues)에 남겨주세요.
 
-Pull Request를 보내실 때는 변경 사항을 간략히 설명해 주시면 감사합니다.
+Pull Request를 보내실 때:
+- 변경 사항과 이유를 간략히 설명해 주세요
+- `go test ./internal/api/handlers/ -v` 실행 후 테스트 통과를 확인해 주세요
+- 하나의 PR에는 하나의 관심사만 담아 주세요
 
 ---
 

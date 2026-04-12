@@ -1,11 +1,5 @@
-```
-███████╗██╗   ██╗███████╗██████╗ ██╗   ██╗██╗   ██╗██████╗
-██╔════╝██║   ██║██╔════╝██╔══██╗╚██╗ ██╔╝██║   ██║██╔══██╗
-█████╗  ██║   ██║█████╗  ██████╔╝ ╚████╔╝ ██║   ██║██████╔╝
-██╔══╝  ╚██╗ ██╔╝██╔══╝  ██╔══██╗  ╚██╔╝  ██║   ██║██╔═══╝
-███████╗ ╚████╔╝ ███████╗██║  ██║   ██║   ╚██████╔╝██║
-╚══════╝  ╚═══╝  ╚══════╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝
-```
+<img src="docs/images/ascci.png" alt="EveryUp" width="480">
+
 > Monitor your services, servers, and APIs from a single self-hosted dashboard. Get real-time alerts on Telegram, Discord, or Slack when something goes down.
 
 [한국어](README.ko.md) | **English**
@@ -15,8 +9,20 @@
 ![Go](https://img.shields.io/badge/Go-1.24-00ADD8?logo=go)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker)
+![Docker Pulls](https://img.shields.io/docker/pulls/aiturn/everyup)
 
 **[Live Demo →](https://ai-turn.github.io/EveryUp/)**
+
+---
+
+## Why EveryUp?
+
+Most monitoring tools solve one problem. EveryUp combines uptime checks, server metrics, log collection, and alerting into a **single self-hosted binary** — no Prometheus, no Grafana, no Redis required.
+
+- **Zero external dependencies** — Go binary + SQLite, runs anywhere Docker runs
+- **Privacy-first** — your data never leaves your own infrastructure
+- **One dashboard** — health checks, infra metrics, logs, and alerts in one place
+- **Open source** — MIT licensed, self-hostable in minutes
 
 ---
 
@@ -31,7 +37,15 @@
 | **Logs** | Unified log viewer, search, log agent collection |
 | **Real-time Streaming** | WebSocket-based live metric updates |
 
-![Dashboard](docs/images/dashboard.png)
+---
+
+## Screenshots
+
+![EveryUp Dashboard — health checks, infra, and alerts overview](docs/images/dashboard.png)
+
+![Login page](docs/images/login.png)
+
+![Log Agent overview](docs/images/log-agent-overview.png)
 
 ---
 
@@ -104,8 +118,6 @@ volumes:
 docker compose up -d
 ```
 
----
-
 Open **http://localhost:3001** and create your admin account.
 
 ---
@@ -137,6 +149,12 @@ cd frontend
 pnpm install
 pnpm dev
 # → http://localhost:5173
+```
+
+**Run backend tests**
+```bash
+cd backend
+go test ./internal/api/handlers/ -v
 ```
 
 **Project Structure**
@@ -180,7 +198,6 @@ docker cp everyup:/app/data/monitoring.db ./monitoring.db.bak
 ```
 
 ---
-
 
 ## Log Agent
 
@@ -227,7 +244,10 @@ See [log-agent/README.md](log-agent/README.md) for more details.
 
 Bug reports and feature requests are welcome via [GitHub Issues](https://github.com/ai-turn/EveryUp/issues).
 
-When submitting a Pull Request, please include a brief description of your changes.
+When submitting a Pull Request:
+- Include a brief description of what changed and why
+- Run `go test ./internal/api/handlers/ -v` and confirm tests pass
+- Keep changes focused — one concern per PR
 
 ---
 
