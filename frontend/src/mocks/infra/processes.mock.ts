@@ -1,18 +1,6 @@
-/**
- * Mock data for system processes
- * Used by: ProcessTable component
- */
+import type { Process } from '../../types/infra';
 
-export interface Process {
-  id: string;
-  name: string;
-  icon: string;
-  pid: string;
-  cpu: string;
-  cpuHighlight: boolean;
-  memory: string;
-  status: 'RUNNING' | 'IDLE' | 'STOPPED';
-}
+export type { Process };
 
 export const mockProcesses: Process[] = [
   {

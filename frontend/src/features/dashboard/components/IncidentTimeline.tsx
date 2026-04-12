@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Timeline, MaterialIcon } from '../../../components/common';
-import { useDashboardIncidents } from '../../../hooks/useData';
-import { incidentTypeConfig } from '../../../mocks/configs';
+import { useDashboardIncidents } from '../../../hooks/useDashboard';
+import { incidentTypeConfig } from '../../../constants';
 import { TableSkeleton } from '../../../components/skeleton';
 import { useIsMobile } from '../../../hooks/useMediaQuery';
 

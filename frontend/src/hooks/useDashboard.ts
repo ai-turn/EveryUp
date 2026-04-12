@@ -35,7 +35,7 @@ export function useDashboardIncidents() {
         second: '2-digit',
         hour12: true,
       }),
-      type: item.type,
+      type: item.type as 'warning' | 'error' | 'success' | 'info',
       serviceName: item.service || 'System',
       message: item.message,
       serviceId: item.serviceId,

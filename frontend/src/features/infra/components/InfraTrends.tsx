@@ -10,7 +10,7 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
-import { useMonitoringTrends } from '../../../hooks/useData';
+import { useMonitoringTrends } from '../../../hooks/useInfra';
 import { Skeleton } from '../../../components/skeleton';
 
 interface InfraTrendsProps {
@@ -128,7 +128,7 @@ export function InfraTrends({ hostId }: InfraTrendsProps) {
                       boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                     }}
                     labelStyle={{ color: tickColor, fontWeight: 600, marginBottom: 4 }}
-                    formatter={(value: number) => [`${value}${chart.unit}`, '']}
+                    formatter={(value: number | undefined) => [`${value ?? ''}${chart.unit}`, '']}
                   />
                   <Legend
                     iconType="circle"

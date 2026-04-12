@@ -1,16 +1,6 @@
-export interface ChartSeries {
-  key: string;
-  label: string;
-  color: string;
-}
+import type { ChartData } from '../../types/infra';
 
-export interface ChartData {
-  title: string;
-  unit: string;
-  yMax?: number;
-  data: Record<string, number | string>[];
-  series: ChartSeries[];
-}
+export type { ChartData };
 
 const now = Date.now();
 const makePoints = (count: number, genFn: (i: number) => Record<string, number | string>) =>

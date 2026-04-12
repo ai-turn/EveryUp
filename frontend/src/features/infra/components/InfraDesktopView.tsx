@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { MaterialIcon, PageHeader } from '../../../components/common';
 import { InfraCard } from './InfraCard';
 import { Skeleton } from '../../../components/skeleton';
-import type { Resource } from '../../../mocks/infra/resourceList.mock';
+import type { Resource } from '../../../types/infra';
 
 interface InfraDesktopViewProps {
   filteredResources: Resource[];

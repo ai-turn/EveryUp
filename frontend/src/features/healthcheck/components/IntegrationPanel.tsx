@@ -5,26 +5,37 @@ import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
 import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
 import { api, Service } from '../../../services/api';
-import { buildHttpAppenderSnippets, buildAgentSnippets, buildNginxSnippets, buildAgentQuickStart } from './integrationSnippets';
+import {
+  buildHttpAppenderSnippets,
+  buildAgentSnippets,
+  buildNginxSnippets,
+  buildAgentQuickStart,
+} from './integrationSnippets';
 
 interface IntegrationPanelProps {
   service: Service;
   onApiKeyRegenerated: (newKey: string, maskedKey: string) => void;
 }
 
-// ── 재사용: 스텝 카드 헤더 ──────────────────────────────────────────────────
-
 interface StepHeaderProps {
   step: number;
   icon: string;
-  accentClass: string;       // 아이콘 bg / 색
-  iconColorClass: string;    // 아이콘 색
-  stepColorClass: string;    // "STEP N" 레이블 색
+  accentClass: string;
+  iconColorClass: string;
+  stepColorClass: string;
   title: string;
   description?: string;
 }
 
-function StepHeader({ step, icon, accentClass, iconColorClass, stepColorClass, title, description }: StepHeaderProps) {
+function StepHeader({
+  step,
+  icon,
+  accentClass,
+  iconColorClass,
+  stepColorClass,
+  title,
+  description,
+}: StepHeaderProps) {
   return (
     <div className="flex items-start gap-3 mb-5">
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${accentClass}`}>
@@ -42,8 +53,6 @@ function StepHeader({ step, icon, accentClass, iconColorClass, stepColorClass, t
     </div>
   );
 }
-
-// ── 재사용: 코드 블록 ─────────────────────────────────────────────────────────
 
 function CodeBlock({
   code,
@@ -79,8 +88,6 @@ function CodeBlock({
   );
 }
 
-// ── 탭 토글 ──────────────────────────────────────────────────────────────────
-
 function SegmentedControl<T extends string>({
   options,
   value,
@@ -109,8 +116,6 @@ function SegmentedControl<T extends string>({
   );
 }
 
-// ── 메인 컴포넌트 ─────────────────────────────────────────────────────────────
-
 export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPanelProps) {
   const { t } = useTranslation(['healthcheck', 'common']);
   const { copy } = useCopyToClipboard();
@@ -124,7 +129,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
   const [showNginx, setShowNginx] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const maskedKey = service.apiKeyMasked || '—';
+  const maskedKey = service.apiKeyMasked || 'Not available';
   const ingestUrl = `${window.location.origin}/api/v1/logs/ingest`;
   const displayKey = '<YOUR_API_KEY>';
   const hostname = window.location.hostname;
@@ -133,7 +138,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
   const origin = window.location.origin;
 
   const httpAppenderSnippets = buildHttpAppenderSnippets(hostname, port, isHttps, displayKey, ingestUrl);
-  const agentSnippets = buildAgentSnippets(hostname, port, isHttps, displayKey, ingestUrl, origin);
+  const agentSnippets = buildAgentSnippets(hostname, port, isHttps, displayKey, origin);
   const nginxSnippets = buildNginxSnippets(hostname);
   const agentQuickStartCmd = buildAgentQuickStart(displayKey, origin);
 
@@ -158,6 +163,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
         return prev - 1;
       });
     }, 1000);
+
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
@@ -195,13 +201,13 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
   const currentTabs = activeCategory === 'http-appender' ? httpAppenderTabs : agentTabs;
   const currentSnippets = activeCategory === 'http-appender' ? httpAppenderSnippets : agentSnippets;
 
-  const handleCategoryChange = (cat: 'http-appender' | 'agent') => {
-    setActiveCategory(cat);
-    setActiveSnippet(cat === 'agent' ? 'config' : 'express');
+  const handleCategoryChange = (category: 'http-appender' | 'agent') => {
+    setActiveCategory(category);
+    setActiveSnippet(category === 'agent' ? 'config' : 'express');
   };
 
   const curlCmd = `curl -X POST ${ingestUrl} \\
-  -H "Authorization: Bearer ${maskedKey !== '—' ? maskedKey : displayKey}" \\
+  -H "Authorization: Bearer ${displayKey}" \\
   -H "Content-Type: application/json" \\
   -d '{"level":"info","message":"Connection test","service":"${service.id}"}'`;
 
@@ -209,8 +215,6 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
 
   return (
     <div className="space-y-4">
-
-      {/* ── Step 1: API Key ── */}
       <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-6">
         <StepHeader
           step={1}
@@ -218,11 +222,10 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           accentClass="bg-primary/10"
           iconColorClass="text-primary"
           stepColorClass="text-primary/70"
-          title={t('healthcheck.integration.apiKey.title')}
-          description={t('healthcheck.integration.apiKey.description')}
+          title={t('healthcheck.integration.apiKey.title', { defaultValue: 'API 키' })}
+          description={t('healthcheck.integration.apiKey.description', { defaultValue: '앱이나 에이전트가 로그를 보낼 때 사용하는 인증 키입니다.' })}
         />
 
-        {/* Masked key display */}
         <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 dark:bg-ui-hover-dark rounded-xl font-mono text-sm mb-4 border border-slate-100 dark:border-ui-border-dark">
           <MaterialIcon name="lock" className="text-sm text-slate-400 dark:text-text-dim-dark shrink-0" />
           <span className="flex-1 text-slate-700 dark:text-text-base-dark truncate select-all">
@@ -236,7 +239,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
             <MaterialIcon name="warning" className="text-sm shrink-0" />
-            {t('healthcheck.integration.apiKey.warning')}
+            {t('healthcheck.integration.apiKey.warning', { defaultValue: '이 키를 안전하게 보관하세요. 외부에 노출되면 재발급하세요.' })}
           </p>
           <button
             onClick={() => setShowConfirm(true)}
@@ -248,12 +251,11 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             ) : (
               <MaterialIcon name="refresh" className="text-sm" />
             )}
-            {t('healthcheck.integration.apiKey.regenerate')}
+            {t('healthcheck.integration.apiKey.regenerate', { defaultValue: '재발급' })}
           </button>
         </div>
       </div>
 
-      {/* ── Step 2: Ingest Endpoint ── */}
       <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-6">
         <StepHeader
           step={2}
@@ -261,11 +263,10 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           accentClass="bg-green-100 dark:bg-green-900/30"
           iconColorClass="text-green-600 dark:text-green-400"
           stepColorClass="text-green-600/80 dark:text-green-400/80"
-          title={t('healthcheck.integration.endpoint.title')}
-          description={t('healthcheck.integration.endpoint.description')}
+          title={t('healthcheck.integration.endpoint.title', { defaultValue: '로그 수집 엔드포인트' })}
+          description={t('healthcheck.integration.endpoint.description', { defaultValue: '로거 또는 에이전트가 이 URL로 POST 요청을 보내면 로그가 수집됩니다.' })}
         />
 
-        {/* Endpoint URL */}
         <div className="flex items-center gap-2 px-3 py-2.5 bg-slate-50 dark:bg-ui-hover-dark rounded-xl font-mono text-sm mb-3 border border-slate-100 dark:border-ui-border-dark">
           <span className="text-xs font-bold text-white bg-green-600 px-2 py-0.5 rounded shrink-0">POST</span>
           <span className="flex-1 text-slate-700 dark:text-text-base-dark truncate text-xs">{ingestUrl}</span>
@@ -278,24 +279,26 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           </button>
         </div>
 
-        {/* Feature tags */}
         <div className="flex flex-wrap gap-2">
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/8 dark:bg-red-500/10 text-xs text-red-600 dark:text-red-400 font-medium">
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-            error · warn
+            error / warn alerts
           </span>
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/8 dark:bg-blue-500/10 text-xs text-blue-600 dark:text-blue-400 font-medium">
             <MaterialIcon name="auto_awesome" className="text-xs" />
-            {t('healthcheck.integration.endpoint.formatInfo', { defaultValue: '포맷 자동 감지' })}
+            {t('healthcheck.integration.endpoint.formatInfo', {
+              defaultValue: '기존 로깅 라이브러리 형식을 그대로 보내도 됩니다. 서버가 주요 포맷을 자동으로 인식합니다.',
+            })}
           </span>
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-500/8 dark:bg-slate-500/10 text-xs text-slate-600 dark:text-text-muted-dark font-medium">
             <MaterialIcon name="layers" className="text-xs" />
-            {t('healthcheck.integration.endpoint.batchInfo', { defaultValue: '배치 최대 100건/req' })}
+            {t('healthcheck.integration.endpoint.batchInfo', {
+              defaultValue: '배치 전송 지원: 요청 한 번에 최대 100개의 로그를 보낼 수 있습니다.',
+            })}
           </span>
         </div>
       </div>
 
-      {/* ── Step 3: Connection Test ── */}
       <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-6">
         <StepHeader
           step={3}
@@ -303,8 +306,10 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           accentClass="bg-emerald-100 dark:bg-emerald-900/30"
           iconColorClass="text-emerald-600 dark:text-emerald-400"
           stepColorClass="text-emerald-600/80 dark:text-emerald-400/80"
-          title={t('healthcheck.integration.connectionTest.title', { defaultValue: 'Connection Test' })}
-          description={t('healthcheck.integration.connectionTest.description', { defaultValue: '코드 연동 전 연결 상태를 먼저 확인하세요.' })}
+          title={t('healthcheck.integration.connectionTest.title', { defaultValue: '연결 테스트' })}
+          description={t('healthcheck.integration.connectionTest.description', {
+            defaultValue: '실제 연동 전에 네트워크 연결과 API 키가 정상인지 먼저 확인하세요.',
+          })}
         />
 
         <CodeBlock
@@ -318,13 +323,12 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           <MaterialIcon name="check_circle" className="text-sm text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
           <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">
             {t('healthcheck.integration.connectionTest.successHint', {
-              defaultValue: 'HTTP 200이 오면 연결 성공. 실패 시 방화벽의 아웃바운드(443/80) 규칙을 확인하세요.',
+              defaultValue: '연결에 성공하면 서버가 HTTP 200으로 응답합니다. 타임아웃이나 연결 거부가 발생하면 방화벽 아웃바운드 규칙과 서버 인바운드 규칙을 확인하세요.',
             })}
           </p>
         </div>
       </div>
 
-      {/* ── Step 4: Code Snippets ── */}
       <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-6">
         <StepHeader
           step={4}
@@ -332,29 +336,32 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           accentClass="bg-purple-100 dark:bg-purple-900/30"
           iconColorClass="text-purple-600 dark:text-purple-400"
           stepColorClass="text-purple-600/80 dark:text-purple-400/80"
-          title={t('healthcheck.integration.snippets.title')}
-          description={t('healthcheck.integration.snippets.description', { defaultValue: '서비스에 로그 전송을 연결합니다. Log Agent 방식을 권장합니다.' })}
+          title={t('healthcheck.integration.snippets.title', { defaultValue: '연동 예시' })}
+          description={t('healthcheck.integration.snippets.description', {
+            defaultValue: '환경과 배포 방식에 맞는 연동 예시를 선택해 바로 적용할 수 있습니다.',
+          })}
         />
 
-        {/* Category toggle */}
         <div className="mb-5">
           <SegmentedControl
             options={[
-              { key: 'agent' as const, label: t('healthcheck.integration.snippets.agent') },
-              { key: 'http-appender' as const, label: t('healthcheck.integration.snippets.httpAppender') },
+              { key: 'agent' as const, label: t('healthcheck.integration.snippets.agent', { defaultValue: 'Log Agent' }) },
+              { key: 'http-appender' as const, label: t('healthcheck.integration.snippets.httpAppender', { defaultValue: 'HTTP Appender' }) },
             ]}
             value={activeCategory}
             onChange={handleCategoryChange}
           />
           <p className="mt-2 text-xs text-slate-500 dark:text-text-muted-dark pl-1">
             {activeCategory === 'http-appender'
-              ? t('healthcheck.integration.snippets.httpAppenderDesc', { defaultValue: '앱 코드에 전송 트랜스포트를 추가합니다. 소스를 직접 제어할 때 적합.' })
-              : t('healthcheck.integration.snippets.agentDesc', { defaultValue: '로그 파일을 테일링해 전송합니다. 서버·컨테이너 환경에 적합.' })
-            }
+              ? t('healthcheck.integration.snippets.httpAppenderDesc', {
+                  defaultValue: '앱 코드에 HTTP 전송 설정을 추가하는 방식입니다. 소스 코드를 수정할 수 있고, 로깅 라이브러리를 이미 사용 중이라면 가장 간단합니다.',
+                })
+              : t('healthcheck.integration.snippets.agentDesc', {
+                  defaultValue: 'Fluent Bit 기반 에이전트가 로그 파일이나 stdout을 수집해 전달합니다. 앱 코드를 수정하기 어렵거나 서버·컨테이너 단위로 붙이고 싶을 때 적합합니다.',
+                })}
           </p>
         </div>
 
-        {/* Agent Quick Start */}
         {activeCategory === 'agent' && (
           <div className="mb-5 border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark rounded-xl p-4">
             <div className="flex items-center gap-2 mb-3">
@@ -363,25 +370,25 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               </div>
               <div>
                 <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                  {t('healthcheck.integration.agent.quickStart', { defaultValue: 'Quick Start' })}
+                  {t('healthcheck.integration.agent.quickStart', { defaultValue: '빠른 시작' })}
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-text-muted-dark">
-                  {t('healthcheck.integration.agent.quickStartDesc', { defaultValue: '명령어 하나로 Log Agent를 실행합니다.' })}
+                  {t('healthcheck.integration.agent.quickStartDesc', {
+                    defaultValue: '로그 파일을 /var/log/app에 마운트하는 가장 빠른 실행 예시입니다.',
+                  })}
                 </p>
               </div>
             </div>
             <CodeBlock
               code={agentQuickStartCmd}
               onCopy={() => copy(agentQuickStartCmd)}
-              copyTitle={t('healthcheck.integration.snippets.copy')}
+              copyTitle={t('healthcheck.integration.snippets.copy', { defaultValue: '코드 복사' })}
               size="xs"
             />
           </div>
         )}
 
-        {/* 2-column: sidebar tabs + code */}
         <div className="flex flex-col sm:flex-row gap-4">
-          {/* Sidebar */}
           <div className="sm:shrink-0 sm:w-40">
             <p className="text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-text-dim-dark mb-2 px-1 hidden sm:block">
               {activeCategory === 'http-appender' ? 'Framework' : 'Deploy'}
@@ -403,12 +410,11 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             </div>
           </div>
 
-          {/* Code pane */}
           <div className="flex-1 min-w-0">
             <CodeBlock
               code={currentSnippets[activeSnippet]}
               onCopy={() => copy(currentSnippets[activeSnippet])}
-              copyTitle={t('healthcheck.integration.snippets.copy')}
+              copyTitle={t('healthcheck.integration.snippets.copy', { defaultValue: '코드 복사' })}
               size="xs"
               minHeight="200px"
             />
@@ -416,10 +422,9 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
         </div>
       </div>
 
-      {/* ── Nginx Reverse Proxy (collapsible) ── */}
       <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
         <button
-          onClick={() => setShowNginx((v) => !v)}
+          onClick={() => setShowNginx((prev) => !prev)}
           className="w-full flex items-center gap-3 px-5 py-4 hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors text-left cursor-pointer"
         >
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-ui-hover-dark shrink-0">
@@ -430,7 +435,9 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               Nginx Reverse Proxy
             </h3>
             <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-0.5">
-              {t('healthcheck.integration.nginx.desc', { defaultValue: 'Authorization 헤더 전달 설정 — 선택 사항' })}
+              {t('healthcheck.integration.nginx.desc', {
+                defaultValue: 'Authorization 헤더 전달이 필요한 경우에만 확인하세요.',
+              })}
             </p>
           </div>
           <MaterialIcon
@@ -446,9 +453,9 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
                 Nginx 기본 설정은{' '}
                 <code className="font-mono bg-amber-100 dark:bg-amber-900/40 px-1 rounded">Authorization</code>{' '}
-                헤더를 백엔드로 전달하지 않습니다.{' '}
+                헤더를 백엔드로 전달하지 않을 수 있습니다.{' '}
                 <code className="font-mono bg-amber-100 dark:bg-amber-900/40 px-1 rounded">proxy_set_header</code>{' '}
-                설정을 반드시 추가하세요.
+                설정을 추가해 주세요.
               </p>
             </div>
 
@@ -472,7 +479,6 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
         )}
       </div>
 
-      {/* ── Regenerate Confirm Dialog ── */}
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="bg-white dark:bg-bg-surface-dark rounded-xl shadow-2xl max-w-sm w-full p-6">
@@ -507,7 +513,6 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
         </div>
       )}
 
-      {/* ── Revealed Key Modal ── */}
       {revealedKey && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="bg-white dark:bg-bg-surface-dark rounded-xl shadow-2xl max-w-md w-full p-6">

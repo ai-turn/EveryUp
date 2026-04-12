@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from '../../../components/common';
 import { IconAlerts } from '../../../components/icons/SidebarIcons';
-import { useNotificationChannels } from '../../../hooks/useData';
+import { useNotificationChannels } from '../../../hooks/useAlerts';
 
 const CHANNEL_META: Record<string, { icon: string; color: string; bg: string }> = {
   telegram: { icon: 'send', color: 'text-sky-500', bg: 'bg-sky-500/10' },

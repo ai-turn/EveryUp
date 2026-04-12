@@ -1,16 +1,6 @@
-/**
- * Mock data for resource gauges
- * Used by: ResourceGauges component
- */
+import type { GaugeData } from '../../types/infra';
 
-export interface GaugeData {
-  label: string;
-  percentage: number;
-  color: string;
-  subtitle: string;
-  trend: string;
-  trendType: 'up' | 'down' | 'stable';
-}
+export type { GaugeData };
 
 export const mockGauges: GaugeData[] = [
   {

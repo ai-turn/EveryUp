@@ -1,5 +1,5 @@
 import { RadialGauge } from '../../../components/charts/RadialGauge';
-import { useMonitoringGauges } from '../../../hooks/useData';
+import { useMonitoringGauges } from '../../../hooks/useInfra';
 import { Skeleton } from '../../../components/skeleton';
 
 interface InfraGaugesProps {

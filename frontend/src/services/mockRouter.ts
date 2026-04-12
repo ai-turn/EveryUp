@@ -36,8 +36,8 @@ const mockTimeline: TimelineItem[] = mockDashboardIncidents.map((i) => ({
   id: i.id,
   type: i.type,
   message: i.message,
-  timestamp: new Date().toISOString(),
-  serviceName: i.serviceName,
+  time: i.time,
+  service: i.serviceName,
 }));
 
 // ── Services ─────────────────────────────────────────────────────────────────

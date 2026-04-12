@@ -1,5 +1,5 @@
-import type { Incident } from '../../types/common';
-import { incidentColorClasses } from '../../design-tokens/colors';
+import type { Incident } from '../types/common';
+import { incidentColorClasses } from '../design-tokens/colors';
 
 /**
  * Visual configuration for incident types

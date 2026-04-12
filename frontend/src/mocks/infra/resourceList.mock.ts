@@ -1,14 +1,6 @@
-export interface Resource {
-    id: string;
-    name: string;
-    type: 'server' | 'database' | 'container';
-    status: 'healthy' | 'warning' | 'critical' | 'error';
-    cluster: string;
-    ip: string;
-    isActive?: boolean;
-    isRemote?: boolean;
-    sshPort?: number;
-}
+import type { Resource } from '../../types/infra';
+
+export type { Resource };
 
 export const mockResources: Resource[] = [
     {

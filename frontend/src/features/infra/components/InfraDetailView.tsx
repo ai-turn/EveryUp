@@ -4,13 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { MaterialIcon, Toggle } from '../../../components/common';
 import { Breadcrumbs } from '../../../components/layout/Breadcrumbs';
 import { useIsMobile } from '../../../hooks/useMediaQuery';
-import { useMonitoringGauges, useMonitoringProcesses } from '../../../hooks/useData';
+import { useMonitoringGauges, useMonitoringProcesses } from '../../../hooks/useInfra';
 import { InfraGauges } from './InfraGauges';
 import { InfraTrends } from './InfraTrends';
 import { ProcessTable } from './ProcessTable';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog';
 import { infraStatusColorClasses } from '../../../design-tokens/colors';
-import { processStatusConfig } from '../../../mocks/configs';
+import { processStatusConfig } from '../../../constants';
 import type { Host } from '../../../services/api';
 
 type MobileTab = 'overview' | 'trends' | 'processes';

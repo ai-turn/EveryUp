@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from '../../../components/common';
 import { InfraCard } from './InfraCard';
-import type { Resource } from '../../../mocks/infra/resourceList.mock';
+import type { Resource } from '../../../types/infra';
 
 interface InfraMobileViewProps {
   filteredResources: Resource[];

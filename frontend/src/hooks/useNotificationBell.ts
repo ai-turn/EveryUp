@@ -40,7 +40,7 @@ export interface UseNotificationBellResult {
 export function useNotificationBell(): UseNotificationBellResult {
   const [allItems, setAllItems] = useState<NotificationHistory[]>([]);
   const [readIds, setReadIds] = useState<Set<number>>(loadReadIds);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchNotifications = useCallback(async () => {
@@ -52,14 +52,22 @@ export function useNotificationBell(): UseNotificationBellResult {
     }
   }, []);
 
-  useEffect(() => {
+  const loadNotifications = useCallback(async () => {
     setLoading(true);
-    fetchNotifications().finally(() => setLoading(false));
+    try {
+      await fetchNotifications();
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchNotifications]);
+
+  useEffect(() => {
+    void loadNotifications();
     timerRef.current = setInterval(fetchNotifications, POLL_INTERVAL);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [fetchNotifications]);
+  }, [fetchNotifications, loadNotifications]);
 
   const unreadCount = allItems.filter(n => !readIds.has(n.id)).length;
 

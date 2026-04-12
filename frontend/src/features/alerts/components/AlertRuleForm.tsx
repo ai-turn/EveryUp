@@ -35,17 +35,15 @@ const ruleSchema = z.object({
 
 type RuleFormValues = z.infer<typeof ruleSchema>;
 type ConditionPreset = 'normal' | 'error' | 'custom';
-type CooldownChip = 300 | 900 | 1800 | 3600 | 'custom';
 
 const OPERATOR_SYMBOLS: Record<string, string> = {
-    gt: '>', gte: '≥', lt: '<', lte: '≤', eq: '=',
+    gt: '>',
+    gte: '>=',
+    lt: '<',
+    lte: '<=',
+    eq: '=',
 };
 
-const SEVERITY_STYLES = {
-    critical: 'peer-checked:border-red-500 peer-checked:bg-red-50 peer-checked:text-red-600 dark:peer-checked:bg-red-900/20 dark:peer-checked:text-red-400',
-    warning: 'peer-checked:border-amber-500 peer-checked:bg-amber-50 peer-checked:text-amber-600 dark:peer-checked:bg-amber-900/20 dark:peer-checked:text-amber-400',
-    info: 'peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-600 dark:peer-checked:bg-blue-900/20 dark:peer-checked:text-blue-400',
-};
 
 function getPresetValues(metric: RuleFormValues['metric'], preset: ConditionPreset): { operator: RuleFormValues['operator']; threshold: number; duration?: number } | null {
     if (preset === 'custom') return null;
@@ -72,7 +70,7 @@ function buildDefaultMessage(metric: RuleFormValues['metric'], operator: RuleFor
     if (metric === 'http_status') return `HTTP Status ${opSym} ${threshold} detected`;
     if (metric === 'response_time') return `Response Time ${opSym} ${threshold}ms detected`;
     const metricLabel = { cpu: 'CPU', memory: 'Memory', disk: 'Disk' }[metric] ?? metric.toUpperCase();
-    return `${metricLabel} usage ${opSym} ${threshold}%, sustained for ${duration}min — {host_name}`;
+    return `${metricLabel} usage ${opSym} ${threshold}%, sustained for ${duration}min on {host_name}`;
 }
 
 function SectionHeader({ icon, label }: { icon: string; label: string }) {
@@ -92,8 +90,6 @@ interface AlertRuleFormProps {
 }
 
 export function AlertRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
-    const { t } = useTranslation(['alerts', 'common']);
-    const { closePanel } = useSidePanel();
     const isEdit = !!rule;
 
     // System rules get a simplified editor (message + channels only)
@@ -192,12 +188,10 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
     const [hosts, setHosts] = useState<Host[]>([]);
 
     const [conditionPreset, setConditionPreset] = useState<ConditionPreset>('error');
-    const [cooldownChip, setCooldownChip] = useState<CooldownChip>(300);
     const [customMessage, setCustomMessage] = useState('');
     const [customThreshold, setCustomThreshold] = useState('');
-    const [customDuration, setCustomDuration] = useState('');
 
-    const { register, handleSubmit, reset, setValue, watch, formState: { errors, isSubmitting } } = useForm<RuleFormValues>({
+    const { register, handleSubmit, reset, setValue, watch, formState: { isSubmitting } } = useForm<RuleFormValues>({
         resolver: zodResolver(ruleSchema),
         mode: 'onBlur',
         defaultValues: {
@@ -215,6 +209,7 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
     const watchedServiceId = watch('serviceId') ?? '';
     const watchedHostId = watch('hostId') ?? '';
     const watchedChannelIds = watch('channelIds');
+    const watchedSeverity = watch('severity');
 
     useEffect(() => {
         api.getServices().then(setServices).catch(() => { });
@@ -240,11 +235,9 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                 channelIds: rule.channelIds || [],
             });
             setConditionPreset(preset);
-            setCooldownChip([300, 900, 1800, 3600].includes(rule.cooldown) ? rule.cooldown as CooldownChip : 'custom');
             setCustomMessage(rule.message ?? '');
             if (preset === 'custom') {
                 setCustomThreshold(String(rule.threshold));
-                setCustomDuration(String(rule.duration));
             }
         }
     }, [rule, reset]);
@@ -277,10 +270,8 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
         applyPreset(preset, watchedMetric);
         if (preset !== 'custom') {
             setCustomThreshold('');
-            setCustomDuration('');
         } else {
             setCustomThreshold(String(watchedThreshold));
-            setCustomDuration(String(watchedDuration));
         }
     };
 
@@ -330,8 +321,6 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
     const targetLabel = isEndpoint
         ? (watchedServiceId ? (selectedService?.name ?? watchedServiceId) : t('alerts.rules.allServices'))
         : (watchedHostId ? (selectedHost?.name ?? watchedHostId) : t('alerts.rules.allHosts'));
-    const previewText = `${metricName} ${OPERATOR_SYMBOLS[watchedOperator] ?? '>'} ${watchedThreshold}${thresholdUnit}`
-        + (isEndpoint ? ` — [${targetLabel}]` : ` — ${watchedDuration}min [${targetLabel}]`);
 
     return (
         <>
@@ -451,7 +440,7 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                     {isEndpoint ? (
                         <>
                             <span className="text-slate-600 font-mono text-xs">FAILS</span>
-                            <code className="px-2 py-0.5 bg-slate-700 text-slate-300 rounded text-xs font-mono">{watchedDuration}×</code>
+                            <code className="px-2 py-0.5 bg-slate-700 text-slate-300 rounded text-xs font-mono">{watchedDuration}횞</code>
                         </>
                     ) : (
                         <>
@@ -472,7 +461,7 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                         <div className="grid grid-cols-3 gap-2">
                             {(['critical', 'warning', 'info'] as const).map(s => (
                                 <button key={s} type="button" onClick={() => setValue('severity', s)}
-                                    className={`py-2 text-xs font-bold rounded-lg border-2 transition-all ${watch('severity') === s ? 'border-primary bg-primary/10 text-primary' : 'border-slate-100 dark:border-ui-border-dark text-slate-500'
+                                    className={`py-2 text-xs font-bold rounded-lg border-2 transition-all ${watchedSeverity === s ? 'border-primary bg-primary/10 text-primary' : 'border-slate-100 dark:border-ui-border-dark text-slate-500'
                                         }`}>
                                     {s.toUpperCase()}
                                 </button>
@@ -554,9 +543,9 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                                         <span className="text-[#8BE9FD]">"severity"</span>
                                         <span className="text-[#6272A4]">: </span>
                                         <span className={
-                                            watch('severity') === 'critical' ? 'text-[#FF5555]' :
-                                            watch('severity') === 'warning' ? 'text-[#FFB86C]' : 'text-[#8BE9FD]'
-                                        }>"{watch('severity')}"</span>
+                                            watchedSeverity === 'critical' ? 'text-[#FF5555]' :
+                                            watchedSeverity === 'warning' ? 'text-[#FFB86C]' : 'text-[#8BE9FD]'
+                                        }>"{watchedSeverity}"</span>
                                         <span className="text-[#6272A4]">,</span>
                                     </div>
                                     <div className="flex items-start">

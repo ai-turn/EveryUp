@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from '../../../components/common';
-import { useMonitoringProcesses } from '../../../hooks/useData';
-import { processStatusConfig } from '../../../mocks/configs';
+import { useMonitoringProcesses } from '../../../hooks/useInfra';
+import { processStatusConfig } from '../../../constants';
 import { TableSkeleton } from '../../../components/skeleton';
 
 interface ProcessTableProps {

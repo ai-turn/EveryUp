@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon, EmptyState } from '../../../components/common';
 import { InfraCard } from '../../infra/components/InfraCard';
-import { useMonitoringResources } from '../../../hooks/useData';
+import { useMonitoringResources } from '../../../hooks/useInfra';
 
 const MAX_ITEMS = 3;
 

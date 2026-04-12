@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon, StatusBadge } from '../../../components/common';
-import type { Resource } from '../../../mocks/infra/resourceList.mock';
+import type { Resource } from '../../../types/infra';
 
 interface InfraCardProps {
     resource: Resource;

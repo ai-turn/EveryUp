@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { InfraForm } from '../features/infra';
 import { InfraDesktopView } from '../features/infra/components/InfraDesktopView';
 import { InfraMobileView } from '../features/infra/components/InfraMobileView';
-import { useMonitoringResources } from '../hooks/useData';
+import { useMonitoringResources } from '../hooks/useInfra';
 import { useSidePanel } from '../contexts/SidePanelContext';
 import { useIsMobile } from '../hooks/useMediaQuery';
 

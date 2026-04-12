@@ -64,19 +64,17 @@ export function LogServiceForm({ onSuccess }: LogServiceFormProps) {
         <>
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 pt-6 pb-4 custom-scrollbar">
         <div className="space-y-6">
-            {/* Info Banner */}
             <div className="flex gap-3 p-4 bg-primary/5 border border-primary/10 rounded-xl">
                 <MaterialIcon name="info" className="text-primary text-xl flex-shrink-0" />
                 <div className="text-sm">
                     <p className="font-bold text-slate-800 dark:text-text-base-dark mb-1">{t('logServices.add.infoTitle', { defaultValue: 'Log Collection Service' })}</p>
                     <p className="text-xs text-slate-500 dark:text-text-muted-dark leading-relaxed">
-                        {t('logServices.add.infoDesc', { defaultValue: 'Create a service to collect error logs via logging library HTTP Appenders (Winston, Logback, etc.). An API key will be generated automatically.' })}
+                        {t('logServices.add.infoDesc', { defaultValue: 'Create a log service to generate an API key automatically. Then choose HTTP Appender or Log Agent in the Integration tab and connect your app.' })}
                     </p>
                 </div>
             </div>
 
             <div className="space-y-4">
-                {/* Service ID */}
                 <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                         {t('common.id')}
@@ -104,7 +102,6 @@ export function LogServiceForm({ onSuccess }: LogServiceFormProps) {
                     )}
                 </div>
 
-                {/* Service Name */}
                 <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                         {t('common.name')}

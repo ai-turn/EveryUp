@@ -1,4 +1,4 @@
-import { incidentColorClasses } from '../../design-tokens/colors';
+import { incidentColorClasses } from '../design-tokens/colors';
 
 /**
  * Visual configuration for error log levels

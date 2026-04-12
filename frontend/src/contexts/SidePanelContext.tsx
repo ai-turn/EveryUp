@@ -34,6 +34,7 @@ export function SidePanelProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useSidePanel() {
   const context = useContext(SidePanelContext);
   if (context === undefined) {

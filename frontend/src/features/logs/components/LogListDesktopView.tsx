@@ -46,7 +46,6 @@ export function LogListDesktopView({
         </button>
       </PageHeader>
 
-      {/* How It Works Guide */}
       <div className="mb-8">
         <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-6">
           <div className="flex items-center gap-3 mb-5">
@@ -58,16 +57,28 @@ export function LogListDesktopView({
                 {t('logs.guide.title', { defaultValue: 'How to Collect Logs' })}
               </h3>
               <p className="text-sm text-slate-500 dark:text-text-muted-dark">
-                {t('logs.guide.subtitle', { defaultValue: 'Collect error logs from your API servers with minimal setup — no SDK required.' })}
+                {t('logs.guide.subtitle', { defaultValue: 'Start collecting logs with your existing logger configuration or log files. No separate SDK is required.' })}
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { step: 1, title: t('logs.guide.step1.title', { defaultValue: 'Create Log Service' }), desc: t('logs.guide.step1.desc', { defaultValue: 'Click "Add Log Service" and enter a name. An API key will be generated automatically for authentication.' }) },
-              { step: 2, title: t('logs.guide.step2.title', { defaultValue: 'Choose Collection Method' }), desc: t('logs.guide.step2.desc', { defaultValue: 'Go to the Integration tab and choose your method — HTTP Appender for direct library integration, or Log Agent for file-based collection via Docker.' }) },
-              { step: 3, title: t('logs.guide.step3.title', { defaultValue: 'Start Receiving Logs' }), desc: t('logs.guide.step3.desc', { defaultValue: 'Error and warning logs will be collected automatically. Alert rules will trigger notifications via Telegram or Discord.' }) },
+              {
+                step: 1,
+                title: t('logs.guide.step1.title', { defaultValue: 'Create a Log Service' }),
+                desc: t('logs.guide.step1.desc', { defaultValue: 'Click "Add Log Service" and create a service name. A dedicated API key is generated automatically.' }),
+              },
+              {
+                step: 2,
+                title: t('logs.guide.step2.title', { defaultValue: 'Choose an Integration Method' }),
+                desc: t('logs.guide.step2.desc', { defaultValue: 'Open the Integration tab and choose the method that fits your environment. Use HTTP Appender when you can edit app code, or Log Agent when you want to collect log files or stdout from servers and containers.' }),
+              },
+              {
+                step: 3,
+                title: t('logs.guide.step3.title', { defaultValue: 'Review Logs and Add Alerts' }),
+                desc: t('logs.guide.step3.desc', { defaultValue: 'Collected logs appear in the log list right away. If needed, add Telegram or Discord alert rules for error and warn logs.' }),
+              },
             ].map(({ step, title, desc }) => (
               <div key={step} className="flex gap-3 p-4 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-xl">
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white text-sm font-bold shrink-0">
@@ -81,7 +92,6 @@ export function LogListDesktopView({
             ))}
           </div>
 
-          {/* Supported methods */}
           <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-text-muted-dark bg-slate-100 dark:bg-ui-hover-dark px-2 py-1 rounded-md">
@@ -118,7 +128,6 @@ export function LogListDesktopView({
         </div>
       </div>
 
-      {/* Search */}
       <div className="mb-8">
         <div className="relative max-w-md">
           <MaterialIcon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -132,7 +141,6 @@ export function LogListDesktopView({
         </div>
       </div>
 
-      {/* Loading */}
       {loading && (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
@@ -141,14 +149,12 @@ export function LogListDesktopView({
         </div>
       )}
 
-      {/* Error */}
       {!loading && error && (
         <div className="text-red-500 p-4">
           {t('common.error')}: {error}
         </div>
       )}
 
-      {/* Empty State */}
       {!loading && !error && services.length === 0 && (
         <EmptyState
           icon="article"
@@ -161,7 +167,6 @@ export function LogListDesktopView({
         />
       )}
 
-      {/* Grid */}
       {!loading && !error && filteredServices.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredServices.map((service) => (
@@ -174,7 +179,6 @@ export function LogListDesktopView({
         </div>
       )}
 
-      {/* No search results */}
       {!loading && !error && services.length > 0 && filteredServices.length === 0 && (
         <div className="py-20 text-center">
           <MaterialIcon name="search_off" className="text-5xl text-slate-300 mb-4" />

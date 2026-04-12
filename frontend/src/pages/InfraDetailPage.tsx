@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../utils/errors';
-import { useHost } from '../hooks/useData';
+import { useHost } from '../hooks/useInfra';
 import { useSidePanel } from '../contexts/SidePanelContext';
 import { api } from '../services/api';
 import { InfraForm } from '../features/infra';

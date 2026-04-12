@@ -19,9 +19,6 @@ export function CheckHistoryBar({ serviceId, refreshKey }: CheckHistoryBarProps)
   const initialLoadDone = useRef(false);
 
   useEffect(() => {
-    if (!initialLoadDone.current) {
-      setLoading(true);
-    }
     Promise.all([
       api.getServiceMetrics(serviceId, { limit: String(SLOT_COUNT) }),
       api.getServiceUptime(serviceId, { days: '90' }),

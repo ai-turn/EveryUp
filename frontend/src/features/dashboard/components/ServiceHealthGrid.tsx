@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon, EmptyState } from '../../../components/common';
 import { ServiceCard } from './ServiceCard';
-import { useDashboardServices } from '../../../hooks/useData';
+import { useDashboardServices } from '../../../hooks/useDashboard';
 import { ServiceCardSkeleton } from '../../../components/skeleton';
 
 interface ServiceHealthGridProps {
