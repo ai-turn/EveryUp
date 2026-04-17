@@ -662,6 +662,7 @@ func migrateV19() error {
 
 // migrateV20 creates the api_requests table for per-service HTTP traffic capture
 // and adds five capture-config columns to the services table.
+// Added: 2026-04-17
 func migrateV20() error {
 	return Transaction(func(tx *sql.Tx) error {
 		stmts := []string{

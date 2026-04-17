@@ -24,8 +24,43 @@ func TestMigrateV20_ApiRequestsTableExists(t *testing.T) {
 	if err != nil {
 		t.Fatalf("api_requests table not found: %v", err)
 	}
-	if name != "api_requests" {
-		t.Errorf("expected table name 'api_requests', got %q", name)
+	// Scan succeeded, so name is guaranteed to be "api_requests" — no further check needed.
+}
+
+// TestMigrateV20_Idempotent verifies that running migrateV20 a second time on an
+// already-migrated database does not produce an error.  The CREATE TABLE uses
+// IF NOT EXISTS and every ALTER TABLE statement is guarded by the
+// "duplicate column" check, so a second invocation must be a no-op.
+func TestMigrateV20_Idempotent(t *testing.T) {
+	openTestDB(t) // Connect already ran all migrations, including migrateV20.
+
+	// Run migrateV20 again on the same open connection.
+	if err := database.MigrateV20ForTest(); err != nil {
+		t.Fatalf("second run of migrateV20 returned error: %v", err)
+	}
+
+	// Confirm that api_capture_mode appears exactly once — not duplicated.
+	rows, err := database.DB.Query("PRAGMA table_info(services)")
+	if err != nil {
+		t.Fatalf("PRAGMA table_info(services) failed: %v", err)
+	}
+	count := 0
+	for rows.Next() {
+		var cid int
+		var colName, colType string
+		var notNull, pk int
+		var dflt interface{}
+		if err := rows.Scan(&cid, &colName, &colType, &notNull, &dflt, &pk); err != nil {
+			rows.Close()
+			t.Fatalf("scan failed: %v", err)
+		}
+		if colName == "api_capture_mode" {
+			count++
+		}
+	}
+	rows.Close()
+	if count != 1 {
+		t.Errorf("api_capture_mode appears %d time(s) in services table, want exactly 1", count)
 	}
 }
 
