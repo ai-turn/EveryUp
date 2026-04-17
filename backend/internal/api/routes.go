@@ -40,6 +40,28 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	ingest := api.Group("/logs", middleware.IngestRateLimiter(), middleware.ApiKeyAuth())
 	ingest.Post("/ingest", logIngestHandler.Ingest)
 
+	// API request ingest — separate rate limiter and body limit from log ingest
+	apiRequestIngestHandler := handlers.NewApiRequestIngestHandler()
+	apiRequestIngest := api.Group("/ingest/requests",
+		middleware.ApiRequestIngestRateLimiter(),
+		middleware.ApiKeyAuth(),
+	)
+	// Enforce 1 MiB body limit for this endpoint
+	apiRequestIngest.Use(func(c *fiber.Ctx) error {
+		const maxBody = 1 * 1024 * 1024 // 1 MiB
+		if len(c.Body()) > maxBody {
+			return c.Status(fiber.StatusRequestEntityTooLarge).JSON(fiber.Map{
+				"success": false,
+				"error": fiber.Map{
+					"code":    "VALIDATION_ERROR",
+					"message": "Request body exceeds 1 MiB limit",
+				},
+			})
+		}
+		return c.Next()
+	})
+	apiRequestIngest.Post("", apiRequestIngestHandler.Ingest)
+
 	// JWT-protected management routes
 	local := api.Group("", middleware.JWTAuth())
 
