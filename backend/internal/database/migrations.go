@@ -191,6 +191,9 @@ func migrate() error {
 	if err := migrateV19(); err != nil {
 		return fmt.Errorf("v19 migration failed: %w", err)
 	}
+	if err := migrateV20(); err != nil {
+		return fmt.Errorf("v20 migration failed: %w", err)
+	}
 
 	return nil
 }
@@ -655,6 +658,59 @@ func migrateV19() error {
 		return err
 	}
 	return nil
+}
+
+// migrateV20 creates the api_requests table for per-service HTTP traffic capture
+// and adds five capture-config columns to the services table.
+func migrateV20() error {
+	return Transaction(func(tx *sql.Tx) error {
+		stmts := []string{
+			`CREATE TABLE IF NOT EXISTS api_requests (
+				id             INTEGER PRIMARY KEY AUTOINCREMENT,
+				service_id     TEXT    NOT NULL,
+				request_id     TEXT    NOT NULL,
+				method         TEXT    NOT NULL,
+				path           TEXT    NOT NULL,
+				path_template  TEXT    NOT NULL,
+				status_code    INTEGER NOT NULL,
+				duration_ms    INTEGER NOT NULL,
+				client_ip      TEXT,
+				req_headers    TEXT,
+				req_body       TEXT,
+				req_body_size  INTEGER NOT NULL DEFAULT 0,
+				res_headers    TEXT,
+				res_body       TEXT,
+				res_body_size  INTEGER NOT NULL DEFAULT 0,
+				error          TEXT,
+				is_error       INTEGER NOT NULL DEFAULT 0,
+				created_at     DATETIME NOT NULL,
+				FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE
+			)`,
+			`CREATE INDEX IF NOT EXISTS idx_api_requests_service_time   ON api_requests(service_id, created_at DESC)`,
+			`CREATE INDEX IF NOT EXISTS idx_api_requests_service_status ON api_requests(service_id, status_code)`,
+			`CREATE INDEX IF NOT EXISTS idx_api_requests_service_error  ON api_requests(service_id, is_error, created_at DESC)`,
+			`CREATE INDEX IF NOT EXISTS idx_api_requests_request_id     ON api_requests(request_id)`,
+		}
+		for _, s := range stmts {
+			if _, err := tx.Exec(s); err != nil {
+				return err
+			}
+		}
+
+		alterCols := []string{
+			`ALTER TABLE services ADD COLUMN api_capture_mode       TEXT`,
+			`ALTER TABLE services ADD COLUMN api_sample_rate        INTEGER`,
+			`ALTER TABLE services ADD COLUMN api_body_max_bytes     INTEGER`,
+			`ALTER TABLE services ADD COLUMN api_masked_headers     TEXT`,
+			`ALTER TABLE services ADD COLUMN api_masked_body_fields TEXT`,
+		}
+		for _, s := range alterCols {
+			if _, err := tx.Exec(s); err != nil && !strings.Contains(err.Error(), "duplicate column") {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 // --- helpers ---
