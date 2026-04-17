@@ -458,3 +458,106 @@ func (r *ServiceRepository) Delete(id string) error {
 	_, err := DB.Exec("DELETE FROM services WHERE id = ?", id)
 	return err
 }
+
+// GetApiCaptureConfig returns the API capture configuration for the given service.
+// If all capture columns are NULL, it returns DefaultApiCaptureConfig().
+// If partially set, non-NULL values override the defaults.
+func (r *ServiceRepository) GetApiCaptureConfig(serviceID string) (*models.ApiCaptureConfig, error) {
+	var (
+		mode             sql.NullString
+		sampleRate       sql.NullInt64
+		bodyMaxBytes     sql.NullInt64
+		maskedHeaders    sql.NullString
+		maskedBodyFields sql.NullString
+	)
+
+	err := DB.QueryRow(`
+		SELECT api_capture_mode, api_sample_rate, api_body_max_bytes,
+		       api_masked_headers, api_masked_body_fields
+		FROM services WHERE id = ?
+	`, serviceID).Scan(&mode, &sampleRate, &bodyMaxBytes, &maskedHeaders, &maskedBodyFields)
+	if err != nil {
+		return nil, err
+	}
+
+	// Start with defaults; override only where columns are non-NULL.
+	cfg := models.DefaultApiCaptureConfig()
+
+	if mode.Valid && mode.String != "" {
+		cfg.Mode = models.ApiCaptureMode(mode.String)
+	}
+	if sampleRate.Valid {
+		cfg.SampleRate = int(sampleRate.Int64)
+	}
+	if bodyMaxBytes.Valid {
+		cfg.BodyMaxBytes = int(bodyMaxBytes.Int64)
+	}
+	// Valid (non-NULL) means the column was explicitly set, even if the value is "".
+	// An empty string means the user cleared the list intentionally.
+	if maskedHeaders.Valid {
+		cfg.MaskedHeaders = splitCommaList(maskedHeaders.String)
+	}
+	if maskedBodyFields.Valid {
+		cfg.MaskedBodyFields = splitCommaList(maskedBodyFields.String)
+	}
+	// Ensure nil-safe slices for JSON serialization.
+	if cfg.MaskedHeaders == nil && maskedHeaders.Valid {
+		cfg.MaskedHeaders = []string{}
+	}
+	if cfg.MaskedBodyFields == nil && maskedBodyFields.Valid {
+		cfg.MaskedBodyFields = []string{}
+	}
+
+	return &cfg, nil
+}
+
+// UpdateApiCaptureConfig persists the given capture configuration for a service.
+// MaskedHeaders and MaskedBodyFields are stored as comma-separated TEXT.
+func (r *ServiceRepository) UpdateApiCaptureConfig(serviceID string, cfg *models.ApiCaptureConfig) error {
+	_, err := DB.Exec(`
+		UPDATE services
+		SET api_capture_mode       = ?,
+		    api_sample_rate        = ?,
+		    api_body_max_bytes     = ?,
+		    api_masked_headers     = ?,
+		    api_masked_body_fields = ?
+		WHERE id = ?
+	`,
+		string(cfg.Mode),
+		cfg.SampleRate,
+		cfg.BodyMaxBytes,
+		joinCommaList(cfg.MaskedHeaders),
+		joinCommaList(cfg.MaskedBodyFields),
+		serviceID,
+	)
+	return err
+}
+
+// splitCommaList splits a comma-separated string into a slice.
+// An empty string returns nil.
+func splitCommaList(s string) []string {
+	if s == "" {
+		return nil
+	}
+	parts := strings.Split(s, ",")
+	result := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if p != "" {
+			result = append(result, p)
+		}
+	}
+	if len(result) == 0 {
+		return nil
+	}
+	return result
+}
+
+// joinCommaList joins a slice into a comma-separated string for storage.
+// A nil or empty slice returns "" (empty string, not NULL), so that an explicit
+// "clear all" can be distinguished from a never-configured NULL column.
+func joinCommaList(items []string) string {
+	if len(items) == 0 {
+		return ""
+	}
+	return strings.Join(items, ",")
+}
