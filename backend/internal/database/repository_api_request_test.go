@@ -406,6 +406,180 @@ func TestServiceRepo_ApiCaptureConfig_DefaultsAndUpdate(t *testing.T) {
 	}
 }
 
+// --- TestApiRequestRepo_ListFilterExtended ---
+
+func TestApiRequestRepo_ListFilterExtended(t *testing.T) {
+	t.Run("Search_reqBody", func(t *testing.T) {
+		openTestDB(t)
+		makeTestService(t, "svc-search")
+
+		repo := database.NewApiRequestRepository()
+		now := time.Now()
+
+		// Row with alice in req_body.
+		r1 := makeTestRequest("svc-search", "POST", "/submit", 200, false, now)
+		r1.ReqBody = `{"user":"alice"}`
+		if err := repo.Create(&r1); err != nil {
+			t.Fatalf("Create r1: %v", err)
+		}
+
+		// Row with /search/foo in path.
+		r2 := makeTestRequest("svc-search", "GET", "/search/foo", 200, false, now.Add(time.Second))
+		r2.ReqBody = `{"key":"value"}`
+		if err := repo.Create(&r2); err != nil {
+			t.Fatalf("Create r2: %v", err)
+		}
+
+		// Search for "alice" — should match r1 via req_body.
+		items, total, err := repo.List(&models.ApiRequestFilter{
+			ServiceID: "svc-search",
+			Search:    "alice",
+		})
+		if err != nil {
+			t.Fatalf("List Search=alice: %v", err)
+		}
+		if total != 1 {
+			t.Errorf("Search=alice: total = %d, want 1", total)
+		}
+		if len(items) == 1 && items[0].Path != "/submit" {
+			t.Errorf("Search=alice: got path %q, want /submit", items[0].Path)
+		}
+
+		// Search for "foo" — should match r2 via path.
+		items2, total2, err := repo.List(&models.ApiRequestFilter{
+			ServiceID: "svc-search",
+			Search:    "foo",
+		})
+		if err != nil {
+			t.Fatalf("List Search=foo: %v", err)
+		}
+		if total2 != 1 {
+			t.Errorf("Search=foo: total = %d, want 1", total2)
+		}
+		if len(items2) == 1 && items2[0].Path != "/search/foo" {
+			t.Errorf("Search=foo: got path %q, want /search/foo", items2[0].Path)
+		}
+	})
+
+	t.Run("MaxStatus", func(t *testing.T) {
+		openTestDB(t)
+		makeTestService(t, "svc-maxstatus")
+
+		repo := database.NewApiRequestRepository()
+		now := time.Now()
+
+		reqs := []models.ApiRequest{
+			makeTestRequest("svc-maxstatus", "GET", "/a", 200, false, now),
+			makeTestRequest("svc-maxstatus", "GET", "/b", 301, false, now.Add(time.Second)),
+			makeTestRequest("svc-maxstatus", "GET", "/c", 404, true, now.Add(2*time.Second)),
+		}
+		if _, err := repo.CreateBatch(reqs); err != nil {
+			t.Fatalf("CreateBatch: %v", err)
+		}
+
+		// MaxStatus=399 → 200 and 301 qualify.
+		items, total, err := repo.List(&models.ApiRequestFilter{
+			ServiceID: "svc-maxstatus",
+			MaxStatus: 399,
+		})
+		if err != nil {
+			t.Fatalf("List MaxStatus=399: %v", err)
+		}
+		if total != 2 {
+			t.Errorf("MaxStatus=399: total = %d, want 2 (200, 301)", total)
+		}
+		for _, it := range items {
+			if it.StatusCode > 399 {
+				t.Errorf("MaxStatus=399: got status %d above max", it.StatusCode)
+			}
+		}
+
+		// MinStatus=200, MaxStatus=299 → only 200 qualifies.
+		items2, total2, err := repo.List(&models.ApiRequestFilter{
+			ServiceID: "svc-maxstatus",
+			MinStatus: 200,
+			MaxStatus: 299,
+		})
+		if err != nil {
+			t.Fatalf("List MinStatus=200 MaxStatus=299: %v", err)
+		}
+		if total2 != 1 {
+			t.Errorf("MinStatus=200 MaxStatus=299: total = %d, want 1 (200 only)", total2)
+		}
+		if len(items2) == 1 && items2[0].StatusCode != 200 {
+			t.Errorf("MinStatus=200 MaxStatus=299: got status %d, want 200", items2[0].StatusCode)
+		}
+	})
+
+	t.Run("FromTo_time", func(t *testing.T) {
+		openTestDB(t)
+		makeTestService(t, "svc-fromto")
+
+		now := time.Now().Truncate(time.Second)
+		tMinus2h := now.Add(-2 * time.Hour)
+		tMinus1h := now.Add(-time.Hour)
+		tPlus1h := now.Add(time.Hour)
+
+		// Insert directly with controlled created_at values.
+		for _, row := range []struct {
+			path      string
+			createdAt time.Time
+		}{
+			{"/old", tMinus2h},
+			{"/mid", tMinus1h},
+			{"/new", tPlus1h},
+		} {
+			_, err := database.DB.Exec(`
+				INSERT INTO api_requests
+					(service_id, request_id, method, path, path_template,
+					 status_code, duration_ms, client_ip,
+					 req_body, req_body_size, res_body, res_body_size,
+					 is_error, created_at)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			`,
+				"svc-fromto", "req-"+row.path, "GET", row.path, row.path,
+				200, 10, "127.0.0.1",
+				"", 0, "", 0,
+				0, row.createdAt,
+			)
+			if err != nil {
+				t.Fatalf("INSERT %s: %v", row.path, err)
+			}
+		}
+
+		repo := database.NewApiRequestRepository()
+
+		// From=t-90min, To=t+2h → should return /mid (t-1h) and /new (t+1h).
+		from90 := now.Add(-90 * time.Minute)
+		toPlus2h := now.Add(2 * time.Hour)
+		items, total, err := repo.List(&models.ApiRequestFilter{
+			ServiceID: "svc-fromto",
+			From:      from90,
+			To:        toPlus2h,
+		})
+		if err != nil {
+			t.Fatalf("List From/To: %v", err)
+		}
+		if total != 2 {
+			t.Errorf("From=-90min To=+2h: total = %d, want 2 (/mid, /new)", total)
+		}
+
+		// To=now → should return /old (t-2h) and /mid (t-1h).
+		items2, total2, err := repo.List(&models.ApiRequestFilter{
+			ServiceID: "svc-fromto",
+			To:        now,
+		})
+		if err != nil {
+			t.Fatalf("List To=now: %v", err)
+		}
+		if total2 != 2 {
+			t.Errorf("To=now: total = %d, want 2 (/old, /mid)", total2)
+		}
+		_ = items
+		_ = items2
+	})
+}
+
 func TestServiceRepo_ApiCaptureConfig_EmptyMaskedLists(t *testing.T) {
 	openTestDB(t)
 	makeTestService(t, "svc-empty")

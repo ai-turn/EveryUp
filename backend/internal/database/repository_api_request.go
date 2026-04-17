@@ -157,13 +157,13 @@ func (r *ApiRequestRepository) CreateBatch(reqs []models.ApiRequest) (int, error
 // Returns nil, nil if not found.
 func (r *ApiRequestRepository) GetByID(id int64) (*models.ApiRequest, error) {
 	var (
-		rid, statusCode, durationMs, reqBodySize, resBodySize int
-		isError                                               int
-		rid64                                                 int64
-		serviceID, requestID, method, path, pathTemplate      string
-		clientIP, reqHeadersRaw, reqBody                      sql.NullString
-		resHeadersRaw, resBody, errStr                        sql.NullString
-		createdAt                                             time.Time
+		statusCode, durationMs, reqBodySize, resBodySize int
+		isError                                          int
+		rid64                                            int64
+		serviceID, requestID, method, path, pathTemplate string
+		clientIP, reqHeadersRaw, reqBody                 sql.NullString
+		resHeadersRaw, resBody, errStr                   sql.NullString
+		createdAt                                        time.Time
 	)
 
 	err := DB.QueryRow(`
@@ -186,7 +186,6 @@ func (r *ApiRequestRepository) GetByID(id int64) (*models.ApiRequest, error) {
 	if err != nil {
 		return nil, err
 	}
-	_ = rid
 
 	req := scanApiRequest(
 		&rid64, &serviceID, &requestID, &method, &path, &pathTemplate,
@@ -283,13 +282,13 @@ func (r *ApiRequestRepository) List(f *models.ApiRequestFilter) ([]models.ApiReq
 	var items []models.ApiRequest
 	for rows.Next() {
 		var (
-			id, statusCode, durationMs, reqBodySize, resBodySize int
-			id64                                                  int64
-			isError                                               int
-			serviceID, requestID, method, path, pathTemplate      string
-			clientIP, reqHeadersRaw, reqBody                      sql.NullString
-			resHeadersRaw, resBody, errStr                        sql.NullString
-			createdAt                                             time.Time
+			statusCode, durationMs, reqBodySize, resBodySize int
+			id64                                             int64
+			isError                                          int
+			serviceID, requestID, method, path, pathTemplate string
+			clientIP, reqHeadersRaw, reqBody                 sql.NullString
+			resHeadersRaw, resBody, errStr                   sql.NullString
+			createdAt                                        time.Time
 		)
 		if err := rows.Scan(
 			&id64, &serviceID, &requestID, &method, &path, &pathTemplate,
@@ -300,7 +299,6 @@ func (r *ApiRequestRepository) List(f *models.ApiRequestFilter) ([]models.ApiReq
 		); err != nil {
 			return nil, 0, err
 		}
-		_ = id
 
 		req := scanApiRequest(
 			&id64, &serviceID, &requestID, &method, &path, &pathTemplate,
