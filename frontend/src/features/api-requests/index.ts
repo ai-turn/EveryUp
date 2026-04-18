@@ -1,4 +1,6 @@
 export { useApiRequests } from './hooks/useApiRequests';
+export { ApiCaptureSettings } from './components/ApiCaptureSettings';
+export type { ApiCaptureSettingsProps } from './components/ApiCaptureSettings';
 export type { UseApiRequestsState } from './hooks/useApiRequests';
 export { RequestsTable } from './components/RequestsTable';
 export { RequestFilters } from './components/RequestFilters';

@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
 import { api, Service } from '../../../services/api';
+import { ApiCaptureSettings } from '../../api-requests/components/ApiCaptureSettings';
 
 type LogLevel = 'error' | 'warn' | 'info';
 
@@ -61,7 +62,7 @@ export function LogServiceSettings({ service, onSuccess }: Props) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       {/* Section header */}
       <div>
         <h3 className="text-sm font-bold text-slate-800 dark:text-white">
@@ -167,6 +168,12 @@ export function LogServiceSettings({ service, onSuccess }: Props) {
         )}
         {t('common.save')}
       </button>
+
+      {/* Divider */}
+      <div className="border-t border-slate-200 dark:border-ui-border-dark" />
+
+      {/* API Capture Settings section */}
+      <ApiCaptureSettings serviceId={service.id} />
     </div>
   );
 }
