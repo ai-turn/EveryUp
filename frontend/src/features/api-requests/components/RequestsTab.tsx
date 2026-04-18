@@ -68,8 +68,9 @@ export function RequestsTab({ serviceId, onGoToSettings }: RequestsTabProps) {
   const handleSelect = useCallback(
     (request: ApiRequest) => {
       openPanel(
-        `${request.method} ${request.pathTemplate}`,
-        <RequestDetailDrawer request={request} />
+        'Request Details',
+        <RequestDetailDrawer request={request} />,
+        'wide'
       );
     },
     [openPanel]

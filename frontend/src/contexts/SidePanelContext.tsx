@@ -1,10 +1,13 @@
 import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 
+export type SidePanelSize = 'default' | 'wide';
+
 interface SidePanelContextType {
   isOpen: boolean;
   title: string;
   content: ReactNode | null;
-  openPanel: (title: string, content: ReactNode) => void;
+  size: SidePanelSize;
+  openPanel: (title: string, content: ReactNode, size?: SidePanelSize) => void;
   closePanel: () => void;
 }
 
@@ -14,10 +17,12 @@ export function SidePanelProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState<ReactNode | null>(null);
+  const [size, setSize] = useState<SidePanelSize>('default');
 
-  const openPanel = useCallback((title: string, content: ReactNode) => {
+  const openPanel = useCallback((title: string, content: ReactNode, size: SidePanelSize = 'default') => {
     setTitle(title);
     setContent(content);
+    setSize(size);
     setIsOpen(true);
   }, []);
 
@@ -28,7 +33,7 @@ export function SidePanelProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <SidePanelContext.Provider value={{ isOpen, title, content, openPanel, closePanel }}>
+    <SidePanelContext.Provider value={{ isOpen, title, content, size, openPanel, closePanel }}>
       {children}
     </SidePanelContext.Provider>
   );

@@ -3,7 +3,11 @@ import { MaterialIcon } from '../common';
 import { useSidePanel } from '../../contexts/SidePanelContext';
 
 export function SidePanel() {
-    const { isOpen, title, content, closePanel } = useSidePanel();
+    const { isOpen, title, content, size, closePanel } = useSidePanel();
+    const widthClass =
+        size === 'wide'
+            ? 'w-full sm:w-[560px] lg:w-[820px] xl:w-[980px]'
+            : 'w-full sm:w-[500px] lg:w-[600px]';
     const panelRef = useRef<HTMLDivElement>(null);
 
     // Handle ESC key to close
@@ -31,7 +35,7 @@ export function SidePanel() {
             <div
                 ref={panelRef}
                 className={`
-          fixed inset-y-0 right-0 z-50 w-full sm:w-[500px] lg:w-[600px] 
+          fixed inset-y-0 right-0 z-50 ${widthClass}
           bg-white dark:bg-bg-surface-dark border-l border-slate-200 dark:border-ui-border-dark
           shadow-2xl transform transition-transform duration-500 ease-in-out
           ${isOpen ? 'translate-x-0' : 'translate-x-full'}
