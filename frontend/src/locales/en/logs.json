@@ -52,6 +52,84 @@
             "actions": "Actions"
         }
     },
+    "apiRequests": {
+        "tabs": {
+            "requests": "Requests"
+        },
+        "table": {
+            "time": "Time",
+            "method": "Method",
+            "path": "Path",
+            "status": "Status",
+            "duration": "Duration",
+            "requestId": "Request ID"
+        },
+        "filters": {
+            "search": "Search path, body…",
+            "allMethods": "ALL",
+            "allStatus": "All",
+            "errorsOnly": "Errors only",
+            "timeRange": {
+                "1h": "1h",
+                "6h": "6h",
+                "24h": "24h",
+                "7d": "7d"
+            }
+        },
+        "detail": {
+            "request": "Request",
+            "response": "Response",
+            "rawJson": "Raw JSON",
+            "headers": "Headers",
+            "body": "Body",
+            "truncated": "Truncated — showing first {{shown}} bytes of {{total}} bytes total",
+            "noBody": "No body",
+            "copy": "Copy",
+            "copied": "Copied"
+        },
+        "empty": {
+            "title": "No requests captured",
+            "description": "No API requests captured yet. Configure capture settings to get started.",
+            "configureCapture": "Configure capture"
+        },
+        "settings": {
+            "title": "API Request Capture",
+            "subtitle": "Configure how requests and responses are captured for this service.",
+            "mode": {
+                "label": "Capture Mode",
+                "disabled": "Disabled",
+                "disabledDesc": "Don't capture any requests.",
+                "errorsOnly": "Errors Only",
+                "errorsOnlyDesc": "Capture only error responses (5xx).",
+                "sampled": "Sampled",
+                "sampledDesc": "Capture a sample of all requests.",
+                "all": "All",
+                "allDesc": "Capture every request."
+            },
+            "sampleRate": {
+                "label": "Sample Rate (%)",
+                "description": "Percentage of successful responses to capture (0–100)"
+            },
+            "bodyMaxBytes": {
+                "label": "Max Body Size",
+                "description": "Maximum body size to store"
+            },
+            "maskedHeaders": {
+                "label": "Masked Headers",
+                "description": "Header names to mask with *** (case-insensitive)",
+                "placeholder": "Add header name…"
+            },
+            "maskedBodyFields": {
+                "label": "Masked Body Fields",
+                "description": "JSON body field names to mask",
+                "placeholder": "Add field name…"
+            },
+            "save": "Save",
+            "saving": "Saving…",
+            "saveSuccess": "Capture settings saved.",
+            "saveError": "Save failed"
+        }
+    },
     "logServices": {
         "viewLogs": "View Logs",
         "empty": "No logs added yet",
