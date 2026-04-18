@@ -83,6 +83,8 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	local.Post("/services/:id/regenerate-key", serviceHandler.RegenerateKey)
 	local.Get("/services/:id/api-capture-config", apiCaptureConfigHandler.GetConfig)
 	local.Put("/services/:id/api-capture-config", apiCaptureConfigHandler.UpdateConfig)
+	local.Get("/services/:id/api-requests", apiRequestIngestHandler.List)
+	local.Get("/services/:id/api-requests/:reqId", apiRequestIngestHandler.GetByID)
 
 	// Metric endpoints
 	metricHandler := handlers.NewMetricHandler()
