@@ -89,7 +89,7 @@ func (s *Scheduler) handleRecovery(serviceID string) {
 	}
 }
 
-// cleanup removes old metrics, logs, and system metrics based on retention settings.
+// cleanup removes old metrics, logs, system metrics, and api_requests based on retention settings.
 // Runs daily at midnight via the cron scheduler.
 func (s *Scheduler) cleanup() {
 	cfg := config.Get()
@@ -116,5 +116,18 @@ func (s *Scheduler) cleanup() {
 		if deleted, err := sysRepo.DeleteOld(sysRetention); err == nil {
 			log.Printf("Cleaned up %d old system metrics", deleted)
 		}
+	}
+
+	// Delete old api_requests (default: 14 days)
+	days := cfg.Retention.ApiRequestsDays
+	if days <= 0 {
+		days = 14
+	}
+	cutoff := time.Now().Add(-time.Duration(days) * 24 * time.Hour)
+	apiRepo := database.NewApiRequestRepository()
+	if deleted, err := apiRepo.DeleteOlderThan(cutoff); err == nil {
+		log.Printf("Cleaned up %d old api_requests (cutoff: %d days)", deleted, days)
+	} else {
+		log.Printf("Failed to clean up api_requests: %v", err)
 	}
 }

@@ -111,9 +111,10 @@ type SMTPConfig struct {
 
 // RetentionConfig holds data retention configuration
 type RetentionConfig struct {
-	Metrics       string `mapstructure:"metrics"`
-	Logs          string `mapstructure:"logs"`
-	SystemMetrics string `mapstructure:"systemMetrics"`
+	Metrics         string `mapstructure:"metrics"`
+	Logs            string `mapstructure:"logs"`
+	SystemMetrics   string `mapstructure:"systemMetrics"`
+	ApiRequestsDays int    `mapstructure:"apiRequestsDays"`
 }
 
 // Global config instance
@@ -145,6 +146,7 @@ func Load(configPath string) (*Config, error) {
 	v.SetDefault("retention.metrics", "7d")
 	v.SetDefault("retention.logs", "3d")
 	v.SetDefault("retention.systemMetrics", "7d")
+	v.SetDefault("retention.apiRequestsDays", 14)
 
 	// Read config file
 	if configPath != "" {
