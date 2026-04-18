@@ -26,6 +26,10 @@ const TIME_RANGES = [
 
 type TimeRangeLabel = (typeof TIME_RANGES)[number]['label'];
 
+function fromMsAgo(ms: number): string {
+  return new Date(Date.now() - ms).toISOString();
+}
+
 function getActiveTimeRange(from?: string): TimeRangeLabel {
   if (!from) return '24h';
   const diff = Date.now() - new Date(from).getTime();
@@ -62,7 +66,7 @@ export function RequestFilters({ params, onChange }: RequestFiltersProps) {
     const range = TIME_RANGES.find((r) => r.label === label)!;
     onChange({
       ...params,
-      from: new Date(Date.now() - range.ms).toISOString(),
+      from: fromMsAgo(range.ms),
       to: undefined,
       offset: 0,
     });
