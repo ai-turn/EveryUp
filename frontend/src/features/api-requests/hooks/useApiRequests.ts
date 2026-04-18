@@ -52,7 +52,7 @@ export function useApiRequests(
         ...(debouncedSearch !== undefined ? { search: debouncedSearch } : {}),
       };
       const response = await api.getServiceApiRequests(serviceId, mergedParams);
-      setState({ items: response.items, total: response.total, loading: false, error: null });
+      setState({ items: [...(response.items ?? [])], total: response.total ?? 0, loading: false, error: null });
     } catch (err) {
       setState(prev => ({ ...prev, loading: false, error: getErrorMessage(err) }));
     }

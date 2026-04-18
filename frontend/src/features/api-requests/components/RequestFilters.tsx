@@ -11,7 +11,7 @@ const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const;
 type StatusQuickFilter = 'all' | '2xx' | '4xx' | '5xx';
 
 const STATUS_RANGES: Record<StatusQuickFilter, { minStatus?: number; maxStatus?: number }> = {
-  all: {},
+  all: { minStatus: undefined, maxStatus: undefined },
   '2xx': { minStatus: 200, maxStatus: 299 },
   '4xx': { minStatus: 400, maxStatus: 499 },
   '5xx': { minStatus: 500, maxStatus: 599 },
