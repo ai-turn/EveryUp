@@ -122,7 +122,7 @@ export function RequestsTab({ serviceId, onGoToSettings }: RequestsTabProps) {
         </div>
       )}
 
-      {!showEmpty && (
+      {!showEmpty && !showNoResults && (
         <>
           <RequestsTable items={accumulatedItems} loading={loading} onSelect={handleSelect} />
 
