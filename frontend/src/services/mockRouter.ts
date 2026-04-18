@@ -467,6 +467,20 @@ export function mockRouter<T>(endpoint: string, method = 'GET'): T {
   // /services/:id/logs
   const serviceLogsMatch = endpoint.match(/^\/services\/([^/?]+)\/logs/);
   if (serviceLogsMatch) return filterLogs(endpoint, serviceLogsMatch[1]) as T;
+  // /services/:id/api-capture-config
+  if (/^\/services\/[^/]+\/api-capture-config/.test(endpoint)) return mockApiCaptureConfig as T;
+  // /services/:id/api-requests/:reqId
+  const apiReqDetailMatch = endpoint.match(/^\/services\/([^/]+)\/api-requests\/(\d+)/);
+  if (apiReqDetailMatch) {
+    const found = mockApiRequests.find(r => String(r.id) === apiReqDetailMatch[2]);
+    return (found ?? null) as T;
+  }
+  // /services/:id/api-requests
+  const apiReqListMatch = endpoint.match(/^\/services\/([^/]+)\/api-requests/);
+  if (apiReqListMatch) {
+    const items = mockApiRequests;
+    return { items, total: items.length } as unknown as T;
+  }
   // /services/:id
   if (/^\/services\/[^/?]+$/.test(endpoint)) return mockApiServices[0] as T;
   // /services
@@ -494,23 +508,6 @@ export function mockRouter<T>(endpoint: string, method = 'GET'): T {
   if (endpoint.startsWith('/notification-history')) return mockNotificationHistory as T;
 
   if (endpoint.startsWith('/settings')) return mockAppSettings as T;
-
-  // /services/:id/api-capture-config
-  if (/^\/services\/[^/]+\/api-capture-config$/.test(endpoint)) return mockApiCaptureConfig as T;
-
-  // /services/:id/api-requests/:reqId
-  const apiReqDetailMatch = endpoint.match(/^\/services\/([^/]+)\/api-requests\/(\d+)/);
-  if (apiReqDetailMatch) {
-    const found = mockApiRequests.find(r => String(r.id) === apiReqDetailMatch[2]);
-    return (found ?? null) as T;
-  }
-  // /services/:id/api-requests
-  const apiReqListMatch = endpoint.match(/^\/services\/([^/]+)\/api-requests/);
-  if (apiReqListMatch) {
-    const sid = apiReqListMatch[1];
-    const items = mockApiRequests.filter(r => r.serviceId === sid || sid === '1');
-    return { items, total: items.length } as unknown as T;
-  }
 
   return null as T;
 }
