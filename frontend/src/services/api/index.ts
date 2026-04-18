@@ -37,6 +37,11 @@ export type {
   LogsParams,
   Incident,
   HealthStatus,
+  ApiCaptureMode,
+  ApiRequest,
+  ApiCaptureConfig,
+  ApiRequestListParams,
+  ApiRequestListResponse,
 } from './services';
 export type {
   Host,

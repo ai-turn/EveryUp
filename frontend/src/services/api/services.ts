@@ -124,6 +124,55 @@ export interface HealthStatus {
   activeServices: number;
 }
 
+export type ApiCaptureMode = 'disabled' | 'errors_only' | 'sampled' | 'all';
+
+export interface ApiRequest {
+  id: number;
+  serviceId: string;
+  requestId: string;
+  method: string;
+  path: string;
+  pathTemplate: string;
+  statusCode: number;
+  durationMs: number;
+  clientIp?: string;
+  reqHeaders?: Record<string, string>;
+  reqBody?: string;
+  reqBodySize: number;
+  resHeaders?: Record<string, string>;
+  resBody?: string;
+  resBodySize: number;
+  error?: string;
+  isError: boolean;
+  createdAt: string;
+}
+
+export interface ApiCaptureConfig {
+  mode: ApiCaptureMode;
+  sampleRate: number;
+  bodyMaxBytes: number;
+  maskedHeaders: string[];
+  maskedBodyFields: string[];
+}
+
+export interface ApiRequestListParams {
+  limit?: number;
+  offset?: number;
+  errorsOnly?: boolean;
+  method?: string;
+  minStatus?: number;
+  maxStatus?: number;
+  pathPrefix?: string;
+  search?: string;
+  from?: string;
+  to?: string;
+}
+
+export interface ApiRequestListResponse {
+  items: ApiRequest[];
+  total: number;
+}
+
 // --- API ---
 
 export function createServicesApi(request: RequestFn) {
@@ -206,5 +255,39 @@ export function createServicesApi(request: RequestFn) {
 
     // Health
     getHealth: () => request<HealthStatus>('/health'),
+
+    // API Request Monitoring
+    getServiceApiRequests: (serviceId: string, params?: ApiRequestListParams) => {
+      const query = params
+        ? (() => {
+            const p = new URLSearchParams();
+            if (params.limit !== undefined) p.set('limit', String(params.limit));
+            if (params.offset !== undefined) p.set('offset', String(params.offset));
+            if (params.errorsOnly !== undefined) p.set('errorsOnly', String(params.errorsOnly));
+            if (params.method !== undefined) p.set('method', params.method);
+            if (params.minStatus !== undefined) p.set('minStatus', String(params.minStatus));
+            if (params.maxStatus !== undefined) p.set('maxStatus', String(params.maxStatus));
+            if (params.pathPrefix !== undefined) p.set('pathPrefix', params.pathPrefix);
+            if (params.search !== undefined) p.set('search', params.search);
+            if (params.from !== undefined) p.set('from', params.from);
+            if (params.to !== undefined) p.set('to', params.to);
+            const s = p.toString();
+            return s ? `?${s}` : '';
+          })()
+        : '';
+      return request<ApiRequestListResponse>(`/services/${serviceId}/api-requests${query}`);
+    },
+
+    getApiRequestById: (serviceId: string, requestId: number) =>
+      request<ApiRequest>(`/services/${serviceId}/api-requests/${requestId}`),
+
+    getApiCaptureConfig: (serviceId: string) =>
+      request<ApiCaptureConfig>(`/services/${serviceId}/api-capture-config`),
+
+    updateApiCaptureConfig: (serviceId: string, config: ApiCaptureConfig) =>
+      request<ApiCaptureConfig>(`/services/${serviceId}/api-capture-config`, {
+        method: 'PUT',
+        body: JSON.stringify(config),
+      }),
   };
 }
