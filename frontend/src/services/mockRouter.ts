@@ -478,8 +478,19 @@ export function mockRouter<T>(endpoint: string, method = 'GET'): T {
   // /services/:id/api-requests
   const apiReqListMatch = endpoint.match(/^\/services\/([^/]+)\/api-requests/);
   if (apiReqListMatch) {
-    const items = mockApiRequests;
-    return { items, total: items.length } as unknown as T;
+    const [, qs] = endpoint.split('?');
+    const p = new URLSearchParams(qs ?? '');
+    let filtered = mockApiRequests;
+    const method = p.get('method');
+    if (method) filtered = filtered.filter(r => r.method === method.toUpperCase());
+    const minStatus = parseInt(p.get('minStatus') ?? '0');
+    const maxStatus = parseInt(p.get('maxStatus') ?? '0');
+    if (minStatus) filtered = filtered.filter(r => r.statusCode >= minStatus);
+    if (maxStatus) filtered = filtered.filter(r => r.statusCode <= maxStatus);
+    if (p.get('errorsOnly') === 'true') filtered = filtered.filter(r => r.isError);
+    const search = p.get('search') ?? '';
+    if (search) filtered = filtered.filter(r => r.path.includes(search) || (r.reqBody ?? '').includes(search));
+    return { items: [...filtered], total: filtered.length } as unknown as T;
   }
   // /services/:id
   if (/^\/services\/[^/?]+$/.test(endpoint)) return mockApiServices[0] as T;

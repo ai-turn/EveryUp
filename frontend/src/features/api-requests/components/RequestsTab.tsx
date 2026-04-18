@@ -57,7 +57,8 @@ export function RequestsTab({ serviceId, onGoToSettings }: RequestsTabProps) {
   const handleParamsChange = useCallback((next: ApiRequestListParams) => {
     setFilterParams(next);
     setOffset(0);
-    setAccumulatedItems([]);
+    // Don't clear items here — keep showing stale data while re-fetching
+    // to avoid flicker. The useEffect replaces items when offset===0.
   }, []);
 
   const handleLoadMore = useCallback(() => {
