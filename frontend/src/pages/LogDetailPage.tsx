@@ -10,7 +10,7 @@ import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { LogDetailView } from '../features/logs/components/LogDetailView';
 import { api, Service } from '../services/api';
 
-type TabKey = 'logs' | 'integration' | 'settings';
+type TabKey = 'logs' | 'requests' | 'integration' | 'settings';
 
 export function LogDetailPage() {
   const { serviceId } = useParams<{ serviceId: string }>();
@@ -27,7 +27,9 @@ export function LogDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [activeTab, setActiveTab] = useState<TabKey>(
-    searchParams.get('tab') === 'integration'
+    searchParams.get('tab') === 'requests'
+      ? 'requests'
+      : searchParams.get('tab') === 'integration'
       ? 'integration'
       : searchParams.get('tab') === 'settings'
       ? 'settings'

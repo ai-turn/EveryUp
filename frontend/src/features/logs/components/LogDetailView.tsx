@@ -12,10 +12,11 @@ import { ErrorLogTable } from './ErrorLogTable';
 import { LogServiceIdentity } from './LogServiceIdentity';
 import { LogServiceSettings } from './LogServiceSettings';
 import { IntegrationPanel } from '../../healthcheck/components/IntegrationPanel';
+import { RequestsTab } from '../../api-requests/components/RequestsTab';
 import { api } from '../../../services/api';
 import type { Service } from '../../../services/api';
 
-type TabKey = 'logs' | 'integration' | 'settings';
+type TabKey = 'logs' | 'requests' | 'integration' | 'settings';
 
 export interface LogDetailViewProps {
   service: Service;
@@ -81,15 +82,22 @@ function TabContent({
   service,
   serviceId,
   refreshKey,
+  onTabChange,
   onServiceUpdate,
   onApiKeyRegenerated,
   desktopSettings = false,
-}: Pick<LogDetailViewProps, 'activeTab' | 'service' | 'serviceId' | 'refreshKey' | 'onServiceUpdate' | 'onApiKeyRegenerated'> & {
+}: Pick<LogDetailViewProps, 'activeTab' | 'service' | 'serviceId' | 'refreshKey' | 'onTabChange' | 'onServiceUpdate' | 'onApiKeyRegenerated'> & {
   desktopSettings?: boolean;
 }) {
   return (
     <>
       {activeTab === 'logs' && <ErrorLogTable serviceId={serviceId} refreshKey={refreshKey} />}
+      {activeTab === 'requests' && (
+        <RequestsTab
+          serviceId={serviceId}
+          onGoToSettings={() => onTabChange('settings')}
+        />
+      )}
       {activeTab === 'integration' && (
         <IntegrationPanel service={service} onApiKeyRegenerated={onApiKeyRegenerated} />
       )}
@@ -240,6 +248,7 @@ function DesktopLayout(props: LogDetailViewProps) {
 
   const tabs: { key: TabKey; label: string; icon: string }[] = [
     { key: 'logs',        label: t('logServices.detail.tabs.logs'),        icon: 'article'                  },
+    { key: 'requests',    label: 'Requests',                               icon: 'http'                     },
     { key: 'integration', label: t('logServices.detail.tabs.integration'), icon: 'integration_instructions' },
     { key: 'settings',    label: t('logServices.detail.tabs.settings'),    icon: 'tune'                     },
   ];
@@ -318,6 +327,7 @@ function DesktopLayout(props: LogDetailViewProps) {
         service={service}
         serviceId={serviceId}
         refreshKey={refreshKey}
+        onTabChange={onTabChange}
         onServiceUpdate={onServiceUpdate}
         onApiKeyRegenerated={onApiKeyRegenerated}
         desktopSettings
@@ -406,6 +416,7 @@ function MobileLayout(props: LogDetailViewProps) {
 
   const tabs: { key: TabKey; label: string; icon: string }[] = [
     { key: 'logs',        label: t('logServices.detail.tabs.logs'),        icon: 'article'                  },
+    { key: 'requests',    label: 'Requests',                               icon: 'http'                     },
     { key: 'integration', label: t('logServices.detail.tabs.integration'), icon: 'integration_instructions' },
     { key: 'settings',    label: t('logServices.detail.tabs.settings'),    icon: 'tune'                     },
   ];
@@ -474,6 +485,7 @@ function MobileLayout(props: LogDetailViewProps) {
         service={service}
         serviceId={serviceId}
         refreshKey={refreshKey}
+        onTabChange={onTabChange}
         onServiceUpdate={onServiceUpdate}
         onApiKeyRegenerated={onApiKeyRegenerated}
       />

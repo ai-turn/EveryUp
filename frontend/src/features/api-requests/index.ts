@@ -4,3 +4,5 @@ export { RequestsTable } from './components/RequestsTable';
 export { RequestFilters } from './components/RequestFilters';
 export { RequestDetailDrawer } from './components/RequestDetailDrawer';
 export type { RequestDetailDrawerProps } from './components/RequestDetailDrawer';
+export { RequestsTab } from './components/RequestsTab';
+export type { RequestsTabProps } from './components/RequestsTab';
