@@ -949,6 +949,121 @@ func TestApiRequestIngest_InvalidApiKey(t *testing.T) {
 	}
 }
 
+// ─── API Capture Config Tests ─────────────────────────────────────
+
+func TestApiCaptureConfig_GetAndUpdate(t *testing.T) {
+	ts := setupTestServer(t)
+	token := ts.setupAdmin(t, "admin", "testpass123")
+	auth := authHeader(token)
+
+	// 1. Create a log service
+	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
+		"id":   "cfg-svc-1",
+		"name": "Config Test Service",
+		"type": "log",
+	}, auth...)
+	if !createResult.Success {
+		t.Fatalf("create service failed: %v", createResult.Error)
+	}
+
+	// 2. GET defaults — expect mode="sampled", sampleRate=10
+	resp, getResult := ts.doRequest(t, "GET", "/api/v1/services/cfg-svc-1/api-capture-config", nil, auth...)
+	if resp.StatusCode != 200 {
+		t.Errorf("GET status = %d, want 200", resp.StatusCode)
+	}
+	if !getResult.Success {
+		t.Fatalf("GET failed: %v", getResult.Error)
+	}
+
+	var cfg struct {
+		Mode         string `json:"mode"`
+		SampleRate   int    `json:"sampleRate"`
+		BodyMaxBytes int    `json:"bodyMaxBytes"`
+	}
+	json.Unmarshal(getResult.Data, &cfg)
+	if cfg.Mode != "sampled" {
+		t.Errorf("default mode = %q, want %q", cfg.Mode, "sampled")
+	}
+	if cfg.SampleRate != 10 {
+		t.Errorf("default sampleRate = %d, want 10", cfg.SampleRate)
+	}
+
+	// 3. PUT with updated values
+	resp, putResult := ts.doRequest(t, "PUT", "/api/v1/services/cfg-svc-1/api-capture-config", map[string]interface{}{
+		"mode":             "errors_only",
+		"sampleRate":       0,
+		"bodyMaxBytes":     4096,
+		"maskedHeaders":    []string{"authorization"},
+		"maskedBodyFields": []string{"password"},
+	}, auth...)
+	if resp.StatusCode != 200 {
+		t.Errorf("PUT status = %d, want 200", resp.StatusCode)
+	}
+	if !putResult.Success {
+		t.Fatalf("PUT failed: %v", putResult.Error)
+	}
+
+	// 4. GET again — verify updated values
+	_, getResult2 := ts.doRequest(t, "GET", "/api/v1/services/cfg-svc-1/api-capture-config", nil, auth...)
+	if !getResult2.Success {
+		t.Fatalf("second GET failed: %v", getResult2.Error)
+	}
+
+	var cfg2 struct {
+		Mode             string   `json:"mode"`
+		SampleRate       int      `json:"sampleRate"`
+		BodyMaxBytes     int      `json:"bodyMaxBytes"`
+		MaskedHeaders    []string `json:"maskedHeaders"`
+		MaskedBodyFields []string `json:"maskedBodyFields"`
+	}
+	json.Unmarshal(getResult2.Data, &cfg2)
+	if cfg2.Mode != "errors_only" {
+		t.Errorf("updated mode = %q, want %q", cfg2.Mode, "errors_only")
+	}
+	if cfg2.SampleRate != 0 {
+		t.Errorf("updated sampleRate = %d, want 0", cfg2.SampleRate)
+	}
+	if cfg2.BodyMaxBytes != 4096 {
+		t.Errorf("updated bodyMaxBytes = %d, want 4096", cfg2.BodyMaxBytes)
+	}
+	if len(cfg2.MaskedHeaders) != 1 || cfg2.MaskedHeaders[0] != "authorization" {
+		t.Errorf("updated maskedHeaders = %v, want [authorization]", cfg2.MaskedHeaders)
+	}
+	if len(cfg2.MaskedBodyFields) != 1 || cfg2.MaskedBodyFields[0] != "password" {
+		t.Errorf("updated maskedBodyFields = %v, want [password]", cfg2.MaskedBodyFields)
+	}
+
+	// 5. PUT with invalid mode → 400 VALIDATION_ERROR
+	resp, errResult := ts.doRequest(t, "PUT", "/api/v1/services/cfg-svc-1/api-capture-config", map[string]interface{}{
+		"mode":             "invalid_mode",
+		"sampleRate":       10,
+		"bodyMaxBytes":     8192,
+		"maskedHeaders":    []string{},
+		"maskedBodyFields": []string{},
+	}, auth...)
+	if resp.StatusCode != 400 {
+		t.Errorf("invalid mode status = %d, want 400", resp.StatusCode)
+	}
+	if errResult.Error == nil || errResult.Error.Code != "VALIDATION_ERROR" {
+		t.Errorf("expected VALIDATION_ERROR, got %v", errResult.Error)
+	}
+
+	// 6. PUT with sampleRate 150 → 400 VALIDATION_ERROR
+	resp, errResult2 := ts.doRequest(t, "PUT", "/api/v1/services/cfg-svc-1/api-capture-config", map[string]interface{}{
+		"mode":             "sampled",
+		"sampleRate":       150,
+		"bodyMaxBytes":     8192,
+		"maskedHeaders":    []string{},
+		"maskedBodyFields": []string{},
+	}, auth...)
+	if resp.StatusCode != 400 {
+		t.Errorf("out-of-range sampleRate status = %d, want 400", resp.StatusCode)
+	}
+	if errResult2.Error == nil || errResult2.Error.Code != "VALIDATION_ERROR" {
+		t.Errorf("expected VALIDATION_ERROR, got %v", errResult2.Error)
+	}
+}
+
 // ─── Alert Rule Tests ──────────────────────────────────────────────
 
 func TestAlertRule_CRUD(t *testing.T) {
