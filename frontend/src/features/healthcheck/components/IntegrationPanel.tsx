@@ -10,6 +10,7 @@ import {
   buildAgentSnippets,
   buildNginxSnippets,
   buildAgentQuickStart,
+  buildApiCaptureSnippets,
 } from './integrationSnippets';
 
 interface IntegrationPanelProps {
@@ -123,7 +124,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
   const [showConfirm, setShowConfirm] = useState(false);
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
   const [revealCountdown, setRevealCountdown] = useState(0);
-  const [activeCategory, setActiveCategory] = useState<'http-appender' | 'agent'>('agent');
+  const [activeCategory, setActiveCategory] = useState<'http-appender' | 'agent' | 'api-capture'>('agent');
   const [activeSnippet, setActiveSnippet] = useState<string>('config');
   const [activeNginxTab, setActiveNginxTab] = useState<'nginx_conf' | 'docker_compose' | 'docker_run'>('nginx_conf');
   const [showNginx, setShowNginx] = useState(false);
@@ -141,6 +142,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
   const agentSnippets = buildAgentSnippets(hostname, port, isHttps, displayKey, origin);
   const nginxSnippets = buildNginxSnippets(hostname);
   const agentQuickStartCmd = buildAgentQuickStart(displayKey, origin);
+  const apiCaptureSnippets = buildApiCaptureSnippets(origin, displayKey);
 
   const dismissRevealedKey = useCallback(() => {
     setRevealedKey(null);
@@ -198,12 +200,30 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
     { key: 'systemd', label: 'systemd' },
   ];
 
-  const currentTabs = activeCategory === 'http-appender' ? httpAppenderTabs : agentTabs;
-  const currentSnippets = activeCategory === 'http-appender' ? httpAppenderSnippets : agentSnippets;
+  const apiCaptureTabs = [
+    { key: 'curl', label: 'cURL' },
+    { key: 'express', label: 'Express.js' },
+    { key: 'go', label: 'Go (net/http)' },
+  ];
 
-  const handleCategoryChange = (category: 'http-appender' | 'agent') => {
+  const currentTabs =
+    activeCategory === 'http-appender'
+      ? httpAppenderTabs
+      : activeCategory === 'api-capture'
+        ? apiCaptureTabs
+        : agentTabs;
+  const currentSnippets =
+    activeCategory === 'http-appender'
+      ? httpAppenderSnippets
+      : activeCategory === 'api-capture'
+        ? apiCaptureSnippets
+        : agentSnippets;
+
+  const handleCategoryChange = (category: 'http-appender' | 'agent' | 'api-capture') => {
     setActiveCategory(category);
-    setActiveSnippet(category === 'agent' ? 'config' : 'express');
+    if (category === 'agent') setActiveSnippet('config');
+    else if (category === 'http-appender') setActiveSnippet('express');
+    else setActiveSnippet('curl');
   };
 
   const curlCmd = `curl -X POST ${ingestUrl} \\
@@ -347,6 +367,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             options={[
               { key: 'agent' as const, label: t('healthcheck.integration.snippets.agent', { defaultValue: 'Log Agent' }) },
               { key: 'http-appender' as const, label: t('healthcheck.integration.snippets.httpAppender', { defaultValue: 'HTTP Appender' }) },
+              { key: 'api-capture' as const, label: t('healthcheck.integration.snippets.apiCapture', { defaultValue: 'API Capture' }) },
             ]}
             value={activeCategory}
             onChange={handleCategoryChange}
@@ -356,9 +377,13 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               ? t('healthcheck.integration.snippets.httpAppenderDesc', {
                   defaultValue: '앱 코드에 HTTP 전송 설정을 추가하는 방식입니다. 소스 코드를 수정할 수 있고, 로깅 라이브러리를 이미 사용 중이라면 가장 간단합니다.',
                 })
-              : t('healthcheck.integration.snippets.agentDesc', {
-                  defaultValue: 'Fluent Bit 기반 에이전트가 로그 파일이나 stdout을 수집해 전달합니다. 앱 코드를 수정하기 어렵거나 서버·컨테이너 단위로 붙이고 싶을 때 적합합니다.',
-                })}
+              : activeCategory === 'api-capture'
+                ? t('healthcheck.integration.snippets.apiCaptureDesc', {
+                    defaultValue: '앱의 HTTP 요청/응답을 캡처해 MT로 전송합니다. 미들웨어를 추가하거나 cURL로 직접 테스트할 수 있습니다.',
+                  })
+                : t('healthcheck.integration.snippets.agentDesc', {
+                    defaultValue: 'Fluent Bit 기반 에이전트가 로그 파일이나 stdout을 수집해 전달합니다. 앱 코드를 수정하기 어렵거나 서버·컨테이너 단위로 붙이고 싶을 때 적합합니다.',
+                  })}
           </p>
         </div>
 
@@ -391,7 +416,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="sm:shrink-0 sm:w-40">
             <p className="text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-text-dim-dark mb-2 px-1 hidden sm:block">
-              {activeCategory === 'http-appender' ? 'Framework' : 'Deploy'}
+              {activeCategory === 'http-appender' ? 'Framework' : activeCategory === 'api-capture' ? 'Language' : 'Deploy'}
             </p>
             <div className="flex sm:flex-col gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
               {currentTabs.map((tab) => (

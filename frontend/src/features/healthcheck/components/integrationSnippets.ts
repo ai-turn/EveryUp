@@ -346,3 +346,70 @@ export function buildAgentQuickStart(displayKey: string, origin: string): string
   --restart unless-stopped \
   aiturn/everyup-log-agent:latest`;
 }
+
+export function buildApiCaptureSnippets(origin: string, displayKey: string): Record<string, string> {
+  const ingestUrl = `${origin}/api/v1/ingest/requests`;
+  return {
+    curl: `curl -X POST ${ingestUrl} \\
+  -H "X-API-Key: ${displayKey}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "method": "POST",
+    "path": "/api/users/42",
+    "statusCode": 201,
+    "durationMs": 45,
+    "reqHeaders": {"Content-Type": "application/json"},
+    "reqBody": "{\\"name\\":\\"Alice\\"}",
+    "resBody": "{\\"id\\":42,\\"name\\":\\"Alice\\"}"
+  }'`,
+
+    express: `// Express middleware — capture API requests to MT
+function mtCapture(apiKey, endpoint) {
+  return (req, res, next) => {
+    const start = Date.now();
+    const originalJson = res.json.bind(res);
+    let resBody = '';
+    res.json = (body) => {
+      resBody = JSON.stringify(body);
+      return originalJson(body);
+    };
+    res.on('finish', () => {
+      fetch(endpoint + '/api/v1/ingest/requests', {
+        method: 'POST',
+        headers: { 'X-API-Key': apiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          method: req.method,
+          path: req.originalUrl,
+          statusCode: res.statusCode,
+          durationMs: Date.now() - start,
+          reqBody: JSON.stringify(req.body),
+          resBody,
+        }),
+      }).catch(() => {});
+    });
+    next();
+  };
+}
+app.use(mtCapture('${displayKey}', '${origin}'));`,
+
+    go: `func MTCaptureMiddleware(apiKey, endpoint string, next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        start := time.Now()
+        rw := &responseWriter{ResponseWriter: w}
+        next.ServeHTTP(rw, r)
+        go func() {
+            payload, _ := json.Marshal(map[string]any{
+                "method":     r.Method,
+                "path":       r.URL.Path,
+                "statusCode": rw.status,
+                "durationMs": time.Since(start).Milliseconds(),
+            })
+            req, _ := http.NewRequest("POST", endpoint+"/api/v1/ingest/requests", bytes.NewReader(payload))
+            req.Header.Set("X-API-Key", apiKey)
+            req.Header.Set("Content-Type", "application/json")
+            http.DefaultClient.Do(req)
+        }()
+    })
+}`,
+  };
+}
