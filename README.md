@@ -35,9 +35,9 @@ Most server monitoring tools solve one problem. EveryUp combines uptime checks, 
 |---------|-------------|
 | **Uptime Monitoring** | HTTP/TCP health checks, uptime tracking, latency trends |
 | **Infrastructure** | Real-time CPU/memory/disk/network collection (local + SSH remote) |
-| **API Metrics** | Per-endpoint traffic, error rate, and response time analysis |
+| **API Request Inspector** | Per-request capture with configurable sampling, server-side masking, and body inspection |
 | **Alerts** | Telegram / Discord / Slack integration, threshold-based rules |
-| **Log Management** | Unified log viewer, search, log agent collection |
+| **Log Management** | Unified log viewer, search, log agent collection, and per-request HTTP inspector |
 | **Real-time Streaming** | WebSocket-based live metric updates |
 
 ---
