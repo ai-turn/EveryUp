@@ -102,7 +102,7 @@ function TabContent({
         <IntegrationPanel service={service} onApiKeyRegenerated={onApiKeyRegenerated} />
       )}
       {activeTab === 'settings' && (
-        <div className={desktopSettings ? 'max-w-lg' : undefined}>
+        <div className={desktopSettings ? 'max-w-3xl' : undefined}>
           <LogServiceSettings service={service} onSuccess={onServiceUpdate} />
         </div>
       )}
@@ -238,7 +238,7 @@ function DesktopLayout(props: LogDetailViewProps) {
     service, serviceId, refreshKey, isLive, lastUpdated, dateLocale,
     activeTab, isDeleteDialogOpen, isDeleting, revealedKey, revealCountdown,
     onTabChange, onLiveToggle, onRefresh, onDelete,
-    onDeleteDialogOpen, onDeleteDialogClose, onSettingsClick,
+    onDeleteDialogOpen, onDeleteDialogClose,
     onServiceUpdate, onApiKeyRegenerated, onRevealedKeyClose, onCopyKey,
   } = props;
 
@@ -316,7 +316,7 @@ function DesktopLayout(props: LogDetailViewProps) {
         </div>
       </div>
 
-      <LogServiceIdentity service={service} onSettingsClick={onSettingsClick} />
+      <LogServiceIdentity service={service} onServiceUpdate={onServiceUpdate} />
 
       <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 mb-6 scrollbar-hide">
         <TabBar tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
@@ -406,7 +406,7 @@ function MobileLayout(props: LogDetailViewProps) {
     service, serviceId, refreshKey, isLive,
     activeTab, isDeleteDialogOpen, isDeleting, revealedKey, revealCountdown,
     onTabChange, onLiveToggle, onRefresh, onDelete,
-    onDeleteDialogOpen, onDeleteDialogClose, onSettingsClick,
+    onDeleteDialogOpen, onDeleteDialogClose,
     onServiceUpdate, onApiKeyRegenerated, onRevealedKeyClose, onCopyKey,
   } = props;
 
@@ -476,7 +476,7 @@ function MobileLayout(props: LogDetailViewProps) {
         </div>
       </div>
 
-      <LogServiceIdentity service={service} onSettingsClick={onSettingsClick} />
+      <LogServiceIdentity service={service} onServiceUpdate={onServiceUpdate} />
 
       <TabBar tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} fullWidth />
 
