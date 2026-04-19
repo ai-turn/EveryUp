@@ -65,7 +65,7 @@ function SectionCard({
 }) {
   return (
     <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark p-5 sm:p-6">
-      <div className="flex items-center gap-3 mb-5">
+      <div className="flex items-center gap-3 pb-4 mb-4 border-b border-slate-100 dark:border-ui-border-dark/60">
         <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
           <MaterialIcon name={icon} className="text-primary text-lg" />
         </div>
@@ -74,16 +74,27 @@ function SectionCard({
           <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{subtitle}</p>
         </div>
       </div>
-      <div className="space-y-5">{children}</div>
+      <div className="divide-y divide-slate-100 dark:divide-ui-border-dark/60">{children}</div>
     </section>
   );
 }
 
-function FieldLabel({ children, hint }: { children: React.ReactNode; hint?: string }) {
+function FieldRow({
+  title,
+  hint,
+  children,
+}: {
+  title: React.ReactNode;
+  hint?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <label className="text-sm font-semibold text-slate-800 dark:text-white">{children}</label>
-      {hint && <p className="text-xs text-slate-500 dark:text-text-muted-dark">{hint}</p>}
+    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,14rem)_1fr] gap-3 lg:gap-8 py-5 first:pt-0 last:pb-0">
+      <div className="flex flex-col gap-1">
+        <span className="text-sm font-semibold text-slate-800 dark:text-white">{title}</span>
+        {hint && <p className="text-xs text-slate-500 dark:text-text-muted-dark leading-relaxed">{hint}</p>}
+      </div>
+      <div className="min-w-0">{children}</div>
     </div>
   );
 }
@@ -96,7 +107,7 @@ function ModeGrid({
   onChange: (v: ApiCaptureMode) => void;
 }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
       {MODE_OPTIONS.map((opt) => {
         const active = value === opt.value;
         return (
@@ -142,8 +153,7 @@ function SampleRateControl({
 }) {
   return (
     <div className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-slate-50/60 dark:bg-ui-hover-dark/30 p-4 space-y-3">
-      <div className="flex items-center justify-between gap-4">
-        <label className="text-sm font-semibold text-slate-800 dark:text-white">Sample Rate</label>
+      <div className="flex items-center justify-end gap-4">
         <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-primary/10 text-primary">
           <span className="text-sm font-bold tabular-nums">{value}</span>
           <span className="text-xs">%</span>
@@ -249,18 +259,12 @@ function BodySizeControl({
 }
 
 function MaskTagField({
-  icon,
-  title,
-  subtitle,
   placeholder,
   presets,
   values,
   onAdd,
   onRemove,
 }: {
-  icon: string;
-  title: string;
-  subtitle: React.ReactNode;
   placeholder: string;
   presets: string[];
   values: string[];
@@ -281,16 +285,6 @@ function MaskTagField({
 
   return (
     <div className="space-y-2">
-      <FieldLabel hint={typeof subtitle === 'string' ? subtitle : undefined}>
-        <span className="inline-flex items-center gap-1.5">
-          <MaterialIcon name={icon} className="text-sm text-slate-400 dark:text-text-dim-dark" />
-          {title}
-        </span>
-      </FieldLabel>
-      {typeof subtitle !== 'string' && (
-        <p className="text-xs text-slate-500 dark:text-text-muted-dark">{subtitle}</p>
-      )}
-
       {values.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {values.map((v, i) => (
@@ -452,16 +446,23 @@ export function ApiCaptureSettings({ serviceId }: ApiCaptureSettingsProps) {
         title="Capture"
         subtitle="Choose which requests are captured for this service."
       >
-        <div className="space-y-2">
-          <FieldLabel hint="Errors are always captured unless mode is Disabled.">Capture Mode</FieldLabel>
+        <FieldRow
+          title="Capture Mode"
+          hint="Errors are always captured unless mode is Disabled."
+        >
           <ModeGrid value={form.mode} onChange={(v) => setForm((f) => ({ ...f, mode: v }))} />
-        </div>
+        </FieldRow>
 
         {form.mode === 'sampled' && (
-          <SampleRateControl
-            value={form.sampleRate}
-            onChange={(v) => setForm((f) => ({ ...f, sampleRate: v }))}
-          />
+          <FieldRow
+            title="Sample Rate"
+            hint="Percentage of non-error requests to capture."
+          >
+            <SampleRateControl
+              value={form.sampleRate}
+              onChange={(v) => setForm((f) => ({ ...f, sampleRate: v }))}
+            />
+          </FieldRow>
         )}
       </SectionCard>
 
@@ -471,45 +472,61 @@ export function ApiCaptureSettings({ serviceId }: ApiCaptureSettingsProps) {
         title="Privacy & Storage"
         subtitle="Limit body size and mask sensitive values before they hit the database."
       >
-        <div className="space-y-2">
-          <FieldLabel hint="Applies to both request and response bodies.">Max Body Size</FieldLabel>
+        <FieldRow
+          title="Max Body Size"
+          hint="Applies to both request and response bodies. Larger payloads are truncated."
+        >
           <BodySizeControl
             value={form.bodyMaxBytes}
             onChange={(v) => setForm((f) => ({ ...f, bodyMaxBytes: v }))}
           />
-        </div>
+        </FieldRow>
 
-        <MaskTagField
-          icon="visibility_off"
-          title="Masked Headers"
-          subtitle={
+        <FieldRow
+          title={
+            <span className="inline-flex items-center gap-1.5">
+              <MaterialIcon name="visibility_off" className="text-sm text-slate-400 dark:text-text-dim-dark" />
+              Masked Headers
+            </span>
+          }
+          hint={
             <>
-              Header values matching these names will be replaced with{' '}
+              Header values matching these names are replaced with{' '}
               <code className="bg-slate-100 dark:bg-ui-hover-dark px-1 rounded text-xs">***</code>.
             </>
           }
-          placeholder="Add header name and press Enter"
-          presets={HEADER_PRESETS}
-          values={form.maskedHeaders}
-          onAdd={(v) => addTag('maskedHeaders', v)}
-          onRemove={(i) => removeTag('maskedHeaders', i)}
-        />
+        >
+          <MaskTagField
+            placeholder="Add header name and press Enter"
+            presets={HEADER_PRESETS}
+            values={form.maskedHeaders}
+            onAdd={(v) => addTag('maskedHeaders', v)}
+            onRemove={(i) => removeTag('maskedHeaders', i)}
+          />
+        </FieldRow>
 
-        <MaskTagField
-          icon="data_object"
-          title="Masked Body Fields"
-          subtitle={
+        <FieldRow
+          title={
+            <span className="inline-flex items-center gap-1.5">
+              <MaterialIcon name="data_object" className="text-sm text-slate-400 dark:text-text-dim-dark" />
+              Masked Body Fields
+            </span>
+          }
+          hint={
             <>
-              JSON fields matching these names will be replaced with{' '}
+              JSON fields matching these names are replaced with{' '}
               <code className="bg-slate-100 dark:bg-ui-hover-dark px-1 rounded text-xs">***</code>.
             </>
           }
-          placeholder="Add field name and press Enter"
-          presets={BODY_FIELD_PRESETS}
-          values={form.maskedBodyFields}
-          onAdd={(v) => addTag('maskedBodyFields', v)}
-          onRemove={(i) => removeTag('maskedBodyFields', i)}
-        />
+        >
+          <MaskTagField
+            placeholder="Add field name and press Enter"
+            presets={BODY_FIELD_PRESETS}
+            values={form.maskedBodyFields}
+            onAdd={(v) => addTag('maskedBodyFields', v)}
+            onRemove={(i) => removeTag('maskedBodyFields', i)}
+          />
+        </FieldRow>
       </SectionCard>
 
       {/* Sticky save bar */}

@@ -102,7 +102,7 @@ function TabContent({
         <IntegrationPanel service={service} onApiKeyRegenerated={onApiKeyRegenerated} />
       )}
       {activeTab === 'settings' && (
-        <div className={desktopSettings ? 'max-w-3xl' : undefined}>
+        <div className={desktopSettings ? 'max-w-5xl' : undefined}>
           <LogServiceSettings service={service} onSuccess={onServiceUpdate} />
         </div>
       )}
