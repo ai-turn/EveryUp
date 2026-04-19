@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useTranslate } from '@tolgee/react';
 import { formatDistanceToNow } from 'date-fns';
 import type { Locale } from 'date-fns';
 import { MaterialIcon, Toggle } from '../../../components/common';
@@ -41,7 +42,7 @@ function ServiceContent({
   refreshKey,
   getIdentityStatus,
 }: Pick<HealthCheckDetailViewProps, 'service' | 'serviceId' | 'refreshKey' | 'getIdentityStatus'>) {
-  const { t } = useTranslation(['healthcheck']);
+  const { t } = useTranslate();
   return (
     <>
       <HealthCheckIdentity
@@ -60,7 +61,7 @@ function ServiceContent({
       <div className="flex items-center gap-2 mt-2 mb-4">
         <MaterialIcon name="analytics" className="text-base text-slate-400 dark:text-text-dim-dark" />
         <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-text-dim-dark">
-          {t('healthcheck.detail.section.performance', { defaultValue: 'Performance' })}
+          {t('성능')}
         </h2>
         <div className="flex-1 border-t border-slate-200 dark:border-ui-border-dark" />
       </div>
@@ -70,7 +71,7 @@ function ServiceContent({
       <div className="flex items-center gap-2 mt-2 mb-4">
         <MaterialIcon name="report" className="text-base text-slate-400 dark:text-text-dim-dark" />
         <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-text-dim-dark">
-          {t('healthcheck.detail.section.issues', { defaultValue: 'Issues' })}
+          {t('장애')}
         </h2>
         <div className="flex-1 border-t border-slate-200 dark:border-ui-border-dark" />
       </div>
@@ -90,7 +91,8 @@ function DeleteDialog({
   onClose: () => void;
   onDelete: () => void;
 }) {
-  const { t } = useTranslation(['healthcheck', 'common']);
+  const { t } = useTranslate();
+  const { t: tc } = useTranslation('common');
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white dark:bg-bg-surface-dark rounded-xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 fade-in duration-200">
@@ -100,15 +102,15 @@ function DeleteDialog({
           </div>
           <div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-              {t('healthcheck.delete.title', { defaultValue: 'Delete Service' })}
+              {t('헬스체크 삭제')}
             </h3>
             <p className="text-sm text-slate-500 dark:text-text-muted-dark">
-              {t('healthcheck.delete.subtitle', { defaultValue: 'This action cannot be undone' })}
+              {t('이 작업은 되돌릴 수 없습니다')}
             </p>
           </div>
         </div>
         <p className="text-sm text-slate-600 dark:text-text-secondary-dark mb-6">
-          {t('healthcheck.delete.confirm', { defaultValue: 'Are you sure you want to delete' })}{' '}
+          {t('정말 삭제하시겠습니까?')}{' '}
           <span className="font-bold">{service.name}</span>?
         </p>
         <div className="flex gap-3">
@@ -117,7 +119,7 @@ function DeleteDialog({
             disabled={isDeleting}
             className="flex-1 px-4 py-2.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark text-slate-700 dark:text-text-secondary-dark font-semibold hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors disabled:opacity-50"
           >
-            {t('common.cancel', { defaultValue: 'Cancel' })}
+            {tc('common.cancel')}
           </button>
           <button
             onClick={onDelete}
@@ -127,12 +129,12 @@ function DeleteDialog({
             {isDeleting ? (
               <>
                 <MaterialIcon name="sync" className="text-lg animate-spin" />
-                {t('common.deleting', { defaultValue: 'Deleting...' })}
+                {tc('common.deleting')}
               </>
             ) : (
               <>
                 <MaterialIcon name="delete" className="text-lg" />
-                {t('common.delete', { defaultValue: 'Delete' })}
+                {tc('common.delete')}
               </>
             )}
           </button>
@@ -145,7 +147,8 @@ function DeleteDialog({
 // --- 데스크톱 레이아웃 ---
 
 function DesktopLayout(props: HealthCheckDetailViewProps) {
-  const { t } = useTranslation(['healthcheck', 'common']);
+  const { t } = useTranslate();
+  const { t: tc } = useTranslation('common');
   const {
     service, serviceId, refreshKey, isLive, lastUpdated, dateLocale,
     isDeleteDialogOpen, isDeleting,
@@ -157,7 +160,7 @@ function DesktopLayout(props: HealthCheckDetailViewProps) {
     <>
       {/* Breadcrumbs & Actions */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
-        <Breadcrumbs items={[{ label: t('common.backToList'), href: '/healthcheck' }]} />
+        <Breadcrumbs items={[{ label: tc('common.backToList'), href: '/healthcheck' }]} />
         <div className="flex items-center gap-1 bg-slate-100 dark:bg-chart-surface rounded-lg p-1">
           <div className="flex items-center gap-2 px-2 py-1">
             <Toggle checked={isLive} onChange={onLiveToggle} />
@@ -174,7 +177,7 @@ function DesktopLayout(props: HealthCheckDetailViewProps) {
               <MaterialIcon name="refresh" className="text-lg" />
             </button>
             <div className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 dark:bg-slate-700 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
-              {t('common.refresh')}
+              {tc('common.refresh')}
             </div>
           </div>
 
@@ -184,7 +187,7 @@ function DesktopLayout(props: HealthCheckDetailViewProps) {
                 <MaterialIcon name="edit" className="text-lg" />
               </button>
               <div className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 dark:bg-slate-700 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
-                {t('healthcheck.detail.manage')}
+                {t('헬스체크 관리')}
               </div>
             </div>
           )}
@@ -194,7 +197,7 @@ function DesktopLayout(props: HealthCheckDetailViewProps) {
               <MaterialIcon name="delete" className="text-lg" />
             </button>
             <div className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 dark:bg-slate-700 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
-              {t('common.delete', { defaultValue: 'Delete' })}
+              {tc('common.delete')}
             </div>
           </div>
         </div>
@@ -212,7 +215,8 @@ function DesktopLayout(props: HealthCheckDetailViewProps) {
 // --- 모바일 레이아웃 ---
 
 function MobileLayout(props: HealthCheckDetailViewProps) {
-  const { t } = useTranslation(['healthcheck', 'common']);
+  const { t } = useTranslate();
+  const { t: tc } = useTranslation('common');
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<MobileTab>('overview');
   const {
@@ -223,9 +227,9 @@ function MobileLayout(props: HealthCheckDetailViewProps) {
   } = props;
 
   const tabs: { key: MobileTab; label: string; icon: string }[] = [
-    { key: 'overview',     label: t('common.overview', { defaultValue: 'Overview' }),                             icon: 'info'   },
-    { key: 'performance',  label: t('healthcheck.detail.section.performance', { defaultValue: 'Performance' }),   icon: 'speed'  },
-    { key: 'issues',       label: t('healthcheck.detail.section.issues', { defaultValue: 'Issues' }),             icon: 'report' },
+    { key: 'overview',     label: tc('common.overview'), icon: 'info'   },
+    { key: 'performance',  label: t('성능'),              icon: 'speed'  },
+    { key: 'issues',       label: t('장애'),              icon: 'report' },
   ];
 
   return (
@@ -237,13 +241,13 @@ function MobileLayout(props: HealthCheckDetailViewProps) {
           className="flex items-center gap-1 text-slate-500 dark:text-text-muted-dark active:opacity-60 transition-opacity cursor-pointer"
         >
           <MaterialIcon name="arrow_back" className="text-lg" />
-          <span className="text-sm font-medium">{t('common.backToList')}</span>
+          <span className="text-sm font-medium">{tc('common.backToList')}</span>
         </button>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-100 dark:bg-chart-surface rounded-lg">
             <Toggle checked={isLive} onChange={onLiveToggle} />
             <span className="text-xs font-medium text-slate-700 dark:text-text-secondary-dark">
-              {t('common.live')}
+              {tc('common.live')}
             </span>
           </div>
           <button onClick={onRefresh} className="p-2.5 rounded-lg bg-slate-100 dark:bg-chart-surface text-slate-700 dark:text-white active:scale-95 transition-transform">

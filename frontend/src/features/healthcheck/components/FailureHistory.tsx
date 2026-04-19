@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTranslate } from '@tolgee/react';
 import { formatDistanceToNow } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
 import { MaterialIcon } from '../../../components/common';
@@ -13,7 +14,8 @@ interface FailureHistoryProps {
 const MAX_FAILURES = 10;
 
 export function FailureHistory({ serviceId, refreshKey }: FailureHistoryProps) {
-  const { t, i18n } = useTranslation(['healthcheck', 'common']);
+  const { t } = useTranslate();
+  const { t: tc, i18n } = useTranslation('common');
   const [metrics, setMetrics] = useState<Metric[]>([]);
   const [loading, setLoading] = useState(true);
   const initialLoadDone = useRef(false);
@@ -54,23 +56,23 @@ export function FailureHistory({ serviceId, refreshKey }: FailureHistoryProps) {
         </div>
         <div>
           <h2 className="text-slate-900 dark:text-white text-xl font-bold tracking-tight">
-            {t('healthcheck.detail.failureHistory.title')}
+            {t('최근 장애 이력')}
           </h2>
           <p className="text-slate-400 dark:text-text-chart-dim text-sm">
-            {t('healthcheck.detail.failureHistory.desc')}
+            {t('최근 실패한 체크 상세 내역')}
           </p>
         </div>
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-8">
-          <span className="text-slate-400 dark:text-text-dim-dark text-sm">{t('common.loading')}</span>
+          <span className="text-slate-400 dark:text-text-dim-dark text-sm">{tc('common.loading')}</span>
         </div>
       ) : metrics.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 gap-2">
           <MaterialIcon name="check_circle" className="text-3xl text-green-500" />
           <p className="text-sm text-slate-500 dark:text-text-muted-dark">
-            {t('healthcheck.detail.failureHistory.noFailures')}
+            {t('최근 장애 이력이 없습니다')}
           </p>
         </div>
       ) : (

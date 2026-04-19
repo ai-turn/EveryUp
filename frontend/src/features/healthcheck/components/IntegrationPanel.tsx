@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTranslate } from '@tolgee/react';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
@@ -118,7 +119,8 @@ function SegmentedControl<T extends string>({
 }
 
 export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPanelProps) {
-  const { t } = useTranslation(['healthcheck', 'common']);
+  const { t } = useTranslate();
+  const { t: tc } = useTranslation('common');
   const { copy } = useCopyToClipboard();
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -178,7 +180,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
       const { apiKey: newKey, apiKeyMasked: newMasked } = await api.regenerateServiceApiKey(service.id);
       onApiKeyRegenerated(newKey, newMasked);
       setRevealedKey(newKey);
-      toast.success(t('healthcheck.integration.toast.regenerated'));
+      toast.success(t('API 키가 재발급되었습니다'));
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
@@ -194,7 +196,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
   ];
 
   const agentTabs = [
-    { key: 'config', label: t('healthcheck.integration.snippets.agentConfig') },
+    { key: 'config', label: t('설정 파일') },
     { key: 'docker_sidecar', label: 'Docker (Sidecar)' },
     { key: 'docker_pipe', label: 'Docker (Pipe)' },
     { key: 'systemd', label: 'systemd' },
@@ -242,8 +244,8 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           accentClass="bg-primary/10"
           iconColorClass="text-primary"
           stepColorClass="text-primary/70"
-          title={t('healthcheck.integration.apiKey.title', { defaultValue: 'API 키' })}
-          description={t('healthcheck.integration.apiKey.description', { defaultValue: '앱이나 에이전트가 로그를 보낼 때 사용하는 인증 키입니다.' })}
+          title={t('API 키')}
+          description={t('앱이나 에이전트가 로그를 보낼 때 사용하는 인증 키입니다.')}
         />
 
         <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 dark:bg-ui-hover-dark rounded-xl font-mono text-sm mb-4 border border-slate-100 dark:border-ui-border-dark">
@@ -259,7 +261,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
             <MaterialIcon name="warning" className="text-sm shrink-0" />
-            {t('healthcheck.integration.apiKey.warning', { defaultValue: '이 키를 안전하게 보관하세요. 외부에 노출되면 재발급하세요.' })}
+            {t('이 키를 안전하게 보관하세요. 외부에 노출되면 재발급하세요.')}
           </p>
           <button
             onClick={() => setShowConfirm(true)}
@@ -271,7 +273,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             ) : (
               <MaterialIcon name="refresh" className="text-sm" />
             )}
-            {t('healthcheck.integration.apiKey.regenerate', { defaultValue: '재발급' })}
+            {t('재발급')}
           </button>
         </div>
       </div>
@@ -283,8 +285,8 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           accentClass="bg-green-100 dark:bg-green-900/30"
           iconColorClass="text-green-600 dark:text-green-400"
           stepColorClass="text-green-600/80 dark:text-green-400/80"
-          title={t('healthcheck.integration.endpoint.title', { defaultValue: '로그 수집 엔드포인트' })}
-          description={t('healthcheck.integration.endpoint.description', { defaultValue: '로거 또는 에이전트가 이 URL로 POST 요청을 보내면 로그가 수집됩니다.' })}
+          title={t('로그 수집 엔드포인트')}
+          description={t('로거 또는 에이전트가 이 URL로 POST 요청을 보내면 로그가 수집됩니다.')}
         />
 
         <div className="flex items-center gap-2 px-3 py-2.5 bg-slate-50 dark:bg-ui-hover-dark rounded-xl font-mono text-sm mb-3 border border-slate-100 dark:border-ui-border-dark">
@@ -293,7 +295,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           <button
             onClick={() => copy(ingestUrl)}
             className="shrink-0 p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-            title={t('common.copyToClipboard')}
+            title={tc('common.copyToClipboard')}
           >
             <MaterialIcon name="content_copy" className="text-sm" />
           </button>
@@ -306,15 +308,11 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           </span>
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/8 dark:bg-blue-500/10 text-xs text-blue-600 dark:text-blue-400 font-medium">
             <MaterialIcon name="auto_awesome" className="text-xs" />
-            {t('healthcheck.integration.endpoint.formatInfo', {
-              defaultValue: '기존 로깅 라이브러리 형식을 그대로 보내도 됩니다. 서버가 주요 포맷을 자동으로 인식합니다.',
-            })}
+            {t('기존 로깅 라이브러리 형식을 그대로 보내도 됩니다. 서버가 주요 포맷을 자동으로 인식합니다.')}
           </span>
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-500/8 dark:bg-slate-500/10 text-xs text-slate-600 dark:text-text-muted-dark font-medium">
             <MaterialIcon name="layers" className="text-xs" />
-            {t('healthcheck.integration.endpoint.batchInfo', {
-              defaultValue: '배치 전송 지원: 요청 한 번에 최대 100개의 로그를 보낼 수 있습니다.',
-            })}
+            {t('배치 전송 지원: 요청 한 번에 최대 100개의 로그를 보낼 수 있습니다.')}
           </span>
         </div>
       </div>
@@ -326,25 +324,21 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           accentClass="bg-emerald-100 dark:bg-emerald-900/30"
           iconColorClass="text-emerald-600 dark:text-emerald-400"
           stepColorClass="text-emerald-600/80 dark:text-emerald-400/80"
-          title={t('healthcheck.integration.connectionTest.title', { defaultValue: '연결 테스트' })}
-          description={t('healthcheck.integration.connectionTest.description', {
-            defaultValue: '실제 연동 전에 네트워크 연결과 API 키가 정상인지 먼저 확인하세요.',
-          })}
+          title={t('연결 테스트')}
+          description={t('실제 연동 전에 네트워크 연결과 API 키가 정상인지 먼저 확인하세요.')}
         />
 
         <CodeBlock
           code={curlCmd}
           onCopy={() => copy(curlCopyCmd)}
-          copyTitle={t('common.copyToClipboard')}
+          copyTitle={tc('common.copyToClipboard')}
           size="sm"
         />
 
         <div className="mt-3 flex items-start gap-2 px-3 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
           <MaterialIcon name="check_circle" className="text-sm text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
           <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">
-            {t('healthcheck.integration.connectionTest.successHint', {
-              defaultValue: '연결에 성공하면 서버가 HTTP 200으로 응답합니다. 타임아웃이나 연결 거부가 발생하면 방화벽 아웃바운드 규칙과 서버 인바운드 규칙을 확인하세요.',
-            })}
+            {t('연결에 성공하면 서버가 HTTP 200으로 응답합니다. 타임아웃이나 연결 거부가 발생하면 방화벽 아웃바운드 규칙과 서버 인바운드 규칙을 확인하세요.')}
           </p>
         </div>
       </div>
@@ -356,34 +350,26 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           accentClass="bg-purple-100 dark:bg-purple-900/30"
           iconColorClass="text-purple-600 dark:text-purple-400"
           stepColorClass="text-purple-600/80 dark:text-purple-400/80"
-          title={t('healthcheck.integration.snippets.title', { defaultValue: '연동 예시' })}
-          description={t('healthcheck.integration.snippets.description', {
-            defaultValue: '환경과 배포 방식에 맞는 연동 예시를 선택해 바로 적용할 수 있습니다.',
-          })}
+          title={t('연동 예시')}
+          description={t('환경과 배포 방식에 맞는 연동 예시를 선택해 바로 적용할 수 있습니다.')}
         />
 
         <div className="mb-5">
           <SegmentedControl
             options={[
-              { key: 'agent' as const, label: t('healthcheck.integration.snippets.agent', { defaultValue: 'Log Agent' }) },
-              { key: 'http-appender' as const, label: t('healthcheck.integration.snippets.httpAppender', { defaultValue: 'HTTP Appender' }) },
-              { key: 'api-capture' as const, label: t('healthcheck.integration.snippets.apiCapture', { defaultValue: 'API Capture' }) },
+              { key: 'agent' as const, label: 'Log Agent' },
+              { key: 'http-appender' as const, label: 'HTTP Appender' },
+              { key: 'api-capture' as const, label: t('API Capture') },
             ]}
             value={activeCategory}
             onChange={handleCategoryChange}
           />
           <p className="mt-2 text-xs text-slate-500 dark:text-text-muted-dark pl-1">
             {activeCategory === 'http-appender'
-              ? t('healthcheck.integration.snippets.httpAppenderDesc', {
-                  defaultValue: '앱 코드에 HTTP 전송 설정을 추가하는 방식입니다. 소스 코드를 수정할 수 있고, 로깅 라이브러리를 이미 사용 중이라면 가장 간단합니다.',
-                })
+              ? t('앱 코드에 HTTP 전송 설정을 추가하는 방식입니다. 소스 코드를 수정할 수 있고, 로깅 라이브러리를 이미 사용 중이라면 가장 간단합니다.')
               : activeCategory === 'api-capture'
-                ? t('healthcheck.integration.snippets.apiCaptureDesc', {
-                    defaultValue: '앱의 HTTP 요청/응답을 캡처해 MT로 전송합니다. 미들웨어를 추가하거나 cURL로 직접 테스트할 수 있습니다.',
-                  })
-                : t('healthcheck.integration.snippets.agentDesc', {
-                    defaultValue: 'Fluent Bit 기반 에이전트가 로그 파일이나 stdout을 수집해 전달합니다. 앱 코드를 수정하기 어렵거나 서버·컨테이너 단위로 붙이고 싶을 때 적합합니다.',
-                  })}
+                ? t('앱의 HTTP 요청/응답을 캡처해 MT로 전송합니다. 미들웨어를 추가하거나 cURL로 직접 테스트할 수 있습니다.')
+                : t('Fluent Bit 기반 에이전트가 로그 파일이나 stdout을 수집해 전달합니다. 앱 코드를 수정하기 어렵거나 서버·컨테이너 단위로 붙이고 싶을 때 적합합니다.')}
           </p>
         </div>
 
@@ -395,19 +381,17 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               </div>
               <div>
                 <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                  {t('healthcheck.integration.agent.quickStart', { defaultValue: '빠른 시작' })}
+                  {t('빠른 시작')}
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-text-muted-dark">
-                  {t('healthcheck.integration.agent.quickStartDesc', {
-                    defaultValue: '로그 파일을 /var/log/app에 마운트하는 가장 빠른 실행 예시입니다.',
-                  })}
+                  {t('로그 파일을 /var/log/app에 마운트하는 가장 빠른 실행 예시입니다.')}
                 </p>
               </div>
             </div>
             <CodeBlock
               code={agentQuickStartCmd}
               onCopy={() => copy(agentQuickStartCmd)}
-              copyTitle={t('healthcheck.integration.snippets.copy', { defaultValue: '코드 복사' })}
+              copyTitle={t('코드 복사')}
               size="xs"
             />
           </div>
@@ -439,7 +423,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             <CodeBlock
               code={currentSnippets[activeSnippet]}
               onCopy={() => copy(currentSnippets[activeSnippet])}
-              copyTitle={t('healthcheck.integration.snippets.copy', { defaultValue: '코드 복사' })}
+              copyTitle={t('코드 복사')}
               size="xs"
               minHeight="200px"
             />
@@ -460,9 +444,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               Nginx Reverse Proxy
             </h3>
             <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-0.5">
-              {t('healthcheck.integration.nginx.desc', {
-                defaultValue: 'Authorization 헤더 전달이 필요한 경우에만 확인하세요.',
-              })}
+              {t('Authorization 헤더 전달이 필요한 경우에만 확인하세요.')}
             </p>
           </div>
           <MaterialIcon
@@ -497,7 +479,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             <CodeBlock
               code={nginxSnippets[activeNginxTab]}
               onCopy={() => copy(nginxSnippets[activeNginxTab])}
-              copyTitle={t('common.copyToClipboard')}
+              copyTitle={tc('common.copyToClipboard')}
               size="xs"
             />
           </div>
@@ -513,10 +495,10 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               </div>
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  {t('healthcheck.integration.apiKey.confirmTitle')}
+                  {t('API 키를 재발급하시겠습니까?')}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">
-                  {t('healthcheck.integration.apiKey.confirmDesc')}
+                  {t('기존 키는 즉시 무효화됩니다. 사용 중인 키를 교체해야 합니다.')}
                 </p>
               </div>
             </div>
@@ -525,13 +507,13 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
                 onClick={() => setShowConfirm(false)}
                 className="flex-1 px-4 py-2.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark text-slate-700 dark:text-text-secondary-dark font-semibold text-sm hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors cursor-pointer"
               >
-                {t('common.cancel')}
+                {tc('common.cancel')}
               </button>
               <button
                 onClick={handleRegenerate}
                 className="flex-1 px-4 py-2.5 rounded-lg bg-red-600 text-white font-semibold text-sm hover:bg-red-700 transition-colors cursor-pointer"
               >
-                {t('healthcheck.integration.apiKey.confirmAction')}
+                {t('재발급')}
               </button>
             </div>
           </div>
@@ -547,10 +529,10 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               </div>
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  {t('healthcheck.integration.apiKey.revealTitle')}
+                  {t('새 API 키가 발급되었습니다')}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">
-                  {t('healthcheck.integration.apiKey.revealDesc')}
+                  {t('지금 복사해 두세요. 이 키는 다시 표시되지 않습니다.')}
                 </p>
               </div>
             </div>
@@ -562,7 +544,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               <button
                 onClick={() => copy(revealedKey)}
                 className="shrink-0 p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-500 dark:text-text-muted-dark cursor-pointer"
-                title={t('healthcheck.integration.apiKey.copy')}
+                title={t('복사')}
               >
                 <MaterialIcon name="content_copy" className="text-base" />
               </button>
@@ -572,7 +554,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               onClick={dismissRevealedKey}
               className="w-full px-4 py-2.5 rounded-lg bg-primary text-white font-semibold text-sm hover:bg-primary/90 transition-colors cursor-pointer"
             >
-              {t('healthcheck.integration.apiKey.revealConfirm')}
+              {t('확인')}
               {revealCountdown > 0 && ` (${revealCountdown}s)`}
             </button>
           </div>

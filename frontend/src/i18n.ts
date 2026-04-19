@@ -6,7 +6,6 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import koCommon from './locales/ko/common.json';
 import koAuth from './locales/ko/auth.json';
 import koDashboard from './locales/ko/dashboard.json';
-import koHealthcheck from './locales/ko/healthcheck.json';
 import koLogs from './locales/ko/logs.json';
 import koInfra from './locales/ko/infra.json';
 import koAlerts from './locales/ko/alerts.json';
@@ -17,7 +16,6 @@ import koErrors from './locales/ko/errors.json';
 import enCommon from './locales/en/common.json';
 import enAuth from './locales/en/auth.json';
 import enDashboard from './locales/en/dashboard.json';
-import enHealthcheck from './locales/en/healthcheck.json';
 import enLogs from './locales/en/logs.json';
 import enInfra from './locales/en/infra.json';
 import enAlerts from './locales/en/alerts.json';
@@ -33,7 +31,6 @@ i18n
         common: koCommon,
         auth: koAuth,
         dashboard: koDashboard,
-        healthcheck: koHealthcheck,
         logs: koLogs,
         infra: koInfra,
         alerts: koAlerts,
@@ -44,7 +41,6 @@ i18n
         common: enCommon,
         auth: enAuth,
         dashboard: enDashboard,
-        healthcheck: enHealthcheck,
         logs: enLogs,
         infra: enInfra,
         alerts: enAlerts,

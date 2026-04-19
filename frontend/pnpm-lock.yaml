@@ -14,6 +14,12 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.71.1(react@19.2.3))
+      '@tolgee/react':
+        specifier: ^7.0.0
+        version: 7.0.0(react@19.2.3)
+      '@tolgee/web':
+        specifier: ^7.0.0
+        version: 7.0.0
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -651,6 +657,17 @@ packages:
     resolution: {integrity: sha512-jVA+/UpKL1vRLg6Hkao5jldawNmRo7mQYrZtNHMIVpLfLhDml5nMRUo/8MwoX2vNXvnaXNNMedrMfMugAVX1nA==}
     peerDependencies:
       vite: ^5.2.0 || ^6 || ^7
+
+  '@tolgee/core@7.0.0':
+    resolution: {integrity: sha512-dK1LTl7SAQCiR8559jTCz6MXTPIoPVcs+x1y1ZJr8V0tg6zpZOG1ZNyhABXXYZFUK3TblRVtKYRRDkNzQKdK/g==}
+
+  '@tolgee/react@7.0.0':
+    resolution: {integrity: sha512-OE7ATvRC4k9fvi4t6aOUpEJsJRSjqKUIeetFfUFW5trnnfoG56YJT20ZEtdQdsjboKnajz9RKYDLQJEBtPMnvw==}
+    peerDependencies:
+      react: ^16.14.0 || ^17.0.1 || ^18.1.0 || ^19
+
+  '@tolgee/web@7.0.0':
+    resolution: {integrity: sha512-1mSBsGMyAoJvdwM/jxHOOo8nIGTCVTyehrQXcrmoWsKdgLo6C9Trbl2bRe5idtAW1IOwos3TCl0fdVFzCGm/qQ==}
 
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -2015,6 +2032,17 @@ snapshots:
       '@tailwindcss/oxide': 4.1.18
       tailwindcss: 4.1.18
       vite: 7.3.1(jiti@2.6.1)(lightningcss@1.30.2)
+
+  '@tolgee/core@7.0.0': {}
+
+  '@tolgee/react@7.0.0(react@19.2.3)':
+    dependencies:
+      '@tolgee/web': 7.0.0
+      react: 19.2.3
+
+  '@tolgee/web@7.0.0':
+    dependencies:
+      '@tolgee/core': 7.0.0
 
   '@types/babel__core@7.20.5':
     dependencies:

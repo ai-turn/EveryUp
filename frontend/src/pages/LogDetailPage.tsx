@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useTranslate } from '@tolgee/react';
 import { ko, enUS } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../utils/errors';
@@ -17,7 +18,8 @@ export function LogDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { t, i18n } = useTranslation(['healthcheck', 'logs', 'common']);
+  const { t } = useTranslate();
+  const { t: ti, i18n } = useTranslation(['logs', 'common']);
   const { copy } = useCopyToClipboard();
 
   const [isLive, setIsLive] = useState(true);
@@ -99,7 +101,7 @@ export function LogDetailPage() {
     setIsDeleting(true);
     try {
       await api.deleteService(service.id);
-      toast.success(t('logs.toast.deleted'));
+      toast.success(ti('logs.toast.deleted'));
       navigate('/logs');
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -120,7 +122,7 @@ export function LogDetailPage() {
       <div className="flex items-center justify-center h-64">
         <div className="flex items-center gap-3 text-slate-500 dark:text-text-muted-dark">
           <MaterialIcon name="sync" className="text-2xl animate-spin" />
-          <span>{t('common.loading')}</span>
+          <span>{ti('common.loading')}</span>
         </div>
       </div>
     );
@@ -132,13 +134,13 @@ export function LogDetailPage() {
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <MaterialIcon name="error_outline" className="text-3xl text-red-500" />
         <p className="text-slate-600 dark:text-text-muted-dark">
-          {error || t('healthcheck.detail.notFound')}
+          {error || t('헬스체크를 찾을 수 없습니다')}
         </p>
         <button
           onClick={() => navigate('/logs')}
           className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium"
         >
-          {t('nav.logs')}
+          {ti('nav.logs')}
         </button>
       </div>
     );

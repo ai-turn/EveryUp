@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTranslate } from '@tolgee/react';
 import { api, Metric } from '../../../services/api';
 
 type TimeRange = '24H' | '7D' | '30D';
@@ -34,13 +35,14 @@ function getTimeRangeParams(range: TimeRange): { from: string; limit: string } {
 }
 
 const TIME_RANGE_KEYS: Record<TimeRange, string> = {
-  '24H': 'healthcheck.detail.chart.range24h',
-  '7D':  'healthcheck.detail.chart.range7d',
-  '30D': 'healthcheck.detail.chart.range30d',
+  '24H': '최근 24시간',
+  '7D':  '최근 7일',
+  '30D': '최근 30일',
 };
 
 export function ResponseTimeChart({ serviceId, refreshKey, timeout }: ResponseTimeChartProps) {
-  const { t } = useTranslation(['healthcheck', 'common']);
+  const { t } = useTranslate();
+  const { t: tc } = useTranslation('common');
   const [timeRange, setTimeRange] = useState<TimeRange>('24H');
   const [metrics, setMetrics] = useState<Metric[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,15 +120,15 @@ export function ResponseTimeChart({ serviceId, refreshKey, timeout }: ResponseTi
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8">
         <div>
           <h2 className="text-slate-900 dark:text-white text-xl font-bold tracking-tight">
-            {t('healthcheck.detail.metrics.responseTime')}
+            {t('평균 지연 시간')}
           </h2>
           <p className="text-slate-400 dark:text-text-chart-dim text-sm">
-            {t('healthcheck.detail.metrics.responseTimeChartDesc', {
+            {t('{range} 동안의 P95 및 평균 지연 시간', {
               range: t(TIME_RANGE_KEYS[timeRange]),
             })}
           </p>
         </div>
-        <div role="group" aria-label={t('healthcheck.detail.metrics.responseTime')} className="flex bg-slate-100 dark:bg-chart-surface p-1 rounded-lg self-start sm:self-auto">
+        <div role="group" aria-label={t('평균 지연 시간')} className="flex bg-slate-100 dark:bg-chart-surface p-1 rounded-lg self-start sm:self-auto">
           {(['24H', '7D', '30D'] as const).map((range) => (
             <button
               key={range}
@@ -176,7 +178,7 @@ export function ResponseTimeChart({ serviceId, refreshKey, timeout }: ResponseTi
             >
               <div className="relative border-t-2 border-dashed border-amber-400 dark:border-amber-500 w-full">
                 <span className="absolute right-0 bottom-1 text-xs font-bold text-amber-500 dark:text-amber-400 bg-white dark:bg-chart-bg px-1 rounded leading-none">
-                  {t('healthcheck.detail.chart.timeout')}{' '}
+                  {t('타임아웃')}{' '}
                   {timeout >= 1000 ? `${timeout / 1000}s` : `${timeout}ms`}
                 </span>
               </div>
@@ -186,13 +188,13 @@ export function ResponseTimeChart({ serviceId, refreshKey, timeout }: ResponseTi
           {loading ? (
             <div className="flex-1 flex items-center justify-center">
               <span className="text-slate-400 dark:text-text-dim-dark text-sm">
-                {t('common.loading')}
+                {tc('common.loading')}
               </span>
             </div>
           ) : normalizedData.length === 0 ? (
             <div className="flex-1 flex items-center justify-center">
               <span className="text-slate-400 dark:text-text-dim-dark text-sm">
-                {t('common.noData')}
+                {tc('common.noData')}
               </span>
             </div>
           ) : (

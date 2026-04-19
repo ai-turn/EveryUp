@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useTranslate } from '@tolgee/react';
 import { ko, enUS } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../utils/errors';
@@ -14,7 +15,8 @@ import { api, Service } from '../services/api';
 export function HealthCheckDetailPage() {
   const { serviceId } = useParams<{ serviceId: string }>();
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation(['healthcheck', 'common']);
+  const { t } = useTranslate();
+  const { t: tc, i18n } = useTranslation(['common', 'nav']);
   const { openPanel } = useSidePanel();
 
   const [isLive, setIsLive] = useState(true);
@@ -56,7 +58,7 @@ export function HealthCheckDetailPage() {
     setIsDeleting(true);
     try {
       await api.deleteService(service.id);
-      toast.success(t('healthcheck.toast.deleted', { defaultValue: 'Service deleted successfully' }));
+      toast.success(t('헬스체크가 삭제되었습니다'));
       navigate('/');
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -67,7 +69,7 @@ export function HealthCheckDetailPage() {
   const handleManage = () => {
     if (!service) return;
     openPanel(
-      t('healthcheck.detail.manage'),
+      t('헬스체크 관리'),
       <HealthCheckForm onSuccess={fetchService} service={service} />
     );
   };
@@ -88,7 +90,7 @@ export function HealthCheckDetailPage() {
       <div className="flex items-center justify-center h-64">
         <div className="flex items-center gap-3 text-slate-500 dark:text-text-muted-dark">
           <MaterialIcon name="sync" className="text-2xl animate-spin" />
-          <span>{t('common.loading')}</span>
+          <span>{tc('common.loading')}</span>
         </div>
       </div>
     );
@@ -100,13 +102,13 @@ export function HealthCheckDetailPage() {
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <MaterialIcon name="error_outline" className="text-3xl text-red-500" />
         <p className="text-slate-600 dark:text-text-muted-dark">
-          {error || t('healthcheck.detail.notFound')}
+          {error || t('헬스체크를 찾을 수 없습니다')}
         </p>
         <button
           onClick={() => navigate('/')}
           className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium"
         >
-          {t('nav.dashboard')}
+          {tc('nav.dashboard')}
         </button>
       </div>
     );

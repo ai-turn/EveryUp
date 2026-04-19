@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTranslate } from '@tolgee/react';
 import { MaterialIcon, StatusBadge } from '../../../components/common';
 import { IconHealthCheck } from '../../../components/icons/SidebarIcons';
 import type { Service } from '../../../types/service';
@@ -17,7 +18,8 @@ function formatInterval(seconds: number): string {
 
 
 export const ServiceCard = memo(function ServiceCard({ service, onClick }: ServiceCardProps) {
-  const { t } = useTranslation(['healthcheck', 'common']);
+  const { t } = useTranslate();
+  const { t: tc } = useTranslation('common');
 
   return (
     <div
@@ -40,7 +42,7 @@ export const ServiceCard = memo(function ServiceCard({ service, onClick }: Servi
         <div className="flex items-center gap-1.5">
           {service.isActive === false && (
             <span className="px-2 py-0.5 rounded-full text-xs font-bold uppercase bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
-              {t('common.pause')}
+              {tc('common.pause')}
             </span>
           )}
           <StatusBadge status={service.status} />
@@ -50,11 +52,11 @@ export const ServiceCard = memo(function ServiceCard({ service, onClick }: Servi
       {/* Metrics */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
-          <p className="text-xs text-slate-500 dark:text-text-muted-dark uppercase font-semibold tracking-wide">{t('healthcheck.detail.metrics.responseTime')}</p>
+          <p className="text-xs text-slate-500 dark:text-text-muted-dark uppercase font-semibold tracking-wide">{t('평균 지연 시간')}</p>
           <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">{service.latency}</p>
         </div>
         <div>
-          <p className="text-xs text-slate-500 dark:text-text-muted-dark uppercase font-semibold tracking-wide">{t('healthcheck.detail.uptime')}</p>
+          <p className="text-xs text-slate-500 dark:text-text-muted-dark uppercase font-semibold tracking-wide">{t('가동률')}</p>
           <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">{service.uptime}</p>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslate } from '@tolgee/react';
 import { MaterialIcon } from '../../../components/common';
 import { api, MetricsSummary, Metric } from '../../../services/api';
 
@@ -9,7 +9,7 @@ interface RealtimeMetricsProps {
 }
 
 export function RealtimeMetrics({ serviceId, refreshKey }: RealtimeMetricsProps) {
-  const { t } = useTranslation(['healthcheck', 'common']);
+  const { t } = useTranslate();
   const [summary, setSummary] = useState<MetricsSummary | null>(null);
   const [recentFailures, setRecentFailures] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -52,32 +52,32 @@ export function RealtimeMetrics({ serviceId, refreshKey }: RealtimeMetricsProps)
 
   const metrics = [
     {
-      label: t('healthcheck.detail.metrics.responseTime'),
+      label: t('평균 지연 시간'),
       value: summary ? `${Math.round(summary.avgResponseTime)}ms` : '-',
       icon: 'speed',
       iconColor: 'text-primary',
       subtext: summary
-        ? t('healthcheck.detail.metrics.maxMin', {
+        ? t('최대 {max}ms / 최소 {min}ms', {
             max: Math.round(summary.maxResponseTime),
             min: Math.round(summary.minResponseTime),
           })
         : '-',
     },
     {
-      label: t('healthcheck.detail.metrics.successRate'),
+      label: t('성공률'),
       value: summary ? `${(summary.uptime ?? 0).toFixed(2)}%` : '-',
       icon: 'check_circle',
       iconColor: summary && (summary.uptime ?? 0) >= 99 ? 'text-green-500' : 'text-amber-500',
       subtext: summary
-        ? t('healthcheck.detail.metrics.totalChecks', { count: summary.totalChecks })
+        ? t('총 {count}회 체크', { count: summary.totalChecks })
         : '-',
     },
     {
-      label: t('healthcheck.detail.metrics.recentFailures', { defaultValue: 'Recent Failures' }),
+      label: t('최근 장애'),
       value: summary ? String(recentFailures) : '-',
       icon: recentFailures === 0 ? 'check_circle' : 'error',
       iconColor: recentFailures === 0 ? 'text-green-500' : 'text-red-500',
-      subtext: t('healthcheck.detail.metrics.recentFailuresSubtext', { defaultValue: 'Out of last 100 checks' }),
+      subtext: t('최근 100회 체크 기준'),
     },
   ];
 

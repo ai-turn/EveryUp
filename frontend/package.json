@@ -13,6 +13,8 @@
   "dependencies": {
     "@fontsource-variable/material-symbols-outlined": "^5.2.38",
     "@hookform/resolvers": "^5.2.2",
+    "@tolgee/react": "^7.0.0",
+    "@tolgee/web": "^7.0.0",
     "date-fns": "^4.1.0",
     "i18next": "^25.8.0",
     "i18next-browser-languagedetector": "^8.2.0",

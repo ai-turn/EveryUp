@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useTranslate } from '@tolgee/react';
 import { useSidePanel } from '../contexts/SidePanelContext';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import { HealthCheckForm } from '../features/healthcheck/components/HealthCheckForm';
@@ -8,7 +8,7 @@ import { HealthCheckDesktopView } from '../features/healthcheck/components/Healt
 import { HealthCheckMobileView } from '../features/healthcheck/components/HealthCheckMobileView';
 
 export function HealthCheckPage() {
-  const { t } = useTranslation(['healthcheck', 'common']);
+  const { t } = useTranslate();
   const { openPanel } = useSidePanel();
   const isMobile = useIsMobile();
   const location = useLocation();
@@ -23,7 +23,7 @@ export function HealthCheckPage() {
 
   const handleAddService = () => {
     openPanel(
-      t('healthcheck.addService'),
+      t('헬스체크 추가'),
       <HealthCheckForm onSuccess={handleServiceAdded} />
     );
   };

@@ -9,7 +9,7 @@ import { LogListMobileView } from '../features/logs/components/LogListMobileView
 import { api, Service, LogEntry } from '../services/api';
 
 export function LogListPage() {
-  const { t } = useTranslation(['logs', 'healthcheck', 'common']);
+  const { t } = useTranslation(['logs', 'common']);
   const navigate = useNavigate();
   const { openPanel } = useSidePanel();
   const isMobile = useIsMobile();

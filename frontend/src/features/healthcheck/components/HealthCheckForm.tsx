@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { useTranslate } from '@tolgee/react';
 import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
 import { api, Service } from '../../../services/api';
@@ -79,7 +80,8 @@ interface HealthCheckFormProps {
 }
 
 export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
-    const { t } = useTranslation(['healthcheck', 'common']);
+    const { t } = useTranslate();
+    const { t: tc } = useTranslation('common');
     const { closePanel } = useSidePanel();
     const isEditMode = !!service;
 
@@ -158,10 +160,10 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
 
             if (isEditMode && service) {
                 await api.updateService(service.id, submitData);
-                toast.success(t('healthcheck.toast.updated'));
+                toast.success(t('헬스체크가 업데이트되었습니다'));
             } else {
                 await api.createService(submitData);
-                toast.success(t('healthcheck.toast.added'));
+                toast.success(t('헬스체크가 추가되었습니다'));
             }
             onSuccess();
             closePanel();
@@ -174,18 +176,18 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
         `w-full px-4 py-2 bg-slate-50 dark:bg-ui-hover-dark border ${hasError ? 'border-red-500' : 'border-slate-200 dark:border-ui-border-dark'} rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm dark:text-white`;
 
     const weekdays = [
-        t('healthcheck.schedule.days.0'),
-        t('healthcheck.schedule.days.1'),
-        t('healthcheck.schedule.days.2'),
-        t('healthcheck.schedule.days.3'),
-        t('healthcheck.schedule.days.4'),
-        t('healthcheck.schedule.days.5'),
-        t('healthcheck.schedule.days.6'),
+        t('일'),
+        t('월'),
+        t('화'),
+        t('수'),
+        t('목'),
+        t('금'),
+        t('토'),
     ];
 
     const cronPreviewText = scheduledType === 'daily'
-        ? t('healthcheck.schedule.dailyAt', { hour: scheduledHour.toString().padStart(2, '0'), minute: scheduledMinute.toString().padStart(2, '0') })
-        : t('healthcheck.schedule.weeklyAt', { day: weekdays[scheduledWeekday], hour: scheduledHour.toString().padStart(2, '0'), minute: scheduledMinute.toString().padStart(2, '0') });
+        ? t('매일 {hour}:{minute}에 체크', { hour: scheduledHour.toString().padStart(2, '0'), minute: scheduledMinute.toString().padStart(2, '0') })
+        : t('매주 {day}요일 {hour}:{minute}에 체크', { day: weekdays[scheduledWeekday], hour: scheduledHour.toString().padStart(2, '0'), minute: scheduledMinute.toString().padStart(2, '0') });
 
     return (
         <>
@@ -194,14 +196,14 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
             <div className="space-y-4">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-ui-border-dark">
                     <MaterialIcon name="info" className="text-primary text-lg" />
-                    <h3 className="text-sm font-bold text-slate-700 dark:text-text-secondary-dark">{t('healthcheck.sections.basicInfo')}</h3>
+                    <h3 className="text-sm font-bold text-slate-700 dark:text-text-secondary-dark">{t('기본 정보')}</h3>
                 </div>
 
                 <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('common.id')}</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{tc('common.id')}</label>
                     <input
                         {...register('id')}
-                        placeholder={t('healthcheck.addModal.idPlaceholder')}
+                        placeholder="my-api-server"
                         disabled={isEditMode}
                         className={`${getInputClassName(!!errors.id)} ${isEditMode ? 'opacity-50 cursor-not-allowed' : ''}`}
                     />
@@ -213,16 +215,16 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
                     ) : (
                         <p className="text-xs text-slate-500 flex items-center gap-1">
                             <MaterialIcon name="info" className="text-xs" />
-                            {isEditMode ? t('healthcheck.addModal.idCannotChange') : t('healthcheck.addModal.idHint')}
+                            {isEditMode ? t('ID는 변경할 수 없습니다') : t('영문 소문자, 숫자, 하이픈(-)만 사용 가능')}
                         </p>
                     )}
                 </div>
 
                 <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('common.name')}</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{tc('common.name')}</label>
                     <input
                         {...register('name')}
-                        placeholder={t('healthcheck.addModal.namePlaceholder')}
+                        placeholder={t('내 API 서버')}
                         className={getInputClassName(!!errors.name)}
                     />
                     {errors.name && (
@@ -237,11 +239,11 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
             <div className="space-y-4 pt-2">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-ui-border-dark">
                     <MaterialIcon name="settings_ethernet" className="text-primary text-lg" />
-                    <h3 className="text-sm font-bold text-slate-700 dark:text-text-secondary-dark">{t('healthcheck.sections.connection')}</h3>
+                    <h3 className="text-sm font-bold text-slate-700 dark:text-text-secondary-dark">{t('연결 설정')}</h3>
                 </div>
 
                 <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('common.type')}</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{tc('common.type')}</label>
                     <div className="flex gap-2">
                         <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all ${selectedType === 'http' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark'}`}>
                             <input {...register('type')} type="radio" value="http" className="hidden" />
@@ -288,7 +290,7 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
                             )}
                         </div>
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('healthcheck.schedule.port')}</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('포트')}</label>
                             <input
                                 {...register('port', { valueAsNumber: true })}
                                 type="number"
@@ -309,21 +311,21 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
             <div className="space-y-4 pt-2">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-ui-border-dark">
                     <MaterialIcon name="schedule" className="text-primary text-lg" />
-                    <h3 className="text-sm font-bold text-slate-700 dark:text-text-secondary-dark">{t('healthcheck.sections.healthCheckSchedule')}</h3>
+                    <h3 className="text-sm font-bold text-slate-700 dark:text-text-secondary-dark">{t('헬스 체크 스케줄')}</h3>
                 </div>
 
                 <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('healthcheck.schedule.type')}</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('스케줄 타입')}</label>
                     <div className="flex flex-col sm:flex-row gap-2">
                         <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all ${scheduleType === 'interval' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark'}`}>
                             <input {...register('scheduleType')} type="radio" value="interval" className="hidden" />
                             <MaterialIcon name="schedule" className="text-lg" />
-                            {t('healthcheck.schedule.typeInterval')}
+                            {t('일정 간격')}
                         </label>
                         <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all ${scheduleType === 'cron' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark'}`}>
                             <input {...register('scheduleType')} type="radio" value="cron" className="hidden" />
                             <MaterialIcon name="calendar_month" className="text-lg" />
-                            {t('healthcheck.schedule.typeScheduled')}
+                            {t('예약 스케줄')}
                         </label>
                     </div>
                 </div>
@@ -331,7 +333,7 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
                 {scheduleType === 'interval' ? (
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('healthcheck.schedule.interval')} (s)</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('체크 간격')} (s)</label>
                             <input
                                 {...register('interval', { valueAsNumber: true })}
                                 type="number"
@@ -345,7 +347,7 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
                             )}
                         </div>
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('healthcheck.schedule.timeout')} (ms)</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('타임아웃')} (ms)</label>
                             <input
                                 {...register('timeout', { valueAsNumber: true })}
                                 type="number"
@@ -367,14 +369,14 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
                                 onClick={() => setScheduledType('daily')}
                                 className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-all ${scheduledType === 'daily' ? 'bg-primary/10 border-primary text-primary' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500'}`}
                             >
-                                {t('healthcheck.schedule.scheduledTypeDaily')}
+                                {t('매일 특정 시각')}
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setScheduledType('weekly')}
                                 className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-all ${scheduledType === 'weekly' ? 'bg-primary/10 border-primary text-primary' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500'}`}
                             >
-                                {t('healthcheck.schedule.scheduledTypeWeekly')}
+                                {t('매주 특정 요일')}
                             </button>
                         </div>
                         {scheduledType === 'weekly' && (
@@ -423,7 +425,7 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
                 onClick={closePanel}
                 className="flex-1 py-3 rounded-lg border border-slate-200 dark:border-ui-border-dark text-slate-600 dark:text-text-muted-dark font-bold hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-all"
             >
-                {t('common.cancel')}
+                {tc('common.cancel')}
             </button>
             <button
                 type="submit"
@@ -436,7 +438,7 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
                 ) : (
                     <>
                         <MaterialIcon name="save" className="text-lg" />
-                        {t('common.save')}
+                        {tc('common.save')}
                     </>
                 )}
             </button>

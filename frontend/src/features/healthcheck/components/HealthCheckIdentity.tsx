@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTranslate } from '@tolgee/react';
 import { formatDistanceToNow } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
 import { MaterialIcon } from '../../../components/common';
@@ -52,7 +53,8 @@ export function HealthCheckIdentity({
   timeout,
   cronExpression,
 }: HealthCheckIdentityProps) {
-  const { t, i18n } = useTranslation(['healthcheck', 'common']);
+  const { t } = useTranslate();
+  const { t: tc, i18n } = useTranslation('common');
 
   const dateLocale = useMemo(
     () => (i18n.language.startsWith('ko') ? ko : enUS),
@@ -90,7 +92,7 @@ export function HealthCheckIdentity({
 
   const lastCheckedText = lastCheckedAt
     ? formatDistanceToNow(new Date(lastCheckedAt), { addSuffix: true, locale: dateLocale })
-    : t('common.never');
+    : tc('common.never');
 
   const scheduleLabel = scheduleType === 'cron' && cronExpression
     ? cronExpression
@@ -110,14 +112,14 @@ export function HealthCheckIdentity({
               <span className={`relative inline-flex rounded-full h-2 w-2 ${config.dot}`} />
             </span>
             <span className={`${config.text} text-xs font-bold uppercase tracking-wider`}>
-              {t(config.labelKey)}
+              {tc(config.labelKey)}
             </span>
           </div>
         </div>
 
         {/* Endpoint */}
         <p className="text-slate-500 dark:text-text-muted-dark text-sm mb-3">
-          <span className="text-slate-400 dark:text-text-dim-dark mr-1">{t('healthcheck.detail.identity.endpoint')}:</span>
+          <span className="text-slate-400 dark:text-text-dim-dark mr-1">{t('엔드포인트')}:</span>
           <code className="break-all">{endpoint}</code>
         </p>
 
@@ -125,24 +127,24 @@ export function HealthCheckIdentity({
         <div className="flex flex-wrap gap-2">
           <InfoChip
             icon="language"
-            label={t('healthcheck.detail.identity.type')}
+            label={t('타입')}
             value={type.toUpperCase()}
           />
           <InfoChip
             icon="sync"
-            label={scheduleType === 'cron' ? 'CRON' : t('healthcheck.detail.identity.interval')}
+            label={scheduleType === 'cron' ? 'CRON' : t('체크주기')}
             value={scheduleLabel}
           />
           {timeout != null && (
             <InfoChip
               icon="alarm"
-              label={t('healthcheck.detail.identity.timeout')}
+              label={t('타임아웃')}
               value={`${timeout}s`}
             />
           )}
           <InfoChip
             icon="event"
-            label={t('healthcheck.detail.identity.lastChecked')}
+            label={t('마지막 체크')}
             value={lastCheckedText}
           />
         </div>
