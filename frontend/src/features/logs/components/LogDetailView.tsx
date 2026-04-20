@@ -85,10 +85,7 @@ function TabContent({
   onTabChange,
   onServiceUpdate,
   onApiKeyRegenerated,
-  desktopSettings = false,
-}: Pick<LogDetailViewProps, 'activeTab' | 'service' | 'serviceId' | 'refreshKey' | 'onTabChange' | 'onServiceUpdate' | 'onApiKeyRegenerated'> & {
-  desktopSettings?: boolean;
-}) {
+}: Pick<LogDetailViewProps, 'activeTab' | 'service' | 'serviceId' | 'refreshKey' | 'onTabChange' | 'onServiceUpdate' | 'onApiKeyRegenerated'>) {
   return (
     <>
       {activeTab === 'logs' && <ErrorLogTable serviceId={serviceId} refreshKey={refreshKey} />}
@@ -102,9 +99,7 @@ function TabContent({
         <IntegrationPanel service={service} onApiKeyRegenerated={onApiKeyRegenerated} />
       )}
       {activeTab === 'settings' && (
-        <div className={desktopSettings ? 'max-w-5xl' : undefined}>
-          <LogServiceSettings service={service} onSuccess={onServiceUpdate} />
-        </div>
+        <LogServiceSettings service={service} onSuccess={onServiceUpdate} />
       )}
     </>
   );
@@ -330,7 +325,6 @@ function DesktopLayout(props: LogDetailViewProps) {
         onTabChange={onTabChange}
         onServiceUpdate={onServiceUpdate}
         onApiKeyRegenerated={onApiKeyRegenerated}
-        desktopSettings
       />
 
       {isDeleteDialogOpen && (

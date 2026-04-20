@@ -1,5 +1,6 @@
 import { useState, useEffect, KeyboardEvent, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
+import { useTranslate } from '@tolgee/react';
 import { api, ApiCaptureConfig, ApiCaptureMode } from '../../../services/api';
 import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
@@ -8,11 +9,11 @@ export interface ApiCaptureSettingsProps {
   serviceId: string;
 }
 
-const MODE_OPTIONS: { value: ApiCaptureMode; label: string; desc: string; icon: string }[] = [
-  { value: 'disabled',    label: 'Disabled',     desc: "Don't capture any requests",          icon: 'block' },
-  { value: 'errors_only', label: 'Errors Only',  desc: 'Capture only 5xx responses',          icon: 'error_outline' },
-  { value: 'sampled',     label: 'Sampled',      desc: 'Capture a percentage of requests',    icon: 'filter_alt' },
-  { value: 'all',         label: 'All Requests', desc: 'Capture every request (high cost)',   icon: 'all_inclusive' },
+const MODE_OPTIONS: { value: ApiCaptureMode; labelKey: string; descKey: string; icon: string }[] = [
+  { value: 'disabled',    labelKey: '캡처 안함',    descKey: '요청을 캡처하지 않습니다',              icon: 'block' },
+  { value: 'errors_only', labelKey: '에러만',       descKey: '5xx 응답만 캡처합니다',                 icon: 'error_outline' },
+  { value: 'sampled',     labelKey: '샘플링',       descKey: '요청의 일부 비율만 캡처합니다',         icon: 'filter_alt' },
+  { value: 'all',         labelKey: '모든 요청',    descKey: '모든 요청을 캡처합니다 (비용 주의)',    icon: 'all_inclusive' },
 ];
 
 const BODY_SIZE_PRESETS = [
@@ -106,6 +107,7 @@ function ModeGrid({
   value: ApiCaptureMode;
   onChange: (v: ApiCaptureMode) => void;
 }) {
+  const { t } = useTranslate();
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
       {MODE_OPTIONS.map((opt) => {
@@ -130,10 +132,10 @@ function ModeGrid({
             </div>
             <div className="flex-1 min-w-0">
               <p className={`text-sm font-bold ${active ? 'text-primary' : 'text-slate-800 dark:text-white'}`}>
-                {opt.label}
+                {t(opt.labelKey)}
               </p>
               <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5 leading-snug">
-                {opt.desc}
+                {t(opt.descKey)}
               </p>
             </div>
             {active && <MaterialIcon name="check_circle" className="text-primary text-lg shrink-0" />}
@@ -151,6 +153,7 @@ function SampleRateControl({
   value: number;
   onChange: (v: number) => void;
 }) {
+  const { t } = useTranslate();
   return (
     <div className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-slate-50/60 dark:bg-ui-hover-dark/30 p-4 space-y-3">
       <div className="flex items-center justify-end gap-4">
@@ -176,8 +179,7 @@ function SampleRateControl({
         <span>100%</span>
       </div>
       <p className="text-xs text-slate-500 dark:text-text-muted-dark">
-        Roughly <span className="font-semibold text-slate-700 dark:text-text-secondary-dark">{value}%</span> of incoming requests will be captured.
-        Errors are always captured regardless of this rate.
+        {t('샘플링 비율 설명 {rate}', { rate: value })}
       </p>
     </div>
   );
@@ -190,6 +192,7 @@ function BodySizeControl({
   value: number;
   onChange: (v: number) => void;
 }) {
+  const { t } = useTranslate();
   const isPreset = BODY_SIZE_PRESETS.some((p) => p.value === value);
   const [custom, setCustom] = useState(!isPreset);
 
@@ -222,14 +225,14 @@ function BodySizeControl({
               : 'bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-muted-dark border-transparent hover:bg-slate-200 dark:hover:bg-ui-active-dark'
           }`}
         >
-          Custom
+          {t('직접 입력')}
         </button>
       </div>
 
       {custom && (
         <div className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-slate-50/60 dark:bg-ui-hover-dark/30 p-4 space-y-3">
           <div className="flex items-center justify-between gap-4">
-            <span className="text-sm font-semibold text-slate-800 dark:text-white">Custom size</span>
+            <span className="text-sm font-semibold text-slate-800 dark:text-white">{t('사용자 지정 크기')}</span>
             <span className="text-sm font-bold text-primary tabular-nums">{formatKiB(value)}</span>
           </div>
           <input
@@ -252,7 +255,7 @@ function BodySizeControl({
       )}
 
       <p className="text-xs text-slate-500 dark:text-text-muted-dark">
-        Bodies larger than <span className="font-semibold text-slate-700 dark:text-text-secondary-dark">{formatKiB(value)}</span> will be truncated on capture.
+        {t('본문 크기 제한 설명 {size}', { size: formatKiB(value) })}
       </p>
     </div>
   );
@@ -271,6 +274,7 @@ function MaskTagField({
   onAdd: (v: string) => void;
   onRemove: (i: number) => void;
 }) {
+  const { t } = useTranslate();
   const [input, setInput] = useState('');
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -298,7 +302,7 @@ function MaskTagField({
                 type="button"
                 onClick={() => onRemove(i)}
                 className="ml-0.5 text-amber-500/70 hover:text-red-500 transition-colors"
-                aria-label={`Remove ${v}`}
+                aria-label={t('{name} 제거', { name: v })}
               >
                 <MaterialIcon name="close" className="text-xs" />
               </button>
@@ -324,13 +328,13 @@ function MaskTagField({
           disabled={!input.trim()}
           className="px-3 py-2 text-sm rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors font-medium disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          Add
+          {t('추가')}
         </button>
       </div>
 
       {unusedPresets.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 pt-1">
-          <span className="text-[11px] font-medium text-slate-400 dark:text-text-dim-dark mr-0.5">Common:</span>
+          <span className="text-[11px] font-medium text-slate-400 dark:text-text-dim-dark mr-0.5">{t('자주 쓰는 값')}:</span>
           {unusedPresets.map((p) => (
             <button
               key={p}
@@ -351,6 +355,7 @@ function MaskTagField({
 // ── Main Component ──────────────────────────────────────────────────────────
 
 export function ApiCaptureSettings({ serviceId }: ApiCaptureSettingsProps) {
+  const { t } = useTranslate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [original, setOriginal] = useState<ApiCaptureConfig>(DEFAULT_CONFIG);
@@ -374,7 +379,7 @@ export function ApiCaptureSettings({ serviceId }: ApiCaptureSettingsProps) {
       const updated = await api.updateApiCaptureConfig(serviceId, form);
       setForm(updated);
       setOriginal(updated);
-      toast.success('API capture settings saved.');
+      toast.success(t('API 캡처 설정이 저장되었습니다'));
     } catch (err) {
       toast.error(getErrorMessage(err));
     } finally {
@@ -402,12 +407,13 @@ export function ApiCaptureSettings({ serviceId }: ApiCaptureSettingsProps) {
   }
 
   // Summary pieces
-  const modeLabel = MODE_OPTIONS.find((m) => m.value === form.mode)?.label ?? form.mode;
+  const modeOpt = MODE_OPTIONS.find((m) => m.value === form.mode);
+  const modeLabel = modeOpt ? t(modeOpt.labelKey) : form.mode;
   const summaryParts: string[] = [modeLabel];
-  if (form.mode === 'sampled') summaryParts.push(`${form.sampleRate}% sampled`);
-  summaryParts.push(`${formatKiB(form.bodyMaxBytes)} body cap`);
+  if (form.mode === 'sampled') summaryParts.push(t('{rate}% 샘플링', { rate: form.sampleRate }));
+  summaryParts.push(t('본문 {size} 제한', { size: formatKiB(form.bodyMaxBytes) }));
   const maskCount = form.maskedHeaders.length + form.maskedBodyFields.length;
-  if (maskCount > 0) summaryParts.push(`${maskCount} masked`);
+  if (maskCount > 0) summaryParts.push(t('{count}개 마스킹', { count: maskCount }));
 
   return (
     <div className="space-y-5 pb-24">
@@ -426,11 +432,11 @@ export function ApiCaptureSettings({ serviceId }: ApiCaptureSettingsProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
-              Current settings
+              {t('현재 설정')}
             </p>
             {isDirty && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300">
-                <span className="w-1 h-1 rounded-full bg-amber-500" /> Unsaved
+                <span className="w-1 h-1 rounded-full bg-amber-500" /> {t('저장 안됨')}
               </span>
             )}
           </div>
@@ -443,20 +449,20 @@ export function ApiCaptureSettings({ serviceId }: ApiCaptureSettingsProps) {
       {/* Capture card */}
       <SectionCard
         icon="cloud_download"
-        title="Capture"
-        subtitle="Choose which requests are captured for this service."
+        title={t('캡처')}
+        subtitle={t('이 서비스에서 어떤 요청을 캡처할지 선택합니다')}
       >
         <FieldRow
-          title="Capture Mode"
-          hint="Errors are always captured unless mode is Disabled."
+          title={t('캡처 모드')}
+          hint={t('캡처 안함 모드가 아닌 경우 에러는 항상 캡처됩니다')}
         >
           <ModeGrid value={form.mode} onChange={(v) => setForm((f) => ({ ...f, mode: v }))} />
         </FieldRow>
 
         {form.mode === 'sampled' && (
           <FieldRow
-            title="Sample Rate"
-            hint="Percentage of non-error requests to capture."
+            title={t('샘플 비율')}
+            hint={t('캡처할 비에러 요청의 비율입니다')}
           >
             <SampleRateControl
               value={form.sampleRate}
@@ -469,12 +475,12 @@ export function ApiCaptureSettings({ serviceId }: ApiCaptureSettingsProps) {
       {/* Privacy & storage card */}
       <SectionCard
         icon="shield"
-        title="Privacy & Storage"
-        subtitle="Limit body size and mask sensitive values before they hit the database."
+        title={t('개인정보 및 저장')}
+        subtitle={t('본문 크기를 제한하고 민감한 값을 마스킹해서 저장합니다')}
       >
         <FieldRow
-          title="Max Body Size"
-          hint="Applies to both request and response bodies. Larger payloads are truncated."
+          title={t('최대 본문 크기')}
+          hint={t('요청과 응답 본문 모두에 적용됩니다. 초과분은 잘립니다')}
         >
           <BodySizeControl
             value={form.bodyMaxBytes}
@@ -486,18 +492,18 @@ export function ApiCaptureSettings({ serviceId }: ApiCaptureSettingsProps) {
           title={
             <span className="inline-flex items-center gap-1.5">
               <MaterialIcon name="visibility_off" className="text-sm text-slate-400 dark:text-text-dim-dark" />
-              Masked Headers
+              {t('마스킹할 헤더')}
             </span>
           }
           hint={
             <>
-              Header values matching these names are replaced with{' '}
+              {t('이 이름과 일치하는 헤더 값은 다음으로 대체됩니다')}{' '}
               <code className="bg-slate-100 dark:bg-ui-hover-dark px-1 rounded text-xs">***</code>.
             </>
           }
         >
           <MaskTagField
-            placeholder="Add header name and press Enter"
+            placeholder={t('헤더 이름을 입력하고 Enter')}
             presets={HEADER_PRESETS}
             values={form.maskedHeaders}
             onAdd={(v) => addTag('maskedHeaders', v)}
@@ -509,18 +515,18 @@ export function ApiCaptureSettings({ serviceId }: ApiCaptureSettingsProps) {
           title={
             <span className="inline-flex items-center gap-1.5">
               <MaterialIcon name="data_object" className="text-sm text-slate-400 dark:text-text-dim-dark" />
-              Masked Body Fields
+              {t('마스킹할 본문 필드')}
             </span>
           }
           hint={
             <>
-              JSON fields matching these names are replaced with{' '}
+              {t('이 이름과 일치하는 JSON 필드는 다음으로 대체됩니다')}{' '}
               <code className="bg-slate-100 dark:bg-ui-hover-dark px-1 rounded text-xs">***</code>.
             </>
           }
         >
           <MaskTagField
-            placeholder="Add field name and press Enter"
+            placeholder={t('필드 이름을 입력하고 Enter')}
             presets={BODY_FIELD_PRESETS}
             values={form.maskedBodyFields}
             onAdd={(v) => addTag('maskedBodyFields', v)}
@@ -535,7 +541,7 @@ export function ApiCaptureSettings({ serviceId }: ApiCaptureSettingsProps) {
           <div className="flex items-center gap-2 min-w-0">
             <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
             <span className="text-sm font-medium text-slate-700 dark:text-text-secondary-dark truncate">
-              You have unsaved changes.
+              {t('저장하지 않은 변경사항이 있습니다')}
             </span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -545,7 +551,7 @@ export function ApiCaptureSettings({ serviceId }: ApiCaptureSettingsProps) {
               disabled={saving}
               className="px-3 py-2 text-sm rounded-lg bg-slate-100 dark:bg-ui-hover-dark text-slate-700 dark:text-text-secondary-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark font-medium transition-colors disabled:opacity-50"
             >
-              Discard
+              {t('되돌리기')}
             </button>
             <button
               type="button"
@@ -558,7 +564,7 @@ export function ApiCaptureSettings({ serviceId }: ApiCaptureSettingsProps) {
               ) : (
                 <MaterialIcon name="save" className="text-base" />
               )}
-              Save changes
+              {t('변경사항 저장')}
             </button>
           </div>
         </div>
