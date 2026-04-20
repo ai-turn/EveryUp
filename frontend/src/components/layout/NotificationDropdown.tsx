@@ -110,8 +110,8 @@ function Badge({ count }: BadgeProps) {
   if (count <= 0) return null;
   const label = count > 9 ? '9+' : String(count);
   return (
-    <span className="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-0.5 flex items-center justify-center
-      bg-error text-white text-[10px] font-bold rounded-full leading-none tabular-nums -translate-x-px ring-2 ring-white dark:ring-bg-main-dark">
+    <span className="absolute -top-2 -right-2 min-w-5 h-5 px-1 flex items-center justify-center
+      bg-error text-white text-xs font-bold rounded-full leading-none tabular-nums ring-2 ring-white dark:ring-bg-main-dark">
       {label}
     </span>
   );
