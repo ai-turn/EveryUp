@@ -54,7 +54,7 @@
     },
     "apiRequests": {
         "tabs": {
-            "requests": "요청"
+            "requests": "API 요청"
         },
         "table": {
             "time": "시간",

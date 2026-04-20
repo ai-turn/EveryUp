@@ -243,7 +243,7 @@ function DesktopLayout(props: LogDetailViewProps) {
 
   const tabs: { key: TabKey; label: string; icon: string }[] = [
     { key: 'logs',        label: t('logServices.detail.tabs.logs'),        icon: 'article'                  },
-    { key: 'requests',    label: 'Requests',                               icon: 'http'                     },
+    { key: 'requests',    label: t('apiRequests.tabs.requests'),           icon: 'http'                     },
     { key: 'integration', label: t('logServices.detail.tabs.integration'), icon: 'integration_instructions' },
     { key: 'settings',    label: t('logServices.detail.tabs.settings'),    icon: 'tune'                     },
   ];
@@ -410,7 +410,7 @@ function MobileLayout(props: LogDetailViewProps) {
 
   const tabs: { key: TabKey; label: string; icon: string }[] = [
     { key: 'logs',        label: t('logServices.detail.tabs.logs'),        icon: 'article'                  },
-    { key: 'requests',    label: 'Requests',                               icon: 'http'                     },
+    { key: 'requests',    label: t('apiRequests.tabs.requests'),           icon: 'http'                     },
     { key: 'integration', label: t('logServices.detail.tabs.integration'), icon: 'integration_instructions' },
     { key: 'settings',    label: t('logServices.detail.tabs.settings'),    icon: 'tune'                     },
   ];
