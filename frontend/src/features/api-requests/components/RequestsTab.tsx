@@ -83,7 +83,11 @@ export function RequestsTab({ serviceId, onGoToSettings }: RequestsTabProps) {
 
   return (
     <div className="space-y-4">
-      <RequestFilters params={filterParams} onChange={handleParamsChange} />
+      <RequestFilters
+        params={filterParams}
+        onChange={handleParamsChange}
+        pathSuggestions={Array.from(new Set(accumulatedItems.map((r) => r.path))).slice(0, 20)}
+      />
 
       {error && (
         <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-400">
