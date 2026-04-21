@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import type React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTranslate } from '@tolgee/react';
 import { toast } from 'react-hot-toast';
@@ -22,29 +23,19 @@ interface IntegrationPanelProps {
 interface StepHeaderProps {
   step: number;
   icon: string;
-  accentClass: string;
-  iconColorClass: string;
-  stepColorClass: string;
   title: string;
   description?: string;
+  trailing?: React.ReactNode;
 }
 
-function StepHeader({
-  step,
-  icon,
-  accentClass,
-  iconColorClass,
-  stepColorClass,
-  title,
-  description,
-}: StepHeaderProps) {
+function StepHeader({ step, icon, title, description, trailing }: StepHeaderProps) {
   return (
     <div className="flex items-start gap-3 mb-5">
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${accentClass}`}>
-        <MaterialIcon name={icon} className={`text-xl ${iconColorClass}`} />
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-primary/10">
+        <MaterialIcon name={icon} className="text-xl text-primary" />
       </div>
-      <div>
-        <p className={`text-[10px] font-bold tracking-widest uppercase mb-0.5 ${stepColorClass}`}>
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] font-bold tracking-widest uppercase mb-0.5 text-primary/70">
           Step {step}
         </p>
         <h3 className="text-base font-bold text-slate-900 dark:text-white leading-tight">{title}</h3>
@@ -52,7 +43,40 @@ function StepHeader({
           <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{description}</p>
         )}
       </div>
+      {trailing && <div className="shrink-0">{trailing}</div>}
     </div>
+  );
+}
+
+function ConnectionStatusBadge({
+  state,
+  secondsAgo,
+}: {
+  state: 'waiting' | 'connected';
+  secondsAgo: number | null;
+}) {
+  const { t } = useTranslate();
+  if (state === 'connected') {
+    return (
+      <span
+        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold"
+        aria-live="polite"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+        {secondsAgo === null || secondsAgo > 60
+          ? t('연결됨')
+          : t('{seconds}초 전 수신', { seconds: secondsAgo })}
+      </span>
+    );
+  }
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark text-xs font-semibold"
+      aria-live="polite"
+    >
+      <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse" />
+      {t('로그 대기 중')}
+    </span>
   );
 }
 
@@ -82,6 +106,7 @@ function CodeBlock({
       <button
         onClick={onCopy}
         title={copyTitle}
+        aria-label={copyTitle}
         className="absolute top-3 right-3 p-1.5 rounded-lg bg-slate-700/80 hover:bg-slate-600 transition-colors text-slate-400 hover:text-slate-200 cursor-pointer"
       >
         <MaterialIcon name="content_copy" className="text-sm" />
@@ -105,6 +130,7 @@ function SegmentedControl<T extends string>({
         <button
           key={opt.key}
           onClick={() => onChange(opt.key)}
+          aria-pressed={value === opt.key}
           className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
             value === opt.key
               ? 'bg-white dark:bg-ui-active-dark text-slate-900 dark:text-white shadow-sm'
@@ -129,8 +155,43 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
   const [activeCategory, setActiveCategory] = useState<'http-appender' | 'agent' | 'api-capture'>('agent');
   const [activeSnippet, setActiveSnippet] = useState<string>('config');
   const [activeNginxTab, setActiveNginxTab] = useState<'nginx_conf' | 'docker_compose' | 'docker_run'>('nginx_conf');
-  const [showNginx, setShowNginx] = useState(false);
+  const [showTroubleshooting, setShowTroubleshooting] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Connection status — poll for latest log to indicate whether ingest is working
+  const [latestLogAt, setLatestLogAt] = useState<Date | null>(null);
+  const [, setNowTick] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const logs = await api.getServiceLogs(service.id, { limit: '1' });
+        if (cancelled) return;
+        if (logs.length > 0 && logs[0].createdAt) {
+          setLatestLogAt(new Date(logs[0].createdAt));
+        }
+      } catch {
+        // non-critical
+      }
+    };
+    poll();
+    const interval = setInterval(poll, 5000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [service.id]);
+
+  useEffect(() => {
+    const tick = setInterval(() => setNowTick((n) => n + 1), 1000);
+    return () => clearInterval(tick);
+  }, []);
+
+  const connectionState: 'waiting' | 'connected' = latestLogAt ? 'connected' : 'waiting';
+  const secondsAgo = latestLogAt
+    ? Math.max(0, Math.floor((Date.now() - latestLogAt.getTime()) / 1000))
+    : null;
 
   const maskedKey = service.apiKeyMasked || 'Not available';
   const ingestUrl = `${window.location.origin}/api/v1/logs/ingest`;
@@ -241,9 +302,6 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
         <StepHeader
           step={1}
           icon="key"
-          accentClass="bg-primary/10"
-          iconColorClass="text-primary"
-          stepColorClass="text-primary/70"
           title={t('API 키')}
           description={t('앱이나 에이전트가 로그를 보낼 때 사용하는 인증 키입니다.')}
         />
@@ -258,15 +316,15 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           </span>
         </div>
 
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
-            <MaterialIcon name="warning" className="text-sm shrink-0" />
-            {t('이 키를 안전하게 보관하세요. 외부에 노출되면 재발급하세요.')}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <p className="text-xs text-amber-600 dark:text-amber-400 flex items-start gap-1.5">
+            <MaterialIcon name="warning" className="text-sm shrink-0 mt-0.5" />
+            <span>{t('이 키를 안전하게 보관하세요. 외부에 노출되면 재발급하세요.')}</span>
           </p>
           <button
             onClick={() => setShowConfirm(true)}
             disabled={isRegenerating}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50 shrink-0 cursor-pointer"
+            className="self-start sm:self-auto flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50 shrink-0 cursor-pointer"
           >
             {isRegenerating ? (
               <MaterialIcon name="sync" className="text-sm animate-spin" />
@@ -282,9 +340,6 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
         <StepHeader
           step={2}
           icon="upload"
-          accentClass="bg-green-100 dark:bg-green-900/30"
-          iconColorClass="text-green-600 dark:text-green-400"
-          stepColorClass="text-green-600/80 dark:text-green-400/80"
           title={t('로그 수집 엔드포인트')}
           description={t('로거 또는 에이전트가 이 URL로 POST 요청을 보내면 로그가 수집됩니다.')}
         />
@@ -296,6 +351,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             onClick={() => copy(ingestUrl)}
             className="shrink-0 p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
             title={tc('common.copyToClipboard')}
+            aria-label={tc('common.copyToClipboard')}
           >
             <MaterialIcon name="content_copy" className="text-sm" />
           </button>
@@ -321,11 +377,9 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
         <StepHeader
           step={3}
           icon="cable"
-          accentClass="bg-emerald-100 dark:bg-emerald-900/30"
-          iconColorClass="text-emerald-600 dark:text-emerald-400"
-          stepColorClass="text-emerald-600/80 dark:text-emerald-400/80"
           title={t('연결 테스트')}
           description={t('실제 연동 전에 네트워크 연결과 API 키가 정상인지 먼저 확인하세요.')}
+          trailing={<ConnectionStatusBadge state={connectionState} secondsAgo={secondsAgo} />}
         />
 
         <CodeBlock
@@ -335,21 +389,27 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           size="sm"
         />
 
-        <div className="mt-3 flex items-start gap-2 px-3 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
-          <MaterialIcon name="check_circle" className="text-sm text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
-          <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">
-            {t('연결에 성공하면 서버가 HTTP 200으로 응답합니다. 타임아웃이나 연결 거부가 발생하면 방화벽 아웃바운드 규칙과 서버 인바운드 규칙을 확인하세요.')}
-          </p>
-        </div>
+        {connectionState === 'connected' ? (
+          <div className="mt-3 flex items-start gap-2 px-3 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
+            <MaterialIcon name="check_circle" className="text-sm text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+            <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">
+              {t('이 서비스로 로그가 정상적으로 수신되고 있습니다.')}
+            </p>
+          </div>
+        ) : (
+          <div className="mt-3 flex items-start gap-2 px-3 py-2.5 bg-slate-50 dark:bg-ui-hover-dark rounded-xl">
+            <MaterialIcon name="info" className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5 shrink-0" />
+            <p className="text-xs text-slate-600 dark:text-text-muted-dark leading-relaxed">
+              {t('연결에 성공하면 서버가 HTTP 200으로 응답합니다. 타임아웃이나 연결 거부가 발생하면 방화벽 아웃바운드 규칙과 서버 인바운드 규칙을 확인하세요.')}
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-6">
         <StepHeader
           step={4}
           icon="code"
-          accentClass="bg-purple-100 dark:bg-purple-900/30"
-          iconColorClass="text-purple-600 dark:text-purple-400"
-          stepColorClass="text-purple-600/80 dark:text-purple-400/80"
           title={t('연동 예시')}
           description={t('환경과 배포 방식에 맞는 연동 예시를 선택해 바로 적용할 수 있습니다.')}
         />
@@ -374,19 +434,15 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
         </div>
 
         {activeCategory === 'agent' && (
-          <div className="mb-5 border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-white dark:bg-ui-active-dark">
-                <MaterialIcon name="rocket_launch" className="text-base text-slate-500 dark:text-text-muted-dark" />
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                  {t('빠른 시작')}
-                </h4>
-                <p className="text-xs text-slate-500 dark:text-text-muted-dark">
-                  {t('로그 파일을 /var/log/app에 마운트하는 가장 빠른 실행 예시입니다.')}
-                </p>
-              </div>
+          <div className="mb-4 border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark rounded-xl p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <MaterialIcon name="rocket_launch" className="text-sm text-slate-500 dark:text-text-muted-dark shrink-0" />
+              <h4 className="text-xs font-bold text-slate-700 dark:text-text-secondary-dark">
+                {t('빠른 시작')}
+              </h4>
+              <span className="text-xs text-slate-500 dark:text-text-muted-dark truncate">
+                {t('로그 파일을 /var/log/app에 마운트하는 가장 빠른 실행 예시입니다.')}
+              </span>
             </div>
             <CodeBlock
               code={agentQuickStartCmd}
@@ -407,6 +463,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
                 <button
                   key={tab.key}
                   onClick={() => setActiveSnippet(tab.key)}
+                  aria-pressed={activeSnippet === tab.key}
                   className={`shrink-0 sm:w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                     activeSnippet === tab.key
                       ? 'bg-primary/10 text-primary dark:text-primary font-semibold'
@@ -433,27 +490,28 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
 
       <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
         <button
-          onClick={() => setShowNginx((prev) => !prev)}
+          onClick={() => setShowTroubleshooting((prev) => !prev)}
+          aria-expanded={showTroubleshooting}
           className="w-full flex items-center gap-3 px-5 py-4 hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors text-left cursor-pointer"
         >
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-ui-hover-dark shrink-0">
-            <MaterialIcon name="dns" className="text-base text-slate-500 dark:text-text-muted-dark" />
+            <MaterialIcon name="help_outline" className="text-base text-slate-500 dark:text-text-muted-dark" />
           </div>
           <div className="flex-1">
             <h3 className="text-sm font-semibold text-slate-700 dark:text-text-secondary-dark">
-              Nginx Reverse Proxy
+              {t('문제 해결 · Nginx 리버스 프록시')}
             </h3>
             <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-0.5">
               {t('Authorization 헤더 전달이 필요한 경우에만 확인하세요.')}
             </p>
           </div>
           <MaterialIcon
-            name={showNginx ? 'expand_less' : 'expand_more'}
+            name={showTroubleshooting ? 'expand_less' : 'expand_more'}
             className="text-slate-400 dark:text-text-dim-dark shrink-0"
           />
         </button>
 
-        {showNginx && (
+        {showTroubleshooting && (
           <div className="px-5 pb-5 border-t border-slate-100 dark:border-ui-border-dark pt-4 space-y-3">
             <div className="flex items-start gap-2 px-3 py-2.5 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
               <MaterialIcon name="warning" className="text-sm text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
