@@ -11,7 +11,7 @@ import { useIsMobile } from '../../../hooks/useMediaQuery';
 import { ErrorLogTable } from './ErrorLogTable';
 import { LogServiceIdentity } from './LogServiceIdentity';
 import { LogServiceSettings } from './LogServiceSettings';
-import { IntegrationPanel } from '../../healthcheck/components/IntegrationPanel';
+import { IntegrationPanel } from './IntegrationPanel';
 import { RequestsTab } from '../../api-requests/components/RequestsTab';
 import { api } from '../../../services/api';
 import type { Service } from '../../../services/api';

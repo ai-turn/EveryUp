@@ -156,6 +156,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
   const [activeSnippet, setActiveSnippet] = useState<string>('config');
   const [activeNginxTab, setActiveNginxTab] = useState<'nginx_conf' | 'docker_compose' | 'docker_run'>('nginx_conf');
   const [showTroubleshooting, setShowTroubleshooting] = useState(false);
+  const [showAgentDeployOptions, setShowAgentDeployOptions] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Connection status — poll for latest log to indicate whether ingest is working
@@ -433,59 +434,124 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           </p>
         </div>
 
-        {activeCategory === 'agent' && (
-          <div className="mb-4 border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark rounded-xl p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <MaterialIcon name="rocket_launch" className="text-sm text-slate-500 dark:text-text-muted-dark shrink-0" />
-              <h4 className="text-xs font-bold text-slate-700 dark:text-text-secondary-dark">
-                {t('빠른 시작')}
-              </h4>
-              <span className="text-xs text-slate-500 dark:text-text-muted-dark truncate">
-                {t('로그 파일을 /var/log/app에 마운트하는 가장 빠른 실행 예시입니다.')}
-              </span>
+        {activeCategory === 'agent' ? (
+          <>
+            <div className="border border-primary/20 bg-primary/5 dark:bg-primary/10 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <MaterialIcon name="rocket_launch" className="text-base text-primary shrink-0" />
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                  {t('빠른 시작')}
+                </h4>
+                <span className="text-[10px] font-bold tracking-widest uppercase text-primary bg-primary/10 px-2 py-0.5 rounded">
+                  {t('권장')}
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-text-muted-dark mb-3 pl-6">
+                {t('로그 파일을 /var/log/app에 마운트하는 가장 빠른 실행 예시입니다. 대부분의 경우 이 한 줄이면 충분합니다.')}
+              </p>
+              <CodeBlock
+                code={agentQuickStartCmd}
+                onCopy={() => copy(agentQuickStartCmd)}
+                copyTitle={t('코드 복사')}
+                size="xs"
+              />
             </div>
-            <CodeBlock
-              code={agentQuickStartCmd}
-              onCopy={() => copy(agentQuickStartCmd)}
-              copyTitle={t('코드 복사')}
-              size="xs"
-            />
+
+            <div className="mt-3 border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
+              <button
+                onClick={() => setShowAgentDeployOptions((prev) => !prev)}
+                aria-expanded={showAgentDeployOptions}
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors text-left cursor-pointer"
+              >
+                <MaterialIcon name="tune" className="text-base text-slate-500 dark:text-text-muted-dark shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-semibold text-slate-700 dark:text-text-secondary-dark">
+                    {t('다른 배포 방식 보기')}
+                  </h4>
+                  <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-0.5 truncate">
+                    {t('설정 파일, Docker Sidecar/Pipe, systemd 환경에 맞는 예시가 필요할 때만 확인하세요.')}
+                  </p>
+                </div>
+                <MaterialIcon
+                  name={showAgentDeployOptions ? 'expand_less' : 'expand_more'}
+                  className="text-slate-400 dark:text-text-dim-dark shrink-0"
+                />
+              </button>
+
+              {showAgentDeployOptions && (
+                <div className="px-4 pb-4 border-t border-slate-100 dark:border-ui-border-dark pt-4">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="sm:shrink-0 sm:w-40">
+                      <p className="text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-text-dim-dark mb-2 px-1 hidden sm:block">
+                        Deploy
+                      </p>
+                      <div className="flex sm:flex-col gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
+                        {agentTabs.map((tab) => (
+                          <button
+                            key={tab.key}
+                            onClick={() => setActiveSnippet(tab.key)}
+                            aria-pressed={activeSnippet === tab.key}
+                            className={`shrink-0 sm:w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                              activeSnippet === tab.key
+                                ? 'bg-primary/10 text-primary dark:text-primary font-semibold'
+                                : 'text-slate-500 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
+                            }`}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <CodeBlock
+                        code={agentSnippets[activeSnippet] ?? agentSnippets.config}
+                        onCopy={() => copy(agentSnippets[activeSnippet] ?? agentSnippets.config)}
+                        copyTitle={t('코드 복사')}
+                        size="xs"
+                        minHeight="200px"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="sm:shrink-0 sm:w-40">
+              <p className="text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-text-dim-dark mb-2 px-1 hidden sm:block">
+                {activeCategory === 'http-appender' ? 'Framework' : 'Language'}
+              </p>
+              <div className="flex sm:flex-col gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
+                {currentTabs.map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveSnippet(tab.key)}
+                    aria-pressed={activeSnippet === tab.key}
+                    className={`shrink-0 sm:w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                      activeSnippet === tab.key
+                        ? 'bg-primary/10 text-primary dark:text-primary font-semibold'
+                        : 'text-slate-500 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <CodeBlock
+                code={currentSnippets[activeSnippet]}
+                onCopy={() => copy(currentSnippets[activeSnippet])}
+                copyTitle={t('코드 복사')}
+                size="xs"
+                minHeight="200px"
+              />
+            </div>
           </div>
         )}
-
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="sm:shrink-0 sm:w-40">
-            <p className="text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-text-dim-dark mb-2 px-1 hidden sm:block">
-              {activeCategory === 'http-appender' ? 'Framework' : activeCategory === 'api-capture' ? 'Language' : 'Deploy'}
-            </p>
-            <div className="flex sm:flex-col gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
-              {currentTabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveSnippet(tab.key)}
-                  aria-pressed={activeSnippet === tab.key}
-                  className={`shrink-0 sm:w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                    activeSnippet === tab.key
-                      ? 'bg-primary/10 text-primary dark:text-primary font-semibold'
-                      : 'text-slate-500 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <CodeBlock
-              code={currentSnippets[activeSnippet]}
-              onCopy={() => copy(currentSnippets[activeSnippet])}
-              copyTitle={t('코드 복사')}
-              size="xs"
-              minHeight="200px"
-            />
-          </div>
-        </div>
       </div>
 
       <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
