@@ -1,4 +1,5 @@
-import { Toggle } from '../../../components/common';
+import { useEffect, useRef, useState } from 'react';
+import { MaterialIcon, Toggle } from '../../../components/common';
 import type { ApiRequestListParams } from '../../../services/api';
 
 interface RequestFiltersProps {
@@ -92,8 +93,6 @@ export function RequestFilters({ params, onChange, pathSuggestions = [] }: Reque
   const groupLabelClass =
     'text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-text-dim-dark select-none pr-1 border-r border-slate-200 dark:border-ui-border-dark mr-1';
 
-  const datalistId = 'api-request-path-suggestions';
-
   return (
     <div className="space-y-2">
       {/* Row 1: filter groups (uniform h-9) */}
@@ -158,28 +157,154 @@ export function RequestFilters({ params, onChange, pathSuggestions = [] }: Reque
         </label>
       </div>
 
-      {/* Row 2: search with path suggestions */}
-      <div className="relative flex items-center w-full">
-        <span className="absolute left-3 material-symbols-outlined text-slate-400 dark:text-text-dim-dark text-sm select-none">
+      {/* Row 2: search with path suggestions (custom combobox) */}
+      <SearchCombobox
+        value={params.search ?? ''}
+        onChange={setSearch}
+        suggestions={pathSuggestions}
+      />
+    </div>
+  );
+}
+
+interface SearchComboboxProps {
+  value: string;
+  onChange: (v: string) => void;
+  suggestions: string[];
+}
+
+function SearchCombobox({ value, onChange, suggestions }: SearchComboboxProps) {
+  const [open, setOpen] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const listboxId = 'api-request-search-listbox';
+
+  const query = value.trim().toLowerCase();
+  const filtered = query
+    ? suggestions.filter((s) => s.toLowerCase().includes(query))
+    : suggestions;
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (!wrapperRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, [open]);
+
+  useEffect(() => {
+    setFocusedIndex(-1);
+  }, [value, open]);
+
+  const commit = (v: string) => {
+    onChange(v);
+    setOpen(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown') {
+      if (!open && filtered.length > 0) setOpen(true);
+      e.preventDefault();
+      setFocusedIndex((i) => (filtered.length === 0 ? -1 : (i + 1) % filtered.length));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setFocusedIndex((i) =>
+        filtered.length === 0 ? -1 : (i - 1 + filtered.length) % filtered.length,
+      );
+    } else if (e.key === 'Enter') {
+      if (open && focusedIndex >= 0 && focusedIndex < filtered.length) {
+        e.preventDefault();
+        commit(filtered[focusedIndex]);
+      }
+    } else if (e.key === 'Escape') {
+      setOpen(false);
+    }
+  };
+
+  const showDropdown = open && filtered.length > 0;
+
+  return (
+    <div ref={wrapperRef} className="relative w-full">
+      <div className="relative flex items-center">
+        <span className="absolute left-3 material-symbols-outlined text-slate-400 dark:text-text-dim-dark text-sm select-none pointer-events-none">
           search
         </span>
         <input
           type="text"
-          value={params.search ?? ''}
-          onChange={(e) => setSearch(e.target.value)}
+          value={value}
+          onChange={(e) => {
+            onChange(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={handleKeyDown}
           placeholder="Search path, body…"
-          list={datalistId}
           autoComplete="off"
-          className="h-9 w-full pl-9 pr-3 text-sm bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-text-dim-dark focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+          role="combobox"
+          aria-expanded={showDropdown}
+          aria-controls={listboxId}
+          aria-autocomplete="list"
+          aria-activedescendant={
+            focusedIndex >= 0 ? `${listboxId}-opt-${focusedIndex}` : undefined
+          }
+          className={`h-9 w-full pl-9 pr-9 text-sm bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-text-dim-dark focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors ${
+            showDropdown ? 'rounded-t-lg rounded-b-none border-b-transparent' : 'rounded-lg'
+          }`}
         />
-        {pathSuggestions.length > 0 && (
-          <datalist id={datalistId}>
-            {pathSuggestions.map((p) => (
-              <option key={p} value={p} />
-            ))}
-          </datalist>
+        {value && (
+          <button
+            type="button"
+            onClick={() => {
+              onChange('');
+              setOpen(false);
+            }}
+            aria-label="Clear search"
+            className="absolute right-2 p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-text-base-dark hover:bg-slate-100 dark:hover:bg-ui-hover-dark transition-colors cursor-pointer"
+          >
+            <MaterialIcon name="close" className="text-sm" />
+          </button>
         )}
       </div>
+
+      {showDropdown && (
+        <ul
+          id={listboxId}
+          role="listbox"
+          className="absolute top-full left-0 right-0 z-20 max-h-64 overflow-y-auto bg-white dark:bg-bg-surface-dark border border-primary border-t-slate-200 dark:border-t-ui-border-dark rounded-b-lg shadow-lg ring-2 ring-primary/30 -mt-px"
+        >
+          <li className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-text-dim-dark border-b border-slate-100 dark:border-ui-border-dark select-none">
+            {query ? 'Matching paths' : 'Recent paths'}
+          </li>
+          {filtered.map((path, i) => {
+            const isFocused = i === focusedIndex;
+            return (
+              <li
+                key={path}
+                id={`${listboxId}-opt-${i}`}
+                role="option"
+                aria-selected={isFocused}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  commit(path);
+                }}
+                onMouseEnter={() => setFocusedIndex(i)}
+                className={`flex items-center gap-2 px-3 py-2 text-sm cursor-pointer transition-colors ${
+                  isFocused
+                    ? 'bg-primary/10 text-primary dark:text-primary'
+                    : 'text-slate-700 dark:text-text-base-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark'
+                }`}
+              >
+                <MaterialIcon
+                  name="history"
+                  className="text-sm text-slate-400 dark:text-text-dim-dark shrink-0"
+                />
+                <span className="truncate font-mono text-xs">{path}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }
