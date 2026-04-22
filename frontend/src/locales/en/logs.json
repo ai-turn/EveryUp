@@ -211,6 +211,86 @@
             "summaryAll": "Collecting: error / warn / info",
             "summaryNone": "No levels selected - nothing will be collected",
             "summaryCollecting": "Collecting"
+        },
+        "integration": {
+            "picker": {
+                "eyebrow": "Integration",
+                "title": "How do you want to send logs?",
+                "subtitle": "Choose the setup that matches your deployment. You can switch later.",
+                "recommended": "Recommended",
+                "goodFor": "Good for",
+                "start": "Start with this",
+                "notSureTitle": "Not sure which one to choose?",
+                "notSureDesc": "Start with Log Agent. Use HTTP Appender only when you want the application logger to send logs directly."
+            },
+            "paths": {
+                "agent": {
+                    "label": "Log Agent",
+                    "tagline": "Collect log files without changing app code",
+                    "description": "A Fluent Bit based agent tails log files or stdout and forwards entries to EveryUp. This is the safest default for most deployments.",
+                    "goodFor": [
+                        "Existing file logs",
+                        "Docker / VM / bare metal",
+                        "Minimal application changes"
+                    ]
+                },
+                "httpAppender": {
+                    "label": "HTTP Appender",
+                    "tagline": "Send logs directly from your logger",
+                    "description": "Add an HTTP transport or appender to Winston, Logback, Serilog, or Python logging. Choose this when you want application-level control.",
+                    "goodFor": [
+                        "Existing logger setup",
+                        "Node.js / Spring Boot / .NET / Python",
+                        "Fine-grained log control"
+                    ]
+                }
+            },
+            "status": {
+                "connected": "Connected",
+                "receivedAgo": "Received {{seconds}}s ago",
+                "testFailed": "Test failed",
+                "waiting": "Waiting for logs"
+            },
+            "selectedMethod": "Selected method",
+            "changeMethod": "Change",
+            "apiKey": {
+                "title": "API key",
+                "masked": "MASKED",
+                "copyVisible": "Copy visible value",
+                "regenerate": "Regenerate"
+            },
+            "endpoint": {
+                "title": "Ingest endpoint",
+                "description": "Accepts common logger formats and batches up to 100 logs per request."
+            },
+            "test": {
+                "title": "Test the connection first",
+                "description": "Send one small log entry before changing production logging. The status updates when a log arrives.",
+                "browserButton": "Send test from browser",
+                "troubleshooting": "Troubleshooting",
+                "troubleshootingDesc": "If the request reaches a reverse proxy, make sure the Authorization header is forwarded."
+            },
+            "setup": {
+                "agentTitle": "Run the agent",
+                "httpTitle": "Add the appender",
+                "agentDesc": "Mount the log directory and start the EveryUp Log Agent.",
+                "httpDesc": "Pick your framework and add the HTTP transport to your logger.",
+                "agentHint": "Quick start is enough for most setups. Change the mounted path to the directory where your application writes logs.",
+                "otherOptions": "Other deployment options",
+                "otherOptionsDesc": "Fluent Bit config, Docker sidecar, Docker pipe, and systemd examples."
+            },
+            "modals": {
+                "regenerateTitle": "Regenerate API key?",
+                "regenerateDesc": "The previous key stops working immediately. Update any running agents or appenders.",
+                "newKeyTitle": "New API key generated",
+                "newKeyDesc": "Copy it now. It will be hidden again shortly.",
+                "done": "Done"
+            },
+            "toast": {
+                "apiKeyRegenerated": "New API key generated.",
+                "regenerateFirst": "Regenerate the API key first, then try the browser test.",
+                "testLogSent": "Test log sent."
+            }
         }
     }
 }

@@ -347,6 +347,10 @@ export function buildAgentQuickStart(displayKey: string, origin: string): string
   aiturn/everyup-log-agent:latest`;
 }
 
+export function buildAgentPullCommand(): string {
+  return 'docker pull aiturn/everyup-log-agent:latest';
+}
+
 export function buildApiCaptureSnippets(origin: string, displayKey: string): Record<string, string> {
   const ingestUrl = `${origin}/api/v1/ingest/requests`;
   return {

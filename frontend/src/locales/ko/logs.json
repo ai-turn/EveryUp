@@ -211,6 +211,86 @@
             "summaryAll": "수집 중: error / warn / info",
             "summaryNone": "선택된 레벨 없음 - 아무것도 수집되지 않습니다",
             "summaryCollecting": "수집 중"
+        },
+        "integration": {
+            "picker": {
+                "eyebrow": "연동",
+                "title": "로그를 어떻게 보낼까요?",
+                "subtitle": "배포 환경에 맞는 방식을 선택하세요. 나중에 언제든 변경할 수 있습니다.",
+                "recommended": "권장",
+                "goodFor": "이런 경우에 좋아요",
+                "start": "이 방식으로 시작",
+                "notSureTitle": "어떤 방식을 골라야 할지 모르겠다면",
+                "notSureDesc": "대부분의 경우 Log Agent가 가장 안정적입니다. 애플리케이션 로거가 직접 로그를 보내야 할 때만 HTTP Appender를 선택하세요."
+            },
+            "paths": {
+                "agent": {
+                    "label": "Log Agent",
+                    "tagline": "앱 코드 수정 없이 로그 파일 수집",
+                    "description": "Fluent Bit 기반 에이전트가 로그 파일이나 stdout을 읽어 EveryUp으로 전송합니다. 대부분의 배포 환경에서 가장 안전한 기본 선택입니다.",
+                    "goodFor": [
+                        "기존 파일 로그가 있는 서비스",
+                        "Docker / VM / 베어메탈 환경",
+                        "애플리케이션 코드 변경을 최소화해야 하는 경우"
+                    ]
+                },
+                "httpAppender": {
+                    "label": "HTTP Appender",
+                    "tagline": "로거에서 직접 로그 전송",
+                    "description": "Winston, Logback, Serilog, Python logging 등에 HTTP transport/appender를 추가합니다. 애플리케이션 레벨에서 제어가 필요할 때 적합합니다.",
+                    "goodFor": [
+                        "이미 로깅 라이브러리를 쓰는 서비스",
+                        "Node.js / Spring Boot / .NET / Python",
+                        "로그 전송을 세밀하게 제어해야 하는 경우"
+                    ]
+                }
+            },
+            "status": {
+                "connected": "연결됨",
+                "receivedAgo": "{{seconds}}초 전 수신",
+                "testFailed": "테스트 실패",
+                "waiting": "로그 대기 중"
+            },
+            "selectedMethod": "선택한 방식",
+            "changeMethod": "변경",
+            "apiKey": {
+                "title": "API 키",
+                "masked": "마스킹됨",
+                "copyVisible": "표시된 값 복사",
+                "regenerate": "재발급"
+            },
+            "endpoint": {
+                "title": "수집 엔드포인트",
+                "description": "주요 로거 포맷을 자동 인식하며 요청당 최대 100개의 로그를 받을 수 있습니다."
+            },
+            "test": {
+                "title": "먼저 연결 테스트",
+                "description": "운영 로그 설정을 바꾸기 전에 작은 테스트 로그 하나를 보내보세요. 로그가 도착하면 상태가 갱신됩니다.",
+                "browserButton": "브라우저에서 테스트 전송",
+                "troubleshooting": "문제 해결",
+                "troubleshootingDesc": "리버스 프록시를 거친다면 Authorization 헤더가 백엔드로 전달되는지 확인하세요."
+            },
+            "setup": {
+                "agentTitle": "에이전트 실행",
+                "httpTitle": "Appender 추가",
+                "agentDesc": "로그 디렉터리를 마운트하고 EveryUp Log Agent를 시작합니다.",
+                "httpDesc": "프레임워크를 선택하고 로거에 HTTP 전송 설정을 추가합니다.",
+                "agentHint": "대부분은 Quick Start로 충분합니다. 애플리케이션이 로그를 쓰는 디렉터리로 마운트 경로만 바꿔주세요.",
+                "otherOptions": "다른 배포 옵션",
+                "otherOptionsDesc": "Fluent Bit 설정, Docker sidecar, Docker pipe, systemd 예시입니다."
+            },
+            "modals": {
+                "regenerateTitle": "API 키를 재발급할까요?",
+                "regenerateDesc": "기존 키는 즉시 동작하지 않습니다. 실행 중인 에이전트나 appender 설정도 교체해야 합니다.",
+                "newKeyTitle": "새 API 키가 발급되었습니다",
+                "newKeyDesc": "지금 복사해 두세요. 잠시 후 다시 숨겨집니다.",
+                "done": "확인"
+            },
+            "toast": {
+                "apiKeyRegenerated": "새 API 키가 발급되었습니다.",
+                "regenerateFirst": "먼저 API 키를 재발급한 뒤 브라우저 테스트를 실행하세요.",
+                "testLogSent": "테스트 로그를 전송했습니다."
+            }
         }
     }
 }

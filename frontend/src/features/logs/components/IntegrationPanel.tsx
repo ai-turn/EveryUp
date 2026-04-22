@@ -11,6 +11,7 @@ import {
   buildAgentSnippets,
   buildNginxSnippets,
   buildAgentQuickStart,
+  buildAgentPullCommand,
 } from './integrationSnippets';
 
 interface IntegrationPanelProps {
@@ -23,47 +24,41 @@ type IntegrationPath = 'agent' | 'http-appender';
 interface PathOption {
   key: IntegrationPath;
   icon: string;
-  label: string;
-  tagline: string;
-  description: string;
-  time: string;
-  difficulty: string;
+  labelKey: string;
+  taglineKey: string;
+  descriptionKey: string;
   recommended?: boolean;
-  goodFor: string[];
+  goodForKey: string;
 }
 
 const PATH_OPTIONS: PathOption[] = [
   {
     key: 'agent',
     icon: 'dns',
-    label: 'Log Agent',
-    tagline: 'Collect log files without changing app code',
-    description:
-      'A Fluent Bit based agent tails log files or stdout and forwards entries to EveryUp. This is the safest default for most deployments.',
-    time: '10 min',
-    difficulty: 'Easy',
+    labelKey: 'logServices.integration.paths.agent.label',
+    taglineKey: 'logServices.integration.paths.agent.tagline',
+    descriptionKey: 'logServices.integration.paths.agent.description',
     recommended: true,
-    goodFor: ['Existing file logs', 'Docker / VM / bare metal', 'Minimal application changes'],
+    goodForKey: 'logServices.integration.paths.agent.goodFor',
   },
   {
     key: 'http-appender',
     icon: 'code',
-    label: 'HTTP Appender',
-    tagline: 'Send logs directly from your logger',
-    description:
-      'Add an HTTP transport or appender to Winston, Logback, Serilog, or Python logging. Choose this when you want application-level control.',
-    time: '5 min',
-    difficulty: 'Medium',
-    goodFor: ['Existing logger setup', 'Node.js / Spring Boot / .NET / Python', 'Fine-grained log control'],
+    labelKey: 'logServices.integration.paths.httpAppender.label',
+    taglineKey: 'logServices.integration.paths.httpAppender.tagline',
+    descriptionKey: 'logServices.integration.paths.httpAppender.description',
+    goodForKey: 'logServices.integration.paths.httpAppender.goodFor',
   },
 ];
 
 function ConnectionStatusBadge({
   state,
   secondsAgo,
+  t,
 }: {
   state: 'waiting' | 'connected' | 'error';
   secondsAgo: number | null;
+  t: (key: string, options?: Record<string, unknown>) => string;
 }) {
   if (state === 'connected') {
     return (
@@ -72,7 +67,9 @@ function ConnectionStatusBadge({
         aria-live="polite"
       >
         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-        {secondsAgo === null || secondsAgo > 60 ? 'Connected' : `Received ${secondsAgo}s ago`}
+        {secondsAgo === null || secondsAgo > 60
+          ? t('logServices.integration.status.connected')
+          : t('logServices.integration.status.receivedAgo', { seconds: secondsAgo })}
       </span>
     );
   }
@@ -84,7 +81,7 @@ function ConnectionStatusBadge({
         aria-live="polite"
       >
         <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-        Test failed
+        {t('logServices.integration.status.testFailed')}
       </span>
     );
   }
@@ -95,7 +92,7 @@ function ConnectionStatusBadge({
       aria-live="polite"
     >
       <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse" />
-      Waiting for logs
+      {t('logServices.integration.status.waiting')}
     </span>
   );
 }
@@ -137,27 +134,22 @@ function CodeBlock({
 
 function SectionTitle({
   number,
-  icon,
   title,
   description,
   trailing,
 }: {
   number: number;
-  icon: string;
   title: string;
   description?: string;
   trailing?: React.ReactNode;
 }) {
   return (
     <div className="flex items-start gap-3 mb-4">
-      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-primary text-white text-xs font-bold">
+      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-primary/10 dark:bg-primary/15 text-primary text-xs font-bold">
         {number}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <MaterialIcon name={icon} className="text-base text-primary" />
-          <h3 className="text-base font-bold text-slate-900 dark:text-white leading-tight">{title}</h3>
-        </div>
+        <h3 className="text-base font-bold text-slate-900 dark:text-white leading-tight">{title}</h3>
         {description && (
           <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-1 leading-relaxed">
             {description}
@@ -200,20 +192,22 @@ function SegmentedControl<T extends string>({
 
 function PathPicker({
   onSelect,
+  t,
 }: {
   onSelect: (path: IntegrationPath) => void;
+  t: (key: string, options?: Record<string, unknown>) => string;
 }) {
   return (
     <div className="space-y-5">
       <div>
         <p className="text-[11px] font-bold tracking-widest uppercase text-primary/70 mb-1">
-          Integration
+          {t('logServices.integration.picker.eyebrow')}
         </p>
         <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-          How do you want to send logs?
+          {t('logServices.integration.picker.title')}
         </h2>
         <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-1">
-          Choose the setup that matches your deployment. You can switch later.
+          {t('logServices.integration.picker.subtitle')}
         </p>
       </div>
 
@@ -231,35 +225,27 @@ function PathPicker({
             {option.recommended && (
               <span className="absolute top-4 right-4 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary text-white text-[10px] font-bold tracking-wide">
                 <MaterialIcon name="auto_awesome" className="text-xs" />
-                Recommended
+                {t('logServices.integration.picker.recommended')}
               </span>
             )}
 
             <div className="w-11 h-11 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4">
               <MaterialIcon name={option.icon} className="text-xl" />
             </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">{option.label}</h3>
-            <p className="text-sm font-semibold text-primary mt-1">{option.tagline}</p>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+              {t(option.labelKey)}
+            </h3>
+            <p className="text-sm font-semibold text-primary mt-1">{t(option.taglineKey)}</p>
             <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-3 leading-relaxed">
-              {option.description}
+              {t(option.descriptionKey)}
             </p>
-
-            <div className="flex flex-wrap gap-2 mt-4">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-ui-hover-dark text-xs font-semibold text-slate-600 dark:text-text-muted-dark">
-                <MaterialIcon name="schedule" className="text-xs" />
-                {option.time}
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-ui-hover-dark text-xs font-semibold text-slate-600 dark:text-text-muted-dark">
-                {option.difficulty}
-              </span>
-            </div>
 
             <div className="pt-4 mt-4 border-t border-dashed border-slate-200 dark:border-ui-border-dark">
               <p className="text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-text-dim-dark mb-2">
-                Good for
+                {t('logServices.integration.picker.goodFor')}
               </p>
               <div className="space-y-1.5">
-                {option.goodFor.map((item) => (
+                {(t(option.goodForKey, { returnObjects: true }) as unknown as string[]).map((item) => (
                   <div
                     key={item}
                     className="flex items-center gap-2 text-xs text-slate-600 dark:text-text-muted-dark"
@@ -272,7 +258,7 @@ function PathPicker({
             </div>
 
             <div className="flex items-center justify-end gap-1 mt-5 text-sm font-semibold text-primary">
-              Start with this
+              {t('logServices.integration.picker.start')}
               <MaterialIcon name="chevron_right" className="text-base" />
             </div>
           </button>
@@ -285,11 +271,10 @@ function PathPicker({
         </div>
         <div>
           <p className="text-sm font-semibold text-slate-800 dark:text-white">
-            Not sure which one to choose?
+            {t('logServices.integration.picker.notSureTitle')}
           </p>
           <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-1 leading-relaxed">
-            Start with Log Agent. Use HTTP Appender only when you want the application logger to send
-            logs directly.
+            {t('logServices.integration.picker.notSureDesc')}
           </p>
         </div>
       </div>
@@ -298,6 +283,7 @@ function PathPicker({
 }
 
 export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPanelProps) {
+  const { t } = useTranslation();
   const { t: tc } = useTranslation('common');
   const { copy } = useCopyToClipboard();
   const [selectedPath, setSelectedPath] = useState<IntegrationPath | null>(null);
@@ -360,6 +346,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
   const httpAppenderSnippets = buildHttpAppenderSnippets(hostname, port, isHttps, displayKey, ingestUrl);
   const agentSnippets = buildAgentSnippets(hostname, port, isHttps, displayKey, origin);
   const nginxSnippets = buildNginxSnippets(hostname);
+  const agentPullCmd = buildAgentPullCommand();
   const agentQuickStartCmd = buildAgentQuickStart(displayKey, origin);
 
   const dismissRevealedKey = useCallback(() => {
@@ -396,7 +383,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
       const { apiKey: newKey, apiKeyMasked: newMasked } = await api.regenerateServiceApiKey(service.id);
       onApiKeyRegenerated(newKey, newMasked);
       setRevealedKey(newKey);
-      toast.success('New API key generated.');
+      toast.success(t('logServices.integration.toast.apiKeyRegenerated'));
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
@@ -411,7 +398,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
 
   const handleBrowserTest = async () => {
     if (!realApiKey) {
-      toast.error('Regenerate the API key first, then try the browser test.');
+      toast.error(t('logServices.integration.toast.regenerateFirst'));
       return;
     }
 
@@ -437,7 +424,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
       const now = new Date();
       setLatestLogAt(now);
       setTestState('connected');
-      toast.success('Test log sent.');
+      toast.success(t('logServices.integration.toast.testLogSent'));
     } catch (error) {
       setTestState('error');
       toast.error(getErrorMessage(error));
@@ -445,7 +432,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
   };
 
   if (!selectedPath || !selectedOption) {
-    return <PathPicker onSelect={setSelectedPath} />;
+    return <PathPicker onSelect={setSelectedPath} t={t} />;
   }
 
   return (
@@ -456,17 +443,19 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-text-dim-dark">
-            Selected method
+            {t('logServices.integration.selectedMethod')}
           </p>
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-base font-bold text-slate-900 dark:text-white">{selectedOption.label}</h2>
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">
+              {t(selectedOption.labelKey)}
+            </h2>
             {selectedOption.recommended && (
               <span className="inline-flex px-2 py-0.5 rounded-full bg-primary text-white text-[10px] font-bold">
-                Recommended
+                {t('logServices.integration.picker.recommended')}
               </span>
             )}
             <span className="text-xs text-slate-500 dark:text-text-muted-dark">
-              {selectedOption.tagline}
+              {t(selectedOption.taglineKey)}
             </span>
           </div>
         </div>
@@ -475,7 +464,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-ui-border-dark text-xs font-semibold text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors cursor-pointer"
         >
           <MaterialIcon name="swap_horiz" className="text-sm" />
-          Change
+          {t('logServices.integration.changeMethod')}
         </button>
       </div>
 
@@ -483,9 +472,11 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
         <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">
             <MaterialIcon name="key" className="text-base text-primary" />
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">API key</h3>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+              {t('logServices.integration.apiKey.title')}
+            </h3>
             <span className="ml-auto text-[10px] font-semibold text-slate-400 dark:text-text-dim-dark bg-slate-100 dark:bg-ui-active-dark px-2 py-0.5 rounded-md">
-              MASKED
+              {t('logServices.integration.apiKey.masked')}
             </span>
           </div>
           <div className="flex items-center gap-2 px-3 py-2.5 bg-slate-50 dark:bg-ui-hover-dark rounded-lg font-mono text-sm border border-slate-100 dark:border-ui-border-dark">
@@ -500,7 +491,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark text-xs font-semibold text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark cursor-pointer"
             >
               <MaterialIcon name="content_copy" className="text-sm" />
-              Copy visible value
+              {t('logServices.integration.apiKey.copyVisible')}
             </button>
             <button
               onClick={() => setShowConfirm(true)}
@@ -508,7 +499,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/20 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 disabled:opacity-50 cursor-pointer"
             >
               <MaterialIcon name={isRegenerating ? 'sync' : 'refresh'} className={`text-sm ${isRegenerating ? 'animate-spin' : ''}`} />
-              Regenerate
+              {t('logServices.integration.apiKey.regenerate')}
             </button>
           </div>
         </div>
@@ -516,7 +507,9 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
         <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">
             <MaterialIcon name="upload" className="text-base text-primary" />
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Ingest endpoint</h3>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+              {t('logServices.integration.endpoint.title')}
+            </h3>
             <span className="ml-auto text-[10px] font-bold text-white bg-emerald-600 px-2 py-0.5 rounded">
               POST
             </span>
@@ -534,7 +527,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           </div>
           <div className="flex items-center gap-2 mt-3 text-xs text-slate-500 dark:text-text-muted-dark">
             <MaterialIcon name="auto_awesome" className="text-sm text-primary" />
-            Accepts common logger formats and batches up to 100 logs per request.
+            {t('logServices.integration.endpoint.description')}
           </div>
         </div>
       </div>
@@ -542,10 +535,9 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
       <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
         <SectionTitle
           number={1}
-          icon="cable"
-          title="Test the connection first"
-          description="Send one small log entry before changing production logging. The status updates when a log arrives."
-          trailing={<ConnectionStatusBadge state={testState} secondsAgo={secondsAgo} />}
+          title={t('logServices.integration.test.title')}
+          description={t('logServices.integration.test.description')}
+          trailing={<ConnectionStatusBadge state={testState} secondsAgo={secondsAgo} t={t} />}
         />
         <CodeBlock
           code={curlCmd}
@@ -559,14 +551,14 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors cursor-pointer"
           >
             <MaterialIcon name="send" className="text-sm" />
-            Send test from browser
+            {t('logServices.integration.test.browserButton')}
           </button>
           <button
             onClick={() => setShowTroubleshooting((prev) => !prev)}
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-ui-border-dark text-xs font-semibold text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors cursor-pointer"
           >
             <MaterialIcon name={showTroubleshooting ? 'expand_less' : 'help_outline'} className="text-sm" />
-            Troubleshooting
+            {t('logServices.integration.test.troubleshooting')}
           </button>
         </div>
 
@@ -575,7 +567,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             <div className="flex items-start gap-2">
               <MaterialIcon name="warning" className="text-base text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
               <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
-                If the request reaches a reverse proxy, make sure the Authorization header is forwarded.
+                {t('logServices.integration.test.troubleshootingDesc')}
               </p>
             </div>
             <SegmentedControl
@@ -600,12 +592,15 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
       <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
         <SectionTitle
           number={2}
-          icon={selectedPath === 'agent' ? 'rocket_launch' : 'code'}
-          title={selectedPath === 'agent' ? 'Run the agent' : 'Add the appender'}
+          title={
+            selectedPath === 'agent'
+              ? t('logServices.integration.setup.agentTitle')
+              : t('logServices.integration.setup.httpTitle')
+          }
           description={
             selectedPath === 'agent'
-              ? 'Mount the log directory and start the EveryUp Log Agent.'
-              : 'Pick your framework and add the HTTP transport to your logger.'
+              ? t('logServices.integration.setup.agentDesc')
+              : t('logServices.integration.setup.httpDesc')
           }
         />
 
@@ -614,10 +609,15 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/20">
               <MaterialIcon name="info" className="text-base text-primary mt-0.5 shrink-0" />
               <p className="text-xs text-slate-600 dark:text-text-muted-dark leading-relaxed">
-                Quick start is enough for most setups. Change the mounted path to the directory where
-                your application writes logs.
+                {t('logServices.integration.setup.agentHint')}
               </p>
             </div>
+            <CodeBlock
+              code={agentPullCmd}
+              onCopy={() => copy(agentPullCmd)}
+              copyTitle={tc('common.copyToClipboard')}
+              size="xs"
+            />
             <CodeBlock
               code={agentQuickStartCmd}
               onCopy={() => copy(agentQuickStartCmd)}
@@ -634,10 +634,10 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
                 <MaterialIcon name="tune" className="text-base text-slate-500 dark:text-text-muted-dark shrink-0" />
                 <div className="flex-1 min-w-0">
                   <h4 className="text-sm font-semibold text-slate-700 dark:text-text-secondary-dark">
-                    Other deployment options
+                    {t('logServices.integration.setup.otherOptions')}
                   </h4>
                   <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-0.5 truncate">
-                    Fluent Bit config, Docker sidecar, Docker pipe, and systemd examples.
+                    {t('logServices.integration.setup.otherOptionsDesc')}
                   </p>
                 </div>
                 <MaterialIcon
@@ -707,10 +707,10 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               </div>
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  Regenerate API key?
+                  {t('logServices.integration.modals.regenerateTitle')}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">
-                  The previous key stops working immediately. Update any running agents or appenders.
+                  {t('logServices.integration.modals.regenerateDesc')}
                 </p>
               </div>
             </div>
@@ -725,7 +725,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
                 onClick={handleRegenerate}
                 className="flex-1 px-4 py-2.5 rounded-lg bg-red-600 text-white font-semibold text-sm hover:bg-red-700 transition-colors cursor-pointer"
               >
-                Regenerate
+                {t('logServices.integration.apiKey.regenerate')}
               </button>
             </div>
           </div>
@@ -741,10 +741,10 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               </div>
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  New API key generated
+                  {t('logServices.integration.modals.newKeyTitle')}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">
-                  Copy it now. It will be hidden again shortly.
+                  {t('logServices.integration.modals.newKeyDesc')}
                 </p>
               </div>
             </div>
@@ -766,7 +766,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               onClick={dismissRevealedKey}
               className="w-full px-4 py-2.5 rounded-lg bg-primary text-white font-semibold text-sm hover:bg-primary/90 transition-colors cursor-pointer"
             >
-              Done
+              {t('logServices.integration.modals.done')}
               {revealCountdown > 0 && ` (${revealCountdown}s)`}
             </button>
           </div>
