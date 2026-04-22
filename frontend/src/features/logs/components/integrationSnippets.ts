@@ -186,7 +186,7 @@ export function buildAgentSnippets(hostname: string, port: string, isHttps: bool
     format          json
     json_date_key   false
     header          Authorization Bearer ${displayKey}
-    header          X-Log-Agent-Source agent
+    header          X-MT-Source agent
     header          Content-Type application/json
     tls             ${isHttps ? 'on' : 'off'}
     tls.verify      off

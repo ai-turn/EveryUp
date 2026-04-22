@@ -8,7 +8,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/aiturn/everyup/internal/alerter"
 	"github.com/aiturn/everyup/internal/api"
 	"github.com/aiturn/everyup/internal/api/websocket"
@@ -17,6 +16,7 @@ import (
 	"github.com/aiturn/everyup/internal/config"
 	"github.com/aiturn/everyup/internal/crypto"
 	"github.com/aiturn/everyup/internal/database"
+	"github.com/gofiber/fiber/v2"
 )
 
 // testServer holds all components needed for integration tests.
@@ -768,6 +768,45 @@ func TestApiRequestIngest_WithApiKey(t *testing.T) {
 	}
 }
 
+func TestApiRequestIngest_WithXAPIKey(t *testing.T) {
+	ts := setupTestServer(t)
+	apiKey := createLogServiceForIngest(t, ts, "req-svc-x-api-key")
+
+	_, err := database.DB.Exec(
+		`UPDATE services SET api_capture_mode = 'all' WHERE id = ?`,
+		"req-svc-x-api-key",
+	)
+	if err != nil {
+		t.Fatalf("update capture mode: %v", err)
+	}
+
+	resp, result := ts.doRequest(t, "POST", "/api/v1/ingest/requests", map[string]interface{}{
+		"method":     "POST",
+		"path":       "/api/users/123",
+		"statusCode": 201,
+		"durationMs": 52,
+	}, "X-API-Key", apiKey)
+
+	if resp.StatusCode != 201 {
+		t.Errorf("status = %d, want 201", resp.StatusCode)
+	}
+	if !result.Success {
+		t.Fatalf("ingest failed: %v", result.Error)
+	}
+
+	var data struct {
+		Processed int `json:"processed"`
+		Total     int `json:"total"`
+	}
+	json.Unmarshal(result.Data, &data)
+	if data.Processed != 1 {
+		t.Errorf("processed = %d, want 1", data.Processed)
+	}
+	if data.Total != 1 {
+		t.Errorf("total = %d, want 1", data.Total)
+	}
+}
+
 func TestApiRequestIngest_ModeDisabled(t *testing.T) {
 	ts := setupTestServer(t)
 	apiKey := createLogServiceForIngest(t, ts, "req-svc-disabled")
@@ -1073,15 +1112,15 @@ func TestAlertRule_CRUD(t *testing.T) {
 
 	// Create
 	_, createResult := ts.doRequest(t, "POST", "/api/v1/alert-rules", map[string]interface{}{
-		"name":     "High CPU",
-		"type":     "resource",
-		"metric":   "cpu",
-		"operator": ">",
+		"name":      "High CPU",
+		"type":      "resource",
+		"metric":    "cpu",
+		"operator":  ">",
 		"threshold": 90,
 		"duration":  5,
-		"severity": "critical",
-		"cooldown": 300,
-		"hostId":   "local",
+		"severity":  "critical",
+		"cooldown":  300,
+		"hostId":    "local",
 	}, auth...)
 
 	if !createResult.Success {

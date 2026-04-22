@@ -39,6 +39,9 @@ func IngestRateLimiter() fiber.Handler {
 			if auth := c.Get("Authorization"); auth != "" {
 				return "apikey:" + auth
 			}
+			if apiKey := c.Get("X-API-Key"); apiKey != "" {
+				return "apikey:" + apiKey
+			}
 			return c.IP()
 		},
 		LimitReached: func(c *fiber.Ctx) error {

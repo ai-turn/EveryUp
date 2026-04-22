@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useTranslate } from '@tolgee/react';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
@@ -12,7 +11,6 @@ import {
   buildAgentSnippets,
   buildNginxSnippets,
   buildAgentQuickStart,
-  buildApiCaptureSnippets,
 } from './integrationSnippets';
 
 interface IntegrationPanelProps {
@@ -20,42 +18,53 @@ interface IntegrationPanelProps {
   onApiKeyRegenerated: (newKey: string, maskedKey: string) => void;
 }
 
-interface StepHeaderProps {
-  step: number;
+type IntegrationPath = 'agent' | 'http-appender';
+
+interface PathOption {
+  key: IntegrationPath;
   icon: string;
-  title: string;
-  description?: string;
-  trailing?: React.ReactNode;
+  label: string;
+  tagline: string;
+  description: string;
+  time: string;
+  difficulty: string;
+  recommended?: boolean;
+  goodFor: string[];
 }
 
-function StepHeader({ step, icon, title, description, trailing }: StepHeaderProps) {
-  return (
-    <div className="flex items-start gap-3 mb-5">
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-primary/10">
-        <MaterialIcon name={icon} className="text-xl text-primary" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[10px] font-bold tracking-widest uppercase mb-0.5 text-primary/70">
-          Step {step}
-        </p>
-        <h3 className="text-base font-bold text-slate-900 dark:text-white leading-tight">{title}</h3>
-        {description && (
-          <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{description}</p>
-        )}
-      </div>
-      {trailing && <div className="shrink-0">{trailing}</div>}
-    </div>
-  );
-}
+const PATH_OPTIONS: PathOption[] = [
+  {
+    key: 'agent',
+    icon: 'dns',
+    label: 'Log Agent',
+    tagline: 'Collect log files without changing app code',
+    description:
+      'A Fluent Bit based agent tails log files or stdout and forwards entries to EveryUp. This is the safest default for most deployments.',
+    time: '10 min',
+    difficulty: 'Easy',
+    recommended: true,
+    goodFor: ['Existing file logs', 'Docker / VM / bare metal', 'Minimal application changes'],
+  },
+  {
+    key: 'http-appender',
+    icon: 'code',
+    label: 'HTTP Appender',
+    tagline: 'Send logs directly from your logger',
+    description:
+      'Add an HTTP transport or appender to Winston, Logback, Serilog, or Python logging. Choose this when you want application-level control.',
+    time: '5 min',
+    difficulty: 'Medium',
+    goodFor: ['Existing logger setup', 'Node.js / Spring Boot / .NET / Python', 'Fine-grained log control'],
+  },
+];
 
 function ConnectionStatusBadge({
   state,
   secondsAgo,
 }: {
-  state: 'waiting' | 'connected';
+  state: 'waiting' | 'connected' | 'error';
   secondsAgo: number | null;
 }) {
-  const { t } = useTranslate();
   if (state === 'connected') {
     return (
       <span
@@ -63,19 +72,30 @@ function ConnectionStatusBadge({
         aria-live="polite"
       >
         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-        {secondsAgo === null || secondsAgo > 60
-          ? t('연결됨')
-          : t('{seconds}초 전 수신', { seconds: secondsAgo })}
+        {secondsAgo === null || secondsAgo > 60 ? 'Connected' : `Received ${secondsAgo}s ago`}
       </span>
     );
   }
+
+  if (state === 'error') {
+    return (
+      <span
+        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-semibold"
+        aria-live="polite"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+        Test failed
+      </span>
+    );
+  }
+
   return (
     <span
       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark text-xs font-semibold"
       aria-live="polite"
     >
       <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse" />
-      {t('로그 대기 중')}
+      Waiting for logs
     </span>
   );
 }
@@ -96,7 +116,7 @@ function CodeBlock({
   return (
     <div className="relative">
       <pre
-        className={`p-4 bg-slate-900 dark:bg-slate-950 rounded-xl overflow-x-auto leading-relaxed whitespace-pre ${
+        className={`p-4 bg-slate-900 dark:bg-slate-950 rounded-lg overflow-x-auto leading-relaxed whitespace-pre ${
           size === 'xs' ? 'text-xs text-slate-300' : 'text-sm text-slate-200'
         }`}
         style={minHeight ? { minHeight } : undefined}
@@ -107,10 +127,44 @@ function CodeBlock({
         onClick={onCopy}
         title={copyTitle}
         aria-label={copyTitle}
-        className="absolute top-3 right-3 p-1.5 rounded-lg bg-slate-700/80 hover:bg-slate-600 transition-colors text-slate-400 hover:text-slate-200 cursor-pointer"
+        className="absolute top-3 right-3 p-1.5 rounded-md bg-slate-700/80 hover:bg-slate-600 transition-colors text-slate-400 hover:text-slate-200 cursor-pointer"
       >
         <MaterialIcon name="content_copy" className="text-sm" />
       </button>
+    </div>
+  );
+}
+
+function SectionTitle({
+  number,
+  icon,
+  title,
+  description,
+  trailing,
+}: {
+  number: number;
+  icon: string;
+  title: string;
+  description?: string;
+  trailing?: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-3 mb-4">
+      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-primary text-white text-xs font-bold">
+        {number}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <MaterialIcon name={icon} className="text-base text-primary" />
+          <h3 className="text-base font-bold text-slate-900 dark:text-white leading-tight">{title}</h3>
+        </div>
+        {description && (
+          <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-1 leading-relaxed">
+            {description}
+          </p>
+        )}
+      </div>
+      {trailing && <div className="shrink-0">{trailing}</div>}
     </div>
   );
 }
@@ -144,22 +198,121 @@ function SegmentedControl<T extends string>({
   );
 }
 
+function PathPicker({
+  onSelect,
+}: {
+  onSelect: (path: IntegrationPath) => void;
+}) {
+  return (
+    <div className="space-y-5">
+      <div>
+        <p className="text-[11px] font-bold tracking-widest uppercase text-primary/70 mb-1">
+          Integration
+        </p>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+          How do you want to send logs?
+        </h2>
+        <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-1">
+          Choose the setup that matches your deployment. You can switch later.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {PATH_OPTIONS.map((option) => (
+          <button
+            key={option.key}
+            onClick={() => onSelect(option.key)}
+            className={`relative text-left p-5 rounded-xl bg-white dark:bg-bg-surface-dark border transition-all cursor-pointer hover:border-primary hover:shadow-lg ${
+              option.recommended
+                ? 'border-primary shadow-sm shadow-primary/10'
+                : 'border-slate-200 dark:border-ui-border-dark'
+            }`}
+          >
+            {option.recommended && (
+              <span className="absolute top-4 right-4 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary text-white text-[10px] font-bold tracking-wide">
+                <MaterialIcon name="auto_awesome" className="text-xs" />
+                Recommended
+              </span>
+            )}
+
+            <div className="w-11 h-11 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4">
+              <MaterialIcon name={option.icon} className="text-xl" />
+            </div>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">{option.label}</h3>
+            <p className="text-sm font-semibold text-primary mt-1">{option.tagline}</p>
+            <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-3 leading-relaxed">
+              {option.description}
+            </p>
+
+            <div className="flex flex-wrap gap-2 mt-4">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-ui-hover-dark text-xs font-semibold text-slate-600 dark:text-text-muted-dark">
+                <MaterialIcon name="schedule" className="text-xs" />
+                {option.time}
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-ui-hover-dark text-xs font-semibold text-slate-600 dark:text-text-muted-dark">
+                {option.difficulty}
+              </span>
+            </div>
+
+            <div className="pt-4 mt-4 border-t border-dashed border-slate-200 dark:border-ui-border-dark">
+              <p className="text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-text-dim-dark mb-2">
+                Good for
+              </p>
+              <div className="space-y-1.5">
+                {option.goodFor.map((item) => (
+                  <div
+                    key={item}
+                    className="flex items-center gap-2 text-xs text-slate-600 dark:text-text-muted-dark"
+                  >
+                    <MaterialIcon name="check" className="text-sm text-emerald-500" />
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-1 mt-5 text-sm font-semibold text-primary">
+              Start with this
+              <MaterialIcon name="chevron_right" className="text-base" />
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <div className="flex items-start gap-3 p-4 rounded-xl bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark">
+        <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark flex items-center justify-center shrink-0">
+          <MaterialIcon name="help_outline" className="text-lg" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-slate-800 dark:text-white">
+            Not sure which one to choose?
+          </p>
+          <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-1 leading-relaxed">
+            Start with Log Agent. Use HTTP Appender only when you want the application logger to send
+            logs directly.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPanelProps) {
-  const { t } = useTranslate();
   const { t: tc } = useTranslation('common');
   const { copy } = useCopyToClipboard();
+  const [selectedPath, setSelectedPath] = useState<IntegrationPath | null>(null);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
   const [revealCountdown, setRevealCountdown] = useState(0);
-  const [activeCategory, setActiveCategory] = useState<'http-appender' | 'agent' | 'api-capture'>('agent');
-  const [activeSnippet, setActiveSnippet] = useState<string>('config');
+  const [httpSnippet, setHttpSnippet] = useState<'express' | 'springboot' | 'aspnet' | 'fastapi'>('express');
+  const [agentSnippet, setAgentSnippet] = useState<'config' | 'docker_sidecar' | 'docker_pipe' | 'systemd'>('config');
   const [activeNginxTab, setActiveNginxTab] = useState<'nginx_conf' | 'docker_compose' | 'docker_run'>('nginx_conf');
   const [showTroubleshooting, setShowTroubleshooting] = useState(false);
-  const [showAgentDeployOptions, setShowAgentDeployOptions] = useState(false);
+  const [showAgentAdvanced, setShowAgentAdvanced] = useState(false);
+  const [testState, setTestState] = useState<'waiting' | 'connected' | 'error'>('waiting');
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Connection status — poll for latest log to indicate whether ingest is working
   const [latestLogAt, setLatestLogAt] = useState<Date | null>(null);
   const [, setNowTick] = useState(0);
 
@@ -171,9 +324,10 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
         if (cancelled) return;
         if (logs.length > 0 && logs[0].createdAt) {
           setLatestLogAt(new Date(logs[0].createdAt));
+          setTestState('connected');
         }
       } catch {
-        // non-critical
+        // Connection status is a convenience only.
       }
     };
     poll();
@@ -189,14 +343,15 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
     return () => clearInterval(tick);
   }, []);
 
-  const connectionState: 'waiting' | 'connected' = latestLogAt ? 'connected' : 'waiting';
   const secondsAgo = latestLogAt
     ? Math.max(0, Math.floor((Date.now() - latestLogAt.getTime()) / 1000))
     : null;
 
+  const selectedOption = PATH_OPTIONS.find((option) => option.key === selectedPath);
   const maskedKey = service.apiKeyMasked || 'Not available';
   const ingestUrl = `${window.location.origin}/api/v1/logs/ingest`;
-  const displayKey = '<YOUR_API_KEY>';
+  const displayKey = revealedKey || service.apiKey || '<YOUR_API_KEY>';
+  const realApiKey = revealedKey || service.apiKey || null;
   const hostname = window.location.hostname;
   const port = window.location.port || '443';
   const isHttps = window.location.protocol === 'https:';
@@ -206,7 +361,6 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
   const agentSnippets = buildAgentSnippets(hostname, port, isHttps, displayKey, origin);
   const nginxSnippets = buildNginxSnippets(hostname);
   const agentQuickStartCmd = buildAgentQuickStart(displayKey, origin);
-  const apiCaptureSnippets = buildApiCaptureSnippets(origin, displayKey);
 
   const dismissRevealedKey = useCallback(() => {
     setRevealedKey(null);
@@ -242,7 +396,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
       const { apiKey: newKey, apiKeyMasked: newMasked } = await api.regenerateServiceApiKey(service.id);
       onApiKeyRegenerated(newKey, newMasked);
       setRevealedKey(newKey);
-      toast.success(t('API 키가 재발급되었습니다'));
+      toast.success('New API key generated.');
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
@@ -250,346 +404,180 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
     }
   };
 
-  const httpAppenderTabs = [
-    { key: 'express', label: 'Express / Node.js' },
-    { key: 'springboot', label: 'Spring Boot' },
-    { key: 'aspnet', label: 'ASP.NET' },
-    { key: 'fastapi', label: 'FastAPI / Django' },
-  ];
-
-  const agentTabs = [
-    { key: 'config', label: t('설정 파일') },
-    { key: 'docker_sidecar', label: 'Docker (Sidecar)' },
-    { key: 'docker_pipe', label: 'Docker (Pipe)' },
-    { key: 'systemd', label: 'systemd' },
-  ];
-
-  const apiCaptureTabs = [
-    { key: 'curl', label: 'cURL' },
-    { key: 'express', label: 'Express.js' },
-    { key: 'go', label: 'Go (net/http)' },
-  ];
-
-  const currentTabs =
-    activeCategory === 'http-appender'
-      ? httpAppenderTabs
-      : activeCategory === 'api-capture'
-        ? apiCaptureTabs
-        : agentTabs;
-  const currentSnippets =
-    activeCategory === 'http-appender'
-      ? httpAppenderSnippets
-      : activeCategory === 'api-capture'
-        ? apiCaptureSnippets
-        : agentSnippets;
-
-  const handleCategoryChange = (category: 'http-appender' | 'agent' | 'api-capture') => {
-    setActiveCategory(category);
-    if (category === 'agent') setActiveSnippet('config');
-    else if (category === 'http-appender') setActiveSnippet('express');
-    else setActiveSnippet('curl');
-  };
-
   const curlCmd = `curl -X POST ${ingestUrl} \\
   -H "Authorization: Bearer ${displayKey}" \\
   -H "Content-Type: application/json" \\
   -d '{"level":"info","message":"Connection test","service":"${service.id}"}'`;
 
-  const curlCopyCmd = `curl -X POST ${ingestUrl} \\\n  -H "Authorization: Bearer ${displayKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"level":"info","message":"Connection test","service":"${service.id}"}'`;
+  const handleBrowserTest = async () => {
+    if (!realApiKey) {
+      toast.error('Regenerate the API key first, then try the browser test.');
+      return;
+    }
+
+    setTestState('waiting');
+    try {
+      const response = await fetch(ingestUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${realApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          level: 'info',
+          message: 'Connection test',
+          metadata: { source: 'integration-panel', serviceId: service.id },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const now = new Date();
+      setLatestLogAt(now);
+      setTestState('connected');
+      toast.success('Test log sent.');
+    } catch (error) {
+      setTestState('error');
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  if (!selectedPath || !selectedOption) {
+    return <PathPicker onSelect={setSelectedPath} />;
+  }
 
   return (
     <div className="space-y-4">
-      <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-6">
-        <StepHeader
-          step={1}
-          icon="key"
-          title={t('API 키')}
-          description={t('앱이나 에이전트가 로그를 보낼 때 사용하는 인증 키입니다.')}
-        />
-
-        <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 dark:bg-ui-hover-dark rounded-xl font-mono text-sm mb-4 border border-slate-100 dark:border-ui-border-dark">
-          <MaterialIcon name="lock" className="text-sm text-slate-400 dark:text-text-dim-dark shrink-0" />
-          <span className="flex-1 text-slate-700 dark:text-text-base-dark truncate select-all">
-            {maskedKey}
-          </span>
-          <span className="text-[10px] font-semibold text-slate-400 dark:text-text-dim-dark bg-slate-100 dark:bg-ui-active-dark px-2 py-0.5 rounded-md shrink-0">
-            MASKED
-          </span>
+      <div className="flex items-center gap-3 p-4 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl">
+        <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+          <MaterialIcon name={selectedOption.icon} className="text-xl" />
         </div>
-
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <p className="text-xs text-amber-600 dark:text-amber-400 flex items-start gap-1.5">
-            <MaterialIcon name="warning" className="text-sm shrink-0 mt-0.5" />
-            <span>{t('이 키를 안전하게 보관하세요. 외부에 노출되면 재발급하세요.')}</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-text-dim-dark">
+            Selected method
           </p>
-          <button
-            onClick={() => setShowConfirm(true)}
-            disabled={isRegenerating}
-            className="self-start sm:self-auto flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50 shrink-0 cursor-pointer"
-          >
-            {isRegenerating ? (
-              <MaterialIcon name="sync" className="text-sm animate-spin" />
-            ) : (
-              <MaterialIcon name="refresh" className="text-sm" />
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">{selectedOption.label}</h2>
+            {selectedOption.recommended && (
+              <span className="inline-flex px-2 py-0.5 rounded-full bg-primary text-white text-[10px] font-bold">
+                Recommended
+              </span>
             )}
-            {t('재발급')}
-          </button>
+            <span className="text-xs text-slate-500 dark:text-text-muted-dark">
+              {selectedOption.tagline}
+            </span>
+          </div>
+        </div>
+        <button
+          onClick={() => setSelectedPath(null)}
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-ui-border-dark text-xs font-semibold text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors cursor-pointer"
+        >
+          <MaterialIcon name="swap_horiz" className="text-sm" />
+          Change
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <MaterialIcon name="key" className="text-base text-primary" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">API key</h3>
+            <span className="ml-auto text-[10px] font-semibold text-slate-400 dark:text-text-dim-dark bg-slate-100 dark:bg-ui-active-dark px-2 py-0.5 rounded-md">
+              MASKED
+            </span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-2.5 bg-slate-50 dark:bg-ui-hover-dark rounded-lg font-mono text-sm border border-slate-100 dark:border-ui-border-dark">
+            <MaterialIcon name="lock" className="text-sm text-slate-400 dark:text-text-dim-dark shrink-0" />
+            <span className="flex-1 text-slate-700 dark:text-text-base-dark truncate select-all">
+              {revealedKey || maskedKey}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-3">
+            <button
+              onClick={() => copy(revealedKey || maskedKey)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark text-xs font-semibold text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark cursor-pointer"
+            >
+              <MaterialIcon name="content_copy" className="text-sm" />
+              Copy visible value
+            </button>
+            <button
+              onClick={() => setShowConfirm(true)}
+              disabled={isRegenerating}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/20 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 disabled:opacity-50 cursor-pointer"
+            >
+              <MaterialIcon name={isRegenerating ? 'sync' : 'refresh'} className={`text-sm ${isRegenerating ? 'animate-spin' : ''}`} />
+              Regenerate
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <MaterialIcon name="upload" className="text-base text-primary" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Ingest endpoint</h3>
+            <span className="ml-auto text-[10px] font-bold text-white bg-emerald-600 px-2 py-0.5 rounded">
+              POST
+            </span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-2.5 bg-slate-50 dark:bg-ui-hover-dark rounded-lg font-mono text-xs border border-slate-100 dark:border-ui-border-dark">
+            <span className="flex-1 text-slate-700 dark:text-text-base-dark truncate">{ingestUrl}</span>
+            <button
+              onClick={() => copy(ingestUrl)}
+              className="shrink-0 p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+              title={tc('common.copyToClipboard')}
+              aria-label={tc('common.copyToClipboard')}
+            >
+              <MaterialIcon name="content_copy" className="text-sm" />
+            </button>
+          </div>
+          <div className="flex items-center gap-2 mt-3 text-xs text-slate-500 dark:text-text-muted-dark">
+            <MaterialIcon name="auto_awesome" className="text-sm text-primary" />
+            Accepts common logger formats and batches up to 100 logs per request.
+          </div>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-6">
-        <StepHeader
-          step={2}
-          icon="upload"
-          title={t('로그 수집 엔드포인트')}
-          description={t('로거 또는 에이전트가 이 URL로 POST 요청을 보내면 로그가 수집됩니다.')}
-        />
-
-        <div className="flex items-center gap-2 px-3 py-2.5 bg-slate-50 dark:bg-ui-hover-dark rounded-xl font-mono text-sm mb-3 border border-slate-100 dark:border-ui-border-dark">
-          <span className="text-xs font-bold text-white bg-green-600 px-2 py-0.5 rounded shrink-0">POST</span>
-          <span className="flex-1 text-slate-700 dark:text-text-base-dark truncate text-xs">{ingestUrl}</span>
-          <button
-            onClick={() => copy(ingestUrl)}
-            className="shrink-0 p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-            title={tc('common.copyToClipboard')}
-            aria-label={tc('common.copyToClipboard')}
-          >
-            <MaterialIcon name="content_copy" className="text-sm" />
-          </button>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/8 dark:bg-red-500/10 text-xs text-red-600 dark:text-red-400 font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-            error / warn alerts
-          </span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/8 dark:bg-blue-500/10 text-xs text-blue-600 dark:text-blue-400 font-medium">
-            <MaterialIcon name="auto_awesome" className="text-xs" />
-            {t('기존 로깅 라이브러리 형식을 그대로 보내도 됩니다. 서버가 주요 포맷을 자동으로 인식합니다.')}
-          </span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-500/8 dark:bg-slate-500/10 text-xs text-slate-600 dark:text-text-muted-dark font-medium">
-            <MaterialIcon name="layers" className="text-xs" />
-            {t('배치 전송 지원: 요청 한 번에 최대 100개의 로그를 보낼 수 있습니다.')}
-          </span>
-        </div>
-      </div>
-
-      <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-6">
-        <StepHeader
-          step={3}
+      <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
+        <SectionTitle
+          number={1}
           icon="cable"
-          title={t('연결 테스트')}
-          description={t('실제 연동 전에 네트워크 연결과 API 키가 정상인지 먼저 확인하세요.')}
-          trailing={<ConnectionStatusBadge state={connectionState} secondsAgo={secondsAgo} />}
+          title="Test the connection first"
+          description="Send one small log entry before changing production logging. The status updates when a log arrives."
+          trailing={<ConnectionStatusBadge state={testState} secondsAgo={secondsAgo} />}
         />
-
         <CodeBlock
           code={curlCmd}
-          onCopy={() => copy(curlCopyCmd)}
+          onCopy={() => copy(curlCmd)}
           copyTitle={tc('common.copyToClipboard')}
           size="sm"
         />
-
-        {connectionState === 'connected' ? (
-          <div className="mt-3 flex items-start gap-2 px-3 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
-            <MaterialIcon name="check_circle" className="text-sm text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
-            <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">
-              {t('이 서비스로 로그가 정상적으로 수신되고 있습니다.')}
-            </p>
-          </div>
-        ) : (
-          <div className="mt-3 flex items-start gap-2 px-3 py-2.5 bg-slate-50 dark:bg-ui-hover-dark rounded-xl">
-            <MaterialIcon name="info" className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5 shrink-0" />
-            <p className="text-xs text-slate-600 dark:text-text-muted-dark leading-relaxed">
-              {t('연결에 성공하면 서버가 HTTP 200으로 응답합니다. 타임아웃이나 연결 거부가 발생하면 방화벽 아웃바운드 규칙과 서버 인바운드 규칙을 확인하세요.')}
-            </p>
-          </div>
-        )}
-      </div>
-
-      <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-6">
-        <StepHeader
-          step={4}
-          icon="code"
-          title={t('연동 예시')}
-          description={t('환경과 배포 방식에 맞는 연동 예시를 선택해 바로 적용할 수 있습니다.')}
-        />
-
-        <div className="mb-5">
-          <SegmentedControl
-            options={[
-              { key: 'agent' as const, label: 'Log Agent' },
-              { key: 'http-appender' as const, label: 'HTTP Appender' },
-              { key: 'api-capture' as const, label: t('API Capture') },
-            ]}
-            value={activeCategory}
-            onChange={handleCategoryChange}
-          />
-          <p className="mt-2 text-xs text-slate-500 dark:text-text-muted-dark pl-1">
-            {activeCategory === 'http-appender'
-              ? t('앱 코드에 HTTP 전송 설정을 추가하는 방식입니다. 소스 코드를 수정할 수 있고, 로깅 라이브러리를 이미 사용 중이라면 가장 간단합니다.')
-              : activeCategory === 'api-capture'
-                ? t('앱의 HTTP 요청/응답을 캡처해 MT로 전송합니다. 미들웨어를 추가하거나 cURL로 직접 테스트할 수 있습니다.')
-                : t('Fluent Bit 기반 에이전트가 로그 파일이나 stdout을 수집해 전달합니다. 앱 코드를 수정하기 어렵거나 서버·컨테이너 단위로 붙이고 싶을 때 적합합니다.')}
-          </p>
+        <div className="flex flex-wrap gap-2 mt-3">
+          <button
+            onClick={handleBrowserTest}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors cursor-pointer"
+          >
+            <MaterialIcon name="send" className="text-sm" />
+            Send test from browser
+          </button>
+          <button
+            onClick={() => setShowTroubleshooting((prev) => !prev)}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-ui-border-dark text-xs font-semibold text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors cursor-pointer"
+          >
+            <MaterialIcon name={showTroubleshooting ? 'expand_less' : 'help_outline'} className="text-sm" />
+            Troubleshooting
+          </button>
         </div>
 
-        {activeCategory === 'agent' ? (
-          <>
-            <div className="border border-primary/20 bg-primary/5 dark:bg-primary/10 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <MaterialIcon name="rocket_launch" className="text-base text-primary shrink-0" />
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                  {t('빠른 시작')}
-                </h4>
-                <span className="text-[10px] font-bold tracking-widest uppercase text-primary bg-primary/10 px-2 py-0.5 rounded">
-                  {t('권장')}
-                </span>
-              </div>
-              <p className="text-xs text-slate-600 dark:text-text-muted-dark mb-3 pl-6">
-                {t('로그 파일을 /var/log/app에 마운트하는 가장 빠른 실행 예시입니다. 대부분의 경우 이 한 줄이면 충분합니다.')}
-              </p>
-              <CodeBlock
-                code={agentQuickStartCmd}
-                onCopy={() => copy(agentQuickStartCmd)}
-                copyTitle={t('코드 복사')}
-                size="xs"
-              />
-            </div>
-
-            <div className="mt-3 border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
-              <button
-                onClick={() => setShowAgentDeployOptions((prev) => !prev)}
-                aria-expanded={showAgentDeployOptions}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors text-left cursor-pointer"
-              >
-                <MaterialIcon name="tune" className="text-base text-slate-500 dark:text-text-muted-dark shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-semibold text-slate-700 dark:text-text-secondary-dark">
-                    {t('다른 배포 방식 보기')}
-                  </h4>
-                  <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-0.5 truncate">
-                    {t('설정 파일, Docker Sidecar/Pipe, systemd 환경에 맞는 예시가 필요할 때만 확인하세요.')}
-                  </p>
-                </div>
-                <MaterialIcon
-                  name={showAgentDeployOptions ? 'expand_less' : 'expand_more'}
-                  className="text-slate-400 dark:text-text-dim-dark shrink-0"
-                />
-              </button>
-
-              {showAgentDeployOptions && (
-                <div className="px-4 pb-4 border-t border-slate-100 dark:border-ui-border-dark pt-4">
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <div className="sm:shrink-0 sm:w-40">
-                      <p className="text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-text-dim-dark mb-2 px-1 hidden sm:block">
-                        Deploy
-                      </p>
-                      <div className="flex sm:flex-col gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
-                        {agentTabs.map((tab) => (
-                          <button
-                            key={tab.key}
-                            onClick={() => setActiveSnippet(tab.key)}
-                            aria-pressed={activeSnippet === tab.key}
-                            className={`shrink-0 sm:w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                              activeSnippet === tab.key
-                                ? 'bg-primary/10 text-primary dark:text-primary font-semibold'
-                                : 'text-slate-500 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
-                            }`}
-                          >
-                            {tab.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <CodeBlock
-                        code={agentSnippets[activeSnippet] ?? agentSnippets.config}
-                        onCopy={() => copy(agentSnippets[activeSnippet] ?? agentSnippets.config)}
-                        copyTitle={t('코드 복사')}
-                        size="xs"
-                        minHeight="200px"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </>
-        ) : (
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="sm:shrink-0 sm:w-40">
-              <p className="text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-text-dim-dark mb-2 px-1 hidden sm:block">
-                {activeCategory === 'http-appender' ? 'Framework' : 'Language'}
-              </p>
-              <div className="flex sm:flex-col gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
-                {currentTabs.map((tab) => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveSnippet(tab.key)}
-                    aria-pressed={activeSnippet === tab.key}
-                    className={`shrink-0 sm:w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                      activeSnippet === tab.key
-                        ? 'bg-primary/10 text-primary dark:text-primary font-semibold'
-                        : 'text-slate-500 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <CodeBlock
-                code={currentSnippets[activeSnippet]}
-                onCopy={() => copy(currentSnippets[activeSnippet])}
-                copyTitle={t('코드 복사')}
-                size="xs"
-                minHeight="200px"
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
-        <button
-          onClick={() => setShowTroubleshooting((prev) => !prev)}
-          aria-expanded={showTroubleshooting}
-          className="w-full flex items-center gap-3 px-5 py-4 hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors text-left cursor-pointer"
-        >
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-ui-hover-dark shrink-0">
-            <MaterialIcon name="help_outline" className="text-base text-slate-500 dark:text-text-muted-dark" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-sm font-semibold text-slate-700 dark:text-text-secondary-dark">
-              {t('문제 해결 · Nginx 리버스 프록시')}
-            </h3>
-            <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-0.5">
-              {t('Authorization 헤더 전달이 필요한 경우에만 확인하세요.')}
-            </p>
-          </div>
-          <MaterialIcon
-            name={showTroubleshooting ? 'expand_less' : 'expand_more'}
-            className="text-slate-400 dark:text-text-dim-dark shrink-0"
-          />
-        </button>
-
         {showTroubleshooting && (
-          <div className="px-5 pb-5 border-t border-slate-100 dark:border-ui-border-dark pt-4 space-y-3">
-            <div className="flex items-start gap-2 px-3 py-2.5 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
-              <MaterialIcon name="warning" className="text-sm text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+          <div className="mt-4 border border-amber-200 dark:border-amber-700/30 bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 space-y-3">
+            <div className="flex items-start gap-2">
+              <MaterialIcon name="warning" className="text-base text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
               <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
-                Nginx 기본 설정은{' '}
-                <code className="font-mono bg-amber-100 dark:bg-amber-900/40 px-1 rounded">Authorization</code>{' '}
-                헤더를 백엔드로 전달하지 않을 수 있습니다.{' '}
-                <code className="font-mono bg-amber-100 dark:bg-amber-900/40 px-1 rounded">proxy_set_header</code>{' '}
-                설정을 추가해 주세요.
+                If the request reaches a reverse proxy, make sure the Authorization header is forwarded.
               </p>
             </div>
-
             <SegmentedControl
               options={[
                 { key: 'nginx_conf' as const, label: 'nginx.conf' },
@@ -599,12 +587,112 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               value={activeNginxTab}
               onChange={setActiveNginxTab}
             />
-
             <CodeBlock
               code={nginxSnippets[activeNginxTab]}
               onCopy={() => copy(nginxSnippets[activeNginxTab])}
               copyTitle={tc('common.copyToClipboard')}
               size="xs"
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
+        <SectionTitle
+          number={2}
+          icon={selectedPath === 'agent' ? 'rocket_launch' : 'code'}
+          title={selectedPath === 'agent' ? 'Run the agent' : 'Add the appender'}
+          description={
+            selectedPath === 'agent'
+              ? 'Mount the log directory and start the EveryUp Log Agent.'
+              : 'Pick your framework and add the HTTP transport to your logger.'
+          }
+        />
+
+        {selectedPath === 'agent' ? (
+          <div className="space-y-3">
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/20">
+              <MaterialIcon name="info" className="text-base text-primary mt-0.5 shrink-0" />
+              <p className="text-xs text-slate-600 dark:text-text-muted-dark leading-relaxed">
+                Quick start is enough for most setups. Change the mounted path to the directory where
+                your application writes logs.
+              </p>
+            </div>
+            <CodeBlock
+              code={agentQuickStartCmd}
+              onCopy={() => copy(agentQuickStartCmd)}
+              copyTitle={tc('common.copyToClipboard')}
+              size="xs"
+            />
+
+            <div className="border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
+              <button
+                onClick={() => setShowAgentAdvanced((prev) => !prev)}
+                aria-expanded={showAgentAdvanced}
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors text-left cursor-pointer"
+              >
+                <MaterialIcon name="tune" className="text-base text-slate-500 dark:text-text-muted-dark shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-semibold text-slate-700 dark:text-text-secondary-dark">
+                    Other deployment options
+                  </h4>
+                  <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-0.5 truncate">
+                    Fluent Bit config, Docker sidecar, Docker pipe, and systemd examples.
+                  </p>
+                </div>
+                <MaterialIcon
+                  name={showAgentAdvanced ? 'expand_less' : 'expand_more'}
+                  className="text-slate-400 dark:text-text-dim-dark shrink-0"
+                />
+              </button>
+
+              {showAgentAdvanced && (
+                <div className="px-4 pb-4 border-t border-slate-100 dark:border-ui-border-dark pt-4">
+                  <div className="flex flex-col lg:flex-row gap-4">
+                    <div className="lg:shrink-0 lg:w-40">
+                      <SegmentedControl
+                        options={[
+                          { key: 'config' as const, label: 'Config' },
+                          { key: 'docker_sidecar' as const, label: 'Sidecar' },
+                          { key: 'docker_pipe' as const, label: 'Pipe' },
+                          { key: 'systemd' as const, label: 'systemd' },
+                        ]}
+                        value={agentSnippet}
+                        onChange={setAgentSnippet}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <CodeBlock
+                        code={agentSnippets[agentSnippet]}
+                        onCopy={() => copy(agentSnippets[agentSnippet])}
+                        copyTitle={tc('common.copyToClipboard')}
+                        size="xs"
+                        minHeight="200px"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <SegmentedControl
+              options={[
+                { key: 'express' as const, label: 'Node.js' },
+                { key: 'springboot' as const, label: 'Spring Boot' },
+                { key: 'aspnet' as const, label: 'ASP.NET' },
+                { key: 'fastapi' as const, label: 'FastAPI' },
+              ]}
+              value={httpSnippet}
+              onChange={setHttpSnippet}
+            />
+            <CodeBlock
+              code={httpAppenderSnippets[httpSnippet]}
+              onCopy={() => copy(httpAppenderSnippets[httpSnippet])}
+              copyTitle={tc('common.copyToClipboard')}
+              size="xs"
+              minHeight="240px"
             />
           </div>
         )}
@@ -619,10 +707,10 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               </div>
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  {t('API 키를 재발급하시겠습니까?')}
+                  Regenerate API key?
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">
-                  {t('기존 키는 즉시 무효화됩니다. 사용 중인 키를 교체해야 합니다.')}
+                  The previous key stops working immediately. Update any running agents or appenders.
                 </p>
               </div>
             </div>
@@ -637,7 +725,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
                 onClick={handleRegenerate}
                 className="flex-1 px-4 py-2.5 rounded-lg bg-red-600 text-white font-semibold text-sm hover:bg-red-700 transition-colors cursor-pointer"
               >
-                {t('재발급')}
+                Regenerate
               </button>
             </div>
           </div>
@@ -653,22 +741,22 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               </div>
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  {t('새 API 키가 발급되었습니다')}
+                  New API key generated
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">
-                  {t('지금 복사해 두세요. 이 키는 다시 표시되지 않습니다.')}
+                  Copy it now. It will be hidden again shortly.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-ui-hover-dark rounded-xl font-mono text-sm mb-4 border border-slate-100 dark:border-ui-border-dark">
+            <div className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-ui-hover-dark rounded-lg font-mono text-sm mb-4 border border-slate-100 dark:border-ui-border-dark">
               <span className="flex-1 text-slate-700 dark:text-text-base-dark break-all select-all">
                 {revealedKey}
               </span>
               <button
                 onClick={() => copy(revealedKey)}
                 className="shrink-0 p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-500 dark:text-text-muted-dark cursor-pointer"
-                title={t('복사')}
+                title={tc('common.copyToClipboard')}
               >
                 <MaterialIcon name="content_copy" className="text-base" />
               </button>
@@ -678,7 +766,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               onClick={dismissRevealedKey}
               className="w-full px-4 py-2.5 rounded-lg bg-primary text-white font-semibold text-sm hover:bg-primary/90 transition-colors cursor-pointer"
             >
-              {t('확인')}
+              Done
               {revealCountdown > 0 && ` (${revealCountdown}s)`}
             </button>
           </div>

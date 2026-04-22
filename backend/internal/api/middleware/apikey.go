@@ -5,10 +5,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/aiturn/everyup/internal/crypto"
 	"github.com/aiturn/everyup/internal/database"
 	"github.com/aiturn/everyup/internal/models"
+	"github.com/gofiber/fiber/v2"
 )
 
 // apiKeyCache maps SHA-256 hash → *models.Service for fast API key lookups.
@@ -38,36 +38,34 @@ func InvalidateApiKeyCache(apiKeyHash string) {
 	apiKeyCache.Delete(apiKeyHash)
 }
 
-// ApiKeyAuth returns a middleware that validates API key from Authorization header.
+// ApiKeyAuth returns a middleware that validates API key from Authorization: Bearer
+// or X-API-Key. X-API-Key is supported for API capture clients and older snippets.
 // It checks the in-memory cache first; on a cache miss it falls back to a DB lookup.
 func ApiKeyAuth() fiber.Handler {
 	repo := database.NewServiceRepository()
 
 	return func(c *fiber.Ctx) error {
-		auth := c.Get("Authorization")
-		if auth == "" {
+		apiKey, ok := extractAPIKey(c)
+		if !ok {
 			return c.Status(401).JSON(fiber.Map{
 				"success": false,
 				"error": fiber.Map{
 					"code":    "UNAUTHORIZED",
-					"message": "Missing Authorization header",
+					"message": "Missing API key",
 				},
 			})
 		}
 
-		// Expect "Bearer <api_key>"
-		parts := strings.SplitN(auth, " ", 2)
-		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		if apiKey == "" {
 			return c.Status(401).JSON(fiber.Map{
 				"success": false,
 				"error": fiber.Map{
 					"code":    "UNAUTHORIZED",
-					"message": "Invalid Authorization format. Expected: Bearer <api_key>",
+					"message": "Invalid API key format. Expected: Authorization: Bearer <api_key> or X-API-Key: <api_key>",
 				},
 			})
 		}
 
-		apiKey := parts[1]
 		hash := crypto.HashApiKey(apiKey)
 
 		// 1. Check in-memory cache
@@ -143,4 +141,18 @@ func ApiKeyAuth() fiber.Handler {
 		c.Locals("service", service)
 		return c.Next()
 	}
+}
+
+func extractAPIKey(c *fiber.Ctx) (string, bool) {
+	if auth := c.Get("Authorization"); auth != "" {
+		parts := strings.SplitN(auth, " ", 2)
+		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+			return "", true
+		}
+		return strings.TrimSpace(parts[1]), true
+	}
+	if apiKey := strings.TrimSpace(c.Get("X-API-Key")); apiKey != "" {
+		return apiKey, true
+	}
+	return "", false
 }
