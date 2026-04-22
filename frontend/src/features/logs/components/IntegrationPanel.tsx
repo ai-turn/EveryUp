@@ -291,8 +291,7 @@ function PathPicker({
 }
 
 export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPanelProps) {
-  const { t } = useTranslation();
-  const { t: tc } = useTranslation('common');
+  const { t } = useTranslation(['logs', 'common']);
   const { copy } = useCopyToClipboard();
   const [selectedPath, setSelectedPath] = useState<IntegrationPath | null>(null);
   const [isRegenerating, setIsRegenerating] = useState(false);
@@ -527,8 +526,8 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             <button
               onClick={() => copy(ingestUrl)}
               className="shrink-0 p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-              title={tc('common.copyToClipboard')}
-              aria-label={tc('common.copyToClipboard')}
+              title={t('common.copyToClipboard')}
+              aria-label={t('common.copyToClipboard')}
             >
               <MaterialIcon name="content_copy" className="text-sm" />
             </button>
@@ -550,7 +549,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
         <CodeBlock
           code={curlCmd}
           onCopy={() => copy(curlCmd)}
-          copyTitle={tc('common.copyToClipboard')}
+          copyTitle={t('common.copyToClipboard')}
           size="sm"
         />
         <div className="flex flex-wrap gap-2 mt-3">
@@ -590,7 +589,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             <CodeBlock
               code={nginxSnippets[activeNginxTab]}
               onCopy={() => copy(nginxSnippets[activeNginxTab])}
-              copyTitle={tc('common.copyToClipboard')}
+              copyTitle={t('common.copyToClipboard')}
               size="xs"
             />
           </div>
@@ -623,13 +622,13 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             <CodeBlock
               code={agentPullCmd}
               onCopy={() => copy(agentPullCmd)}
-              copyTitle={tc('common.copyToClipboard')}
+              copyTitle={t('common.copyToClipboard')}
               size="xs"
             />
             <CodeBlock
               code={agentQuickStartCmd}
               onCopy={() => copy(agentQuickStartCmd)}
-              copyTitle={tc('common.copyToClipboard')}
+              copyTitle={t('common.copyToClipboard')}
               size="xs"
             />
 
@@ -673,7 +672,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
                       <CodeBlock
                         code={agentSnippets[agentSnippet]}
                         onCopy={() => copy(agentSnippets[agentSnippet])}
-                        copyTitle={tc('common.copyToClipboard')}
+                        copyTitle={t('common.copyToClipboard')}
                         size="xs"
                         minHeight="200px"
                       />
@@ -698,7 +697,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             <CodeBlock
               code={httpAppenderSnippets[httpSnippet]}
               onCopy={() => copy(httpAppenderSnippets[httpSnippet])}
-              copyTitle={tc('common.copyToClipboard')}
+              copyTitle={t('common.copyToClipboard')}
               size="xs"
               minHeight="240px"
             />
@@ -727,7 +726,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
                 onClick={() => setShowConfirm(false)}
                 className="flex-1 px-4 py-2.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark text-slate-700 dark:text-text-secondary-dark font-semibold text-sm hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors cursor-pointer"
               >
-                {tc('common.cancel')}
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleRegenerate}
@@ -764,7 +763,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               <button
                 onClick={() => copy(revealedKey)}
                 className="shrink-0 p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-500 dark:text-text-muted-dark cursor-pointer"
-                title={tc('common.copyToClipboard')}
+                title={t('common.copyToClipboard')}
               >
                 <MaterialIcon name="content_copy" className="text-base" />
               </button>
