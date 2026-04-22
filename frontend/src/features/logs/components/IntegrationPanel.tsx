@@ -572,8 +572,10 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
         {showTroubleshooting && (
           <div className="mt-4 border border-amber-200 dark:border-amber-700/30 bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 space-y-3">
             <div className="flex items-start gap-2">
-              <MaterialIcon name="warning" className="text-base text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
-              <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
+              <span className="w-4 h-5 shrink-0 inline-flex items-center justify-center">
+                <MaterialIcon name="warning" className="text-base leading-none text-amber-600 dark:text-amber-400" />
+              </span>
+              <p className="text-xs text-amber-700 dark:text-amber-300 leading-5">
                 {t('logServices.integration.test.troubleshootingDesc')}
               </p>
             </div>
@@ -614,8 +616,10 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
         {selectedPath === 'agent' ? (
           <div className="space-y-3">
             <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/20">
-              <MaterialIcon name="info" className="text-base text-primary mt-0.5 shrink-0" />
-              <p className="text-xs text-slate-600 dark:text-text-muted-dark leading-relaxed">
+              <span className="w-4 h-5 shrink-0 inline-flex items-center justify-center">
+                <MaterialIcon name="info" className="text-base leading-none text-primary" />
+              </span>
+              <p className="text-xs text-slate-600 dark:text-text-muted-dark leading-5">
                 {t('logServices.integration.setup.agentHint')}
               </p>
             </div>

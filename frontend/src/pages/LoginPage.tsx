@@ -101,14 +101,18 @@ export function LoginPage() {
             <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl shadow-sm p-6 space-y-4">
               {error && (
                 <div className="flex items-start gap-2 text-red-500 dark:text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2.5">
-                  <MaterialIcon name="error_outline" className="text-base mt-0.5 shrink-0" />
+                  <span className="w-4 h-5 shrink-0 inline-flex items-center justify-center">
+                    <MaterialIcon name="error_outline" className="text-base leading-none" />
+                  </span>
                   <span>{error}</span>
                 </div>
               )}
 
               {isSetup && (
                 <div className="flex items-start gap-2 text-blue-500 dark:text-blue-400 text-sm bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2.5">
-                  <MaterialIcon name="info" className="text-base mt-0.5 shrink-0" />
+                  <span className="w-4 h-5 shrink-0 inline-flex items-center justify-center">
+                    <MaterialIcon name="info" className="text-base leading-none" />
+                  </span>
                   <span>{t('login.setupNotice')}</span>
                 </div>
               )}

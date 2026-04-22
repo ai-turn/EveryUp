@@ -406,7 +406,9 @@ export function InfraForm({ onSuccess, host }: InfraFormProps) {
                                 </div>
                                 {ppkWarning && (
                                     <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 flex items-start gap-2">
-                                        <MaterialIcon name="warning" className="text-sm text-amber-500 shrink-0 mt-0.5" />
+                                        <span className="w-4 h-4 shrink-0 inline-flex items-center justify-center">
+                                            <MaterialIcon name="warning" className="text-sm leading-none text-amber-500" />
+                                        </span>
                                         <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">{t('infra.modal.sshKeyPpkDetected')}</p>
                                     </div>
                                 )}
