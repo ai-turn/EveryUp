@@ -28,7 +28,7 @@ interface PathOption {
   taglineKey: string;
   descriptionKey: string;
   recommended?: boolean;
-  goodForKey: string;
+  goodForKeys: string[];
 }
 
 const PATH_OPTIONS: PathOption[] = [
@@ -39,7 +39,11 @@ const PATH_OPTIONS: PathOption[] = [
     taglineKey: 'logServices.integration.paths.agent.tagline',
     descriptionKey: 'logServices.integration.paths.agent.description',
     recommended: true,
-    goodForKey: 'logServices.integration.paths.agent.goodFor',
+    goodForKeys: [
+      'logServices.integration.paths.agent.goodFor.0',
+      'logServices.integration.paths.agent.goodFor.1',
+      'logServices.integration.paths.agent.goodFor.2',
+    ],
   },
   {
     key: 'http-appender',
@@ -47,7 +51,11 @@ const PATH_OPTIONS: PathOption[] = [
     labelKey: 'logServices.integration.paths.httpAppender.label',
     taglineKey: 'logServices.integration.paths.httpAppender.tagline',
     descriptionKey: 'logServices.integration.paths.httpAppender.description',
-    goodForKey: 'logServices.integration.paths.httpAppender.goodFor',
+    goodForKeys: [
+      'logServices.integration.paths.httpAppender.goodFor.0',
+      'logServices.integration.paths.httpAppender.goodFor.1',
+      'logServices.integration.paths.httpAppender.goodFor.2',
+    ],
   },
 ];
 
@@ -245,13 +253,13 @@ function PathPicker({
                 {t('logServices.integration.picker.goodFor')}
               </p>
               <div className="space-y-1.5">
-                {(t(option.goodForKey, { returnObjects: true }) as unknown as string[]).map((item) => (
+                {option.goodForKeys.map((itemKey) => (
                   <div
-                    key={item}
+                    key={itemKey}
                     className="flex items-center gap-2 text-xs text-slate-600 dark:text-text-muted-dark"
                   >
                     <MaterialIcon name="check" className="text-sm text-emerald-500" />
-                    {item}
+                    {t(itemKey)}
                   </div>
                 ))}
               </div>
