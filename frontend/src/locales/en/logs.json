@@ -226,22 +226,22 @@
             "paths": {
                 "agent": {
                     "label": "Log Agent",
-                    "tagline": "Collect log files without changing app code",
-                    "description": "A Fluent Bit based agent tails log files or stdout and forwards entries to EveryUp. This is the safest default for most deployments.",
+                    "tagline": "A Docker container that tails and forwards your log files",
+                    "description": "Mount your log directory and run the container. No changes to your application code.",
                     "goodFor": [
-                        "Existing file logs",
+                        "File-based logs (.log, stdout)",
                         "Docker / VM / bare metal",
-                        "Minimal application changes"
+                        "No app code changes"
                     ]
                 },
                 "httpAppender": {
                     "label": "HTTP Appender",
-                    "tagline": "Send logs directly from your logger",
-                    "description": "Add an HTTP transport or appender to Winston, Logback, Serilog, or Python logging. Choose this when you want application-level control.",
+                    "tagline": "Add an HTTP endpoint to your app logger",
+                    "description": "Add an HTTP transport to Winston, Logback, Serilog, or Python logging. Control what gets sent from your code.",
                     "goodFor": [
                         "Existing logger setup",
                         "Node.js / Spring Boot / .NET / Python",
-                        "Fine-grained log control"
+                        "Code-level control over log delivery"
                     ]
                 }
             },

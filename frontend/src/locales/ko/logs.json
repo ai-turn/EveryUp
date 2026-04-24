@@ -226,22 +226,22 @@
             "paths": {
                 "agent": {
                     "label": "Log Agent",
-                    "tagline": "앱 코드 수정 없이 로그 파일 수집",
-                    "description": "Fluent Bit 기반 에이전트가 로그 파일이나 stdout을 읽어 EveryUp으로 전송합니다. 대부분의 배포 환경에서 가장 안전한 기본 선택입니다.",
+                    "tagline": "로그 파일을 읽어 전송하는 Docker 컨테이너",
+                    "description": "로그 디렉토리를 마운트하고 컨테이너를 실행합니다. 앱 코드는 변경하지 않아도 됩니다.",
                     "goodFor": [
-                        "기존 파일 로그가 있는 서비스",
+                        "파일로 기록되는 로그 (.log, stdout)",
                         "Docker / VM / 베어메탈 환경",
-                        "애플리케이션 코드 변경을 최소화해야 하는 경우"
+                        "앱 코드를 건드리지 않는 경우"
                     ]
                 },
                 "httpAppender": {
                     "label": "HTTP Appender",
-                    "tagline": "로거에서 직접 로그 전송",
-                    "description": "Winston, Logback, Serilog, Python logging 등에 HTTP transport/appender를 추가합니다. 애플리케이션 레벨에서 제어가 필요할 때 적합합니다.",
+                    "tagline": "앱 로거에 HTTP endpoint를 추가",
+                    "description": "Winston, Logback, Serilog, Python logging에 HTTP transport를 추가합니다. 전송 조건을 코드에서 직접 제어할 수 있습니다.",
                     "goodFor": [
                         "이미 로깅 라이브러리를 쓰는 서비스",
                         "Node.js / Spring Boot / .NET / Python",
-                        "로그 전송을 세밀하게 제어해야 하는 경우"
+                        "전송 조건을 코드로 제어하는 경우"
                     ]
                 }
             },
