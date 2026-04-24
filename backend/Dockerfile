@@ -40,9 +40,9 @@ RUN mkdir -p /app/data /app/web && chown -R app:app /app
 
 USER app
 
-ENV MT_SERVER_HOST=0.0.0.0
-ENV MT_SERVER_PORT=3001
-ENV MT_DATABASE_PATH=/app/data/monitoring.db
+ENV EVERYUP_SERVER_HOST=0.0.0.0
+ENV EVERYUP_SERVER_PORT=3001
+ENV EVERYUP_DATABASE_PATH=/app/data/monitoring.db
 
 EXPOSE 3001
 VOLUME ["/app/data"]

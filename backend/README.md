@@ -46,7 +46,7 @@ docker run -d -p 3001:3001 `
 
 ## 설정
 
-`config.json` 또는 `MT_` 접두사 환경 변수로 설정합니다.
+`config.json` 또는 `EVERYUP_` 접두사 환경 변수로 설정합니다.
 
 ```json
 {
@@ -77,8 +77,8 @@ docker run -d -p 3001:3001 `
 
 | 변수 | 설명 |
 |------|------|
-| `MT_SERVER_PORT` | 서버 포트 (기본: 3001) |
-| `MT_DATABASE_PATH` | SQLite DB 경로 |
+| `EVERYUP_SERVER_PORT` | 서버 포트 (기본: 3001) |
+| `EVERYUP_DATABASE_PATH` | SQLite DB 경로 |
 
 ## API 엔드포인트
 

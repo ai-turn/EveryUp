@@ -40,7 +40,7 @@ reset-password: ## Reset admin password: make reset-password USER=admin PASS=new
 	@if [ -z "$(USER)" ] || [ -z "$(PASS)" ]; then \
 		echo "Usage: make reset-password USER=admin PASS=newpassword"; exit 1; \
 	fi
-	MT_ADMIN_USERNAME=$(USER) MT_ADMIN_PASSWORD=$(PASS) go run ./cmd/server &
+	EVERYUP_ADMIN_USERNAME=$(USER) EVERYUP_ADMIN_PASSWORD=$(PASS) go run ./cmd/server &
 	@sleep 3 && kill %1 2>/dev/null; echo "Password reset for user: $(USER)"
 
 # =============================================================================

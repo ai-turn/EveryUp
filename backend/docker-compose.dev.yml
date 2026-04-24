@@ -16,7 +16,7 @@ services:
       - mt-data-dev:/app/data
     environment:
       - TZ=Asia/Seoul
-      - MT_SERVER_MODE=development
+      - EVERYUP_SERVER_MODE=development
     restart: unless-stopped
 
   # Frontend dev server (optional - run separately with npm run dev)

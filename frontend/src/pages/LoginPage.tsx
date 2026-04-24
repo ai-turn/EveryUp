@@ -190,8 +190,8 @@ export function LoginPage() {
                     <pre className="text-[11px] bg-slate-50 dark:bg-bg-main-dark border border-slate-200 dark:border-ui-border-dark rounded-lg p-2.5 overflow-x-auto text-slate-700 dark:text-slate-300 leading-relaxed">
 {`# docker-compose.yml
 environment:
-  MT_ADMIN_USERNAME: admin
-  MT_ADMIN_PASSWORD: newpassword
+  EVERYUP_ADMIN_USERNAME: admin
+  EVERYUP_ADMIN_PASSWORD: newpassword
 
 docker compose restart`}
                     </pre>

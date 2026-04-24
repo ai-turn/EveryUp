@@ -11,6 +11,6 @@ import (
 // Stack traces are only enabled outside production to avoid info leakage.
 func Recovery() fiber.Handler {
 	return recover.New(recover.Config{
-		EnableStackTrace: os.Getenv("MT_SERVER_MODE") != "production",
+		EnableStackTrace: os.Getenv("EVERYUP_SERVER_MODE") != "production",
 	})
 }

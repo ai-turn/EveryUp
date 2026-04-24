@@ -49,7 +49,7 @@ type ServerConfig struct {
 	Host         string `mapstructure:"host"`
 	Port         int    `mapstructure:"port"`
 	Mode         string `mapstructure:"mode"`
-	AllowOrigins string `mapstructure:"allowOrigins"` // env: MT_SERVER_ALLOWORIGINS
+	AllowOrigins string `mapstructure:"allowOrigins"` // env: EVERYUP_SERVER_ALLOWORIGINS
 }
 
 // DatabaseConfig holds database configuration
@@ -166,7 +166,7 @@ func Load(configPath string) (*Config, error) {
 	}
 
 	// Environment variable overrides
-	v.SetEnvPrefix("MT")
+	v.SetEnvPrefix("EVERYUP")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 

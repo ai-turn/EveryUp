@@ -80,9 +80,9 @@ RUN mkdir -p /app/data && chown -R monitoring:monitoring /app
 USER monitoring
 
 # Environment variables (override with docker run -e or compose environment)
-ENV MT_SERVER_HOST=0.0.0.0
-ENV MT_SERVER_PORT=3001
-ENV MT_DATABASE_PATH=/app/data/monitoring.db
+ENV EVERYUP_SERVER_HOST=0.0.0.0
+ENV EVERYUP_SERVER_PORT=3001
+ENV EVERYUP_DATABASE_PATH=/app/data/monitoring.db
 ENV TZ=UTC
 
 EXPOSE 3001

@@ -105,13 +105,13 @@ Copy-Item .env.example .env
 Or create it manually with the variables you want to override:
 
 ```dotenv
-# MT_SERVER_PORT=3001
-# MT_ADMIN_USERNAME=admin
-# MT_ADMIN_PASSWORD=changeme
+# EVERYUP_SERVER_PORT=3001
+# EVERYUP_ADMIN_USERNAME=admin
+# EVERYUP_ADMIN_PASSWORD=changeme
 # TZ=Asia/Seoul
 ```
 
-> If `MT_ADMIN_USERNAME` and `MT_ADMIN_PASSWORD` are both set, EveryUp creates or resets that admin account on every startup. Leave them unset after the initial setup unless you intentionally want to pre-seed or reset the admin login.
+> If `EVERYUP_ADMIN_USERNAME` and `EVERYUP_ADMIN_PASSWORD` are both set, EveryUp creates or resets that admin account on every startup. Leave them unset after the initial setup unless you intentionally want to pre-seed or reset the admin login.
 
 **2.** Create `docker-compose.yml`:
 
@@ -121,7 +121,7 @@ services:
     image: aiturn/everyup:latest
     container_name: everyup
     ports:
-      - "${MT_SERVER_PORT:-3001}:3001"
+      - "${EVERYUP_SERVER_PORT:-3001}:3001"
     volumes:
       - everyup-data:/app/data
     env_file:
@@ -190,16 +190,16 @@ everyup/
 
 ## Configuration
 
-All `config.json` values can be overridden with `MT_`-prefixed environment variables.
+All `config.json` values can be overridden with `EVERYUP_`-prefixed environment variables.
 
 | Environment Variable | Default | Description |
 |----------------------|---------|-------------|
-| `MT_SERVER_MODE` | `production` | Run mode: `development` or `production` |
-| `MT_SERVER_PORT` | `3001` | Server port |
-| `MT_SERVER_ALLOWORIGINS` | *(same-origin)* | Allowed CORS origins (e.g. `https://your-domain.com`) |
-| `MT_ADMIN_USERNAME` | *(unset)* | Creates or resets an admin account on startup |
-| `MT_ADMIN_PASSWORD` | *(unset)* | Password for the admin account above |
-| `MT_DATABASE_PATH` | `./data/monitoring.db` | SQLite file path |
+| `EVERYUP_SERVER_MODE` | `production` | Run mode: `development` or `production` |
+| `EVERYUP_SERVER_PORT` | `3001` | Server port |
+| `EVERYUP_SERVER_ALLOWORIGINS` | *(same-origin)* | Allowed CORS origins (e.g. `https://your-domain.com`) |
+| `EVERYUP_ADMIN_USERNAME` | *(unset)* | Creates or resets an admin account on startup |
+| `EVERYUP_ADMIN_PASSWORD` | *(unset)* | Password for the admin account above |
+| `EVERYUP_DATABASE_PATH` | `./data/monitoring.db` | SQLite file path |
 | `TZ` | System default | Timezone (e.g. `America/New_York`) |
 
 See [backend/README.md](backend/README.md) for the full configuration reference.

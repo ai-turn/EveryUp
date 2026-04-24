@@ -65,7 +65,7 @@ func main() {
 	}
 	log.Printf("JWT: signing secret loaded (HMAC-SHA256, key managed in DB)")
 
-	// Initialize admin account from env vars (MT_ADMIN_USERNAME + MT_ADMIN_PASSWORD)
+	// Initialize admin account from env vars (EVERYUP_ADMIN_USERNAME + EVERYUP_ADMIN_PASSWORD)
 	initAdminAccount(cfg)
 
 	// Warm up API key cache
@@ -204,18 +204,18 @@ func main() {
 }
 
 // initAdminAccount creates or resets the admin account from env vars.
-// Set MT_ADMIN_USERNAME + MT_ADMIN_PASSWORD to trigger this on startup.
+// Set EVERYUP_ADMIN_USERNAME + EVERYUP_ADMIN_PASSWORD to trigger this on startup.
 // In production mode, weak passwords are rejected at startup.
 func initAdminAccount(cfg *config.Config) {
-	adminUser := os.Getenv("MT_ADMIN_USERNAME")
-	adminPass := os.Getenv("MT_ADMIN_PASSWORD")
+	adminUser := os.Getenv("EVERYUP_ADMIN_USERNAME")
+	adminPass := os.Getenv("EVERYUP_ADMIN_PASSWORD")
 	if adminUser == "" || adminPass == "" {
 		return
 	}
 
 	if cfg.Server.Mode == "production" && (adminPass == "admin" || adminPass == "password" || adminPass == "changeme" || len(adminPass) < 8) {
 		log.Fatalf("[SECURITY] Default or weak admin password is not allowed in production mode. " +
-			"Set MT_ADMIN_PASSWORD to a strong password (at least 8 characters).")
+			"Set EVERYUP_ADMIN_PASSWORD to a strong password (at least 8 characters).")
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(adminPass), bcrypt.DefaultCost)

@@ -105,13 +105,13 @@ Copy-Item .env.example .env
 또는 변경이 필요한 항목만 직접 작성합니다:
 
 ```dotenv
-# MT_SERVER_PORT=3001
-# MT_ADMIN_USERNAME=admin
-# MT_ADMIN_PASSWORD=changeme
+# EVERYUP_SERVER_PORT=3001
+# EVERYUP_ADMIN_USERNAME=admin
+# EVERYUP_ADMIN_PASSWORD=changeme
 # TZ=Asia/Seoul
 ```
 
-> `MT_ADMIN_USERNAME`와 `MT_ADMIN_PASSWORD`를 함께 설정하면 EveryUp은 시작할 때마다 해당 관리자 계정을 생성하거나 비밀번호를 다시 설정합니다. 초기 계정을 미리 만들거나 비밀번호를 재설정하려는 경우가 아니라면, 최초 설정 이후에는 비워 두는 것을 권장합니다.
+> `EVERYUP_ADMIN_USERNAME`와 `EVERYUP_ADMIN_PASSWORD`를 함께 설정하면 EveryUp은 시작할 때마다 해당 관리자 계정을 생성하거나 비밀번호를 다시 설정합니다. 초기 계정을 미리 만들거나 비밀번호를 재설정하려는 경우가 아니라면, 최초 설정 이후에는 비워 두는 것을 권장합니다.
 
 **2.** `docker-compose.yml` 생성:
 
@@ -121,7 +121,7 @@ services:
     image: aiturn/everyup:latest
     container_name: everyup
     ports:
-      - "${MT_SERVER_PORT:-3001}:3001"
+      - "${EVERYUP_SERVER_PORT:-3001}:3001"
     volumes:
       - everyup-data:/app/data
     env_file:
@@ -190,16 +190,16 @@ everyup/
 
 ## 설정
 
-`MT_` 접두사 환경 변수로 `config.json`의 모든 값을 오버라이드할 수 있습니다.
+`EVERYUP_` 접두사 환경 변수로 `config.json`의 모든 값을 오버라이드할 수 있습니다.
 
 | 환경 변수 | 기본값 | 설명 |
 |-----------|--------|------|
-| `MT_SERVER_MODE` | `production` | 실행 모드: `development` 또는 `production` |
-| `MT_SERVER_PORT` | `3001` | 서버 포트 |
-| `MT_SERVER_ALLOWORIGINS` | *(동일 오리진)* | 허용할 CORS 오리진 (예: `https://your-domain.com`) |
-| `MT_ADMIN_USERNAME` | *(미설정)* | 시작 시 관리자 계정 생성 또는 비밀번호 초기화 |
-| `MT_ADMIN_PASSWORD` | *(미설정)* | 위 계정의 비밀번호 |
-| `MT_DATABASE_PATH` | `./data/monitoring.db` | SQLite 파일 경로 |
+| `EVERYUP_SERVER_MODE` | `production` | 실행 모드: `development` 또는 `production` |
+| `EVERYUP_SERVER_PORT` | `3001` | 서버 포트 |
+| `EVERYUP_SERVER_ALLOWORIGINS` | *(동일 오리진)* | 허용할 CORS 오리진 (예: `https://your-domain.com`) |
+| `EVERYUP_ADMIN_USERNAME` | *(미설정)* | 시작 시 관리자 계정 생성 또는 비밀번호 초기화 |
+| `EVERYUP_ADMIN_PASSWORD` | *(미설정)* | 위 계정의 비밀번호 |
+| `EVERYUP_DATABASE_PATH` | `./data/monitoring.db` | SQLite 파일 경로 |
 | `TZ` | 시스템 기본값 | 타임존 (예: `Asia/Seoul`) |
 
 전체 설정 옵션은 [backend/README.md](backend/README.md)를 참고하세요.

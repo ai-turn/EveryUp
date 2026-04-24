@@ -50,12 +50,12 @@ func ValidateSSHKeyPath(keyPath string) error {
 }
 
 // getAllowedSSHKeyDirs returns the list of directories that SSH key files are allowed in.
-// It merges the defaults with any custom directories set via MT_SSH_KEY_DIRS env var.
+// It merges the defaults with any custom directories set via EVERYUP_SSH_KEY_DIRS env var.
 func getAllowedSSHKeyDirs() []string {
 	dirs := make([]string, len(DefaultSSHKeyDirs))
 	copy(dirs, DefaultSSHKeyDirs)
 
-	if custom := os.Getenv("MT_SSH_KEY_DIRS"); custom != "" {
+	if custom := os.Getenv("EVERYUP_SSH_KEY_DIRS"); custom != "" {
 		for _, d := range strings.Split(custom, ":") {
 			d = strings.TrimSpace(d)
 			if d != "" {

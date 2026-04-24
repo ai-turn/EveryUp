@@ -26,7 +26,7 @@ func InitKnownHosts() string {
 		return knownHostsPath
 	}
 
-	dbPath := os.Getenv("MT_DATABASE_PATH")
+	dbPath := os.Getenv("EVERYUP_DATABASE_PATH")
 	if dbPath == "" {
 		dbPath = "./data/monitoring.db"
 	}

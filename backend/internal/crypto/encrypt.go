@@ -18,7 +18,7 @@ import (
 var masterKey []byte
 
 // InitFromDB loads the master encryption key with the following priority:
-//  1. MT_ENCRYPTION_KEY environment variable (recommended for production)
+//  1. EVERYUP_ENCRYPTION_KEY environment variable (recommended for production)
 //  2. Key file at <db-dir>/.encryption_key (auto-generated on first run)
 //  3. Fallback to DB app_settings table (legacy, for backward compatibility)
 //
@@ -28,10 +28,10 @@ func InitFromDB(db *sql.DB) error {
 	const keyName = "encryption_key"
 
 	// Priority 1: Environment variable
-	if envKey := os.Getenv("MT_ENCRYPTION_KEY"); envKey != "" {
+	if envKey := os.Getenv("EVERYUP_ENCRYPTION_KEY"); envKey != "" {
 		key, err := hex.DecodeString(strings.TrimSpace(envKey))
 		if err != nil || len(key) != 32 {
-			return fmt.Errorf("MT_ENCRYPTION_KEY must be a 64-character hex string (32 bytes)")
+			return fmt.Errorf("EVERYUP_ENCRYPTION_KEY must be a 64-character hex string (32 bytes)")
 		}
 		masterKey = key
 		log.Println("Encryption key loaded from environment variable")
@@ -98,7 +98,7 @@ func InitFromDB(db *sql.DB) error {
 // resolveKeyFilePath returns the path for the encryption key file,
 // co-located with the database directory.
 func resolveKeyFilePath() string {
-	dbPath := os.Getenv("MT_DATABASE_PATH")
+	dbPath := os.Getenv("EVERYUP_DATABASE_PATH")
 	if dbPath == "" {
 		dbPath = "./data/monitoring.db"
 	}

@@ -24,7 +24,7 @@ func CORS(allowOrigins string, mode string) fiber.Handler {
 
 	if allowOrigins == "*" && mode == "production" {
 		log.Fatalf("[SECURITY] CORS wildcard '*' is not allowed in production mode. " +
-			"Set MT_SERVER_ALLOWORIGINS to your frontend domain (e.g. https://app.example.com).")
+			"Set EVERYUP_SERVER_ALLOWORIGINS to your frontend domain (e.g. https://app.example.com).")
 	}
 
 	// AllowCredentials requires a specific origin (not wildcard).
