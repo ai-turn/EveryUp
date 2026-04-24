@@ -18,6 +18,24 @@ No Prometheus, no Grafana, no cloud required — just a single binary and a SQLi
 
 ---
 
+## Table of Contents
+
+- [Why EveryUp?](#why-everyup)
+- [Features](#features)
+- [Screenshots](#screenshots)
+- [Quick Start](#quick-start)
+  - [Docker](#docker)
+  - [Docker Compose](#docker-compose)
+  - [Local Development](#local-development)
+- [Configuration](#configuration)
+- [Data Backup](#data-backup)
+- [Log Agent](#log-agent)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
 ## Why EveryUp?
 
 Most server monitoring tools solve one problem. EveryUp combines uptime checks, infrastructure metrics, log collection, and alerting into a **single self-hosted binary** — making it a lightweight open-source alternative to Uptime Kuma + Grafana + a log aggregator.
