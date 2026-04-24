@@ -256,7 +256,7 @@ function PathPicker({
                 {option.goodForKeys.map((itemKey) => (
                   <div
                     key={itemKey}
-                    className="flex items-center gap-2 text-xs text-slate-600 dark:text-text-muted-dark"
+                    className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-text-muted-dark"
                   >
                     <MaterialIcon name="check" className="text-sm text-emerald-500" />
                     {t(itemKey)}
