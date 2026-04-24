@@ -220,7 +220,7 @@ docker compose up -d`}
 
                 {/* GitHub README link */}
                 <a
-                  href="https://github.com/ai-turn/EveryUp#readme"
+                  href="https://github.com/ai-turn/everyup#readme"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-text-dim-dark hover:text-primary dark:hover:text-primary transition-colors"

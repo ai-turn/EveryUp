@@ -39,7 +39,7 @@ export function DemoBanner() {
           )}
         </div>
         <a
-          href="https://github.com/ai-turn/EveryUp"
+          href="https://github.com/ai-turn/everyup"
           target="_blank"
           rel="noopener noreferrer"
           className="shrink-0 hidden sm:flex items-center gap-1.5 text-xs text-slate-300 hover:text-white transition-colors"

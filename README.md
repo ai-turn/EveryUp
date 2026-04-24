@@ -7,14 +7,14 @@ No Prometheus, no Grafana, no cloud required — just a single binary and a SQLi
 
 [한국어](README.ko.md) | **English**
 
-[![Demo](https://img.shields.io/badge/Demo-live-brightgreen)](https://ai-turn.github.io/EveryUp/)
+[![Demo](https://img.shields.io/badge/Demo-live-brightgreen)](https://ai-turn.github.io/everyup/)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Go](https://img.shields.io/badge/Go-1.24-00ADD8?logo=go)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker)
 ![Docker Pulls](https://img.shields.io/docker/pulls/aiturn/everyup)
 
-**[Live Demo →](https://ai-turn.github.io/EveryUp/)**
+**[Live Demo →](https://ai-turn.github.io/everyup/)**
 
 ---
 
@@ -130,8 +130,8 @@ Open **http://localhost:3001** and create your admin account.
 **Prerequisites:** [Go 1.24+](https://go.dev/dl/), [Node.js 22+](https://nodejs.org/), [pnpm](https://pnpm.io/installation)
 
 ```bash
-git clone https://github.com/ai-turn/EveryUp.git
-cd EveryUp
+git clone https://github.com/ai-turn/everyup.git
+cd everyup
 ```
 
 **Backend**
@@ -245,7 +245,7 @@ See [log-agent/README.md](log-agent/README.md) for more details.
 
 ## Contributing
 
-Bug reports and feature requests are welcome via [GitHub Issues](https://github.com/ai-turn/EveryUp/issues).
+Bug reports and feature requests are welcome via [GitHub Issues](https://github.com/ai-turn/everyup/issues).
 
 When submitting a Pull Request:
 - Include a brief description of what changed and why

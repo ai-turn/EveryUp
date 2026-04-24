@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
   return {
-    // GitHub Pages 배포 시 VITE_BASE_PATH=/EveryUp/ 로 설정
+    // GitHub Pages 배포 시 VITE_BASE_PATH=/everyup/ 로 설정
     base: process.env.VITE_BASE_PATH || env.VITE_BASE_PATH || '/',
     plugins: [
       react(),
