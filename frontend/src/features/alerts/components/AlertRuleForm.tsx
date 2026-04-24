@@ -77,7 +77,7 @@ function SectionHeader({ icon, label }: { icon: string; label: string }) {
     return (
         <div className="flex items-center gap-2 mb-3">
             <MaterialIcon name={icon} className="text-base text-primary" />
-            <span className="text-xs font-bold uppercase tracking-widest text-primary">{label}</span>
+            <span className="text-xs font-bold text-primary">{label}</span>
             <div className="flex-1 h-px bg-primary/20" />
         </div>
     );
@@ -347,7 +347,7 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
 
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('alerts.rules.target')}</label>
+                        <label className="block text-xs font-bold text-slate-500 mb-2">{t('alerts.rules.target')}</label>
                         <select
                             value={isEndpoint ? watchedServiceId : watchedHostId}
                             onChange={e => setValue(isEndpoint ? 'serviceId' : 'hostId', e.target.value)}
@@ -361,7 +361,7 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                     </div>
 
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('alerts.rules.metric')}</label>
+                        <label className="block text-xs font-bold text-slate-500 mb-2">{t('alerts.rules.metric')}</label>
                         <div className="flex flex-wrap gap-2">
                             {(isEndpoint ? ['http_status', 'response_time'] as const : ['cpu', 'memory', 'disk'] as const).map(m => (
                                 <button key={m} type="button" onClick={() => handleMetricChange(m)}
@@ -374,7 +374,7 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                     </div>
 
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('alerts.rules.ruleName')}</label>
+                        <label className="block text-xs font-bold text-slate-500 mb-2">{t('alerts.rules.ruleName')}</label>
                         <input {...register('name')} placeholder="e.g. High CPU usage alert" className="w-full px-4 py-2.5 bg-slate-50 dark:bg-ui-hover-dark border-2 border-slate-100 dark:border-ui-border-dark rounded-xl text-sm font-semibold outline-none focus:border-primary dark:text-white" />
                     </div>
                 </div>
@@ -383,12 +383,16 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
             <section>
                 <SectionHeader icon="rule" label={t('alerts.rules.sectionCondition')} />
                 <div className="grid grid-cols-3 gap-2 mb-6">
-                    {(['normal', 'error', 'custom'] as const).map(p => (
-                        <button key={p} type="button" onClick={() => handleConditionPreset(p)}
-                            className={`flex flex-col items-center gap-1.5 p-2 sm:p-3 border-2 rounded-xl transition-all ${conditionPreset === p ? 'border-primary bg-primary/10 text-primary' : 'border-slate-100 dark:border-ui-border-dark text-slate-500'
+                    {([
+                        { value: 'normal' as const, icon: 'check_circle', labelKey: 'alerts.rules.conditionNormal' },
+                        { value: 'error'  as const, icon: 'warning',       labelKey: 'alerts.rules.conditionError'  },
+                        { value: 'custom' as const, icon: 'tune',          labelKey: 'alerts.rules.conditionCustom' },
+                    ]).map(p => (
+                        <button key={p.value} type="button" onClick={() => handleConditionPreset(p.value)}
+                            className={`flex flex-col items-center gap-1.5 p-2 sm:p-3 border-2 rounded-xl transition-all ${conditionPreset === p.value ? 'border-primary bg-primary/10 text-primary' : 'border-slate-100 dark:border-ui-border-dark text-slate-500'
                                 }`}>
-                            <MaterialIcon name={p === 'normal' ? 'check_circle' : p === 'error' ? 'warning' : 'tune'} />
-                            <span className="text-xs font-bold uppercase">{p}</span>
+                            <MaterialIcon name={p.icon} />
+                            <span className="text-xs font-bold">{t(p.labelKey)}</span>
                         </button>
                     ))}
                 </div>
@@ -412,7 +416,7 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                 {conditionPreset === 'custom' && (
                     <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-xl mb-4">
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{t('alerts.rules.operator')}</label>
+                            <label className="block text-xs font-bold text-slate-500 mb-1">{t('alerts.rules.operator')}</label>
                             <select {...register('operator')} className="w-full bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-lg px-2 py-1.5 text-sm dark:text-white">
                                 <option value="gt">&gt;</option>
                                 <option value="gte">&ge;</option>
@@ -422,7 +426,7 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{t('alerts.rules.customInputThreshold')}</label>
+                            <label className="block text-xs font-bold text-slate-500 mb-1">{t('alerts.rules.customInputThreshold')}</label>
                             <input type="number" value={customThreshold} onChange={e => {
                                 setCustomThreshold(e.target.value);
                                 const n = parseFloat(e.target.value);
@@ -440,7 +444,7 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                     {isEndpoint ? (
                         <>
                             <span className="text-slate-600 font-mono text-xs">FAILS</span>
-                            <code className="px-2 py-0.5 bg-slate-700 text-slate-300 rounded text-xs font-mono">{watchedDuration}횞</code>
+                            <code className="px-2 py-0.5 bg-slate-700 text-slate-300 rounded text-xs font-mono">{watchedDuration}x</code>
                         </>
                     ) : (
                         <>
@@ -457,20 +461,20 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                 <SectionHeader icon="notifications" label={t('alerts.rules.sectionNotification')} />
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('alerts.rules.severity')}</label>
+                        <label className="block text-xs font-bold text-slate-500 mb-2">{t('alerts.rules.severity')}</label>
                         <div className="grid grid-cols-3 gap-2">
                             {(['critical', 'warning', 'info'] as const).map(s => (
                                 <button key={s} type="button" onClick={() => setValue('severity', s)}
                                     className={`py-2 text-xs font-bold rounded-lg border-2 transition-all ${watchedSeverity === s ? 'border-primary bg-primary/10 text-primary' : 'border-slate-100 dark:border-ui-border-dark text-slate-500'
                                         }`}>
-                                    {s.toUpperCase()}
+                                    {t(`alerts.rules.${s}`)}
                                 </button>
                             ))}
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t('alerts.rules.notifyChannels')}</label>
+                        <label className="block text-xs font-bold text-slate-500 mb-2">{t('alerts.rules.notifyChannels')}</label>
                         <div className="space-y-2">
                             {channels.map(ch => (
                                 <button key={ch.id} type="button" onClick={() => handleToggleChannel(ch.id)}
@@ -485,7 +489,7 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
 
                     {/* Alert Payload Preview */}
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                        <label className="block text-xs font-bold text-slate-500 mb-2">
                             {t('alerts.rules.alertPayload')}
                             <span className="ml-2 text-xs font-normal text-slate-400 normal-case">{t('alerts.rules.alertPayloadHint')}</span>
                         </label>
@@ -564,7 +568,7 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
 
                     {/* Editable message */}
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+                        <label className="block text-xs font-bold text-slate-500 mb-1">
                             <span className="text-[#8BE9FD] font-mono">"message"</span>
                             <span className="ml-2 normal-case font-normal text-slate-400">
                                 {t('alerts.rules.messageOverridesHint')}

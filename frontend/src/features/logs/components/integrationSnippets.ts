@@ -367,8 +367,8 @@ export function buildApiCaptureSnippets(origin: string, displayKey: string): Rec
     "resBody": "{\\"id\\":42,\\"name\\":\\"Alice\\"}"
   }'`,
 
-    express: `// Express middleware — capture API requests to MT
-function mtCapture(apiKey, endpoint) {
+    express: `// Express middleware — capture API requests to EveryUp
+function everyupCapture(apiKey, endpoint) {
   return (req, res, next) => {
     const start = Date.now();
     const originalJson = res.json.bind(res);
@@ -394,9 +394,9 @@ function mtCapture(apiKey, endpoint) {
     next();
   };
 }
-app.use(mtCapture('${displayKey}', '${origin}'));`,
+app.use(everyupCapture('${displayKey}', '${origin}'));`,
 
-    go: `func MTCaptureMiddleware(apiKey, endpoint string, next http.Handler) http.Handler {
+    go: `func EveryUpCaptureMiddleware(apiKey, endpoint string, next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         start := time.Now()
         rw := &responseWriter{ResponseWriter: w}

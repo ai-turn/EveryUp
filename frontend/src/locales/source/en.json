@@ -132,7 +132,7 @@
   "API 키 재발급에 실패했습니다": "Failed to regenerate API key",
   "환경과 배포 방식에 맞는 연동 예시를 선택해 바로 적용할 수 있습니다.": "Pick an integration example that matches your environment and deployment style, and apply it right away.",
   "API Capture": "API Capture",
-  "앱의 HTTP 요청/응답을 캡처해 MT로 전송합니다. 미들웨어를 추가하거나 cURL로 직접 테스트할 수 있습니다.": "Capture HTTP requests/responses from your app and send them to MT. Add middleware or test directly with cURL.",
+  "앱의 HTTP 요청/응답을 캡처해 EveryUp으로 전송합니다. 미들웨어를 추가하거나 cURL로 직접 테스트할 수 있습니다.": "Capture HTTP requests/responses from your app and send them to EveryUp. Add middleware or test directly with cURL.",
   "Authorization 헤더 전달이 필요한 경우에만 확인하세요.": "Only relevant if you need to forward the Authorization header.",
   "캡처 안함": "Disabled",
   "에러만": "Errors Only",
