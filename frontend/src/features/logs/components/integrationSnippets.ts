@@ -52,7 +52,7 @@ logger.warn('Slow query detected', { duration: 3200 });`,
     </encoder>
   </appender>
 
-  <appender name="MT_HTTP"
+  <appender name="EVERYUP_HTTP"
     class="net.logstash.logback.appender.LogstashHttpAppender">
     <url>${ingestUrl}</url>
     <customHeaders>
@@ -68,7 +68,7 @@ logger.warn('Slow query detected', { duration: 3200 });`,
   <!-- Send WARN and above to EveryUp -->
   <root level="WARN">
     <appender-ref ref="CONSOLE" />
-    <appender-ref ref="MT_HTTP" />
+    <appender-ref ref="EVERYUP_HTTP" />
   </root>
 </configuration>
 
