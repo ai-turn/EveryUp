@@ -15,10 +15,10 @@ interface Props {
   onServiceUpdate?: (updated: Service) => void;
 }
 
-const LEVEL_STYLE: Record<LogLevel, { text: string; bg: string; icon: string; label: string }> = {
-  error: { text: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800', icon: 'error', label: 'Error' },
-  warn:  { text: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800', icon: 'warning', label: 'Warn' },
-  info:  { text: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800', icon: 'info', label: 'Info' },
+const LEVEL_STYLE: Record<LogLevel, { text: string; activeBg: string; dot: string; label: string }> = {
+  error: { text: 'text-red-500 dark:text-red-400',   activeBg: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',     dot: 'bg-red-500',   label: 'Error' },
+  warn:  { text: 'text-amber-500 dark:text-amber-400', activeBg: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800', dot: 'bg-amber-500', label: 'Warn' },
+  info:  { text: 'text-sky-500 dark:text-sky-400',   activeBg: 'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800',     dot: 'bg-sky-500',   label: 'Info' },
 };
 
 const ALL_LEVELS: LogLevel[] = ['error', 'warn', 'info'];
@@ -112,9 +112,9 @@ function LevelFilterChip({ service, onServiceUpdate }: { service: Service; onSer
               return (
                 <span
                   key={lvl}
-                  className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded border text-xs font-bold uppercase ${s.text} ${s.bg}`}
+                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-bold uppercase ${s.text}`}
                 >
-                  <MaterialIcon name={s.icon} className="text-xs" />
+                  <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
                   {lvl}
                 </span>
               );
@@ -153,20 +153,17 @@ function LevelFilterChip({ service, onServiceUpdate }: { service: Service; onSer
                   type="button"
                   onClick={() => toggle(lvl)}
                   disabled={saving}
-                  className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg border text-xs font-bold transition-all disabled:opacity-60 ${
+                  className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg border text-xs font-semibold transition-all disabled:opacity-60 ${
                     active
-                      ? `${s.text} ${s.bg}`
-                      : 'text-slate-400 dark:text-text-muted-dark border-slate-200 dark:border-ui-border-dark bg-transparent hover:bg-slate-50 dark:hover:bg-ui-hover-dark'
+                      ? `${s.text} ${s.activeBg}`
+                      : 'text-slate-400 dark:text-text-muted-dark border-transparent hover:bg-slate-50 dark:hover:bg-ui-hover-dark'
                   }`}
                 >
                   <span className="flex items-center gap-2">
-                    <MaterialIcon name={s.icon} className="text-sm" />
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${s.dot} ${active ? '' : 'opacity-25'}`} />
                     {s.label}
                   </span>
-                  <MaterialIcon
-                    name={active ? 'check_circle' : 'radio_button_unchecked'}
-                    className="text-base"
-                  />
+                  {active && <MaterialIcon name="check" className="text-sm" />}
                 </button>
               );
             })}
