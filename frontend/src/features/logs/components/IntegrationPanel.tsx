@@ -208,7 +208,7 @@ function PathPicker({
   return (
     <div className="space-y-5">
       <div>
-        <p className="text-[11px] font-bold tracking-widest uppercase text-primary/70 mb-1">
+        <p className="text-xs font-bold text-primary/70 mb-1">
           {t('logServices.integration.picker.eyebrow')}
         </p>
         <h2 className="text-xl font-bold text-slate-900 dark:text-white">
@@ -231,7 +231,7 @@ function PathPicker({
             }`}
           >
             {option.recommended && (
-              <span className="absolute top-4 right-4 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary text-white text-[10px] font-bold tracking-wide">
+              <span className="absolute top-4 right-4 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary text-white text-xs font-bold">
                 <MaterialIcon name="auto_awesome" className="text-xs" />
                 {t('logServices.integration.picker.recommended')}
               </span>
@@ -249,7 +249,7 @@ function PathPicker({
             </p>
 
             <div className="pt-4 mt-4 border-t border-dashed border-slate-200 dark:border-ui-border-dark">
-              <p className="text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-text-dim-dark mb-2">
+              <p className="text-xs font-semibold text-slate-400 dark:text-text-dim-dark mb-2">
                 {t('logServices.integration.picker.goodFor')}
               </p>
               <div className="space-y-1.5">
@@ -449,7 +449,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           <MaterialIcon name={selectedOption.icon} className="text-xl" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-bold tracking-widest uppercase text-slate-400 dark:text-text-dim-dark">
+          <p className="text-xs font-semibold text-slate-400 dark:text-text-dim-dark">
             {t('logServices.integration.selectedMethod')}
           </p>
           <div className="flex flex-wrap items-center gap-2">
@@ -457,7 +457,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               {t(selectedOption.labelKey)}
             </h2>
             {selectedOption.recommended && (
-              <span className="inline-flex px-2 py-0.5 rounded-full bg-primary text-white text-[10px] font-bold">
+              <span className="inline-flex px-2 py-0.5 rounded-full bg-primary text-white text-xs font-bold">
                 {t('logServices.integration.picker.recommended')}
               </span>
             )}
@@ -482,7 +482,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             <h3 className="text-sm font-bold text-slate-900 dark:text-white">
               {t('logServices.integration.apiKey.title')}
             </h3>
-            <span className="ml-auto text-[10px] font-semibold text-slate-400 dark:text-text-dim-dark bg-slate-100 dark:bg-ui-active-dark px-2 py-0.5 rounded-md">
+            <span className="ml-auto text-xs font-semibold text-slate-400 dark:text-text-dim-dark bg-slate-100 dark:bg-ui-active-dark px-2 py-0.5 rounded-md">
               {t('logServices.integration.apiKey.masked')}
             </span>
           </div>
@@ -517,7 +517,7 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             <h3 className="text-sm font-bold text-slate-900 dark:text-white">
               {t('logServices.integration.endpoint.title')}
             </h3>
-            <span className="ml-auto text-[10px] font-bold text-white bg-emerald-600 px-2 py-0.5 rounded">
+            <span className="ml-auto text-xs font-bold text-white bg-emerald-600 px-2 py-0.5 rounded">
               POST
             </span>
           </div>
