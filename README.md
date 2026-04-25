@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/everyup_logo.png" alt="EveryUp" width="96">
+</p>
+
 # EveryUp — Self-Hosted Monitoring Dashboard
 
 <img src="docs/images/ascci.png" alt="EveryUp — self-hosted uptime and infrastructure monitoring" width="480">

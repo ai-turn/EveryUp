@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/everyup_logo.png" alt="EveryUp" width="96">
+</p>
+
 # EveryUp — 셀프 호스팅 모니터링 대시보드
 
 <img src="docs/images/ascci.png" alt="EveryUp — 셀프 호스팅 업타임 및 인프라 모니터링" width="480">
