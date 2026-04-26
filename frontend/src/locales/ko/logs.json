@@ -213,7 +213,7 @@
             "picker": {
                 "eyebrow": "연동",
                 "title": "로그를 어떻게 보낼까요?",
-                "subtitle": "배포 환경에 맞는 방식을 하나 선택하세요.",
+                "subtitle": "배포 환경에 맞는 방식을 선택하세요.",
                 "recommended": "권장",
                 "goodFor": "이런 경우에 좋아요",
                 "start": "이 방식으로 시작",
