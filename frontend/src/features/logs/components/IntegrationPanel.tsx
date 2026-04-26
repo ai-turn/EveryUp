@@ -231,8 +231,7 @@ function PathPicker({
             }`}
           >
             {option.recommended && (
-              <span className="absolute top-4 right-4 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary text-white text-xs font-bold">
-                <MaterialIcon name="auto_awesome" className="text-xs" />
+              <span className="absolute top-4 right-4 px-2.5 py-1 rounded-full bg-primary text-white text-xs font-bold">
                 {t('logServices.integration.picker.recommended')}
               </span>
             )}

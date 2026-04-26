@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from '../../../components/common';
 import { api, LogEntry } from '../../../services/api';
 import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
-import { isJSON, formatJSON } from '../../../utils/formatters';
 import { useDebouncedValue } from '../../../hooks/useDebouncedValue';
 
 interface ErrorLogTableProps {
@@ -39,7 +38,6 @@ export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [levelFilter, setLevelFilter] = useState<LevelFilter>('all');
   const [isPaused, setIsPaused] = useState(false);
-  const [formatMode, setFormatMode] = useState<'raw' | 'pretty'>('raw');
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [limit, setLimit] = useState(LIMIT_STEP);
   const { copy } = useCopyToClipboard();
@@ -151,20 +149,6 @@ export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
             {isPaused ? t('common.resume') : t('common.pause')}
           </button>
 
-          {/* Format Toggle — only relevant for JSON logs */}
-          <button
-            onClick={() => setFormatMode((m) => (m === 'raw' ? 'pretty' : 'raw'))}
-            title={t('logs.formatToggleHint')}
-            className={`cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
-              formatMode === 'pretty'
-                ? 'border-primary bg-primary/10 text-primary'
-                : 'border-slate-200 dark:border-ui-border-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark text-slate-700 dark:text-text-secondary-dark'
-            }`}
-          >
-            <MaterialIcon name="code" className="text-lg" />
-            {formatMode === 'raw' ? t('logs.formatPretty') : t('logs.formatRaw')}
-          </button>
-
           {/* Search */}
           <div className="relative flex-1 min-w-40">
             <MaterialIcon
@@ -246,28 +230,23 @@ export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
           <tbody className="text-sm font-mono divide-y divide-slate-200 dark:divide-ui-border-dark">
             {filteredLogs.map((log) => {
               const isExpanded = expandedRows.has(log.id);
-              const hasJSON = isJSON(log.message);
-              const showPretty = hasJSON && formatMode === 'pretty';
 
               return (
                 <tr
                   key={log.id}
                   className="hover:bg-slate-50 dark:hover:bg-ui-hover-dark/30 transition-colors"
                 >
-                  {/* Expand Button — hidden when pretty mode auto-formats JSON */}
                   <td className="py-4 px-2">
-                    {!showPretty && (
-                      <button
-                        onClick={() => toggleRow(log.id)}
-                        aria-label={isExpanded ? t('common.collapse') : t('common.expand')}
-                        className="cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-text-secondary-dark transition-colors"
-                      >
-                        <MaterialIcon
-                          name={isExpanded ? 'expand_less' : 'expand_more'}
-                          className="text-lg"
-                        />
-                      </button>
-                    )}
+                    <button
+                      onClick={() => toggleRow(log.id)}
+                      aria-label={isExpanded ? t('common.collapse') : t('common.expand')}
+                      className="cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-text-secondary-dark transition-colors"
+                    >
+                      <MaterialIcon
+                        name={isExpanded ? 'expand_less' : 'expand_more'}
+                        className="text-lg"
+                      />
+                    </button>
                   </td>
 
                   <td className="py-4 px-2 text-slate-500 dark:text-text-muted-dark whitespace-nowrap tabular-nums">
@@ -283,11 +262,7 @@ export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
                     </span>
                   </td>
                   <td className="py-4 px-2 text-slate-900 dark:text-white max-w-sm">
-                    {showPretty ? (
-                      <pre className="text-xs bg-slate-50 dark:bg-ui-hover-dark p-3 rounded-lg overflow-x-auto">
-                        {formatJSON(log.message)}
-                      </pre>
-                    ) : isExpanded ? (
+                    {isExpanded ? (
                       <span className="break-all whitespace-pre-wrap">{log.message}</span>
                     ) : (
                       <span className="line-clamp-2">{log.message}</span>
