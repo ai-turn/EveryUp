@@ -7,11 +7,10 @@ import { MaterialIcon } from '../../../components/common';
 import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
 import { api, Service } from '../../../services/api';
 import {
-  buildHttpAppenderSnippets,
   buildAgentSnippets,
   buildNginxSnippets,
-  buildAgentQuickStart,
   buildAgentPullCommand,
+  buildApiCaptureMiddlewareSnippets,
 } from './integrationSnippets';
 
 interface IntegrationPanelProps {
@@ -19,7 +18,7 @@ interface IntegrationPanelProps {
   onApiKeyRegenerated: (newKey: string, maskedKey: string) => void;
 }
 
-type IntegrationPath = 'agent' | 'http-appender';
+type IntegrationPath = 'agent' | 'api-capture';
 
 interface PathOption {
   key: IntegrationPath;
@@ -46,15 +45,15 @@ const PATH_OPTIONS: PathOption[] = [
     ],
   },
   {
-    key: 'http-appender',
-    icon: 'code',
-    labelKey: 'logServices.integration.paths.httpAppender.label',
-    taglineKey: 'logServices.integration.paths.httpAppender.tagline',
-    descriptionKey: 'logServices.integration.paths.httpAppender.description',
+    key: 'api-capture',
+    icon: 'api',
+    labelKey: 'logServices.integration.paths.apiCapture.label',
+    taglineKey: 'logServices.integration.paths.apiCapture.tagline',
+    descriptionKey: 'logServices.integration.paths.apiCapture.description',
     goodForKeys: [
-      'logServices.integration.paths.httpAppender.goodFor.0',
-      'logServices.integration.paths.httpAppender.goodFor.1',
-      'logServices.integration.paths.httpAppender.goodFor.2',
+      'logServices.integration.paths.apiCapture.goodFor.0',
+      'logServices.integration.paths.apiCapture.goodFor.1',
+      'logServices.integration.paths.apiCapture.goodFor.2',
     ],
   },
 ];
@@ -297,11 +296,9 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
   const [showConfirm, setShowConfirm] = useState(false);
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
   const [revealCountdown, setRevealCountdown] = useState(0);
-  const [httpSnippet, setHttpSnippet] = useState<'express' | 'springboot' | 'aspnet' | 'fastapi'>('express');
-  const [agentSnippet, setAgentSnippet] = useState<'config' | 'docker_sidecar' | 'docker_pipe' | 'systemd'>('config');
+  const [apiCaptureSnippet, setApiCaptureSnippet] = useState<'springboot' | 'fastapi' | 'express' | 'go' | 'django'>('springboot');
   const [activeNginxTab, setActiveNginxTab] = useState<'nginx_conf' | 'docker_compose' | 'docker_run'>('nginx_conf');
   const [showTroubleshooting, setShowTroubleshooting] = useState(false);
-  const [showAgentAdvanced, setShowAgentAdvanced] = useState(false);
   const [testState, setTestState] = useState<'waiting' | 'connected' | 'error'>('waiting');
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -349,11 +346,11 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
   const isHttps = window.location.protocol === 'https:';
   const origin = window.location.origin;
 
-  const httpAppenderSnippets = buildHttpAppenderSnippets(hostname, port, isHttps, displayKey, ingestUrl);
   const agentSnippets = buildAgentSnippets(hostname, port, isHttps, displayKey, origin);
   const nginxSnippets = buildNginxSnippets(hostname);
   const agentPullCmd = buildAgentPullCommand();
-  const agentQuickStartCmd = buildAgentQuickStart(displayKey, origin);
+  const apiCaptureMiddlewareSnippets = buildApiCaptureMiddlewareSnippets(origin, displayKey);
+  const apiCaptureIngestUrl = `${origin}/api/v1/ingest/requests`;
 
   const dismissRevealedKey = useCallback(() => {
     setRevealedKey(null);
@@ -521,9 +518,11 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
             </span>
           </div>
           <div className="flex items-center gap-2 px-3 py-2.5 bg-slate-50 dark:bg-ui-hover-dark rounded-lg font-mono text-xs border border-slate-100 dark:border-ui-border-dark">
-            <span className="flex-1 text-slate-700 dark:text-text-base-dark truncate">{ingestUrl}</span>
+            <span className="flex-1 text-slate-700 dark:text-text-base-dark truncate">
+              {selectedPath === 'api-capture' ? apiCaptureIngestUrl : ingestUrl}
+            </span>
             <button
-              onClick={() => copy(ingestUrl)}
+              onClick={() => copy(selectedPath === 'api-capture' ? apiCaptureIngestUrl : ingestUrl)}
               className="shrink-0 p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               title={t('common.copyToClipboard')}
               aria-label={t('common.copyToClipboard')}
@@ -533,82 +532,86 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           </div>
           <div className="flex items-center gap-2 mt-3 text-xs text-slate-500 dark:text-text-muted-dark">
             <MaterialIcon name="auto_awesome" className="text-sm text-primary" />
-            {t('logServices.integration.endpoint.description')}
+            {selectedPath === 'api-capture'
+              ? t('logServices.integration.endpoint.apiCaptureDescription')
+              : t('logServices.integration.endpoint.description')}
           </div>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
-        <SectionTitle
-          number={1}
-          title={t('logServices.integration.test.title')}
-          description={t('logServices.integration.test.description')}
-          trailing={<ConnectionStatusBadge state={testState} secondsAgo={secondsAgo} t={t} />}
-        />
-        <CodeBlock
-          code={curlCmd}
-          onCopy={() => copy(curlCmd)}
-          copyTitle={t('common.copyToClipboard')}
-          size="sm"
-        />
-        <div className="flex flex-wrap gap-2 mt-3">
-          <button
-            onClick={handleBrowserTest}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors cursor-pointer"
-          >
-            <MaterialIcon name="send" className="text-sm" />
-            {t('logServices.integration.test.browserButton')}
-          </button>
-          <button
-            onClick={() => setShowTroubleshooting((prev) => !prev)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-ui-border-dark text-xs font-semibold text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors cursor-pointer"
-          >
-            <MaterialIcon name={showTroubleshooting ? 'expand_less' : 'help_outline'} className="text-sm" />
-            {t('logServices.integration.test.troubleshooting')}
-          </button>
-        </div>
+      {selectedPath !== 'api-capture' && (
+        <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
+          <SectionTitle
+            number={1}
+            title={t('logServices.integration.test.title')}
+            description={t('logServices.integration.test.description')}
+            trailing={<ConnectionStatusBadge state={testState} secondsAgo={secondsAgo} t={t} />}
+          />
+          <CodeBlock
+            code={curlCmd}
+            onCopy={() => copy(curlCmd)}
+            copyTitle={t('common.copyToClipboard')}
+            size="sm"
+          />
+          <div className="flex flex-wrap gap-2 mt-3">
+            <button
+              onClick={handleBrowserTest}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors cursor-pointer"
+            >
+              <MaterialIcon name="send" className="text-sm" />
+              {t('logServices.integration.test.browserButton')}
+            </button>
+            <button
+              onClick={() => setShowTroubleshooting((prev) => !prev)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-ui-border-dark text-xs font-semibold text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors cursor-pointer"
+            >
+              <MaterialIcon name={showTroubleshooting ? 'expand_less' : 'help_outline'} className="text-sm" />
+              {t('logServices.integration.test.troubleshooting')}
+            </button>
+          </div>
 
-        {showTroubleshooting && (
-          <div className="mt-4 border border-amber-200 dark:border-amber-700/30 bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 space-y-3">
-            <div className="flex items-start gap-2">
-              <span className="w-4 h-5 shrink-0 inline-flex items-center justify-center">
-                <MaterialIcon name="warning" className="text-base leading-none text-amber-600 dark:text-amber-400" />
-              </span>
-              <p className="text-xs text-amber-700 dark:text-amber-300 leading-5">
-                {t('logServices.integration.test.troubleshootingDesc')}
-              </p>
+          {showTroubleshooting && (
+            <div className="mt-4 border border-amber-200 dark:border-amber-700/30 bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 space-y-3">
+              <div className="flex items-start gap-2">
+                <span className="w-4 h-5 shrink-0 inline-flex items-center justify-center">
+                  <MaterialIcon name="warning" className="text-base leading-none text-amber-600 dark:text-amber-400" />
+                </span>
+                <p className="text-xs text-amber-700 dark:text-amber-300 leading-5">
+                  {t('logServices.integration.test.troubleshootingDesc')}
+                </p>
+              </div>
+              <SegmentedControl
+                options={[
+                  { key: 'nginx_conf' as const, label: 'nginx.conf' },
+                  { key: 'docker_compose' as const, label: 'Docker Compose' },
+                  { key: 'docker_run' as const, label: 'Docker Run' },
+                ]}
+                value={activeNginxTab}
+                onChange={setActiveNginxTab}
+              />
+              <CodeBlock
+                code={nginxSnippets[activeNginxTab]}
+                onCopy={() => copy(nginxSnippets[activeNginxTab])}
+                copyTitle={t('common.copyToClipboard')}
+                size="xs"
+              />
             </div>
-            <SegmentedControl
-              options={[
-                { key: 'nginx_conf' as const, label: 'nginx.conf' },
-                { key: 'docker_compose' as const, label: 'Docker Compose' },
-                { key: 'docker_run' as const, label: 'Docker Run' },
-              ]}
-              value={activeNginxTab}
-              onChange={setActiveNginxTab}
-            />
-            <CodeBlock
-              code={nginxSnippets[activeNginxTab]}
-              onCopy={() => copy(nginxSnippets[activeNginxTab])}
-              copyTitle={t('common.copyToClipboard')}
-              size="xs"
-            />
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
         <SectionTitle
-          number={2}
+          number={selectedPath === 'api-capture' ? 1 : 2}
           title={
             selectedPath === 'agent'
               ? t('logServices.integration.setup.agentTitle')
-              : t('logServices.integration.setup.httpTitle')
+              : t('logServices.integration.setup.apiCaptureTitle')
           }
           description={
             selectedPath === 'agent'
               ? t('logServices.integration.setup.agentDesc')
-              : t('logServices.integration.setup.httpDesc')
+              : t('logServices.integration.setup.apiCaptureDesc')
           }
         />
 
@@ -622,6 +625,14 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
                 {t('logServices.integration.setup.agentHint')}
               </p>
             </div>
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark">
+              <span className="w-4 h-5 shrink-0 inline-flex items-center justify-center">
+                <MaterialIcon name="sell" className="text-base leading-none text-slate-500 dark:text-text-muted-dark" />
+              </span>
+              <p className="text-xs text-slate-600 dark:text-text-muted-dark leading-5">
+                {t('logServices.integration.setup.levelPrefixHint')}
+              </p>
+            </div>
             <CodeBlock
               code={agentPullCmd}
               onCopy={() => copy(agentPullCmd)}
@@ -629,83 +640,42 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
               size="xs"
             />
             <CodeBlock
-              code={agentQuickStartCmd}
-              onCopy={() => copy(agentQuickStartCmd)}
+              code={agentSnippets['docker_sidecar']}
+              onCopy={() => copy(agentSnippets['docker_sidecar'])}
               copyTitle={t('common.copyToClipboard')}
               size="xs"
             />
-
-            <div className="border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
-              <button
-                onClick={() => setShowAgentAdvanced((prev) => !prev)}
-                aria-expanded={showAgentAdvanced}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors text-left cursor-pointer"
-              >
-                <MaterialIcon name="tune" className="text-base text-slate-500 dark:text-text-muted-dark shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-semibold text-slate-700 dark:text-text-secondary-dark">
-                    {t('logServices.integration.setup.otherOptions')}
-                  </h4>
-                  <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-0.5 truncate">
-                    {t('logServices.integration.setup.otherOptionsDesc')}
-                  </p>
-                </div>
-                <MaterialIcon
-                  name={showAgentAdvanced ? 'expand_less' : 'expand_more'}
-                  className="text-slate-400 dark:text-text-dim-dark shrink-0"
-                />
-              </button>
-
-              {showAgentAdvanced && (
-                <div className="px-4 pb-4 border-t border-slate-100 dark:border-ui-border-dark pt-4">
-                  <div className="flex flex-col lg:flex-row gap-4">
-                    <div className="lg:shrink-0 lg:w-40">
-                      <SegmentedControl
-                        options={[
-                          { key: 'config' as const, label: 'Config' },
-                          { key: 'docker_sidecar' as const, label: 'Sidecar' },
-                          { key: 'docker_pipe' as const, label: 'Pipe' },
-                          { key: 'systemd' as const, label: 'systemd' },
-                        ]}
-                        value={agentSnippet}
-                        onChange={setAgentSnippet}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <CodeBlock
-                        code={agentSnippets[agentSnippet]}
-                        onCopy={() => copy(agentSnippets[agentSnippet])}
-                        copyTitle={t('common.copyToClipboard')}
-                        size="xs"
-                        minHeight="200px"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
-        ) : (
+        ) : selectedPath === 'api-capture' ? (
           <div className="space-y-3">
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/30">
+              <span className="w-4 h-5 shrink-0 inline-flex items-center justify-center">
+                <MaterialIcon name="settings" className="text-base leading-none text-amber-600 dark:text-amber-400" />
+              </span>
+              <p className="text-xs text-amber-700 dark:text-amber-300 leading-5">
+                {t('logServices.integration.setup.apiCaptureHint')}
+              </p>
+            </div>
             <SegmentedControl
               options={[
-                { key: 'express' as const, label: 'Node.js' },
                 { key: 'springboot' as const, label: 'Spring Boot' },
-                { key: 'aspnet' as const, label: 'ASP.NET' },
                 { key: 'fastapi' as const, label: 'FastAPI' },
+                { key: 'express' as const, label: 'Node.js' },
+                { key: 'go' as const, label: 'Go' },
+                { key: 'django' as const, label: 'Django' },
               ]}
-              value={httpSnippet}
-              onChange={setHttpSnippet}
+              value={apiCaptureSnippet}
+              onChange={setApiCaptureSnippet}
             />
             <CodeBlock
-              code={httpAppenderSnippets[httpSnippet]}
-              onCopy={() => copy(httpAppenderSnippets[httpSnippet])}
+              code={apiCaptureMiddlewareSnippets[apiCaptureSnippet]}
+              onCopy={() => copy(apiCaptureMiddlewareSnippets[apiCaptureSnippet])}
               copyTitle={t('common.copyToClipboard')}
               size="xs"
-              minHeight="240px"
+              minHeight="260px"
             />
           </div>
-        )}
+        ) : null}
       </div>
 
       {showConfirm && (

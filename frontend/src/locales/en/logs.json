@@ -218,7 +218,7 @@
                 "goodFor": "Good for",
                 "start": "Start with this",
                 "notSureTitle": "Not sure which one to choose?",
-                "notSureDesc": "Start with Log Agent. Use HTTP Appender only when you want the application logger to send logs directly."
+                "notSureDesc": "Use Log Agent for file-based logs, API Request Capture for HTTP request/response data, and HTTP Appender to send logs directly from a logger library."
             },
             "paths": {
                 "agent": {
@@ -229,6 +229,16 @@
                         "File-based logs (.log, stdout)",
                         "Docker / VM / bare metal",
                         "No app code changes"
+                    ]
+                },
+                "apiCapture": {
+                    "label": "API Request Capture",
+                    "tagline": "Add middleware to capture HTTP requests and responses",
+                    "description": "Add a middleware to Spring Boot, FastAPI, Express, and more. Captures method, path, status, duration, and body with no infrastructure changes.",
+                    "goodFor": [
+                        "Full HTTP request/response capture",
+                        "Spring Boot / FastAPI / Express / Go / Django",
+                        "No infrastructure changes — code only"
                     ]
                 },
                 "httpAppender": {
@@ -258,7 +268,8 @@
             },
             "endpoint": {
                 "title": "Ingest endpoint",
-                "description": "Accepts common logger formats and batches up to 100 logs per request."
+                "description": "Accepts common logger formats and batches up to 100 logs per request.",
+                "apiCaptureDescription": "Accepts up to 50 API request entries per batch. Use the X-API-Key header for authentication."
             },
             "test": {
                 "title": "Test the connection first",
@@ -270,9 +281,13 @@
             "setup": {
                 "agentTitle": "Run the agent",
                 "httpTitle": "Add the appender",
+                "apiCaptureTitle": "Add the middleware",
                 "agentDesc": "Mount the log directory and start the EveryUp Log Agent.",
                 "httpDesc": "Pick your framework and add the HTTP transport to your logger.",
+                "apiCaptureDesc": "Pick your framework and add the middleware to your application.",
                 "agentHint": "Quick start is enough for most setups. Change the mounted path to the directory where your application writes logs.",
+                "levelPrefixHint": "For plain text logs, prefix lines with [INFO], [WARN], or [ERROR] so EveryUp can classify levels correctly. JSON logs can use level, severity, logLevel, or lvl fields.",
+                "apiCaptureHint": "Go to the Settings tab → API Capture and enable a capture mode before data will be collected.",
                 "otherOptions": "Other deployment options",
                 "otherOptionsDesc": "Fluent Bit config, Docker sidecar, Docker pipe, and systemd examples."
             },

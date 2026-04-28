@@ -243,7 +243,7 @@ docker run -d \
   --name everyup-log-agent \
   -v /var/log/myapp:/var/log/app:ro \
   -e LOG_AGENT_ENDPOINT=http://your-everyup-server:3001 \
-  -e LOG_AGENT_API_KEY=la_your_api_key \
+  -e LOG_AGENT_API_KEY=everyup_your_api_key \
   --restart unless-stopped \
   aiturn/everyup-log-agent:latest
 ```

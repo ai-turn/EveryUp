@@ -34,7 +34,7 @@ func normalizeFormEncoded(body string) (models.LogIngestEntry, error) {
 	} else if lvl := values.Get("level"); lvl != "" {
 		entry.Level = mapGenericLevel(lvl)
 	} else {
-		entry.Level = models.LogLevelError
+		entry.Level = models.LogLevelInfo
 	}
 
 	// Collect useful Python fields as metadata
@@ -97,7 +97,7 @@ func normalizeRawLogs(body []byte) ([]models.LogIngestEntry, error) {
 
 	// Fallback: treat entire body as message
 	return []models.LogIngestEntry{{
-		Level:   models.LogLevelError,
+		Level:   models.LogLevelInfo,
 		Message: string(body),
 	}}, nil
 }
@@ -244,16 +244,35 @@ func normalizeWinstonLog(obj map[string]interface{}) models.LogIngestEntry {
 
 	if msg, ok := getString(obj, "message"); ok {
 		entry.Message = msg
+	} else if msg, ok := getString(obj, "msg"); ok {
+		entry.Message = msg
+	} else if msg, ok := getString(obj, "log"); ok {
+		entry.Message = msg
 	}
 	if lvl, ok := getString(obj, "level"); ok {
 		entry.Level = mapGenericLevel(lvl)
+	} else if lvl, ok := getString(obj, "levelname"); ok {
+		entry.Level = mapGenericLevel(lvl)
+	} else if lvl, ok := getString(obj, "severity"); ok {
+		entry.Level = mapGenericLevel(lvl)
+	} else if lvl, ok := getString(obj, "logLevel"); ok {
+		entry.Level = mapGenericLevel(lvl)
+	} else if lvl, ok := getString(obj, "log_level"); ok {
+		entry.Level = mapGenericLevel(lvl)
+	} else if lvl, ok := getString(obj, "lvl"); ok {
+		entry.Level = mapGenericLevel(lvl)
+	} else {
+		entry.Level = inferLevelFromMessage(entry.Message)
+		if entry.Level == "" {
+			entry.Level = inferLevelFromStream(obj)
+		}
 	}
 
 	// Collect remaining fields as metadata
 	meta := make(map[string]interface{})
 	for k, v := range obj {
 		switch k {
-		case "level", "message", "logs":
+		case "level", "levelname", "severity", "logLevel", "log_level", "lvl", "message", "msg", "log", "logs":
 			continue
 		default:
 			meta[k] = v
@@ -319,6 +338,13 @@ func normalizeLogstashLog(obj map[string]interface{}) models.LogIngestEntry {
 	}
 	if lvl, ok := getString(obj, "level"); ok {
 		entry.Level = mapGenericLevel(lvl)
+	} else if lvl, ok := getString(obj, "severity"); ok {
+		entry.Level = mapGenericLevel(lvl)
+	} else {
+		entry.Level = inferLevelFromMessage(entry.Message)
+		if entry.Level == "" {
+			entry.Level = inferLevelFromStream(obj)
+		}
 	}
 
 	// Map useful Logstash fields
@@ -352,6 +378,50 @@ func mapGenericLevel(level string) models.LogLevel {
 		return models.LogLevelInfo
 	default:
 		return models.LogLevel(strings.ToLower(level))
+	}
+}
+
+func inferLevelFromMessage(message string) models.LogLevel {
+	upper := strings.ToUpper(strings.TrimSpace(message))
+	switch {
+	case hasLevelPrefix(upper, "FATAL"),
+		hasLevelPrefix(upper, "CRITICAL"),
+		hasLevelPrefix(upper, "ERROR"),
+		hasLevelPrefix(upper, "ERR"):
+		return models.LogLevelError
+	case hasLevelPrefix(upper, "WARN"),
+		hasLevelPrefix(upper, "WARNING"):
+		return models.LogLevelWarn
+	case hasLevelPrefix(upper, "INFO"),
+		hasLevelPrefix(upper, "DEBUG"),
+		hasLevelPrefix(upper, "TRACE"):
+		return models.LogLevelInfo
+	default:
+		return ""
+	}
+}
+
+func inferLevelFromStream(obj map[string]interface{}) models.LogLevel {
+	if stream, ok := getString(obj, "stream"); ok && strings.EqualFold(stream, "stderr") {
+		return models.LogLevelError
+	}
+	return models.LogLevelInfo
+}
+
+func hasLevelPrefix(message, level string) bool {
+	message = strings.TrimPrefix(message, "[")
+	message = strings.TrimPrefix(message, "(")
+	if !strings.HasPrefix(message, level) {
+		return false
+	}
+	if len(message) == len(level) {
+		return true
+	}
+	switch message[len(level)] {
+	case ' ', ':', '-', ']', ')':
+		return true
+	default:
+		return false
 	}
 }
 

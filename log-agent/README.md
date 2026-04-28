@@ -45,7 +45,7 @@ docker run -d \
   --name everyup-log-agent \
   -v /path/to/your/app/logs:/var/log/app:ro \
   -e LOG_AGENT_ENDPOINT=http://your-everyup-server:3001 \
-  -e LOG_AGENT_API_KEY=la_your_api_key \
+  -e LOG_AGENT_API_KEY=everyup_your_api_key \
   --restart unless-stopped \
   aiturn/everyup-log-agent:latest
 ```
@@ -74,7 +74,7 @@ services:
     restart: unless-stopped
     environment:
       - LOG_AGENT_ENDPOINT=http://your-everyup-server:3001
-      - LOG_AGENT_API_KEY=la_your_api_key
+      - LOG_AGENT_API_KEY=everyup_your_api_key
     volumes:
       - /path/to/your/app/logs:/var/log/app:ro
 ```
@@ -121,8 +121,6 @@ docker compose up -d
 | `LOG_AGENT_LEVEL` | No | Agent log level: `debug`, `info`, `warn`, `error` | `info` |
 | `LOG_AGENT_RETRY_LIMIT` | No | Retry count when delivery fails. Use `0` for unlimited retries. | `3` |
 | `LOG_AGENT_PATH` | No | Host log directory mounted to `/var/log/app` | none |
-| `LOG_AGENT_WEB_CONSOLE` | No | Enable the test web console | `false` |
-| `LOG_AGENT_WEB_CONSOLE_PORT` | No | Port used by the test web console | `8080` |
 | `LOG_AGENT_HOST` | No | Override the host parsed from `LOG_AGENT_ENDPOINT` | none |
 | `LOG_AGENT_PORT` | No | Override the port parsed from `LOG_AGENT_ENDPOINT` | none |
 | `LOG_AGENT_TLS` | No | Override TLS detection with `on` or `off` | parsed from endpoint |
@@ -155,7 +153,7 @@ services:
       - app-logs:/var/log/app:ro
     environment:
       - LOG_AGENT_ENDPOINT=http://your-everyup-server:3001
-      - LOG_AGENT_API_KEY=la_your_api_key
+      - LOG_AGENT_API_KEY=everyup_your_api_key
     restart: unless-stopped
 
 volumes:
@@ -175,7 +173,7 @@ services:
     image: aiturn/everyup-log-agent:latest
     environment:
       - LOG_AGENT_ENDPOINT=http://your-everyup-server:3001
-      - LOG_AGENT_API_KEY=la_your_api_key
+      - LOG_AGENT_API_KEY=everyup_your_api_key
       - LOG_AGENT_CONFIG=/fluent-bit/etc/stdin.conf
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -213,7 +211,7 @@ Example env file:
 LOG_AGENT_HOST=monitoring.example.com
 LOG_AGENT_PORT=443
 LOG_AGENT_TLS=on
-LOG_AGENT_API_KEY=la_your_api_key
+LOG_AGENT_API_KEY=everyup_your_api_key
 LOG_AGENT_FILE=/var/log/myapp/app.log
 LOG_AGENT_LEVEL=info
 ```
@@ -226,52 +224,6 @@ sudo cp fluent-bit.conf /etc/everyup-agent/
 sudo systemctl enable everyup-log-agent
 sudo systemctl start everyup-log-agent
 ```
-
-## Web Console For Testing
-
-The web console helps confirm that the agent can receive and forward logs.
-
-Do not enable this in production. It starts an unauthenticated HTTP server intended only for temporary testing.
-
-```yaml
-environment:
-  - LOG_AGENT_ENDPOINT=http://your-everyup-server:3001
-  - LOG_AGENT_API_KEY=la_your_api_key
-  - LOG_AGENT_WEB_CONSOLE=true
-  - LOG_AGENT_WEB_CONSOLE_PORT=8080
-ports:
-  - "8080:8080"
-```
-
-### Access options
-
-#### Option 1. Direct port access
-
-Open the console directly:
-
-```text
-http://<server-ip>:8080
-```
-
-This is the simplest option for a quick test. If the page does not open, check your cloud security group or host firewall and temporarily allow the console port.
-
-#### Option 2. Through nginx
-
-Use this when the server is only reachable through your reverse proxy.
-
-```nginx
-location /log-console/ {
-    proxy_pass http://everyup-log-agent:8080/;
-    proxy_set_header Host $host;
-}
-
-location /log {
-    proxy_pass http://everyup-log-agent:8080/log;
-    proxy_set_header Host $host;
-}
-```
-
-The `everyup-log-agent` service must be on the same Docker network as nginx.
 
 ## Log Format
 

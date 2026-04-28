@@ -338,6 +338,237 @@ docker run -d \
   };
 }
 
+export function buildApiCaptureMiddlewareSnippets(origin: string, displayKey: string): Record<string, string> {
+  const endpoint = `${origin}/api/v1/ingest/requests`;
+  return {
+    springboot: `// EveryUpFilter.java — Spring Boot 2.x / 3.x
+// 추가 의존성 없음 (spring-boot-starter-web 포함)
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.ContentCachingRequestWrapper;
+import org.springframework.web.util.ContentCachingResponseWrapper;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.*;
+
+@Component
+public class EveryUpFilter extends OncePerRequestFilter {
+    private static final String ENDPOINT = "${endpoint}";
+    private static final String API_KEY  = "${displayKey}";
+    private final HttpClient http = HttpClient.newHttpClient();
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest req,
+            HttpServletResponse res, FilterChain chain)
+            throws ServletException, IOException {
+        long start   = System.currentTimeMillis();
+        var reqWrap  = new ContentCachingRequestWrapper(req);
+        var resWrap  = new ContentCachingResponseWrapper(res);
+        chain.doFilter(reqWrap, resWrap);
+        resWrap.copyBodyToResponse();
+
+        String payload = """
+            {"method":"%s","path":"%s","statusCode":%d,"durationMs":%d,
+             "reqBody":"%s","resBody":"%s"}
+            """.formatted(
+                req.getMethod(), req.getRequestURI(), res.getStatus(),
+                System.currentTimeMillis() - start,
+                new String(reqWrap.getContentAsByteArray()).replace("\\"", "\\\\\\""),
+                new String(resWrap.getContentAsByteArray()).replace("\\"", "\\\\\\""));
+
+        http.sendAsync(
+            HttpRequest.newBuilder(URI.create(ENDPOINT))
+                .header("X-API-Key", API_KEY)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(payload)).build(),
+            HttpResponse.BodyHandlers.discarding());
+    }
+}`,
+
+    fastapi: `# FastAPI — BaseHTTPMiddleware
+# pip install httpx
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+import httpx, time
+
+ENDPOINT = "${endpoint}"
+API_KEY  = "${displayKey}"
+
+class EveryUpMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        start    = time.monotonic()
+        req_body = await request.body()
+        response = await call_next(request)
+        duration = int((time.monotonic() - start) * 1000)
+
+        chunks = []
+        async for chunk in response.body_iterator:
+            chunks.append(chunk)
+        res_body = b"".join(chunks)
+        async def body_iter(): yield res_body
+        response.body_iterator = body_iter()
+
+        try:
+            async with httpx.AsyncClient() as client:
+                await client.post(ENDPOINT, timeout=3,
+                    headers={"X-API-Key": API_KEY},
+                    json={"method": request.method,
+                          "path": request.url.path,
+                          "statusCode": response.status_code,
+                          "durationMs": duration,
+                          "reqBody": req_body.decode("utf-8", errors="replace"),
+                          "resBody": res_body.decode("utf-8", errors="replace")})
+        except Exception:
+            pass
+        return response
+
+# main.py
+from fastapi import FastAPI
+app = FastAPI()
+app.add_middleware(EveryUpMiddleware)`,
+
+    express: `// Express / Node.js — 미들웨어
+// Node 18+ (fetch 내장) 또는: npm install node-fetch
+
+const ENDPOINT = "${endpoint}";
+const API_KEY  = "${displayKey}";
+
+function everyUpCapture(req, res, next) {
+    const start  = Date.now();
+    const chunks = [];
+    const _write = res.write.bind(res);
+    const _end   = res.end.bind(res);
+
+    res.write = (c, ...a) => { chunks.push(Buffer.from(c)); return _write(c, ...a); };
+    res.end   = (c, ...a) => {
+        if (c) chunks.push(Buffer.from(c));
+        fetch(ENDPOINT, {
+            method: "POST",
+            headers: { "X-API-Key": API_KEY, "Content-Type": "application/json" },
+            body: JSON.stringify({
+                method: req.method, path: req.originalUrl,
+                statusCode: res.statusCode, durationMs: Date.now() - start,
+                reqBody: JSON.stringify(req.body),
+                resBody: Buffer.concat(chunks).toString(),
+            }),
+        }).catch(() => {});
+        return _end(c, ...a);
+    };
+    next();
+}
+
+// app.js
+app.use(express.json());
+app.use(everyUpCapture);`,
+
+    go: `// Go — net/http 미들웨어
+package main
+
+import (
+    "bytes"
+    "encoding/json"
+    "io"
+    "net/http"
+    "time"
+)
+
+const (
+    everyUpEndpoint = "${endpoint}"
+    everyUpAPIKey   = "${displayKey}"
+)
+
+type resCapture struct {
+    http.ResponseWriter
+    status int
+    body   bytes.Buffer
+}
+
+func (r *resCapture) WriteHeader(code int) {
+    r.status = code
+    r.ResponseWriter.WriteHeader(code)
+}
+func (r *resCapture) Write(b []byte) (int, error) {
+    r.body.Write(b)
+    return r.ResponseWriter.Write(b)
+}
+
+func EveryUpCapture(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        start := time.Now()
+        reqBody, _ := io.ReadAll(r.Body)
+        r.Body = io.NopCloser(bytes.NewReader(reqBody))
+
+        rc := &resCapture{ResponseWriter: w, status: 200}
+        next.ServeHTTP(rc, r)
+
+        payload, _ := json.Marshal(map[string]any{
+            "method": r.Method, "path": r.URL.Path,
+            "statusCode": rc.status,
+            "durationMs": time.Since(start).Milliseconds(),
+            "reqBody": string(reqBody),
+            "resBody": rc.body.String(),
+        })
+        go func() {
+            req, _ := http.NewRequest("POST", everyUpEndpoint,
+                bytes.NewReader(payload))
+            req.Header.Set("X-API-Key", everyUpAPIKey)
+            req.Header.Set("Content-Type", "application/json")
+            http.DefaultClient.Do(req)
+        }()
+    })
+}
+
+// 사용: http.ListenAndServe(":8080", EveryUpCapture(mux))`,
+
+    django: `# Django — MIDDLEWARE 클래스
+# settings.py
+# MIDDLEWARE = [
+#     "myapp.middleware.EveryUpMiddleware",
+#     ...
+# ]
+
+# myapp/middleware.py
+import json, time, threading
+import urllib.request
+
+ENDPOINT = "${endpoint}"
+API_KEY  = "${displayKey}"
+
+class EveryUpMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        start    = time.monotonic()
+        req_body = request.body.decode("utf-8", errors="replace")
+        response = self.get_response(request)
+        duration = int((time.monotonic() - start) * 1000)
+
+        res_body = ""
+        if hasattr(response, "content"):
+            res_body = response.content.decode("utf-8", errors="replace")
+
+        payload = json.dumps({
+            "method": request.method, "path": request.path,
+            "statusCode": response.status_code, "durationMs": duration,
+            "reqBody": req_body, "resBody": res_body,
+        }).encode()
+
+        def _send():
+            try:
+                req = urllib.request.Request(ENDPOINT, data=payload,
+                    headers={"X-API-Key": API_KEY,
+                             "Content-Type": "application/json"})
+                urllib.request.urlopen(req, timeout=3)
+            except Exception:
+                pass
+        threading.Thread(target=_send, daemon=True).start()
+        return response`,
+  };
+}
+
 export function buildAgentQuickStart(displayKey: string, origin: string): string {
   return `docker run -d --name everyup-log-agent \
   -v /path/to/your/app/logs:/var/log/app:ro \

@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/aiturn/everyup/internal/alerter"
 	"github.com/aiturn/everyup/internal/database"
 	"github.com/aiturn/everyup/internal/models"
+	"github.com/gofiber/fiber/v2"
 )
 
 // errLogFiltered is returned by processEntry when the log level is filtered out by the service config.
@@ -209,9 +209,10 @@ func (h *LogIngestHandler) processEntry(service *models.Service, entry *models.L
 		return nil, fmt.Errorf("message exceeds maximum size of 10 KB")
 	}
 
-	// Default level to error if not specified
+	// Default to info when no level is specified. Unknown/plain text logs should
+	// not become alerts unless the sender explicitly marks them as warn/error.
 	if entry.Level == "" {
-		entry.Level = models.LogLevelError
+		entry.Level = models.LogLevelInfo
 	}
 
 	// Apply per-service log level filter. Empty filter = accept all levels.

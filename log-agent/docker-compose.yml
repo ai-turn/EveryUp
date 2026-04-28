@@ -6,7 +6,5 @@ services:
     env_file:
       - path: .env
         required: true
-    ports:
-      - "${LOG_AGENT_WEB_CONSOLE_PORT:-8080}:${LOG_AGENT_WEB_CONSOLE_PORT:-8080}"
     volumes:
       - ${LOG_AGENT_PATH:-/var/log/app}:/var/log/app

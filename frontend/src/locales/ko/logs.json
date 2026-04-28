@@ -218,7 +218,7 @@
                 "goodFor": "이런 경우에 좋아요",
                 "start": "이 방식으로 시작",
                 "notSureTitle": "어떤 방식을 골라야 할지 모르겠다면",
-                "notSureDesc": "대부분의 경우 Log Agent가 가장 안정적입니다. 애플리케이션 로거가 직접 로그를 보내야 할 때만 HTTP Appender를 선택하세요."
+                "notSureDesc": "로그 파일 수집은 Log Agent, API 요청/응답 캡처는 API 요청 캡처, 로거 라이브러리로 직접 전송은 HTTP Appender를 선택하세요."
             },
             "paths": {
                 "agent": {
@@ -229,6 +229,16 @@
                         "파일로 기록되는 로그 (.log, stdout)",
                         "Docker / VM / 베어메탈 환경",
                         "앱 코드를 건드리지 않는 경우"
+                    ]
+                },
+                "apiCapture": {
+                    "label": "API 요청 캡처",
+                    "tagline": "앱에 미들웨어를 추가해 HTTP 요청/응답 수집",
+                    "description": "Spring Boot, FastAPI, Express 등에 미들웨어 코드를 추가합니다. 인프라 변경 없이 요청 메서드, 경로, 상태코드, 응답시간, 바디를 수집합니다.",
+                    "goodFor": [
+                        "HTTP API 요청/응답 전체 캡처",
+                        "Spring Boot / FastAPI / Express / Go / Django",
+                        "인프라 변경 없이 코드만 수정"
                     ]
                 },
                 "httpAppender": {
@@ -258,7 +268,8 @@
             },
             "endpoint": {
                 "title": "수집 엔드포인트",
-                "description": "주요 로거 포맷을 자동 인식하며 요청당 최대 100개의 로그를 받을 수 있습니다."
+                "description": "주요 로거 포맷을 자동 인식하며 요청당 최대 100개의 로그를 받을 수 있습니다.",
+                "apiCaptureDescription": "요청당 최대 50건의 API 요청을 받습니다. 헤더는 X-API-Key를 사용합니다."
             },
             "test": {
                 "title": "먼저 연결 테스트",
@@ -270,9 +281,13 @@
             "setup": {
                 "agentTitle": "에이전트 실행",
                 "httpTitle": "Appender 추가",
+                "apiCaptureTitle": "미들웨어 추가",
                 "agentDesc": "로그 디렉터리를 마운트하고 EveryUp Log Agent를 시작합니다.",
                 "httpDesc": "프레임워크를 선택하고 로거에 HTTP 전송 설정을 추가합니다.",
+                "apiCaptureDesc": "프레임워크를 선택하고 미들웨어 코드를 앱에 추가합니다.",
                 "agentHint": "대부분은 Quick Start로 충분합니다. 애플리케이션이 로그를 쓰는 디렉터리로 마운트 경로만 바꿔주세요.",
+                "levelPrefixHint": "일반 텍스트 로그는 각 줄 앞에 [INFO], [WARN], [ERROR] 같은 prefix를 붙이면 레벨을 정확히 분류할 수 있습니다. JSON 로그는 level, severity, logLevel, lvl 필드를 사용할 수 있습니다.",
+                "apiCaptureHint": "Settings 탭 → API 캡처에서 캡처 모드를 먼저 활성화해야 수집이 시작됩니다.",
                 "otherOptions": "다른 배포 옵션",
                 "otherOptionsDesc": "Fluent Bit 설정, Docker sidecar, Docker pipe, systemd 예시입니다."
             },
