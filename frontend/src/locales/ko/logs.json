@@ -212,13 +212,13 @@
         "integration": {
             "picker": {
                 "eyebrow": "연동",
-                "title": "로그를 어떻게 보낼까요?",
-                "subtitle": "배포 환경에 맞는 방식을 선택하세요.",
+                "title": "무엇을 수집할까요?",
+                "subtitle": "수집하려는 데이터 종류에 맞는 방식을 선택하세요.",
                 "recommended": "권장",
                 "goodFor": "이런 경우에 좋아요",
                 "start": "이 방식으로 시작",
                 "notSureTitle": "어떤 방식을 골라야 할지 모르겠다면",
-                "notSureDesc": "로그 파일 수집은 Log Agent, API 요청/응답 캡처는 API 요청 캡처, 로거 라이브러리로 직접 전송은 HTTP Appender를 선택하세요."
+                "notSureDesc": "로그 파일이나 stdout을 수집하려면 Log Agent, HTTP 요청/응답 데이터를 캡처하려면 API 요청 캡처를 선택하세요."
             },
             "paths": {
                 "agent": {

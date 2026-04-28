@@ -212,13 +212,13 @@
         "integration": {
             "picker": {
                 "eyebrow": "Integration",
-                "title": "How do you want to send logs?",
-                "subtitle": "Choose the setup that matches your deployment.",
+                "title": "What do you want to collect?",
+                "subtitle": "Choose the method that matches the data you want to capture.",
                 "recommended": "Recommended",
                 "goodFor": "Good for",
                 "start": "Start with this",
                 "notSureTitle": "Not sure which one to choose?",
-                "notSureDesc": "Use Log Agent for file-based logs, API Request Capture for HTTP request/response data, and HTTP Appender to send logs directly from a logger library."
+                "notSureDesc": "Use Log Agent to collect log files or stdout. Use API Request Capture to record HTTP request and response data."
             },
             "paths": {
                 "agent": {
