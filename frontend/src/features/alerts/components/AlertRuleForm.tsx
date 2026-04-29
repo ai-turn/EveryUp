@@ -341,8 +341,8 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                 <div className="flex gap-2 mb-4">
                     {([
                         { value: 'endpoint' as const, label: t('alerts.rules.endpointHealth'), icon: 'monitor_heart' },
-                        { value: 'resource' as const, label: t('alerts.rules.serverResource'), icon: 'memory' },
                         { value: 'log' as const, label: t('alerts.rules.logRule'), icon: 'article' },
+                        { value: 'resource' as const, label: t('alerts.rules.serverResource'), icon: 'memory' },
                     ]).map(cat => (
                         <button key={cat.value} type="button" onClick={() => handleCategoryChange(cat.value)}
                             className={`flex-1 flex items-center justify-center gap-2 px-3 py-3 text-sm font-bold border-2 rounded-xl transition-all ${watchedCategory === cat.value ? 'border-primary bg-primary/10 text-primary' : 'border-slate-100 dark:border-ui-border-dark text-slate-500 hover:border-slate-200 dark:hover:border-slate-700'
