@@ -199,12 +199,12 @@ services:
   myapp:
     image: myapp:latest
     volumes:
-      - app-logs:/var/log/app   # App writes log files here
+      - app-logs:<YOUR_LOG_PATH>   # ← 앱이 로그를 쓰는 실제 경로로 교체 (예: /app/logs)
 
   everyup-agent:
     image: aiturn/everyup-log-agent:latest
     volumes:
-      - app-logs:/var/log/app:ro  # Agent reads those files
+      - app-logs:<YOUR_LOG_PATH>:ro  # ← 위와 동일한 경로 유지 (읽기 전용)
     environment:
       - LOG_AGENT_ENDPOINT=${origin}
       - LOG_AGENT_API_KEY=${displayKey}

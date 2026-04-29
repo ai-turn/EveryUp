@@ -37,7 +37,6 @@ const PATH_OPTIONS: PathOption[] = [
     labelKey: 'logServices.integration.paths.agent.label',
     taglineKey: 'logServices.integration.paths.agent.tagline',
     descriptionKey: 'logServices.integration.paths.agent.description',
-    recommended: true,
     goodForKeys: [
       'logServices.integration.paths.agent.goodFor.0',
       'logServices.integration.paths.agent.goodFor.1',

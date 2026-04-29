@@ -217,7 +217,7 @@
                 "recommended": "Recommended",
                 "goodFor": "Good for",
                 "start": "Start with this",
-                "notSureTitle": "Not sure which one to choose?",
+                "notSureTitle": "Not sure which to pick?",
                 "notSureDesc": "Use Log Agent to collect log files or stdout. Use API Request Capture to record HTTP request and response data."
             },
             "paths": {
