@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	"github.com/aiturn/everyup/internal/alerter"
 	"github.com/aiturn/everyup/internal/database"
 	"github.com/aiturn/everyup/internal/models"
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 // NotificationHandler handles notification channel operations
@@ -149,9 +149,9 @@ func (h *NotificationHandler) Test(c *fiber.Ctx) error {
 	// Create test notification
 	notification := alerter.Notification{
 		ServiceID:   "test",
-		ServiceName: "Test Service",
+		ServiceName: "Notification Test",
 		Status:      models.StatusHealthy,
-		Message:     "This is a test notification from MT-Monitor",
+		Message:     "This is a test notification. Your EVERYUP notification channel is connected correctly.",
 		Time:        time.Now(),
 	}
 

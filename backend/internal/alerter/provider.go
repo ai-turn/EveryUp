@@ -11,6 +11,9 @@ type AlertProvider interface {
 	Send(notification Notification) error
 }
 
+// ProductName is used as the visible sender/brand in outbound notifications.
+const ProductName = "EVERYUP"
+
 // Alert types
 const (
 	AlertTypeHealthCheck = "healthcheck"
@@ -49,7 +52,7 @@ type Notification struct {
 	// Resource alert fields
 	HostID    string
 	HostName  string
-	Metric    string  // "cpu" | "memory" | "disk" | "http_status" | "response_time"
+	Metric    string // "cpu" | "memory" | "disk" | "http_status" | "response_time"
 	Value     float64
 	Threshold float64
 	Severity  string // "critical" | "warning" | "info"

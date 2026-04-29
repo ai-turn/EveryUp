@@ -67,7 +67,7 @@ func (p *DiscordProvider) buildHealthCheckEmbed(n Notification) map[string]inter
 	}
 
 	return map[string]interface{}{
-		"username": "MT-Monitor",
+		"username": ProductName,
 		"embeds": []map[string]interface{}{
 			{
 				"title":       fmt.Sprintf("%s Service %s: %s", statusEmoji, n.Status, n.ServiceName),
@@ -133,7 +133,7 @@ func (p *DiscordProvider) buildLogEmbed(n Notification) map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"username": "MT-Monitor",
+		"username": ProductName,
 		"embeds": []map[string]interface{}{
 			{
 				"title":       fmt.Sprintf("%s Log Alert [%s] — %s", levelEmoji, strings.ToUpper(n.LogLevel), n.ServiceName),
@@ -148,7 +148,7 @@ func (p *DiscordProvider) buildLogEmbed(n Notification) map[string]interface{} {
 
 // buildEndpointEmbed creates an endpoint health alert Discord embed
 func (p *DiscordProvider) buildEndpointEmbed(n Notification) map[string]interface{} {
-	color := 3447003   // Blue for info (recovery)
+	color := 3447003 // Blue for info (recovery)
 	severityEmoji := "ℹ️"
 	switch strings.ToLower(n.Severity) {
 	case "critical":
@@ -172,7 +172,7 @@ func (p *DiscordProvider) buildEndpointEmbed(n Notification) map[string]interfac
 	}
 
 	return map[string]interface{}{
-		"username": "MT-Monitor",
+		"username": ProductName,
 		"embeds": []map[string]interface{}{
 			{
 				"title":       fmt.Sprintf("%s Endpoint Alert [%s] — %s", severityEmoji, strings.ToUpper(n.Severity), n.ServiceName),
@@ -209,7 +209,7 @@ func (p *DiscordProvider) buildEndpointEmbed(n Notification) map[string]interfac
 // buildSystemEmbed creates a system event Discord embed (e.g. server boot)
 func (p *DiscordProvider) buildSystemEmbed(n Notification) map[string]interface{} {
 	return map[string]interface{}{
-		"username": "MT-Monitor",
+		"username": ProductName,
 		"embeds": []map[string]interface{}{
 			{
 				"title":       "🟢 System Notification",
@@ -223,7 +223,7 @@ func (p *DiscordProvider) buildSystemEmbed(n Notification) map[string]interface{
 
 // buildResourceEmbed creates a resource threshold alert Discord embed
 func (p *DiscordProvider) buildResourceEmbed(n Notification) map[string]interface{} {
-	color := 3447003   // Blue for info
+	color := 3447003 // Blue for info
 	severityEmoji := "ℹ️"
 	switch strings.ToLower(n.Severity) {
 	case "critical":
@@ -235,7 +235,7 @@ func (p *DiscordProvider) buildResourceEmbed(n Notification) map[string]interfac
 	}
 
 	return map[string]interface{}{
-		"username": "MT-Monitor",
+		"username": ProductName,
 		"embeds": []map[string]interface{}{
 			{
 				"title":       fmt.Sprintf("%s Resource Alert [%s] — %s", severityEmoji, strings.ToUpper(n.Severity), n.HostName),

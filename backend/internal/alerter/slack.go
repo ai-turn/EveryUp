@@ -67,7 +67,7 @@ func (p *SlackProvider) buildHealthCheckPayload(n Notification) map[string]inter
 	}
 
 	return map[string]interface{}{
-		"username": "MT-Monitor",
+		"username": ProductName,
 		"attachments": []map[string]interface{}{
 			{
 				"color": color,
@@ -100,11 +100,11 @@ func (p *SlackProvider) buildHealthCheckPayload(n Notification) map[string]inter
 						},
 					},
 					{
-						"type":    "context",
+						"type": "context",
 						"elements": []map[string]interface{}{
 							{
 								"type": "mrkdwn",
-								"text": fmt.Sprintf("MT-Monitor • %s", n.Time.Format("2006-01-02 15:04:05")),
+								"text": fmt.Sprintf("%s • %s", ProductName, n.Time.Format("2006-01-02 15:04:05")),
 							},
 						},
 					},
@@ -152,7 +152,7 @@ func (p *SlackProvider) buildLogPayload(n Notification) map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"username": "MT-Monitor",
+		"username": ProductName,
 		"attachments": []map[string]interface{}{
 			{
 				"color": color,
@@ -176,11 +176,11 @@ func (p *SlackProvider) buildLogPayload(n Notification) map[string]interface{} {
 						"fields": fields,
 					},
 					{
-						"type":    "context",
+						"type": "context",
 						"elements": []map[string]interface{}{
 							{
 								"type": "mrkdwn",
-								"text": fmt.Sprintf("MT-Monitor • %s", n.Time.Format("2006-01-02 15:04:05")),
+								"text": fmt.Sprintf("%s • %s", ProductName, n.Time.Format("2006-01-02 15:04:05")),
 							},
 						},
 					},
@@ -192,7 +192,7 @@ func (p *SlackProvider) buildLogPayload(n Notification) map[string]interface{} {
 
 // buildEndpointPayload creates an endpoint health alert Slack payload
 func (p *SlackProvider) buildEndpointPayload(n Notification) map[string]interface{} {
-	color := "#3b82f6"      // Blue for info
+	color := "#3b82f6" // Blue for info
 	severityEmoji := ":information_source:"
 	switch strings.ToLower(n.Severity) {
 	case "critical":
@@ -216,7 +216,7 @@ func (p *SlackProvider) buildEndpointPayload(n Notification) map[string]interfac
 	}
 
 	return map[string]interface{}{
-		"username": "MT-Monitor",
+		"username": ProductName,
 		"attachments": []map[string]interface{}{
 			{
 				"color": color,
@@ -257,11 +257,11 @@ func (p *SlackProvider) buildEndpointPayload(n Notification) map[string]interfac
 						},
 					},
 					{
-						"type":    "context",
+						"type": "context",
 						"elements": []map[string]interface{}{
 							{
 								"type": "mrkdwn",
-								"text": fmt.Sprintf("MT-Monitor • %s", n.Time.Format("2006-01-02 15:04:05")),
+								"text": fmt.Sprintf("%s • %s", ProductName, n.Time.Format("2006-01-02 15:04:05")),
 							},
 						},
 					},
@@ -274,7 +274,7 @@ func (p *SlackProvider) buildEndpointPayload(n Notification) map[string]interfac
 // buildSystemPayload creates a system event Slack payload
 func (p *SlackProvider) buildSystemPayload(n Notification) map[string]interface{} {
 	return map[string]interface{}{
-		"username": "MT-Monitor",
+		"username": ProductName,
 		"attachments": []map[string]interface{}{
 			{
 				"color": "#10b981",
@@ -294,11 +294,11 @@ func (p *SlackProvider) buildSystemPayload(n Notification) map[string]interface{
 						},
 					},
 					{
-						"type":    "context",
+						"type": "context",
 						"elements": []map[string]interface{}{
 							{
 								"type": "mrkdwn",
-								"text": fmt.Sprintf("MT-Monitor • %s", n.Time.Format("2006-01-02 15:04:05")),
+								"text": fmt.Sprintf("%s • %s", ProductName, n.Time.Format("2006-01-02 15:04:05")),
 							},
 						},
 					},
@@ -322,7 +322,7 @@ func (p *SlackProvider) buildResourcePayload(n Notification) map[string]interfac
 	}
 
 	return map[string]interface{}{
-		"username": "MT-Monitor",
+		"username": ProductName,
 		"attachments": []map[string]interface{}{
 			{
 				"color": color,
@@ -367,11 +367,11 @@ func (p *SlackProvider) buildResourcePayload(n Notification) map[string]interfac
 						},
 					},
 					{
-						"type":    "context",
+						"type": "context",
 						"elements": []map[string]interface{}{
 							{
 								"type": "mrkdwn",
-								"text": fmt.Sprintf("MT-Monitor • %s", n.Time.Format("2006-01-02 15:04:05")),
+								"text": fmt.Sprintf("%s • %s", ProductName, n.Time.Format("2006-01-02 15:04:05")),
 							},
 						},
 					},
