@@ -12,7 +12,7 @@ export interface ApiCaptureSettingsProps {
 const MODE_OPTIONS: { value: ApiCaptureMode; labelKey: string; descKey: string; icon: string }[] = [
   { value: 'disabled',    labelKey: '캡처 안함',    descKey: '요청을 캡처하지 않습니다',              icon: 'block' },
   { value: 'errors_only', labelKey: '에러만',       descKey: '5xx 응답만 캡처합니다',                 icon: 'error_outline' },
-  { value: 'sampled',     labelKey: '샘플링',       descKey: '요청의 일부 비율만 캡처합니다',         icon: 'filter_alt' },
+  { value: 'sampled',     labelKey: '샘플링',       descKey: '에러는 모두, 비에러는 설정 비율만 캡처합니다', icon: 'filter_alt' },
   { value: 'all',         labelKey: '모든 요청',    descKey: '모든 요청을 캡처합니다 (비용 주의)',    icon: 'all_inclusive' },
 ];
 
@@ -452,11 +452,20 @@ export function ApiCaptureSettings({ serviceId }: ApiCaptureSettingsProps) {
         title={t('캡처')}
         subtitle={t('이 서비스에서 어떤 요청을 캡처할지 선택합니다')}
       >
-        <FieldRow
-          title={t('캡처 모드')}
-          hint={t('캡처 안함 모드가 아닌 경우 에러는 항상 캡처됩니다')}
-        >
-          <ModeGrid value={form.mode} onChange={(v) => setForm((f) => ({ ...f, mode: v }))} />
+        <FieldRow title={t('캡처 모드')}>
+          <div className="space-y-3">
+            <ModeGrid value={form.mode} onChange={(v) => setForm((f) => ({ ...f, mode: v }))} />
+            {form.mode !== 'disabled' && (
+              <div className="flex items-baseline gap-3 px-3 py-2.5 rounded-lg bg-red-50 dark:bg-red-900/15 border border-red-200/60 dark:border-red-800/40">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400 shrink-0">
+                  {t('항상 포함')}
+                </span>
+                <p className="text-xs text-slate-700 dark:text-text-secondary-dark leading-relaxed">
+                  {t('5xx 에러 응답은 모드와 샘플 비율에 관계없이 항상 캡처됩니다.')}
+                </p>
+              </div>
+            )}
+          </div>
         </FieldRow>
 
         {form.mode === 'sampled' && (

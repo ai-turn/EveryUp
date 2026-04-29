@@ -55,11 +55,13 @@ func normalizeFormEncoded(body string) (models.LogIngestEntry, error) {
 // into a slice of LogIngestEntry. Supported formats:
 //
 //   - JSON array:  [{ "level":"error", "message":"..." }, ...] (Fluent Bit)
-//   - MT native:   { "level":"error", "message":"..." } or { "logs":[...] }
-//   - Winston:     { "level":"error", "message":"...", "timestamp":"..." }
-//   - Serilog:     { "events":[{ "@t":"...", "@mt":"...", "@l":"Error" }] }
-//   - Logstash:    { "@timestamp":"...", "level":"ERROR", "message":"..." }
-//   - Python dict: { "levelname":"ERROR", "msg":"...", "name":"root" }
+//   - MT native:   { "level":"debug", "message":"..." } or { "logs":[...] }
+//   - Winston:     { "level":"info", "message":"...", "timestamp":"..." }
+//   - Serilog:     { "events":[{ "@t":"...", "@mt":"...", "@l":"Verbose" }] }
+//   - Logstash:    { "@timestamp":"...", "level":"DEBUG", "message":"..." }
+//   - Python dict: { "levelname":"TRACE", "msg":"...", "name":"root" }
+//
+// Levels are preserved as one of: error, warn, info, debug, trace.
 func normalizeRawLogs(body []byte) ([]models.LogIngestEntry, error) {
 	// Try JSON array first (Fluent Bit HTTP output sends bare arrays)
 	body = bytes.TrimSpace(body)
@@ -187,8 +189,12 @@ func mapSerilogLevel(level string) models.LogLevel {
 		return models.LogLevelError
 	case "warning":
 		return models.LogLevelWarn
-	case "information", "debug", "verbose":
+	case "information":
 		return models.LogLevelInfo
+	case "debug":
+		return models.LogLevelDebug
+	case "verbose":
+		return models.LogLevelTrace
 	default:
 		return models.LogLevel(strings.ToLower(level))
 	}
@@ -374,8 +380,12 @@ func mapGenericLevel(level string) models.LogLevel {
 		return models.LogLevelError
 	case "WARN", "WARNING":
 		return models.LogLevelWarn
-	case "INFO", "INFORMATION", "DEBUG", "TRACE", "VERBOSE":
+	case "INFO", "INFORMATION":
 		return models.LogLevelInfo
+	case "DEBUG":
+		return models.LogLevelDebug
+	case "TRACE", "VERBOSE":
+		return models.LogLevelTrace
 	default:
 		return models.LogLevel(strings.ToLower(level))
 	}
@@ -392,10 +402,13 @@ func inferLevelFromMessage(message string) models.LogLevel {
 	case hasLevelPrefix(upper, "WARN"),
 		hasLevelPrefix(upper, "WARNING"):
 		return models.LogLevelWarn
-	case hasLevelPrefix(upper, "INFO"),
-		hasLevelPrefix(upper, "DEBUG"),
-		hasLevelPrefix(upper, "TRACE"):
+	case hasLevelPrefix(upper, "INFO"):
 		return models.LogLevelInfo
+	case hasLevelPrefix(upper, "DEBUG"):
+		return models.LogLevelDebug
+	case hasLevelPrefix(upper, "TRACE"),
+		hasLevelPrefix(upper, "VERBOSE"):
+		return models.LogLevelTrace
 	default:
 		return ""
 	}

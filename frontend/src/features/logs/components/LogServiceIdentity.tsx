@@ -4,10 +4,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
 import { MaterialIcon } from '../../../components/common';
-import { api, Service } from '../../../services/api';
+import { api, LogLevel, LOG_LEVELS, Service } from '../../../services/api';
 import { getErrorMessage } from '../../../utils/errors';
-
-type LogLevel = 'error' | 'warn' | 'info';
 
 interface Props {
   service: Service;
@@ -16,12 +14,14 @@ interface Props {
 }
 
 const LEVEL_STYLE: Record<LogLevel, { text: string; activeBg: string; dot: string; label: string }> = {
-  error: { text: 'text-red-500 dark:text-red-400',   activeBg: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',     dot: 'bg-red-500',   label: 'Error' },
-  warn:  { text: 'text-amber-500 dark:text-amber-400', activeBg: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800', dot: 'bg-amber-500', label: 'Warn' },
-  info:  { text: 'text-sky-500 dark:text-sky-400',   activeBg: 'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800',     dot: 'bg-sky-500',   label: 'Info' },
+  error: { text: 'text-red-500 dark:text-red-400',     activeBg: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',         dot: 'bg-red-500',    label: 'Error' },
+  warn:  { text: 'text-amber-500 dark:text-amber-400', activeBg: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800', dot: 'bg-amber-500',  label: 'Warn'  },
+  info:  { text: 'text-sky-500 dark:text-sky-400',     activeBg: 'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800',         dot: 'bg-sky-500',    label: 'Info'  },
+  debug: { text: 'text-slate-500 dark:text-slate-300', activeBg: 'bg-slate-50 dark:bg-slate-800/30 border-slate-200 dark:border-slate-700', dot: 'bg-slate-500',  label: 'Debug' },
+  trace: { text: 'text-slate-400 dark:text-slate-400', activeBg: 'bg-slate-50 dark:bg-slate-800/20 border-slate-200 dark:border-slate-700', dot: 'bg-slate-400',  label: 'Trace' },
 };
 
-const ALL_LEVELS: LogLevel[] = ['error', 'warn', 'info'];
+const ALL_LEVELS: readonly LogLevel[] = LOG_LEVELS;
 
 function InfoChip({ icon, label, value, accent }: { icon: string; label: string; value: string; accent?: boolean }) {
   return (
@@ -42,7 +42,8 @@ function LevelFilterChip({ service, onServiceUpdate }: { service: Service; onSer
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const initialFilter = (service.logLevelFilter ?? []) as LogLevel[];
-  // Empty filter (from server) = accept all → treat as all 3 selected locally
+  // Empty filter (legacy NULL or pre-migration data) → display as all 5 selected.
+  // Post-migration servers store an explicit array, so this is mostly defensive.
   const effectiveSelected = initialFilter.length === 0 ? new Set<LogLevel>(ALL_LEVELS) : new Set(initialFilter);
   const acceptAll = effectiveSelected.size === ALL_LEVELS.length;
 
@@ -59,8 +60,9 @@ function LevelFilterChip({ service, onServiceUpdate }: { service: Service; onSer
   }, [isOpen]);
 
   const save = async (next: Set<LogLevel>) => {
-    // All 3 selected = accept all → send empty array to backend
-    const filter: LogLevel[] = next.size === ALL_LEVELS.length ? [] : [...next];
+    // Always send the explicit list. Backend persists exactly what the user picked
+    // so the UI never has to reverse-engineer "all = empty".
+    const filter: LogLevel[] = ALL_LEVELS.filter((l) => next.has(l));
     setSaving(true);
     try {
       const updated = await api.updateService(service.id, { logLevelFilter: filter });
@@ -140,7 +142,7 @@ function LevelFilterChip({ service, onServiceUpdate }: { service: Service; onSer
           </div>
           <p className="text-[11px] text-slate-500 dark:text-text-muted-dark leading-relaxed mb-3">
             {t('logServices.identity.levelFilterPopoverHint', {
-              defaultValue: 'Select which levels the server will store. Selecting all three is equivalent to accepting every level.',
+              defaultValue: 'Select which levels the server will store. Defaults to error / warn / info — debug & trace are opt-in.',
             })}
           </p>
           <div className="flex flex-col gap-1.5">

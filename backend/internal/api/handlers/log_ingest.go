@@ -24,6 +24,7 @@ const maxBatchSize = 100
 // LogIngestHandler handles external log ingestion via API key
 type LogIngestHandler struct {
 	logRepo      *database.LogRepository
+	ruleRepo     *database.AlertRuleRepository
 	alertManager *alerter.Manager
 }
 
@@ -31,6 +32,7 @@ type LogIngestHandler struct {
 func NewLogIngestHandler() *LogIngestHandler {
 	return &LogIngestHandler{
 		logRepo:      database.NewLogRepository(),
+		ruleRepo:     database.NewAlertRuleRepository(),
 		alertManager: alerter.NewManager(),
 	}
 }
@@ -255,7 +257,17 @@ func (h *LogIngestHandler) processEntry(service *models.Service, entry *models.L
 
 // triggerAlertIfNeeded dispatches alert for error/warn level logs
 func (h *LogIngestHandler) triggerAlertIfNeeded(service *models.Service, logEntry *models.Log, metadata map[string]interface{}) {
-	if logEntry.Level == models.LogLevelError || logEntry.Level == models.LogLevelWarn {
+	if logEntry.Level != models.LogLevelError && logEntry.Level != models.LogLevelWarn {
+		return
+	}
+
+	rules, err := h.ruleRepo.GetEnabledLogRulesByServiceID(service.ID)
+	if err != nil {
+		log.Printf("Failed to get log alert rules for service %s: %v", service.ID, err)
+		return
+	}
+
+	if len(rules) == 0 {
 		go h.alertManager.DispatchLogAlert(
 			service.ID,
 			service.Name,
@@ -263,5 +275,62 @@ func (h *LogIngestHandler) triggerAlertIfNeeded(service *models.Service, logEntr
 			logEntry.Message,
 			metadata,
 		)
+		return
+	}
+
+	for _, rule := range rules {
+		if logRuleMatches(rule, logEntry.Level) {
+			go h.alertManager.DispatchLogAlertForRule(
+				rule,
+				service.ID,
+				service.Name,
+				string(logEntry.Level),
+				logEntry.Message,
+				metadata,
+			)
+		}
+	}
+}
+
+func logRuleMatches(rule models.AlertRule, level models.LogLevel) bool {
+	value := logLevelValue(level)
+	threshold := rule.Threshold
+	if threshold <= 0 {
+		threshold = logLevelValue(models.LogLevelWarn)
+	}
+	return compareAlertValue(value, rule.Operator, threshold)
+}
+
+func logLevelValue(level models.LogLevel) float64 {
+	switch level {
+	case models.LogLevelError:
+		return 4
+	case models.LogLevelWarn:
+		return 3
+	case models.LogLevelInfo:
+		return 2
+	case models.LogLevelDebug:
+		return 1
+	case models.LogLevelTrace:
+		return 0
+	default:
+		return 0
+	}
+}
+
+func compareAlertValue(value float64, operator models.AlertOperator, threshold float64) bool {
+	switch operator {
+	case models.AlertOperatorGT:
+		return value > threshold
+	case models.AlertOperatorGTE:
+		return value >= threshold
+	case models.AlertOperatorLT:
+		return value < threshold
+	case models.AlertOperatorLTE:
+		return value <= threshold
+	case models.AlertOperatorEQ:
+		return value == threshold
+	default:
+		return value >= threshold
 	}
 }

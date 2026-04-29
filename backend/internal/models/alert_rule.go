@@ -8,6 +8,7 @@ type AlertRuleType string
 const (
 	AlertRuleTypeResource AlertRuleType = "resource"
 	AlertRuleTypeService  AlertRuleType = "service"
+	AlertRuleTypeLog      AlertRuleType = "log"
 	AlertRuleTypeSystem   AlertRuleType = "system"
 )
 
@@ -21,6 +22,7 @@ const (
 	AlertMetricStatusChange AlertMetric = "status_change"
 	AlertMetricHTTPStatus   AlertMetric = "http_status"   // HTTP status code comparison
 	AlertMetricResponseTime AlertMetric = "response_time" // Response time in ms
+	AlertMetricLogLevel     AlertMetric = "log_level"
 )
 
 // AlertOperator defines comparison operators
@@ -56,9 +58,9 @@ type AlertRule struct {
 	Duration  int           `json:"duration"` // minutes of consecutive breach
 	Severity  AlertSeverity `json:"severity"`
 	IsEnabled bool          `json:"isEnabled"`
-	IsSystem  bool          `json:"isSystem"`  // system rules cannot be deleted
-	Cooldown  int           `json:"cooldown"`  // seconds between re-alerts
-	Message   string        `json:"message"`   // optional custom alert message
+	IsSystem  bool          `json:"isSystem"` // system rules cannot be deleted
+	Cooldown  int           `json:"cooldown"` // seconds between re-alerts
+	Message   string        `json:"message"`  // optional custom alert message
 	CreatedAt time.Time     `json:"createdAt"`
 	UpdatedAt time.Time     `json:"updatedAt"`
 

@@ -157,10 +157,17 @@ func (r *ServiceCreateRequest) ToService() *Service {
 		url = r.Host
 	}
 
-	// Convert string log level filter to LogLevel slice
+	// Convert string log level filter to LogLevel slice.
+	// For new log-type services, default to [error, warn, info] when caller did
+	// not specify a filter — keeps DEBUG/TRACE opt-in so existing log volume
+	// patterns don't suddenly flood after the level expansion.
 	var logLevelFilter []LogLevel
-	for _, l := range r.LogLevelFilter {
-		logLevelFilter = append(logLevelFilter, LogLevel(strings.ToLower(l)))
+	if len(r.LogLevelFilter) > 0 {
+		for _, l := range r.LogLevelFilter {
+			logLevelFilter = append(logLevelFilter, LogLevel(strings.ToLower(l)))
+		}
+	} else if r.Type == ServiceTypeLog {
+		logLevelFilter = []LogLevel{LogLevelError, LogLevelWarn, LogLevelInfo}
 	}
 
 	now := time.Now()

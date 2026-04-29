@@ -1,6 +1,10 @@
 -- transform.lua
 -- Transforms Fluent Bit records into EveryUp native format:
---   { "level": "error|warn|info", "message": "...", "metadata": {...} }
+--   { "level": "error|warn|info|debug|trace", "message": "...", "metadata": {...} }
+--
+-- DEBUG/TRACE are preserved as distinct levels. The backend's default service
+-- filter is [error, warn, info] so DEBUG/TRACE are dropped at ingest unless the
+-- service explicitly opts in via Settings.
 
 local function normalize_level(raw_level)
     raw_level = string.upper(tostring(raw_level or ""))
@@ -9,8 +13,12 @@ local function normalize_level(raw_level)
         return "error"
     elseif raw_level == "WARN" or raw_level == "WARNING" then
         return "warn"
-    elseif raw_level == "INFO" or raw_level == "INFORMATION" or raw_level == "DEBUG" or raw_level == "TRACE" or raw_level == "VERBOSE" then
+    elseif raw_level == "INFO" or raw_level == "INFORMATION" then
         return "info"
+    elseif raw_level == "DEBUG" then
+        return "debug"
+    elseif raw_level == "TRACE" or raw_level == "VERBOSE" then
+        return "trace"
     end
 
     return nil
@@ -27,10 +35,13 @@ local function infer_level_from_message(message)
     elseif string.match(text, "^%s*%[?WARN%]?[%s:%-]") or
            string.match(text, "^%s*%[?WARNING%]?[%s:%-]") then
         return "warn"
-    elseif string.match(text, "^%s*%[?INFO%]?[%s:%-]") or
-           string.match(text, "^%s*%[?DEBUG%]?[%s:%-]") or
-           string.match(text, "^%s*%[?TRACE%]?[%s:%-]") then
+    elseif string.match(text, "^%s*%[?INFO%]?[%s:%-]") then
         return "info"
+    elseif string.match(text, "^%s*%[?DEBUG%]?[%s:%-]") then
+        return "debug"
+    elseif string.match(text, "^%s*%[?TRACE%]?[%s:%-]") or
+           string.match(text, "^%s*%[?VERBOSE%]?[%s:%-]") then
+        return "trace"
     end
 
     return nil

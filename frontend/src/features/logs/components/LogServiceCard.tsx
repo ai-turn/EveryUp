@@ -9,14 +9,18 @@ interface LogServiceCardProps {
 }
 
 const levelBadgeStyle: Record<string, string> = {
-  error:   'bg-red-500/10 text-red-500',
-  warn:    'bg-amber-500/10 text-amber-500',
-  info:    'bg-blue-500/10 text-blue-500',
+  error: 'bg-red-500/10 text-red-500',
+  warn:  'bg-amber-500/10 text-amber-500',
+  info:  'bg-blue-500/10 text-blue-500',
+  debug: 'bg-slate-500/10 text-slate-500 dark:text-slate-300',
+  trace: 'bg-slate-400/10 text-slate-500 dark:text-slate-400',
 };
 
 export const LogServiceCard = memo(function LogServiceCard({ service, onClick }: LogServiceCardProps) {
   const levels = service.logLevelFilter ?? [];
-  const allLevels = levels.length === 0 || levels.length === 3;
+  // length 0 = no filter set (server should never produce this post-migration);
+  // length 5 = user explicitly enabled every level (incl. debug/trace).
+  const allLevels = levels.length === 0 || levels.length === 5;
 
   return (
     <div

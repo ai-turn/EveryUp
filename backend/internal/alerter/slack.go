@@ -116,11 +116,21 @@ func (p *SlackProvider) buildHealthCheckPayload(n Notification) map[string]inter
 
 // buildLogPayload creates a log alert Slack payload
 func (p *SlackProvider) buildLogPayload(n Notification) map[string]interface{} {
-	color := "#ef4444"      // Red for ERROR
+	color := "#ef4444" // Red — error (default)
 	levelEmoji := ":red_circle:"
-	if strings.EqualFold(n.LogLevel, "warn") {
-		color = "#f59e0b"   // Yellow for WARN
+	switch strings.ToLower(n.LogLevel) {
+	case "warn":
+		color = "#f59e0b"
 		levelEmoji = ":large_yellow_circle:"
+	case "info":
+		color = "#3b82f6"
+		levelEmoji = ":large_blue_circle:"
+	case "debug":
+		color = "#9aa0a6"
+		levelEmoji = ":white_circle:"
+	case "trace":
+		color = "#bfc1c4"
+		levelEmoji = ":black_circle:"
 	}
 
 	fields := []map[string]interface{}{

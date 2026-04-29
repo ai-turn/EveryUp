@@ -180,6 +180,36 @@ func (r *AlertRuleRepository) GetEnabledByServiceID(serviceID string) ([]models.
 	return rules, nil
 }
 
+// GetEnabledLogRulesByServiceID returns enabled log rules for a log service (or global log rules).
+func (r *AlertRuleRepository) GetEnabledLogRulesByServiceID(serviceID string) ([]models.AlertRule, error) {
+	rows, err := DB.Query(`
+		SELECT `+alertRuleSelectColumns+`
+		FROM alert_rules
+		WHERE is_enabled = 1 AND type = 'log'
+		  AND (service_id = ? OR service_id IS NULL OR service_id = '')
+		ORDER BY severity DESC
+	`, serviceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var rules []models.AlertRule
+	for rows.Next() {
+		rule, err := scanAlertRuleFields(rows.Scan)
+		if err != nil {
+			return nil, err
+		}
+		rules = append(rules, rule)
+	}
+
+	for i := range rules {
+		chIDs, _ := loadChannelIDs(rules[i].ID)
+		rules[i].ChannelIDs = chIDs
+	}
+	return rules, nil
+}
+
 // Create creates a new alert rule with channel mappings in a transaction.
 func (r *AlertRuleRepository) Create(rule *models.AlertRule) error {
 	return Transaction(func(tx *sql.Tx) error {

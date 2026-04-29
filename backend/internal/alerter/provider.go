@@ -43,7 +43,7 @@ type Notification struct {
 
 	// Log alert fields
 	AlertType string // "healthcheck" | "log" | "resource" | "endpoint"
-	LogLevel  string // "error" | "warn"
+	LogLevel  string // "error" | "warn" (info/debug/trace are not currently dispatched)
 	Metadata  map[string]interface{}
 
 	// Resource alert fields

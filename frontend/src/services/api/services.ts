@@ -25,8 +25,12 @@ export interface Service {
   cronExpression?: string;
   createdAt?: string;
   // log-type services only. undefined/[] = accept all levels.
-  logLevelFilter?: Array<'error' | 'warn' | 'info'>;
+  logLevelFilter?: LogLevel[];
 }
+
+export type LogLevel = 'error' | 'warn' | 'info' | 'debug' | 'trace';
+
+export const LOG_LEVELS: readonly LogLevel[] = ['error', 'warn', 'info', 'debug', 'trace'] as const;
 
 export interface CreateServiceData {
   name: string;
@@ -42,7 +46,7 @@ export interface CreateServiceData {
   tags?: string[];
   scheduleType?: 'interval' | 'cron';
   cronExpression?: string;
-  logLevelFilter?: Array<'error' | 'warn' | 'info'>;
+  logLevelFilter?: LogLevel[];
 }
 
 export interface Metric {
@@ -91,7 +95,7 @@ export interface LogEntry {
   id: number;
   serviceId: string;
   serviceName?: string;
-  level: 'info' | 'warn' | 'error';
+  level: LogLevel;
   message: string;
   metadata?: Record<string, unknown>;
   source?: 'internal' | 'external' | 'agent';

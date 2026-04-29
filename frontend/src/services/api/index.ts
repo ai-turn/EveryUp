@@ -24,6 +24,7 @@ export const api = {
 // Re-export all types — 기존 import 경로 유지
 export type { ApiResponse, RequestFn } from './base';
 export type { TimelineItem } from './dashboard';
+export { LOG_LEVELS } from './services';
 export type {
   Service,
   CreateServiceData,
@@ -34,6 +35,7 @@ export type {
   UptimeDay,
   UptimeParams,
   LogEntry,
+  LogLevel,
   LogsParams,
   Incident,
   HealthStatus,

@@ -20,6 +20,7 @@ const METRIC_LABELS: Record<string, string> = {
   status_change: 'Status',
   http_status: 'HTTP Status',
   response_time: 'Response Time',
+  log_level: 'Log Level',
 };
 
 const ENDPOINT_METRICS = new Set(['http_status', 'response_time']);
@@ -62,7 +63,25 @@ function TargetBadge({ rule, services, hosts }: TargetBadgeProps) {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold rounded-full bg-slate-100 text-slate-500 dark:bg-ui-hover-dark dark:text-text-muted-dark">
         <MaterialIcon name="public" className="text-xs" />
-        {t('alerts.rules.allServices')}
+        {t('alerts.rules.allHealthchecks')}
+      </span>
+    );
+  }
+
+  if (rule.type === 'log') {
+    if (rule.serviceId) {
+      const svc = services.find(s => s.id === rule.serviceId);
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400 max-w-30">
+          <MaterialIcon name="article" className="text-xs" />
+          <span className="truncate">{svc?.name ?? rule.serviceId}</span>
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold rounded-full bg-slate-100 text-slate-500 dark:bg-ui-hover-dark dark:text-text-muted-dark">
+        <MaterialIcon name="article" className="text-xs" />
+        {t('alerts.rules.allLogServices')}
       </span>
     );
   }

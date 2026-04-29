@@ -40,7 +40,9 @@
             "all": "전체",
             "error": "에러",
             "warn": "경고",
-            "info": "정보"
+            "info": "정보",
+            "debug": "디버그",
+            "trace": "트레이스"
         },
         "table": {
             "timestamp": "타임스탬프",
@@ -200,12 +202,12 @@
             "levelFilterTitle": "로그 레벨 필터",
             "levelFilterDesc": "이 서비스에서 저장할 로그 레벨을 선택합니다. 선택하지 않은 레벨은 수집 시점에 조용히 무시되며, 에이전트 오류로 처리되지는 않습니다.",
             "acceptAll": "모든 레벨 수집",
-            "acceptAllDesc": "error, warn, info - 모두 수집합니다 (기본값)",
+            "acceptAllDesc": "error / warn / info 기본 수집 (debug, trace는 옵트인)",
             "custom": "선택 수집",
             "customDesc": "선택한 레벨만 수집합니다",
             "selectAtLeastOne": "최소 하나의 로그 레벨을 선택해야 합니다.",
             "saved": "로그 레벨 필터가 저장되었습니다.",
-            "summaryAll": "수집 중: error / warn / info",
+            "summaryAll": "수집 중: error / warn / info / debug / trace",
             "summaryNone": "선택된 레벨 없음 - 아무것도 수집되지 않습니다",
             "summaryCollecting": "수집 중"
         },

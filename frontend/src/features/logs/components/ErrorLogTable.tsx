@@ -12,7 +12,7 @@ interface ErrorLogTableProps {
 
 const LIMIT_STEP = 50;
 
-const LEVEL_FILTERS = ['all', 'error', 'warn', 'info'] as const;
+const LEVEL_FILTERS = ['all', 'error', 'warn', 'info', 'debug', 'trace'] as const;
 type LevelFilter = (typeof LEVEL_FILTERS)[number];
 
 const levelBadgeStyle: Record<string, string> = {
@@ -21,12 +21,18 @@ const levelBadgeStyle: Record<string, string> = {
   warn:
     'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:bg-amber-500/20 dark:border-amber-500/40 dark:text-amber-400',
   info: 'bg-blue-500/10 border-blue-500/30 text-blue-600 dark:bg-blue-500/20 dark:border-blue-500/40 dark:text-blue-400',
+  debug:
+    'bg-slate-500/10 border-slate-500/30 text-slate-600 dark:bg-slate-500/20 dark:border-slate-500/40 dark:text-slate-300',
+  trace:
+    'bg-slate-400/10 border-slate-400/30 text-slate-500 dark:bg-slate-400/15 dark:border-slate-400/30 dark:text-slate-400',
 };
 
 const levelDotStyle: Record<string, string> = {
   error: 'bg-red-500',
   warn: 'bg-amber-500',
   info: 'bg-blue-500',
+  debug: 'bg-slate-500',
+  trace: 'bg-slate-400',
 };
 
 export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
@@ -80,6 +86,8 @@ export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
     error: logs.filter((l) => l.level === 'error').length,
     warn: logs.filter((l) => l.level === 'warn').length,
     info: logs.filter((l) => l.level === 'info').length,
+    debug: logs.filter((l) => l.level === 'debug').length,
+    trace: logs.filter((l) => l.level === 'trace').length,
   };
 
   const toggleRow = (id: number) => {

@@ -99,7 +99,7 @@ const mockLogServices: Service[] = [
     responseTime: 0,
     tags: ['prod'],
     scheduleType: 'interval' as const,
-    logLevelFilter: ['error', 'warn', 'info'],
+    logLevelFilter: ['error', 'warn', 'info', 'debug'],
   },
 ];
 

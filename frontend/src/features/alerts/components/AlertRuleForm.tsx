@@ -17,8 +17,8 @@ import { useSidePanel } from '../../../contexts/SidePanelContext';
 
 const ruleSchema = z.object({
     name: z.string().min(1),
-    ruleCategory: z.enum(['resource', 'endpoint']),
-    metric: z.enum(['cpu', 'memory', 'disk', 'http_status', 'response_time']),
+    ruleCategory: z.enum(['resource', 'endpoint', 'log']),
+    metric: z.enum(['cpu', 'memory', 'disk', 'http_status', 'response_time', 'log_level']),
     serviceId: z.string().optional(),
     hostId: z.string().optional(),
     operator: z.enum(['gt', 'gte', 'lt', 'lte', 'eq']),
@@ -34,6 +34,7 @@ const ruleSchema = z.object({
 });
 
 type RuleFormValues = z.infer<typeof ruleSchema>;
+type RuleCategory = RuleFormValues['ruleCategory'];
 type ConditionPreset = 'normal' | 'error' | 'custom';
 
 const OPERATOR_SYMBOLS: Record<string, string> = {
@@ -50,10 +51,12 @@ function getPresetValues(metric: RuleFormValues['metric'], preset: ConditionPres
     if (preset === 'normal') {
         if (metric === 'http_status') return { operator: 'lte', threshold: 299 };
         if (metric === 'response_time') return { operator: 'lt', threshold: 1000 };
+        if (metric === 'log_level') return { operator: 'eq', threshold: 4 };
         return { operator: 'lt', threshold: 70, duration: 1 };
     }
     if (metric === 'http_status') return { operator: 'gte', threshold: 400 };
     if (metric === 'response_time') return { operator: 'gt', threshold: 3000 };
+    if (metric === 'log_level') return { operator: 'gte', threshold: 3 };
     return { operator: 'gt', threshold: 80, duration: 3 };
 }
 
@@ -69,6 +72,7 @@ function buildDefaultMessage(metric: RuleFormValues['metric'], operator: RuleFor
     const opSym = OPERATOR_SYMBOLS[operator] ?? operator;
     if (metric === 'http_status') return `HTTP Status ${opSym} ${threshold} detected`;
     if (metric === 'response_time') return `Response Time ${opSym} ${threshold}ms detected`;
+    if (metric === 'log_level') return `Log {level}: {message}`;
     const metricLabel = { cpu: 'CPU', memory: 'Memory', disk: 'Disk' }[metric] ?? metric.toUpperCase();
     return `${metricLabel} usage ${opSym} ${threshold}%, sustained for ${duration}min on {host_name}`;
 }
@@ -218,12 +222,12 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
 
     useEffect(() => {
         if (rule) {
-            const isEndpoint = rule.type === 'service';
+            const ruleCategory: RuleCategory = rule.type === 'service' ? 'endpoint' : rule.type === 'log' ? 'log' : 'resource';
             const metric = rule.metric as RuleFormValues['metric'];
             const preset = detectConditionPreset(metric, rule.operator, rule.threshold, rule.duration);
             reset({
                 name: rule.name,
-                ruleCategory: isEndpoint ? 'endpoint' : 'resource',
+                ruleCategory,
                 metric,
                 serviceId: rule.serviceId ?? '',
                 hostId: rule.hostId ?? '',
@@ -252,11 +256,11 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
         }
     };
 
-    const handleCategoryChange = (cat: 'resource' | 'endpoint') => {
+    const handleCategoryChange = (cat: RuleCategory) => {
         setValue('ruleCategory', cat);
         setValue('serviceId', '');
         setValue('hostId', '');
-        const newMetric: RuleFormValues['metric'] = cat === 'resource' ? 'cpu' : 'http_status';
+        const newMetric: RuleFormValues['metric'] = cat === 'resource' ? 'cpu' : cat === 'log' ? 'log_level' : 'http_status';
         setValue('metric', newMetric);
         applyPreset('error', newMetric);
     };
@@ -285,17 +289,18 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
     const onSubmit = async (data: RuleFormValues) => {
         try {
             const isEndpoint = data.ruleCategory === 'endpoint';
+            const isLog = data.ruleCategory === 'log';
             const payload = {
                 name: data.name,
-                type: isEndpoint ? 'service' as const : 'resource' as const,
+                type: isLog ? 'log' as const : isEndpoint ? 'service' as const : 'resource' as const,
                 metric: data.metric,
-                serviceId: isEndpoint ? (data.serviceId || null) : null,
-                hostId: !isEndpoint ? (data.hostId || null) : null,
+                serviceId: isEndpoint || isLog ? (data.serviceId || null) : null,
+                hostId: !isEndpoint && !isLog ? (data.hostId || null) : null,
                 operator: data.operator,
                 threshold: data.threshold,
                 duration: data.duration,
                 severity: data.severity,
-                cooldown: isEndpoint ? 0 : data.cooldown,
+                cooldown: isEndpoint || isLog ? 0 : data.cooldown,
                 message: customMessage.trim() || '',
                 channelIds: data.channelIds,
             };
@@ -314,12 +319,14 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
     };
 
     const isEndpoint = watchedCategory === 'endpoint';
-    const metricName = { cpu: 'CPU', memory: 'Memory', disk: 'Disk', http_status: 'HTTP Status', response_time: 'Response Time' }[watchedMetric] ?? watchedMetric;
-    const thresholdUnit = watchedMetric === 'response_time' ? 'ms' : watchedMetric === 'http_status' ? '' : '%';
-    const selectedService = services.find(s => s.id === watchedServiceId);
+    const isLog = watchedCategory === 'log';
+    const metricName = { cpu: 'CPU', memory: 'Memory', disk: 'Disk', http_status: 'HTTP Status', response_time: 'Response Time', log_level: 'Log Level' }[watchedMetric] ?? watchedMetric;
+    const thresholdUnit = watchedMetric === 'response_time' ? 'ms' : watchedMetric === 'http_status' || watchedMetric === 'log_level' ? '' : '%';
+    const selectableServices = isLog ? services.filter(s => s.type === 'log') : services.filter(s => s.type !== 'log');
+    const selectedService = selectableServices.find(s => s.id === watchedServiceId);
     const selectedHost = hosts.find(h => h.id === watchedHostId);
-    const targetLabel = isEndpoint
-        ? (watchedServiceId ? (selectedService?.name ?? watchedServiceId) : t('alerts.rules.allServices'))
+    const targetLabel = isEndpoint || isLog
+        ? (watchedServiceId ? (selectedService?.name ?? watchedServiceId) : (isLog ? t('alerts.rules.allLogServices') : t('alerts.rules.allHealthchecks')))
         : (watchedHostId ? (selectedHost?.name ?? watchedHostId) : t('alerts.rules.allHosts'));
 
     return (
@@ -333,8 +340,9 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                 <SectionHeader icon="target" label={t('alerts.rules.sectionTarget')} />
                 <div className="flex gap-2 mb-4">
                     {([
-                        { value: 'endpoint' as const, label: t('alerts.rules.endpointHealth'), icon: 'http' },
+                        { value: 'endpoint' as const, label: t('alerts.rules.endpointHealth'), icon: 'monitor_heart' },
                         { value: 'resource' as const, label: t('alerts.rules.serverResource'), icon: 'memory' },
+                        { value: 'log' as const, label: t('alerts.rules.logRule'), icon: 'article' },
                     ]).map(cat => (
                         <button key={cat.value} type="button" onClick={() => handleCategoryChange(cat.value)}
                             className={`flex-1 flex items-center justify-center gap-2 px-3 py-3 text-sm font-bold border-2 rounded-xl transition-all ${watchedCategory === cat.value ? 'border-primary bg-primary/10 text-primary' : 'border-slate-100 dark:border-ui-border-dark text-slate-500 hover:border-slate-200 dark:hover:border-slate-700'
@@ -350,11 +358,11 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                         <label className="block text-xs font-bold text-slate-500 mb-2">{t('alerts.rules.target')}</label>
                         <select
                             value={isEndpoint ? watchedServiceId : watchedHostId}
-                            onChange={e => setValue(isEndpoint ? 'serviceId' : 'hostId', e.target.value)}
+                            onChange={e => setValue(isEndpoint || isLog ? 'serviceId' : 'hostId', e.target.value)}
                             className="w-full px-4 py-2.5 bg-slate-50 dark:bg-ui-hover-dark border-2 border-slate-100 dark:border-ui-border-dark rounded-xl text-sm font-semibold outline-none focus:border-primary dark:text-white"
                         >
-                            <option value="">{isEndpoint ? t('alerts.rules.allServices') : t('alerts.rules.allHosts')}</option>
-                            {(isEndpoint ? services : hosts).map(item => (
+                            <option value="">{isLog ? t('alerts.rules.allLogServices') : isEndpoint ? t('alerts.rules.allHealthchecks') : t('alerts.rules.allHosts')}</option>
+                            {(isEndpoint || isLog ? selectableServices : hosts).map(item => (
                                 <option key={item.id} value={item.id}>{item.name}</option>
                             ))}
                         </select>
@@ -363,11 +371,11 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                     <div>
                         <label className="block text-xs font-bold text-slate-500 mb-2">{t('alerts.rules.metric')}</label>
                         <div className="flex flex-wrap gap-2">
-                            {(isEndpoint ? ['http_status', 'response_time'] as const : ['cpu', 'memory', 'disk'] as const).map(m => (
+                            {(isLog ? ['log_level'] as const : isEndpoint ? ['http_status', 'response_time'] as const : ['cpu', 'memory', 'disk'] as const).map(m => (
                                 <button key={m} type="button" onClick={() => handleMetricChange(m)}
                                     className={`px-4 py-2 rounded-lg text-xs font-bold border-2 transition-all ${watchedMetric === m ? 'border-primary bg-primary/10 text-primary' : 'border-slate-100 dark:border-ui-border-dark text-slate-500'
                                         }`}>
-                                    {m.replace('_', ' ').toUpperCase()}
+                                    {m === 'log_level' ? t('alerts.rules.logLevel') : m.replace('_', ' ').toUpperCase()}
                                 </button>
                             ))}
                         </div>
@@ -397,11 +405,11 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                     ))}
                 </div>
 
-                {isEndpoint && (
+                {(isEndpoint || isLog) && (
                     <div className="mt-3 flex items-center justify-between p-3 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-xl">
                         <div>
-                            <p className="text-xs font-bold text-slate-700 dark:text-white">{t('alerts.rules.consecutiveChecks')}</p>
-                            <p className="text-xs text-slate-400">{t('alerts.rules.consecutiveChecksHint')}</p>
+                            <p className="text-xs font-bold text-slate-700 dark:text-white">{isLog ? t('alerts.rules.logSensitivity') : t('alerts.rules.consecutiveChecks')}</p>
+                            <p className="text-xs text-slate-400">{isLog ? t('alerts.rules.logSensitivityHint') : t('alerts.rules.consecutiveChecksHint')}</p>
                         </div>
                         <input
                             type="number"
@@ -441,7 +449,12 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                     <code className="px-2 py-0.5 bg-sky-500/20 text-sky-300 rounded text-xs font-mono">{metricName}</code>
                     <code className="px-1.5 py-0.5 bg-slate-700 text-slate-300 rounded text-xs font-mono">{OPERATOR_SYMBOLS[watchedOperator] ?? watchedOperator}</code>
                     <code className="px-2 py-0.5 bg-red-500/20 text-red-300 rounded text-xs font-mono">{watchedThreshold}{thresholdUnit}</code>
-                    {isEndpoint ? (
+                    {isLog ? (
+                        <>
+                            <span className="text-slate-600 font-mono text-xs">MATCHES</span>
+                            <code className="px-2 py-0.5 bg-slate-700 text-slate-300 rounded text-xs font-mono">{watchedThreshold >= 4 ? 'ERROR' : 'WARN+'}</code>
+                        </>
+                    ) : isEndpoint ? (
                         <>
                             <span className="text-slate-600 font-mono text-xs">FAILS</span>
                             <code className="px-2 py-0.5 bg-slate-700 text-slate-300 rounded text-xs font-mono">{watchedDuration}x</code>
@@ -510,11 +523,11 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                                     <div>
                                         <span className="text-[#8BE9FD]">"type"</span>
                                         <span className="text-[#6272A4]">: </span>
-                                        <span className="text-[#50FA7B]">"{isEndpoint ? 'endpoint' : 'resource'}"</span>
+                                        <span className="text-[#50FA7B]">"{isLog ? 'log' : isEndpoint ? 'healthcheck' : 'resource'}"</span>
                                         <span className="text-[#6272A4]">,</span>
                                     </div>
                                     <div>
-                                        <span className="text-[#8BE9FD]">"{isEndpoint ? 'service' : 'host'}"</span>
+                                        <span className="text-[#8BE9FD]">"{isEndpoint || isLog ? 'service' : 'host'}"</span>
                                         <span className="text-[#6272A4]">: </span>
                                         <span className="text-[#F1FA8C]">"{targetLabel}"</span>
                                         <span className="text-[#6272A4]">,</span>
@@ -583,7 +596,9 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                         />
                         <p className="mt-1 text-xs text-slate-400 font-mono">
                             <span className="text-[#6272A4]">// vars: </span>
-                            {isEndpoint
+                            {isLog
+                                ? <span className="text-[#BD93F9]">{'{service_name}'} {'{level}'} {'{message}'}</span>
+                                : isEndpoint
                                 ? <span className="text-[#BD93F9]">{'{service_name}'} {'{value}'} {'{threshold}'} {'{metric}'}</span>
                                 : <span className="text-[#BD93F9]">{'{host_name}'} {'{value}'} {'{threshold}'} {'{metric}'} {'{duration}'}</span>
                             }

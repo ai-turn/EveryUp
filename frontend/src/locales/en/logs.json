@@ -40,7 +40,9 @@
             "all": "All",
             "error": "Error",
             "warn": "Warning",
-            "info": "Info"
+            "info": "Info",
+            "debug": "Debug",
+            "trace": "Trace"
         },
         "table": {
             "timestamp": "Timestamp",
@@ -200,12 +202,12 @@
             "levelFilterTitle": "Log Level Filter",
             "levelFilterDesc": "Choose which log levels this service stores. Unselected levels are silently dropped at ingest time and do not count as agent errors.",
             "acceptAll": "Accept all levels",
-            "acceptAllDesc": "error, warn, info - collect everything (default)",
+            "acceptAllDesc": "error / warn / info by default — debug and trace are opt-in",
             "custom": "Custom selection",
             "customDesc": "Only collect selected levels",
             "selectAtLeastOne": "Select at least one log level.",
             "saved": "Log level filter saved.",
-            "summaryAll": "Collecting: error / warn / info",
+            "summaryAll": "Collecting: error / warn / info / debug / trace",
             "summaryNone": "No levels selected - nothing will be collected",
             "summaryCollecting": "Collecting"
         },

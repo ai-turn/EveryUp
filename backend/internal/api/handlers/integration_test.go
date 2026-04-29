@@ -597,6 +597,122 @@ func TestLogIngest_WithApiKey(t *testing.T) {
 	}
 }
 
+// TestLogService_DefaultLogLevelFilter verifies that creating a log service
+// without specifying logLevelFilter populates it with [error, warn, info]
+// (DEBUG/TRACE are opt-in).
+func TestLogService_DefaultLogLevelFilter(t *testing.T) {
+	ts := setupTestServer(t)
+	token := ts.setupAdmin(t, "admin", "testpass123")
+	auth := authHeader(token)
+
+	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
+		"id":   "log-default-filter",
+		"name": "Default Filter",
+		"type": "log",
+	}, auth...)
+
+	var svc struct {
+		LogLevelFilter []string `json:"logLevelFilter"`
+	}
+	if err := json.Unmarshal(createResult.Data, &svc); err != nil {
+		t.Fatalf("unmarshal create response: %v", err)
+	}
+
+	if len(svc.LogLevelFilter) != 3 {
+		t.Fatalf("logLevelFilter len = %d, want 3 — got %v", len(svc.LogLevelFilter), svc.LogLevelFilter)
+	}
+	want := map[string]bool{"error": true, "warn": true, "info": true}
+	for _, l := range svc.LogLevelFilter {
+		if !want[l] {
+			t.Errorf("unexpected level %q in default filter", l)
+		}
+	}
+}
+
+// TestLogIngest_DebugBlockedByDefault verifies that DEBUG logs are rejected
+// when the service has the default [error, warn, info] filter.
+func TestLogIngest_DebugBlockedByDefault(t *testing.T) {
+	ts := setupTestServer(t)
+	token := ts.setupAdmin(t, "admin", "testpass123")
+	auth := authHeader(token)
+
+	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
+		"id":   "log-debug-blocked",
+		"name": "Debug Blocked",
+		"type": "log",
+	}, auth...)
+
+	var svc struct {
+		ApiKey string `json:"apiKey"`
+	}
+	json.Unmarshal(createResult.Data, &svc)
+
+	// Send one DEBUG log + one ERROR log.
+	resp, result := ts.doRequest(t, "POST", "/api/v1/logs/ingest", map[string]interface{}{
+		"logs": []map[string]interface{}{
+			{"level": "debug", "message": "sql executed"},
+			{"level": "error", "message": "boom"},
+		},
+	}, "Authorization", "Bearer "+svc.ApiKey)
+
+	if resp.StatusCode != 201 {
+		t.Fatalf("status = %d, want 201, error = %v", resp.StatusCode, result.Error)
+	}
+
+	// Verify only the ERROR log was stored.
+	_, logsResult := ts.doRequest(t, "GET", "/api/v1/services/log-debug-blocked/logs", nil, auth...)
+	var logs []struct {
+		Level string `json:"level"`
+	}
+	json.Unmarshal(logsResult.Data, &logs)
+
+	if len(logs) != 1 {
+		t.Fatalf("len(logs) = %d, want 1 (DEBUG should be filtered out)", len(logs))
+	}
+	if logs[0].Level != "error" {
+		t.Errorf("stored level = %q, want %q", logs[0].Level, "error")
+	}
+}
+
+// TestLogIngest_DebugAllowedWhenFilterIncludesIt verifies that DEBUG logs are
+// stored when the service's filter explicitly includes "debug".
+func TestLogIngest_DebugAllowedWhenFilterIncludesIt(t *testing.T) {
+	ts := setupTestServer(t)
+	token := ts.setupAdmin(t, "admin", "testpass123")
+	auth := authHeader(token)
+
+	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
+		"id":             "log-debug-allowed",
+		"name":           "Debug Allowed",
+		"type":           "log",
+		"logLevelFilter": []string{"error", "warn", "info", "debug", "trace"},
+	}, auth...)
+
+	var svc struct {
+		ApiKey string `json:"apiKey"`
+	}
+	json.Unmarshal(createResult.Data, &svc)
+
+	resp, _ := ts.doRequest(t, "POST", "/api/v1/logs/ingest", map[string]interface{}{
+		"level":   "debug",
+		"message": "sql executed",
+	}, "Authorization", "Bearer "+svc.ApiKey)
+
+	if resp.StatusCode != 201 {
+		t.Fatalf("status = %d, want 201", resp.StatusCode)
+	}
+
+	_, logsResult := ts.doRequest(t, "GET", "/api/v1/services/log-debug-allowed/logs", nil, auth...)
+	var logs []struct {
+		Level string `json:"level"`
+	}
+	json.Unmarshal(logsResult.Data, &logs)
+
+	if len(logs) != 1 || logs[0].Level != "debug" {
+		t.Errorf("stored logs = %+v, want one debug entry", logs)
+	}
+}
+
 func TestLogIngest_InvalidApiKey(t *testing.T) {
 	ts := setupTestServer(t)
 

@@ -93,11 +93,21 @@ func (p *DiscordProvider) buildHealthCheckEmbed(n Notification) map[string]inter
 
 // buildLogEmbed creates a log alert Discord embed
 func (p *DiscordProvider) buildLogEmbed(n Notification) map[string]interface{} {
-	color := 15158332  // Red for ERROR
+	color := 15158332 // Red — error (default)
 	levelEmoji := "🔴"
-	if strings.EqualFold(n.LogLevel, "warn") {
-		color = 16776960 // Yellow for WARN
+	switch strings.ToLower(n.LogLevel) {
+	case "warn":
+		color = 16776960 // Yellow
 		levelEmoji = "🟡"
+	case "info":
+		color = 3447003 // Blue
+		levelEmoji = "🔵"
+	case "debug":
+		color = 10132122 // Slate
+		levelEmoji = "⚪"
+	case "trace":
+		color = 12566463 // Light slate
+		levelEmoji = "⚫"
 	}
 
 	fields := []map[string]interface{}{

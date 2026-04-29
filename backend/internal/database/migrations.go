@@ -194,6 +194,9 @@ func migrate() error {
 	if err := migrateV20(); err != nil {
 		return fmt.Errorf("v20 migration failed: %w", err)
 	}
+	if err := migrateV21(); err != nil {
+		return fmt.Errorf("v21 migration failed: %w", err)
+	}
 
 	return nil
 }
@@ -711,6 +714,24 @@ func migrateV20() error {
 			}
 		}
 		return nil
+	})
+}
+
+// migrateV21 backfills the services.log_level_filter column for existing log
+// services that left it NULL (= "accept all"). After DEBUG/TRACE were promoted
+// to first-class levels, "accept all" would suddenly include those, so we pin
+// pre-existing log services to the previous behavior: error/warn/info only.
+// New services pick up the same default in models.ServiceCreateRequest.ToService.
+// Added: 2026-04-29
+func migrateV21() error {
+	return Transaction(func(tx *sql.Tx) error {
+		_, err := tx.Exec(`
+			UPDATE services
+			SET log_level_filter = '["error","warn","info"]'
+			WHERE type = 'log'
+			  AND (log_level_filter IS NULL OR log_level_filter = '' OR log_level_filter = 'null')
+		`)
+		return err
 	})
 }
 

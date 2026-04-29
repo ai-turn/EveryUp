@@ -12,6 +12,8 @@ const (
 	LogLevelError LogLevel = "error"
 	LogLevelWarn  LogLevel = "warn"
 	LogLevelInfo  LogLevel = "info"
+	LogLevelDebug LogLevel = "debug"
+	LogLevelTrace LogLevel = "trace"
 )
 
 // LogSource represents where the log originated from

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aiturn/everyup/internal/config"
@@ -117,6 +118,38 @@ func (m *Manager) DispatchLogAlert(serviceID, serviceName, level, message string
 	}
 
 	m.Dispatch(notification)
+}
+
+// DispatchLogAlertForRule sends a log alert through the channels selected by a rule.
+func (m *Manager) DispatchLogAlertForRule(rule models.AlertRule, serviceID, serviceName, level, message string, metadata map[string]interface{}) {
+	fingerprint := GenerateFingerprint(rule.ID+":"+serviceID, level, message)
+
+	if !m.dedup.ShouldAlert(fingerprint) {
+		log.Printf("Dedup: suppressed duplicate log rule alert for service %s [%s]", serviceName, level)
+		return
+	}
+
+	if rule.Message != "" {
+		message = strings.NewReplacer(
+			"{service_name}", serviceName,
+			"{level}", level,
+			"{message}", message,
+		).Replace(rule.Message)
+	}
+
+	notification := Notification{
+		RuleID:      rule.ID,
+		ServiceID:   serviceID,
+		ServiceName: serviceName,
+		Message:     message,
+		Time:        time.Now(),
+		AlertType:   AlertTypeLog,
+		LogLevel:    level,
+		Metadata:    metadata,
+		Severity:    string(rule.Severity),
+	}
+
+	m.DispatchToChannels(notification, rule.ChannelIDs)
 }
 
 // DispatchToChannels sends a notification to specific channels by ID.
