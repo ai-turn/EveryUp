@@ -83,13 +83,13 @@ export function RequestFilters({ params, onChange, pathSuggestions = [] }: Reque
   }
 
   const chipBase =
-    'px-3 py-1 rounded-full text-xs font-medium cursor-pointer transition-all duration-100 select-none';
+    'px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all duration-100 select-none';
   const chipActive = 'bg-primary text-white';
   const chipInactive =
     'bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-muted-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark';
 
   const groupClass =
-    'h-9 flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-2';
+    'h-11 flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-2';
   const groupLabelClass =
     'text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-text-dim-dark select-none pr-1 border-r border-slate-200 dark:border-ui-border-dark mr-1';
 
@@ -146,7 +146,7 @@ export function RequestFilters({ params, onChange, pathSuggestions = [] }: Reque
         </div>
 
         {/* Errors only toggle */}
-        <label className="h-9 flex items-center gap-2 cursor-pointer rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-3">
+        <label className="h-11 flex items-center gap-2 cursor-pointer rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-3">
           <Toggle
             checked={!!params.errorsOnly}
             onChange={setErrorsOnly}
@@ -248,7 +248,7 @@ function SearchCombobox({ value, onChange, suggestions }: SearchComboboxProps) {
           aria-activedescendant={
             focusedIndex >= 0 ? `${listboxId}-opt-${focusedIndex}` : undefined
           }
-          className={`h-9 w-full pl-9 pr-9 text-sm bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-text-dim-dark focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors ${
+          className={`h-11 w-full pl-9 pr-9 text-sm bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-text-dim-dark focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors ${
             showDropdown ? 'rounded-t-lg rounded-b-none border-b-transparent' : 'rounded-lg'
           }`}
         />
