@@ -361,7 +361,7 @@ public class EveryUpFilter extends OncePerRequestFilter {
     private final HttpClient http = HttpClient.newHttpClient();
 
     // ──────────────────────────────────────────────────────────────────
-    // 마스킹 (수정 가능): 아래 필드에 해당하는 JSON 값은 *** 로 치환
+    // 마스킹 (생략 가능): 아래 필드에 해당하는 JSON 값은 *** 로 치환
     // ──────────────────────────────────────────────────────────────────
     private static final Set<String> MASK_BODY_FIELDS = Set.of(
         "password", "token", "secret", "accessToken", "refreshToken", "apiKey");
@@ -417,7 +417,7 @@ ENDPOINT = "${endpoint}"
 API_KEY  = "${displayKey}"
 
 # ──────────────────────────────────────────────────────────────────
-# 마스킹 (수정 가능): 아래 필드에 해당하는 JSON 값은 *** 로 치환
+# 마스킹 (생략 가능): 아래 필드에 해당하는 JSON 값은 *** 로 치환
 # ──────────────────────────────────────────────────────────────────
 MASK_BODY_FIELDS = {"password", "token", "secret",
                     "accessToken", "refreshToken", "apiKey"}
@@ -468,7 +468,7 @@ const ENDPOINT = "${endpoint}";
 const API_KEY  = "${displayKey}";
 
 // ──────────────────────────────────────────────────────────────────
-// 마스킹 (수정 가능): 아래 필드에 해당하는 JSON 값은 *** 로 치환
+// 마스킹 (생략 가능): 아래 필드에 해당하는 JSON 값은 *** 로 치환
 // ──────────────────────────────────────────────────────────────────
 const MASK_BODY_FIELDS = ["password", "token", "secret",
                           "accessToken", "refreshToken", "apiKey"];
@@ -528,7 +528,7 @@ const (
 )
 
 // ──────────────────────────────────────────────────────────────────
-// 마스킹 (수정 가능): 아래 필드에 해당하는 JSON 값은 *** 로 치환
+// 마스킹 (생략 가능): 아래 필드에 해당하는 JSON 값은 *** 로 치환
 // ──────────────────────────────────────────────────────────────────
 var maskBodyFields = []string{"password", "token", "secret",
     "accessToken", "refreshToken", "apiKey"}
@@ -601,7 +601,7 @@ ENDPOINT = "${endpoint}"
 API_KEY  = "${displayKey}"
 
 # ──────────────────────────────────────────────────────────────────
-# 마스킹 (수정 가능): 아래 필드에 해당하는 JSON 값은 *** 로 치환
+# 마스킹 (생략 가능): 아래 필드에 해당하는 JSON 값은 *** 로 치환
 # ──────────────────────────────────────────────────────────────────
 MASK_BODY_FIELDS = {"password", "token", "secret",
                     "accessToken", "refreshToken", "apiKey"}
