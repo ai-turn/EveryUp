@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/aiturn/everyup/internal/models"
@@ -108,6 +109,53 @@ func TestInferLevelFromMessagePreservesDebugAndTrace(t *testing.T) {
 	for _, c := range cases {
 		if got := inferLevelFromMessage(c.in); got != c.want {
 			t.Errorf("inferLevelFromMessage(%q) = %q, want %q", c.in, got, c.want)
+		}
+	}
+}
+
+// TestInferLevelFromMessage_AdversarialBracketed covers cases where naive
+// substring matching would mislabel: stray "[ERROR]" in body, thread-name
+// brackets, non-level all-caps brackets.
+func TestInferLevelFromMessage_AdversarialBracketed(t *testing.T) {
+	cases := []struct {
+		name string
+		in   string
+		want models.LogLevel
+	}{
+		{
+			name: "INFO line that mentions [ERROR] in body",
+			in:   "2026-04-30 22:12:31 [INFO] Caught [ERROR] response from upstream service",
+			want: models.LogLevelInfo,
+		},
+		{
+			name: "WARN line that mentions [ERROR] later",
+			in:   "2026-04-30 [WARN] retrying after [ERROR]",
+			want: models.LogLevelWarn,
+		},
+		{
+			name: "Thread-name bracket comes first then real DEBUG",
+			in:   "1 --- [http-nio] [DEBUG] o.s.jdbc started",
+			want: models.LogLevelDebug,
+		},
+		{
+			name: "Non-level all-caps bracket is skipped",
+			in:   "Started [HEALTHCHECK] task",
+			want: "", // no known level → empty (caller falls back to inferLevelFromStream / default)
+		},
+		{
+			name: "Underscore variant is not a known level",
+			in:   "[ERROR_HANDLER] controller invoked",
+			want: "", // ERROR_HANDLER is not the keyword "ERROR"
+		},
+		{
+			name: "Bracketed level after 200-char head is ignored (long stack trace)",
+			in:   strings.Repeat("a ", 110) + " [ERROR] way back",
+			want: "",
+		},
+	}
+	for _, c := range cases {
+		if got := inferLevelFromMessage(c.in); got != c.want {
+			t.Errorf("%s: inferLevelFromMessage(...) = %q, want %q", c.name, got, c.want)
 		}
 	}
 }

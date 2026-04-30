@@ -4,10 +4,42 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/aiturn/everyup/internal/models"
 )
+
+// bracketedLevelRe finds bracketed all-caps tokens like "[DEBUG]" or
+// "[http-nio]". We treat the first known-level token as the line's level
+// and skip non-level tokens such as thread names.
+var bracketedLevelRe = regexp.MustCompile(`\[([A-Z]+)\]`)
+
+// inferBracketedLevel scans the first 200 chars of the upper-cased line for
+// bracketed tokens in order and returns the first one that matches a known
+// log level keyword. This is order-aware: a stray "[ERROR]" deep in a
+// message body is ignored if a real level token appears earlier.
+func inferBracketedLevel(upper string) models.LogLevel {
+	head := upper
+	if len(head) > 200 {
+		head = head[:200]
+	}
+	for _, m := range bracketedLevelRe.FindAllStringSubmatch(head, -1) {
+		switch m[1] {
+		case "FATAL", "CRITICAL", "ERROR":
+			return models.LogLevelError
+		case "WARN", "WARNING":
+			return models.LogLevelWarn
+		case "INFO":
+			return models.LogLevelInfo
+		case "DEBUG":
+			return models.LogLevelDebug
+		case "TRACE", "VERBOSE":
+			return models.LogLevelTrace
+		}
+	}
+	return ""
+}
 
 // normalizeFormEncoded handles Python HTTPHandler's form-encoded format
 // Fields: levelname, msg, name, pathname, lineno, funcName, etc.
@@ -394,26 +426,14 @@ func mapGenericLevel(level string) models.LogLevel {
 func inferLevelFromMessage(message string) models.LogLevel {
 	upper := strings.ToUpper(strings.TrimSpace(message))
 
-	// Bracketed level token anywhere in the line.
-	// Catches Spring Boot / Logback style: "2026-04-30 22:12:31.541 [DEBUG] ..."
-	switch {
-	case strings.Contains(upper, "[FATAL]"),
-		strings.Contains(upper, "[CRITICAL]"),
-		strings.Contains(upper, "[ERROR]"):
-		return models.LogLevelError
-	case strings.Contains(upper, "[WARN]"),
-		strings.Contains(upper, "[WARNING]"):
-		return models.LogLevelWarn
-	case strings.Contains(upper, "[INFO]"):
-		return models.LogLevelInfo
-	case strings.Contains(upper, "[DEBUG]"):
-		return models.LogLevelDebug
-	case strings.Contains(upper, "[TRACE]"),
-		strings.Contains(upper, "[VERBOSE]"):
-		return models.LogLevelTrace
+	// 1. Position-aware bracketed token scan (handles Spring Boot / Logback
+	//    style "2026-04-30 22:12:31.541 [DEBUG] ..." and tolerates message
+	//    bodies that incidentally mention "[ERROR]" later in the line).
+	if lvl := inferBracketedLevel(upper); lvl != "" {
+		return lvl
 	}
 
-	// Bare prefix at the start of the line (no brackets).
+	// 2. Bare prefix at the very start of the line (no brackets).
 	switch {
 	case hasLevelPrefix(upper, "FATAL"),
 		hasLevelPrefix(upper, "CRITICAL"),

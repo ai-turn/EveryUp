@@ -27,21 +27,27 @@ end
 local function infer_level_from_message(message)
     local text = string.upper(tostring(message or ""))
 
-    -- Bracketed level token anywhere in the line.
-    -- Catches Spring Boot / Logback style: "2026-04-30 22:12:31.541 [DEBUG] ..."
-    if text:find("%[FATAL%]") or text:find("%[CRITICAL%]") or text:find("%[ERROR%]") then
-        return "error"
-    elseif text:find("%[WARN%]") or text:find("%[WARNING%]") then
-        return "warn"
-    elseif text:find("%[INFO%]") then
-        return "info"
-    elseif text:find("%[DEBUG%]") then
-        return "debug"
-    elseif text:find("%[TRACE%]") or text:find("%[VERBOSE%]") then
-        return "trace"
+    -- 1. Position-aware bracketed token scan — iterate "[XXXX]" tokens in
+    --    order and return the first one that matches a known level keyword.
+    --    Non-level brackets like "[http-nio]" or "[main]" are skipped.
+    --    A stray "[ERROR]" deep in a message body is ignored if a real
+    --    level token appears earlier.
+    local head = text:sub(1, 200)
+    for token in head:gmatch("%[([A-Z]+)%]") do
+        if token == "FATAL" or token == "CRITICAL" or token == "ERROR" then
+            return "error"
+        elseif token == "WARN" or token == "WARNING" then
+            return "warn"
+        elseif token == "INFO" then
+            return "info"
+        elseif token == "DEBUG" then
+            return "debug"
+        elseif token == "TRACE" or token == "VERBOSE" then
+            return "trace"
+        end
     end
 
-    -- Bare prefix at the start of the line (no brackets).
+    -- 2. Bare prefix at the very start of the line (no brackets).
     if string.match(text, "^%s*FATAL[%s:%-]") or
        string.match(text, "^%s*CRITICAL[%s:%-]") or
        string.match(text, "^%s*ERROR[%s:%-]") or
