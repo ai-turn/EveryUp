@@ -99,6 +99,11 @@ func TestInferLevelFromMessagePreservesDebugAndTrace(t *testing.T) {
 		{"TRACE entering method", models.LogLevelTrace},
 		{"VERBOSE detail dump", models.LogLevelTrace},
 		{"INFO startup ok", models.LogLevelInfo},
+		// Spring Boot / Logback default format — timestamp first, level token mid-line.
+		{"2026-04-30 22:12:31.541 [DEBUG] 1 --- [http-nio] o.s.jdbc.core.JdbcTemplate : Executing", models.LogLevelDebug},
+		{"2026-04-30 22:12:31.541 [ERROR] boom", models.LogLevelError},
+		{"2026-04-30 22:12:31.541 [WARN] slow query", models.LogLevelWarn},
+		{"2026-04-30 22:12:31.541 [TRACE] entering method", models.LogLevelTrace},
 	}
 	for _, c := range cases {
 		if got := inferLevelFromMessage(c.in); got != c.want {

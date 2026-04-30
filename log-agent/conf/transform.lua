@@ -27,20 +27,35 @@ end
 local function infer_level_from_message(message)
     local text = string.upper(tostring(message or ""))
 
-    if string.match(text, "^%s*%[?FATAL%]?[%s:%-]") or
-       string.match(text, "^%s*%[?CRITICAL%]?[%s:%-]") or
-       string.match(text, "^%s*%[?ERROR%]?[%s:%-]") or
-       string.match(text, "^%s*%[?ERR%]?[%s:%-]") then
+    -- Bracketed level token anywhere in the line.
+    -- Catches Spring Boot / Logback style: "2026-04-30 22:12:31.541 [DEBUG] ..."
+    if text:find("%[FATAL%]") or text:find("%[CRITICAL%]") or text:find("%[ERROR%]") then
         return "error"
-    elseif string.match(text, "^%s*%[?WARN%]?[%s:%-]") or
-           string.match(text, "^%s*%[?WARNING%]?[%s:%-]") then
+    elseif text:find("%[WARN%]") or text:find("%[WARNING%]") then
         return "warn"
-    elseif string.match(text, "^%s*%[?INFO%]?[%s:%-]") then
+    elseif text:find("%[INFO%]") then
         return "info"
-    elseif string.match(text, "^%s*%[?DEBUG%]?[%s:%-]") then
+    elseif text:find("%[DEBUG%]") then
         return "debug"
-    elseif string.match(text, "^%s*%[?TRACE%]?[%s:%-]") or
-           string.match(text, "^%s*%[?VERBOSE%]?[%s:%-]") then
+    elseif text:find("%[TRACE%]") or text:find("%[VERBOSE%]") then
+        return "trace"
+    end
+
+    -- Bare prefix at the start of the line (no brackets).
+    if string.match(text, "^%s*FATAL[%s:%-]") or
+       string.match(text, "^%s*CRITICAL[%s:%-]") or
+       string.match(text, "^%s*ERROR[%s:%-]") or
+       string.match(text, "^%s*ERR[%s:%-]") then
+        return "error"
+    elseif string.match(text, "^%s*WARN[%s:%-]") or
+           string.match(text, "^%s*WARNING[%s:%-]") then
+        return "warn"
+    elseif string.match(text, "^%s*INFO[%s:%-]") then
+        return "info"
+    elseif string.match(text, "^%s*DEBUG[%s:%-]") then
+        return "debug"
+    elseif string.match(text, "^%s*TRACE[%s:%-]") or
+           string.match(text, "^%s*VERBOSE[%s:%-]") then
         return "trace"
     end
 

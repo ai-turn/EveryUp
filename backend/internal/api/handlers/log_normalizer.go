@@ -393,6 +393,27 @@ func mapGenericLevel(level string) models.LogLevel {
 
 func inferLevelFromMessage(message string) models.LogLevel {
 	upper := strings.ToUpper(strings.TrimSpace(message))
+
+	// Bracketed level token anywhere in the line.
+	// Catches Spring Boot / Logback style: "2026-04-30 22:12:31.541 [DEBUG] ..."
+	switch {
+	case strings.Contains(upper, "[FATAL]"),
+		strings.Contains(upper, "[CRITICAL]"),
+		strings.Contains(upper, "[ERROR]"):
+		return models.LogLevelError
+	case strings.Contains(upper, "[WARN]"),
+		strings.Contains(upper, "[WARNING]"):
+		return models.LogLevelWarn
+	case strings.Contains(upper, "[INFO]"):
+		return models.LogLevelInfo
+	case strings.Contains(upper, "[DEBUG]"):
+		return models.LogLevelDebug
+	case strings.Contains(upper, "[TRACE]"),
+		strings.Contains(upper, "[VERBOSE]"):
+		return models.LogLevelTrace
+	}
+
+	// Bare prefix at the start of the line (no brackets).
 	switch {
 	case hasLevelPrefix(upper, "FATAL"),
 		hasLevelPrefix(upper, "CRITICAL"),
