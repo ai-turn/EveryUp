@@ -352,12 +352,29 @@ import jakarta.servlet.http.*;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.*;
+import java.util.Set;
 
 @Component
 public class EveryUpFilter extends OncePerRequestFilter {
     private static final String ENDPOINT = "${endpoint}";
     private static final String API_KEY  = "${displayKey}";
     private final HttpClient http = HttpClient.newHttpClient();
+
+    // ──────────────────────────────────────────────────────────────────
+    // 마스킹 (수정 가능): 아래 필드에 해당하는 JSON 값은 *** 로 치환
+    // ──────────────────────────────────────────────────────────────────
+    private static final Set<String> MASK_BODY_FIELDS = Set.of(
+        "password", "token", "secret", "accessToken", "refreshToken", "apiKey");
+
+    private static String maskBody(String body) {
+        String out = body;
+        for (String f : MASK_BODY_FIELDS) {
+            out = out.replaceAll(
+                "(\\"" + f + "\\"\\\\s*:\\\\s*)\\"[^\\"]*\\"", "$1\\"***\\"");
+        }
+        return out;
+    }
+    // ──────────────────────────────────────────────────────────────────
 
     @Override
     protected void doFilterInternal(HttpServletRequest req,
@@ -369,14 +386,17 @@ public class EveryUpFilter extends OncePerRequestFilter {
         chain.doFilter(reqWrap, resWrap);
         resWrap.copyBodyToResponse();
 
+        String reqBody = maskBody(new String(reqWrap.getContentAsByteArray()));
+        String resBody = maskBody(new String(resWrap.getContentAsByteArray()));
+
         String payload = """
             {"method":"%s","path":"%s","statusCode":%d,"durationMs":%d,
              "reqBody":"%s","resBody":"%s"}
             """.formatted(
                 req.getMethod(), req.getRequestURI(), res.getStatus(),
                 System.currentTimeMillis() - start,
-                new String(reqWrap.getContentAsByteArray()).replace("\\"", "\\\\\\""),
-                new String(resWrap.getContentAsByteArray()).replace("\\"", "\\\\\\""));
+                reqBody.replace("\\"", "\\\\\\""),
+                resBody.replace("\\"", "\\\\\\""));
 
         http.sendAsync(
             HttpRequest.newBuilder(URI.create(ENDPOINT))
@@ -391,10 +411,22 @@ public class EveryUpFilter extends OncePerRequestFilter {
 # pip install httpx
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-import httpx, time
+import httpx, re, time
 
 ENDPOINT = "${endpoint}"
 API_KEY  = "${displayKey}"
+
+# ──────────────────────────────────────────────────────────────────
+# 마스킹 (수정 가능): 아래 필드에 해당하는 JSON 값은 *** 로 치환
+# ──────────────────────────────────────────────────────────────────
+MASK_BODY_FIELDS = {"password", "token", "secret",
+                    "accessToken", "refreshToken", "apiKey"}
+
+def mask_body(body: str) -> str:
+    for f in MASK_BODY_FIELDS:
+        body = re.sub(rf'("{f}"\\s*:\\s*)"[^"]*"', r'\\1"***"', body)
+    return body
+# ──────────────────────────────────────────────────────────────────
 
 class EveryUpMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -418,8 +450,8 @@ class EveryUpMiddleware(BaseHTTPMiddleware):
                           "path": request.url.path,
                           "statusCode": response.status_code,
                           "durationMs": duration,
-                          "reqBody": req_body.decode("utf-8", errors="replace"),
-                          "resBody": res_body.decode("utf-8", errors="replace")})
+                          "reqBody": mask_body(req_body.decode("utf-8", errors="replace")),
+                          "resBody": mask_body(res_body.decode("utf-8", errors="replace"))})
         except Exception:
             pass
         return response
@@ -434,6 +466,21 @@ app.add_middleware(EveryUpMiddleware)`,
 
 const ENDPOINT = "${endpoint}";
 const API_KEY  = "${displayKey}";
+
+// ──────────────────────────────────────────────────────────────────
+// 마스킹 (수정 가능): 아래 필드에 해당하는 JSON 값은 *** 로 치환
+// ──────────────────────────────────────────────────────────────────
+const MASK_BODY_FIELDS = ["password", "token", "secret",
+                          "accessToken", "refreshToken", "apiKey"];
+
+function maskBody(body) {
+    let out = body;
+    for (const f of MASK_BODY_FIELDS) {
+        out = out.replace(new RegExp(\`("\${f}"\\\\s*:\\\\s*)"[^"]*"\`, "g"), \`$1"***"\`);
+    }
+    return out;
+}
+// ──────────────────────────────────────────────────────────────────
 
 function everyUpCapture(req, res, next) {
     const start  = Date.now();
@@ -450,8 +497,8 @@ function everyUpCapture(req, res, next) {
             body: JSON.stringify({
                 method: req.method, path: req.originalUrl,
                 statusCode: res.statusCode, durationMs: Date.now() - start,
-                reqBody: JSON.stringify(req.body),
-                resBody: Buffer.concat(chunks).toString(),
+                reqBody: maskBody(JSON.stringify(req.body)),
+                resBody: maskBody(Buffer.concat(chunks).toString()),
             }),
         }).catch(() => {});
         return _end(c, ...a);
@@ -471,6 +518,7 @@ import (
     "encoding/json"
     "io"
     "net/http"
+    "regexp"
     "time"
 )
 
@@ -478,6 +526,22 @@ const (
     everyUpEndpoint = "${endpoint}"
     everyUpAPIKey   = "${displayKey}"
 )
+
+// ──────────────────────────────────────────────────────────────────
+// 마스킹 (수정 가능): 아래 필드에 해당하는 JSON 값은 *** 로 치환
+// ──────────────────────────────────────────────────────────────────
+var maskBodyFields = []string{"password", "token", "secret",
+    "accessToken", "refreshToken", "apiKey"}
+
+func maskBody(b string) string {
+    out := b
+    for _, f := range maskBodyFields {
+        re := regexp.MustCompile(\`("\` + f + \`"\\s*:\\s*)"[^"]*"\`)
+        out = re.ReplaceAllString(out, \`$1"***"\`)
+    }
+    return out
+}
+// ──────────────────────────────────────────────────────────────────
 
 type resCapture struct {
     http.ResponseWriter
@@ -507,8 +571,8 @@ func EveryUpCapture(next http.Handler) http.Handler {
             "method": r.Method, "path": r.URL.Path,
             "statusCode": rc.status,
             "durationMs": time.Since(start).Milliseconds(),
-            "reqBody": string(reqBody),
-            "resBody": rc.body.String(),
+            "reqBody": maskBody(string(reqBody)),
+            "resBody": maskBody(rc.body.String()),
         })
         go func() {
             req, _ := http.NewRequest("POST", everyUpEndpoint,
@@ -530,11 +594,23 @@ func EveryUpCapture(next http.Handler) http.Handler {
 # ]
 
 # myapp/middleware.py
-import json, time, threading
+import json, re, time, threading
 import urllib.request
 
 ENDPOINT = "${endpoint}"
 API_KEY  = "${displayKey}"
+
+# ──────────────────────────────────────────────────────────────────
+# 마스킹 (수정 가능): 아래 필드에 해당하는 JSON 값은 *** 로 치환
+# ──────────────────────────────────────────────────────────────────
+MASK_BODY_FIELDS = {"password", "token", "secret",
+                    "accessToken", "refreshToken", "apiKey"}
+
+def mask_body(body):
+    for f in MASK_BODY_FIELDS:
+        body = re.sub(rf'("{f}"\\s*:\\s*)"[^"]*"', r'\\1"***"', body)
+    return body
+# ──────────────────────────────────────────────────────────────────
 
 class EveryUpMiddleware:
     def __init__(self, get_response):
@@ -553,7 +629,7 @@ class EveryUpMiddleware:
         payload = json.dumps({
             "method": request.method, "path": request.path,
             "statusCode": response.status_code, "durationMs": duration,
-            "reqBody": req_body, "resBody": res_body,
+            "reqBody": mask_body(req_body), "resBody": mask_body(res_body),
         }).encode()
 
         def _send():
