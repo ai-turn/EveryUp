@@ -151,8 +151,6 @@
             "durationHint": "알림 발생 전 연속 위반 지속 시간",
             "consecutiveChecks": "연속 체크 횟수",
             "consecutiveChecksHint": "알림 발생 전 연속 실패 횟수",
-            "logSensitivity": "로그 레벨",
-            "logSensitivityHint": "경고 및 오류 로그가 알림을 발생시킬 수 있습니다",
             "cooldown": "쿨다운 (초)",
             "cooldownHint": "반복 알림 사이의 최소 대기 시간",
             "preview": "발동 시:",

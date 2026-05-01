@@ -409,11 +409,11 @@ function FullRuleForm({ onSuccess, rule, channels }: AlertRuleFormProps) {
                     ))}
                 </div>
 
-                {(isEndpoint || isLog) && !isApiStatus && (
+                {isEndpoint && (
                     <div className="mt-3 flex items-center justify-between p-3 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-xl">
                         <div>
-                            <p className="text-xs font-bold text-slate-700 dark:text-white">{isLog ? t('alerts.rules.logSensitivity') : t('alerts.rules.consecutiveChecks')}</p>
-                            <p className="text-xs text-slate-400">{isLog ? t('alerts.rules.logSensitivityHint') : t('alerts.rules.consecutiveChecksHint')}</p>
+                            <p className="text-xs font-bold text-slate-700 dark:text-white">{t('alerts.rules.consecutiveChecks')}</p>
+                            <p className="text-xs text-slate-400">{t('alerts.rules.consecutiveChecksHint')}</p>
                         </div>
                         <input
                             type="number"

@@ -151,8 +151,6 @@
             "durationHint": "Minutes of consecutive breach before alerting",
             "consecutiveChecks": "Consecutive Checks",
             "consecutiveChecksHint": "Number of failing checks before alerting",
-            "logSensitivity": "Log Level",
-            "logSensitivityHint": "Warning and error logs can trigger notifications",
             "cooldown": "Cooldown (sec)",
             "cooldownHint": "Minimum time between repeated alerts",
             "preview": "If triggered:",
