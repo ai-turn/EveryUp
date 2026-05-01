@@ -2,7 +2,8 @@ import { MaterialIcon, PageHeader, EmptyState } from '../../../components/common
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { AlertRulesTab } from './AlertRulesTab';
 import { NotificationHistoryTab } from './NotificationHistoryTab';
-import type { NotificationChannel } from '../../../services/api';
+import { ChannelHealthMeta } from './ChannelHealthMeta';
+import type { NotificationChannel, NotificationChannelHealth } from '../../../services/api';
 import { useTranslation } from 'react-i18next';
 import { getChannelStyle, getChannelTypeLabel } from '../utils/channelMeta';
 
@@ -10,6 +11,7 @@ type TabType = 'channels' | 'rules' | 'history';
 
 interface AlertsDesktopViewProps {
   channels: NotificationChannel[];
+  channelHealth: Record<string, NotificationChannelHealth>;
   isLoading: boolean;
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
@@ -25,6 +27,7 @@ interface AlertsDesktopViewProps {
 
 export function AlertsDesktopView({
   channels,
+  channelHealth,
   isLoading,
   activeTab,
   setActiveTab,
@@ -148,15 +151,18 @@ export function AlertsDesktopView({
                     <div className={`flex-1 min-w-0 ${!channel.isEnabled ? 'opacity-60' : ''}`}>
                       <div className="flex items-center gap-2">
                         <h3 className="font-bold text-slate-900 dark:text-white truncate">{channel.name}</h3>
+                        <span className={`text-xs font-bold ${style.text} shrink-0`}>
+                          {getChannelTypeLabel(channel.type, t)}
+                        </span>
                         {!channel.isEnabled && (
                           <span className="px-2 py-0.5 text-xs font-bold uppercase tracking-wider bg-slate-200 dark:bg-ui-active-dark text-slate-500 dark:text-text-muted-dark rounded-full">
                             {t('common.disabled', { defaultValue: 'Disabled' })}
                           </span>
                         )}
                       </div>
-                      <p className={`text-sm font-bold ${style.text}`}>
-                        {getChannelTypeLabel(channel.type, t)}
-                      </p>
+                      <div className="mt-1">
+                        <ChannelHealthMeta health={channelHealth[channel.id]} />
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <button

@@ -33,6 +33,16 @@
         "rulesTitle": "Notification Rules",
         "rulesDesc": "Map events to your active channels",
         "addChannel": "Add Channel",
+        "health": {
+            "lastSent": "Last sent",
+            "never": "Never sent",
+            "successRate7d": "7d success rate",
+            "noActivity": "No activity in last 7 days",
+            "noActivityShort": "No activity",
+            "linkedRules": "Linked enabled rules",
+            "rulesCount_one": "{{count}} rule",
+            "rulesCount_other": "{{count}} rules"
+        },
         "noChannels": "No notification channels configured",
         "noChannelsDesc": "Add a Slack, Discord, or Telegram channel to start receiving alerts.",
         "loadingChannels": "Loading channels...",

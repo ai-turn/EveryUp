@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"strconv"
 	"time"
 
 	"github.com/aiturn/everyup/internal/alerter"
@@ -23,6 +24,32 @@ func NewNotificationHandler() *NotificationHandler {
 		repo:    database.NewNotificationRepository(),
 		manager: alerter.NewManager(),
 	}
+}
+
+// GetHealth returns per-channel usage/health stats over the last `days` (default 7).
+// GET /notification-channels/health?days=7
+func (h *NotificationHandler) GetHealth(c *fiber.Ctx) error {
+	days := 7
+	if d := c.Query("days"); d != "" {
+		if v, err := strconv.Atoi(d); err == nil && v > 0 && v <= 90 {
+			days = v
+		}
+	}
+
+	stats, err := h.repo.GetHealth(days)
+	if err != nil {
+		return internalError(c, ErrCodeFetch, err)
+	}
+
+	out := make([]*models.NotificationChannelHealth, 0, len(stats))
+	for _, v := range stats {
+		out = append(out, v)
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data":    out,
+	})
 }
 
 // GetAll returns all notification channels

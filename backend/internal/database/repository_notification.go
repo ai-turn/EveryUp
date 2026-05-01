@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"log"
+	"time"
 
 	"github.com/aiturn/everyup/internal/crypto"
 	"github.com/aiturn/everyup/internal/models"
@@ -129,6 +130,89 @@ func (r *NotificationRepository) SetEnabled(id string, isEnabled bool) error {
 
 	_, err := DB.Exec(`UPDATE notification_channels SET is_enabled = ? WHERE id = ?`, enabled, id)
 	return err
+}
+
+// GetHealth returns aggregated usage/health stats per channel within the last `days`.
+// Map key is channel ID. Channels with no history/rules are absent from the map.
+func (r *NotificationRepository) GetHealth(days int) (map[string]*models.NotificationChannelHealth, error) {
+	cutoff := time.Now().AddDate(0, 0, -days)
+	out := make(map[string]*models.NotificationChannelHealth)
+
+	getOrInit := func(id string) *models.NotificationChannelHealth {
+		if h, ok := out[id]; ok {
+			return h
+		}
+		h := &models.NotificationChannelHealth{ChannelID: id}
+		out[id] = h
+		return h
+	}
+
+	rows, err := DB.Query(`
+		SELECT channel_id,
+		       SUM(CASE WHEN status = 'sent'   AND created_at >= ? THEN 1 ELSE 0 END) AS sent_count,
+		       SUM(CASE WHEN status = 'failed' AND created_at >= ? THEN 1 ELSE 0 END) AS failed_count,
+		       MAX(sent_at) AS last_sent
+		FROM notification_history
+		GROUP BY channel_id
+	`, cutoff, cutoff)
+	if err != nil {
+		return nil, err
+	}
+	type histRow struct {
+		channelID string
+		sent      int
+		failed    int
+		lastSent  sql.NullTime
+	}
+	var histRows []histRow
+	for rows.Next() {
+		var r histRow
+		if err := rows.Scan(&r.channelID, &r.sent, &r.failed, &r.lastSent); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		histRows = append(histRows, r)
+	}
+	rows.Close()
+	for _, r := range histRows {
+		h := getOrInit(r.channelID)
+		h.SuccessCount = r.sent
+		h.FailedCount = r.failed
+		if r.lastSent.Valid {
+			t := r.lastSent.Time
+			h.LastSentAt = &t
+		}
+	}
+
+	ruleRows, err := DB.Query(`
+		SELECT arc.channel_id, COUNT(DISTINCT arc.rule_id)
+		FROM alert_rule_channels arc
+		JOIN alert_rules ar ON ar.id = arc.rule_id
+		WHERE ar.is_enabled = 1
+		GROUP BY arc.channel_id
+	`)
+	if err != nil {
+		return nil, err
+	}
+	type rcRow struct {
+		channelID string
+		count     int
+	}
+	var rcRows []rcRow
+	for ruleRows.Next() {
+		var r rcRow
+		if err := ruleRows.Scan(&r.channelID, &r.count); err != nil {
+			ruleRows.Close()
+			return nil, err
+		}
+		rcRows = append(rcRows, r)
+	}
+	ruleRows.Close()
+	for _, r := range rcRows {
+		getOrInit(r.channelID).RuleCount = r.count
+	}
+
+	return out, nil
 }
 
 // GetEnabled returns all enabled notification channels

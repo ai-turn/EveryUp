@@ -90,6 +90,14 @@ export interface CreateNotificationChannelData {
 
 // --- Notification History Types ---
 
+export interface NotificationChannelHealth {
+  channelId: string;
+  lastSentAt?: string;
+  successCount: number;
+  failedCount: number;
+  ruleCount: number;
+}
+
 export type NotificationStatus = 'sent' | 'failed' | 'pending';
 export type NotificationAlertType = 'resource' | 'healthcheck' | 'log' | 'scheduled' | 'endpoint';
 
@@ -186,6 +194,13 @@ export function createAlertsApi(request: RequestFn) {
     // Notification Channels
     getNotificationChannels: async () => {
       const data = await request<NotificationChannel[]>('/notifications');
+      return data || [];
+    },
+
+    getNotificationChannelHealth: async (days = 7) => {
+      const data = await request<NotificationChannelHealth[]>(
+        `/notifications/health?days=${days}`,
+      );
       return data || [];
     },
 

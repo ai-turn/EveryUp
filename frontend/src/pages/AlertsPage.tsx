@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../utils/errors';
-import { api, type NotificationChannel, type AlertRule, type NotificationHistory, type NotificationStats } from '../services/api';
+import { api, type NotificationChannel, type AlertRule, type NotificationHistory, type NotificationStats, type NotificationChannelHealth } from '../services/api';
 import { useSidePanel } from '../contexts/SidePanelContext';
 import { ChannelForm } from '../features/alerts/components/ChannelForm';
 import { AlertsDesktopView } from '../features/alerts/components/AlertsDesktopView';
@@ -22,6 +22,7 @@ export function AlertsPage() {
   const [rules, setRules] = useState<AlertRule[]>([]);
   const [history, setHistory] = useState<NotificationHistory[]>([]);
   const [stats, setStats] = useState<NotificationStats | null>(null);
+  const [channelHealth, setChannelHealth] = useState<Record<string, NotificationChannelHealth>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [rulesLoading, setRulesLoading] = useState(true);
   const [historyLoading, setHistoryLoading] = useState(true);
@@ -39,6 +40,17 @@ export function AlertsPage() {
       toast.error(getErrorMessage(error));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadChannelHealth = async () => {
+    try {
+      const data = await api.getNotificationChannelHealth(7);
+      const map: Record<string, NotificationChannelHealth> = {};
+      for (const h of data) map[h.channelId] = h;
+      setChannelHealth(map);
+    } catch {
+      // health is non-critical
     }
   };
 
@@ -75,6 +87,7 @@ export function AlertsPage() {
 
   useEffect(() => {
     loadChannels();
+    loadChannelHealth();
     loadRules();
     loadHistory();
     loadStats();
@@ -111,7 +124,7 @@ export function AlertsPage() {
       await api.deleteNotificationChannel(pendingDeleteId);
       toast.success(t('alerts.channelDeleted'));
       setPendingDeleteId(null);
-      loadChannels();
+      refreshChannels();
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
@@ -132,17 +145,22 @@ export function AlertsPage() {
     }
   };
 
+  const refreshChannels = () => {
+    loadChannels();
+    loadChannelHealth();
+  };
+
   const handleAddChannel = () => {
     openPanel(
       t('alerts.addChannel'),
-      <ChannelForm onSuccess={loadChannels} />
+      <ChannelForm onSuccess={refreshChannels} />
     );
   };
 
   const handleEditChannel = (channel: NotificationChannel) => {
     openPanel(
       t('alerts.modal.editTitle', { defaultValue: 'Edit Channel' }),
-      <ChannelForm channel={channel} onSuccess={loadChannels} />
+      <ChannelForm channel={channel} onSuccess={refreshChannels} />
     );
   };
 
@@ -176,6 +194,7 @@ export function AlertsPage() {
       <>
         <AlertsMobileView
           channels={channels}
+          channelHealth={channelHealth}
           rules={rules}
           history={history}
           stats={stats}
@@ -199,6 +218,7 @@ export function AlertsPage() {
     <>
       <AlertsDesktopView
         channels={channels}
+        channelHealth={channelHealth}
         isLoading={isLoading}
         activeTab={activeTab}
         setActiveTab={setActiveTab}

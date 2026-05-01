@@ -4,12 +4,14 @@ import { ko, enUS } from 'date-fns/locale';
 import { MaterialIcon } from '../../../components/common';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { getChannelStyle, getChannelTypeLabel } from '../utils/channelMeta';
-import type { NotificationChannel, AlertRule, NotificationHistory, NotificationStats } from '../../../services/api';
+import { ChannelHealthMeta } from './ChannelHealthMeta';
+import type { NotificationChannel, NotificationChannelHealth, AlertRule, NotificationHistory, NotificationStats } from '../../../services/api';
 
 type MobileTab = 'channels' | 'rules' | 'history';
 
 interface AlertsMobileViewProps {
   channels: NotificationChannel[];
+  channelHealth: Record<string, NotificationChannelHealth>;
   rules: AlertRule[];
   history: NotificationHistory[];
   stats: NotificationStats | null;
@@ -39,6 +41,7 @@ const historyStatusConfig: Record<string, { icon: string; color: string }> = {
 
 export function AlertsMobileView({
   channels,
+  channelHealth,
   rules,
   history,
   stats,
@@ -170,6 +173,9 @@ export function AlertsMobileView({
                     >
                       <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${channel.isEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
                     </button>
+                  </div>
+                  <div className="mb-3 pb-3 border-b border-slate-100 dark:border-ui-border-dark/50">
+                    <ChannelHealthMeta health={channelHealth[channel.id]} compact />
                   </div>
                   <div className="flex gap-2">
                     <button

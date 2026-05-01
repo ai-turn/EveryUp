@@ -33,6 +33,16 @@
         "rulesTitle": "알림 규칙",
         "rulesDesc": "활성 채널에 이벤트를 매핑합니다.",
         "addChannel": "채널 추가",
+        "health": {
+            "lastSent": "마지막 발송",
+            "never": "발송 이력 없음",
+            "successRate7d": "7일 성공률",
+            "noActivity": "최근 7일 활동 없음",
+            "noActivityShort": "활동 없음",
+            "linkedRules": "연결된 활성 규칙",
+            "rulesCount_one": "규칙 {{count}}개",
+            "rulesCount_other": "규칙 {{count}}개"
+        },
         "noChannels": "구성된 알림 채널이 없습니다",
         "noChannelsDesc": "Slack, Discord, Telegram 채널을 추가해 알림을 받아보세요.",
         "loadingChannels": "채널 로딩 중...",

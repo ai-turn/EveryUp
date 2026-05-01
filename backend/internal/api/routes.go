@@ -134,6 +134,7 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	// Notifications
 	notificationHandler := handlers.NewNotificationHandler()
 	local.Get("/notifications", notificationHandler.GetAll)
+	local.Get("/notifications/health", notificationHandler.GetHealth)
 	local.Post("/notifications", notificationHandler.Create)
 	local.Put("/notifications/:id", notificationHandler.Update)
 	local.Post("/notifications/:id/test", notificationHandler.Test)

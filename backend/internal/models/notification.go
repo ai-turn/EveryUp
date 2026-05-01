@@ -15,6 +15,15 @@ type NotificationChannel struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
+// NotificationChannelHealth holds aggregated health/usage stats for a channel
+type NotificationChannelHealth struct {
+	ChannelID    string     `json:"channelId"`
+	LastSentAt   *time.Time `json:"lastSentAt,omitempty"`
+	SuccessCount int        `json:"successCount"`
+	FailedCount  int        `json:"failedCount"`
+	RuleCount    int        `json:"ruleCount"`
+}
+
 // TelegramConfig holds Telegram bot configuration
 type TelegramConfig struct {
 	BotToken string `json:"botToken"`

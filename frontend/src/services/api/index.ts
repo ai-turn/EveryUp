@@ -67,6 +67,7 @@ export type {
   DiscordConfig,
   SlackConfig,
   CreateNotificationChannelData,
+  NotificationChannelHealth,
   NotificationStatus,
   NotificationAlertType,
   NotificationHistory,

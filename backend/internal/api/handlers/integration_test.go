@@ -542,6 +542,38 @@ func TestNotificationChannel_CRUD(t *testing.T) {
 	}
 }
 
+func TestNotificationChannel_GetHealth(t *testing.T) {
+	ts := setupTestServer(t)
+	token := ts.setupAdmin(t, "admin", "testpass123")
+	auth := authHeader(token)
+
+	// Create a channel so it can show up in health (only channels with history/rule links appear)
+	_, _ = ts.doRequest(t, "POST", "/api/v1/notifications", map[string]interface{}{
+		"name": "HC Discord",
+		"type": "discord",
+		"config": map[string]string{
+			"webhookUrl": "https://discord.com/api/webhooks/123/abc",
+		},
+	}, auth...)
+
+	resp, result := ts.doRequest(t, "GET", "/api/v1/notifications/health?days=7", nil, auth...)
+	if resp.StatusCode != 200 {
+		t.Fatalf("status = %d, want 200", resp.StatusCode)
+	}
+	if !result.Success {
+		t.Fatalf("expected success, got error: %v", result.Error)
+	}
+
+	var entries []map[string]interface{}
+	if err := json.Unmarshal(result.Data, &entries); err != nil {
+		t.Fatalf("decode health: %v", err)
+	}
+	// With no notification_history rows and no rule links, the array should be empty
+	if len(entries) != 0 {
+		t.Errorf("expected empty health list, got %d entries", len(entries))
+	}
+}
+
 func TestNotificationChannel_InvalidType(t *testing.T) {
 	ts := setupTestServer(t)
 	token := ts.setupAdmin(t, "admin", "testpass123")
