@@ -34,8 +34,15 @@
         "rulesDesc": "활성 채널에 이벤트를 매핑합니다.",
         "addChannel": "채널 추가",
         "noChannels": "구성된 알림 채널이 없습니다",
+        "noChannelsDesc": "Slack, Discord, Telegram 채널을 추가해 알림을 받아보세요.",
         "loadingChannels": "채널 로딩 중...",
         "confirmDelete": "이 채널을 삭제하시겠습니까?",
+        "deleteDialog": {
+            "title": "채널 삭제",
+            "messagePrefix": "",
+            "messageSuffix": " 채널을 삭제하시겠습니까?",
+            "warning": "이 작업은 되돌릴 수 없으며, 연결된 알림 규칙에서도 제거됩니다."
+        },
         "channelDeleted": "채널이 삭제되었습니다",
         "channelAdded": "채널이 추가되었습니다",
         "channelUpdated": "채널이 수정되었습니다",

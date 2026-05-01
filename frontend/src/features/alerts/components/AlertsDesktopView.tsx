@@ -1,9 +1,10 @@
-import { MaterialIcon, PageHeader } from '../../../components/common';
+import { MaterialIcon, PageHeader, EmptyState } from '../../../components/common';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { AlertRulesTab } from './AlertRulesTab';
 import { NotificationHistoryTab } from './NotificationHistoryTab';
 import type { NotificationChannel } from '../../../services/api';
 import { useTranslation } from 'react-i18next';
+import { getChannelStyle, getChannelTypeLabel } from '../utils/channelMeta';
 
 type TabType = 'channels' | 'rules' | 'history';
 
@@ -21,12 +22,6 @@ interface AlertsDesktopViewProps {
   onTestChannel: (id: string) => void;
   onAddRule: () => void;
 }
-
-const channelStyles: Record<string, { bg: string; text: string }> = {
-  telegram: { bg: 'bg-sky-500/10', text: 'text-sky-500' },
-  discord: { bg: 'bg-indigo-500/10', text: 'text-indigo-400' },
-  slack: { bg: 'bg-purple-500/10', text: 'text-purple-500' },
-};
 
 export function AlertsDesktopView({
   channels,
@@ -106,46 +101,51 @@ export function AlertsDesktopView({
         <NotificationHistoryTab />
       ) : activeTab === 'channels' ? (
         <>
-          <p className="text-sm text-slate-500 dark:text-text-muted-dark mb-4">
-            {t('alerts.configured', { count: channels.length })}
-          </p>
-
           <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-ui-border-dark">
+              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <MaterialIcon name="notifications" className="text-primary text-lg" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                  {t('alerts.channelsTitle')}
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">
+                  {t('alerts.configured', { count: channels.length })}
+                </p>
+              </div>
+            </div>
             {isLoading ? (
               <div className="p-8 text-center text-slate-500">
                 <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-2" />
                 {t('alerts.loadingChannels')}
               </div>
             ) : channels.length === 0 ? (
-              <div className="p-12 text-center">
-                <MaterialIcon name="notifications_off" className="text-6xl text-slate-300 dark:text-text-dim-dark mb-4" />
-                <p className="text-slate-500 dark:text-text-muted-dark mb-4">
-                  {t('alerts.noChannels')}
-                </p>
-                <button
-                  onClick={onAddChannel}
-                  className="px-6 py-2 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-all shadow-md"
-                >
-                  {t('alerts.addChannel')}
-                </button>
-              </div>
+              <EmptyState
+                icon="notifications_off"
+                title={t('alerts.noChannels')}
+                description={t('alerts.noChannelsDesc')}
+                action={{ label: t('alerts.addChannel'), onClick: onAddChannel }}
+              />
             ) : (
               <div className="divide-y divide-slate-200 dark:divide-ui-border-dark">
-                {channels.map((channel) => (
+                {channels.map((channel) => {
+                  const style = getChannelStyle(channel.type);
+                  return (
                   <div
                     key={channel.id}
-                    className={`p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-ui-hover-dark/50 transition-colors ${!channel.isEnabled ? 'opacity-50' : ''}`}
+                    className="p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-ui-hover-dark/50 transition-colors"
                   >
                     <div
-                      className={`w-12 h-12 rounded-lg flex items-center justify-center ${(channelStyles[channel.type] ?? channelStyles.discord).bg}`}
+                      className={`w-12 h-12 rounded-lg flex items-center justify-center ${style.bg} ${!channel.isEnabled ? 'opacity-50' : ''}`}
                     >
                       <ChannelIcon
                         type={channel.type}
                         size={24}
-                        className={(channelStyles[channel.type] ?? channelStyles.discord).text}
+                        className={style.text}
                       />
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className={`flex-1 min-w-0 ${!channel.isEnabled ? 'opacity-60' : ''}`}>
                       <div className="flex items-center gap-2">
                         <h3 className="font-bold text-slate-900 dark:text-white truncate">{channel.name}</h3>
                         {!channel.isEnabled && (
@@ -154,15 +154,15 @@ export function AlertsDesktopView({
                           </span>
                         )}
                       </div>
-                      <p className={`text-sm font-bold capitalize ${(channelStyles[channel.type] ?? channelStyles.discord).text}`}>
-                        {channel.type}
+                      <p className={`text-sm font-bold ${style.text}`}>
+                        {getChannelTypeLabel(channel.type, t)}
                       </p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={() => onToggleChannel(channel.id)}
                         disabled={togglingIds.has(channel.id)}
-                        className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50 ${channel.isEnabled ? 'bg-primary' : 'bg-slate-400 dark:bg-slate-500'}`}
+                        className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed ${channel.isEnabled ? 'bg-primary' : 'bg-slate-400 dark:bg-slate-500'}`}
                         title={channel.isEnabled
                           ? t('alerts.disable', { defaultValue: 'Disable' })
                           : t('alerts.enable', { defaultValue: 'Enable' })
@@ -173,36 +173,34 @@ export function AlertsDesktopView({
                         />
                       </button>
 
-                      <div className="w-px h-6 bg-slate-200 dark:bg-ui-active-dark" />
-
                       <button
                         onClick={() => onTestChannel(channel.id)}
-                        className="px-3 sm:px-4 py-2 bg-primary/10 dark:bg-primary/20 text-primary font-bold rounded-lg hover:bg-primary/20 dark:hover:bg-primary/30 transition-all flex items-center gap-2"
+                        disabled={!channel.isEnabled}
+                        title={t('alerts.test')}
+                        className="ml-1 px-3 py-1.5 text-primary text-sm font-bold rounded-lg hover:bg-primary/10 dark:hover:bg-primary/20 transition-all flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <MaterialIcon name="send" className="text-sm" />
                         <span className="hidden sm:inline">{t('alerts.test')}</span>
                       </button>
 
-                      <div className="w-px h-6 bg-slate-200 dark:bg-ui-active-dark" />
-
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => onEditChannel(channel)}
-                          className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-ui-hover-dark rounded-lg transition-all"
-                          title={t('common.edit', { defaultValue: 'Edit' })}
-                        >
-                          <MaterialIcon name="edit" />
-                        </button>
-                        <button
-                          onClick={() => onDeleteChannel(channel.id)}
-                          className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
-                        >
-                          <MaterialIcon name="delete" />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => onEditChannel(channel)}
+                        className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-ui-hover-dark rounded-lg transition-all"
+                        title={t('common.edit', { defaultValue: 'Edit' })}
+                      >
+                        <MaterialIcon name="edit" />
+                      </button>
+                      <button
+                        onClick={() => onDeleteChannel(channel.id)}
+                        className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
+                        title={t('common.delete', { defaultValue: 'Delete' })}
+                      >
+                        <MaterialIcon name="delete" />
+                      </button>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

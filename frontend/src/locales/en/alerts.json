@@ -34,8 +34,15 @@
         "rulesDesc": "Map events to your active channels",
         "addChannel": "Add Channel",
         "noChannels": "No notification channels configured",
+        "noChannelsDesc": "Add a Slack, Discord, or Telegram channel to start receiving alerts.",
         "loadingChannels": "Loading channels...",
         "confirmDelete": "Delete this channel?",
+        "deleteDialog": {
+            "title": "Delete channel",
+            "messagePrefix": "Delete ",
+            "messageSuffix": "?",
+            "warning": "This action cannot be undone, and the channel will be removed from any alert rules that reference it."
+        },
         "channelDeleted": "Channel deleted",
         "channelAdded": "Channel added successfully",
         "channelUpdated": "Channel updated",

@@ -8,6 +8,7 @@ import { ChannelForm } from '../features/alerts/components/ChannelForm';
 import { AlertsDesktopView } from '../features/alerts/components/AlertsDesktopView';
 import { AlertsMobileView } from '../features/alerts/components/AlertsMobileView';
 import { useIsMobile } from '../hooks/useMediaQuery';
+import { ConfirmDialog } from '../components/common';
 
 type TabType = 'channels' | 'rules' | 'history';
 
@@ -26,6 +27,8 @@ export function AlertsPage() {
   const [historyLoading, setHistoryLoading] = useState(true);
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
   const [rulesAddTrigger, setRulesAddTrigger] = useState(0);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // --- Data fetching ---
   const loadChannels = async () => {
@@ -97,16 +100,28 @@ export function AlertsPage() {
     }
   };
 
-  const handleDeleteChannel = async (id: string) => {
-    if (!confirm(t('alerts.confirmDelete'))) return;
+  const handleDeleteChannel = (id: string) => {
+    setPendingDeleteId(id);
+  };
+
+  const confirmDeleteChannel = async () => {
+    if (!pendingDeleteId) return;
+    setIsDeleting(true);
     try {
-      await api.deleteNotificationChannel(id);
+      await api.deleteNotificationChannel(pendingDeleteId);
       toast.success(t('alerts.channelDeleted'));
+      setPendingDeleteId(null);
       loadChannels();
     } catch (error) {
       toast.error(getErrorMessage(error));
+    } finally {
+      setIsDeleting(false);
     }
   };
+
+  const pendingDeleteChannel = pendingDeleteId
+    ? channels.find(c => c.id === pendingDeleteId) ?? null
+    : null;
 
   const handleTestChannel = async (id: string) => {
     try {
@@ -136,41 +151,67 @@ export function AlertsPage() {
   };
 
   // --- Render ---
+  const deleteDialog = (
+    <ConfirmDialog
+      isOpen={pendingDeleteChannel !== null}
+      onClose={() => setPendingDeleteId(null)}
+      onConfirm={confirmDeleteChannel}
+      title={t('alerts.deleteDialog.title')}
+      message={
+        <span>
+          {t('alerts.deleteDialog.messagePrefix')}
+          <span className="font-bold text-slate-900 dark:text-white">{pendingDeleteChannel?.name}</span>
+          {t('alerts.deleteDialog.messageSuffix')}
+        </span>
+      }
+      description={t('alerts.deleteDialog.warning')}
+      confirmLabel={t('common.delete')}
+      variant="danger"
+      isProcessing={isDeleting}
+    />
+  );
+
   if (isMobile) {
     return (
-      <AlertsMobileView
+      <>
+        <AlertsMobileView
+          channels={channels}
+          rules={rules}
+          history={history}
+          stats={stats}
+          isLoading={isLoading}
+          rulesLoading={rulesLoading}
+          historyLoading={historyLoading}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          onAddChannel={handleAddChannel}
+          onEditChannel={handleEditChannel}
+          onDeleteChannel={handleDeleteChannel}
+          onToggleChannel={handleToggleChannel}
+          onTestChannel={handleTestChannel}
+        />
+        {deleteDialog}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <AlertsDesktopView
         channels={channels}
-        rules={rules}
-        history={history}
-        stats={stats}
         isLoading={isLoading}
-        rulesLoading={rulesLoading}
-        historyLoading={historyLoading}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        togglingIds={togglingIds}
+        rulesAddTrigger={rulesAddTrigger}
         onAddChannel={handleAddChannel}
         onEditChannel={handleEditChannel}
         onDeleteChannel={handleDeleteChannel}
         onToggleChannel={handleToggleChannel}
         onTestChannel={handleTestChannel}
+        onAddRule={handleAddRule}
       />
-    );
-  }
-
-  return (
-    <AlertsDesktopView
-      channels={channels}
-      isLoading={isLoading}
-      activeTab={activeTab}
-      setActiveTab={setActiveTab}
-      togglingIds={togglingIds}
-      rulesAddTrigger={rulesAddTrigger}
-      onAddChannel={handleAddChannel}
-      onEditChannel={handleEditChannel}
-      onDeleteChannel={handleDeleteChannel}
-      onToggleChannel={handleToggleChannel}
-      onTestChannel={handleTestChannel}
-      onAddRule={handleAddRule}
-    />
+      {deleteDialog}
+    </>
   );
 }

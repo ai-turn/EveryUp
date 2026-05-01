@@ -5,3 +5,4 @@ export { Toggle } from './Toggle';
 export { EmptyState } from './EmptyState';
 export { KPICard } from './KPICard';
 export { Timeline } from './Timeline';
+export { ConfirmDialog } from './ConfirmDialog';

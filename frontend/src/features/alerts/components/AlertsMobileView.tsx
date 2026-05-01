@@ -3,6 +3,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
 import { MaterialIcon } from '../../../components/common';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
+import { getChannelStyle, getChannelTypeLabel } from '../utils/channelMeta';
 import type { NotificationChannel, AlertRule, NotificationHistory, NotificationStats } from '../../../services/api';
 
 type MobileTab = 'channels' | 'rules' | 'history';
@@ -23,12 +24,6 @@ interface AlertsMobileViewProps {
   onToggleChannel: (id: string) => void;
   onTestChannel: (id: string) => void;
 }
-
-const channelColors: Record<string, { color: string; bg: string }> = {
-  telegram: { color: 'text-sky-500', bg: 'bg-sky-500/10' },
-  discord: { color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-  slack: { color: 'text-purple-500', bg: 'bg-purple-500/10' },
-};
 
 const severityColors: Record<string, { text: string; bg: string }> = {
   critical: { text: 'text-red-600 dark:text-red-400', bg: 'bg-red-500/10' },
@@ -148,19 +143,26 @@ export function AlertsMobileView({
             </div>
           ) : (
             channels.map(channel => {
-              const meta = channelColors[channel.type] ?? channelColors.discord;
+              const meta = getChannelStyle(channel.type);
               return (
                 <div
                   key={channel.id}
-                  className={`bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-4 ${!channel.isEnabled ? 'opacity-60' : ''}`}
+                  className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-4"
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${meta.bg}`}>
-                      <ChannelIcon type={channel.type} size={20} className={meta.color} />
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${meta.bg} ${!channel.isEnabled ? 'opacity-50' : ''}`}>
+                      <ChannelIcon type={channel.type} size={20} className={meta.text} />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{channel.name}</p>
-                      <p className={`text-xs font-semibold capitalize ${meta.color}`}>{channel.type}</p>
+                    <div className={`flex-1 min-w-0 ${!channel.isEnabled ? 'opacity-60' : ''}`}>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{channel.name}</p>
+                        {!channel.isEnabled && (
+                          <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-slate-200 dark:bg-ui-active-dark text-slate-500 dark:text-text-muted-dark rounded-full shrink-0">
+                            {t('common.disabled', { defaultValue: 'Disabled' })}
+                          </span>
+                        )}
+                      </div>
+                      <p className={`text-xs font-semibold ${meta.text}`}>{getChannelTypeLabel(channel.type, t)}</p>
                     </div>
                     <button
                       onClick={() => onToggleChannel(channel.id)}
