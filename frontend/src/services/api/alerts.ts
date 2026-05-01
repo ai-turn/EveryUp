@@ -3,7 +3,7 @@ import type { RequestFn } from './base';
 // --- Alert Rule Types ---
 
 export type AlertRuleType = 'resource' | 'service' | 'log' | 'system';
-export type AlertMetric = 'cpu' | 'memory' | 'disk' | 'status_change' | 'http_status' | 'response_time' | 'log_level';
+export type AlertMetric = 'cpu' | 'memory' | 'disk' | 'status_change' | 'http_status' | 'response_time' | 'log_level' | 'api_status_code';
 export type AlertOperator = 'gt' | 'lt' | 'gte' | 'lte' | 'eq';
 export type AlertSeverity = 'critical' | 'warning' | 'info';
 

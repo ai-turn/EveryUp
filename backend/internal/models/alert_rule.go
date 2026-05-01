@@ -23,6 +23,7 @@ const (
 	AlertMetricHTTPStatus   AlertMetric = "http_status"   // HTTP status code comparison
 	AlertMetricResponseTime AlertMetric = "response_time" // Response time in ms
 	AlertMetricLogLevel     AlertMetric = "log_level"
+	AlertMetricApiStatus    AlertMetric = "api_status_code" // captured API request status code
 )
 
 // AlertOperator defines comparison operators

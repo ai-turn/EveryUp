@@ -3,6 +3,7 @@ package alerter
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -147,6 +148,54 @@ func (m *Manager) DispatchLogAlertForRule(rule models.AlertRule, serviceID, serv
 		LogLevel:    level,
 		Metadata:    metadata,
 		Severity:    string(rule.Severity),
+	}
+
+	m.DispatchToChannels(notification, rule.ChannelIDs)
+}
+
+// DispatchApiRequestAlertForRule sends an API request alert through channels selected by a rule.
+// statusCode is compared against rule.Threshold via rule.Operator at the call site.
+func (m *Manager) DispatchApiRequestAlertForRule(rule models.AlertRule, serviceID, serviceName, method, path string, statusCode int, durationMs float64) {
+	// Per-(rule, service, status_code, method, path) dedup so identical repeated failures collapse,
+	// but distinct paths/methods still alert independently.
+	fpKey := rule.ID + ":" + serviceID
+	fpDetail := method + " " + path
+	fingerprint := GenerateFingerprint(fpKey, fmt.Sprintf("%d", statusCode), fpDetail)
+
+	if !m.dedup.ShouldAlert(fingerprint) {
+		log.Printf("Dedup: suppressed duplicate API request alert for service %s [%d %s %s]", serviceName, statusCode, method, path)
+		return
+	}
+
+	defaultMessage := fmt.Sprintf("%s %s → %d (%.0fms)", method, path, statusCode, durationMs)
+	message := defaultMessage
+	if rule.Message != "" {
+		message = strings.NewReplacer(
+			"{service_name}", serviceName,
+			"{method}", method,
+			"{path}", path,
+			"{status}", fmt.Sprintf("%d", statusCode),
+			"{duration}", fmt.Sprintf("%.0f", durationMs),
+		).Replace(rule.Message)
+	}
+
+	notification := Notification{
+		RuleID:      rule.ID,
+		ServiceID:   serviceID,
+		ServiceName: serviceName,
+		Message:     message,
+		Time:        time.Now(),
+		AlertType:   AlertTypeApiRequest,
+		Metric:      string(models.AlertMetricApiStatus),
+		Value:       float64(statusCode),
+		Threshold:   rule.Threshold,
+		Severity:    string(rule.Severity),
+		Metadata: map[string]interface{}{
+			"method":      method,
+			"path":        path,
+			"statusCode":  statusCode,
+			"durationMs":  durationMs,
+		},
 	}
 
 	m.DispatchToChannels(notification, rule.ChannelIDs)

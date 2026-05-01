@@ -21,6 +21,7 @@ const (
 	AlertTypeResource    = "resource"
 	AlertTypeEndpoint    = "endpoint"
 	AlertTypeSystem      = "system"
+	AlertTypeApiRequest  = "api_request"
 )
 
 // Channel types — mirror the notification_channels.type column in the database.

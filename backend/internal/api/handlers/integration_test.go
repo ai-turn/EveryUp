@@ -916,6 +916,63 @@ func TestApiRequestIngest_WithApiKey(t *testing.T) {
 	}
 }
 
+func TestApiRequestIngest_TriggersAlertRule(t *testing.T) {
+	ts := setupTestServer(t)
+	apiKey := createLogServiceForIngest(t, ts, "req-svc-alert")
+
+	if _, err := database.DB.Exec(
+		`UPDATE services SET api_capture_mode = 'all' WHERE id = ?`,
+		"req-svc-alert",
+	); err != nil {
+		t.Fatalf("update capture mode: %v", err)
+	}
+
+	// Insert an enabled api_status_code rule directly
+	if _, err := database.DB.Exec(`
+		INSERT INTO alert_rules (id, name, type, service_id, metric, operator, threshold, duration, severity, is_enabled, cooldown, created_at)
+		VALUES ('rule-api-1', 'Server errors', 'log', 'req-svc-alert', 'api_status_code', 'gte', 500, 0, 'critical', 1, 0, datetime('now'))
+	`); err != nil {
+		t.Fatalf("insert rule: %v", err)
+	}
+
+	// Verify lookup returns the rule
+	repo := database.NewAlertRuleRepository()
+	rules, err := repo.GetEnabledApiRequestRulesByServiceID("req-svc-alert")
+	if err != nil {
+		t.Fatalf("rule lookup: %v", err)
+	}
+	if len(rules) != 1 {
+		t.Fatalf("expected 1 rule, got %d", len(rules))
+	}
+	if rules[0].Metric != "api_status_code" {
+		t.Errorf("metric = %q, want api_status_code", rules[0].Metric)
+	}
+
+	// And that log rule lookup excludes it
+	logRules, err := repo.GetEnabledLogRulesByServiceID("req-svc-alert")
+	if err != nil {
+		t.Fatalf("log rule lookup: %v", err)
+	}
+	if len(logRules) != 0 {
+		t.Errorf("expected 0 log rules (api_status_code excluded), got %d", len(logRules))
+	}
+
+	// Ingest a 500 — alert dispatch is async, but ingest should still succeed
+	resp, result := ts.doRequest(t, "POST", "/api/v1/ingest/requests", map[string]interface{}{
+		"method":     "POST",
+		"path":       "/api/orders",
+		"statusCode": 500,
+		"durationMs": 230,
+	}, "Authorization", "Bearer "+apiKey)
+
+	if resp.StatusCode != 201 {
+		t.Errorf("status = %d, want 201", resp.StatusCode)
+	}
+	if !result.Success {
+		t.Fatalf("ingest failed: %v", result.Error)
+	}
+}
+
 func TestApiRequestIngest_WithXAPIKey(t *testing.T) {
 	ts := setupTestServer(t)
 	apiKey := createLogServiceForIngest(t, ts, "req-svc-x-api-key")

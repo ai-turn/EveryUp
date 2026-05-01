@@ -127,6 +127,7 @@
             "nameRequired": "Name is required",
             "metric": "Metric",
             "logLevel": "Log Level",
+            "apiStatusCode": "API Request",
             "service": "Service",
             "selectService": "Select a service...",
             "serviceRequired": "Please select a service",

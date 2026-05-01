@@ -11,6 +11,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/oklog/ulid/v2"
+	"github.com/aiturn/everyup/internal/alerter"
 	"github.com/aiturn/everyup/internal/database"
 	"github.com/aiturn/everyup/internal/models"
 )
@@ -19,15 +20,19 @@ const maxApiRequestBatchSize = 50
 
 // ApiRequestIngestHandler handles API request capture ingestion via API key.
 type ApiRequestIngestHandler struct {
-	repo        *database.ApiRequestRepository
-	serviceRepo *database.ServiceRepository
+	repo         *database.ApiRequestRepository
+	serviceRepo  *database.ServiceRepository
+	ruleRepo     *database.AlertRuleRepository
+	alertManager *alerter.Manager
 }
 
 // NewApiRequestIngestHandler creates a new ApiRequestIngestHandler.
 func NewApiRequestIngestHandler() *ApiRequestIngestHandler {
 	return &ApiRequestIngestHandler{
-		repo:        database.NewApiRequestRepository(),
-		serviceRepo: database.NewServiceRepository(),
+		repo:         database.NewApiRequestRepository(),
+		serviceRepo:  database.NewServiceRepository(),
+		ruleRepo:     database.NewAlertRuleRepository(),
+		alertManager: alerter.NewManager(),
 	}
 }
 
@@ -174,6 +179,7 @@ func (h *ApiRequestIngestHandler) Ingest(c *fiber.Ctx) error {
 			return internalError(c, ErrCodeDatabase, err)
 		}
 		processed = len(batch)
+		h.evaluateApiRequestAlerts(service, batch)
 	}
 
 	return c.Status(201).JSON(fiber.Map{
@@ -188,6 +194,36 @@ func (h *ApiRequestIngestHandler) Ingest(c *fiber.Ctx) error {
 }
 
 // validateApiRequestEntry checks required fields and size constraints.
+// evaluateApiRequestAlerts dispatches alerts for any captured request matching an enabled rule.
+// Rule lookup is done once per ingest call; matching is per-entry status_code vs rule.Operator+Threshold.
+func (h *ApiRequestIngestHandler) evaluateApiRequestAlerts(service *models.Service, batch []models.ApiRequest) {
+	rules, err := h.ruleRepo.GetEnabledApiRequestRulesByServiceID(service.ID)
+	if err != nil {
+		log.Printf("[ApiRequestIngest] Failed to load API request rules for service %s: %v", service.ID, err)
+		return
+	}
+	if len(rules) == 0 {
+		return
+	}
+
+	for _, entry := range batch {
+		for _, rule := range rules {
+			if !compareAlertValue(float64(entry.StatusCode), rule.Operator, rule.Threshold) {
+				continue
+			}
+			go h.alertManager.DispatchApiRequestAlertForRule(
+				rule,
+				service.ID,
+				service.Name,
+				entry.Method,
+				entry.Path,
+				entry.StatusCode,
+				float64(entry.DurationMs),
+			)
+		}
+	}
+}
+
 func validateApiRequestEntry(e *models.ApiRequestIngestEntry) error {
 	if e.Method == "" {
 		return fmt.Errorf("method is required")

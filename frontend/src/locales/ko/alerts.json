@@ -127,6 +127,7 @@
             "nameRequired": "이름을 입력해주세요",
             "metric": "지표",
             "logLevel": "로그 레벨",
+            "apiStatusCode": "API 요청",
             "service": "서비스",
             "selectService": "서비스를 선택하세요...",
             "serviceRequired": "서비스를 선택해주세요",

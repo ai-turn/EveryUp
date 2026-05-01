@@ -180,12 +180,44 @@ func (r *AlertRuleRepository) GetEnabledByServiceID(serviceID string) ([]models.
 	return rules, nil
 }
 
+// GetEnabledApiRequestRulesByServiceID returns enabled API request rules for a service (or global rules).
+// API request rules are stored as type='log' with metric='api_status_code'.
+func (r *AlertRuleRepository) GetEnabledApiRequestRulesByServiceID(serviceID string) ([]models.AlertRule, error) {
+	rows, err := DB.Query(`
+		SELECT `+alertRuleSelectColumns+`
+		FROM alert_rules
+		WHERE is_enabled = 1 AND type = 'log' AND metric = 'api_status_code'
+		  AND (service_id = ? OR service_id IS NULL OR service_id = '')
+		ORDER BY severity DESC
+	`, serviceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var rules []models.AlertRule
+	for rows.Next() {
+		rule, err := scanAlertRuleFields(rows.Scan)
+		if err != nil {
+			return nil, err
+		}
+		rules = append(rules, rule)
+	}
+
+	for i := range rules {
+		chIDs, _ := loadChannelIDs(rules[i].ID)
+		rules[i].ChannelIDs = chIDs
+	}
+	return rules, nil
+}
+
 // GetEnabledLogRulesByServiceID returns enabled log rules for a log service (or global log rules).
+// Excludes api_status_code rules — those are evaluated separately via GetEnabledApiRequestRulesByServiceID.
 func (r *AlertRuleRepository) GetEnabledLogRulesByServiceID(serviceID string) ([]models.AlertRule, error) {
 	rows, err := DB.Query(`
 		SELECT `+alertRuleSelectColumns+`
 		FROM alert_rules
-		WHERE is_enabled = 1 AND type = 'log'
+		WHERE is_enabled = 1 AND type = 'log' AND metric != 'api_status_code'
 		  AND (service_id = ? OR service_id IS NULL OR service_id = '')
 		ORDER BY severity DESC
 	`, serviceID)
