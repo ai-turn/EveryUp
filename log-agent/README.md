@@ -83,18 +83,18 @@ New log lines should start appearing in EveryUp within a few seconds.
 
 If your URL format is not supported (e.g. IPv6), skip `LOG_AGENT_ENDPOINT` and set `LOG_AGENT_HOST`, `LOG_AGENT_PORT`, and `LOG_AGENT_TLS` directly.
 
-## Deployment Patterns
+## More Deployment Options
 
-### Sidecar with a shared volume
+### My app and agent are in the same docker-compose.yml
 
-Use this when your app and agent run in the same Compose stack and share a log volume.
+If your app and the agent share a Docker Compose file, use a named volume so both containers can access the same log directory.
 
 ```yaml
 services:
   myapp:
     image: myapp:latest
     volumes:
-      - app-logs:/var/log/app
+      - app-logs:/var/log/app          # app writes logs here
 
   everyup-log-agent:
     image: aiturn/everyup-log-agent:latest
@@ -103,15 +103,15 @@ services:
       - LOG_AGENT_ENDPOINT=http://your-everyup-server:3001
       - LOG_AGENT_API_KEY=everyup_your_api_key
     volumes:
-      - app-logs:/var/log/app:ro
+      - app-logs:/var/log/app:ro       # agent reads the same directory (read-only)
 
 volumes:
   app-logs:
 ```
 
-### Pipe mode (stdout/stderr only)
+### My app does not write log files — it only prints to the terminal
 
-Use this when your app only logs to stdout/stderr and does not write log files.
+Some apps (especially Node.js, Spring Boot with default config) don't write log files at all. They just print to the console (`stdout`/`stderr`). You can pipe that output into the agent.
 
 ```yaml
 services:
@@ -131,19 +131,23 @@ services:
       sh -c "docker logs -f myapp 2>&1 | /entrypoint.sh"
 ```
 
-### systemd (VM or bare metal)
+> Replace `myapp` in the `docker logs -f myapp` command with the actual container name of your app.
 
-Use this when Docker is not your primary runtime. Install Fluent Bit first:
+### My server does not use Docker at all (VM or bare metal)
+
+If you're running the agent directly on a Linux server without Docker, use Fluent Bit installed as a system service.
+
+**1. Install Fluent Bit**
 
 ```bash
 curl -sL https://packages.fluentbit.io/install.sh | sh
 ```
 
-Create `/etc/systemd/system/everyup-log-agent.service`:
+**2. Create a service file** at `/etc/systemd/system/everyup-log-agent.service`:
 
 ```ini
 [Unit]
-Description=EveryUp Log Agent (Fluent Bit)
+Description=EveryUp Log Agent
 After=network.target
 
 [Service]
@@ -157,17 +161,17 @@ EnvironmentFile=/etc/everyup-agent/agent.env
 WantedBy=multi-user.target
 ```
 
-Create `/etc/everyup-agent/agent.env`:
+**3. Create a config file** at `/etc/everyup-agent/agent.env`:
 
 ```bash
-LOG_AGENT_HOST=monitoring.example.com
-LOG_AGENT_PORT=443
-LOG_AGENT_TLS=on
+LOG_AGENT_HOST=your-everyup-server.com
+LOG_AGENT_PORT=3001
+LOG_AGENT_TLS=off
 LOG_AGENT_API_KEY=everyup_your_api_key
 LOG_AGENT_FILE=/var/log/myapp/app.log
 ```
 
-Then enable and start:
+**4. Start the service**
 
 ```bash
 sudo systemctl enable --now everyup-log-agent
