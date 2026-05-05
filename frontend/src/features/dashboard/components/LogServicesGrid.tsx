@@ -48,15 +48,23 @@ export function LogServicesGrid() {
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-            {t('dashboard.logs.title')}
-          </h2>
-          {!loading && services.length > 0 && (
-            <span className="text-xs font-semibold text-slate-500 dark:text-text-muted-dark bg-slate-100 dark:bg-ui-hover-dark px-2 py-0.5 rounded-full">
-              {services.length}
-            </span>
-          )}
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <MaterialIcon name="article" className="text-primary text-lg" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                {t('dashboard.logs.title')}
+              </h2>
+              {!loading && services.length > 0 && (
+                <span className="text-xs font-semibold text-slate-500 dark:text-text-muted-dark bg-slate-100 dark:bg-ui-hover-dark px-2 py-0.5 rounded-full">
+                  {services.length}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">애플리케이션 로그 수집 현황</p>
+          </div>
         </div>
         {!loading && services.length > 0 && (
           <button
@@ -107,7 +115,6 @@ export function LogServicesGrid() {
         </div>
       )}
 
-      <div className="mt-8 mx-6 h-px bg-slate-200 dark:bg-ui-border-dark" />
     </div>
   );
 }

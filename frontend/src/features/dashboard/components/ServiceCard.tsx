@@ -1,16 +1,44 @@
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTranslate } from '@tolgee/react';
-import { MaterialIcon, StatusBadge, Sparkline } from '../../../components/common';
+import { MaterialIcon, StatusBadge } from '../../../components/common';
 import { IconHealthCheck } from '../../../components/icons/SidebarIcons';
 import type { Service } from '../../../types/service';
+
+function SparklineArea({ data, belowSla }: { data: number[]; belowSla: boolean }) {
+  const color = belowSla ? '#ef4444' : '#3b76c9';
+  const gradientId = `sg-${Math.random().toString(36).slice(2, 7)}`;
+  const W = 240, H = 38, PAD = 2;
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const stepX = (W - PAD * 2) / (data.length - 1);
+  const toX = (i: number) => PAD + i * stepX;
+  const toY = (v: number) => PAD + (H - PAD * 2) - ((v - min) / range) * (H - PAD * 2);
+
+  const linePts = data.map((v, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(v).toFixed(1)}`).join(' ');
+  const areaPts = `M${PAD},${H - PAD} ` +
+    data.map((v, i) => `L${toX(i).toFixed(1)},${toY(v).toFixed(1)}`).join(' ') +
+    ` L${W - PAD},${H - PAD} Z`;
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full mt-3" style={{ height: 38 }} aria-hidden="true" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity={0.2} />
+          <stop offset="100%" stopColor={color} stopOpacity={0} />
+        </linearGradient>
+      </defs>
+      <path d={areaPts} fill={`url(#${gradientId})`} />
+      <path d={linePts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 interface ServiceCardProps {
   service: Service;
   onClick?: () => void;
 }
-
-const SPARKLINE_COLOR = '#3b76c9';
 
 const SLA_THRESHOLD = 99.9;
 
@@ -60,46 +88,21 @@ export const ServiceCard = memo(function ServiceCard({ service, onClick }: Servi
         </div>
 
         {/* Metrics row */}
-        <div className="flex items-end justify-between gap-2">
-          <div className="grid grid-cols-2 gap-x-6 gap-y-1 flex-1 min-w-0">
-            <div>
-              <p className="text-xs text-slate-500 dark:text-text-muted-dark uppercase font-semibold tracking-wide">{t('평균 지연 시간')}</p>
-              <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">{service.latency}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-500 dark:text-text-muted-dark uppercase font-semibold tracking-wide">{t('가동률')}</p>
-              <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">{service.uptime}</p>
-            </div>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+          <div>
+            <p className="text-xs text-slate-500 dark:text-text-muted-dark uppercase font-semibold tracking-wide">{t('평균 지연 시간')}</p>
+            <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">{service.latency}</p>
           </div>
-
-          {/* Sparkline */}
-          {service.latencyHistory && service.latencyHistory.length >= 2 && (
-            <div className="shrink-0 opacity-70">
-              <Sparkline data={service.latencyHistory} color={SPARKLINE_COLOR} width={72} height={26} />
-            </div>
-          )}
+          <div>
+            <p className="text-xs text-slate-500 dark:text-text-muted-dark uppercase font-semibold tracking-wide">{t('가동률')}</p>
+            <p className={`text-sm font-bold tabular-nums ${belowSla ? 'text-red-500' : 'text-slate-900 dark:text-white'}`}>{service.uptime}</p>
+          </div>
         </div>
 
-        {/* Uptime progress bar */}
-        <div className="mt-3">
-          <div className="relative h-1.5 bg-slate-100 dark:bg-ui-hover-dark rounded-full overflow-hidden">
-            <div
-              className="absolute left-0 top-0 bottom-0 rounded-full transition-all duration-500"
-              style={{
-                width: `${Math.min(uptimeRaw, 100)}%`,
-                backgroundColor: belowSla ? '#ef4444' : '#10b981',
-              }}
-            />
-            {/* SLA threshold marker */}
-            <div
-              className="absolute top-0 bottom-0 w-px bg-slate-400/60 dark:bg-slate-500/60"
-              style={{ left: `${SLA_THRESHOLD}%` }}
-            />
-          </div>
-          {belowSla && (
-            <p className="text-[10px] text-red-500 mt-0.5 font-semibold">SLA {SLA_THRESHOLD}% 미달</p>
-          )}
-        </div>
+        {/* Full-width sparkline with gradient area */}
+        {service.latencyHistory && service.latencyHistory.length >= 2 && (
+          <SparklineArea data={service.latencyHistory} belowSla={belowSla} />
+        )}
 
         {/* Footer badges */}
         <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-ui-border-dark/50">
