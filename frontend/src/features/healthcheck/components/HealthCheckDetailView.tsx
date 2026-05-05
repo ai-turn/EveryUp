@@ -56,16 +56,8 @@ function ServiceContent({
         timeout={service.timeout}
         cronExpression={service.cronExpression}
       />
-      <CheckHistoryBar serviceId={serviceId} refreshKey={refreshKey} />
-
-      <div className="flex items-center gap-2 mt-2 mb-4">
-        <MaterialIcon name="analytics" className="text-base text-slate-400 dark:text-text-dim-dark" />
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-text-dim-dark">
-          {t('성능')}
-        </h2>
-        <div className="flex-1 border-t border-slate-200 dark:border-ui-border-dark" />
-      </div>
       <RealtimeMetrics serviceId={serviceId} refreshKey={refreshKey} />
+      <CheckHistoryBar serviceId={serviceId} refreshKey={refreshKey} />
       <ResponseTimeChart serviceId={serviceId} refreshKey={refreshKey} timeout={service.timeout} />
 
       <div className="flex items-center gap-2 mt-2 mb-4">
@@ -161,45 +153,36 @@ function DesktopLayout(props: HealthCheckDetailViewProps) {
       {/* Breadcrumbs & Actions */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
         <Breadcrumbs items={[{ label: tc('common.backToList'), href: '/healthcheck' }]} />
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-chart-surface rounded-lg p-1">
-          <div className="flex items-center gap-2 px-2 py-1">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-3 py-2">
             <Toggle checked={isLive} onChange={onLiveToggle} />
-            {isLive && (
-              <span className="hidden sm:inline text-xs text-slate-400 dark:text-text-muted-dark">
-                {formatDistanceToNow(lastUpdated, { addSuffix: true, locale: dateLocale })}
-              </span>
-            )}
+            <span className="text-sm font-bold text-slate-600 dark:text-text-muted-dark">
+              {tc('common.live')}
+            </span>
           </div>
-          <div className="w-px h-5 bg-slate-300 dark:bg-ui-active-dark mx-0.5" />
-
-          <div className="relative group">
-            <button onClick={onRefresh} className="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-600 dark:text-text-secondary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60">
-              <MaterialIcon name="refresh" className="text-lg" />
-            </button>
-            <div className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 dark:bg-slate-700 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
-              {tc('common.refresh')}
-            </div>
-          </div>
-
+          <button
+            onClick={onRefresh}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-100 dark:bg-ui-hover-dark px-3 py-2 text-sm font-bold text-slate-600 dark:text-text-secondary-dark transition-colors hover:bg-slate-200 dark:hover:bg-ui-active-dark"
+          >
+            <MaterialIcon name="refresh" className="text-base" />
+            {tc('common.refresh')}
+          </button>
           {service.type !== 'log' && (
-            <div className="relative group">
-              <button onClick={onManage} className="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-600 dark:text-text-secondary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60">
-                <MaterialIcon name="edit" className="text-lg" />
-              </button>
-              <div className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 dark:bg-slate-700 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
-                {t('헬스체크 관리')}
-              </div>
-            </div>
-          )}
-
-          <div className="relative group">
-            <button onClick={onDeleteDialogOpen} className="p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/60">
-              <MaterialIcon name="delete" className="text-lg" />
+            <button
+              onClick={onManage}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm font-bold text-primary transition-colors hover:bg-primary/20"
+            >
+              <MaterialIcon name="edit" className="text-base" />
+              {tc('common.edit')}
             </button>
-            <div className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 dark:bg-slate-700 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
-              {tc('common.delete')}
-            </div>
-          </div>
+          )}
+          <button
+            onClick={onDeleteDialogOpen}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-500/10 px-3 py-2 text-sm font-bold text-red-500 transition-colors hover:bg-red-500/20"
+          >
+            <MaterialIcon name="delete" className="text-base" />
+            {tc('common.delete')}
+          </button>
         </div>
       </div>
 
@@ -244,21 +227,21 @@ function MobileLayout(props: HealthCheckDetailViewProps) {
           <span className="text-sm font-medium">{tc('common.backToList')}</span>
         </button>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-100 dark:bg-chart-surface rounded-lg">
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark">
             <Toggle checked={isLive} onChange={onLiveToggle} />
-            <span className="text-xs font-medium text-slate-700 dark:text-text-secondary-dark">
+            <span className="text-xs font-medium text-slate-600 dark:text-text-muted-dark">
               {tc('common.live')}
             </span>
           </div>
-          <button onClick={onRefresh} className="p-2.5 rounded-lg bg-slate-100 dark:bg-chart-surface text-slate-700 dark:text-white active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60">
+          <button onClick={onRefresh} className="p-2.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-secondary-dark active:scale-95 transition-transform">
             <MaterialIcon name="refresh" className="text-lg" />
           </button>
           {service.type !== 'log' && (
-            <button onClick={onManage} className="p-2.5 rounded-lg bg-primary text-white active:scale-95 transition-transform cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60">
+            <button onClick={onManage} className="p-2.5 rounded-lg bg-primary/10 text-primary active:scale-95 transition-transform cursor-pointer">
               <MaterialIcon name="edit" className="text-lg" />
             </button>
           )}
-          <button onClick={onDeleteDialogOpen} className="p-2.5 rounded-lg bg-red-500 text-white active:scale-95 transition-transform cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/60">
+          <button onClick={onDeleteDialogOpen} className="p-2.5 rounded-lg bg-red-500/10 text-red-500 active:scale-95 transition-transform cursor-pointer">
             <MaterialIcon name="delete" className="text-lg" />
           </button>
         </div>

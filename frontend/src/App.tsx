@@ -23,6 +23,7 @@ const AlertRuleFormPage    = lazy(() => import('./pages/AlertRuleFormPage').then
 const HealthCheckFormPage  = lazy(() => import('./pages/HealthCheckFormPage').then(m => ({ default: m.HealthCheckFormPage })));
 const InfraFormPage        = lazy(() => import('./pages/InfraFormPage').then(m => ({ default: m.InfraFormPage })));
 const LogServiceFormPage   = lazy(() => import('./pages/LogServiceFormPage').then(m => ({ default: m.LogServiceFormPage })));
+const LogServiceEditPage   = lazy(() => import('./pages/LogServiceEditPage').then(m => ({ default: m.LogServiceEditPage })));
 
 function PageLoader() {
   return (
@@ -65,6 +66,7 @@ function App() {
                 <Route path="/healthcheck/:serviceId" element={<HealthCheckDetailPage />} />
                 <Route path="/logs" element={<LogListPage />} />
                 <Route path="/logs/new" element={<LogServiceFormPage />} />
+                <Route path="/logs/:serviceId/edit" element={<LogServiceEditPage />} />
                 <Route path="/logs/:serviceId" element={<LogDetailPage />} />
                 <Route path="/infra" element={<InfraPage />} />
                 <Route path="/infra/new" element={<InfraFormPage />} />

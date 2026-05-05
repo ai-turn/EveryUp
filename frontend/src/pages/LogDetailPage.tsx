@@ -1,8 +1,7 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useTranslate } from '@tolgee/react';
-import { ko, enUS } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../utils/errors';
 import { MaterialIcon } from '../components/common';
@@ -11,7 +10,7 @@ import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { LogDetailView } from '../features/logs/components/LogDetailView';
 import { api, Service } from '../services/api';
 
-type TabKey = 'logs' | 'requests' | 'integration' | 'settings';
+type TabKey = 'logs' | 'requests' | 'integration';
 
 export function LogDetailPage() {
   const { serviceId } = useParams<{ serviceId: string }>();
@@ -19,11 +18,10 @@ export function LogDetailPage() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { t } = useTranslate();
-  const { t: ti, i18n } = useTranslation(['logs', 'common']);
+  const { t: ti } = useTranslation(['logs', 'common']);
   const { copy } = useCopyToClipboard();
 
   const [isLive, setIsLive] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState(new Date());
   const [service, setService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,8 +31,6 @@ export function LogDetailPage() {
       ? 'requests'
       : searchParams.get('tab') === 'integration'
       ? 'integration'
-      : searchParams.get('tab') === 'settings'
-      ? 'settings'
       : 'logs'
   );
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
@@ -42,15 +38,12 @@ export function LogDetailPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const dateLocale = useMemo(() => (i18n.language.startsWith('ko') ? ko : enUS), [i18n.language]);
-
   const fetchService = useCallback(async () => {
     if (!serviceId) return;
     try {
       const data = await api.getServiceById(serviceId);
       setService(data);
       setError(null);
-      setLastUpdated(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch service');
     } finally {
@@ -162,21 +155,11 @@ export function LogDetailPage() {
     onDelete: handleDelete,
     onDeleteDialogOpen: () => setIsDeleteDialogOpen(true),
     onDeleteDialogClose: () => setIsDeleteDialogOpen(false),
-    onSettingsClick: () => {
-      setActiveTab('settings');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    },
     onServiceUpdate: setService,
     onApiKeyRegenerated: handleApiKeyRegenerated,
     onRevealedKeyClose: () => setRevealedKey(null),
     onCopyKey: copy,
   } as const;
 
-  return (
-    <LogDetailView
-      {...sharedProps}
-      lastUpdated={lastUpdated}
-      dateLocale={dateLocale}
-    />
-  );
+  return <LogDetailView {...sharedProps} />;
 }

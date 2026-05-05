@@ -180,6 +180,12 @@
       "infoTitle": "Log Collection Service",
       "infoDesc": "Create a log service to generate an API key automatically. Then choose HTTP Appender or Log Agent in the Integration tab and connect your app."
     },
+    "edit": {
+      "title": "Edit Log Service",
+      "subtitle": "Update service name and API capture settings.",
+      "basicInfo": "Basic information",
+      "basicInfoDesc": "Update the service name."
+    },
     "validation": {
       "idRequired": "ID is required (min 2 chars)",
       "idFormat": "Only lowercase letters, numbers, and hyphens are allowed",

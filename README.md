@@ -26,6 +26,12 @@ No Prometheus, no Grafana, no cloud required — just a single binary and a SQLi
 
 - [Why EveryUp?](#why-everyup)
 - [Features](#features)
+- [Menu Guide](#menu-guide)
+  - [Health Check](#health-check)
+  - [Logs](#logs)
+  - [Infra](#infra)
+  - [Alerts](#alerts)
+  - [Settings](#settings)
 - [Screenshots](#screenshots)
 - [Quick Start](#quick-start)
   - [Docker](#docker)
@@ -61,6 +67,52 @@ Most server monitoring tools solve one problem. EveryUp combines uptime checks, 
 | **Alerts** | Telegram / Discord / Slack integration, threshold-based rules |
 | **Log Management** | Unified log viewer, search, log agent collection, and per-request HTTP inspector |
 | **Real-time Streaming** | WebSocket-based live metric updates |
+
+---
+
+## Menu Guide
+
+### Health Check
+
+Periodically checks the availability of HTTP and TCP endpoints.
+
+- **Scheduling**: Fixed interval or cron expression per service
+- **Detail view**: Real-time metrics, response time chart, recent check history bar, and failure log
+- **Incident detection**: Sends an alert when consecutive failures exceed the configured threshold
+
+### Logs
+
+Collects and displays logs from external services in a unified dashboard.
+
+- **Log viewer**: Filter by level (error / warn / info / debug / trace), keyword search, and timeline view
+- **API Request Inspector**: Per-service HTTP request/response capture — configurable sampling rate, errors-only mode, and header/body masking
+- **Integration tab**: Generate API keys and view code snippets for log agent setup
+- **Capture settings**: Log level filter and API capture mode managed independently per service
+
+### Infra
+
+Collects real-time server resource usage and records historical trends.
+
+- **Local collection**: Collects CPU, memory, disk, and network directly from the host running the agent
+- **SSH remote collection**: Collects metrics from remote servers via SSH — no agent installation required
+- **Detail view**: Radial gauges (live) + trend charts (time-series) + process list
+
+### Alerts
+
+Sends notifications to external channels when thresholds are exceeded or incidents occur.
+
+- **Channels**: Telegram, Discord, Slack, and Webhook — multiple channels can be registered simultaneously
+- **Rules**: Conditions include health check down, infra CPU/memory/disk thresholds, and log error/warn events
+- **History**: Browse send success/failure records by channel and timeline
+
+### Settings
+
+Manages system-wide configuration for your EveryUp instance.
+
+- **Account**: Change the admin password
+- **Data retention**: Configure retention periods for logs, metrics, and alert history
+- **Collection interval**: Set the infra metric collection and storage intervals
+- **Theme**: Toggle between light and dark mode
 
 ---
 
@@ -230,7 +282,7 @@ Deploy `everyup-log-agent` on any server to collect logs from external services 
 
 **1. Get an API key**
 
-In the EveryUp dashboard, go to **Health Check → Service detail → Integration** tab to generate an API key.
+In the EveryUp dashboard, go to **Logs → Service detail → Integration** tab to generate an API key.
 
 **2. Run the agent**
 
