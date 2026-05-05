@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon, EmptyState } from '../../../components/common';
 import { LogServiceCard } from '../../logs';
-import { api, Service } from '../../../services/api';
+import { api, Service, LogEntry } from '../../../services/api';
 
 const MAX_ITEMS = 3;
 
@@ -11,12 +11,26 @@ export function LogServicesGrid() {
   const navigate = useNavigate();
   const { t } = useTranslation(['dashboard', 'common']);
   const [services, setServices] = useState<Service[]>([]);
+  const [recentLogsMap, setRecentLogsMap] = useState<Record<string, LogEntry[]>>({});
   const [loading, setLoading] = useState(true);
 
   const fetchServices = useCallback(async () => {
     try {
       const data = await api.getServices();
-      setServices(data.filter((s) => s.type === 'log'));
+      const logServices = data.filter((s) => s.type === 'log').slice(0, MAX_ITEMS);
+      setServices(logServices);
+
+      const entries = await Promise.all(
+        logServices.map(async (svc) => {
+          try {
+            const logs = await api.getServiceLogs(svc.id, { limit: '20' });
+            return [svc.id, logs] as const;
+          } catch {
+            return [svc.id, []] as const;
+          }
+        })
+      );
+      setRecentLogsMap(Object.fromEntries(entries));
     } catch {
       // silently fail — dashboard card is non-critical
     } finally {
@@ -86,12 +100,12 @@ export function LogServicesGrid() {
             <LogServiceCard
               key={service.id}
               service={service}
+              recentLogs={recentLogsMap[service.id] ?? []}
               onClick={() => navigate(`/logs/${service.id}`)}
             />
           ))}
         </div>
       )}
-
 
       <div className="mt-8 mx-6 h-px bg-slate-200 dark:bg-ui-border-dark" />
     </div>

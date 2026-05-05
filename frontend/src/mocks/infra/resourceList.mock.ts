@@ -10,6 +10,9 @@ export const mockResources: Resource[] = [
         status: 'healthy',
         cluster: 'EU-West-1',
         ip: '192.168.1.45',
+        cpuUsage: 42,
+        memoryUsage: 51,
+        diskUsage: 38,
     },
     {
         id: 'api-server-01',
@@ -18,6 +21,9 @@ export const mockResources: Resource[] = [
         status: 'healthy',
         cluster: 'EU-West-1',
         ip: '192.168.1.50',
+        cpuUsage: 49,
+        memoryUsage: 57,
+        diskUsage: 43,
     },
     {
         id: 'cache-redis-01',
@@ -26,6 +32,9 @@ export const mockResources: Resource[] = [
         status: 'warning',
         cluster: 'US-East-1',
         ip: '192.168.2.10',
+        cpuUsage: 56,
+        memoryUsage: 83,
+        diskUsage: 48,
     },
     {
         id: 'worker-node-01',
@@ -34,5 +43,8 @@ export const mockResources: Resource[] = [
         status: 'critical',
         cluster: 'US-East-1',
         ip: '192.168.2.20',
+        cpuUsage: 91,
+        memoryUsage: 69,
+        diskUsage: 53,
     },
 ];
