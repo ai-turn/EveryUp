@@ -164,6 +164,7 @@ func (c *LocalCollector) GetSystemInfo() (*models.SystemInfo, error) {
 		Hostname: "localhost",
 		OS:       "unknown",
 		Platform: "unknown",
+		Kernel:   "unknown",
 		Uptime:   0,
 		IP:       getLocalIP(),
 		CPU:      models.CPUInfo{Cores: cpuCount, Usage: cpuUsage},
@@ -184,6 +185,7 @@ func (c *LocalCollector) GetSystemInfo() (*models.SystemInfo, error) {
 		info.Hostname = hostInfo.Hostname
 		info.OS = hostInfo.OS
 		info.Platform = fmt.Sprintf("%s %s", hostInfo.Platform, hostInfo.PlatformVersion)
+		info.Kernel = hostInfo.KernelVersion
 		info.Uptime = hostInfo.Uptime
 	}
 

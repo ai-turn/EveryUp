@@ -37,34 +37,35 @@ func (r *LogRepository) Create(l *models.Log) error {
 
 // GetAll returns logs with optional filters
 func (r *LogRepository) GetAll(filter models.LogFilter) ([]models.Log, int, error) {
-	// Build query
-	query := "SELECT id, service_id, level, message, metadata, created_at FROM logs WHERE 1=1"
-	countQuery := "SELECT COUNT(*) FROM logs WHERE 1=1"
+	// Build query — JOIN services to include service name
+	baseWhere := " FROM logs l LEFT JOIN services s ON s.id = l.service_id WHERE 1=1"
+	query := "SELECT l.id, l.service_id, COALESCE(s.name, l.service_id, ''), l.level, l.message, l.metadata, l.created_at" + baseWhere
+	countQuery := "SELECT COUNT(*)" + baseWhere
 	args := []interface{}{}
 
 	if filter.ServiceID != "" {
-		query += " AND service_id = ?"
-		countQuery += " AND service_id = ?"
+		query += " AND l.service_id = ?"
+		countQuery += " AND l.service_id = ?"
 		args = append(args, filter.ServiceID)
 	}
 	if filter.Level != "" {
-		query += " AND level = ?"
-		countQuery += " AND level = ?"
+		query += " AND l.level = ?"
+		countQuery += " AND l.level = ?"
 		args = append(args, filter.Level)
 	}
 	if filter.Search != "" {
-		query += " AND message LIKE ?"
-		countQuery += " AND message LIKE ?"
+		query += " AND l.message LIKE ?"
+		countQuery += " AND l.message LIKE ?"
 		args = append(args, "%"+filter.Search+"%")
 	}
 	if !filter.From.IsZero() {
-		query += " AND created_at >= ?"
-		countQuery += " AND created_at >= ?"
+		query += " AND l.created_at >= ?"
+		countQuery += " AND l.created_at >= ?"
 		args = append(args, filter.From)
 	}
 	if !filter.To.IsZero() {
-		query += " AND created_at <= ?"
-		countQuery += " AND created_at <= ?"
+		query += " AND l.created_at <= ?"
+		countQuery += " AND l.created_at <= ?"
 		args = append(args, filter.To)
 	}
 
@@ -75,7 +76,7 @@ func (r *LogRepository) GetAll(filter models.LogFilter) ([]models.Log, int, erro
 	}
 
 	// Add pagination
-	query += " ORDER BY created_at DESC"
+	query += " ORDER BY l.created_at DESC"
 	if filter.Limit > 0 {
 		query += " LIMIT ?"
 		args = append(args, filter.Limit)
@@ -94,12 +95,15 @@ func (r *LogRepository) GetAll(filter models.LogFilter) ([]models.Log, int, erro
 	var logs []models.Log
 	for rows.Next() {
 		var l models.Log
-		var serviceID, metadata sql.NullString
-		if err := rows.Scan(&l.ID, &serviceID, &l.Level, &l.Message, &metadata, &l.CreatedAt); err != nil {
+		var serviceID, serviceName, metadata sql.NullString
+		if err := rows.Scan(&l.ID, &serviceID, &serviceName, &l.Level, &l.Message, &metadata, &l.CreatedAt); err != nil {
 			return nil, 0, err
 		}
 		if serviceID.Valid {
 			l.ServiceID = serviceID.String
+		}
+		if serviceName.Valid {
+			l.ServiceName = serviceName.String
 		}
 		if metadata.Valid {
 			l.Metadata = json.RawMessage(metadata.String)

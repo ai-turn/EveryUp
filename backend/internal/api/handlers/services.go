@@ -40,6 +40,9 @@ func (h *ServiceHandler) GetAll(c *fiber.Ctx) error {
 		return internalError(c, "DATABASE_ERROR", err)
 	}
 
+	// Fetch sparkline data for all services in one batch query
+	sparklines, _ := h.metricRepo.GetRecentResponseTimesBatch(24)
+
 	// Enrich services: status from isActive (live monitoring on/off), metrics for uptime/latency
 	for i := range services {
 		// Status = is monitoring live?
@@ -52,6 +55,11 @@ func (h *ServiceHandler) GetAll(c *fiber.Ctx) error {
 		// Log services have no metrics — skip metric enrichment
 		if services[i].Type == models.ServiceTypeLog {
 			continue
+		}
+
+		// Attach sparkline history
+		if hist, ok := sparklines[services[i].ID]; ok {
+			services[i].LatencyHistory = hist
 		}
 
 		// Populate last check time and uptime/response time from metrics

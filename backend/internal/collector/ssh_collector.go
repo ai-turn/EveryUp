@@ -20,7 +20,7 @@ import (
 var _ MetricCollector = (*SSHCollector)(nil)
 
 // combinedCommand is a single SSH command that fetches all metrics at once.
-const combinedCommand = `echo "===STAT===" && head -1 /proc/stat && echo "===MEMINFO===" && cat /proc/meminfo && echo "===DF===" && df -B1 / && echo "===DISKSTATS===" && cat /proc/diskstats && echo "===NETDEV===" && cat /proc/net/dev && echo "===UPTIME===" && cat /proc/uptime && echo "===HOSTNAME===" && hostname && echo "===END==="`
+const combinedCommand = `echo "===STAT===" && head -1 /proc/stat && echo "===MEMINFO===" && cat /proc/meminfo && echo "===DF===" && df -B1 / && echo "===DISKSTATS===" && cat /proc/diskstats && echo "===NETDEV===" && cat /proc/net/dev && echo "===UPTIME===" && cat /proc/uptime && echo "===HOSTNAME===" && hostname && echo "===OSRELEASE===" && cat /etc/os-release 2>/dev/null || true && echo "===KERNEL===" && uname -r && echo "===END==="`
 
 // processCommand fetches the top N processes sorted by CPU.
 const processCommand = `ps aux --sort=-%cpu | head -%d`
@@ -179,12 +179,18 @@ func (c *SSHCollector) GetSystemInfo() (*models.SystemInfo, error) {
 	diskUsage, _ := parser.ParseDiskUsage(sections["DF"])
 	uptime := parser.ParseUptime(sections["UPTIME"])
 	hostname := parser.ParseHostname(sections["HOSTNAME"])
+	osName := parsePrettyName(sections["OSRELEASE"])
+	kernel := strings.TrimSpace(sections["KERNEL"])
+	if osName == "" {
+		osName = "linux"
+	}
 
 	// CPU: return 0 for info (actual usage comes from Collect delta)
 	info := &models.SystemInfo{
 		Hostname: hostname,
-		OS:       "linux",
+		OS:       osName,
 		Platform: "linux",
+		Kernel:   kernel,
 		Uptime:   uptime,
 		IP:       c.host.IP,
 		CPU:      models.CPUInfo{Usage: 0},
@@ -326,6 +332,18 @@ func parseSections(output string) map[string]string {
 	}
 
 	return sections
+}
+
+func parsePrettyName(osRelease string) string {
+	for _, line := range strings.Split(osRelease, "\n") {
+		line = strings.TrimSpace(line)
+		if !strings.HasPrefix(line, "PRETTY_NAME=") {
+			continue
+		}
+		value := strings.TrimPrefix(line, "PRETTY_NAME=")
+		return strings.Trim(value, `"'`)
+	}
+	return ""
 }
 
 // buildSSHAuth creates SSH auth methods from a host model.

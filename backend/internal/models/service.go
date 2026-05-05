@@ -63,10 +63,11 @@ type Service struct {
 	LogLevelFilter []LogLevel `json:"logLevelFilter,omitempty"`
 
 	// Computed fields (not stored in DB, populated from metrics)
-	Status       ServiceStatus `json:"status,omitempty"`
-	LastCheckAt  *time.Time    `json:"lastCheckAt,omitempty"`
-	Uptime       float64       `json:"uptime,omitempty"`
-	ResponseTime int           `json:"responseTime,omitempty"`
+	Status         ServiceStatus `json:"status,omitempty"`
+	LastCheckAt    *time.Time    `json:"lastCheckAt,omitempty"`
+	Uptime         float64       `json:"uptime,omitempty"`
+	ResponseTime   int           `json:"responseTime,omitempty"`
+	LatencyHistory []int         `json:"latencyHistory,omitempty"` // recent response times oldest→newest
 }
 
 // HTTPConfig holds HTTP check configuration

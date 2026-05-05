@@ -142,7 +142,8 @@ docker run -d -p 3001:3001 `
 | Method | Endpoint | 설명 |
 |--------|----------|------|
 | GET | `/logs` | 로그 목록 (페이지네이션) |
-| POST | `/logs/ingest` | 로그 수집 (API Key 인증) |
+| POST | `/ingest/logs` | 로그 수집 (API Key 인증) |
+| POST | `/logs/ingest` | 로그 수집 legacy alias (API Key 인증) |
 
 ### 대시보드
 

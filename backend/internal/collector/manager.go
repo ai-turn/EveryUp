@@ -327,20 +327,31 @@ func (m *CollectorManager) storeAll() {
 }
 
 // GetHistory returns time-series data from the database for a host.
+// Data is downsampled into fixed-size time buckets so charts always receive
+// ~72 clean data points regardless of the raw 1-minute storage granularity:
+//
+//	6H  → 5-minute buckets  → up to 72 points
+//	12H → 10-minute buckets → up to 72 points
+//	24H → 20-minute buckets → up to 72 points
 func (m *CollectorManager) GetHistory(hostID, rangeStr string) (*models.SystemMetricsHistory, error) {
-	var duration time.Duration
+	var duration    time.Duration
+	var bucketMins  int
+
 	switch rangeStr {
 	case "12h":
-		duration = 12 * time.Hour
+		duration   = 12 * time.Hour
+		bucketMins = 10
 	case "24h":
-		duration = 24 * time.Hour
+		duration   = 24 * time.Hour
+		bucketMins = 20
 	default:
-		duration = 6 * time.Hour
-		rangeStr = "6h"
+		duration   = 6 * time.Hour
+		bucketMins = 5
+		rangeStr   = "6h"
 	}
 
 	since := time.Now().Add(-duration)
-	points, err := m.repo.GetHistory(hostID, since)
+	points, err := m.repo.GetHistory(hostID, since, bucketMins)
 	if err != nil {
 		return nil, err
 	}

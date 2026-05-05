@@ -27,6 +27,7 @@ const (
 type Log struct {
 	ID          int64           `json:"id"`
 	ServiceID   string          `json:"serviceId,omitempty"`
+	ServiceName string          `json:"serviceName,omitempty"`
 	Level       LogLevel        `json:"level"`
 	Message     string          `json:"message"`
 	Metadata    json.RawMessage `json:"metadata,omitempty"`

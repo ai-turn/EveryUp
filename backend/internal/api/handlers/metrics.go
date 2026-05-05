@@ -6,6 +6,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/aiturn/everyup/internal/database"
+	"github.com/aiturn/everyup/internal/models"
 )
 
 // MetricHandler handles metric-related requests
@@ -90,6 +91,84 @@ func (h *MetricHandler) GetSummary(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"success": true,
 		"data":    summary,
+	})
+}
+
+// GetRecentChecks returns recent check results (success + failure) across all non-log services
+func (h *MetricHandler) GetRecentChecks(c *fiber.Ctx) error {
+	limit := 200
+	if l := c.Query("limit"); l != "" {
+		if parsed, err := strconv.Atoi(l); err == nil && parsed > 0 && parsed <= 500 {
+			limit = parsed
+		}
+	}
+
+	entries, err := h.repo.GetRecentChecks(limit)
+	if err != nil {
+		return internalError(c, ErrCodeDatabase, err)
+	}
+	if entries == nil {
+		entries = []models.CheckEntry{}
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data":    entries,
+	})
+}
+
+// GetAllFailures returns recent failures across all services
+func (h *MetricHandler) GetAllFailures(c *fiber.Ctx) error {
+	limit := 50
+	if l := c.Query("limit"); l != "" {
+		if parsed, err := strconv.Atoi(l); err == nil && parsed > 0 && parsed <= 200 {
+			limit = parsed
+		}
+	}
+
+	failures, err := h.repo.GetAllFailures(limit)
+	if err != nil {
+		return internalError(c, ErrCodeDatabase, err)
+	}
+	if failures == nil {
+		failures = []models.FailureWithService{}
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data":    failures,
+	})
+}
+
+// GetKpiSummary returns aggregate KPI for the healthcheck list page hero
+func (h *MetricHandler) GetKpiSummary(c *fiber.Ctx) error {
+	kpi, err := h.repo.GetKpiSummary()
+	if err != nil {
+		return internalError(c, ErrCodeDatabase, err)
+	}
+	return c.JSON(fiber.Map{"success": true, "data": kpi})
+}
+
+// GetUptimeSummaryAll returns per-service uptime percentages
+func (h *MetricHandler) GetUptimeSummaryAll(c *fiber.Ctx) error {
+	days := 90
+	if d := c.Query("days"); d != "" {
+		if parsed, err := strconv.Atoi(d); err == nil && parsed > 0 {
+			days = parsed
+		}
+	}
+
+	summaries, err := h.repo.GetUptimeSummaryAll(days)
+	if err != nil {
+		return internalError(c, ErrCodeDatabase, err)
+	}
+	if summaries == nil {
+		summaries = []models.ServiceUptimeSummary{}
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data":    summaries,
 	})
 }
 

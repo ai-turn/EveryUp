@@ -115,19 +115,24 @@ func (h *SystemHandler) GetProcesses(c *fiber.Ctx) error {
 
 // getHistoryFromDB queries metrics history directly from DB for any host.
 func getHistoryFromDB(repo *database.SystemMetricRepository, hostID, rangeStr string) (fiber.Map, error) {
-	var duration time.Duration
+	var duration   time.Duration
+	var bucketMins int
+
 	switch rangeStr {
 	case "12h":
-		duration = 12 * time.Hour
+		duration   = 12 * time.Hour
+		bucketMins = 10
 	case "24h":
-		duration = 24 * time.Hour
+		duration   = 24 * time.Hour
+		bucketMins = 20
 	default:
-		duration = 6 * time.Hour
-		rangeStr = "6h"
+		duration   = 6 * time.Hour
+		bucketMins = 5
+		rangeStr   = "6h"
 	}
 
 	since := time.Now().Add(-duration)
-	points, err := repo.GetHistory(hostID, since)
+	points, err := repo.GetHistory(hostID, since, bucketMins)
 	if err != nil {
 		return nil, err
 	}

@@ -629,6 +629,55 @@ func TestLogIngest_WithApiKey(t *testing.T) {
 	}
 }
 
+func TestLogIngest_CanonicalEndpointWithApiKey(t *testing.T) {
+	ts := setupTestServer(t)
+	token := ts.setupAdmin(t, "admin", "testpass123")
+	auth := authHeader(token)
+
+	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
+		"id":   "log-svc-canonical",
+		"name": "Canonical Log Service",
+		"type": "log",
+	}, auth...)
+
+	var svc struct {
+		ApiKey string `json:"apiKey"`
+	}
+	json.Unmarshal(createResult.Data, &svc)
+
+	resp, result := ts.doRequest(t, "POST", "/api/v1/ingest/logs", map[string]interface{}{
+		"level":   "error",
+		"message": "Test error log from canonical ingest endpoint",
+	}, "Authorization", "Bearer "+svc.ApiKey)
+
+	if resp.StatusCode != 201 {
+		t.Errorf("status = %d, want 201", resp.StatusCode)
+	}
+	if !result.Success {
+		t.Fatalf("ingest failed: %v", result.Error)
+	}
+
+	_, logsResult := ts.doRequest(t, "GET", "/api/v1/services/log-svc-canonical/logs", nil, auth...)
+	if !logsResult.Success {
+		t.Fatalf("get logs failed: %v", logsResult.Error)
+	}
+}
+
+func TestLogList_NotInterceptedByLogIngestApiKeyAuth(t *testing.T) {
+	ts := setupTestServer(t)
+	token := ts.setupAdmin(t, "admin", "testpass123")
+	auth := authHeader(token)
+
+	resp, result := ts.doRequest(t, "GET", "/api/v1/logs", nil, auth...)
+
+	if resp.StatusCode != 200 {
+		t.Errorf("status = %d, want 200", resp.StatusCode)
+	}
+	if !result.Success {
+		t.Fatalf("get logs failed: %v", result.Error)
+	}
+}
+
 // TestLogService_DefaultLogLevelFilter verifies that creating a log service
 // without specifying logLevelFilter populates it with [error, warn, info]
 // (DEBUG/TRACE are opt-in).

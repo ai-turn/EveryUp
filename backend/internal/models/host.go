@@ -65,6 +65,61 @@ type Host struct {
 	LastError string     `json:"lastError,omitempty"`
 }
 
+// InfraResourceStatus is the operational status shown on the infrastructure list.
+type InfraResourceStatus string
+
+const (
+	InfraStatusHealthy  InfraResourceStatus = "healthy"
+	InfraStatusWarning  InfraResourceStatus = "warning"
+	InfraStatusCritical InfraResourceStatus = "critical"
+	InfraStatusError    InfraResourceStatus = "error"
+	InfraStatusPaused   InfraResourceStatus = "paused"
+	InfraStatusUnknown  InfraResourceStatus = "unknown"
+)
+
+// InfraSeverity captures whether a host should be treated as an active incident.
+type InfraSeverity string
+
+const (
+	InfraSeverityNone     InfraSeverity = "none"
+	InfraSeverityWarning  InfraSeverity = "warning"
+	InfraSeverityCritical InfraSeverity = "critical"
+)
+
+// SSHSummary exposes connection health fields needed by the remote hosts view.
+type SSHSummary struct {
+	Port             int        `json:"port,omitempty"`
+	User             string     `json:"user,omitempty"`
+	ConnectionStatus string     `json:"connectionStatus"`
+	LastTestedAt     *time.Time `json:"lastTestedAt,omitempty"`
+}
+
+// InfraResourceSummary is the production list DTO for infrastructure pages.
+type InfraResourceSummary struct {
+	ID              string               `json:"id"`
+	Name            string               `json:"name"`
+	Type            HostResourceCategory `json:"type"`
+	ConnectionType  HostType             `json:"connectionType"`
+	Status          InfraResourceStatus  `json:"status"`
+	Severity        InfraSeverity        `json:"severity"`
+	StatusReason    string               `json:"statusReason"`
+	Cluster         string               `json:"cluster"`
+	IP              string               `json:"ip"`
+	IsActive        bool                 `json:"isActive"`
+	IsRemote        bool                 `json:"isRemote"`
+	SSHPort         int                  `json:"sshPort,omitempty"`
+	LastSeenAt      *time.Time           `json:"lastSeenAt,omitempty"`
+	LastCollectedAt *time.Time           `json:"lastCollectedAt,omitempty"`
+	IncidentSince   *time.Time           `json:"incidentSince,omitempty"`
+	LastError       string               `json:"lastError,omitempty"`
+	CPUUsage        *float64             `json:"cpuUsage,omitempty"`
+	MemoryUsage     *float64             `json:"memoryUsage,omitempty"`
+	DiskUsage       *float64             `json:"diskUsage,omitempty"`
+	SSH             *SSHSummary          `json:"ssh,omitempty"`
+	CreatedAt       time.Time            `json:"createdAt"`
+	UpdatedAt       time.Time            `json:"updatedAt"`
+}
+
 // HostCreateRequest represents a request to create a host
 type HostCreateRequest struct {
 	ID               string               `json:"id"`

@@ -143,6 +143,256 @@ func (r *MetricRepository) GetUptimeData(serviceID string, days int) ([]models.U
 	return data, nil
 }
 
+// GetRecentChecks returns recent check results (success + failure) across all non-log services
+func (r *MetricRepository) GetRecentChecks(limit int) ([]models.CheckEntry, error) {
+	if limit <= 0 {
+		limit = 100
+	}
+
+	rows, err := DB.Query(`
+		SELECT m.id, m.service_id, COALESCE(s.name, m.service_id),
+		       COALESCE(s.type, 'http'), m.status,
+		       m.response_time, m.status_code, m.error_message, m.checked_at
+		FROM metrics m
+		LEFT JOIN services s ON s.id = m.service_id
+		WHERE (s.type IS NULL OR s.type != 'log')
+		ORDER BY m.checked_at DESC
+		LIMIT ?
+	`, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []models.CheckEntry
+	for rows.Next() {
+		var e models.CheckEntry
+		var statusCode, responseTime sql.NullInt64
+		var errorMsg sql.NullString
+		if err := rows.Scan(&e.ID, &e.ServiceID, &e.ServiceName, &e.ServiceType, &e.Status,
+			&responseTime, &statusCode, &errorMsg, &e.CheckedAt); err != nil {
+			return nil, err
+		}
+		if statusCode.Valid {
+			e.StatusCode = int(statusCode.Int64)
+		}
+		if responseTime.Valid {
+			e.ResponseTime = int(responseTime.Int64)
+		}
+		if errorMsg.Valid {
+			e.ErrorMessage = errorMsg.String
+		}
+		results = append(results, e)
+	}
+	return results, nil
+}
+
+// GetAllFailures returns recent failures across all services, joined with service name
+func (r *MetricRepository) GetAllFailures(limit int) ([]models.FailureWithService, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+
+	rows, err := DB.Query(`
+		SELECT m.id, m.service_id, COALESCE(s.name, m.service_id), m.status,
+		       m.response_time, m.status_code, m.error_message, m.checked_at
+		FROM metrics m
+		LEFT JOIN services s ON s.id = m.service_id
+		WHERE m.status = 'failure'
+		ORDER BY m.checked_at DESC
+		LIMIT ?
+	`, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []models.FailureWithService
+	for rows.Next() {
+		var f models.FailureWithService
+		var statusCode, responseTime sql.NullInt64
+		var errorMsg sql.NullString
+		if err := rows.Scan(&f.ID, &f.ServiceID, &f.ServiceName, &f.Status,
+			&responseTime, &statusCode, &errorMsg, &f.CheckedAt); err != nil {
+			return nil, err
+		}
+		if statusCode.Valid {
+			f.StatusCode = int(statusCode.Int64)
+		}
+		if responseTime.Valid {
+			f.ResponseTime = int(responseTime.Int64)
+		}
+		if errorMsg.Valid {
+			f.ErrorMessage = errorMsg.String
+		}
+		results = append(results, f)
+	}
+	return results, nil
+}
+
+// GetUptimeSummaryAll returns per-service uptime percentages over the last N days
+func (r *MetricRepository) GetUptimeSummaryAll(days int) ([]models.ServiceUptimeSummary, error) {
+	if days <= 0 {
+		days = 90
+	}
+
+	rows, err := DB.Query(`
+		SELECT m.service_id, COALESCE(s.name, m.service_id),
+		       COUNT(*) as total,
+		       SUM(CASE WHEN m.status = 'success' THEN 1 ELSE 0 END) as success
+		FROM metrics m
+		LEFT JOIN services s ON s.id = m.service_id
+		WHERE m.checked_at >= DATE('now', ?)
+		  AND s.type != 'log'
+		GROUP BY m.service_id
+		ORDER BY COALESCE(s.name, m.service_id) ASC
+	`, fmt.Sprintf("-%d days", days))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []models.ServiceUptimeSummary
+	for rows.Next() {
+		var sum models.ServiceUptimeSummary
+		var total, success int
+		if err := rows.Scan(&sum.ServiceID, &sum.ServiceName, &total, &success); err != nil {
+			return nil, err
+		}
+		sum.TotalChecks = total
+		sum.Failures = total - success
+		if total > 0 {
+			sum.Uptime = float64(success) / float64(total) * 100
+		}
+		results = append(results, sum)
+	}
+	return results, nil
+}
+
+// GetRecentResponseTimesBatch returns the last `limit` response times per service,
+// ordered oldest→newest, for all services with data in the last 7 days.
+func (r *MetricRepository) GetRecentResponseTimesBatch(limit int) (map[string][]int, error) {
+	if limit <= 0 {
+		limit = 24
+	}
+	rows, err := DB.Query(`
+		SELECT service_id, response_time
+		FROM metrics
+		WHERE checked_at >= datetime('now', '-7 days') AND response_time > 0
+		ORDER BY service_id, checked_at DESC
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	counts := map[string]int{}
+	result := map[string][]int{}
+	for rows.Next() {
+		var sid string
+		var rt int
+		if err := rows.Scan(&sid, &rt); err != nil {
+			return nil, err
+		}
+		if counts[sid] < limit {
+			result[sid] = append(result[sid], rt)
+			counts[sid]++
+		}
+	}
+
+	// Reverse each slice so it goes oldest→newest for sparkline rendering
+	for sid, v := range result {
+		for i, j := 0, len(v)-1; i < j; i, j = i+1, j-1 {
+			v[i], v[j] = v[j], v[i]
+		}
+		result[sid] = v
+	}
+	return result, nil
+}
+
+// GetKpiSummary returns aggregate KPI statistics for healthcheck services (non-log type).
+func (r *MetricRepository) GetKpiSummary() (*models.HealthCheckKpiSummary, error) {
+	var kpi models.HealthCheckKpiSummary
+
+	// 1. Count services by latest metric status
+	row := DB.QueryRow(`
+		SELECT
+			COUNT(*) AS total,
+			SUM(CASE WHEN is_active = 1 AND last_status = 'success' THEN 1 ELSE 0 END) AS healthy,
+			SUM(CASE WHEN is_active = 1 AND last_status = 'failure' THEN 1 ELSE 0 END) AS unhealthy,
+			SUM(CASE WHEN is_active = 0 OR last_status IS NULL THEN 1 ELSE 0 END) AS unknown_cnt
+		FROM (
+			SELECT s.id, s.is_active,
+				(SELECT m.status FROM metrics m WHERE m.service_id = s.id ORDER BY m.checked_at DESC LIMIT 1) AS last_status
+			FROM services s
+			WHERE s.type != 'log'
+		)
+	`)
+	if err := row.Scan(&kpi.Total, &kpi.Healthy, &kpi.Unhealthy, &kpi.Unknown); err != nil {
+		return nil, err
+	}
+
+	// 2. Avg uptime and avg latency over last 24h across all healthcheck services
+	row2 := DB.QueryRow(`
+		SELECT
+			COALESCE(AVG(CAST(succ AS REAL) / NULLIF(cnt, 0) * 100), 100.0) AS avg_uptime,
+			COALESCE(AVG(avg_rt), 0.0) AS avg_latency
+		FROM (
+			SELECT service_id,
+				COUNT(*) AS cnt,
+				SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) AS succ,
+				AVG(CASE WHEN response_time > 0 THEN response_time END) AS avg_rt
+			FROM metrics
+			WHERE checked_at >= datetime('now', '-24 hours')
+			GROUP BY service_id
+		) t
+		JOIN services s ON s.id = t.service_id
+		WHERE s.type != 'log'
+	`)
+	if err := row2.Scan(&kpi.AvgUptime, &kpi.AvgLatency); err != nil {
+		kpi.AvgUptime = 100.0
+	}
+
+	// 3. Active incidents count
+	DB.QueryRow(`SELECT COUNT(*) FROM incidents WHERE resolved_at IS NULL OR resolved_at = ''`).Scan(&kpi.ActiveIncidents)
+
+	// 4. 24-point hourly sparkline (avg response time per hour, last 24h)
+	sparkRows, err := DB.Query(`
+		SELECT
+			CAST((julianday('now') - julianday(m.checked_at)) * 24 AS INTEGER) AS hours_ago,
+			AVG(m.response_time) AS avg_rt
+		FROM metrics m
+		JOIN services s ON s.id = m.service_id
+		WHERE m.checked_at >= datetime('now', '-24 hours')
+			AND s.type != 'log'
+			AND m.response_time > 0
+		GROUP BY hours_ago
+		ORDER BY hours_ago DESC
+	`)
+	if err == nil {
+		defer sparkRows.Close()
+		buckets := make(map[int]float64)
+		for sparkRows.Next() {
+			var hoursAgo int
+			var avgRt float64
+			if sparkRows.Scan(&hoursAgo, &avgRt) == nil && hoursAgo >= 0 && hoursAgo < 24 {
+				buckets[hoursAgo] = avgRt
+			}
+		}
+		// Build 24-slot array oldest→newest (index 0 = 23h ago, index 23 = current hour)
+		history := make([]float64, 24)
+		for i := 0; i < 24; i++ {
+			hoursAgo := 23 - i
+			if v, ok := buckets[hoursAgo]; ok {
+				history[i] = v
+			}
+		}
+		kpi.LatencyHistory = history
+	}
+
+	return &kpi, nil
+}
+
 // DeleteOld deletes metrics older than the specified duration
 func (r *MetricRepository) DeleteOld(retention time.Duration) (int64, error) {
 	result, err := DB.Exec(`

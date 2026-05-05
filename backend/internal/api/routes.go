@@ -3,12 +3,13 @@ package api
 import (
 	"net/http"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/filesystem"
 	"github.com/aiturn/everyup/internal/api/handlers"
 	"github.com/aiturn/everyup/internal/api/middleware"
+	apiroutes "github.com/aiturn/everyup/internal/api/routes"
 	"github.com/aiturn/everyup/internal/checker"
 	"github.com/aiturn/everyup/internal/collector"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/filesystem"
 )
 
 // SetupRoutes configures all API routes
@@ -35,32 +36,10 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	api.Post("/auth/login", authLimiter, authHandler.Login)
 	api.Post("/auth/logout", authHandler.Logout)
 
-	// Ingest routes — API Key auth + rate limited, registered BEFORE JWT group to avoid interception
+	// Ingest routes are registered before the JWT group and isolated by prefix.
 	logIngestHandler := handlers.NewLogIngestHandler()
-	ingest := api.Group("/logs", middleware.IngestRateLimiter(), middleware.ApiKeyAuth())
-	ingest.Post("/ingest", logIngestHandler.Ingest)
-
-	// API request ingest — separate rate limiter and body limit from log ingest
 	apiRequestIngestHandler := handlers.NewApiRequestIngestHandler()
-	apiRequestIngest := api.Group("/ingest/requests",
-		middleware.ApiRequestIngestRateLimiter(),
-		middleware.ApiKeyAuth(),
-	)
-	// Enforce 1 MiB body limit for this endpoint
-	apiRequestIngest.Use(func(c *fiber.Ctx) error {
-		const maxBody = 1 * 1024 * 1024 // 1 MiB
-		if len(c.Body()) > maxBody {
-			return c.Status(fiber.StatusRequestEntityTooLarge).JSON(fiber.Map{
-				"success": false,
-				"error": fiber.Map{
-					"code":    "VALIDATION_ERROR",
-					"message": "Request body exceeds 1 MiB limit",
-				},
-			})
-		}
-		return c.Next()
-	})
-	apiRequestIngest.Post("", apiRequestIngestHandler.Ingest)
+	apiroutes.RegisterIngestRoutes(api, logIngestHandler, apiRequestIngestHandler)
 
 	// JWT-protected management routes
 	local := api.Group("", middleware.JWTAuth())
@@ -91,6 +70,10 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	local.Get("/services/:id/metrics", metricHandler.GetByServiceID)
 	local.Get("/services/:id/metrics/summary", metricHandler.GetSummary)
 	local.Get("/services/:id/uptime", metricHandler.GetUptime)
+	local.Get("/metrics/recent", metricHandler.GetRecentChecks)
+	local.Get("/metrics/failures", metricHandler.GetAllFailures)
+	local.Get("/metrics/uptime-summary", metricHandler.GetUptimeSummaryAll)
+	local.Get("/metrics/kpi", metricHandler.GetKpiSummary)
 
 	// Log endpoints
 	logHandler := handlers.NewLogHandler()
@@ -108,6 +91,7 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 
 	// Host endpoints
 	hostHandler := handlers.NewHostHandler(collectorMgr)
+	local.Get("/hosts/summary", hostHandler.GetSummary)
 	local.Get("/hosts", hostHandler.GetAll)
 	local.Get("/hosts/:hostId", hostHandler.GetByID)
 	local.Post("/hosts", hostHandler.Create)

@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"strings"
 	"time"
 
 	"github.com/aiturn/everyup/internal/models"
@@ -34,14 +35,33 @@ func (r *SystemMetricRepository) Create(m *models.SystemMetric) error {
 	return nil
 }
 
-// GetHistory returns system metrics for a given host and time range
-func (r *SystemMetricRepository) GetHistory(hostID string, since time.Time) ([]models.SystemMetricPoint, error) {
+// GetHistory returns system metrics for a given host and time range, downsampled into
+// bucketMinutes-wide AVG buckets so the chart always receives ~60-80 clean data points
+// regardless of how many 1-minute rows are stored.
+//
+// bucket formula (SQLite):
+//
+//	strftime('%Y-%m-%dT%H:', ts) || printf('%02d', (strftime('%M', ts) / N) * N) || ':00Z'
+func (r *SystemMetricRepository) GetHistory(hostID string, since time.Time, bucketMinutes int) ([]models.SystemMetricPoint, error) {
+	if bucketMinutes <= 0 {
+		bucketMinutes = 1
+	}
+
 	rows, err := DB.Query(`
-		SELECT created_at, cpu_usage, mem_used, disk_read, disk_write
+		SELECT
+			strftime('%Y-%m-%dT%H:', created_at) ||
+			printf('%02d', (CAST(strftime('%M', created_at) AS INTEGER) / ?) * ?) || ':00Z' AS bucket,
+			ROUND(AVG(cpu_usage), 1)  AS cpu,
+			ROUND(AVG(mem_used),  2)  AS mem_used,
+			ROUND(AVG(disk_read), 3)  AS disk_read,
+			ROUND(AVG(disk_write),3)  AS disk_write,
+			ROUND(AVG(net_in),    3)  AS net_in,
+			ROUND(AVG(net_out),   3)  AS net_out
 		FROM system_metrics
 		WHERE host_id = ? AND created_at >= ?
-		ORDER BY created_at ASC
-	`, hostID, since)
+		GROUP BY bucket
+		ORDER BY bucket ASC
+	`, bucketMinutes, bucketMinutes, hostID, since)
 	if err != nil {
 		return nil, err
 	}
@@ -50,14 +70,61 @@ func (r *SystemMetricRepository) GetHistory(hostID string, since time.Time) ([]m
 	var points []models.SystemMetricPoint
 	for rows.Next() {
 		var p models.SystemMetricPoint
-		var ts time.Time
-		if err := rows.Scan(&ts, &p.CPU, &p.MemUsed, &p.DiskRead, &p.DiskWrite); err != nil {
+		if err := rows.Scan(&p.Timestamp, &p.CPU, &p.MemUsed, &p.DiskRead, &p.DiskWrite, &p.NetIn, &p.NetOut); err != nil {
 			return nil, err
 		}
-		p.Timestamp = ts.Format(time.RFC3339)
 		points = append(points, p)
 	}
 	return points, nil
+}
+
+// GetLatestByHosts returns the most recent metric for each host ID.
+func (r *SystemMetricRepository) GetLatestByHosts(hostIDs []string) (map[string]models.SystemMetric, error) {
+	latest := make(map[string]models.SystemMetric, len(hostIDs))
+	if len(hostIDs) == 0 {
+		return latest, nil
+	}
+
+	placeholders := strings.TrimRight(strings.Repeat("?,", len(hostIDs)), ",")
+	args := make([]interface{}, len(hostIDs))
+	for i, id := range hostIDs {
+		args[i] = id
+	}
+
+	rows, err := DB.Query(`
+		SELECT sm.id, sm.host_id, sm.cpu_usage, sm.mem_total, sm.mem_used, sm.mem_usage,
+		       sm.disk_total, sm.disk_used, sm.disk_usage, sm.disk_read, sm.disk_write,
+		       sm.net_in, sm.net_out, sm.created_at
+		FROM system_metrics sm
+		INNER JOIN (
+			SELECT host_id, MAX(created_at) AS created_at
+			FROM system_metrics
+			WHERE host_id IN (`+placeholders+`)
+			GROUP BY host_id
+		) latest
+			ON latest.host_id = sm.host_id AND latest.created_at = sm.created_at
+	`, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var m models.SystemMetric
+		var ts time.Time
+		if err := rows.Scan(&m.ID, &m.HostID, &m.CPUUsage, &m.MemTotal, &m.MemUsed, &m.MemUsage,
+			&m.DiskTotal, &m.DiskUsed, &m.DiskUsage, &m.DiskRead, &m.DiskWrite,
+			&m.NetIn, &m.NetOut, &ts); err != nil {
+			return nil, err
+		}
+		m.CreatedAt = ts
+		latest[m.HostID] = m
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return latest, nil
 }
 
 // GetLatestByHost returns the most recent metric for a host

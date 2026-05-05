@@ -4,15 +4,14 @@ import "time"
 
 // SystemInfo represents the host system information with current resource snapshot
 type SystemInfo struct {
-	Hostname string   `json:"hostname"`
-	OS       string   `json:"os"`
-	Platform string   `json:"platform"`
-	Kernel   string   `json:"kernel"`
-	Uptime   uint64   `json:"uptime"` // seconds
-	IP       string   `json:"ip"`
-	CPU      CPUInfo  `json:"cpu"`
-	Memory   MemInfo  `json:"memory"`
-	Disk     DiskInfo `json:"disk"`
+	Hostname string    `json:"hostname"`
+	OS       string    `json:"os"`
+	Platform string    `json:"platform"`
+	Uptime   uint64    `json:"uptime"` // seconds
+	IP       string    `json:"ip"`
+	CPU      CPUInfo   `json:"cpu"`
+	Memory   MemInfo   `json:"memory"`
+	Disk     DiskInfo  `json:"disk"`
 }
 
 // CPUInfo represents CPU metrics
@@ -75,10 +74,10 @@ type SystemMetricsHistory struct {
 
 // ProcessInfo represents a running process
 type ProcessInfo struct {
-	PID         int32   `json:"pid"`
-	Name        string  `json:"name"`
+	PID         int32  `json:"pid"`
+	Name        string `json:"name"`
 	CPU         float64 `json:"cpu"`
-	Memory      string  `json:"memory"`
-	MemoryBytes uint64  `json:"memoryBytes"`
-	Status      string  `json:"status"`
+	Memory      string `json:"memory"`
+	MemoryBytes uint64 `json:"memoryBytes"`
+	Status      string `json:"status"`
 }
