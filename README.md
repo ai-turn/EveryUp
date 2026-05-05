@@ -105,6 +105,7 @@ Collects real-time server resource usage and records historical trends.
 - **Local collection**: Collects CPU, memory, disk, and network directly from the host running the agent
 - **SSH remote collection**: Collects metrics from remote servers via SSH — no agent installation required
 - **Detail view**: Radial gauges (live) + trend charts (time-series) + process list
+- **Credential security**: SSH passwords and private keys are encrypted with AES-256-GCM before being stored in the database. The encryption key is auto-generated on first run and never exposed through the API.
 
 ### Alerts
 
