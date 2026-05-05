@@ -8,12 +8,12 @@ import { ApiCaptureSettings } from '../features/api-requests/components/ApiCaptu
 import { api, LogLevel, LOG_LEVELS } from '../services/api';
 import type { Service } from '../services/api';
 
-const LEVEL_STYLE: Record<LogLevel, { dot: string; label: string; activeBg: string; activeText: string; activeBorder: string }> = {
-  error: { dot: 'bg-red-500',    label: 'Error', activeBg: 'bg-red-500',    activeText: 'text-white', activeBorder: 'border-red-500'    },
-  warn:  { dot: 'bg-amber-400',  label: 'Warn',  activeBg: 'bg-amber-400',  activeText: 'text-white', activeBorder: 'border-amber-400'  },
-  info:  { dot: 'bg-sky-500',    label: 'Info',  activeBg: 'bg-sky-500',    activeText: 'text-white', activeBorder: 'border-sky-500'    },
-  debug: { dot: 'bg-violet-500', label: 'Debug', activeBg: 'bg-violet-500', activeText: 'text-white', activeBorder: 'border-violet-500' },
-  trace: { dot: 'bg-slate-400',  label: 'Trace', activeBg: 'bg-slate-500',  activeText: 'text-white', activeBorder: 'border-slate-500'  },
+const LEVEL_STYLE: Record<LogLevel, { dot: string; label: string; active: string }> = {
+  error: { dot: 'bg-red-500',    label: 'Error', active: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-300 dark:border-red-800'         },
+  warn:  { dot: 'bg-amber-400',  label: 'Warn',  active: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700' },
+  info:  { dot: 'bg-sky-500',    label: 'Info',  active: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-300 dark:border-sky-700'           },
+  debug: { dot: 'bg-violet-500', label: 'Debug', active: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-300 dark:border-violet-700' },
+  trace: { dot: 'bg-slate-400',  label: 'Trace', active: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-600' },
 };
 
 function setsEqual(a: Set<LogLevel>, b: Set<LogLevel>) {
@@ -253,11 +253,11 @@ export function LogServiceEditPage() {
                   onClick={() => toggleLevel(lvl)}
                   className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-bold transition-all ${
                     active
-                      ? `${s.activeBg} ${s.activeText} ${s.activeBorder}`
-                      : 'border-slate-200 dark:border-ui-border-dark text-slate-400 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark'
+                      ? s.active
+                      : 'border-slate-200 dark:border-ui-border-dark text-slate-400 dark:text-text-dim-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark'
                   }`}
                 >
-                  <span className={`w-2 h-2 rounded-full shrink-0 ${active ? 'bg-white/70' : s.dot + ' opacity-40'}`} />
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${s.dot} ${active ? '' : 'opacity-25'}`} />
                   {s.label}
                   {active && <MaterialIcon name="check" className="text-xs ml-0.5" />}
                 </button>

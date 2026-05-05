@@ -23,15 +23,15 @@ const levelDotStyle: Record<LogLevel, string> = {
 };
 
 const levelActiveStyle: Record<LevelFilter, string> = {
-  all:   'bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 border-slate-800 dark:border-slate-200',
-  error: 'bg-red-500 text-white border-red-500',
-  warn:  'bg-amber-400 text-white border-amber-400',
-  info:  'bg-sky-500 text-white border-sky-500',
-  debug: 'bg-violet-500 text-white border-violet-500',
-  trace: 'bg-slate-500 text-white border-slate-500',
+  all:   'bg-slate-100 dark:bg-ui-hover-dark text-slate-800 dark:text-white border-slate-300 dark:border-slate-500',
+  error: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-300 dark:border-red-800',
+  warn:  'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700',
+  info:  'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-300 dark:border-sky-700',
+  debug: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-300 dark:border-violet-700',
+  trace: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-600',
 };
 
-const levelInactiveStyle = 'border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark';
+const levelInactiveStyle = 'border-slate-200 dark:border-ui-border-dark text-slate-400 dark:text-text-dim-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark';
 
 const levelToneStyle: Record<LogLevel, string> = {
   error: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
@@ -489,7 +489,7 @@ export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
                   }`}
                 >
                   {level !== 'all' && (
-                    <span className={`h-1.5 w-1.5 rounded-full ${isActive ? 'bg-white/80' : levelDotStyle[level]}`} />
+                    <span className={`h-1.5 w-1.5 rounded-full ${levelDotStyle[level]} ${isActive ? '' : 'opacity-30'}`} />
                   )}
                   {t(`logs.filter.${level}`)}
                   <span className={`tabular-nums ${isActive ? 'opacity-80' : 'opacity-60'}`}>
