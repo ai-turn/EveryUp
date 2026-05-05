@@ -5,9 +5,9 @@ import { MaterialIcon, StatusBadge } from '../../../components/common';
 import { IconHealthCheck } from '../../../components/icons/SidebarIcons';
 import type { Service } from '../../../types/service';
 
-function SparklineArea({ data, belowSla }: { data: number[]; belowSla: boolean }) {
+function SparklineArea({ data, belowSla, id }: { data: number[]; belowSla: boolean; id: string }) {
   const color = belowSla ? '#ef4444' : '#3b76c9';
-  const gradientId = `sg-${Math.random().toString(36).slice(2, 7)}`;
+  const gradientId = `sg-${id.replace(/[^a-zA-Z0-9]/g, '-')}`;
   const W = 240, H = 38, PAD = 2;
   const min = Math.min(...data);
   const max = Math.max(...data);
@@ -101,7 +101,7 @@ export const ServiceCard = memo(function ServiceCard({ service, onClick }: Servi
 
         {/* Full-width sparkline with gradient area */}
         {service.latencyHistory && service.latencyHistory.length >= 2 && (
-          <SparklineArea data={service.latencyHistory} belowSla={belowSla} />
+          <SparklineArea data={service.latencyHistory} belowSla={belowSla} id={service.id} />
         )}
 
         {/* Footer badges */}

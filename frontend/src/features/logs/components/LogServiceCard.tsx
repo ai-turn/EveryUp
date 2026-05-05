@@ -46,10 +46,11 @@ function formatTimeAgo(dateStr?: string): string {
 }
 
 function formatClock(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString([], {
+  return new Date(dateStr).toLocaleTimeString('en-GB', {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
+    hour12: false,
   });
 }
 
@@ -150,7 +151,7 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
       {/* Recent log preview */}
       <div className="space-y-1.5 min-h-15">
         {recentLogs.slice(0, 3).map((log) => (
-          <div key={log.id} className="grid grid-cols-[58px_10px_1fr] gap-2 items-baseline font-mono text-[11px]">
+          <div key={log.id} className="grid grid-cols-[52px_8px_1fr] gap-2 items-center font-mono text-[11px]">
             <span className="text-slate-400 dark:text-text-dim-dark tabular-nums">{formatClock(log.createdAt)}</span>
             <span className={`w-1.5 h-1.5 rounded-full ${levelDotStyle[log.level]}`} />
             <span className={`${log.level === 'error' ? 'text-red-500' : log.level === 'warn' ? 'text-amber-600 dark:text-amber-400' : 'text-slate-700 dark:text-text-base-dark'} truncate`}>
