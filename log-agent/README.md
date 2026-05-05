@@ -65,6 +65,53 @@ New log lines should appear in EveryUp within a few seconds.
 
 The Quick Start works when your app writes logs to a file on the host machine. If your situation is different, pick the option below that matches.
 
+### ✅ Recommended — My app and the agent are in separate Docker Compose files
+
+This is the recommended setup. The agent runs as its own independent Compose stack, completely separate from your application. They share logs through a Docker named volume.
+
+**Step 1.** In your app's `docker-compose.yml`, write logs to a named volume:
+
+```yaml
+services:
+  your-app:
+    image: your-app:latest
+    volumes:
+      - app-logs:/var/log/app    # your app writes logs here
+
+volumes:
+  app-logs:                      # Docker manages this volume
+```
+
+**Step 2.** Create a separate `docker-compose.yml` for the agent (e.g. in `everyup-log-agent/`):
+
+```yaml
+services:
+  everyup-log-agent:
+    image: aiturn/everyup-log-agent:latest
+    restart: unless-stopped
+    environment:
+      - LOG_AGENT_ENDPOINT=http://your-everyup-server:3001
+      - LOG_AGENT_API_KEY=everyup_your_api_key
+    volumes:
+      - app-logs:/var/log/app:ro  # reads from the same volume (read-only)
+
+volumes:
+  app-logs:
+    external: true                # tells Docker this volume already exists
+```
+
+**Step 3.** Start the agent:
+
+```bash
+docker compose up -d
+```
+
+> The volume name (`app-logs`) must match exactly between the two Compose files. Docker links them by name.
+
+This approach keeps the agent fully decoupled — you can update or restart either stack independently without affecting the other.
+
+---
+
 ### A. My app and the agent are in the same Docker Compose file, and they share a log directory
 
 Use a named Docker volume so both containers can access the same log folder.
