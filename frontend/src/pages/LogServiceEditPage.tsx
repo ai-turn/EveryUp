@@ -8,12 +8,12 @@ import { ApiCaptureSettings } from '../features/api-requests/components/ApiCaptu
 import { api, LogLevel, LOG_LEVELS } from '../services/api';
 import type { Service } from '../services/api';
 
-const LEVEL_STYLE: Record<LogLevel, { text: string; activeBg: string; dot: string; label: string; desc: string }> = {
-  error: { text: 'text-red-500 dark:text-red-400',     activeBg: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',         dot: 'bg-red-500',   label: 'Error', desc: 'logServices.filter.errorDesc' },
-  warn:  { text: 'text-amber-500 dark:text-amber-400', activeBg: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800', dot: 'bg-amber-500', label: 'Warn',  desc: 'logServices.filter.warnDesc'  },
-  info:  { text: 'text-sky-500 dark:text-sky-400',     activeBg: 'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800',         dot: 'bg-sky-500',   label: 'Info',  desc: 'logServices.filter.infoDesc'  },
-  debug: { text: 'text-slate-500 dark:text-slate-300', activeBg: 'bg-slate-50 dark:bg-slate-800/30 border-slate-200 dark:border-slate-700', dot: 'bg-slate-500', label: 'Debug', desc: 'logServices.filter.debugDesc' },
-  trace: { text: 'text-slate-400 dark:text-slate-400', activeBg: 'bg-slate-50 dark:bg-slate-800/20 border-slate-200 dark:border-slate-700', dot: 'bg-slate-400', label: 'Trace', desc: 'logServices.filter.traceDesc' },
+const LEVEL_STYLE: Record<LogLevel, { dot: string; label: string; activeBg: string; activeText: string; activeBorder: string }> = {
+  error: { dot: 'bg-red-500',    label: 'Error', activeBg: 'bg-red-500',    activeText: 'text-white', activeBorder: 'border-red-500'    },
+  warn:  { dot: 'bg-amber-400',  label: 'Warn',  activeBg: 'bg-amber-400',  activeText: 'text-white', activeBorder: 'border-amber-400'  },
+  info:  { dot: 'bg-sky-500',    label: 'Info',  activeBg: 'bg-sky-500',    activeText: 'text-white', activeBorder: 'border-sky-500'    },
+  debug: { dot: 'bg-violet-500', label: 'Debug', activeBg: 'bg-violet-500', activeText: 'text-white', activeBorder: 'border-violet-500' },
+  trace: { dot: 'bg-slate-400',  label: 'Trace', activeBg: 'bg-slate-500',  activeText: 'text-white', activeBorder: 'border-slate-500'  },
 };
 
 function setsEqual(a: Set<LogLevel>, b: Set<LogLevel>) {
@@ -242,7 +242,7 @@ export function LogServiceEditPage() {
             </div>
           </div>
 
-          <div className="pt-4 flex flex-col gap-1.5">
+          <div className="pt-4 flex flex-wrap gap-2">
             {LOG_LEVELS.map((lvl) => {
               const s = LEVEL_STYLE[lvl];
               const active = filterDraft.has(lvl);
@@ -251,17 +251,15 @@ export function LogServiceEditPage() {
                   key={lvl}
                   type="button"
                   onClick={() => toggleLevel(lvl)}
-                  className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border text-sm font-semibold transition-all ${
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-bold transition-all ${
                     active
-                      ? `${s.text} ${s.activeBg}`
-                      : 'text-slate-400 dark:text-text-muted-dark border-transparent hover:bg-slate-50 dark:hover:bg-ui-hover-dark'
+                      ? `${s.activeBg} ${s.activeText} ${s.activeBorder}`
+                      : 'border-slate-200 dark:border-ui-border-dark text-slate-400 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark'
                   }`}
                 >
-                  <span className="flex items-center gap-2.5">
-                    <span className={`w-2 h-2 rounded-full shrink-0 ${s.dot} ${active ? '' : 'opacity-25'}`} />
-                    {s.label}
-                  </span>
-                  {active && <MaterialIcon name="check" className="text-sm" />}
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${active ? 'bg-white/70' : s.dot + ' opacity-40'}`} />
+                  {s.label}
+                  {active && <MaterialIcon name="check" className="text-xs ml-0.5" />}
                 </button>
               );
             })}
