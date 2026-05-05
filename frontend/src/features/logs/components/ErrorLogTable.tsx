@@ -22,6 +22,17 @@ const levelDotStyle: Record<LogLevel, string> = {
   trace: 'bg-slate-400',
 };
 
+const levelActiveStyle: Record<LevelFilter, string> = {
+  all:   'bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 border-slate-800 dark:border-slate-200',
+  error: 'bg-red-500 text-white border-red-500',
+  warn:  'bg-amber-400 text-white border-amber-400',
+  info:  'bg-sky-500 text-white border-sky-500',
+  debug: 'bg-violet-500 text-white border-violet-500',
+  trace: 'bg-slate-500 text-white border-slate-500',
+};
+
+const levelInactiveStyle = 'border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark';
+
 const levelToneStyle: Record<LogLevel, string> = {
   error: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
   warn: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
@@ -463,70 +474,69 @@ export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
             실제 수집 로그가 없어 예시 데이터로 화면 구성을 보여줍니다.
           </div>
         )}
-        <div className="flex flex-col gap-3 border-b border-slate-100 dark:border-ui-border-dark px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h2 className="text-base font-black text-slate-900 dark:text-white">{t('logs.titleRecent')}</h2>
-            <p className="text-xs text-slate-500 dark:text-text-muted-dark">
-              {viewMode === 'grouped' ? `${groups.length}개 그룹` : `${filteredLogs.length}건`}
-            </p>
+        {/* Single filter row */}
+        <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 dark:border-ui-border-dark px-4 py-2.5">
+          {/* Level badge filters */}
+          <div className="flex items-center gap-1.5 flex-wrap flex-1 min-w-0">
+            {LEVEL_FILTERS.map((level) => {
+              const isActive = levelFilter === level;
+              return (
+                <button
+                  key={level}
+                  onClick={() => setLevelFilter(level)}
+                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold transition-colors whitespace-nowrap ${
+                    isActive ? levelActiveStyle[level] : levelInactiveStyle
+                  }`}
+                >
+                  {level !== 'all' && (
+                    <span className={`h-1.5 w-1.5 rounded-full ${isActive ? 'bg-white/80' : levelDotStyle[level]}`} />
+                  )}
+                  {t(`logs.filter.${level}`)}
+                  <span className={`tabular-nums ${isActive ? 'opacity-80' : 'opacity-60'}`}>
+                    {levelCounts[level]}
+                  </span>
+                </button>
+              );
+            })}
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => setIsPaused(!isPaused)}
-              className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors ${
-                isPaused
-                  ? 'border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
-                  : 'border-slate-200 dark:border-ui-border-dark text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark'
-              }`}
-            >
-              <MaterialIcon name={isPaused ? 'play_arrow' : 'pause'} className="text-sm" />
-              {isPaused ? t('common.resume') : t('common.pause')}
-            </button>
-            <div className="relative min-w-56">
-              <MaterialIcon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
+
+          {/* Right controls */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="relative">
+              <MaterialIcon name="search" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('logs.searchPlaceholder')}
-                className="h-9 w-full rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark pl-9 pr-3 text-sm text-slate-900 dark:text-white outline-none focus:border-primary"
+                className="h-8 w-44 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark pl-8 pr-3 text-xs text-slate-900 dark:text-white outline-none focus:border-primary focus:w-56 transition-all"
               />
             </div>
-            <div className="inline-flex rounded-lg border border-slate-200 dark:border-ui-border-dark bg-slate-100 dark:bg-ui-hover-dark p-1">
+            <div className="inline-flex rounded-lg border border-slate-200 dark:border-ui-border-dark bg-slate-100 dark:bg-ui-hover-dark p-0.5">
               <button
                 onClick={() => setViewMode('grouped')}
-                className={`rounded-md px-3 py-1 text-xs font-bold ${viewMode === 'grouped' ? 'bg-white dark:bg-bg-surface-dark text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-text-muted-dark'}`}
+                className={`rounded-md px-2.5 py-1 text-[11px] font-bold transition-colors ${viewMode === 'grouped' ? 'bg-white dark:bg-bg-surface-dark text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-text-muted-dark'}`}
               >
                 그룹
               </button>
               <button
                 onClick={() => setViewMode('raw')}
-                className={`rounded-md px-3 py-1 text-xs font-bold ${viewMode === 'raw' ? 'bg-white dark:bg-bg-surface-dark text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-text-muted-dark'}`}
+                className={`rounded-md px-2.5 py-1 text-[11px] font-bold transition-colors ${viewMode === 'raw' ? 'bg-white dark:bg-bg-surface-dark text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-text-muted-dark'}`}
               >
                 원본
               </button>
             </div>
+            <button
+              onClick={() => setIsPaused(!isPaused)}
+              className={`flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-bold transition-colors ${
+                isPaused
+                  ? 'border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
+                  : 'border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark'
+              }`}
+            >
+              <MaterialIcon name={isPaused ? 'play_arrow' : 'pause'} className="text-sm" />
+              {isPaused ? t('common.resume') : t('common.pause')}
+            </button>
           </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 dark:border-ui-border-dark px-4 py-3">
-          {LEVEL_FILTERS.map((level) => {
-            const isActive = levelFilter === level;
-            return (
-              <button
-                key={level}
-                onClick={() => setLevelFilter(level)}
-                className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold transition-colors ${
-                  isActive
-                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white'
-                    : 'border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark'
-                }`}
-              >
-                {level !== 'all' && <span className={`h-1.5 w-1.5 rounded-full ${levelDotStyle[level]}`} />}
-                {t(`logs.filter.${level}`)}
-                <span className="opacity-70">{levelCounts[level]}</span>
-              </button>
-            );
-          })}
         </div>
 
         {error && (
