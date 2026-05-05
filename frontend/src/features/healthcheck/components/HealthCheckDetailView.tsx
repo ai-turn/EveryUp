@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useTranslate } from '@tolgee/react';
-import { formatDistanceToNow } from 'date-fns';
-import type { Locale } from 'date-fns';
 import { MaterialIcon, Toggle } from '../../../components/common';
 import { Breadcrumbs } from '../../../components/layout/Breadcrumbs';
 import { useIsMobile } from '../../../hooks/useMediaQuery';
@@ -21,8 +19,6 @@ export interface HealthCheckDetailViewProps {
   serviceId: string;
   refreshKey: number;
   isLive: boolean;
-  lastUpdated: Date;
-  dateLocale: Locale;
   isDeleteDialogOpen: boolean;
   isDeleting: boolean;
   onLiveToggle: (live: boolean) => void;
@@ -139,10 +135,9 @@ function DeleteDialog({
 // --- 데스크톱 레이아웃 ---
 
 function DesktopLayout(props: HealthCheckDetailViewProps) {
-  const { t } = useTranslate();
   const { t: tc } = useTranslation('common');
   const {
-    service, serviceId, refreshKey, isLive, lastUpdated, dateLocale,
+    service, serviceId, refreshKey, isLive,
     isDeleteDialogOpen, isDeleting,
     onLiveToggle, onRefresh, onManage, onDelete, onDeleteDialogOpen, onDeleteDialogClose,
     getIdentityStatus,

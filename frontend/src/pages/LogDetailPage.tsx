@@ -155,7 +155,6 @@ export function LogDetailPage() {
     onDelete: handleDelete,
     onDeleteDialogOpen: () => setIsDeleteDialogOpen(true),
     onDeleteDialogClose: () => setIsDeleteDialogOpen(false),
-    onServiceUpdate: setService,
     onApiKeyRegenerated: handleApiKeyRegenerated,
     onRevealedKeyClose: () => setRevealedKey(null),
     onCopyKey: copy,

@@ -27,7 +27,6 @@ export interface LogDetailViewProps {
   onDelete: () => void;
   onDeleteDialogOpen: () => void;
   onDeleteDialogClose: () => void;
-  onServiceUpdate: (service: Service) => void;
   onApiKeyRegenerated: (newKey: string, maskedKey: string) => void;
   onRevealedKeyClose: () => void;
   onCopyKey: (key: string) => void;
@@ -221,7 +220,7 @@ function DesktopLayout(props: LogDetailViewProps) {
     activeTab, isDeleteDialogOpen, isDeleting, revealedKey, revealCountdown,
     onTabChange, onLiveToggle, onRefresh, onDelete,
     onDeleteDialogOpen, onDeleteDialogClose,
-    onServiceUpdate, onApiKeyRegenerated, onRevealedKeyClose, onCopyKey,
+    onApiKeyRegenerated, onRevealedKeyClose, onCopyKey,
   } = props;
 
   const tabs: { key: TabKey; label: string; icon: string }[] = [
@@ -267,7 +266,7 @@ function DesktopLayout(props: LogDetailViewProps) {
         </div>
       </div>
 
-      <LogServiceIdentity service={service} onServiceUpdate={onServiceUpdate} />
+      <LogServiceIdentity service={service} />
 
       <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 mb-6 scrollbar-hide">
         <TabBar tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} />
@@ -308,7 +307,7 @@ function MobileLayout(props: LogDetailViewProps) {
     activeTab, isDeleteDialogOpen, isDeleting, revealedKey, revealCountdown,
     onTabChange, onLiveToggle, onRefresh, onDelete,
     onDeleteDialogOpen, onDeleteDialogClose,
-    onServiceUpdate, onApiKeyRegenerated, onRevealedKeyClose, onCopyKey,
+    onApiKeyRegenerated, onRevealedKeyClose, onCopyKey,
   } = props;
 
   const tabs: { key: TabKey; label: string; icon: string }[] = [
@@ -357,7 +356,7 @@ function MobileLayout(props: LogDetailViewProps) {
         </div>
       </div>
 
-      <LogServiceIdentity service={service} onServiceUpdate={onServiceUpdate} />
+      <LogServiceIdentity service={service} />
 
       <TabBar tabs={tabs} activeTab={activeTab} onTabChange={onTabChange} fullWidth />
 

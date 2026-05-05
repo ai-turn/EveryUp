@@ -182,9 +182,11 @@
     },
     "edit": {
       "title": "로그 서비스 수정",
-      "subtitle": "이름 및 API 캡처 설정을 변경합니다.",
+      "subtitle": "이름, 로그 레벨 필터, API 캡처 설정을 변경합니다.",
       "basicInfo": "기본 정보",
-      "basicInfoDesc": "서비스 이름을 변경합니다."
+      "basicInfoDesc": "서비스 이름을 변경합니다.",
+      "levelFilterDesc": "서버에 저장할 로그 레벨을 선택합니다.",
+      "levelFilterHint": "기본값은 error / warn / info이며, debug · trace는 명시적으로 추가해야 수집됩니다."
     },
     "validation": {
       "idRequired": "ID는 필수입니다 (최소 2자)",

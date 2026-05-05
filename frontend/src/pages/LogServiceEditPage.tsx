@@ -5,8 +5,22 @@ import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../utils/errors';
 import { MaterialIcon } from '../components/common';
 import { ApiCaptureSettings } from '../features/api-requests/components/ApiCaptureSettings';
-import { api } from '../services/api';
+import { api, LogLevel, LOG_LEVELS } from '../services/api';
 import type { Service } from '../services/api';
+
+const LEVEL_STYLE: Record<LogLevel, { text: string; activeBg: string; dot: string; label: string; desc: string }> = {
+  error: { text: 'text-red-500 dark:text-red-400',     activeBg: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',         dot: 'bg-red-500',   label: 'Error', desc: 'logServices.filter.errorDesc' },
+  warn:  { text: 'text-amber-500 dark:text-amber-400', activeBg: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800', dot: 'bg-amber-500', label: 'Warn',  desc: 'logServices.filter.warnDesc'  },
+  info:  { text: 'text-sky-500 dark:text-sky-400',     activeBg: 'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800',         dot: 'bg-sky-500',   label: 'Info',  desc: 'logServices.filter.infoDesc'  },
+  debug: { text: 'text-slate-500 dark:text-slate-300', activeBg: 'bg-slate-50 dark:bg-slate-800/30 border-slate-200 dark:border-slate-700', dot: 'bg-slate-500', label: 'Debug', desc: 'logServices.filter.debugDesc' },
+  trace: { text: 'text-slate-400 dark:text-slate-400', activeBg: 'bg-slate-50 dark:bg-slate-800/20 border-slate-200 dark:border-slate-700', dot: 'bg-slate-400', label: 'Trace', desc: 'logServices.filter.traceDesc' },
+};
+
+function setsEqual(a: Set<LogLevel>, b: Set<LogLevel>) {
+  if (a.size !== b.size) return false;
+  for (const v of a) if (!b.has(v)) return false;
+  return true;
+}
 
 export function LogServiceEditPage() {
   const { serviceId } = useParams<{ serviceId: string }>();
@@ -16,6 +30,7 @@ export function LogServiceEditPage() {
   const [service, setService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);
   const [nameDraft, setNameDraft] = useState('');
+  const [filterDraft, setFilterDraft] = useState<Set<LogLevel>>(new Set());
   const [isSaving, setIsSaving] = useState(false);
 
   const goBack = useCallback(() => navigate(`/logs/${serviceId}`), [navigate, serviceId]);
@@ -26,21 +41,42 @@ export function LogServiceEditPage() {
       .then((data) => {
         setService(data);
         setNameDraft(data.name);
+        const initial = (data.logLevelFilter ?? []) as LogLevel[];
+        setFilterDraft(initial.length === 0 ? new Set(LOG_LEVELS) : new Set(initial));
       })
       .catch(() => navigate('/logs'))
       .finally(() => setLoading(false));
   }, [serviceId, navigate]);
 
+  const toggleLevel = (level: LogLevel) => {
+    setFilterDraft((prev) => {
+      if (prev.has(level)) {
+        if (prev.size === 1) return prev;
+        const next = new Set(prev);
+        next.delete(level);
+        return next;
+      }
+      return new Set([...prev, level]);
+    });
+  };
+
   const handleSave = async () => {
     if (!service) return;
     const trimmed = nameDraft.trim();
-    if (!trimmed || trimmed === service.name) {
-      goBack();
-      return;
-    }
+    const initialFilter = (service.logLevelFilter ?? []) as LogLevel[];
+    const effectiveInitial = new Set<LogLevel>(initialFilter.length === 0 ? LOG_LEVELS : initialFilter);
+    const nameDirtyNow = trimmed !== service.name;
+    const filterDirtyNow = !setsEqual(filterDraft, effectiveInitial);
+
+    if (!nameDirtyNow && !filterDirtyNow) { goBack(); return; }
+
+    const updates: Parameters<typeof api.updateService>[1] = {};
+    if (nameDirtyNow) updates.name = trimmed;
+    if (filterDirtyNow) updates.logLevelFilter = LOG_LEVELS.filter((l) => filterDraft.has(l));
+
     setIsSaving(true);
     try {
-      await api.updateService(service.id, { name: trimmed });
+      await api.updateService(service.id, updates);
       toast.success(t('common.saved', { defaultValue: 'Saved' }));
       goBack();
     } catch (err) {
@@ -62,6 +98,10 @@ export function LogServiceEditPage() {
 
   const nameError = nameDraft.trim().length > 0 && nameDraft.trim().length < 2;
   const nameDirty = nameDraft.trim() !== service.name;
+  const initialFilter = (service.logLevelFilter ?? []) as LogLevel[];
+  const effectiveInitial = new Set<LogLevel>(initialFilter.length === 0 ? LOG_LEVELS : initialFilter);
+  const filterDirty = !setsEqual(filterDraft, effectiveInitial);
+  const isDirty = nameDirty || filterDirty;
 
   return (
     <div className="-m-4 sm:-m-6 md:-m-8 bg-white dark:bg-bg-main-dark min-h-full">
@@ -101,7 +141,7 @@ export function LogServiceEditPage() {
             <button
               type="button"
               onClick={handleSave}
-              disabled={isSaving || nameError || !nameDirty}
+              disabled={isSaving || nameError || !isDirty}
               className="px-5 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-all shadow-sm active:scale-95 disabled:opacity-40 flex items-center gap-1.5"
             >
               {isSaving ? (
@@ -119,7 +159,7 @@ export function LogServiceEditPage() {
 
       {/* Body */}
       <div className="px-6 py-8 space-y-6">
-        {/* Basic info — matches ApiCaptureSettings SectionCard style */}
+        {/* Basic info */}
         <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark p-5 sm:p-6">
           <div className="flex items-center gap-3 pb-4 mb-0 border-b border-slate-100 dark:border-ui-border-dark/60">
             <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -183,6 +223,53 @@ export function LogServiceEditPage() {
                 )}
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Log Level Filter */}
+        <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark p-5 sm:p-6">
+          <div className="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-ui-border-dark/60">
+            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <MaterialIcon name="filter_alt" className="text-primary text-lg" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                {t('logServices.settings.levelFilterTitle')}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">
+                {t('logServices.edit.levelFilterDesc')}
+              </p>
+            </div>
+          </div>
+
+          <div className="pt-4 flex flex-col gap-1.5">
+            {LOG_LEVELS.map((lvl) => {
+              const s = LEVEL_STYLE[lvl];
+              const active = filterDraft.has(lvl);
+              return (
+                <button
+                  key={lvl}
+                  type="button"
+                  onClick={() => toggleLevel(lvl)}
+                  className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border text-sm font-semibold transition-all ${
+                    active
+                      ? `${s.text} ${s.activeBg}`
+                      : 'text-slate-400 dark:text-text-muted-dark border-transparent hover:bg-slate-50 dark:hover:bg-ui-hover-dark'
+                  }`}
+                >
+                  <span className="flex items-center gap-2.5">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${s.dot} ${active ? '' : 'opacity-25'}`} />
+                    {s.label}
+                  </span>
+                  {active && <MaterialIcon name="check" className="text-sm" />}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-1.5 mt-4 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark text-xs text-slate-500 dark:text-text-muted-dark">
+            <MaterialIcon name="info" className="text-xs shrink-0" />
+            <span>{t('logServices.edit.levelFilterHint')}</span>
           </div>
         </section>
 

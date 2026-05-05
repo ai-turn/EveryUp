@@ -1,8 +1,7 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useTranslate } from '@tolgee/react';
-import { ko, enUS } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../utils/errors';
 import { MaterialIcon } from '../components/common';
@@ -14,10 +13,9 @@ export function HealthCheckDetailPage() {
   const { serviceId } = useParams<{ serviceId: string }>();
   const navigate = useNavigate();
   const { t } = useTranslate();
-  const { t: tc, i18n } = useTranslation(['common', 'nav']);
+  const { t: tc } = useTranslation(['common', 'nav']);
 
   const [isLive, setIsLive] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState(new Date());
   const [service, setService] = useState<Service | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,15 +23,12 @@ export function HealthCheckDetailPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const dateLocale = useMemo(() => (i18n.language.startsWith('ko') ? ko : enUS), [i18n.language]);
-
   const fetchService = useCallback(async () => {
     if (!serviceId) return;
     try {
       const data = await api.getServiceById(serviceId);
       setService(data);
       setError(null);
-      setLastUpdated(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch service');
     } finally {
@@ -124,11 +119,5 @@ export function HealthCheckDetailPage() {
     getIdentityStatus,
   } as const;
 
-  return (
-    <HealthCheckDetailView
-      {...sharedProps}
-      lastUpdated={lastUpdated}
-      dateLocale={dateLocale}
-    />
-  );
+  return <HealthCheckDetailView {...sharedProps} />;
 }

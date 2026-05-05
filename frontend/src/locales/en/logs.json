@@ -182,9 +182,11 @@
     },
     "edit": {
       "title": "Edit Log Service",
-      "subtitle": "Update service name and API capture settings.",
+      "subtitle": "Update service name, log level filter, and API capture settings.",
       "basicInfo": "Basic information",
-      "basicInfoDesc": "Update the service name."
+      "basicInfoDesc": "Update the service name.",
+      "levelFilterDesc": "Select which log levels the server will store.",
+      "levelFilterHint": "Defaults to error / warn / info — debug and trace must be explicitly enabled."
     },
     "validation": {
       "idRequired": "ID is required (min 2 chars)",
