@@ -1,25 +1,24 @@
 # EveryUp Log Agent
 
-Built on [Fluent Bit](https://fluentbit.io/), the EveryUp Log Agent tails your application log files and forwards entries to your EveryUp server. No code changes required.
+Built on [Fluent Bit](https://fluentbit.io/), the EveryUp Log Agent reads your application's log files and forwards them to your EveryUp dashboard — no code changes required.
 
-Use this when:
-- Your app writes logs to a file or stdout/stderr
-- You want to add log monitoring without touching application code
-
-Supports `linux/amd64` and `linux/arm64`. Docker pulls the correct variant automatically.
+---
 
 ## Before You Start
 
-1. Your EveryUp server is running.
-2. You created a log service in the EveryUp dashboard.
+1. Your EveryUp server is running and accessible.
+2. You created a log service in the EveryUp dashboard (**Logs → Add service**).
 3. You copied the API key from **Logs → Service detail → Integration**.
-4. Your application writes logs to a file or stdout/stderr.
 
-## Quick Start
+---
 
-### Option A — docker run
+## Choose Your Setup
 
-Replace `/path/to/your/app/logs` with the directory your app writes logs to.
+Pick the option that matches your situation. You only need one.
+
+---
+
+### A. My app writes logs to a file, and I want to run the agent with a single command
 
 ```bash
 docker run -d \
@@ -31,14 +30,18 @@ docker run -d \
   aiturn/everyup-log-agent:latest
 ```
 
-### Option B — docker compose (recommended)
+Replace `/path/to/your/app/logs` with the folder where your app writes its `.log` files.
+
+---
+
+### B. My app is already running with Docker Compose, and it writes logs to a file
 
 Add the agent to your existing `docker-compose.yml`:
 
 ```yaml
 services:
   your-app:
-    # ... your existing service
+    # ... leave your existing service as-is
 
   everyup-log-agent:
     image: aiturn/everyup-log-agent:latest
@@ -54,47 +57,22 @@ services:
 docker compose up -d
 ```
 
-### Verify
+Replace `/path/to/your/app/logs` with the actual log directory on the host machine.
 
-```bash
-docker logs everyup-log-agent
-```
+---
 
-New log lines should start appearing in EveryUp within a few seconds.
+### C. My app is in Docker Compose but doesn't write log files — it only prints to the terminal
 
-## Configuration
+Many apps (Node.js, Spring Boot, etc.) print logs to the console instead of writing files. In Docker, this is called `stdout`/`stderr`.
 
-| Variable | Required | Description | Default |
-|----------|----------|-------------|---------|
-| `LOG_AGENT_ENDPOINT` | Yes | EveryUp server URL | — |
-| `LOG_AGENT_API_KEY` | Yes | API key from **Logs → Integration** | — |
-| `LOG_AGENT_FILE` | No | Log file path inside the container. Glob patterns are supported. | `/var/log/app/*.log` |
-| `LOG_AGENT_LEVEL` | No | Agent's own log verbosity: `debug`, `info`, `warn`, `error` | `info` |
-| `LOG_AGENT_RETRY_LIMIT` | No | Delivery retry count. Set `0` for unlimited retries. | `3` |
-| `LOG_AGENT_HOST` | No | Override the host parsed from `LOG_AGENT_ENDPOINT` | — |
-| `LOG_AGENT_PORT` | No | Override the port parsed from `LOG_AGENT_ENDPOINT` | — |
-| `LOG_AGENT_TLS` | No | Override TLS: `on` or `off` | parsed from endpoint |
-| `LOG_AGENT_TLS_VERIFY` | No | Verify TLS certificate: `on` or `off` | `on` |
-| `LOG_AGENT_CONFIG` | No | Path to a custom Fluent Bit config file | `/fluent-bit/etc/fluent-bit.conf` |
-
-**Endpoint parsing examples:**
-- `http://192.168.1.10:3001` → `host=192.168.1.10`, `port=3001`, `tls=off`
-- `https://monitoring.example.com` → `host=monitoring.example.com`, `port=443`, `tls=on`
-
-If your URL format is not supported (e.g. IPv6), skip `LOG_AGENT_ENDPOINT` and set `LOG_AGENT_HOST`, `LOG_AGENT_PORT`, and `LOG_AGENT_TLS` directly.
-
-## More Deployment Options
-
-### My app and agent are in the same docker-compose.yml
-
-If your app and the agent share a Docker Compose file, use a named volume so both containers can access the same log directory.
+In this case, the app and agent need to share a Docker volume so both can see the same data:
 
 ```yaml
 services:
-  myapp:
-    image: myapp:latest
+  your-app:
+    image: your-app:latest
     volumes:
-      - app-logs:/var/log/app          # app writes logs here
+      - app-logs:/var/log/app    # ← your app must write logs here
 
   everyup-log-agent:
     image: aiturn/everyup-log-agent:latest
@@ -103,20 +81,24 @@ services:
       - LOG_AGENT_ENDPOINT=http://your-everyup-server:3001
       - LOG_AGENT_API_KEY=everyup_your_api_key
     volumes:
-      - app-logs:/var/log/app:ro       # agent reads the same directory (read-only)
+      - app-logs:/var/log/app:ro  # ← agent reads from the same place
 
 volumes:
   app-logs:
 ```
 
-### My app does not write log files — it only prints to the terminal
+> Your app needs to write logs to `/var/log/app` inside its container for this to work. If your app can't write files at all, see option D below.
 
-Some apps (especially Node.js, Spring Boot with default config) don't write log files at all. They just print to the console (`stdout`/`stderr`). You can pipe that output into the agent.
+---
+
+### D. My app only prints to the terminal and I cannot change that
+
+If your app prints everything to the terminal and you have no way to redirect it to a file, the agent can capture the terminal output directly.
 
 ```yaml
 services:
-  myapp:
-    image: myapp:latest
+  your-app:
+    image: your-app:latest
 
   everyup-log-agent:
     image: aiturn/everyup-log-agent:latest
@@ -128,22 +110,22 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     entrypoint: >
-      sh -c "docker logs -f myapp 2>&1 | /entrypoint.sh"
+      sh -c "docker logs -f your-app 2>&1 | /entrypoint.sh"
 ```
 
-> Replace `myapp` in the `docker logs -f myapp` command with the actual container name of your app.
+Replace `your-app` in `docker logs -f your-app` with your actual container name.
 
-### My server does not use Docker at all (VM or bare metal)
+---
 
-If you're running the agent directly on a Linux server without Docker, use Fluent Bit installed as a system service.
+### E. I'm not using Docker — my server runs services directly
 
-**1. Install Fluent Bit**
+Install Fluent Bit on the server:
 
 ```bash
 curl -sL https://packages.fluentbit.io/install.sh | sh
 ```
 
-**2. Create a service file** at `/etc/systemd/system/everyup-log-agent.service`:
+Create a service file at `/etc/systemd/system/everyup-log-agent.service`:
 
 ```ini
 [Unit]
@@ -161,7 +143,7 @@ EnvironmentFile=/etc/everyup-agent/agent.env
 WantedBy=multi-user.target
 ```
 
-**3. Create a config file** at `/etc/everyup-agent/agent.env`:
+Create a config file at `/etc/everyup-agent/agent.env`:
 
 ```bash
 LOG_AGENT_HOST=your-everyup-server.com
@@ -171,19 +153,52 @@ LOG_AGENT_API_KEY=everyup_your_api_key
 LOG_AGENT_FILE=/var/log/myapp/app.log
 ```
 
-**4. Start the service**
+Start the service:
 
 ```bash
 sudo systemctl enable --now everyup-log-agent
 ```
 
+---
+
+## Verify It's Working
+
+After starting the agent, check that it connected successfully:
+
+```bash
+docker logs everyup-log-agent
+```
+
+New log lines should appear in EveryUp within a few seconds. If nothing shows up, see [Troubleshooting](#troubleshooting) below.
+
+---
+
+## Configuration Reference
+
+| Variable | Required | Description | Default |
+|----------|----------|-------------|---------|
+| `LOG_AGENT_ENDPOINT` | Yes | EveryUp server URL | — |
+| `LOG_AGENT_API_KEY` | Yes | API key from **Logs → Integration** | — |
+| `LOG_AGENT_FILE` | No | Log file path inside the container. Glob patterns are supported. | `/var/log/app/*.log` |
+| `LOG_AGENT_LEVEL` | No | Agent's own log verbosity: `debug`, `info`, `warn`, `error` | `info` |
+| `LOG_AGENT_RETRY_LIMIT` | No | Delivery retry count. Set `0` for unlimited retries. | `3` |
+| `LOG_AGENT_HOST` | No | Override the host parsed from `LOG_AGENT_ENDPOINT` | — |
+| `LOG_AGENT_PORT` | No | Override the port parsed from `LOG_AGENT_ENDPOINT` | — |
+| `LOG_AGENT_TLS` | No | Override TLS detection: `on` or `off` | parsed from endpoint |
+| `LOG_AGENT_TLS_VERIFY` | No | Verify TLS certificate: `on` or `off` | `on` |
+| `LOG_AGENT_CONFIG` | No | Path to a custom Fluent Bit config file | `/fluent-bit/etc/fluent-bit.conf` |
+
+**How endpoint URL is parsed:**
+- `http://192.168.1.10:3001` → host `192.168.1.10`, port `3001`, TLS off
+- `https://monitoring.example.com` → host `monitoring.example.com`, port `443`, TLS on
+
+---
+
 ## Log Format
 
-The agent accepts any log format and normalizes it before forwarding.
+The agent accepts any log format and normalizes it automatically.
 
 ### JSON logs (recommended)
-
-Structured fields are preserved as metadata.
 
 ```json
 {"level": "error", "message": "connection failed", "service": "api", "userId": 123}
@@ -191,15 +206,15 @@ Structured fields are preserved as metadata.
 
 Recognized fields:
 
-| JSON field | Maps to |
-|------------|---------|
+| JSON field | Stored as |
+|------------|-----------|
 | `message`, `msg`, `log` | message |
 | `level`, `levelname`, `severity`, `logLevel`, `log_level`, `lvl` | level |
-| all other fields | metadata |
+| all other fields | metadata (searchable) |
 
 ### Plain text logs
 
-The full line is stored as the message. The agent infers the level from bracketed tokens or line prefixes (e.g. `[ERROR]`, `WARN:`). If no level can be detected, it defaults to `info`.
+If a line is not JSON, the full line is stored as the message. The agent infers the level from patterns like `[ERROR]`, `WARN:`, or `ERROR ` at the start of the line.
 
 ### Level mapping
 
@@ -212,44 +227,48 @@ The full line is stored as the message. The agent infers the level from brackete
 | `TRACE`, `VERBOSE` | `trace` |
 | unset or unrecognized | `info` |
 
-> **Note:** The default log level filter per service is `[error, warn, info]`. `debug` and `trace` entries are forwarded by the agent but dropped at ingest unless you explicitly add those levels in **Logs → Service detail → Edit**.
+> **Note:** Each log service filters by level. The default is `error`, `warn`, and `info` only. To also receive `debug` and `trace` entries, go to **Logs → Service detail → Edit** and add those levels.
+
+---
 
 ## Troubleshooting
 
-### Logs are not being collected
+### No logs are being collected
 
-Check that the volume mount is correct:
+Check that the agent can see the log files:
 
 ```bash
 docker exec everyup-log-agent ls -la /var/log/app/
 ```
 
-Check the file pattern. The default is `/var/log/app/*.log`. If your files use a different extension:
+If the folder is empty or doesn't exist, the volume path is wrong. Double-check that you're mounting the correct directory.
 
-```bash
-LOG_AGENT_FILE=/var/log/app/*
+The default file pattern is `/var/log/app/*.log`. If your files have a different extension (e.g. `.txt` or no extension):
+
+```
+-e LOG_AGENT_FILE=/var/log/app/*
 ```
 
-Many containers only log to stdout/stderr by default — in that case use [Pipe mode](#pipe-mode-stdoutstderr-only).
+### Logs are visible locally but don't appear in EveryUp
 
-### Logs are collected but do not appear in EveryUp
-
-Check the agent logs for connection errors:
+Check the agent output for error messages:
 
 ```bash
 docker logs everyup-log-agent
 ```
 
-Check network connectivity from inside the container:
+Common causes:
+- `Connection refused` — the endpoint URL or port is wrong
+- `401 Unauthorized` — the API key doesn't match
+
+Test connectivity from inside the agent container:
 
 ```bash
 docker exec everyup-log-agent wget -qO- http://your-everyup-server:3001/api/v1/health
 ```
 
-Common causes: `Connection refused` (wrong endpoint), `401 Unauthorized` (wrong API key).
+For more detail, enable verbose logging:
 
-Enable debug logging for more detail:
-
-```bash
+```
 -e LOG_AGENT_LEVEL=debug
 ```
