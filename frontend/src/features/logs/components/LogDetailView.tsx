@@ -237,10 +237,11 @@ function DesktopLayout(props: LogDetailViewProps) {
         <Breadcrumbs items={[{ label: t('common.backToList'), href: '/logs' }]} />
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-3 py-2">
+            <div className="relative flex h-2 w-2 shrink-0">
+              {isLive && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
+              <span className={`relative inline-flex h-2 w-2 rounded-full ${isLive ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
+            </div>
             <Toggle checked={isLive} onChange={onLiveToggle} />
-            <span className="text-sm font-bold text-slate-600 dark:text-text-muted-dark">
-              {t('common.live')}
-            </span>
           </div>
           <button
             onClick={onRefresh}
@@ -329,10 +330,11 @@ function MobileLayout(props: LogDetailViewProps) {
         </button>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark">
+            <div className="relative flex h-2 w-2 shrink-0">
+              {isLive && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
+              <span className={`relative inline-flex h-2 w-2 rounded-full ${isLive ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
+            </div>
             <Toggle checked={isLive} onChange={onLiveToggle} />
-            <span className="text-xs font-medium text-slate-600 dark:text-text-muted-dark">
-              {t('common.live')}
-            </span>
           </div>
           <button
             onClick={onRefresh}

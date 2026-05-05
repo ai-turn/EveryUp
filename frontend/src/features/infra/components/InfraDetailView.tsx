@@ -189,10 +189,11 @@ function DesktopLayout(props: InfraDetailViewProps) {
             {/* 일시정지 / 재개 */}
             {host && !isLocal && (
               <div className={`flex items-center gap-2 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-3 py-2 ${isPausing ? 'pointer-events-none opacity-60' : ''}`}>
+                <div className="relative flex h-2 w-2 shrink-0">
+                  {host.isActive && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
+                  <span className={`relative inline-flex h-2 w-2 rounded-full ${host.isActive ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
+                </div>
                 <Toggle checked={host.isActive} onChange={onPauseResume} />
-                <span className="text-sm font-bold text-slate-600 dark:text-text-muted-dark">
-                  {host.isActive ? t('infra.active') : t('infra.paused')}
-                </span>
               </div>
             )}
 
@@ -535,11 +536,12 @@ function MobileLayout(props: InfraDetailViewProps) {
         </button>
         <div className="flex items-center gap-2">
           {host && !isLocal && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-100 dark:bg-chart-surface rounded-lg">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark">
+              <div className="relative flex h-2 w-2 shrink-0">
+                {host.isActive && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
+                <span className={`relative inline-flex h-2 w-2 rounded-full ${host.isActive ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
+              </div>
               <Toggle checked={host.isActive} onChange={onPauseResume} />
-              <span className="text-xs font-medium text-slate-700 dark:text-text-secondary-dark">
-                {host.isActive ? t('infra.active') : t('infra.paused')}
-              </span>
             </div>
           )}
           {host && (
