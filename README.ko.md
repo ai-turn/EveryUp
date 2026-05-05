@@ -32,7 +32,6 @@ Prometheus, Grafana, 클라우드 없이 — 단일 바이너리와 SQLite 파�
   - [인프라](#인프라)
   - [알림](#알림)
   - [환경설정](#환경설정)
-- [스크린샷](#스크린샷)
 - [빠른 시작](#빠른-시작)
   - [Docker](#docker)
   - [Docker Compose](#docker-compose)
@@ -123,16 +122,6 @@ EveryUp 전체에 적용되는 시스템 설정을 관리합니다.
 - **데이터 보존**: 로그, 메트릭, 알림 이력의 보존 기간 설정
 - **수집 주기**: 인프라 메트릭 수집 및 저장 간격 설정
 - **테마**: 라이트 / 다크 모드 전환
-
----
-
-## 스크린샷
-
-![EveryUp 대시보드 — 헬스체크, 인프라, 알림 현황](docs/images/dashboard.png)
-
-![로그인 페이지](docs/images/login.png)
-
-![로그 에이전트 개요](docs/images/log-agent-overview.png)
 
 ---
 

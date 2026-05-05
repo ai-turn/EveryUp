@@ -32,7 +32,6 @@ No Prometheus, no Grafana, no cloud required — just a single binary and a SQLi
   - [Infra](#infra)
   - [Alerts](#alerts)
   - [Settings](#settings)
-- [Screenshots](#screenshots)
 - [Quick Start](#quick-start)
   - [Docker](#docker)
   - [Docker Compose](#docker-compose)
@@ -123,16 +122,6 @@ Manages system-wide configuration for your EveryUp instance.
 - **Data retention**: Configure retention periods for logs, metrics, and alert history
 - **Collection interval**: Set the infra metric collection and storage intervals
 - **Theme**: Toggle between light and dark mode
-
----
-
-## Screenshots
-
-![EveryUp Dashboard — health checks, infra, and alerts overview](docs/images/dashboard.png)
-
-![Login page](docs/images/login.png)
-
-![Log Agent overview](docs/images/log-agent-overview.png)
 
 ---
 
