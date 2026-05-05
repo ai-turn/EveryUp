@@ -10,6 +10,7 @@ import { mockLogEntries as allMockLogs } from '../mocks/logs/logs.mock';
 import { mockResponseTimeChartData } from '../mocks/healthcheck/charts.mock';
 import { mockGauges } from '../mocks/infra';
 import { mockResources } from '../mocks/infra/resourceList.mock';
+import { mockChannels } from '../mocks/alerts/channels.mock';
 
 import type {
   TimelineItem,
@@ -19,7 +20,6 @@ import type {
   UptimeData,
   LogEntry,
   Incident,
-  NotificationChannel,
   Host,
   SystemInfo,
   SystemMetricsHistory,
@@ -163,33 +163,6 @@ const mockIncidentList: Incident[] = [
 ];
 
 // ── Notifications ─────────────────────────────────────────────────────────────
-
-const mockChannels: NotificationChannel[] = [
-  {
-    id: '1',
-    name: 'Ops Telegram',
-    type: 'telegram',
-    config: JSON.stringify({ botToken: '***', chatId: '-100123456' }),
-    isEnabled: true,
-    createdAt: new Date(Date.now() - 30 * 86_400_000).toISOString(),
-  },
-  {
-    id: '2',
-    name: '#alerts Discord',
-    type: 'discord',
-    config: JSON.stringify({ webhookUrl: 'https://discord.com/api/webhooks/...' }),
-    isEnabled: true,
-    createdAt: new Date(Date.now() - 20 * 86_400_000).toISOString(),
-  },
-  {
-    id: '3',
-    name: '#incidents Slack',
-    type: 'slack',
-    config: JSON.stringify({ webhookUrl: 'https://hooks.slack.com/services/...' }),
-    isEnabled: true,
-    createdAt: new Date(Date.now() - 10 * 86_400_000).toISOString(),
-  },
-];
 
 // ── Hosts ─────────────────────────────────────────────────────────────────────
 
