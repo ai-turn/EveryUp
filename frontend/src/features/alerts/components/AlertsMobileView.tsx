@@ -67,6 +67,23 @@ export function AlertsMobileView({
 
   return (
     <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-black text-slate-900 dark:text-white">{t('alerts.title')}</h1>
+          <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{t('alerts.subtitle')}</p>
+        </div>
+        {activeTab === 'channels' && (
+          <button
+            onClick={onAddChannel}
+            className="flex items-center gap-1.5 px-3 py-2 bg-primary/10 hover:bg-primary/20 rounded-lg text-xs font-bold text-primary transition-all cursor-pointer active:scale-95 shrink-0"
+          >
+            <MaterialIcon name="add" className="text-base" />
+            {t('alerts.addChannel')}
+          </button>
+        )}
+      </div>
+
       {/* Stats Summary */}
       {stats && (
         <div className="flex gap-3 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
@@ -119,14 +136,6 @@ export function AlertsMobileView({
       {/* Channels Tab */}
       {activeTab === 'channels' && (
         <div className="space-y-3">
-          <button
-            onClick={onAddChannel}
-            className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-ui-border-dark text-primary font-bold text-sm active:scale-95 transition-transform"
-          >
-            <MaterialIcon name="add_circle" className="text-lg" />
-            {t('alerts.addChannel')}
-          </button>
-
           {isLoading ? (
             [1, 2].map(i => (
               <div key={i} className="h-20 rounded-xl bg-slate-100 dark:bg-ui-hover-dark animate-pulse" />

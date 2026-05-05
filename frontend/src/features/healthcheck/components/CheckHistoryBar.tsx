@@ -61,7 +61,7 @@ export function CheckHistoryBar({ serviceId, refreshKey }: CheckHistoryBarProps)
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-slate-900 dark:text-white text-xl font-bold tracking-tight">
-            {t('체크 이력')}
+            {t('체크 기록')}
           </h2>
           <p className="text-slate-400 dark:text-text-chart-dim text-sm">
             {t('최근 {count}회 체크 결과', { count: SLOT_COUNT })}

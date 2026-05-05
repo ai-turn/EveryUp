@@ -206,12 +206,43 @@ const mockHosts: Host[] = mockResources.map((r) => ({
   updatedAt: new Date(Date.now() - 86_400_000).toISOString(),
 }));
 
+const mockHostSummaries = mockResources.map((r, index) => {
+  const isProblem = ['warning', 'critical', 'error'].includes(r.status);
+  const isRemote = index !== 1;
+  const lastSeenAt = new Date(Date.now() - (index + 1) * 90_000).toISOString();
+  return {
+    ...r,
+    connectionType: isRemote ? 'remote' : 'local',
+    isActive: r.status !== 'critical',
+    isRemote,
+    sshPort: isRemote ? 22 : undefined,
+    severity: r.status === 'critical' || r.status === 'error' ? 'critical' : r.status === 'warning' ? 'warning' : 'none',
+    statusReason: isProblem ? 'threshold_exceeded' : 'healthy',
+    lastSeenAt,
+    lastCollectedAt: lastSeenAt,
+    incidentSince: isProblem ? new Date(Date.now() - (index + 2) * 3600_000).toISOString() : undefined,
+    lastError: r.status === 'critical' ? 'Memory usage exceeded 90%' : undefined,
+    cpuUsage: r.status === 'critical' ? 91 : 42 + index * 7,
+    memoryUsage: r.status === 'warning' ? 83 : 51 + index * 6,
+    diskUsage: 38 + index * 5,
+    ssh: isRemote ? {
+      port: 22,
+      user: 'monitor',
+      connectionStatus: r.status === 'critical' ? 'failed' : 'connected',
+      lastTestedAt: lastSeenAt,
+    } : undefined,
+    createdAt: new Date(Date.now() - 60 * 86_400_000).toISOString(),
+    updatedAt: new Date(Date.now() - 86_400_000).toISOString(),
+  };
+});
+
 // ── System Resource Monitoring ────────────────────────────────────────────────
 
 const mockSystemInfo: SystemInfo = {
   hostname: 'prod-server-01',
   os: 'Ubuntu 22.04 LTS',
   platform: 'linux',
+  kernel: '5.15.0-92-generic',
   uptime: 1_234_567,
   ip: '192.168.1.50',
   cpu: { cores: 8, usage: mockGauges[0]?.percentage ?? 42 },
@@ -228,6 +259,8 @@ const mockSystemMetrics: SystemMetricsHistory = {
     memCached: 10 + Math.random() * 5,
     diskRead: 50 + Math.random() * 100,
     diskWrite: 30 + Math.random() * 80,
+    netIn: 8 + Math.random() * 20,
+    netOut: 4 + Math.random() * 16,
   })),
 };
 
@@ -508,6 +541,8 @@ export function mockRouter<T>(endpoint: string, method = 'GET'): T {
   if (/^\/hosts\/[^/]+\/system\/metrics/.test(endpoint)) return mockSystemMetrics as T;
   // /hosts/:id/system/processes
   if (/^\/hosts\/[^/]+\/system\/processes/.test(endpoint)) return mockProcesses as T;
+  // /hosts/summary
+  if (endpoint === '/hosts/summary') return mockHostSummaries as T;
   // /hosts/:id
   if (/^\/hosts\/[^/]+$/.test(endpoint)) return mockHosts[0] as T;
   // /hosts

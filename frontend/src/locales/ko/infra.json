@@ -1,7 +1,7 @@
 {
     "infra": {
         "title": "인프라",
-        "subtitle": "서버 및 컨테이너의 실시간 인프라 모니터링",
+        "subtitle": "서버와 컨테이너의 실시간 인프라 상태를 모니터링합니다",
         "features": {
             "cpuMemDisk": "CPU / 메모리 / 디스크",
             "sshRemote": "SSH 원격 호스트",
@@ -21,16 +21,106 @@
         "resumeMonitoring": "모니터링 재개",
         "active": "활성",
         "paused": "일시정지",
+        "connection": "연결",
+        "connectionTypes": {
+            "local": "로컬",
+            "remote": "원격",
+            "localShort": "로컬",
+            "sshRemote": "SSH 원격"
+        },
+        "statuses": {
+            "healthy": "정상",
+            "warning": "경고",
+            "critical": "위험",
+            "error": "오류",
+            "paused": "일시정지",
+            "unknown": "알 수 없음"
+        },
+        "statusReasons": {
+            "healthy": "정상",
+            "paused": "모니터링 일시정지",
+            "collector_error": "수집기 오류",
+            "no_metrics": "아직 메트릭 없음",
+            "metric_stale": "메트릭 지연",
+            "threshold_exceeded": "임계치 초과"
+        },
+        "connectionStatus": {
+            "connected": "연결됨",
+            "failed": "실패",
+            "unknown": "알 수 없음"
+        },
+        "tabs": {
+            "resources": "리소스",
+            "incidents": "인시던트",
+            "remoteHosts": "원격 호스트",
+            "attention": "주의 필요",
+            "paused": "일시정지",
+            "remote": "원격"
+        },
+        "kpi": {
+            "total": "전체 호스트",
+            "healthy": "정상",
+            "incidents": "인시던트",
+            "attention": "주의",
+            "paused": "일시정지",
+            "remote": "원격 SSH"
+        },
+        "incidents": {
+            "resource": "리소스",
+            "since": "발생 시점",
+            "lastSeen": "마지막 확인",
+            "reason": "원인"
+        },
+        "remote": {
+            "connection": "연결",
+            "latency": "지연 시간",
+            "lastSeen": "마지막 확인",
+            "lastCollected": "수집 시각",
+            "seenPrefix": "확인"
+        },
+        "metrics": {
+            "memory": "메모리",
+            "disk": "디스크",
+            "score": "점수"
+        },
+        "detail": {
+            "operationalState": "운영 상태",
+            "collectionToggle": "수집 상태",
+            "liveVitals": "실시간 지표",
+            "hostProfile": "호스트 프로필",
+            "load": "부하",
+            "loadStates": {
+                "normal": "정상",
+                "elevated": "상승",
+                "critical": "위험"
+            },
+            "scoreVerdicts": {
+                "healthy": "지표가 안정적인 운영 범위에 있습니다.",
+                "watch": "일부 리소스 부하가 올라가고 있습니다.",
+                "risk": "리소스 부하 확인이 필요합니다.",
+                "paused": "이 호스트의 수집이 일시 중지되어 있습니다."
+            },
+            "resourcePressure": "리소스 압력",
+            "filesystem": "파일시스템",
+            "used": "사용률",
+            "os": "OS",
+            "kernel": "커널",
+            "uptime": "업타임",
+            "hostname": "호스트명"
+        },
+        "noResults": "필터와 일치하는 호스트가 없습니다",
         "resourceTypes": {
             "server": "서버",
             "database": "데이터베이스",
             "container": "컨테이너"
         },
         "trends": {
-            "title": "인프라 트렌드",
+            "title": "인프라 추세",
             "last6h": "최근 6시간",
             "last12h": "최근 12시간",
-            "last24h": "최근 24시간"
+            "last24h": "최근 24시간",
+            "now": "현재",
+            "peak": "최고"
         },
         "processes": {
             "title": "주요 프로세스",
@@ -45,12 +135,12 @@
         },
         "deleteConfirm": {
             "title": "호스트 삭제",
-            "message": "정말 삭제하시겠습니까",
+            "message": "정말 삭제하시겠습니까?",
             "warning": "이 작업은 되돌릴 수 없습니다. 이 호스트의 모든 메트릭과 데이터가 영구적으로 삭제됩니다."
         },
         "toast": {
-            "paused": "호스트 모니터링이 일시정지되었습니다",
-            "resumed": "호스트 모니터링이 재개되었습니다",
+            "paused": "호스트 모니터링을 일시정지했습니다",
+            "resumed": "호스트 모니터링을 재개했습니다",
             "created": "호스트가 성공적으로 등록되었습니다",
             "updated": "호스트가 성공적으로 업데이트되었습니다",
             "deleted": "호스트가 성공적으로 삭제되었습니다",
@@ -61,6 +151,11 @@
         "sections": {
             "basicInfo": "기본 정보"
         },
+        "form": {
+            "basicInfoDesc": "모니터링 화면에서 사용할 이름, 그룹, 리소스 유형을 설정합니다.",
+            "connectionDesc": "수집, SSH 테스트, 호스트 식별에 필요한 연결 정보를 설정합니다.",
+            "testHint": "저장하기 전에 SSH 인증 정보와 지연 시간을 확인하세요."
+        },
         "modal": {
             "idCannotChange": "ID는 변경할 수 없습니다",
             "displayName": "표시 이름",
@@ -68,48 +163,48 @@
             "ipPlaceholder": "192.168.1.100",
             "port": "서비스 포트",
             "portPlaceholder": "",
-            "portHint": "선택사항 · 이 호스트 서비스에 접근할 포트",
+            "portHint": "선택 사항 - 이 호스트의 서비스에 접근하는 포트",
             "group": "그룹",
             "groupPlaceholder": "production",
-            "groupHint": "선택사항: 환경별로 호스트 그룹화",
+            "groupHint": "선택 사항: 환경별로 호스트를 그룹화합니다",
             "description": "설명",
             "descriptionPlaceholder": "프로덕션 웹 서버...",
-            "localAutoManaged": "로컬 호스트는 시스템이 자동 관리합니다",
-            "resourceCategory": "인프라 종류",
-            "idHint": "영문 소문자, 숫자, 하이픈",
+            "localAutoManaged": "로컬 호스트는 시스템이 자동으로 관리합니다",
+            "resourceCategory": "인프라 유형",
+            "idHint": "영문 소문자, 숫자, 하이픈만 사용할 수 있습니다",
             "hostIdPlaceholder": "server-01",
             "hostNamePlaceholder": "웹 서버 01",
             "sshSettings": "SSH 설정",
             "sshUser": "SSH 사용자",
             "sshUserPlaceholder": "monitor",
             "sshPort": "SSH 포트",
-            "sshPortHint": "원격 서버 SSH 연결 포트 (기본값: 22)",
+            "sshPortHint": "SSH 연결에 사용할 포트입니다. 기본값은 22입니다",
             "authType": "인증 방식",
             "authPassword": "비밀번호",
             "authKey": "SSH 키 (PEM)",
             "authKeyFile": "키 파일 경로",
             "password": "비밀번호",
             "passwordPlaceholder": "SSH 비밀번호 입력",
-            "passwordChangePlaceholder": "현재 값 유지하려면 비워두세요",
+            "passwordChangePlaceholder": "현재 값을 유지하려면 비워두세요",
             "sshKey": "SSH 개인 키",
             "sshKeyPlaceholder": "-----BEGIN RSA PRIVATE KEY-----\n...",
             "sshKeyChangePlaceholder": "현재 키를 유지하려면 비워두세요",
             "sshKeyBrowse": "파일 선택",
-            "sshKeyDragDrop": "또는 키 파일을 여기에 드래그 & 드롭",
-            "sshKeyPpkDetected": "PPK 형식이 감지되었습니다. PEM 형식으로 변환해주세요: puttygen key.ppk -O private-openssh -o key.pem",
+            "sshKeyDragDrop": "또는 키 파일을 여기로 드래그 앤 드롭",
+            "sshKeyPpkDetected": "PPK 형식이 감지되었습니다. puttygen key.ppk -O private-openssh -o key.pem 명령으로 PEM 형식으로 변환해 주세요.",
             "sshKeyPath": "키 파일 경로 (API 서버)",
             "sshKeyPathPlaceholder": "/home/user/.ssh/id_rsa",
-            "sshKeyPathHint": "로컬 PC가 아닌 API 서버의 파일 경로입니다",
+            "sshKeyPathHint": "사용자 PC가 아니라 API 서버에서 접근 가능한 파일 경로입니다",
             "testConnection": "연결 테스트",
             "testing": "테스트 중...",
             "connectionSuccess": "연결 성공",
             "connectionFailed": "연결 실패",
-            "latency": "지연시간",
-            "testRequiredFields": "연결 테스트를 위해 IP 주소와 SSH 사용자를 입력해주세요",
-            "editModePasswordRequired": "연결 테스트를 위해 비밀번호를 다시 입력해주세요 (보안상 저장된 비밀번호는 전송되지 않습니다)"
+            "latency": "지연 시간",
+            "testRequiredFields": "연결 테스트를 위해 IP 주소와 SSH 사용자를 입력해 주세요",
+            "editModePasswordRequired": "연결 테스트를 위해 비밀번호를 다시 입력해 주세요. 저장된 비밀번호는 보안상 전송되지 않습니다."
         },
         "error": {
-            "lastError": "최근 에러",
+            "lastError": "최근 오류",
             "retryConnection": "재연결"
         }
     }

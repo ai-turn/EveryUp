@@ -1,11 +1,19 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import logo from '../../assets/logo.png';
 import logoDark from '../../assets/logo-dark.png';
 import { NotificationDropdown } from './NotificationDropdown';
 import { useIsMobile } from '../../hooks/useMediaQuery';
+
+const navItems: { labelKey: string; href: string }[] = [
+    { labelKey: 'nav.healthcheck', href: '/healthcheck' },
+    { labelKey: 'nav.logs', href: '/logs' },
+    { labelKey: 'nav.monitoring', href: '/infra' },
+    { labelKey: 'nav.alerts', href: '/alerts' },
+    { labelKey: 'nav.settings', href: '/settings' },
+];
 
 function IconSun() {
     return (
@@ -31,12 +39,12 @@ function IconMoon() {
     );
 }
 
-
 export function Header() {
     const { theme, toggleTheme } = useTheme();
-    const { i18n } = useTranslation('common');
+    const { i18n, t } = useTranslation('common');
     const [notifOpen, setNotifOpen] = useState(false);
     const isMobile = useIsMobile();
+    const location = useLocation();
 
     const changeLanguage = (lng: string) => {
         i18n.changeLanguage(lng);
@@ -48,7 +56,8 @@ export function Header() {
     };
 
     return (
-        <header className="h-14 lg:h-16 border-b border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-main-dark flex items-center justify-between px-4 shrink-0 transition-colors duration-200 z-30 relative">
+        <header className="h-14 lg:h-16 border-b border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-main-dark shrink-0 transition-colors duration-200 z-30 relative">
+          <div className="h-full max-w-360 mx-auto flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
             {/* Left: Logo */}
             <Link to="/" className="flex items-center gap-2 group shrink-0 z-10 transition-transform active:scale-95">
                 <div className="flex items-center justify-center h-10 w-10 overflow-hidden">
@@ -59,8 +68,29 @@ export function Header() {
                 </div>
             </Link>
 
+            {/* Center: Primary nav (lg+) — replaces the left Sidebar */}
+            <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
+                {navItems.map((item) => {
+                    const isActive = item.href === '/'
+                        ? location.pathname === '/'
+                        : location.pathname.startsWith(item.href);
+                    return (
+                        <Link
+                            key={item.href}
+                            to={item.href}
+                            className={`flex items-center px-3 py-2 text-sm transition-colors ${isActive
+                                ? 'text-primary font-semibold'
+                                : 'font-medium text-slate-500 dark:text-text-muted-dark hover:text-slate-800 dark:hover:text-white'
+                                }`}
+                        >
+                            <span>{t(item.labelKey)}</span>
+                        </Link>
+                    );
+                })}
+            </nav>
+
             {/* Right: Actions */}
-            <div className="flex items-center gap-3 lg:gap-6 z-10">
+            <div className="flex items-center gap-3 lg:gap-4 z-10 shrink-0">
                 {/* Language Switcher */}
                 {isMobile ? (
                     <button
@@ -111,6 +141,7 @@ export function Header() {
                     />
                 </div>
             </div>
+          </div>
         </header>
     );
 }

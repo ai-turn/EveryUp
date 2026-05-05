@@ -173,7 +173,7 @@ function DesktopLayout(props: HealthCheckDetailViewProps) {
           <div className="w-px h-5 bg-slate-300 dark:bg-ui-active-dark mx-0.5" />
 
           <div className="relative group">
-            <button onClick={onRefresh} className="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-600 dark:text-text-secondary-dark">
+            <button onClick={onRefresh} className="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-600 dark:text-text-secondary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60">
               <MaterialIcon name="refresh" className="text-lg" />
             </button>
             <div className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 dark:bg-slate-700 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
@@ -183,7 +183,7 @@ function DesktopLayout(props: HealthCheckDetailViewProps) {
 
           {service.type !== 'log' && (
             <div className="relative group">
-              <button onClick={onManage} className="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-600 dark:text-text-secondary-dark">
+              <button onClick={onManage} className="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-600 dark:text-text-secondary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60">
                 <MaterialIcon name="edit" className="text-lg" />
               </button>
               <div className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 dark:bg-slate-700 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
@@ -193,7 +193,7 @@ function DesktopLayout(props: HealthCheckDetailViewProps) {
           )}
 
           <div className="relative group">
-            <button onClick={onDeleteDialogOpen} className="p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-red-500">
+            <button onClick={onDeleteDialogOpen} className="p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/60">
               <MaterialIcon name="delete" className="text-lg" />
             </button>
             <div className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 dark:bg-slate-700 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
@@ -250,15 +250,15 @@ function MobileLayout(props: HealthCheckDetailViewProps) {
               {tc('common.live')}
             </span>
           </div>
-          <button onClick={onRefresh} className="p-2.5 rounded-lg bg-slate-100 dark:bg-chart-surface text-slate-700 dark:text-white active:scale-95 transition-transform">
+          <button onClick={onRefresh} className="p-2.5 rounded-lg bg-slate-100 dark:bg-chart-surface text-slate-700 dark:text-white active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60">
             <MaterialIcon name="refresh" className="text-lg" />
           </button>
           {service.type !== 'log' && (
-            <button onClick={onManage} className="p-2.5 rounded-lg bg-primary text-white active:scale-95 transition-transform cursor-pointer">
+            <button onClick={onManage} className="p-2.5 rounded-lg bg-primary text-white active:scale-95 transition-transform cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60">
               <MaterialIcon name="edit" className="text-lg" />
             </button>
           )}
-          <button onClick={onDeleteDialogOpen} className="p-2.5 rounded-lg bg-red-500 text-white active:scale-95 transition-transform cursor-pointer">
+          <button onClick={onDeleteDialogOpen} className="p-2.5 rounded-lg bg-red-500 text-white active:scale-95 transition-transform cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400/60">
             <MaterialIcon name="delete" className="text-lg" />
           </button>
         </div>

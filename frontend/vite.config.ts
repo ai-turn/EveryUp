@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      port: 5173,
+      port: 5174,
       proxy: {
         '/api': {
           // .env에서 타겟 주소를 가져옴 (기본값: localhost:3001)

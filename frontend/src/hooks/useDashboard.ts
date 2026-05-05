@@ -16,10 +16,13 @@ export function useDashboardServices() {
       status: statusMap[service.status] || 'warning',
       latency: `${service.responseTime || 0}ms`,
       uptime: `${(service.uptime || 0).toFixed(1)}%`,
+      uptimeRaw: service.uptime,
       icon: '',
       type: service.type as 'http' | 'tcp' | undefined,
       interval: service.interval,
       isActive: service.isActive,
+      url: service.url,
+      latencyHistory: service.latencyHistory,
     }));
   });
 }

@@ -4,11 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import { useTranslate } from '@tolgee/react';
 import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
 import { api, Service } from '../../../services/api';
-import { useSidePanel } from '../../../contexts/SidePanelContext';
 
 // Helper functions to convert between UI state and cron expression
 function cronToScheduledParams(cronExpr: string | undefined): {
@@ -76,13 +74,13 @@ type ServiceFormValues = z.infer<typeof serviceSchema>;
 
 interface HealthCheckFormProps {
     onSuccess: () => void;
+    onCancel: () => void;
     service?: Service;
+    onSubmittingChange?: (isSubmitting: boolean) => void;
 }
 
-export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
-    const { t } = useTranslate();
-    const { t: tc } = useTranslation('common');
-    const { closePanel } = useSidePanel();
+export function HealthCheckForm({ onSuccess, service, onSubmittingChange }: HealthCheckFormProps) {
+    const { t } = useTranslation(['healthcheck', 'common']);
     const isEditMode = !!service;
 
     const [scheduledType, setScheduledType] = useState<'daily' | 'weekly'>('daily');
@@ -108,6 +106,17 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
 
     const selectedType = watch('type');
     const scheduleType = watch('scheduleType');
+    const watchedName = watch('name');
+    const watchedId = watch('id');
+    const watchedUrl = watch('url');
+    const watchedHost = watch('host');
+    const watchedPort = watch('port');
+    const watchedInterval = watch('interval');
+    const watchedTimeout = watch('timeout');
+
+    useEffect(() => {
+        onSubmittingChange?.(isSubmitting);
+    }, [isSubmitting, onSubmittingChange]);
 
     useEffect(() => {
         if (service) {
@@ -160,13 +169,13 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
 
             if (isEditMode && service) {
                 await api.updateService(service.id, submitData);
-                toast.success(t('헬스체크가 업데이트되었습니다'));
+                toast.success(t('healthcheck.toast.updated'));
             } else {
                 await api.createService(submitData);
-                toast.success(t('헬스체크가 추가되었습니다'));
+                toast.success(t('healthcheck.toast.created'));
             }
             onSuccess();
-            closePanel();
+            onCancel();
         } catch (error) {
             toast.error(getErrorMessage(error));
         }
@@ -176,31 +185,42 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
         `w-full px-4 py-2 bg-slate-50 dark:bg-ui-hover-dark border ${hasError ? 'border-red-500' : 'border-slate-200 dark:border-ui-border-dark'} rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm dark:text-white`;
 
     const weekdays = [
-        t('일'),
-        t('월'),
-        t('화'),
-        t('수'),
-        t('목'),
-        t('금'),
-        t('토'),
+        t('healthcheck.weekdays.sun'),
+        t('healthcheck.weekdays.mon'),
+        t('healthcheck.weekdays.tue'),
+        t('healthcheck.weekdays.wed'),
+        t('healthcheck.weekdays.thu'),
+        t('healthcheck.weekdays.fri'),
+        t('healthcheck.weekdays.sat'),
     ];
 
     const cronPreviewText = scheduledType === 'daily'
-        ? t('매일 {hour}:{minute}에 체크', { hour: scheduledHour.toString().padStart(2, '0'), minute: scheduledMinute.toString().padStart(2, '0') })
-        : t('매주 {day}요일 {hour}:{minute}에 체크', { day: weekdays[scheduledWeekday], hour: scheduledHour.toString().padStart(2, '0'), minute: scheduledMinute.toString().padStart(2, '0') });
+        ? t('healthcheck.form.cronDailyPreview', { hour: scheduledHour.toString().padStart(2, '0'), minute: scheduledMinute.toString().padStart(2, '0') })
+        : t('healthcheck.form.cronWeeklyPreview', { day: weekdays[scheduledWeekday], hour: scheduledHour.toString().padStart(2, '0'), minute: scheduledMinute.toString().padStart(2, '0') });
 
     return (
         <>
-        <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 pt-6 pb-4 custom-scrollbar">
-        <form id="hc-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form
+            id="healthcheck-form"
+            onSubmit={handleSubmit(onSubmit)}
+            className="px-6 py-6 min-h-full"
+        >
+        <div className="max-w-350 mx-auto grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_20rem] gap-6 items-start">
+        <div className="space-y-6 min-w-0">
+        <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
             <div className="space-y-4">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-ui-border-dark">
-                    <MaterialIcon name="info" className="text-primary text-lg" />
-                    <h3 className="text-sm font-bold text-slate-700 dark:text-text-secondary-dark">{t('기본 정보')}</h3>
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <MaterialIcon name="info" className="text-primary text-base" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-bold text-slate-800 dark:text-text-base-dark">{t('healthcheck.form.basicInfo')}</h3>
+                        <p className="text-xs text-slate-500 dark:text-text-muted-dark">{t('healthcheck.form.basicInfoDesc')}</p>
+                    </div>
                 </div>
 
                 <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{tc('common.id')}</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('common.id')}</label>
                     <input
                         {...register('id')}
                         placeholder="my-api-server"
@@ -215,16 +235,16 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
                     ) : (
                         <p className="text-xs text-slate-500 flex items-center gap-1">
                             <MaterialIcon name="info" className="text-xs" />
-                            {isEditMode ? t('ID는 변경할 수 없습니다') : t('영문 소문자, 숫자, 하이픈(-)만 사용 가능')}
+                            {isEditMode ? t('healthcheck.form.idCannotChange') : t('healthcheck.form.idHint')}
                         </p>
                     )}
                 </div>
 
                 <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{tc('common.name')}</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('common.name')}</label>
                     <input
                         {...register('name')}
-                        placeholder={t('내 API 서버')}
+                        placeholder={t('healthcheck.form.namePlaceholder')}
                         className={getInputClassName(!!errors.name)}
                     />
                     {errors.name && (
@@ -235,15 +255,22 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
                     )}
                 </div>
             </div>
+        </div>
 
+        <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
             <div className="space-y-4 pt-2">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-ui-border-dark">
-                    <MaterialIcon name="settings_ethernet" className="text-primary text-lg" />
-                    <h3 className="text-sm font-bold text-slate-700 dark:text-text-secondary-dark">{t('연결 설정')}</h3>
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <MaterialIcon name="settings_ethernet" className="text-primary text-base" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-bold text-slate-800 dark:text-text-base-dark">{t('healthcheck.form.connection')}</h3>
+                        <p className="text-xs text-slate-500 dark:text-text-muted-dark">{t('healthcheck.form.connectionDesc')}</p>
+                    </div>
                 </div>
 
                 <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{tc('common.type')}</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('common.type')}</label>
                     <div className="flex gap-2">
                         <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all ${selectedType === 'http' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark'}`}>
                             <input {...register('type')} type="radio" value="http" className="hidden" />
@@ -290,7 +317,7 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
                             )}
                         </div>
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('포트')}</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('healthcheck.form.port')}</label>
                             <input
                                 {...register('port', { valueAsNumber: true })}
                                 type="number"
@@ -307,25 +334,32 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
                     </div>
                 )}
             </div>
+        </div>
 
+        <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
             <div className="space-y-4 pt-2">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-ui-border-dark">
-                    <MaterialIcon name="schedule" className="text-primary text-lg" />
-                    <h3 className="text-sm font-bold text-slate-700 dark:text-text-secondary-dark">{t('헬스 체크 스케줄')}</h3>
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <MaterialIcon name="schedule" className="text-primary text-base" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-bold text-slate-800 dark:text-text-base-dark">{t('healthcheck.form.schedule')}</h3>
+                        <p className="text-xs text-slate-500 dark:text-text-muted-dark">{t('healthcheck.form.scheduleDesc')}</p>
+                    </div>
                 </div>
 
                 <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('스케줄 타입')}</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('healthcheck.form.scheduleType')}</label>
                     <div className="flex flex-col sm:flex-row gap-2">
                         <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all ${scheduleType === 'interval' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark'}`}>
                             <input {...register('scheduleType')} type="radio" value="interval" className="hidden" />
                             <MaterialIcon name="schedule" className="text-lg" />
-                            {t('일정 간격')}
+                            {t('healthcheck.form.interval')}
                         </label>
                         <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all ${scheduleType === 'cron' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark'}`}>
                             <input {...register('scheduleType')} type="radio" value="cron" className="hidden" />
                             <MaterialIcon name="calendar_month" className="text-lg" />
-                            {t('예약 스케줄')}
+                            {t('healthcheck.form.cron')}
                         </label>
                     </div>
                 </div>
@@ -333,7 +367,7 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
                 {scheduleType === 'interval' ? (
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('체크 간격')} (s)</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('healthcheck.form.checkInterval')} (s)</label>
                             <input
                                 {...register('interval', { valueAsNumber: true })}
                                 type="number"
@@ -347,7 +381,7 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
                             )}
                         </div>
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('타임아웃')} (ms)</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('healthcheck.form.timeout')} (ms)</label>
                             <input
                                 {...register('timeout', { valueAsNumber: true })}
                                 type="number"
@@ -369,14 +403,14 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
                                 onClick={() => setScheduledType('daily')}
                                 className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-all ${scheduledType === 'daily' ? 'bg-primary/10 border-primary text-primary' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500'}`}
                             >
-                                {t('매일 특정 시각')}
+                                {t('healthcheck.form.daily')}
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setScheduledType('weekly')}
                                 className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-all ${scheduledType === 'weekly' ? 'bg-primary/10 border-primary text-primary' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500'}`}
                             >
-                                {t('매주 특정 요일')}
+                                {t('healthcheck.form.weekly')}
                             </button>
                         </div>
                         {scheduledType === 'weekly' && (
@@ -416,33 +450,63 @@ export function HealthCheckForm({ onSuccess, service }: HealthCheckFormProps) {
                     </div>
                 )}
             </div>
+        </div>
 
+        </div>
+
+        <aside className="xl:sticky xl:top-6 space-y-4">
+            <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <MaterialIcon name={selectedType === 'http' ? 'api' : 'dns'} className="text-primary text-xl" />
+                    </div>
+                    <div className="min-w-0">
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                            {watchedName || t('healthcheck.form.namePlaceholder')}
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-text-muted-dark truncate">
+                            {watchedId || 'my-api-server'}
+                        </p>
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    <SummaryRow label={t('common.type')} value={selectedType?.toUpperCase() || 'HTTP'} />
+                    <SummaryRow
+                        label={selectedType === 'http' ? 'URL' : 'Host'}
+                        value={selectedType === 'http' ? (watchedUrl || '-') : `${watchedHost || '-'}${watchedPort ? `:${watchedPort}` : ''}`}
+                    />
+                    <SummaryRow
+                        label={t('healthcheck.form.summarySchedule')}
+                        value={scheduleType === 'interval' ? `${watchedInterval || 30}s` : cronPreviewText}
+                    />
+                    <SummaryRow label={t('healthcheck.form.timeout')} value={`${watchedTimeout || 5000}ms`} />
+                </div>
+            </div>
+
+            <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
+                <div className="flex items-center gap-2 mb-3">
+                    <MaterialIcon name="tips_and_updates" className="text-lg text-slate-400" />
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">{t('healthcheck.form.configTitle')}</h3>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-text-muted-dark leading-relaxed">
+                    {selectedType === 'http'
+                        ? t('healthcheck.form.httpConfigDesc')
+                        : t('healthcheck.form.tcpConfigDesc')}
+                </p>
+            </div>
+        </aside>
+
+        </div>
         </form>
-        </div>
-        <div className="flex-none border-t border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-6 py-4 flex gap-3">
-            <button
-                type="button"
-                onClick={closePanel}
-                className="flex-1 py-3 rounded-lg border border-slate-200 dark:border-ui-border-dark text-slate-600 dark:text-text-muted-dark font-bold hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-all"
-            >
-                {tc('common.cancel')}
-            </button>
-            <button
-                type="submit"
-                form="hc-form"
-                disabled={isSubmitting}
-                className="flex-1 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-all shadow-md active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-                {isSubmitting ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                    <>
-                        <MaterialIcon name="save" className="text-lg" />
-                        {tc('common.save')}
-                    </>
-                )}
-            </button>
-        </div>
         </>
+    );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="flex items-center justify-between gap-3 py-2 border-b border-slate-100 dark:border-ui-border-dark/50 last:border-0">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{label}</span>
+            <span className="text-sm font-semibold text-slate-800 dark:text-text-base-dark truncate">{value}</span>
+        </div>
     );
 }

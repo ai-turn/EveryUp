@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../utils/errors';
 import { api, type NotificationChannel, type AlertRule, type NotificationHistory, type NotificationStats, type NotificationChannelHealth } from '../services/api';
-import { useSidePanel } from '../contexts/SidePanelContext';
-import { ChannelForm } from '../features/alerts/components/ChannelForm';
 import { AlertsDesktopView } from '../features/alerts/components/AlertsDesktopView';
 import { AlertsMobileView } from '../features/alerts/components/AlertsMobileView';
 import { useIsMobile } from '../hooks/useMediaQuery';
@@ -14,7 +13,7 @@ type TabType = 'channels' | 'rules' | 'history';
 
 export function AlertsPage() {
   const { t } = useTranslation(['alerts', 'common']);
-  const { openPanel } = useSidePanel();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
 
   const [activeTab, setActiveTab] = useState<TabType>('channels');
@@ -151,17 +150,11 @@ export function AlertsPage() {
   };
 
   const handleAddChannel = () => {
-    openPanel(
-      t('alerts.addChannel'),
-      <ChannelForm onSuccess={refreshChannels} />
-    );
+    navigate('/alerts/channels/new');
   };
 
   const handleEditChannel = (channel: NotificationChannel) => {
-    openPanel(
-      t('alerts.modal.editTitle', { defaultValue: 'Edit Channel' }),
-      <ChannelForm channel={channel} onSuccess={refreshChannels} />
-    );
+    navigate(`/alerts/channels/${channel.id}/edit`);
   };
 
   const handleAddRule = () => {
@@ -219,6 +212,9 @@ export function AlertsPage() {
       <AlertsDesktopView
         channels={channels}
         channelHealth={channelHealth}
+        rules={rules}
+        history={history}
+        stats={stats}
         isLoading={isLoading}
         activeTab={activeTab}
         setActiveTab={setActiveTab}

@@ -6,9 +6,7 @@ import { ko, enUS } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../utils/errors';
 import { MaterialIcon } from '../components/common';
-import { useSidePanel } from '../contexts/SidePanelContext';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
-import { HealthCheckForm } from '../features/healthcheck/components/HealthCheckForm';
 import { HealthCheckDetailView } from '../features/healthcheck/components/HealthCheckDetailView';
 import { api, Service } from '../services/api';
 
@@ -17,7 +15,6 @@ export function HealthCheckDetailPage() {
   const navigate = useNavigate();
   const { t } = useTranslate();
   const { t: tc, i18n } = useTranslation(['common', 'nav']);
-  const { openPanel } = useSidePanel();
 
   const [isLive, setIsLive] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(new Date());
@@ -68,10 +65,7 @@ export function HealthCheckDetailPage() {
 
   const handleManage = () => {
     if (!service) return;
-    openPanel(
-      t('헬스체크 관리'),
-      <HealthCheckForm onSuccess={fetchService} service={service} />
-    );
+    navigate(`/healthcheck/${service.id}/edit`);
   };
 
   const getIdentityStatus = (status: Service['status']): 'online' | 'offline' | 'degraded' => {

@@ -17,6 +17,7 @@
         "live": "라이브",
         "copyToClipboard": "클립보드에 복사",
         "pause": "일시정지",
+        "paused": "일시정지",
         "resume": "재개",
         "healthy": "정상",
         "degraded": "성능 저하",

@@ -11,8 +11,11 @@ export interface Service {
   status: ServiceStatus;
   latency: string;
   uptime: string;
+  uptimeRaw?: number;
   icon: string;
   type?: 'http' | 'tcp';
   interval?: number;
   isActive?: boolean;
+  url?: string;
+  latencyHistory?: number[];
 }

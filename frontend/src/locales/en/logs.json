@@ -1,310 +1,339 @@
 {
-    "logs": {
-        "title": "Logs",
-        "subtitle": "Collect, review, and analyze application logs in one place",
-        "features": {
-            "errorTracking": "Error Tracking",
-            "alertTrigger": "Alert Trigger",
-            "loggingLibrary": "Logging Library"
-        },
-        "guide": {
-            "title": "How to Collect Logs",
-            "subtitle": "Start collecting logs with your existing logger configuration or log files. No separate SDK is required.",
-            "supported": "Supported:",
-            "step1": {
-                "title": "Create a Log Service",
-                "desc": "Click \"Add Log\" and create a service name. A dedicated API key is generated automatically for that service."
-            },
-            "step2": {
-                "title": "Choose an Integration Method",
-                "desc": "Open the Integration tab and choose the method that fits your environment. Use HTTP Appender when you can edit app code, or Log Agent when you want to collect log files or stdout from servers and containers."
-            },
-            "step3": {
-                "title": "Review Logs and Add Alerts",
-                "desc": "Collected logs appear in the log list right away. If needed, add Telegram or Discord alert rules for error and warn logs."
-            }
-        },
-        "pause": "Pause Stream",
-        "resume": "Resume Stream",
-        "copy": "Copy",
-        "details": "Details",
-        "export": "Export",
-        "titleRecent": "Recent Error Logs",
-        "searchPlaceholder": "Search logs...",
-        "pausedMessage": "Log updates are paused. Click Resume to restart.",
-        "noResults": "No results found.",
-        "noLogs": "No logs available.",
-        "loadMore": "Load More",
-        "fetchError": "Failed to load logs.",
-        "filter": {
-            "all": "All",
-            "error": "Error",
-            "warn": "Warning",
-            "info": "Info",
-            "debug": "Debug",
-            "trace": "Trace"
-        },
-        "table": {
-            "timestamp": "Timestamp",
-            "level": "Level",
-            "message": "Message",
-            "actions": "Actions"
-        }
+  "logs": {
+    "title": "Logs",
+    "subtitle": "Collect, review, and analyze application logs in one place.",
+    "features": {
+      "errorTracking": "Error Tracking",
+      "alertTrigger": "Alert Trigger",
+      "loggingLibrary": "Logging Library"
     },
-    "apiRequests": {
-        "tabs": {
-            "requests": "Requests"
-        },
-        "table": {
-            "time": "Time",
-            "method": "Method",
-            "path": "Path",
-            "status": "Status",
-            "duration": "Duration",
-            "requestId": "Request ID"
-        },
-        "filters": {
-            "search": "Search path, body…",
-            "allMethods": "ALL",
-            "allStatus": "All",
-            "errorsOnly": "Errors only",
-            "timeRange": {
-                "1h": "1h",
-                "6h": "6h",
-                "24h": "24h",
-                "7d": "7d"
-            }
-        },
-        "detail": {
-            "request": "Request",
-            "response": "Response",
-            "rawJson": "Raw JSON",
-            "headers": "Headers",
-            "body": "Body",
-            "truncated": "Truncated — showing first {{shown}} bytes of {{total}} bytes total",
-            "noBody": "No body",
-            "copy": "Copy",
-            "copied": "Copied"
-        },
-        "empty": {
-            "title": "No requests captured",
-            "description": "No API requests captured yet. Configure capture settings to get started.",
-            "configureCapture": "Configure capture"
-        },
-        "settings": {
-            "title": "API Request Capture",
-            "subtitle": "Configure how requests and responses are captured for this service.",
-            "mode": {
-                "label": "Capture Mode",
-                "disabled": "Disabled",
-                "disabledDesc": "Don't capture any requests.",
-                "errorsOnly": "Errors Only",
-                "errorsOnlyDesc": "Capture only error responses (5xx).",
-                "sampled": "Sampled",
-                "sampledDesc": "Capture a sample of all requests.",
-                "all": "All",
-                "allDesc": "Capture every request."
-            },
-            "sampleRate": {
-                "label": "Sample Rate (%)",
-                "description": "Percentage of successful responses to capture (0–100)"
-            },
-            "bodyMaxBytes": {
-                "label": "Max Body Size",
-                "description": "Maximum body size to store"
-            },
-            "maskedHeaders": {
-                "label": "Masked Headers",
-                "description": "Header names to mask with *** (case-insensitive)",
-                "placeholder": "Add header name…"
-            },
-            "maskedBodyFields": {
-                "label": "Masked Body Fields",
-                "description": "JSON body field names to mask",
-                "placeholder": "Add field name…"
-            },
-            "save": "Save",
-            "saving": "Saving…",
-            "saveSuccess": "Capture settings saved.",
-            "saveError": "Save failed"
-        }
+    "guide": {
+      "title": "How to Collect Logs",
+      "subtitle": "Start collecting logs with your existing logger configuration or log files. No separate SDK is required.",
+      "supported": "Supported",
+      "step1": {
+        "title": "Create a Log Service",
+        "desc": "Click \"Add Log\" and create a service name. A dedicated API key is generated automatically for that service."
+      },
+      "step2": {
+        "title": "Choose an Integration Method",
+        "desc": "Open the Integration tab and choose the method that fits your environment. Use HTTP Appender when you can edit app code, or Log Agent when you want to collect log files or stdout."
+      },
+      "step3": {
+        "title": "Review Logs and Add Alerts",
+        "desc": "Collected logs appear in the log list right away. If needed, add Telegram or Discord alert rules for error and warn logs."
+      }
     },
-    "logServices": {
-        "viewLogs": "View Logs",
-        "empty": "No logs added yet",
-        "emptyDesc": "Add a log service, then start collecting logs with HTTP Appender or Log Agent.",
-        "add": {
-            "title": "Add Log",
-            "submit": "Add Log",
-            "infoTitle": "Log Collection Service",
-            "infoDesc": "Create a log service to generate an API key automatically. Then choose HTTP Appender or Log Agent in the Integration tab and connect your app."
-        },
-        "validation": {
-            "idRequired": "ID is required (min 2 chars)",
-            "idFormat": "Only lowercase letters, numbers, and hyphens",
-            "nameRequired": "Name is required (min 2 chars)"
-        },
-        "toast": {
-            "created": "Log added successfully",
-            "createdGuide": "Log added! Copy the integration code below to start collecting logs.",
-            "createFailed": "Failed to add log",
-            "deleted": "Log service deleted successfully"
-        },
-        "guide": {
-            "recommended": "Recommended",
-            "universal": "Any Language",
-            "loggingLibrary": {
-                "title": "Send Directly From App Code",
-                "desc": "Add HTTP sending to your existing logging library such as Winston, Logback, or Serilog. This is usually the easiest option when you can modify application code.",
-                "tags": {
-                    "autoSend": "Auto Send",
-                    "asyncBatch": "Async Batch",
-                    "failSafe": "Fail Safe"
-                }
-            },
-            "http": {
-                "title": "Direct HTTP POST",
-                "desc": "Send logs with plain HTTP POST from any language or platform. This works well for scripts or custom log forwarding logic.",
-                "tags": {
-                    "restApi": "REST API",
-                    "bearerAuth": "Bearer Auth",
-                    "batchSupport": "Batch Support"
-                }
-            }
-        },
-        "identity": {
-            "id": "Log ID",
-            "apiKey": "API Key",
-            "createdAt": "Created",
-            "levelFilter": "Log Level",
-            "acceptAll": "All Levels",
-            "levelFilterHint": "Click to go to the Settings tab"
-        },
-        "detail": {
-            "tabs": {
-                "logs": "Error Logs",
-                "integration": "Integration",
-                "settings": "Settings"
-            }
-        },
-        "delete": {
-            "title": "Delete Log",
-            "subtitle": "This action cannot be undone",
-            "confirm": "Are you sure you want to delete"
-        },
-        "apiKey": {
-            "revealTitle": "New API Key Generated",
-            "revealDesc": "Copy your new API key now. It will not be shown again.",
-            "revealConfirm": "Done",
-            "revealOnce": "This key is shown only once. Copy it now - you won't be able to see it again."
-        },
-        "settings": {
-            "levelFilterTitle": "Log Level Filter",
-            "levelFilterDesc": "Choose which log levels this service stores. Unselected levels are silently dropped at ingest time and do not count as agent errors.",
-            "acceptAll": "Accept all levels",
-            "acceptAllDesc": "error / warn / info by default — debug and trace are opt-in",
-            "custom": "Custom selection",
-            "customDesc": "Only collect selected levels",
-            "selectAtLeastOne": "Select at least one log level.",
-            "saved": "Log level filter saved.",
-            "summaryAll": "Collecting: error / warn / info / debug / trace",
-            "summaryNone": "No levels selected - nothing will be collected",
-            "summaryCollecting": "Collecting"
-        },
-        "integration": {
-            "picker": {
-                "eyebrow": "Integration",
-                "title": "What do you want to collect?",
-                "subtitle": "Choose the method that matches the data you want to capture.",
-                "recommended": "Recommended",
-                "goodFor": "Good for",
-                "start": "Start with this",
-                "notSureTitle": "Not sure which to pick?",
-                "notSureDesc": "Use Log Agent to collect log files or stdout. Use API Request Capture to record HTTP request and response data."
-            },
-            "paths": {
-                "agent": {
-                    "label": "Log Agent",
-                    "tagline": "A Docker container that tails and forwards your log files",
-                    "description": "Mount your log directory and run the container. No changes to your application code.",
-                    "goodFor": [
-                        "File-based logs (.log, stdout)",
-                        "Docker / VM / bare metal",
-                        "No app code changes"
-                    ]
-                },
-                "apiCapture": {
-                    "label": "API Request Capture",
-                    "tagline": "Add middleware to capture HTTP requests and responses",
-                    "description": "Add a middleware to Spring Boot, FastAPI, Express, and more. Captures method, path, status, duration, and body with no infrastructure changes.",
-                    "goodFor": [
-                        "Full HTTP request/response capture",
-                        "Spring Boot / FastAPI / Express / Go / Django",
-                        "No infrastructure changes — code only"
-                    ]
-                },
-                "httpAppender": {
-                    "label": "HTTP Appender",
-                    "tagline": "Add an HTTP endpoint to your app logger",
-                    "description": "Add an HTTP transport to Winston, Logback, Serilog, or Python logging. Control what gets sent from your code.",
-                    "goodFor": [
-                        "Existing logger setup",
-                        "Node.js / Spring Boot / .NET / Python",
-                        "Code-level control over log delivery"
-                    ]
-                }
-            },
-            "status": {
-                "connected": "Connected",
-                "receivedAgo": "Received {{seconds}}s ago",
-                "testFailed": "Test failed",
-                "waiting": "Waiting for logs"
-            },
-            "selectedMethod": "Selected method",
-            "changeMethod": "Change",
-            "apiKey": {
-                "title": "API key",
-                "masked": "MASKED",
-                "copyVisible": "Copy visible value",
-                "regenerate": "Regenerate"
-            },
-            "endpoint": {
-                "title": "Ingest endpoint",
-                "description": "Accepts common logger formats and batches up to 100 logs per request.",
-                "apiCaptureDescription": "Accepts up to 50 API request entries per batch. Use the X-API-Key header for authentication."
-            },
-            "test": {
-                "title": "Test the connection first",
-                "description": "Send one small log entry before changing production logging. The status updates when a log arrives.",
-                "browserButton": "Send test from browser",
-                "troubleshooting": "Troubleshooting",
-                "troubleshootingDesc": "If the request reaches a reverse proxy, make sure the Authorization header is forwarded."
-            },
-            "setup": {
-                "agentTitle": "Run the agent",
-                "httpTitle": "Add the appender",
-                "apiCaptureTitle": "Add the middleware",
-                "agentDesc": "Mount the log directory and start the EveryUp Log Agent.",
-                "httpDesc": "Pick your framework and add the HTTP transport to your logger.",
-                "apiCaptureDesc": "Pick your framework and add the middleware to your application.",
-                "agentHint": "Quick start is enough for most setups. Change the mounted path to the directory where your application writes logs.",
-                "levelPrefixHint": "For plain text logs, prefix lines with [INFO], [WARN], or [ERROR] so EveryUp can classify levels correctly. JSON logs can use level, severity, logLevel, or lvl fields.",
-                "apiCaptureHint": "Go to the Settings tab → API Capture and enable a capture mode before data will be collected.",
-                "otherOptions": "Other deployment options",
-                "otherOptionsDesc": "Fluent Bit config, Docker sidecar, Docker pipe, and systemd examples."
-            },
-            "modals": {
-                "regenerateTitle": "Regenerate API key?",
-                "regenerateDesc": "The previous key stops working immediately. Update any running agents or appenders.",
-                "newKeyTitle": "New API key generated",
-                "newKeyDesc": "Copy it now. It will be hidden again shortly.",
-                "done": "Done"
-            },
-            "toast": {
-                "apiKeyRegenerated": "New API key generated.",
-                "regenerateFirst": "Regenerate the API key first, then try the browser test.",
-                "testLogSent": "Test log sent."
-            }
-        }
+    "pause": "Pause Stream",
+    "resume": "Resume Stream",
+    "copy": "Copy",
+    "details": "Details",
+    "export": "Export",
+    "titleRecent": "Recent Logs",
+    "searchPlaceholder": "Search logs...",
+    "pausedMessage": "Log updates are paused. Click Resume to restart.",
+    "noResults": "No results found.",
+    "noLogs": "No logs available.",
+    "loadMore": "Load More",
+    "fetchError": "Failed to load logs.",
+    "list": {
+      "tabs": {
+        "services": "Services",
+        "stream": "Log Stream",
+        "errors": "Errors / Warnings"
+      }
+    },
+    "card": {
+      "noRecent": "No recent logs received"
+    },
+    "view": {
+      "cards": "Cards",
+      "table": "Table",
+      "activity": "Activity"
+    },
+    "tabs": {
+      "receiving": "Receiving",
+      "waiting": "No recent logs",
+      "paused": "Paused"
+    },
+    "kpi": {
+      "services": "Log services",
+      "receiving": "Receiving",
+      "waiting": "No recent logs",
+      "errors": "Recent errors",
+      "warnings": "Recent warnings"
+    },
+    "filter": {
+      "all": "All",
+      "error": "Error",
+      "warn": "Warning",
+      "info": "Info",
+      "debug": "Debug",
+      "trace": "Trace"
+    },
+    "table": {
+      "timestamp": "Time",
+      "level": "Level",
+      "service": "Service",
+      "source": "Source",
+      "message": "Message",
+      "actions": "Actions"
+    },
+    "stream": {
+      "search": "Search messages...",
+      "allServices": "All services",
+      "refresh": "Refresh",
+      "reset": "Reset filters",
+      "showing": "{{count}} shown",
+      "empty": "No logs to display"
+    },
+    "errors": {
+      "emptyTitle": "No error or warning logs",
+      "emptyDesc": "No errors or warnings have been collected recently"
     }
+  },
+  "apiRequests": {
+    "tabs": {
+      "requests": "Requests"
+    },
+    "table": {
+      "time": "Time",
+      "method": "Method",
+      "path": "Path",
+      "status": "Status",
+      "duration": "Duration",
+      "requestId": "Request ID"
+    },
+    "filters": {
+      "search": "Search path, body...",
+      "allMethods": "All",
+      "allStatus": "All",
+      "errorsOnly": "Errors only",
+      "timeRange": {
+        "1h": "1h",
+        "6h": "6h",
+        "24h": "24h",
+        "7d": "7d"
+      }
+    },
+    "detail": {
+      "request": "Request",
+      "response": "Response",
+      "rawJson": "Raw JSON",
+      "headers": "Headers",
+      "body": "Body",
+      "truncated": "Truncated: showing first {{shown}} bytes of {{total}} bytes total",
+      "noBody": "No body",
+      "copy": "Copy",
+      "copied": "Copied"
+    },
+    "empty": {
+      "title": "No requests captured",
+      "description": "No API requests captured yet. Configure capture settings to get started.",
+      "configureCapture": "Configure capture"
+    },
+    "settings": {
+      "title": "API Request Capture",
+      "subtitle": "Configure how requests and responses are captured for this service.",
+      "mode": {
+        "label": "Capture Mode",
+        "disabled": "Disabled",
+        "disabledDesc": "Do not capture any requests.",
+        "errorsOnly": "Errors Only",
+        "errorsOnlyDesc": "Capture only error responses (5xx).",
+        "sampled": "Sampled",
+        "sampledDesc": "Capture a sample of all requests.",
+        "all": "All",
+        "allDesc": "Capture every request."
+      },
+      "sampleRate": {
+        "label": "Sample Rate (%)",
+        "description": "Percentage of successful responses to capture (0-100)"
+      },
+      "bodyMaxBytes": {
+        "label": "Max Body Size",
+        "description": "Maximum body size to store"
+      },
+      "maskedHeaders": {
+        "label": "Masked Headers",
+        "description": "Header names to mask with ***",
+        "placeholder": "Add header name..."
+      },
+      "maskedBodyFields": {
+        "label": "Masked Body Fields",
+        "description": "JSON body field names to mask",
+        "placeholder": "Add field name..."
+      },
+      "save": "Save",
+      "saving": "Saving...",
+      "saveSuccess": "Capture settings saved.",
+      "saveError": "Save failed"
+    }
+  },
+  "logServices": {
+    "viewLogs": "View Logs",
+    "empty": "No log services yet",
+    "emptyDesc": "Add a log service, then start collecting logs with HTTP Appender or Log Agent.",
+    "add": {
+      "title": "Add Log",
+      "submit": "Add Log",
+      "infoTitle": "Log Collection Service",
+      "infoDesc": "Create a log service to generate an API key automatically. Then choose HTTP Appender or Log Agent in the Integration tab and connect your app."
+    },
+    "validation": {
+      "idRequired": "ID is required (min 2 chars)",
+      "idFormat": "Only lowercase letters, numbers, and hyphens are allowed",
+      "nameRequired": "Name is required (min 2 chars)"
+    },
+    "toast": {
+      "created": "Log added successfully",
+      "createdGuide": "Log added. Copy the integration code below to start collecting logs.",
+      "createFailed": "Failed to add log",
+      "deleted": "Log service deleted successfully"
+    },
+    "guide": {
+      "recommended": "Recommended",
+      "universal": "Any Language",
+      "loggingLibrary": {
+        "title": "Send Directly From App Code",
+        "desc": "Add HTTP sending to your existing logging library such as Winston, Logback, or Serilog. This is usually the easiest option when you can modify application code.",
+        "tags": {
+          "autoSend": "Auto Send",
+          "asyncBatch": "Async Batch",
+          "failSafe": "Fail Safe"
+        }
+      },
+      "http": {
+        "title": "Direct HTTP POST",
+        "desc": "Send logs with plain HTTP POST from any language or platform. This works well for scripts or custom log forwarding logic.",
+        "tags": {
+          "restApi": "REST API",
+          "bearerAuth": "Bearer Auth",
+          "batchSupport": "Batch Support"
+        }
+      }
+    },
+    "identity": {
+      "id": "Log ID",
+      "apiKey": "API Key",
+      "createdAt": "Created",
+      "levelFilter": "Log Level",
+      "acceptAll": "All Levels",
+      "levelFilterHint": "Click to go to the Settings tab"
+    },
+    "detail": {
+      "tabs": {
+        "logs": "Logs",
+        "integration": "Integration",
+        "settings": "Settings"
+      }
+    },
+    "delete": {
+      "title": "Delete Log",
+      "subtitle": "This action cannot be undone",
+      "confirm": "Are you sure you want to delete"
+    },
+    "apiKey": {
+      "revealTitle": "New API Key Generated",
+      "revealDesc": "Copy your new API key now. It will not be shown again.",
+      "revealConfirm": "Done",
+      "revealOnce": "This key is shown only once. Copy it now."
+    },
+    "settings": {
+      "levelFilterTitle": "Log Level Filter",
+      "levelFilterDesc": "Choose which log levels this service stores. Unselected levels are silently dropped at ingest time.",
+      "acceptAll": "Accept all levels",
+      "acceptAllDesc": "error / warn / info by default, debug and trace are opt-in",
+      "custom": "Custom selection",
+      "customDesc": "Only collect selected levels",
+      "selectAtLeastOne": "Select at least one log level.",
+      "saved": "Log level filter saved.",
+      "summaryAll": "Collecting: error / warn / info / debug / trace",
+      "summaryNone": "No levels selected - nothing will be collected",
+      "summaryCollecting": "Collecting"
+    },
+    "integration": {
+      "picker": {
+        "eyebrow": "Integration",
+        "title": "What do you want to collect?",
+        "subtitle": "Choose the method that matches the data you want to capture.",
+        "recommended": "Recommended",
+        "goodFor": "Good for",
+        "start": "Start with this",
+        "notSureTitle": "Not sure which to pick?",
+        "notSureDesc": "Use Log Agent to collect log files or stdout. Use API Request Capture to record HTTP request and response data."
+      },
+      "paths": {
+        "agent": {
+          "label": "Log Agent",
+          "tagline": "A Docker container that tails and forwards your log files",
+          "description": "Mount your log directory and run the container. No changes to your application code.",
+          "goodFor": ["File-based logs (.log, stdout)", "Docker / VM / bare metal", "No app code changes"]
+        },
+        "apiCapture": {
+          "label": "API Request Capture",
+          "tagline": "Add middleware to capture HTTP requests and responses",
+          "description": "Add a middleware to Spring Boot, FastAPI, Express, and more. Captures method, path, status, duration, and body.",
+          "goodFor": ["Full HTTP request/response capture", "Spring Boot / FastAPI / Express / Go / Django", "No infrastructure changes, code only"]
+        },
+        "httpAppender": {
+          "label": "HTTP Appender",
+          "tagline": "Add an HTTP endpoint to your app logger",
+          "description": "Add an HTTP transport to Winston, Logback, Serilog, or Python logging.",
+          "goodFor": ["Existing logger setup", "Node.js / Spring Boot / .NET / Python", "Code-level control over log delivery"]
+        }
+      },
+      "status": {
+        "connected": "Connected",
+        "receivedAgo": "Received {{seconds}}s ago",
+        "testFailed": "Test failed",
+        "waiting": "Waiting for logs"
+      },
+      "selectedMethod": "Selected method",
+      "changeMethod": "Change",
+      "apiKey": {
+        "title": "API key",
+        "masked": "MASKED",
+        "copyVisible": "Copy visible value",
+        "regenerate": "Regenerate"
+      },
+      "endpoint": {
+        "title": "Ingest endpoint",
+        "description": "Accepts common logger formats and batches up to 100 logs per request.",
+        "apiCaptureDescription": "Accepts up to 50 API request entries per batch. Use the X-API-Key header for authentication."
+      },
+      "test": {
+        "title": "Test the connection first",
+        "description": "Send one small log entry before changing production logging. The status updates when a log arrives.",
+        "browserButton": "Send test from browser",
+        "troubleshooting": "Troubleshooting",
+        "troubleshootingDesc": "If the request reaches a reverse proxy, make sure the Authorization header is forwarded."
+      },
+      "setup": {
+        "agentTitle": "Run the agent",
+        "httpTitle": "Add the appender",
+        "apiCaptureTitle": "Add the middleware",
+        "agentDesc": "Mount the log directory and start the EveryUp Log Agent.",
+        "httpDesc": "Pick your framework and add the HTTP transport to your logger.",
+        "apiCaptureDesc": "Pick your framework and add the middleware to your application.",
+        "agentHint": "Quick start is enough for most setups. Change the mounted path to the directory where your application writes logs.",
+        "levelPrefixHint": "For plain text logs, prefix lines with [INFO], [WARN], or [ERROR] so EveryUp can classify levels correctly. JSON logs can use level, severity, logLevel, or lvl fields.",
+        "apiCaptureHint": "Go to Settings - API Capture and enable a capture mode before data will be collected.",
+        "otherOptions": "Other deployment options",
+        "otherOptionsDesc": "Fluent Bit config, Docker sidecar, Docker pipe, and systemd examples."
+      },
+      "modals": {
+        "regenerateTitle": "Regenerate API key?",
+        "regenerateDesc": "The previous key stops working immediately. Update any running agents or appenders.",
+        "newKeyTitle": "New API key generated",
+        "newKeyDesc": "Copy it now. It will be hidden again shortly.",
+        "done": "Done"
+      },
+      "toast": {
+        "apiKeyRegenerated": "New API key generated.",
+        "regenerateFirst": "Regenerate the API key first, then try the browser test.",
+        "testLogSent": "Test log sent."
+      }
+    }
+  }
 }

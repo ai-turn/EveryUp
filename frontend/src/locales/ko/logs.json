@@ -1,310 +1,339 @@
 {
-    "logs": {
-        "title": "로그",
-        "subtitle": "애플리케이션에서 발생한 로그를 한곳에 모아 확인하고 분석합니다",
-        "features": {
-            "errorTracking": "에러 추적",
-            "alertTrigger": "알림 트리거",
-            "loggingLibrary": "로깅 라이브러리"
-        },
-        "guide": {
-            "title": "로그 수집 방법",
-            "subtitle": "별도 SDK 없이, 기존 로깅 설정이나 로그 파일을 활용해 로그 수집을 시작할 수 있습니다.",
-            "supported": "지원:",
-            "step1": {
-                "title": "로그 서비스 만들기",
-                "desc": "\"로그 추가\"를 클릭해 서비스 이름을 만들면, 이 서비스 전용 API 키가 자동으로 발급됩니다."
-            },
-            "step2": {
-                "title": "연동 방식 고르기",
-                "desc": "연동 탭에서 환경에 맞는 방식을 선택하세요. 앱 코드를 수정할 수 있으면 HTTP Appender, 서버나 컨테이너의 로그 파일·stdout을 수집하려면 Log Agent가 적합합니다."
-            },
-            "step3": {
-                "title": "로그 확인 및 알림 연결",
-                "desc": "수집된 로그는 목록에서 바로 확인할 수 있습니다. 필요하면 error/warn 로그에 대해 Telegram이나 Discord 알림 규칙을 연결하세요."
-            }
-        },
-        "pause": "로그 일시정지",
-        "resume": "로그 재개",
-        "copy": "복사",
-        "details": "상세",
-        "export": "내보내기",
-        "titleRecent": "최근 에러 로그",
-        "searchPlaceholder": "로그 검색...",
-        "pausedMessage": "로그 업데이트가 일시정지되었습니다. 재개를 클릭하여 다시 시작하세요.",
-        "noResults": "검색 결과가 없습니다.",
-        "noLogs": "로그가 없습니다.",
-        "loadMore": "더 불러오기",
-        "fetchError": "로그를 불러오는데 실패했습니다.",
-        "filter": {
-            "all": "전체",
-            "error": "에러",
-            "warn": "경고",
-            "info": "정보",
-            "debug": "디버그",
-            "trace": "트레이스"
-        },
-        "table": {
-            "timestamp": "타임스탬프",
-            "level": "레벨",
-            "message": "메시지",
-            "actions": "작업"
-        }
+  "logs": {
+    "title": "로그",
+    "subtitle": "애플리케이션에서 발생한 로그를 수집하고 한 곳에서 확인합니다.",
+    "features": {
+      "errorTracking": "에러 추적",
+      "alertTrigger": "알림 트리거",
+      "loggingLibrary": "로깅 라이브러리"
     },
-    "apiRequests": {
-        "tabs": {
-            "requests": "API 요청"
-        },
-        "table": {
-            "time": "시간",
-            "method": "메서드",
-            "path": "경로",
-            "status": "상태",
-            "duration": "응답시간",
-            "requestId": "요청 ID"
-        },
-        "filters": {
-            "search": "경로, 바디 검색…",
-            "allMethods": "전체",
-            "allStatus": "전체",
-            "errorsOnly": "오류만",
-            "timeRange": {
-                "1h": "1시간",
-                "6h": "6시간",
-                "24h": "24시간",
-                "7d": "7일"
-            }
-        },
-        "detail": {
-            "request": "요청",
-            "response": "응답",
-            "rawJson": "원시 JSON",
-            "headers": "헤더",
-            "body": "바디",
-            "truncated": "잘림 — 전체 {{total}} 바이트 중 첫 {{shown}} 바이트 표시",
-            "noBody": "바디 없음",
-            "copy": "복사",
-            "copied": "복사됨"
-        },
-        "empty": {
-            "title": "캡처된 요청 없음",
-            "description": "아직 캡처된 API 요청이 없습니다. 캡처 설정을 구성하여 시작하세요.",
-            "configureCapture": "캡처 설정하기"
-        },
-        "settings": {
-            "title": "API 요청 캡처",
-            "subtitle": "이 서비스의 요청/응답 캡처 방식을 설정합니다.",
-            "mode": {
-                "label": "캡처 모드",
-                "disabled": "비활성화",
-                "disabledDesc": "요청을 캡처하지 않습니다.",
-                "errorsOnly": "오류만",
-                "errorsOnlyDesc": "5xx 오류 응답만 캡처합니다.",
-                "sampled": "샘플링",
-                "sampledDesc": "모든 요청의 일부를 캡처합니다.",
-                "all": "전체",
-                "allDesc": "모든 요청을 캡처합니다."
-            },
-            "sampleRate": {
-                "label": "샘플링 비율 (%)",
-                "description": "성공 응답 캡처 비율 (0–100)"
-            },
-            "bodyMaxBytes": {
-                "label": "최대 바디 크기",
-                "description": "바디 저장 크기 제한"
-            },
-            "maskedHeaders": {
-                "label": "마스킹 헤더",
-                "description": "값을 *** 로 마스킹할 헤더 이름 (대소문자 무시)",
-                "placeholder": "헤더 이름 추가…"
-            },
-            "maskedBodyFields": {
-                "label": "마스킹 필드",
-                "description": "JSON 바디에서 마스킹할 필드 이름",
-                "placeholder": "필드 이름 추가…"
-            },
-            "save": "저장",
-            "saving": "저장 중…",
-            "saveSuccess": "캡처 설정이 저장되었습니다.",
-            "saveError": "저장 실패"
-        }
+    "guide": {
+      "title": "로그 수집 방법",
+      "subtitle": "별도 SDK 없이 기존 로거 설정이나 로그 파일을 활용해 수집을 시작할 수 있습니다.",
+      "supported": "지원",
+      "step1": {
+        "title": "로그 서비스 만들기",
+        "desc": "\"로그 추가\"를 눌러 서비스 이름을 만들면 전용 API 키가 자동으로 발급됩니다."
+      },
+      "step2": {
+        "title": "연동 방식 고르기",
+        "desc": "연동 탭에서 환경에 맞는 방식을 선택하세요. 앱 코드를 수정할 수 있으면 HTTP Appender, 로그 파일이나 stdout을 수집하려면 Log Agent가 적합합니다."
+      },
+      "step3": {
+        "title": "로그 확인 및 알림 연결",
+        "desc": "수집된 로그는 목록에서 바로 확인할 수 있습니다. 필요하면 error/warn 로그에 대한 Telegram 또는 Discord 알림 규칙을 연결하세요."
+      }
     },
-    "logServices": {
-        "viewLogs": "로그 보기",
-        "empty": "등록된 로그가 없습니다",
-        "emptyDesc": "로그 서비스를 추가한 뒤 HTTP Appender 또는 Log Agent 방식으로 로그 수집을 시작하세요.",
-        "add": {
-            "title": "로그 추가",
-            "submit": "로그 추가",
-            "infoTitle": "로그 수집 서비스",
-            "infoDesc": "로그 서비스를 만들면 API 키가 자동으로 발급됩니다. 이후 연동 탭에서 HTTP Appender 또는 Log Agent 방식 중 하나를 선택해 바로 연결할 수 있습니다."
-        },
-        "validation": {
-            "idRequired": "ID는 필수입니다 (최소 2자)",
-            "idFormat": "영문 소문자, 숫자, 하이픈만 사용 가능",
-            "nameRequired": "이름은 필수입니다 (최소 2자)"
-        },
-        "toast": {
-            "created": "로그가 추가되었습니다",
-            "createdGuide": "로그가 추가되었습니다! 아래 연동 코드를 복사하여 로그 수집을 시작하세요.",
-            "createFailed": "로그 추가에 실패했습니다",
-            "deleted": "로그 서비스가 삭제되었습니다"
-        },
-        "guide": {
-            "recommended": "추천",
-            "universal": "모든 언어",
-            "loggingLibrary": {
-                "title": "앱 코드에서 직접 전송",
-                "desc": "기존 로깅 라이브러리(Winston, Logback, Serilog 등)에 HTTP 전송 설정을 추가해 로그를 바로 보냅니다. 앱 코드를 수정할 수 있을 때 가장 간단합니다.",
-                "tags": {
-                    "autoSend": "자동 전송",
-                    "asyncBatch": "비동기 배치",
-                    "failSafe": "장애 격리"
-                }
-            },
-            "http": {
-                "title": "HTTP POST 직접 호출",
-                "desc": "어떤 언어나 플랫폼에서든 HTTP POST 요청으로 로그를 직접 보낼 수 있습니다. 간단한 스크립트나 커스텀 전송 로직이 필요할 때 적합합니다.",
-                "tags": {
-                    "restApi": "REST API",
-                    "bearerAuth": "Bearer 인증",
-                    "batchSupport": "배치 전송"
-                }
-            }
-        },
-        "identity": {
-            "id": "로그 ID",
-            "apiKey": "API 키",
-            "createdAt": "생성일",
-            "levelFilter": "로그 레벨",
-            "acceptAll": "모든 레벨",
-            "levelFilterHint": "클릭하면 설정 탭으로 이동합니다"
-        },
-        "detail": {
-            "tabs": {
-                "logs": "에러 로그",
-                "integration": "연동",
-                "settings": "설정"
-            }
-        },
-        "delete": {
-            "title": "로그 삭제",
-            "subtitle": "이 작업은 되돌릴 수 없습니다",
-            "confirm": "정말 삭제하시겠습니까?"
-        },
-        "apiKey": {
-            "revealTitle": "새 API 키가 발급되었습니다",
-            "revealDesc": "지금 복사해 두세요. 이 키는 다시 표시되지 않습니다.",
-            "revealConfirm": "확인",
-            "revealOnce": "이 키는 한 번만 표시됩니다. 지금 복사해 두세요 - 다시 확인할 수 없습니다."
-        },
-        "settings": {
-            "levelFilterTitle": "로그 레벨 필터",
-            "levelFilterDesc": "이 서비스에서 저장할 로그 레벨을 선택합니다. 선택하지 않은 레벨은 수집 시점에 조용히 무시되며, 에이전트 오류로 처리되지는 않습니다.",
-            "acceptAll": "모든 레벨 수집",
-            "acceptAllDesc": "error / warn / info 기본 수집 (debug, trace는 옵트인)",
-            "custom": "선택 수집",
-            "customDesc": "선택한 레벨만 수집합니다",
-            "selectAtLeastOne": "최소 하나의 로그 레벨을 선택해야 합니다.",
-            "saved": "로그 레벨 필터가 저장되었습니다.",
-            "summaryAll": "수집 중: error / warn / info / debug / trace",
-            "summaryNone": "선택된 레벨 없음 - 아무것도 수집되지 않습니다",
-            "summaryCollecting": "수집 중"
-        },
-        "integration": {
-            "picker": {
-                "eyebrow": "연동",
-                "title": "무엇을 수집할까요?",
-                "subtitle": "수집하려는 데이터 종류에 맞는 방식을 선택하세요.",
-                "recommended": "권장",
-                "goodFor": "이런 경우에 좋아요",
-                "start": "이 방식으로 시작",
-                "notSureTitle": "어떤 방식을 골라야 할지 모르겠나요?",
-                "notSureDesc": "로그 파일이나 stdout을 수집하려면 Log Agent, HTTP 요청/응답 데이터를 캡처하려면 API 요청 캡처를 선택하세요."
-            },
-            "paths": {
-                "agent": {
-                    "label": "Log Agent",
-                    "tagline": "로그 파일을 읽어 전송하는 Docker 컨테이너",
-                    "description": "로그 디렉토리를 마운트하고 컨테이너를 실행합니다. 앱 코드는 변경하지 않아도 됩니다.",
-                    "goodFor": [
-                        "파일로 기록되는 로그 (.log, stdout)",
-                        "Docker / VM / 베어메탈 환경",
-                        "앱 코드를 건드리지 않는 경우"
-                    ]
-                },
-                "apiCapture": {
-                    "label": "API 요청 캡처",
-                    "tagline": "앱에 미들웨어를 추가해 HTTP 요청/응답 수집",
-                    "description": "Spring Boot, FastAPI, Express 등에 미들웨어 코드를 추가합니다. 인프라 변경 없이 요청 메서드, 경로, 상태코드, 응답시간, 바디를 수집합니다.",
-                    "goodFor": [
-                        "HTTP API 요청/응답 전체 캡처",
-                        "Spring Boot / FastAPI / Express / Go / Django",
-                        "인프라 변경 없이 코드만 수정"
-                    ]
-                },
-                "httpAppender": {
-                    "label": "HTTP Appender",
-                    "tagline": "앱 로거에 HTTP endpoint를 추가",
-                    "description": "Winston, Logback, Serilog, Python logging에 HTTP transport를 추가합니다. 전송 조건을 코드에서 직접 제어할 수 있습니다.",
-                    "goodFor": [
-                        "이미 로깅 라이브러리를 쓰는 서비스",
-                        "Node.js / Spring Boot / .NET / Python",
-                        "전송 조건을 코드로 제어하는 경우"
-                    ]
-                }
-            },
-            "status": {
-                "connected": "연결됨",
-                "receivedAgo": "{{seconds}}초 전 수신",
-                "testFailed": "테스트 실패",
-                "waiting": "로그 대기 중"
-            },
-            "selectedMethod": "선택한 방식",
-            "changeMethod": "변경",
-            "apiKey": {
-                "title": "API 키",
-                "masked": "마스킹됨",
-                "copyVisible": "표시된 값 복사",
-                "regenerate": "재발급"
-            },
-            "endpoint": {
-                "title": "수집 엔드포인트",
-                "description": "주요 로거 포맷을 자동 인식하며 요청당 최대 100개의 로그를 받을 수 있습니다.",
-                "apiCaptureDescription": "요청당 최대 50건의 API 요청을 받습니다. 헤더는 X-API-Key를 사용합니다."
-            },
-            "test": {
-                "title": "먼저 연결 테스트",
-                "description": "운영 로그 설정을 바꾸기 전에 작은 테스트 로그 하나를 보내보세요. 로그가 도착하면 상태가 갱신됩니다.",
-                "browserButton": "브라우저에서 테스트 전송",
-                "troubleshooting": "문제 해결",
-                "troubleshootingDesc": "리버스 프록시를 거친다면 Authorization 헤더가 백엔드로 전달되는지 확인하세요."
-            },
-            "setup": {
-                "agentTitle": "에이전트 실행",
-                "httpTitle": "Appender 추가",
-                "apiCaptureTitle": "미들웨어 추가",
-                "agentDesc": "로그 디렉터리를 마운트하고 EveryUp Log Agent를 시작합니다.",
-                "httpDesc": "프레임워크를 선택하고 로거에 HTTP 전송 설정을 추가합니다.",
-                "apiCaptureDesc": "프레임워크를 선택하고 미들웨어 코드를 앱에 추가합니다.",
-                "agentHint": "대부분은 Quick Start로 충분합니다. 애플리케이션이 로그를 쓰는 디렉터리로 마운트 경로만 바꿔주세요.",
-                "levelPrefixHint": "일반 텍스트 로그는 각 줄 앞에 [INFO], [WARN], [ERROR] 같은 prefix를 붙이면 레벨을 정확히 분류할 수 있습니다. JSON 로그는 level, severity, logLevel, lvl 필드를 사용할 수 있습니다.",
-                "apiCaptureHint": "Settings 탭 → API 캡처에서 캡처 모드를 먼저 활성화해야 수집이 시작됩니다.",
-                "otherOptions": "다른 배포 옵션",
-                "otherOptionsDesc": "Fluent Bit 설정, Docker sidecar, Docker pipe, systemd 예시입니다."
-            },
-            "modals": {
-                "regenerateTitle": "API 키를 재발급할까요?",
-                "regenerateDesc": "기존 키는 즉시 동작하지 않습니다. 실행 중인 에이전트나 appender 설정도 교체해야 합니다.",
-                "newKeyTitle": "새 API 키가 발급되었습니다",
-                "newKeyDesc": "지금 복사해 두세요. 잠시 후 다시 숨겨집니다.",
-                "done": "확인"
-            },
-            "toast": {
-                "apiKeyRegenerated": "새 API 키가 발급되었습니다.",
-                "regenerateFirst": "먼저 API 키를 재발급한 뒤 브라우저 테스트를 실행하세요.",
-                "testLogSent": "테스트 로그를 전송했습니다."
-            }
-        }
+    "pause": "로그 일시정지",
+    "resume": "로그 재개",
+    "copy": "복사",
+    "details": "상세",
+    "export": "내보내기",
+    "titleRecent": "최근 로그",
+    "searchPlaceholder": "로그 검색...",
+    "pausedMessage": "로그 업데이트가 일시정지되었습니다. 재개를 눌러 다시 시작하세요.",
+    "noResults": "검색 결과가 없습니다.",
+    "noLogs": "표시할 로그가 없습니다.",
+    "loadMore": "더 불러오기",
+    "fetchError": "로그를 불러오지 못했습니다.",
+    "list": {
+      "tabs": {
+        "services": "서비스",
+        "stream": "로그 스트림",
+        "errors": "에러/경고"
+      }
+    },
+    "card": {
+      "noRecent": "최근 수신된 로그가 없습니다"
+    },
+    "view": {
+      "cards": "카드",
+      "table": "테이블",
+      "activity": "활동"
+    },
+    "tabs": {
+      "receiving": "수신 중",
+      "waiting": "최근 로그 없음",
+      "paused": "일시정지"
+    },
+    "kpi": {
+      "services": "로그 서비스",
+      "receiving": "수신 중",
+      "waiting": "최근 로그 없음",
+      "errors": "최근 에러",
+      "warnings": "최근 경고"
+    },
+    "filter": {
+      "all": "전체",
+      "error": "에러",
+      "warn": "경고",
+      "info": "정보",
+      "debug": "디버그",
+      "trace": "트레이스"
+    },
+    "table": {
+      "timestamp": "시간",
+      "level": "레벨",
+      "service": "서비스",
+      "source": "소스",
+      "message": "메시지",
+      "actions": "작업"
+    },
+    "stream": {
+      "search": "메시지 검색...",
+      "allServices": "전체 서비스",
+      "refresh": "새로고침",
+      "reset": "필터 초기화",
+      "showing": "{{count}}건 표시",
+      "empty": "표시할 로그가 없습니다"
+    },
+    "errors": {
+      "emptyTitle": "에러/경고 로그가 없습니다",
+      "emptyDesc": "최근 수집된 에러와 경고가 없습니다"
     }
+  },
+  "apiRequests": {
+    "tabs": {
+      "requests": "API 요청"
+    },
+    "table": {
+      "time": "시간",
+      "method": "메서드",
+      "path": "경로",
+      "status": "상태",
+      "duration": "응답시간",
+      "requestId": "요청 ID"
+    },
+    "filters": {
+      "search": "경로, 바디 검색...",
+      "allMethods": "전체",
+      "allStatus": "전체",
+      "errorsOnly": "오류만",
+      "timeRange": {
+        "1h": "1시간",
+        "6h": "6시간",
+        "24h": "24시간",
+        "7d": "7일"
+      }
+    },
+    "detail": {
+      "request": "요청",
+      "response": "응답",
+      "rawJson": "원본 JSON",
+      "headers": "헤더",
+      "body": "바디",
+      "truncated": "일부만 표시 중: 전체 {{total}}바이트 중 {{shown}}바이트",
+      "noBody": "바디 없음",
+      "copy": "복사",
+      "copied": "복사됨"
+    },
+    "empty": {
+      "title": "캡처된 요청 없음",
+      "description": "아직 캡처된 API 요청이 없습니다. 캡처 설정을 구성해 시작하세요.",
+      "configureCapture": "캡처 설정"
+    },
+    "settings": {
+      "title": "API 요청 캡처",
+      "subtitle": "이 서비스의 요청/응답 캡처 방식을 설정합니다.",
+      "mode": {
+        "label": "캡처 모드",
+        "disabled": "비활성화",
+        "disabledDesc": "요청을 캡처하지 않습니다.",
+        "errorsOnly": "오류만",
+        "errorsOnlyDesc": "5xx 오류 응답만 캡처합니다.",
+        "sampled": "샘플링",
+        "sampledDesc": "모든 요청 중 일부를 캡처합니다.",
+        "all": "전체",
+        "allDesc": "모든 요청을 캡처합니다."
+      },
+      "sampleRate": {
+        "label": "샘플링 비율 (%)",
+        "description": "성공 응답 캡처 비율 (0-100)"
+      },
+      "bodyMaxBytes": {
+        "label": "최대 바디 크기",
+        "description": "저장할 바디 크기 제한"
+      },
+      "maskedHeaders": {
+        "label": "마스킹 헤더",
+        "description": "값을 ***로 마스킹할 헤더 이름",
+        "placeholder": "헤더 이름 추가..."
+      },
+      "maskedBodyFields": {
+        "label": "마스킹 필드",
+        "description": "JSON 바디에서 마스킹할 필드 이름",
+        "placeholder": "필드 이름 추가..."
+      },
+      "save": "저장",
+      "saving": "저장 중...",
+      "saveSuccess": "캡처 설정이 저장되었습니다.",
+      "saveError": "저장 실패"
+    }
+  },
+  "logServices": {
+    "viewLogs": "로그 보기",
+    "empty": "등록된 로그 서비스가 없습니다",
+    "emptyDesc": "로그 서비스를 추가한 뒤 HTTP Appender 또는 Log Agent 방식으로 수집을 시작하세요.",
+    "add": {
+      "title": "로그 추가",
+      "submit": "로그 추가",
+      "infoTitle": "로그 수집 서비스",
+      "infoDesc": "로그 서비스를 만들면 API 키가 자동으로 발급됩니다. 이후 연동 탭에서 HTTP Appender 또는 Log Agent 방식 중 하나를 선택해 바로 연결할 수 있습니다."
+    },
+    "validation": {
+      "idRequired": "ID는 필수입니다 (최소 2자)",
+      "idFormat": "영문 소문자, 숫자, 하이픈만 사용할 수 있습니다",
+      "nameRequired": "이름은 필수입니다 (최소 2자)"
+    },
+    "toast": {
+      "created": "로그가 추가되었습니다",
+      "createdGuide": "로그가 추가되었습니다. 아래 연동 코드를 복사해 수집을 시작하세요.",
+      "createFailed": "로그 추가에 실패했습니다",
+      "deleted": "로그 서비스가 삭제되었습니다"
+    },
+    "guide": {
+      "recommended": "추천",
+      "universal": "모든 언어",
+      "loggingLibrary": {
+        "title": "앱 코드에서 직접 전송",
+        "desc": "Winston, Logback, Serilog 같은 기존 로깅 라이브러리에 HTTP 전송 설정을 추가합니다. 앱 코드를 수정할 수 있을 때 가장 간단합니다.",
+        "tags": {
+          "autoSend": "자동 전송",
+          "asyncBatch": "비동기 배치",
+          "failSafe": "장애 격리"
+        }
+      },
+      "http": {
+        "title": "HTTP POST 직접 호출",
+        "desc": "언어나 플랫폼과 관계없이 HTTP POST 요청으로 로그를 직접 보냅니다. 스크립트나 커스텀 전송 로직에 적합합니다.",
+        "tags": {
+          "restApi": "REST API",
+          "bearerAuth": "Bearer 인증",
+          "batchSupport": "배치 전송"
+        }
+      }
+    },
+    "identity": {
+      "id": "로그 ID",
+      "apiKey": "API 키",
+      "createdAt": "생성일",
+      "levelFilter": "로그 레벨",
+      "acceptAll": "모든 레벨",
+      "levelFilterHint": "클릭하면 설정 탭으로 이동합니다"
+    },
+    "detail": {
+      "tabs": {
+        "logs": "로그",
+        "integration": "연동",
+        "settings": "설정"
+      }
+    },
+    "delete": {
+      "title": "로그 삭제",
+      "subtitle": "이 작업은 되돌릴 수 없습니다",
+      "confirm": "정말 삭제하시겠습니까?"
+    },
+    "apiKey": {
+      "revealTitle": "새 API 키가 발급되었습니다",
+      "revealDesc": "지금 복사해 주세요. 이 키는 다시 표시되지 않습니다.",
+      "revealConfirm": "확인",
+      "revealOnce": "이 키는 한 번만 표시됩니다. 지금 복사해 주세요."
+    },
+    "settings": {
+      "levelFilterTitle": "로그 레벨 필터",
+      "levelFilterDesc": "이 서비스에 저장할 로그 레벨을 선택합니다. 선택하지 않은 레벨은 수집 시점에 조용히 무시됩니다.",
+      "acceptAll": "모든 레벨 수집",
+      "acceptAllDesc": "error / warn / info 기본 수집, debug와 trace는 선택 수집",
+      "custom": "선택 수집",
+      "customDesc": "선택한 레벨만 수집합니다",
+      "selectAtLeastOne": "최소 하나의 로그 레벨을 선택해야 합니다.",
+      "saved": "로그 레벨 필터가 저장되었습니다.",
+      "summaryAll": "수집 중: error / warn / info / debug / trace",
+      "summaryNone": "선택된 레벨 없음 - 아무 로그도 수집하지 않습니다",
+      "summaryCollecting": "수집 중"
+    },
+    "integration": {
+      "picker": {
+        "eyebrow": "연동",
+        "title": "무엇을 수집할까요?",
+        "subtitle": "수집하려는 데이터 종류에 맞는 방식을 선택하세요.",
+        "recommended": "권장",
+        "goodFor": "이런 경우에 좋아요",
+        "start": "이 방식으로 시작",
+        "notSureTitle": "어떤 방식을 골라야 할지 모르겠나요?",
+        "notSureDesc": "로그 파일이나 stdout을 수집하려면 Log Agent, HTTP 요청/응답 데이터를 캡처하려면 API 요청 캡처를 선택하세요."
+      },
+      "paths": {
+        "agent": {
+          "label": "Log Agent",
+          "tagline": "로그 파일을 읽어 전송하는 Docker 컨테이너",
+          "description": "로그 디렉터리를 마운트하고 컨테이너를 실행합니다. 앱 코드는 수정하지 않아도 됩니다.",
+          "goodFor": ["파일 기반 로그 (.log, stdout)", "Docker / VM / 베어메탈 환경", "앱 코드를 건드리지 않는 경우"]
+        },
+        "apiCapture": {
+          "label": "API 요청 캡처",
+          "tagline": "앱에 미들웨어를 추가해 HTTP 요청/응답 수집",
+          "description": "Spring Boot, FastAPI, Express 등에 미들웨어 코드를 추가합니다. 메서드, 경로, 상태 코드, 응답 시간, 바디를 수집합니다.",
+          "goodFor": ["HTTP API 요청/응답 전체 캡처", "Spring Boot / FastAPI / Express / Go / Django", "인프라 변경 없이 코드만 수정"]
+        },
+        "httpAppender": {
+          "label": "HTTP Appender",
+          "tagline": "앱 로거에 HTTP endpoint 추가",
+          "description": "Winston, Logback, Serilog, Python logging에 HTTP transport를 추가합니다.",
+          "goodFor": ["기존 로깅 라이브러리를 쓰는 서비스", "Node.js / Spring Boot / .NET / Python", "전송 조건을 코드로 제어하는 경우"]
+        }
+      },
+      "status": {
+        "connected": "연결됨",
+        "receivedAgo": "{{seconds}}초 전 수신",
+        "testFailed": "테스트 실패",
+        "waiting": "로그 대기 중"
+      },
+      "selectedMethod": "선택한 방식",
+      "changeMethod": "변경",
+      "apiKey": {
+        "title": "API 키",
+        "masked": "마스킹됨",
+        "copyVisible": "표시된 값 복사",
+        "regenerate": "재발급"
+      },
+      "endpoint": {
+        "title": "수집 엔드포인트",
+        "description": "주요 로거 포맷을 자동 인식하며 요청당 최대 100개의 로그를 받을 수 있습니다.",
+        "apiCaptureDescription": "요청당 최대 50건의 API 요청을 받습니다. X-API-Key 헤더를 사용합니다."
+      },
+      "test": {
+        "title": "먼저 연결 테스트",
+        "description": "운영 로그 설정을 바꾸기 전에 작은 테스트 로그 하나를 보내보세요. 로그가 도착하면 상태가 갱신됩니다.",
+        "browserButton": "브라우저에서 테스트 전송",
+        "troubleshooting": "문제 해결",
+        "troubleshootingDesc": "리버스 프록시를 거친다면 Authorization 헤더가 백엔드로 전달되는지 확인하세요."
+      },
+      "setup": {
+        "agentTitle": "에이전트 실행",
+        "httpTitle": "Appender 추가",
+        "apiCaptureTitle": "미들웨어 추가",
+        "agentDesc": "로그 디렉터리를 마운트하고 EveryUp Log Agent를 시작합니다.",
+        "httpDesc": "프레임워크를 선택하고 로거에 HTTP 전송 설정을 추가합니다.",
+        "apiCaptureDesc": "프레임워크를 선택하고 미들웨어 코드를 앱에 추가합니다.",
+        "agentHint": "대부분은 Quick Start로 충분합니다. 앱이 로그를 쓰는 디렉터리 경로만 바꿔주세요.",
+        "levelPrefixHint": "일반 텍스트 로그는 줄 앞에 [INFO], [WARN], [ERROR] 같은 prefix를 붙이면 레벨을 정확히 분류할 수 있습니다. JSON 로그는 level, severity, logLevel, lvl 필드를 사용할 수 있습니다.",
+        "apiCaptureHint": "설정 탭의 API 캡처에서 캡처 모드를 먼저 활성화해야 수집이 시작됩니다.",
+        "otherOptions": "다른 배포 옵션",
+        "otherOptionsDesc": "Fluent Bit 설정, Docker sidecar, Docker pipe, systemd 예시입니다."
+      },
+      "modals": {
+        "regenerateTitle": "API 키를 재발급할까요?",
+        "regenerateDesc": "기존 키는 즉시 동작하지 않습니다. 실행 중인 에이전트나 appender 설정을 교체해야 합니다.",
+        "newKeyTitle": "새 API 키가 발급되었습니다",
+        "newKeyDesc": "지금 복사하세요. 잠시 후 다시 숨겨집니다.",
+        "done": "확인"
+      },
+      "toast": {
+        "apiKeyRegenerated": "새 API 키가 발급되었습니다.",
+        "regenerateFirst": "먼저 API 키를 재발급한 뒤 브라우저 테스트를 실행하세요.",
+        "testLogSent": "테스트 로그를 전송했습니다."
+      }
+    }
+  }
 }

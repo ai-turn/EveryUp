@@ -56,7 +56,7 @@ export function FailureHistory({ serviceId, refreshKey }: FailureHistoryProps) {
         </div>
         <div>
           <h2 className="text-slate-900 dark:text-white text-xl font-bold tracking-tight">
-            {t('최근 장애 이력')}
+            {t('최근 장애 기록')}
           </h2>
           <p className="text-slate-400 dark:text-text-chart-dim text-sm">
             {t('최근 실패한 체크 상세 내역')}
@@ -72,7 +72,7 @@ export function FailureHistory({ serviceId, refreshKey }: FailureHistoryProps) {
         <div className="flex flex-col items-center justify-center py-8 gap-2">
           <MaterialIcon name="check_circle" className="text-3xl text-green-500" />
           <p className="text-sm text-slate-500 dark:text-text-muted-dark">
-            {t('최근 장애 이력이 없습니다')}
+            {t('최근 장애 기록이 없습니다')}
           </p>
         </div>
       ) : (

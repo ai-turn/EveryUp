@@ -46,10 +46,10 @@ export function systemInfoToResources(info: SystemInfo): Resource[] {
 }
 
 // --- SystemInfo → GaugeData[] ---
-export function systemInfoToGauges(info: SystemInfo): GaugeData[] {
-  return [
+export function systemInfoToGauges(info: SystemInfo, history?: SystemMetricsHistory): GaugeData[] {
+  const gauges: GaugeData[] = [
     {
-      label: 'CPU Load',
+      label: 'CPU',
       percentage: info.cpu.usage,
       color: '#137fec',
       subtitle: `${info.cpu.cores} Cores Online`,
@@ -57,7 +57,7 @@ export function systemInfoToGauges(info: SystemInfo): GaugeData[] {
       trendType: 'stable',
     },
     {
-      label: 'Memory Usage',
+      label: 'Memory',
       percentage: info.memory.usage,
       color: '#a3e635',
       subtitle: `${info.memory.used} GB / ${info.memory.total} GB`,
@@ -65,7 +65,7 @@ export function systemInfoToGauges(info: SystemInfo): GaugeData[] {
       trendType: 'stable',
     },
     {
-      label: 'Disk Space',
+      label: 'Disk',
       percentage: info.disk.usage,
       color: '#f59e0b',
       subtitle: `${info.disk.used} GB / ${info.disk.total} GB`,
@@ -73,6 +73,26 @@ export function systemInfoToGauges(info: SystemInfo): GaugeData[] {
       trendType: 'stable',
     },
   ];
+
+  const latestPoint = history?.points?.at(-1);
+  if (latestPoint) {
+    const netIn = latestPoint.netIn || 0;
+    const netOut = latestPoint.netOut || 0;
+    const total = netIn + netOut;
+
+    gauges.push({
+      label: 'Network',
+      percentage: Math.max(0, Math.min(100, Math.round(total * 4))),
+      color: '#10b981',
+      subtitle: `In ${netIn.toFixed(1)} MB/s · Out ${netOut.toFixed(1)} MB/s`,
+      trend: `${total.toFixed(1)} MB/s`,
+      trendType: 'stable',
+      displayValue: total.toFixed(1),
+      displayUnit: 'MB/s',
+    });
+  }
+
+  return gauges;
 }
 
 // --- SystemMetricsHistory → ChartData[] ---
@@ -93,9 +113,12 @@ export function historyToCharts(history: SystemMetricsHistory): ChartData[] {
     memCached: parseFloat((p.memCached || 0).toFixed(1)),
     diskRead: parseFloat(p.diskRead.toFixed(2)),
     diskWrite: parseFloat(p.diskWrite.toFixed(2)),
+    netIn: parseFloat((p.netIn || 0).toFixed(2)),
+    netOut: parseFloat((p.netOut || 0).toFixed(2)),
   }));
 
   const diskMax = Math.max(...points.map((p) => Math.max(p.diskRead, p.diskWrite)), 1);
+  const networkMax = Math.max(...points.map((p) => Math.max(p.netIn || 0, p.netOut || 0)), 1);
 
   return [
     {
@@ -110,8 +133,8 @@ export function historyToCharts(history: SystemMetricsHistory): ChartData[] {
       unit: 'GB',
       data,
       series: [
-        { key: 'memUsed', label: 'Used', color: '#137fec' },
-        { key: 'memCached', label: 'Cached', color: '#a855f7' },
+        { key: 'memUsed',   label: 'Used',   color: '#3b76c9' },
+        { key: 'memCached', label: 'Cached', color: '#10b981' },
       ],
     },
     {
@@ -122,6 +145,16 @@ export function historyToCharts(history: SystemMetricsHistory): ChartData[] {
       series: [
         { key: 'diskRead', label: 'Read', color: '#a3e635' },
         { key: 'diskWrite', label: 'Write', color: '#f97316' },
+      ],
+    },
+    {
+      title: 'Network Traffic',
+      unit: 'MB/s',
+      yMax: parseFloat((networkMax * 1.2).toFixed(2)),
+      data,
+      series: [
+        { key: 'netIn', label: 'In', color: '#10b981' },
+        { key: 'netOut', label: 'Out', color: '#06b6d4' },
       ],
     },
   ];

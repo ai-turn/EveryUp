@@ -14,8 +14,21 @@ export function useMonitoringGauges(hostId: string) {
     mockGauges,
     async () => {
       const info = await api.getSystemInfo(hostId);
-      return systemInfoToGauges(info);
+      try {
+        const history = await api.getSystemMetricsHistory(hostId, '6h');
+        return systemInfoToGauges(info, history);
+      } catch {
+        return systemInfoToGauges(info);
+      }
     },
+    [hostId]
+  );
+}
+
+export function useSystemInfo(hostId: string) {
+  return useDataFetch(
+    null,
+    async () => api.getSystemInfo(hostId),
     [hostId]
   );
 }
@@ -35,7 +48,7 @@ export function useMonitoringProcesses(hostId: string) {
   return useDataFetch(
     mockProcesses,
     async () => {
-      const procs = await api.getSystemProcesses(hostId, 10, 'cpu');
+      const procs = await api.getSystemProcesses(hostId, 20, 'cpu');
       return systemProcessesToProcesses(procs);
     },
     [hostId]
@@ -44,8 +57,12 @@ export function useMonitoringProcesses(hostId: string) {
 
 export function useMonitoringResources() {
   return useDataFetch(mockResources, async () => {
-    const hosts = await api.getHosts();
-    return hostsToResources(hosts);
+    try {
+      return await api.getHostSummaries();
+    } catch {
+      const hosts = await api.getHosts();
+      return hostsToResources(hosts);
+    }
   });
 }
 

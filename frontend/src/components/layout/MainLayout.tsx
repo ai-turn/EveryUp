@@ -1,15 +1,12 @@
 import { Outlet } from 'react-router-dom';
-import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { DemoBanner } from './DemoBanner';
 import { BottomNavMobile } from './BottomNav.mobile';
-import { useSidebar } from '../../contexts/SidebarContext';
 import { SidePanel } from './SidePanel';
 import { useSidePanel } from '../../contexts/SidePanelContext';
 
 export function MainLayout() {
-  const { isCollapsed, toggleSidebar } = useSidebar();
   const { isOpen: isPanelOpen } = useSidePanel();
 
   return (
@@ -22,37 +19,17 @@ export function MainLayout() {
         Skip to main content
       </a>
 
-      {/* 0. Demo Banner (only in demo mode) */}
       <DemoBanner />
 
-      {/* 1. Header (Full Width) */}
+      {/* Header (with horizontal nav, replaces left Sidebar) */}
       <Header />
 
-      {/* 2. Middle Area (Sidebar + Content + SidePanel) */}
+      {/* Content area */}
       <div className="flex flex-1 overflow-hidden relative">
-        {/* Sidebar: lg+ 전용 */}
-        <div className="hidden lg:flex">
-          <Sidebar />
-        </div>
-
         <main id="main-content" className="flex-1 flex flex-col overflow-hidden relative min-w-0 bg-white dark:bg-bg-main-dark transition-all duration-500 ease-in-out">
-          {/* Toolbar Area: lg+ 전용 (모바일은 BottomNav로 네비게이션) */}
-          <div className="hidden lg:flex h-12 border-b border-slate-100 dark:border-ui-border-dark items-center px-2 shrink-0 gap-4">
-            <button
-              onClick={toggleSidebar}
-              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark transition-colors"
-              aria-label={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-              title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-            >
-              <svg width="20" height="20" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path fillRule="evenodd" clipRule="evenodd" d="M6.245 2.5H14.5V12.5C14.5 13.0523 14.0523 13.5 13.5 13.5H6.245V2.5ZM4.995 2.5H1.5V12.5C1.5 13.0523 1.94772 13.5 2.5 13.5H4.995V2.5ZM0 1H1.5H14.5H16V2.5V12.5C16 13.8807 14.8807 15 13.5 15H2.5C1.11929 15 0 13.8807 0 12.5V2.5V1Z" fill="currentColor" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto scroll-smooth">
+          <div className="flex-1 overflow-y-auto scroll-smooth [scrollbar-gutter:stable]">
             <div className="flex flex-col min-h-full pb-safe-bottom lg:pb-0">
-              <div className="p-4 sm:p-6 md:p-8 space-y-8 flex-1">
+              <div className="p-4 sm:p-6 md:p-8 space-y-8 flex-1 w-full max-w-360 mx-auto">
                 <Outlet />
               </div>
               <Footer />
@@ -60,7 +37,7 @@ export function MainLayout() {
           </div>
         </main>
 
-        {/* Desktop Panel Space (Phantom for Push Effect) */}
+        {/* SidePanel space (legacy — will be replaced by full pages in later phase) */}
         <div
           className={`hidden lg:block transition-all duration-500 ease-in-out flex-shrink-0 ${isPanelOpen ? 'lg:w-[500px] xl:w-[600px]' : 'w-0'
             }`}

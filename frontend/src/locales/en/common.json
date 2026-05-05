@@ -17,6 +17,7 @@
         "live": "Live",
         "copyToClipboard": "Copy to clipboard",
         "pause": "Pause",
+        "paused": "Paused",
         "resume": "Resume",
         "healthy": "Healthy",
         "degraded": "Degraded",

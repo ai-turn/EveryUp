@@ -26,6 +26,8 @@ export interface Service {
   createdAt?: string;
   // log-type services only. undefined/[] = accept all levels.
   logLevelFilter?: LogLevel[];
+  // computed from recent metrics — oldest→newest
+  latencyHistory?: number[];
 }
 
 export type LogLevel = 'error' | 'warn' | 'info' | 'debug' | 'trace';
@@ -47,6 +49,29 @@ export interface CreateServiceData {
   scheduleType?: 'interval' | 'cron';
   cronExpression?: string;
   logLevelFilter?: LogLevel[];
+}
+
+export interface CheckEntry {
+  id: number;
+  serviceId: string;
+  serviceName: string;
+  serviceType: string;
+  status: 'success' | 'failure';
+  responseTime: number;
+  statusCode?: number;
+  errorMessage?: string;
+  checkedAt: string;
+}
+
+export interface HealthCheckKpiSummary {
+  total: number;
+  healthy: number;
+  unhealthy: number;
+  unknown: number;
+  avgUptime: number;
+  avgLatency: number;
+  activeIncidents: number;
+  latencyHistory: number[]; // 24 hourly avg ms, oldest→newest
 }
 
 export interface Metric {
@@ -79,6 +104,25 @@ export interface MetricsParams {
 export interface UptimeData {
   percentage: number;
   days: UptimeDay[];
+}
+
+export interface FailureWithService {
+  id: number;
+  serviceId: string;
+  serviceName: string;
+  status: 'failure';
+  responseTime: number;
+  statusCode?: number;
+  errorMessage?: string;
+  checkedAt: string;
+}
+
+export interface ServiceUptimeSummary {
+  serviceId: string;
+  serviceName: string;
+  uptime: number; // 0–100
+  totalChecks: number;
+  failures: number;
 }
 
 export interface UptimeDay {
@@ -243,6 +287,30 @@ export function createServicesApi(request: RequestFn) {
     getServiceLogs: async (serviceId: string, params?: LogsParams) => {
       const query = params ? `?${new URLSearchParams(params as Record<string, string>)}` : '';
       const data = await request<LogEntry[]>(`/services/${serviceId}/logs${query}`);
+      return data || [];
+    },
+
+    // KPI summary
+    getHealthCheckKpiSummary: () =>
+      request<HealthCheckKpiSummary>('/metrics/kpi'),
+
+    // Recent checks (success + failure) across all non-log services
+    getRecentChecks: async (limit?: number) => {
+      const query = limit ? `?limit=${limit}` : '';
+      const data = await request<CheckEntry[]>(`/metrics/recent${query}`);
+      return data || [];
+    },
+
+    // Global metrics aggregation
+    getAllFailures: async (limit?: number) => {
+      const query = limit ? `?limit=${limit}` : '';
+      const data = await request<FailureWithService[]>(`/metrics/failures${query}`);
+      return data || [];
+    },
+
+    getUptimeSummaryAll: async (days?: number) => {
+      const query = days ? `?days=${days}` : '';
+      const data = await request<ServiceUptimeSummary[]>(`/metrics/uptime-summary${query}`);
       return data || [];
     },
 

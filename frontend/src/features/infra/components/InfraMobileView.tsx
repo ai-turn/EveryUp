@@ -4,7 +4,10 @@ import { InfraCard } from './InfraCard';
 import type { Resource } from '../../../types/infra';
 
 interface InfraMobileViewProps {
+  resources: Resource[];
   filteredResources: Resource[];
+  incidentCount: number;
+  remoteCount: number;
   loading: boolean;
   error: Error | string | null;
   searchQuery: string;
@@ -20,7 +23,10 @@ interface InfraMobileViewProps {
 }
 
 export function InfraMobileView({
+  resources,
   filteredResources,
+  incidentCount,
+  remoteCount,
   loading,
   error,
   searchQuery,
@@ -35,6 +41,7 @@ export function InfraMobileView({
   onRetry,
 }: InfraMobileViewProps) {
   const { t } = useTranslation(['infra', 'common']);
+  const healthyCount = resources.filter(r => r.status === 'healthy').length;
 
   return (
     <div className="space-y-4">
@@ -44,16 +51,21 @@ export function InfraMobileView({
           <h1 className="text-xl font-black text-slate-900 dark:text-white">{t('infra.title')}</h1>
           <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{t('infra.subtitle')}</p>
         </div>
+        <button
+          onClick={onAddResource}
+          className="flex items-center gap-1.5 px-3 py-2 bg-primary/10 hover:bg-primary/20 rounded-lg text-xs font-bold text-primary transition-all cursor-pointer active:scale-95 shrink-0"
+        >
+          <MaterialIcon name="add" className="text-base" />
+          {t('infra.addResource')}
+        </button>
       </div>
 
-      {/* Add Button */}
-      <button
-        onClick={onAddResource}
-        className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-ui-border-dark text-primary font-bold text-sm active:scale-95 transition-transform"
-      >
-        <MaterialIcon name="add_circle" className="text-lg" />
-        {t('infra.addResource')}
-      </button>
+      <div className="flex gap-3 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
+        <MobileKpi label={t('infra.kpi.total')} value={resources.length} />
+        <MobileKpi label={t('infra.kpi.healthy')} value={healthyCount} tone="text-emerald-600 dark:text-emerald-400" />
+        <MobileKpi label={t('infra.kpi.incidents')} value={incidentCount} tone={incidentCount > 0 ? 'text-amber-600 dark:text-amber-400' : undefined} />
+        <MobileKpi label={t('infra.kpi.remote')} value={remoteCount} />
+      </div>
 
       {/* Search */}
       <div className="relative">
@@ -89,6 +101,8 @@ export function InfraMobileView({
           <option value="warning">{t('common.warning')}</option>
           <option value="critical">{t('common.critical')}</option>
           <option value="error">{t('common.error')}</option>
+          <option value="paused">{t('common.paused')}</option>
+          <option value="unknown">{t('common.unknown')}</option>
         </select>
       </div>
 
@@ -96,9 +110,9 @@ export function InfraMobileView({
       {error && (
         <div className="flex items-center gap-3 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
           <MaterialIcon name="error_outline" className="text-lg shrink-0" />
-          <p className="text-xs font-medium flex-1">{t('common.loadError', { defaultValue: 'Failed to load hosts.' })}</p>
+          <p className="text-xs font-medium flex-1">{t('common.loadError')}</p>
           <button onClick={onRetry} className="text-xs font-bold hover:underline cursor-pointer shrink-0">
-            {t('common.retry', { defaultValue: 'Retry' })}
+            {t('common.retry')}
           </button>
         </div>
       )}
@@ -123,15 +137,24 @@ export function InfraMobileView({
       ) : (
         <div className="py-12 text-center">
           <MaterialIcon name="search_off" className="text-4xl text-slate-300 dark:text-text-dim-dark" />
-          <p className="text-sm text-slate-400 dark:text-text-muted-dark mt-2">{t('infra.noResults', { defaultValue: 'No hosts match your filters' })}</p>
+          <p className="text-sm text-slate-400 dark:text-text-muted-dark mt-2">{t('infra.noResults')}</p>
           <button
             onClick={onClearFilters}
             className="mt-2 text-xs font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer"
           >
-            {t('common.clearFilters', { defaultValue: 'Clear Filters' })} →
+            {t('common.clearFilters')}
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function MobileKpi({ label, value, tone = 'text-slate-900 dark:text-white' }: { label: string; value: number; tone?: string }) {
+  return (
+    <div className="shrink-0 flex-1 min-w-24 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-3">
+      <p className="text-xs font-medium text-slate-500 dark:text-text-muted-dark truncate">{label}</p>
+      <p className={`text-xl font-bold ${tone}`}>{value}</p>
     </div>
   );
 }

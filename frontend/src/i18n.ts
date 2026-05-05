@@ -9,6 +9,7 @@ import koDashboard from './locales/ko/dashboard.json';
 import koLogs from './locales/ko/logs.json';
 import koInfra from './locales/ko/infra.json';
 import koAlerts from './locales/ko/alerts.json';
+import koHealthcheck from './locales/ko/healthcheck.json';
 import koSettings from './locales/ko/settings.json';
 import koErrors from './locales/ko/errors.json';
 
@@ -19,6 +20,7 @@ import enDashboard from './locales/en/dashboard.json';
 import enLogs from './locales/en/logs.json';
 import enInfra from './locales/en/infra.json';
 import enAlerts from './locales/en/alerts.json';
+import enHealthcheck from './locales/en/healthcheck.json';
 import enSettings from './locales/en/settings.json';
 import enErrors from './locales/en/errors.json';
 
@@ -34,6 +36,7 @@ i18n
         logs: koLogs,
         infra: koInfra,
         alerts: koAlerts,
+        healthcheck: koHealthcheck,
         settings: koSettings,
         errors: koErrors,
       },
@@ -44,6 +47,7 @@ i18n
         logs: enLogs,
         infra: enInfra,
         alerts: enAlerts,
+        healthcheck: enHealthcheck,
         settings: enSettings,
         errors: enErrors,
       },

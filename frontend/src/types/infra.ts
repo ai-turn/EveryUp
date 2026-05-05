@@ -4,12 +4,31 @@ export interface Resource {
   id: string;
   name: string;
   type: 'server' | 'database' | 'container';
-  status: 'healthy' | 'warning' | 'critical' | 'error';
+  status: 'healthy' | 'warning' | 'critical' | 'error' | 'paused' | 'unknown';
+  severity?: 'none' | 'warning' | 'critical';
+  statusReason?: string;
   cluster: string;
   ip: string;
+  connectionType?: 'local' | 'remote';
   isActive?: boolean;
   isRemote?: boolean;
   sshPort?: number;
+  lastSeenAt?: string;
+  lastCollectedAt?: string;
+  incidentSince?: string;
+  lastError?: string;
+  cpuUsage?: number;
+  memoryUsage?: number;
+  diskUsage?: number;
+  ssh?: {
+    port?: number;
+    user?: string;
+    connectionStatus: 'connected' | 'failed' | 'unknown';
+    latencyMs?: number;
+    lastTestedAt?: string;
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface GaugeData {
@@ -19,6 +38,8 @@ export interface GaugeData {
   subtitle: string;
   trend: string;
   trendType: 'up' | 'down' | 'stable';
+  displayValue?: string;
+  displayUnit?: string;
 }
 
 export interface ChartSeries {

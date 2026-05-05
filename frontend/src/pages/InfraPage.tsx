@@ -1,17 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { InfraForm } from '../features/infra';
 import { InfraDesktopView } from '../features/infra/components/InfraDesktopView';
 import { InfraMobileView } from '../features/infra/components/InfraMobileView';
 import { useMonitoringResources } from '../hooks/useInfra';
-import { useSidePanel } from '../contexts/SidePanelContext';
 import { useIsMobile } from '../hooks/useMediaQuery';
 
 export function InfraPage() {
   const navigate = useNavigate();
-  const { t } = useTranslation(['infra', 'common']);
-  const { openPanel } = useSidePanel();
   const isMobile = useIsMobile();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,10 +15,7 @@ export function InfraPage() {
   const { data: resources, loading, error, refetch } = useMonitoringResources();
 
   const handleAddResource = () => {
-    openPanel(
-      t('infra.addResource'),
-      <InfraForm onSuccess={refetch} />
-    );
+    navigate('/infra/new');
   };
 
   const filteredResources = (resources || []).filter(r => {
@@ -36,8 +28,16 @@ export function InfraPage() {
     return matchesSearch && matchesType && matchesStatus;
   });
 
+  const incidentCount = (resources || []).filter(r =>
+    ['warning', 'critical', 'error', 'unknown'].includes(r.status)
+  ).length;
+  const remoteCount = (resources || []).filter(r => r.isRemote).length;
+
   const sharedProps = {
+    resources: resources || [],
     filteredResources,
+    incidentCount,
+    remoteCount,
     loading,
     error,
     searchQuery,

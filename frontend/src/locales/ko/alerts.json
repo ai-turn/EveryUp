@@ -33,8 +33,16 @@
         "rulesTitle": "알림 규칙",
         "rulesDesc": "활성 채널에 이벤트를 매핑합니다.",
         "addChannel": "채널 추가",
+        "kpi": {
+            "sent7d": "발송 (7일)",
+            "failed7d": "실패 (7일)",
+            "successRate": "성공률",
+            "activeRules": "활성 규칙",
+            "activeChannels": "활성 채널"
+        },
         "health": {
             "lastSent": "마지막 발송",
+            "lastSentAgo": "{{ago}} 발송됨",
             "never": "발송 이력 없음",
             "successRate7d": "7일 성공률",
             "noActivity": "최근 7일 활동 없음",

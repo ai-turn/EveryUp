@@ -1,4 +1,5 @@
 export { HealthCheckForm } from './components/HealthCheckForm';
+export { HealthCheckKpiHero } from './components/HealthCheckKpiHero';
 export { HealthCheckIdentity } from './components/HealthCheckIdentity';
 export { RealtimeMetrics } from './components/RealtimeMetrics';
 export { ResponseTimeChart } from './components/ResponseTimeChart';

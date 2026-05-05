@@ -1,31 +1,62 @@
-import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { useTranslate } from '@tolgee/react';
-import { useSidePanel } from '../contexts/SidePanelContext';
+import { useState, useEffect, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useIsMobile } from '../hooks/useMediaQuery';
-import { HealthCheckForm } from '../features/healthcheck/components/HealthCheckForm';
+import { useDashboardServices } from '../hooks/useDashboard';
+import { api, type CheckEntry, type ServiceUptimeSummary } from '../services/api';
 import { HealthCheckDesktopView } from '../features/healthcheck/components/HealthCheckDesktopView';
 import { HealthCheckMobileView } from '../features/healthcheck/components/HealthCheckMobileView';
 
+export type HealthCheckTab = 'services' | 'history' | 'uptime';
+
 export function HealthCheckPage() {
-  const { t } = useTranslate();
-  const { openPanel } = useSidePanel();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const location = useLocation();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [activeTab, setActiveTab] = useState<HealthCheckTab>('services');
+  const [refreshKey] = useState(0);
 
-  const handleServiceAdded = () => {
-    setRefreshKey(prev => prev + 1);
-  };
+  const { data: services, loading, error } = useDashboardServices();
+
+  const [recentChecks, setRecentChecks] = useState<CheckEntry[]>([]);
+  const [failuresLoading, setFailuresLoading] = useState(false);
+
+  const [uptimeSummary, setUptimeSummary] = useState<ServiceUptimeSummary[]>([]);
+  const [uptimeLoading, setUptimeLoading] = useState(false);
+
+  const loadFailures = useCallback(async () => {
+    setFailuresLoading(true);
+    try {
+      const data = await api.getRecentChecks(300);
+      setRecentChecks(data);
+    } catch {
+      // non-critical
+    } finally {
+      setFailuresLoading(false);
+    }
+  }, []);
+
+  const loadUptimeSummary = useCallback(async () => {
+    setUptimeLoading(true);
+    try {
+      const data = await api.getUptimeSummaryAll(90);
+      setUptimeSummary(data);
+    } catch {
+      // non-critical
+    } finally {
+      setUptimeLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'history') loadFailures();
+    if (activeTab === 'uptime') loadUptimeSummary();
+  }, [activeTab, loadFailures, loadUptimeSummary]);
 
   const handleAddService = () => {
-    openPanel(
-      t('헬스체크 추가'),
-      <HealthCheckForm onSuccess={handleServiceAdded} />
-    );
+    navigate('/healthcheck/new');
   };
 
   useEffect(() => {
@@ -33,14 +64,24 @@ export function HealthCheckPage() {
       handleAddService();
       window.history.replaceState({}, document.title);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
   const sharedProps = {
+    services: services || [],
+    loading,
+    error,
     searchQuery,
     statusFilter,
+    activeTab,
     refreshKey,
+    failures: recentChecks,
+    failuresLoading,
+    uptimeSummary,
+    uptimeLoading,
     onSearchChange: setSearchQuery,
     onStatusFilterChange: setStatusFilter,
+    onTabChange: setActiveTab,
     onAddService: handleAddService,
   } as const;
 

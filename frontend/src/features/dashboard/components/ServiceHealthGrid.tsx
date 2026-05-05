@@ -5,12 +5,19 @@ import { MaterialIcon, EmptyState } from '../../../components/common';
 import { ServiceCard } from './ServiceCard';
 import { useDashboardServices } from '../../../hooks/useDashboard';
 import { ServiceCardSkeleton } from '../../../components/skeleton';
+import type { Service } from '../../../types/service';
+
+type HealthCheckTab = 'all' | 'healthy' | 'attention' | 'paused';
 
 interface ServiceHealthGridProps {
   hideHeader?: boolean;
   bare?: boolean;
+  servicesOverride?: Service[];
+  loadingOverride?: boolean;
+  errorOverride?: Error | null;
   searchQuery?: string;
   statusFilter?: string;
+  activeTab?: HealthCheckTab;
   refreshKey?: number;
   navigateTo?: (serviceId: string) => string;
   maxItems?: number;
@@ -20,8 +27,12 @@ interface ServiceHealthGridProps {
 export function ServiceHealthGrid({
   hideHeader = false,
   bare = false,
+  servicesOverride,
+  loadingOverride,
+  errorOverride,
   searchQuery = '',
   statusFilter = '',
+  activeTab = 'all',
   refreshKey = 0,
   navigateTo = (id) => `/healthcheck/${id}`,
   maxItems,
@@ -29,7 +40,11 @@ export function ServiceHealthGrid({
 }: ServiceHealthGridProps) {
   const navigate = useNavigate();
   const { t } = useTranslation(['dashboard', 'common']);
-  const { data: services, loading, error, refetch } = useDashboardServices();
+  const dashboardServices = useDashboardServices();
+  const services = servicesOverride ?? dashboardServices.data;
+  const loading = loadingOverride ?? dashboardServices.loading;
+  const error = errorOverride ?? dashboardServices.error;
+  const refetch = dashboardServices.refetch;
 
   useEffect(() => {
     if (refreshKey > 0) {
@@ -41,10 +56,17 @@ export function ServiceHealthGrid({
   const deferredStatus = useDeferredValue(statusFilter);
 
   const filteredServices = (services || []).filter(s => {
+    const matchesTab =
+      activeTab === 'all' ||
+      (activeTab === 'healthy' && s.isActive !== false && s.status === 'healthy') ||
+      (activeTab === 'attention' && ['degraded', 'warning', 'offline'].includes(s.status)) ||
+      (activeTab === 'paused' && s.isActive === false);
+    const q = deferredSearch.toLowerCase();
     const matchesSearch =
-      s.name.toLowerCase().includes(deferredSearch.toLowerCase());
+      s.name.toLowerCase().includes(q) ||
+      (s.url != null && s.url.toLowerCase().includes(q));
     const matchesStatus = !deferredStatus || s.status === deferredStatus;
-    return matchesSearch && matchesStatus;
+    return matchesTab && matchesSearch && matchesStatus;
   });
 
   const displayServices = maxItems ? filteredServices.slice(0, maxItems) : filteredServices;

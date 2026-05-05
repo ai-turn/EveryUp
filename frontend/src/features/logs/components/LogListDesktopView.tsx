@@ -1,190 +1,367 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MaterialIcon, PageHeader, EmptyState } from '../../../components/common';
+import { MaterialIcon, PageHeader, EmptyState, FilterBar, KPIChip } from '../../../components/common';
 import { LogServiceCard } from './LogServiceCard';
-import type { Service } from '../../../services/api';
+import { LogStreamTab } from './LogStreamTab';
+import { LogErrorsTab } from './LogErrorsTab';
+import type { LogEntry, LogLevel, Service } from '../../../services/api';
+import type { LogListTab } from '../../../pages/LogListPage';
+
+type ServiceViewMode = 'cards' | 'table';
+
+const levelOrder: LogLevel[] = ['error', 'warn', 'info', 'debug', 'trace'];
+
+function formatTimeAgo(dateStr?: string): string {
+  if (!dateStr) return '-';
+  const diff = Math.max(0, Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000));
+  if (diff < 60) return `${diff}s`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  return `${Math.floor(diff / 86400)}d`;
+}
+
+function MiniBars({ logs }: { logs: LogEntry[] }) {
+  const buckets = Array.from({ length: 12 }, () => 0);
+  const now = Date.now();
+  logs.forEach((log) => {
+    const ageMinutes = Math.floor((now - new Date(log.createdAt).getTime()) / 60000);
+    const index = 11 - Math.min(11, Math.max(0, Math.floor(ageMinutes / 10)));
+    buckets[index] += log.level === 'error' ? 3 : log.level === 'warn' ? 2 : 1;
+  });
+  const max = Math.max(...buckets, 1);
+
+  return (
+    <div className="flex h-7 items-end gap-0.5">
+      {buckets.map((value, index) => (
+        <span
+          key={index}
+          className="w-1.5 rounded-t bg-primary/50 dark:bg-primary/60"
+          style={{ height: `${Math.max(3, (value / max) * 26)}px` }}
+        />
+      ))}
+    </div>
+  );
+}
 
 interface LogListDesktopViewProps {
   services: Service[];
   filteredServices: Service[];
+  latestLogs: Record<string, LogEntry | null>;
+  serviceLogs: Record<string, LogEntry[]>;
   loading: boolean;
   error: string | null;
+  activeTab: LogListTab;
   searchQuery: string;
+  streamLogs: LogEntry[];
+  streamLoading: boolean;
+  errorLogs: LogEntry[];
+  errorsLoading: boolean;
+  onTabChange: (tab: LogListTab) => void;
   onSearchChange: (query: string) => void;
   onAddService: () => void;
   onServiceClick: (id: string) => void;
+  onRefreshStream: () => void;
+  onRefreshErrors: () => void;
 }
 
 export function LogListDesktopView({
   services,
   filteredServices,
+  latestLogs,
+  serviceLogs,
   loading,
   error,
+  activeTab,
   searchQuery,
+  streamLogs,
+  streamLoading,
+  errorLogs,
+  errorsLoading,
+  onTabChange,
   onSearchChange,
   onAddService,
   onServiceClick,
+  onRefreshStream,
+  onRefreshErrors,
 }: LogListDesktopViewProps) {
   const { t } = useTranslation(['logs', 'common']);
+  const [viewMode, setViewMode] = useState<ServiceViewMode>('cards');
+  const allRecentLogs = Object.values(serviceLogs).flat();
+  const receivingCount = services.filter((s) => !!latestLogs[s.id]).length;
+  const waitingCount = services.length - receivingCount;
+  const errorCount = allRecentLogs.filter((log) => log.level === 'error').length;
+  const warnCount = allRecentLogs.filter((log) => log.level === 'warn').length;
+  const errorServiceCount = services.filter((s) => (serviceLogs[s.id] ?? []).some((l) => l.level === 'error')).length;
+  const warnServiceCount = services.filter((s) => (serviceLogs[s.id] ?? []).some((l) => l.level === 'warn')).length;
+
+  const tabs: Array<{ key: LogListTab; label: string; icon: string; count?: number }> = [
+    { key: 'services', label: t('logs.list.tabs.services', { defaultValue: '서비스' }), icon: 'article' },
+    { key: 'stream', label: t('logs.list.tabs.stream', { defaultValue: '로그 스트림' }), icon: 'receipt_long' },
+    { key: 'errors', label: t('logs.list.tabs.errors', { defaultValue: '에러/경고' }), icon: 'error', count: errorCount + warnCount },
+  ];
 
   return (
     <>
-      <PageHeader
-        title={t('logs.title')}
-        subtitle={t('logs.subtitle')}
-        features={[
-          { icon: 'bug_report', label: t('logs.features.errorTracking', { defaultValue: 'Error Tracking' }) },
-          { icon: 'notifications_active', label: t('logs.features.alertTrigger', { defaultValue: 'Alert Trigger' }) },
-          { icon: 'integration_instructions', label: t('logs.features.loggingLibrary', { defaultValue: 'Logging Library' }) },
-        ]}
-      >
+      <PageHeader title={t('logs.title')} subtitle={t('logs.subtitle')}>
         <button
           onClick={onAddService}
-          className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 rounded-lg text-sm font-bold transition-all text-white shadow-sm hover:shadow-md cursor-pointer active:scale-95"
+          className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 rounded-lg text-sm font-bold transition-all text-primary cursor-pointer active:scale-95"
         >
           <MaterialIcon name="add" className="text-lg" />
-          {t('logServices.add.submit', { defaultValue: 'Add Log Service' })}
+          {t('logServices.add.submit')}
         </button>
       </PageHeader>
 
-      <div className="mb-8">
-        <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10">
-              <MaterialIcon name="menu_book" className="text-lg text-primary" />
-            </div>
-            <div>
-              <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                {t('logs.guide.title', { defaultValue: 'How to Collect Logs' })}
-              </h3>
-              <p className="text-sm text-slate-500 dark:text-text-muted-dark">
-                {t('logs.guide.subtitle', { defaultValue: 'Start collecting logs with your existing logger configuration or log files. No separate SDK is required.' })}
-              </p>
-            </div>
-          </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-5">
+        <KPIChip label={t('logs.kpi.services')} value={services.length} tone="primary" icon="article" />
+        <KPIChip label={t('logs.kpi.receiving')} value={receivingCount} tone="emerald" icon="cloud_done" />
+        <KPIChip label={t('logs.kpi.waiting')} value={waitingCount} tone={waitingCount > 0 ? 'amber' : 'slate'} icon="schedule" />
+        <KPIChip label={t('logs.kpi.errors')} value={errorCount} tone={errorCount > 0 ? 'red' : 'slate'} icon="error" />
+        <KPIChip label={t('logs.kpi.warnings')} value={warnCount} tone={warnCount > 0 ? 'amber' : 'slate'} icon="warning" />
+      </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              {
-                step: 1,
-                title: t('logs.guide.step1.title', { defaultValue: 'Create a Log Service' }),
-                desc: t('logs.guide.step1.desc', { defaultValue: 'Click "Add Log Service" and create a service name. A dedicated API key is generated automatically.' }),
-              },
-              {
-                step: 2,
-                title: t('logs.guide.step2.title', { defaultValue: 'Choose an Integration Method' }),
-                desc: t('logs.guide.step2.desc', { defaultValue: 'Open the Integration tab and choose the method that fits your environment. Use HTTP Appender when you can edit app code, or Log Agent when you want to collect log files or stdout from servers and containers.' }),
-              },
-              {
-                step: 3,
-                title: t('logs.guide.step3.title', { defaultValue: 'Review Logs and Add Alerts' }),
-                desc: t('logs.guide.step3.desc', { defaultValue: 'Collected logs appear in the log list right away. If needed, add Telegram or Discord alert rules for error and warn logs.' }),
-              },
-            ].map(({ step, title, desc }) => (
-              <div key={step} className="flex gap-3 p-4 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-xl">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white text-sm font-bold shrink-0">
-                  {step}
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{title}</h4>
-                  <p className="text-sm text-slate-500 dark:text-text-muted-dark leading-relaxed">{desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-text-muted-dark bg-slate-100 dark:bg-ui-hover-dark px-2 py-1 rounded-md">
-                <MaterialIcon name="http" className="text-xs" />
-                HTTP Appender
+      <div className="flex items-end border-b border-slate-200 dark:border-ui-border-dark mb-5">
+        <div role="tablist" aria-label={t('logs.title')} className="flex gap-0">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              role="tab"
+              aria-selected={activeTab === tab.key}
+              onClick={() => onTabChange(tab.key)}
+              className={`relative px-4 py-2.5 text-sm font-semibold transition-colors -mb-px border-b-2 whitespace-nowrap ${
+                activeTab === tab.key
+                  ? 'text-slate-900 dark:text-white border-primary'
+                  : 'text-slate-500 dark:text-text-muted-dark border-transparent hover:text-slate-700 dark:hover:text-text-base-dark'
+              }`}
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <MaterialIcon name={tab.icon} className="text-sm" />
+                {tab.label}
+                {typeof tab.count === 'number' && (
+                  <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] ${activeTab === tab.key ? 'bg-primary/10 text-primary' : 'bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark'}`}>
+                    {tab.count}
+                  </span>
+                )}
               </span>
-              {[
-                { name: 'Express', lang: 'Node.js', color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' },
-                { name: 'Spring Boot', lang: 'Java', color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300' },
-                { name: 'ASP.NET', lang: '.NET', color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' },
-                { name: 'FastAPI', lang: 'Python', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' },
-              ].map((fw) => (
-                <span key={fw.name} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${fw.color}`}>
-                  {fw.name} <span className="opacity-60">({fw.lang})</span>
-                </span>
-              ))}
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-text-muted-dark bg-slate-100 dark:bg-ui-hover-dark px-2 py-1 rounded-md">
-                <MaterialIcon name="smart_toy" className="text-xs" />
-                Log Agent
-              </span>
-              {[
-                { name: 'Docker', lang: 'Sidecar', color: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300' },
-                { name: 'systemd', lang: 'VM/EC2', color: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300' },
-                { name: 'Fluent Bit', lang: 'Config', color: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300' },
-              ].map((lib) => (
-                <span key={lib.name} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${lib.color}`}>
-                  {lib.name} <span className="opacity-60">({lib.lang})</span>
-                </span>
-              ))}
-            </div>
-          </div>
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="mb-8">
-        <div className="relative max-w-md">
-          <MaterialIcon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder={t('logs.searchPlaceholder')}
-            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all dark:text-white dark:placeholder-text-muted-dark"
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
+      {activeTab === 'services' && (
+        <>
+          <FilterBar
+            searchValue={searchQuery}
+            onSearchChange={onSearchChange}
+            searchPlaceholder={t('logs.searchPlaceholder')}
           />
-        </div>
-      </div>
 
-      {loading && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-40 rounded-xl bg-slate-100 dark:bg-ui-hover-dark animate-pulse" />
-          ))}
-        </div>
-      )}
+          {services.length > 0 && (
+            <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-3 py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold">
+                  {t('logs.filter.all')} {services.length}
+                </span>
+                <span className="px-3 py-1.5 rounded-full border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs font-bold">
+                  {t('logs.filter.error')} {errorServiceCount}
+                </span>
+                <span className="px-3 py-1.5 rounded-full border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-xs font-bold">
+                  {t('logs.filter.warn')} {warnServiceCount}
+                </span>
+                <span className="px-3 py-1.5 rounded-full border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark text-slate-500 dark:text-text-muted-dark text-xs font-bold">
+                  {t('logs.tabs.waiting')} {waitingCount}
+                </span>
+              </div>
 
-      {!loading && error && (
-        <div className="text-red-500 p-4">
-          {t('common.error')}: {error}
-        </div>
-      )}
+              <div className="inline-flex items-center rounded-lg border border-slate-200 dark:border-ui-border-dark bg-slate-100 dark:bg-bg-surface-dark/50 p-1">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('cards')}
+                  className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${
+                    viewMode === 'cards'
+                      ? 'bg-white dark:bg-ui-hover-dark text-slate-900 dark:text-white shadow-sm'
+                      : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-base-dark'
+                  }`}
+                >
+                  <MaterialIcon name="grid_view" className="text-sm" />
+                  {t('logs.view.cards', { defaultValue: '카드' })}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('table')}
+                  className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${
+                    viewMode === 'table'
+                      ? 'bg-white dark:bg-ui-hover-dark text-slate-900 dark:text-white shadow-sm'
+                      : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-base-dark'
+                  }`}
+                >
+                  <MaterialIcon name="view_list" className="text-sm" />
+                  {t('logs.view.table', { defaultValue: '테이블' })}
+                </button>
+              </div>
+            </div>
+          )}
 
-      {!loading && !error && services.length === 0 && (
-        <EmptyState
-          icon="article"
-          title={t('logServices.empty', { defaultValue: 'No log services yet' })}
-          description={t('logServices.emptyDesc')}
-          action={{
-            label: t('logServices.add.submit', { defaultValue: 'Add Log Service' }),
-            onClick: onAddService,
-          }}
-        />
-      )}
+          {loading && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-64 rounded-xl bg-slate-100 dark:bg-ui-hover-dark animate-pulse" />
+              ))}
+            </div>
+          )}
 
-      {!loading && !error && filteredServices.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredServices.map((service) => (
-            <LogServiceCard
-              key={service.id}
-              service={service}
-              onClick={() => onServiceClick(service.id)}
+          {!loading && error && (
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
+              <MaterialIcon name="error_outline" className="text-xl shrink-0" />
+              <p className="text-sm font-medium">{t('common.error')}: {error}</p>
+            </div>
+          )}
+
+          {!loading && !error && services.length === 0 && (
+            <EmptyState
+              icon="article"
+              title={t('logServices.empty')}
+              description={t('logServices.emptyDesc')}
+              action={{ label: t('logServices.add.submit'), onClick: onAddService }}
             />
-          ))}
-        </div>
+          )}
+
+          {!loading && !error && filteredServices.length > 0 && viewMode === 'cards' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              {filteredServices.map((service) => (
+                <LogServiceCard
+                  key={service.id}
+                  service={service}
+                  recentLogs={serviceLogs[service.id] ?? []}
+                  onClick={() => onServiceClick(service.id)}
+                />
+              ))}
+            </div>
+          )}
+
+          {!loading && !error && filteredServices.length > 0 && viewMode === 'table' && (
+            <LogServiceTable
+              services={filteredServices}
+              serviceLogs={serviceLogs}
+              onServiceClick={onServiceClick}
+            />
+          )}
+
+          {!loading && !error && services.length > 0 && filteredServices.length === 0 && (
+            <div className="py-20 text-center border border-dashed border-slate-200 dark:border-ui-border-dark rounded-2xl bg-slate-50/50 dark:bg-bg-surface-dark/50">
+              <MaterialIcon name="search_off" className="text-5xl text-slate-300 mb-4" />
+              <p className="text-slate-500 dark:text-text-muted-dark font-medium">{t('logs.noResults')}</p>
+            </div>
+          )}
+        </>
       )}
 
-      {!loading && !error && services.length > 0 && filteredServices.length === 0 && (
-        <div className="py-20 text-center">
-          <MaterialIcon name="search_off" className="text-5xl text-slate-300 mb-4" />
-          <p className="text-slate-500 dark:text-text-muted-dark">{t('logs.noResults')}</p>
-        </div>
+      {activeTab === 'stream' && (
+        <LogStreamTab logs={streamLogs} loading={streamLoading} services={services} onRefresh={onRefreshStream} />
+      )}
+
+      {activeTab === 'errors' && (
+        <LogErrorsTab logs={errorLogs} loading={errorsLoading} services={services} onRefresh={onRefreshErrors} />
       )}
     </>
+  );
+}
+
+function LogServiceTable({
+  services,
+  serviceLogs,
+  onServiceClick,
+}: {
+  services: Service[];
+  serviceLogs: Record<string, LogEntry[]>;
+  onServiceClick: (id: string) => void;
+}) {
+  const { t } = useTranslation(['logs', 'common']);
+  return (
+    <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark">
+      <div className="grid grid-cols-[minmax(220px,1.3fr)_112px_120px_minmax(220px,1.4fr)_150px_92px] gap-3 px-4 py-2.5 bg-slate-50/80 dark:bg-ui-hover-dark/40 border-b border-slate-100 dark:border-ui-border-dark text-[11px] font-bold uppercase tracking-wide text-slate-400 dark:text-text-dim-dark">
+        <div>{t('logs.table.service', { defaultValue: '서비스' })}</div>
+        <div>{t('logs.table.timestamp', { defaultValue: '시간' })}</div>
+        <div>{t('logs.table.level', { defaultValue: '레벨' })}</div>
+        <div>{t('logs.table.message', { defaultValue: '메시지' })}</div>
+        <div>{t('logs.view.activity', { defaultValue: '활동' })}</div>
+        <div className="text-right">{t('logs.table.actions', { defaultValue: '작업' })}</div>
+      </div>
+
+      {services.map((service) => {
+        const logs = serviceLogs[service.id] ?? [];
+        const latest = logs[0];
+        const counts = levelOrder.reduce<Record<LogLevel, number>>((acc, level) => {
+          acc[level] = logs.filter((log) => log.level === level).length;
+          return acc;
+        }, { error: 0, warn: 0, info: 0, debug: 0, trace: 0 });
+
+        return (
+          <button
+            key={service.id}
+            type="button"
+            onClick={() => onServiceClick(service.id)}
+            className="grid w-full grid-cols-[minmax(220px,1.3fr)_112px_120px_minmax(220px,1.4fr)_150px_92px] gap-3 px-4 py-3 text-left border-b last:border-b-0 border-slate-100 dark:border-ui-border-dark/60 hover:bg-slate-50/70 dark:hover:bg-ui-hover-dark/30 transition-colors"
+          >
+            <div className="min-w-0">
+              <div className="font-mono text-sm font-bold text-slate-900 dark:text-white truncate">{service.name}</div>
+              <div className="text-[11px] text-slate-400 dark:text-text-dim-dark truncate">{service.id}</div>
+            </div>
+            <div className="flex flex-col justify-center text-xs text-slate-500 dark:text-text-muted-dark">
+              <span className="font-semibold tabular-nums text-slate-700 dark:text-text-base-dark">{formatTimeAgo(latest?.createdAt)}</span>
+              <span className="text-[10px]">{logs.length} recent</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {levelOrder.slice(0, 3).map((level) => (
+                <span
+                  key={level}
+                  className={`rounded px-1.5 py-0.5 text-[10px] font-black tabular-nums ${
+                    level === 'error' && counts[level] > 0
+                      ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                      : level === 'warn' && counts[level] > 0
+                      ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                      : 'bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark'
+                  }`}
+                  title={level}
+                >
+                  {level[0].toUpperCase()} {counts[level]}
+                </span>
+              ))}
+            </div>
+            <div className="min-w-0 flex items-center gap-2 font-mono text-xs">
+              {latest ? (
+                <>
+                  <span
+                    className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                      latest.level === 'error'
+                        ? 'bg-red-500'
+                        : latest.level === 'warn'
+                        ? 'bg-amber-400'
+                        : latest.level === 'info'
+                        ? 'bg-sky-400'
+                        : 'bg-slate-400'
+                    }`}
+                  />
+                  <span className={`${latest.level === 'error' ? 'text-red-500' : latest.level === 'warn' ? 'text-amber-600 dark:text-amber-400' : 'text-slate-700 dark:text-text-base-dark'} truncate`}>
+                    {latest.message}
+                  </span>
+                </>
+              ) : (
+                <span className="text-slate-400 dark:text-text-dim-dark">{t('logs.card.noRecent', { defaultValue: '최근 수신된 로그가 없습니다' })}</span>
+              )}
+            </div>
+            <div className="flex items-center text-primary">
+              <MiniBars logs={logs} />
+            </div>
+            <div className="flex items-center justify-end">
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-primary">
+                {t('logServices.viewLogs', { defaultValue: '로그 보기' })}
+                <MaterialIcon name="arrow_forward" className="text-sm" />
+              </span>
+            </div>
+          </button>
+        );
+      })}
+    </div>
   );
 }

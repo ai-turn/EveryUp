@@ -47,4 +47,16 @@ export const mockCharts: ChartData[] = [
       { key: 'diskWrite', label: 'Write', color: '#f97316' },
     ],
   },
+  {
+    title: 'Network Traffic',
+    unit: 'MB/s',
+    data: makePoints(12, (i) => ({
+      netIn: parseFloat((Math.abs(Math.sin(i * 0.7)) * 24 + 4).toFixed(2)),
+      netOut: parseFloat((Math.abs(Math.cos(i * 0.9)) * 18 + 2).toFixed(2)),
+    })),
+    series: [
+      { key: 'netIn', label: 'In', color: '#10b981' },
+      { key: 'netOut', label: 'Out', color: '#06b6d4' },
+    ],
+  },
 ];

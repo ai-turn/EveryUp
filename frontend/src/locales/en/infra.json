@@ -21,6 +21,94 @@
         "resumeMonitoring": "Resume Monitoring",
         "active": "Active",
         "paused": "Paused",
+        "connection": "Connection",
+        "connectionTypes": {
+            "local": "Local",
+            "remote": "Remote",
+            "localShort": "Local",
+            "sshRemote": "SSH Remote"
+        },
+        "statuses": {
+            "healthy": "Healthy",
+            "warning": "Warning",
+            "critical": "Critical",
+            "error": "Error",
+            "paused": "Paused",
+            "unknown": "Unknown"
+        },
+        "statusReasons": {
+            "healthy": "Healthy",
+            "paused": "Monitoring paused",
+            "collector_error": "Collector error",
+            "no_metrics": "No metrics yet",
+            "metric_stale": "Metrics stale",
+            "threshold_exceeded": "Threshold exceeded"
+        },
+        "connectionStatus": {
+            "connected": "Connected",
+            "failed": "Failed",
+            "unknown": "Unknown"
+        },
+        "tabs": {
+            "resources": "Resources",
+            "incidents": "Incidents",
+            "remoteHosts": "Remote Hosts",
+            "attention": "Needs attention",
+            "paused": "Paused",
+            "remote": "Remote"
+        },
+        "kpi": {
+            "total": "Total hosts",
+            "healthy": "Healthy",
+            "incidents": "Incidents",
+            "attention": "Attention",
+            "paused": "Paused",
+            "remote": "Remote SSH"
+        },
+        "incidents": {
+            "resource": "Resource",
+            "since": "Since",
+            "lastSeen": "Last seen",
+            "reason": "Reason"
+        },
+        "remote": {
+            "connection": "Connection",
+            "latency": "Latency",
+            "lastSeen": "Last seen",
+            "lastCollected": "Collected",
+            "seenPrefix": "Seen"
+        },
+        "metrics": {
+            "memory": "Memory",
+            "disk": "Disk",
+            "score": "Score"
+        },
+        "detail": {
+            "operationalState": "Operational state",
+            "collectionToggle": "Collection status",
+            "liveVitals": "Live vitals",
+            "hostProfile": "Host profile",
+            "load": "Load",
+            "loadStates": {
+                "normal": "Normal",
+                "elevated": "Elevated",
+                "critical": "Critical"
+            },
+            "scoreVerdicts": {
+                "healthy": "Metrics are in a comfortable operating range.",
+                "watch": "Some resource pressure is building up.",
+                "risk": "Resource pressure needs attention.",
+                "paused": "Collection is paused for this host."
+            },
+            "resourcePressure": "Resource pressure",
+            "filesystem": "Filesystem",
+            "used": "Used",
+            "os": "OS",
+            "kernel": "Kernel",
+            "uptime": "Uptime",
+            "hostname": "Hostname"
+        },
+        "noResults": "No hosts match your filters",
         "resourceTypes": {
             "server": "Server",
             "database": "Database",
@@ -30,7 +118,9 @@
             "title": "Infrastructure Trends",
             "last6h": "Last 6 Hours",
             "last12h": "Last 12 Hours",
-            "last24h": "Last 24 Hours"
+            "last24h": "Last 24 Hours",
+            "now": "Now",
+            "peak": "Peak"
         },
         "processes": {
             "title": "Top Processes",
@@ -61,6 +151,11 @@
         "sections": {
             "basicInfo": "Basic Information"
         },
+        "form": {
+            "basicInfoDesc": "Name, group, and resource category used across monitoring views.",
+            "connectionDesc": "Connection details for collection, SSH testing, and host identity.",
+            "testHint": "Run a test before saving to confirm SSH credentials and latency."
+        },
         "modal": {
             "idCannotChange": "ID cannot be changed",
             "displayName": "Display name",
@@ -68,7 +163,7 @@
             "ipPlaceholder": "192.168.1.100",
             "port": "Service Port",
             "portPlaceholder": "",
-            "portHint": "Optional · Port used to access this host's service",
+            "portHint": "Optional - Port used to access this host's service",
             "group": "Group",
             "groupPlaceholder": "production",
             "groupHint": "Optional: Group hosts by environment",

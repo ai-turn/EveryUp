@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next';
 import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
 import { api, Host, type SSHTestResult } from '../../../services/api';
-import { useSidePanel } from '../../../contexts/SidePanelContext';
 
 const hostSchema = z.object({
     id: z.string().min(2, 'ID is too short').regex(/^[a-z0-9-]+$/, 'Lower case letters, numbers, and hyphens only'),
@@ -42,12 +41,13 @@ type HostFormValues = z.infer<typeof hostSchema>;
 
 interface InfraFormProps {
     onSuccess: () => void;
+    onCancel: () => void;
     host?: Host;
+    onSubmittingChange?: (isSubmitting: boolean) => void;
 }
 
-export function InfraForm({ onSuccess, host }: InfraFormProps) {
+export function InfraForm({ onSuccess, onCancel, host, onSubmittingChange }: InfraFormProps) {
     const { t } = useTranslation(['infra', 'common']);
-    const { closePanel } = useSidePanel();
     const isEditMode = !!host;
 
     const [isTesting, setIsTesting] = useState(false);
@@ -77,6 +77,10 @@ export function InfraForm({ onSuccess, host }: InfraFormProps) {
 
     const selectedType = watch('type');
     const selectedAuthType = watch('sshAuthType');
+    const selectedCategory = watch('resourceCategory');
+    const watchedName = watch('name');
+    const watchedIp = watch('ip');
+    const watchedGroup = watch('group');
 
     useEffect(() => {
         if (host) {
@@ -164,6 +168,7 @@ export function InfraForm({ onSuccess, host }: InfraFormProps) {
     };
 
     const onSubmit = async (data: HostFormValues) => {
+        onSubmittingChange?.(true);
         try {
             if (isEditMode && host) {
                 const submitData = { ...data };
@@ -175,9 +180,11 @@ export function InfraForm({ onSuccess, host }: InfraFormProps) {
             }
             toast.success(t(isEditMode ? 'infra.toast.updated' : 'infra.toast.created'));
             onSuccess();
-            closePanel();
+            onCancel();
         } catch (error) {
             toast.error(getErrorMessage(error));
+        } finally {
+            onSubmittingChange?.(false);
         }
     };
 
@@ -186,15 +193,26 @@ export function InfraForm({ onSuccess, host }: InfraFormProps) {
 
     return (
         <>
-        <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 pt-6 pb-4 custom-scrollbar">
-        <form id="infra-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form
+            id="infra-form"
+            onSubmit={handleSubmit(onSubmit)}
+            className="px-6 py-6 min-h-full"
+        >
+        <div className="max-w-350 mx-auto grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_20rem] gap-6 items-start">
+            <div className="space-y-6 min-w-0">
             <div className="space-y-4">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-ui-border-dark">
-                    <MaterialIcon name="info" className="text-primary text-lg" />
-                    <h3 className="text-sm font-bold text-slate-700 dark:text-text-secondary-dark">{t('infra.sections.basicInfo')}</h3>
+                <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
+                <div className="flex items-center gap-2 pb-3 mb-4 border-b border-slate-200 dark:border-ui-border-dark">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <MaterialIcon name="info" className="text-primary text-base" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-bold text-slate-800 dark:text-text-base-dark">{t('infra.sections.basicInfo')}</h3>
+                        <p className="text-xs text-slate-500 dark:text-text-muted-dark">{t('infra.form.basicInfoDesc')}</p>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('common.id')}</label>
                         <input
@@ -226,12 +244,12 @@ export function InfraForm({ onSuccess, host }: InfraFormProps) {
                         <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all ${selectedType === 'local' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500'}`}>
                             <input {...register('type')} type="radio" value="local" className="hidden" />
                             <MaterialIcon name="computer" className="text-lg" />
-                            Local
+                            {t('infra.connectionTypes.local')}
                         </label>
                         <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all ${selectedType === 'remote' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500'}`}>
                             <input {...register('type')} type="radio" value="remote" className="hidden" />
                             <MaterialIcon name="cloud" className="text-lg" />
-                            Remote
+                            {t('infra.connectionTypes.remote')}
                         </label>
                     </div>
                 </div>
@@ -255,16 +273,23 @@ export function InfraForm({ onSuccess, host }: InfraFormProps) {
                         ))}
                     </div>
                 </div>
+                </div>
             </div>
 
             <div className="space-y-4 pt-2">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-ui-border-dark">
-                    <MaterialIcon name="settings_ethernet" className="text-primary text-lg" />
-                    <h3 className="text-sm font-bold text-slate-700 dark:text-text-secondary-dark">{t('infra.modal.sshSettings')}</h3>
+                <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
+                <div className="flex items-center gap-2 pb-3 mb-4 border-b border-slate-200 dark:border-ui-border-dark">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <MaterialIcon name="settings_ethernet" className="text-primary text-base" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-bold text-slate-800 dark:text-text-base-dark">{t('infra.modal.sshSettings')}</h3>
+                        <p className="text-xs text-slate-500 dark:text-text-muted-dark">{t('infra.form.connectionDesc')}</p>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                    <div className="col-span-2 space-y-1">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="md:col-span-2 space-y-1">
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('infra.modal.ipAddress')}</label>
                         <input
                             {...register('ip')}
@@ -426,78 +451,115 @@ export function InfraForm({ onSuccess, host }: InfraFormProps) {
                             </div>
                         )}
 
-                        <button
-                            type="button"
-                            onClick={handleTestConnection}
-                            disabled={isTesting}
-                            className="w-full py-3 rounded-xl border border-slate-200 dark:border-ui-border-dark text-slate-700 dark:text-text-secondary-dark font-bold text-sm hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                        >
-                            {isTesting ? (
-                                <>
-                                    <div className="w-4 h-4 border-2 border-slate-400/30 border-t-slate-400 rounded-full animate-spin" />
-                                    {t('infra.modal.testing')}
-                                </>
-                            ) : (
-                                <>
-                                    <MaterialIcon name="cable" className="text-lg" />
-                                    {t('infra.modal.testConnection')}
-                                </>
-                            )}
-                        </button>
-
-                        {testResult && (
-                            <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
-                                <div className="flex items-center gap-2 text-primary font-bold text-sm mb-2">
-                                    <MaterialIcon name="check_circle" className="text-lg" />
-                                    {t('infra.modal.connectionSuccess')}
-                                </div>
-                                <div className="text-xs text-slate-600 dark:text-text-muted-dark space-y-1 font-medium">
-                                    {testResult.hostname && <p>Hostname: {testResult.hostname}</p>}
-                                    {testResult.platform && <p>OS: {testResult.platform}</p>}
-                                    <p>{t('infra.modal.latency')}: <span className="text-primary font-bold">{testResult.latencyMs}ms</span></p>
-                                </div>
-                            </div>
-                        )}
-
-                        {testError && (
-                            <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30">
-                                <div className="flex items-center gap-2 text-red-600 dark:text-red-400 font-bold text-sm mb-1">
-                                    <MaterialIcon name="error" className="text-lg" />
-                                    {t('infra.modal.connectionFailed')}
-                                </div>
-                                <p className="text-xs text-red-500/80 font-medium leading-relaxed">{testError}</p>
-                            </div>
-                        )}
                     </div>
                 )}
+                </div>
+            </div>
             </div>
 
+            <aside className="xl:sticky xl:top-6 space-y-4">
+                <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <MaterialIcon
+                                name={selectedCategory === 'database' ? 'storage' : selectedCategory === 'container' ? 'deployed_code' : 'dns'}
+                                className="text-primary text-xl"
+                            />
+                        </div>
+                        <div className="min-w-0">
+                            <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                                {watchedName || t('infra.modal.hostNamePlaceholder')}
+                            </h3>
+                            <p className="text-xs text-slate-500 dark:text-text-muted-dark truncate">
+                                {watchedIp || t('infra.modal.ipPlaceholder')}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <SummaryRow label={t('common.type')} value={selectedType === 'remote' ? t('infra.connectionTypes.remote') : t('infra.connectionTypes.local')} />
+                        <SummaryRow label={t('infra.modal.resourceCategory')} value={t(`infra.resourceTypes.${selectedCategory || 'server'}`)} />
+                        <SummaryRow label={t('infra.modal.group')} value={watchedGroup || t('common.none')} />
+                        {selectedType === 'remote' && (
+                            <SummaryRow label={t('infra.modal.authType')} value={t(`infra.modal.auth${selectedAuthType === 'password' ? 'Password' : selectedAuthType === 'key' ? 'Key' : 'KeyFile'}`)} />
+                        )}
+                    </div>
+                </div>
+
+                <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                        <MaterialIcon
+                            name={testResult ? 'check_circle' : testError ? 'error' : 'cable'}
+                            className={`text-lg ${testResult ? 'text-emerald-500' : testError ? 'text-red-500' : 'text-slate-400'}`}
+                        />
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                            {t('infra.modal.testConnection')}
+                        </h3>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-text-muted-dark leading-relaxed">
+                        {selectedType === 'remote'
+                            ? t('infra.form.testHint')
+                            : t('infra.modal.localAutoManaged')}
+                    </p>
+                    {selectedType === 'remote' && (
+                        <>
+                            <button
+                                type="button"
+                                onClick={handleTestConnection}
+                                disabled={isTesting}
+                                className="mt-4 w-full py-2.5 rounded-lg border border-slate-200 dark:border-ui-border-dark text-slate-700 dark:text-text-secondary-dark font-bold text-sm hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                {isTesting ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-slate-400/30 border-t-slate-400 rounded-full animate-spin" />
+                                        {t('infra.modal.testing')}
+                                    </>
+                                ) : (
+                                    <>
+                                        <MaterialIcon name="cable" className="text-base" />
+                                        {t('infra.modal.testConnection')}
+                                    </>
+                                )}
+                            </button>
+
+                            {testResult && (
+                                <div className="mt-4 p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/15">
+                                    <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm mb-2">
+                                        <MaterialIcon name="check_circle" className="text-lg" />
+                                        {t('infra.modal.connectionSuccess')}
+                                    </div>
+                                    <div className="text-xs text-slate-600 dark:text-text-muted-dark space-y-1 font-medium">
+                                        {testResult.hostname && <p>Hostname: {testResult.hostname}</p>}
+                                        {testResult.platform && <p>OS: {testResult.platform}</p>}
+                                        <p>{t('infra.modal.latency')}: <span className="text-emerald-600 dark:text-emerald-400 font-bold">{testResult.latencyMs}ms</span></p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {testError && (
+                                <div className="mt-4 p-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30">
+                                    <div className="flex items-center gap-2 text-red-600 dark:text-red-400 font-bold text-sm mb-1">
+                                        <MaterialIcon name="error" className="text-lg" />
+                                        {t('infra.modal.connectionFailed')}
+                                    </div>
+                                    <p className="text-xs text-red-500/80 font-medium leading-relaxed">{testError}</p>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            </aside>
+
+        </div>
         </form>
-        </div>
-        <div className="flex-none border-t border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-6 py-4 flex gap-3">
-            <button
-                type="button"
-                onClick={closePanel}
-                className="flex-1 py-3 rounded-lg border border-slate-200 dark:border-ui-border-dark text-slate-600 dark:text-text-muted-dark font-bold hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-all"
-            >
-                {t('common.cancel')}
-            </button>
-            <button
-                type="submit"
-                form="infra-form"
-                disabled={isSubmitting}
-                className="flex-1 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-all shadow-md active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-                {isSubmitting ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                    <>
-                        <MaterialIcon name="save" className="text-lg" />
-                        {t('common.save')}
-                    </>
-                )}
-            </button>
-        </div>
         </>
+    );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="flex items-center justify-between gap-3 py-2 border-b border-slate-100 dark:border-ui-border-dark/50 last:border-0">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{label}</span>
+            <span className="text-sm font-semibold text-slate-800 dark:text-text-base-dark truncate">{value}</span>
+        </div>
     );
 }

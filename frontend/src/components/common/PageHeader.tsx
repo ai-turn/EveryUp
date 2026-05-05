@@ -1,19 +1,12 @@
 import React from 'react';
-import { MaterialIcon } from './MaterialIcon';
-
-export interface PageFeature {
-    icon: string;
-    label: string;
-}
 
 interface PageHeaderProps {
     title: string;
     subtitle?: string;
-    features?: PageFeature[];
-    children?: React.ReactNode; // For actions/buttons
+    children?: React.ReactNode;
 }
 
-export function PageHeader({ title, subtitle, features, children }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, children }: PageHeaderProps) {
     return (
         <div className="mb-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -31,20 +24,6 @@ export function PageHeader({ title, subtitle, features, children }: PageHeaderPr
                     </div>
                 )}
             </div>
-
-            {features && features.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-4">
-                    {features.map((f) => (
-                        <span
-                            key={f.label}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark text-xs font-medium"
-                        >
-                            <MaterialIcon name={f.icon} className="text-sm text-primary" />
-                            {f.label}
-                        </span>
-                    ))}
-                </div>
-            )}
         </div>
     );
 }

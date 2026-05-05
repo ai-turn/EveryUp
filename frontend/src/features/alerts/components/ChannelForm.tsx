@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -7,9 +7,17 @@ import { useTranslation } from 'react-i18next';
 import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
 import { IconTelegram, IconDiscord, IconSlack } from '../../../components/icons/ChannelIcons';
-import { api, type CreateNotificationChannelData, type NotificationChannel, type TelegramConfig, type DiscordConfig, type SlackConfig } from '../../../services/api';
-import { useSidePanel } from '../../../contexts/SidePanelContext';
+import {
+    api,
+    type CreateNotificationChannelData,
+    type NotificationChannel,
+    type TelegramConfig,
+    type DiscordConfig,
+    type SlackConfig,
+} from '../../../services/api';
 import { SetupGuide } from './SetupGuide';
+
+// ─── Schema ───────────────────────────────────────────────────────────────────
 
 const channelSchema = z.object({
     name: z.string().min(2, 'Name is too short'),
@@ -22,35 +30,246 @@ const channelSchema = z.object({
     if ((data.type === 'discord' || data.type === 'slack') && !data.webhookUrl) return false;
     if ((data.type === 'discord' || data.type === 'slack') && data.webhookUrl && !/^https?:\/\/.+/.test(data.webhookUrl)) return false;
     return true;
-}, {
-    message: 'Please fill in all required fields',
-    path: ['botToken'],
-});
+}, { message: 'Please fill in all required fields', path: ['botToken'] });
 
 type ChannelFormValues = z.infer<typeof channelSchema>;
+type ChannelType = 'telegram' | 'discord' | 'slack';
+
+// ─── Channel type metadata ────────────────────────────────────────────────────
+
+const CHANNEL_META: Record<ChannelType, {
+    label: string;
+    sub: string;
+    color: string;
+    colorBg: string;
+    Icon: React.FC<{ size?: number; className?: string }>;
+}> = {
+    telegram: {
+        label: 'Telegram',
+        sub: 'BOT API · 메시지',
+        color: 'text-[#26A5E4]',
+        colorBg: 'bg-[#26A5E4]/10 border-[#26A5E4]',
+        Icon: IconTelegram,
+    },
+    discord: {
+        label: 'Discord',
+        sub: 'WEBHOOK · 임베드',
+        color: 'text-[#5865F2]',
+        colorBg: 'bg-[#5865F2]/10 border-[#5865F2]',
+        Icon: IconDiscord,
+    },
+    slack: {
+        label: 'Slack',
+        sub: 'WEBHOOK · 메시지',
+        color: 'text-[#E01E5A]',
+        colorBg: 'bg-[#E01E5A]/10 border-[#E01E5A]',
+        Icon: IconSlack,
+    },
+};
+
+// ─── Layout primitives ────────────────────────────────────────────────────────
+
+function FormStep({ n, title, subtitle, children }: { n: number; title: string; subtitle: string; children: ReactNode }) {
+    return (
+        <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30">
+                <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs font-mono shrink-0">
+                    {n}
+                </span>
+                <div>
+                    <p className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest">{title}</p>
+                    <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{subtitle}</p>
+                </div>
+            </div>
+            <div className="p-5 space-y-5">{children}</div>
+        </div>
+    );
+}
+
+function Field({ label, hint, required, children, error }: {
+    label: string; hint?: string | null; required?: boolean; error?: string; children: ReactNode;
+}) {
+    return (
+        <div>
+            <div className="flex items-center gap-1 mb-2">
+                <label className="text-xs font-bold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide">{label}</label>
+                {required && <span className="text-red-500 text-xs">*</span>}
+            </div>
+            {children}
+            {error && <p className="text-xs text-red-500 font-medium mt-1">{error}</p>}
+            {hint && !error && <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-1.5 italic">{hint}</p>}
+        </div>
+    );
+}
+
+const inputCls = "w-full px-3.5 py-2.5 bg-slate-50 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark rounded-lg text-sm font-semibold outline-none focus:border-primary dark:text-white transition-colors";
+const inputMonoCls = inputCls + " font-mono";
+
+// ─── Accurate preview components (matching real backend output) ───────────────
+
+// Telegram: plain-text Markdown message rendered in a chat bubble
+function TelegramPreview({ name }: { name: string }) {
+    const now = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+    return (
+        <div className="rounded-xl overflow-hidden border border-slate-700 font-sans text-[11px]">
+            {/* Header bar */}
+            <div className="flex items-center gap-2 px-3 py-2 bg-[#17212B]">
+                <div className="w-7 h-7 rounded-full bg-[#26A5E4] flex items-center justify-center shrink-0">
+                    <IconTelegram size={14} className="text-white" />
+                </div>
+                <div className="min-w-0">
+                    <p className="text-white font-semibold text-[11px] leading-tight truncate">{name || 'EveryUp Bot'}</p>
+                    <p className="text-[#7C91A7] text-[9px]">bot</p>
+                </div>
+            </div>
+            {/* Chat body */}
+            <div className="bg-[#0E1621] px-3 py-3">
+                <div className="bg-[#182533] rounded-lg rounded-tl-none px-3 py-2.5 max-w-[90%] space-y-1 leading-[1.6]">
+                    <p>
+                        <span className="text-[#5FBDE3] font-bold">✅ Service Recovered</span>
+                    </p>
+                    <p className="text-slate-300">
+                        <span className="text-[#7C91A7]">Service: </span>Notification Test
+                    </p>
+                    <p className="text-slate-300">
+                        <span className="text-[#7C91A7]">Time: </span>
+                        {new Date().toISOString().slice(0, 19).replace('T', ' ')}
+                    </p>
+                    <p className="text-slate-300">
+                        <span className="text-[#7C91A7]">Message: </span>
+                        <span className="text-slate-400">This is a test notification. Your EVERYUP notification channel is connected correctly.</span>
+                    </p>
+                    <p className="text-[#7C91A7] text-[9px] text-right">{now}</p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// Discord: embed card matching backend output
+function DiscordPreview({ name }: { name: string }) {
+    return (
+        <div className="rounded-xl overflow-hidden border border-[#1e1f22] font-sans text-[11px]">
+            {/* Header bar */}
+            <div className="flex items-center gap-2 px-3 py-2 bg-[#313338]">
+                <div className="w-7 h-7 rounded-full bg-[#5865F2] flex items-center justify-center shrink-0">
+                    <IconDiscord size={14} className="text-white" />
+                </div>
+                <div className="flex items-center gap-1.5">
+                    <span className="text-white font-semibold">{name || 'EVERYUP'}</span>
+                    <span className="px-1 py-px bg-[#5865F2] text-white text-[8px] font-bold rounded uppercase">APP</span>
+                </div>
+            </div>
+            {/* Message area */}
+            <div className="bg-[#313338] px-3 pb-3 pt-1">
+                {/* Embed */}
+                <div className="border-l-4 border-[#3baa7c] bg-[#2b2d31] rounded-r-lg overflow-hidden">
+                    <div className="px-3 py-2.5 space-y-2">
+                        {/* Embed title */}
+                        <p className="text-[#3baa7c] font-bold">✅ Service healthy: Notification Test</p>
+                        {/* Embed description */}
+                        <p className="text-[#dbdee1] leading-relaxed">
+                            This is a test notification. Your EVERYUP notification channel is connected correctly.
+                        </p>
+                        {/* Fields row */}
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 pt-1">
+                            <div>
+                                <p className="text-[#b5bac1] text-[9px] font-bold uppercase mb-0.5">Service ID</p>
+                                <p className="text-[#dbdee1]">test</p>
+                            </div>
+                            <div>
+                                <p className="text-[#b5bac1] text-[9px] font-bold uppercase mb-0.5">Status</p>
+                                <p className="text-[#dbdee1]">healthy</p>
+                            </div>
+                        </div>
+                        {/* Footer */}
+                        <p className="text-[#87898c] text-[9px] pt-1 border-t border-[#3f4147]">
+                            EVERYUP • {new Date().toISOString().slice(0, 10)}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// Slack: Block Kit attachment matching backend output
+function SlackPreview({ name }: { name: string }) {
+    return (
+        <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-[#424242] font-sans text-[11px]">
+            {/* Header bar */}
+            <div className="flex items-center gap-2 px-3 py-2 bg-[#4A154B]">
+                <div className="w-7 h-7 rounded bg-white flex items-center justify-center shrink-0">
+                    <IconSlack size={14} className="text-[#E01E5A]" />
+                </div>
+                <div className="flex items-center gap-1.5">
+                    <span className="text-white font-semibold">{name || 'EVERYUP'}</span>
+                    <span className="px-1 py-px bg-white/25 text-white text-[8px] font-bold rounded uppercase">APP</span>
+                </div>
+            </div>
+            {/* Message body */}
+            <div className="bg-white dark:bg-[#1a1d21] px-3 py-2.5">
+                {/* Attachment with left colored border */}
+                <div className="border-l-4 border-success pl-2.5 space-y-1.5">
+                    {/* Header section */}
+                    <p className="font-bold text-slate-800 dark:text-slate-100">
+                        ✅ <span className="italic">Service healthy: Notification Test</span>
+                    </p>
+                    {/* Message section */}
+                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                        This is a test notification. Your EVERYUP notification channel is connected correctly.
+                    </p>
+                    {/* Fields row */}
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 pt-0.5">
+                        <div>
+                            <p className="font-bold text-slate-700 dark:text-slate-300 text-[10px]">Service ID</p>
+                            <p className="text-slate-500 dark:text-slate-400">test</p>
+                        </div>
+                        <div>
+                            <p className="font-bold text-slate-700 dark:text-slate-300 text-[10px]">Status</p>
+                            <p className="text-slate-500 dark:text-slate-400">healthy</p>
+                        </div>
+                    </div>
+                    {/* Context footer */}
+                    <p className="text-slate-400 dark:text-slate-500 text-[9px] pt-1">
+                        EVERYUP • {new Date().toISOString().slice(0, 10).replace(/-/g, '-')} {new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+const PREVIEW_BY_TYPE: Record<ChannelType, React.FC<{ name: string }>> = {
+    telegram: TelegramPreview,
+    discord: DiscordPreview,
+    slack: SlackPreview,
+};
+
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 interface ChannelFormProps {
     onSuccess: () => void;
+    onCancel: () => void;
     channel?: NotificationChannel;
+    onSubmittingChange?: (v: boolean) => void;
 }
 
-export function ChannelForm({ onSuccess, channel }: ChannelFormProps) {
-    const { t } = useTranslation(['alerts', 'common']);
-    const { closePanel } = useSidePanel();
-    const [isTesting, setIsTesting] = useState(false);
-    const isEditMode = !!channel;
+// ─── Main component ───────────────────────────────────────────────────────────
 
-    const {
-        register,
-        handleSubmit,
-        watch,
-        reset,
-        formState: { errors, isSubmitting },
-    } = useForm<ChannelFormValues>({
+export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }: ChannelFormProps) {
+    const { t } = useTranslation(['alerts', 'common']);
+    const isEdit = !!channel;
+
+    // savedChannelId: set after channel is created via "Save & Test" in create mode
+    const [savedChannelId, setSavedChannelId] = useState<string | null>(isEdit ? channel.id : null);
+    const [testState, setTestState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+    const [testError, setTestError] = useState('');
+    const [testTime, setTestTime] = useState('');
+
+    const { register, handleSubmit, watch, reset, getValues, trigger, formState: { errors } } = useForm<ChannelFormValues>({
         resolver: zodResolver(channelSchema),
-        defaultValues: {
-            type: 'telegram',
-        },
+        defaultValues: { type: 'telegram' },
     });
 
     useEffect(() => {
@@ -60,164 +279,336 @@ export function ChannelForm({ onSuccess, channel }: ChannelFormProps) {
                 config = typeof channel.config === 'string'
                     ? JSON.parse(channel.config)
                     : channel.config;
-            } catch {
-                config = null;
-            }
+            } catch { config = null; }
 
             reset({
                 name: channel.name,
-                type: channel.type,
+                type: channel.type as ChannelType,
                 botToken: channel.type === 'telegram' && config ? (config as TelegramConfig).botToken : '',
                 chatId: channel.type === 'telegram' && config ? (config as TelegramConfig).chatId : '',
-                webhookUrl: (channel.type === 'discord' || channel.type === 'slack') && config ? (config as DiscordConfig).webhookUrl : '',
+                webhookUrl: (channel.type === 'discord' || channel.type === 'slack') && config
+                    ? (config as DiscordConfig).webhookUrl : '',
             });
         } else {
             reset({ type: 'telegram', name: '', botToken: '', chatId: '', webhookUrl: '' });
         }
     }, [channel, reset]);
 
-    const selectedType = watch('type');
+    const watchedType = (watch('type') ?? 'telegram') as ChannelType;
+    const watchedName = watch('name') ?? '';
+    const watchedBotToken = watch('botToken') ?? '';
+    const watchedChatId = watch('chatId') ?? '';
+    const watchedWebhook = watch('webhookUrl') ?? '';
 
+    const meta = CHANNEL_META[watchedType];
+    const PreviewComponent = PREVIEW_BY_TYPE[watchedType];
+
+    // Build API payload from form values
+    const buildPayload = (data: ChannelFormValues): CreateNotificationChannelData => ({
+        name: data.name,
+        type: data.type,
+        config: data.type === 'telegram'
+            ? { botToken: data.botToken!, chatId: data.chatId! }
+            : { webhookUrl: data.webhookUrl! },
+    });
+
+    // Normal save (page header button)
     const onSubmit = async (data: ChannelFormValues) => {
+        onSubmittingChange?.(true);
         try {
-            const payload: CreateNotificationChannelData = {
-                name: data.name,
-                type: data.type,
-                config: data.type === 'telegram'
-                    ? { botToken: data.botToken!, chatId: data.chatId! }
-                    : { webhookUrl: data.webhookUrl! }, // discord & slack both use webhookUrl
-            };
-
-            if (isEditMode) {
-                await api.updateNotificationChannel(channel.id, payload);
+            if (isEdit) {
+                await api.updateNotificationChannel(channel.id, buildPayload(data));
                 toast.success(t('alerts.channelUpdated', { defaultValue: 'Channel updated' }));
+                onSuccess();
+                onCancel();
+            } else if (savedChannelId) {
+                // Already created via Save & Test — just navigate away
+                onSuccess();
+                onCancel();
             } else {
-                const created = await api.createNotificationChannel(payload);
+                const created = await api.createNotificationChannel(buildPayload(data));
                 toast.success(t('alerts.channelAdded'));
-
+                onSuccess();
+                onCancel();
+                // Background auto-test (silent)
                 if (created.id) {
-                    setIsTesting(true);
-                    try {
-                        await api.testNotificationChannel(created.id);
-                        toast.success(t('alerts.testSent'));
-                    } catch (error) {
-                        toast.error(getErrorMessage(error));
-                    } finally {
-                        setIsTesting(false);
-                    }
+                    api.testNotificationChannel(created.id).catch(() => { });
                 }
             }
-
-            onSuccess();
-            closePanel();
         } catch (error) {
             toast.error(getErrorMessage(error));
+        } finally {
+            onSubmittingChange?.(false);
         }
     };
 
+    // Test button handler: save if new, then test
+    const handleTest = async () => {
+        const idToTest = savedChannelId ?? (isEdit ? channel.id : null);
+
+        if (!idToTest) {
+            // Create mode — need to save first
+            const valid = await trigger();
+            if (!valid) {
+                toast.error('필수 항목을 먼저 입력해주세요');
+                return;
+            }
+            onSubmittingChange?.(true);
+            setTestState('loading');
+            try {
+                const data = getValues();
+                const created = await api.createNotificationChannel(buildPayload(data));
+                toast.success(t('alerts.channelAdded'));
+                setSavedChannelId(created.id);
+                await api.testNotificationChannel(created.id);
+                setTestState('success');
+                setTestTime(new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+            } catch (error) {
+                setTestState('error');
+                setTestError(getErrorMessage(error));
+            } finally {
+                onSubmittingChange?.(false);
+            }
+            return;
+        }
+
+        // Edit mode or already saved — just test
+        setTestState('loading');
+        setTestError('');
+        try {
+            await api.testNotificationChannel(idToTest);
+            setTestState('success');
+            setTestTime(new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+        } catch (error) {
+            setTestState('error');
+            setTestError(getErrorMessage(error));
+        }
+    };
+
+    const maskToken = (v: string) => v.length > 8 ? v.slice(0, 6) + '••••' + v.slice(-4) : v ? '••••••' : '';
+
     return (
-        <>
-        <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 pt-6 pb-4 custom-scrollbar">
-        <form id="channel-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="space-y-4">
-                <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                        {t('common.name')}
-                    </label>
-                    <input
-                        {...register('name')}
-                        placeholder={t('alerts.modal.namePlaceholder')}
-                        className={`w-full px-4 py-2 bg-slate-50 dark:bg-ui-hover-dark border ${errors.name ? 'border-red-500' : 'border-slate-200 dark:border-ui-border-dark'} rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm dark:text-white`}
-                    />
-                    {errors.name && <p className="text-xs text-red-500 font-medium">{errors.name.message}</p>}
+        <form id="channel-form" onSubmit={handleSubmit(onSubmit)} className="px-6 py-6">
+            <div className="max-w-350 mx-auto grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
+
+                {/* ── Left: form steps ─────────────────────────────────── */}
+                <div className="space-y-4 min-w-0">
+
+                    {/* Step 1: Type + Name */}
+                    <FormStep n={1} title="채널 유형 (Type)" subtitle="알림을 받을 플랫폼을 선택하세요">
+                        <Field label={t('common.type')}>
+                            <div className="grid grid-cols-3 gap-3">
+                                {(['telegram', 'discord', 'slack'] as const).map(type => {
+                                    const m = CHANNEL_META[type];
+                                    const active = watchedType === type;
+                                    return (
+                                        <label
+                                            key={type}
+                                            className={`flex flex-col items-center gap-2.5 p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                                                active
+                                                    ? m.colorBg
+                                                    : 'border-slate-100 dark:border-ui-border-dark hover:border-slate-200 dark:hover:border-slate-600'
+                                            }`}
+                                        >
+                                            <input {...register('type')} type="radio" value={type} className="sr-only" />
+                                            <m.Icon size={26} className={active ? m.color : 'text-slate-400 dark:text-text-dim-dark'} />
+                                            <span className={`text-sm font-bold ${active ? m.color : 'text-slate-600 dark:text-text-muted-dark'}`}>{m.label}</span>
+                                            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{m.sub}</span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        </Field>
+
+                        <Field label={t('common.name')} required error={errors.name?.message}>
+                            <input
+                                {...register('name')}
+                                placeholder={t('alerts.modal.namePlaceholder')}
+                                className={inputCls + (errors.name ? ' border-red-500' : '')}
+                            />
+                        </Field>
+                    </FormStep>
+
+                    {/* Step 2: Credentials */}
+                    <FormStep n={2} title="연결 설정 (Credentials)" subtitle="채널 연결에 필요한 인증 정보를 입력하세요">
+                        {watchedType === 'telegram' ? (
+                            <>
+                                <Field
+                                    label={t('alerts.modal.botToken')}
+                                    required
+                                    error={errors.botToken?.message}
+                                    hint="BotFather에서 발급받은 Bot Token"
+                                >
+                                    <input
+                                        {...register('botToken')}
+                                        placeholder={t('alerts.modal.botTokenPlaceholder')}
+                                        className={inputMonoCls + (errors.botToken ? ' border-red-500' : '')}
+                                    />
+                                </Field>
+                                <Field
+                                    label={t('alerts.modal.chatId')}
+                                    required
+                                    hint="채팅방 또는 채널의 Chat ID"
+                                >
+                                    <input
+                                        {...register('chatId')}
+                                        placeholder={t('alerts.modal.chatIdPlaceholder')}
+                                        className={inputMonoCls}
+                                    />
+                                </Field>
+                                <SetupGuide type="telegram" />
+                            </>
+                        ) : (
+                            <>
+                                <Field
+                                    label={t('alerts.modal.webhookUrl')}
+                                    required
+                                    error={errors.webhookUrl?.message}
+                                    hint={watchedType === 'slack' ? 'Slack Incoming Webhooks URL' : 'Discord Channel Webhook URL'}
+                                >
+                                    <input
+                                        {...register('webhookUrl')}
+                                        placeholder={watchedType === 'slack'
+                                            ? t('alerts.modal.slackWebhookUrlPlaceholder')
+                                            : t('alerts.modal.webhookUrlPlaceholder')}
+                                        className={inputMonoCls + (errors.webhookUrl ? ' border-red-500' : '')}
+                                    />
+                                </Field>
+                                <SetupGuide type={watchedType} />
+                            </>
+                        )}
+                    </FormStep>
                 </div>
 
-                <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                        {t('common.type')}
-                    </label>
-                    <div className="flex gap-2">
-                        <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all ${selectedType === 'telegram' ? 'bg-[#26A5E4]/10 border-[#26A5E4] text-[#26A5E4] font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500'}`}>
-                            <input {...register('type')} type="radio" value="telegram" className="hidden" />
-                            <IconTelegram size={18} />
-                            {t('alerts.modal.telegram')}
-                        </label>
-                        <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all ${selectedType === 'discord' ? 'bg-[#5865F2]/10 border-[#5865F2] text-[#5865F2] font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500'}`}>
-                            <input {...register('type')} type="radio" value="discord" className="hidden" />
-                            <IconDiscord size={18} />
-                            {t('alerts.modal.discord')}
-                        </label>
-                        <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all ${selectedType === 'slack' ? 'bg-[#4A154B]/10 border-[#4A154B] text-[#4A154B] font-bold dark:bg-[#E01E5A]/10 dark:border-[#E01E5A] dark:text-[#E01E5A]' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500'}`}>
-                            <input {...register('type')} type="radio" value="slack" className="hidden" />
-                            <IconSlack size={18} />
-                            {t('alerts.modal.slack')}
-                        </label>
+                {/* ── Right: sticky preview + test ─────────────────────── */}
+                <div className="hidden lg:block">
+                    <div className="sticky top-6 space-y-4">
+
+                        {/* Channel preview card */}
+                        <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
+                            <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30">
+                                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                <div>
+                                    <p className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest">채널 미리보기</p>
+                                    <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">실제 전송 메시지 형식</p>
+                                </div>
+                            </div>
+                            <div className="p-5 space-y-4">
+                                {/* Identity */}
+                                <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-xl">
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border-2 ${meta.colorBg}`}>
+                                        <meta.Icon size={20} className={meta.color} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                                            {watchedName || <span className="text-slate-400 font-normal italic">채널 이름 미입력</span>}
+                                        </p>
+                                        <p className={`text-xs font-semibold ${meta.color}`}>{meta.label}</p>
+                                    </div>
+                                </div>
+
+                                {/* Config summary */}
+                                <div className="space-y-1.5 text-[11px]">
+                                    {watchedType === 'telegram' ? (
+                                        <>
+                                            <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-lg">
+                                                <span className="text-slate-400 font-mono uppercase text-[10px] tracking-wide">Bot Token</span>
+                                                <span className="font-mono text-slate-600 dark:text-slate-400">
+                                                    {watchedBotToken ? maskToken(watchedBotToken) : <span className="text-slate-300 dark:text-slate-600 italic">미입력</span>}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-lg">
+                                                <span className="text-slate-400 font-mono uppercase text-[10px] tracking-wide">Chat ID</span>
+                                                <span className="font-mono text-slate-600 dark:text-slate-400">
+                                                    {watchedChatId || <span className="text-slate-300 dark:text-slate-600 italic">미입력</span>}
+                                                </span>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-lg gap-3">
+                                            <span className="text-slate-400 font-mono uppercase text-[10px] tracking-wide shrink-0">Webhook</span>
+                                            <span className="font-mono text-slate-600 dark:text-slate-400 truncate text-right">
+                                                {watchedWebhook
+                                                    ? watchedWebhook.replace(/^https?:\/\//, '').slice(0, 32) + (watchedWebhook.length > 40 ? '…' : '')
+                                                    : <span className="text-slate-300 dark:text-slate-600 italic">미입력</span>}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Actual message preview */}
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">테스트 메시지 미리보기</p>
+                                    <PreviewComponent name={watchedName} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Test send card */}
+                        <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
+                            <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30">
+                                <MaterialIcon name="send" className="text-base text-slate-400" />
+                                <div>
+                                    <p className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest">테스트 전송</p>
+                                    <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">실제 채널로 테스트 메시지 발송</p>
+                                </div>
+                            </div>
+                            <div className="p-5 space-y-3">
+                                <p className="text-xs text-slate-500 dark:text-text-muted-dark leading-relaxed">
+                                    {!isEdit && !savedChannelId
+                                        ? <>입력한 연결 정보로 채널을 <span className="font-semibold text-slate-700 dark:text-slate-300">저장하고 즉시 테스트</span>합니다.</>
+                                        : <>위 형식의 테스트 메시지를 <span className={`font-semibold ${meta.color}`}>{channel?.name ?? watchedName}</span>으로 전송합니다.</>
+                                    }
+                                </p>
+
+                                <button
+                                    type="button"
+                                    onClick={handleTest}
+                                    disabled={testState === 'loading'}
+                                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 dark:bg-slate-800 text-white text-sm font-bold rounded-xl hover:bg-slate-700 dark:hover:bg-slate-700 transition-all active:scale-95 disabled:opacity-50"
+                                >
+                                    {testState === 'loading' ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            {!isEdit && !savedChannelId ? '저장 중...' : '전송 중...'}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <MaterialIcon name="send" className="text-sm" />
+                                            {!isEdit && !savedChannelId ? '저장하고 테스트' : '테스트 전송'}
+                                        </>
+                                    )}
+                                </button>
+
+                                {testState === 'success' && (
+                                    <div className="flex items-start gap-2 px-3 py-2.5 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl">
+                                        <MaterialIcon name="check_circle" className="text-base text-emerald-500 mt-0.5 shrink-0" />
+                                        <div>
+                                            <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400">발송 성공</p>
+                                            <p className="text-[10px] text-emerald-600 dark:text-emerald-500 mt-0.5">{testTime}에 전송되었습니다</p>
+                                            {!isEdit && savedChannelId && (
+                                                <p className="text-[10px] text-emerald-600 dark:text-emerald-500 mt-0.5">채널이 저장되었습니다. 헤더의 완료 버튼을 누르세요.</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {testState === 'error' && (
+                                    <div className="flex items-start gap-2 px-3 py-2.5 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl">
+                                        <MaterialIcon name="error" className="text-base text-red-500 mt-0.5 shrink-0" />
+                                        <div>
+                                            <p className="text-xs font-bold text-red-700 dark:text-red-400">발송 실패</p>
+                                            <p className="text-[10px] text-red-600 dark:text-red-500 mt-0.5">{testError}</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
-                {selectedType === 'telegram' ? (
-                    <>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('alerts.modal.botToken')}</label>
-                            <input
-                                {...register('botToken')}
-                                placeholder={t('alerts.modal.botTokenPlaceholder')}
-                                className={`w-full px-4 py-2 bg-slate-50 dark:bg-ui-hover-dark border ${errors.botToken ? 'border-red-500' : 'border-slate-200 dark:border-ui-border-dark'} rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm font-mono dark:text-white`}
-                            />
-                            {errors.botToken && <p className="text-xs text-red-500 font-medium">{errors.botToken.message}</p>}
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('alerts.modal.chatId')}</label>
-                            <input
-                                {...register('chatId')}
-                                placeholder={t('alerts.modal.chatIdPlaceholder')}
-                                className={`w-full px-4 py-2 bg-slate-50 dark:bg-ui-hover-dark border ${errors.chatId ? 'border-red-500' : 'border-slate-200 dark:border-ui-border-dark'} rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm font-mono dark:text-white`}
-                            />
-                        </div>
-                        <SetupGuide type="telegram" />
-                    </>
-                ) : (
-                    <>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('alerts.modal.webhookUrl')}</label>
-                            <input
-                                {...register('webhookUrl')}
-                                placeholder={selectedType === 'slack' ? t('alerts.modal.slackWebhookUrlPlaceholder') : t('alerts.modal.webhookUrlPlaceholder')}
-                                className={`w-full px-4 py-2 bg-slate-50 dark:bg-ui-hover-dark border ${errors.webhookUrl ? 'border-red-500' : 'border-slate-200 dark:border-ui-border-dark'} rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm font-mono dark:text-white`}
-                            />
-                            {errors.webhookUrl && <p className="text-xs text-red-500 font-medium">{errors.webhookUrl.message}</p>}
-                        </div>
-                        <SetupGuide type={selectedType as 'discord' | 'slack'} />
-                    </>
-                )}
             </div>
-
         </form>
-        </div>
-        <div className="flex-none border-t border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-6 py-4 flex gap-3">
-            <button
-                type="button"
-                onClick={closePanel}
-                className="flex-1 py-3 rounded-lg border border-slate-200 dark:border-ui-border-dark text-slate-600 dark:text-text-muted-dark font-bold hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-all"
-            >
-                {t('common.cancel')}
-            </button>
-            <button
-                type="submit"
-                form="channel-form"
-                disabled={isSubmitting || isTesting}
-                className="flex-1 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-all shadow-md active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-                {isSubmitting || isTesting ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                    <>
-                        <MaterialIcon name="save" className="text-lg" />
-                        {t('common.save')}
-                    </>
-                )}
-            </button>
-        </div>
-        </>
     );
 }

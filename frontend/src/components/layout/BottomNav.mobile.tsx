@@ -39,7 +39,7 @@ export function BottomNavMobile() {
           key={item.href}
           to={item.href}
           className={`
-            flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors
+            flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors relative
             ${isActive(item.href)
               ? 'text-primary'
               : 'text-slate-400 dark:text-text-muted-dark'
@@ -48,6 +48,9 @@ export function BottomNavMobile() {
         >
           <item.Icon size={23} />
           <span className="text-xs font-medium whitespace-nowrap">{t(item.labelKey)}</span>
+          {isActive(item.href) && (
+            <span className="absolute top-1.5 w-1 h-1 rounded-full bg-primary" />
+          )}
         </Link>
       ))}
     </nav>

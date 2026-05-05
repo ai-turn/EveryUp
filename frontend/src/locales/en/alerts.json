@@ -33,8 +33,16 @@
         "rulesTitle": "Notification Rules",
         "rulesDesc": "Map events to your active channels",
         "addChannel": "Add Channel",
+        "kpi": {
+            "sent7d": "Sent (7d)",
+            "failed7d": "Failed (7d)",
+            "successRate": "Success rate",
+            "activeRules": "Active rules",
+            "activeChannels": "Active channels"
+        },
         "health": {
             "lastSent": "Last sent",
+            "lastSentAgo": "Sent {{ago}}",
             "never": "Never sent",
             "successRate7d": "7d success rate",
             "noActivity": "No activity in last 7 days",

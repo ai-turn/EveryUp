@@ -4,9 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../utils/errors';
 import { useHost } from '../hooks/useInfra';
-import { useSidePanel } from '../contexts/SidePanelContext';
 import { api } from '../services/api';
-import { InfraForm } from '../features/infra';
 import { InfraDetailView } from '../features/infra/components/InfraDetailView';
 
 const hostStatusMap: Record<string, string> = {
@@ -20,7 +18,6 @@ export function InfraDetailPage() {
   const { resourceId } = useParams();
   const { t } = useTranslation(['infra', 'common']);
   const navigate = useNavigate();
-  const { openPanel } = useSidePanel();
 
   const hostId = resourceId || 'local';
   const { data: host, loading: hostLoading, refetch } = useHost(hostId);
@@ -33,7 +30,7 @@ export function InfraDetailPage() {
   const ip = host?.ip || '';
   const cluster = host?.group || '';
   const isLocal = host?.type === 'local';
-  const status = hostStatusMap[host?.status || 'unknown'] || 'healthy';
+  const status = host && !host.isActive ? 'paused' : hostStatusMap[host?.status || 'unknown'] || 'healthy';
 
   // --- Handlers ---
   const handlePauseResume = async () => {
@@ -70,10 +67,7 @@ export function InfraDetailPage() {
 
   const handleEdit = () => {
     if (!host) return;
-    openPanel(
-      t('infra.editHost'),
-      <InfraForm onSuccess={refetch} host={host} />
-    );
+    navigate(`/infra/${host.id}/edit`);
   };
 
   // --- Shared props ---

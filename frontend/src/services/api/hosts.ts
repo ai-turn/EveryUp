@@ -1,4 +1,5 @@
 import type { RequestFn } from './base';
+import type { Resource } from '../../types/infra';
 
 // --- Types ---
 
@@ -53,6 +54,7 @@ export interface SystemInfo {
   hostname: string;
   os: string;
   platform: string;
+  kernel?: string;
   uptime: number;
   ip: string;
   cpu: { cores: number; usage: number };
@@ -67,6 +69,8 @@ export interface SystemMetricPoint {
   memCached: number;
   diskRead: number;
   diskWrite: number;
+  netIn: number;
+  netOut: number;
 }
 
 export interface SystemMetricsHistory {
@@ -90,6 +94,11 @@ export function createHostsApi(request: RequestFn) {
     // Hosts CRUD
     getHosts: async () => {
       const data = await request<Host[]>('/hosts');
+      return data || [];
+    },
+
+    getHostSummaries: async () => {
+      const data = await request<Resource[]>('/hosts/summary');
       return data || [];
     },
 

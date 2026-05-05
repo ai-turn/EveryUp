@@ -14,6 +14,7 @@ const styleMap: Record<string, StatusStyle> = {
   unhealthy: { bg: 'bg-red-500/10',     text: 'text-red-500',     pulse: 'bg-red-500' },
   critical:  { bg: 'bg-red-500/10',     text: 'text-red-500',     pulse: 'bg-red-500' },
   error:     { bg: 'bg-red-500/10',     text: 'text-red-500',     pulse: 'bg-red-500' },
+  paused:    { bg: 'bg-slate-500/10',   text: 'text-slate-500',   pulse: 'bg-slate-500' },
   offline:   { bg: 'bg-slate-500/10',   text: 'text-slate-500',   pulse: 'bg-slate-500' },
   unknown:   { bg: 'bg-slate-500/10',   text: 'text-slate-500',   pulse: 'bg-slate-500' },
 };
@@ -28,6 +29,7 @@ const labelMap: Record<string, string> = {
   unhealthy: 'common.degraded',
   critical:  'common.critical',
   error:     'common.error',
+  paused:    'common.paused',
   offline:   'common.offline',
   unknown:   'common.unknown',
 };

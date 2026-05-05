@@ -17,6 +17,13 @@ const SettingsPage         = lazy(() => import('./pages/SettingsPage').then(m =>
 const NotFoundPage         = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const LoginPage            = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
 
+// Form pages (replace SidePanel-based forms in v2)
+const ChannelFormPage      = lazy(() => import('./pages/ChannelFormPage').then(m => ({ default: m.ChannelFormPage })));
+const AlertRuleFormPage    = lazy(() => import('./pages/AlertRuleFormPage').then(m => ({ default: m.AlertRuleFormPage })));
+const HealthCheckFormPage  = lazy(() => import('./pages/HealthCheckFormPage').then(m => ({ default: m.HealthCheckFormPage })));
+const InfraFormPage        = lazy(() => import('./pages/InfraFormPage').then(m => ({ default: m.InfraFormPage })));
+const LogServiceFormPage   = lazy(() => import('./pages/LogServiceFormPage').then(m => ({ default: m.LogServiceFormPage })));
+
 function PageLoader() {
   return (
     <div className="flex-1 p-4 sm:p-6 md:p-8 space-y-4 animate-pulse">
@@ -53,12 +60,21 @@ function App() {
               <Route element={<MainLayout />}>
                 <Route index element={<DashboardPage />} />
                 <Route path="/healthcheck" element={<HealthCheckPage />} />
+                <Route path="/healthcheck/new" element={<HealthCheckFormPage />} />
+                <Route path="/healthcheck/:serviceId/edit" element={<HealthCheckFormPage />} />
                 <Route path="/healthcheck/:serviceId" element={<HealthCheckDetailPage />} />
                 <Route path="/logs" element={<LogListPage />} />
+                <Route path="/logs/new" element={<LogServiceFormPage />} />
                 <Route path="/logs/:serviceId" element={<LogDetailPage />} />
                 <Route path="/infra" element={<InfraPage />} />
+                <Route path="/infra/new" element={<InfraFormPage />} />
+                <Route path="/infra/:resourceId/edit" element={<InfraFormPage />} />
                 <Route path="/infra/:resourceId" element={<InfraDetailPage />} />
                 <Route path="/alerts" element={<AlertsPage />} />
+                <Route path="/alerts/channels/new" element={<ChannelFormPage />} />
+                <Route path="/alerts/channels/:id/edit" element={<ChannelFormPage />} />
+                <Route path="/alerts/rules/new" element={<AlertRuleFormPage />} />
+                <Route path="/alerts/rules/:id/edit" element={<AlertRuleFormPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Route>

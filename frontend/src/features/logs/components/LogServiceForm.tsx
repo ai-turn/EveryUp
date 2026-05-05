@@ -4,17 +4,17 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
-import { useSidePanel } from '../../../contexts/SidePanelContext';
 import { api } from '../../../services/api';
 
 interface LogServiceFormProps {
     onSuccess: () => void;
+    onCancel: () => void;
+    onSubmittingChange?: (isSubmitting: boolean) => void;
 }
 
-export function LogServiceForm({ onSuccess }: LogServiceFormProps) {
+export function LogServiceForm({ onSuccess, onCancel, onSubmittingChange }: LogServiceFormProps) {
     const { t } = useTranslation(['logs', 'common']);
     const navigate = useNavigate();
-    const { closePanel } = useSidePanel();
     const [id, setId] = useState('');
     const [name, setName] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -38,6 +38,7 @@ export function LogServiceForm({ onSuccess }: LogServiceFormProps) {
         if (!validate()) return;
 
         setSubmitting(true);
+        onSubmittingChange?.(true);
         try {
             const created = await api.createService({
                 id,
@@ -45,7 +46,7 @@ export function LogServiceForm({ onSuccess }: LogServiceFormProps) {
                 type: 'log',
             });
             onSuccess();
-            closePanel();
+            onCancel();
             navigate(`/logs/${id}?tab=integration`, {
                 state: { newApiKey: created.apiKey },
             });
@@ -54,6 +55,7 @@ export function LogServiceForm({ onSuccess }: LogServiceFormProps) {
             toast.error(getErrorMessage(err));
         } finally {
             setSubmitting(false);
+            onSubmittingChange?.(false);
         }
     };
 
@@ -62,8 +64,16 @@ export function LogServiceForm({ onSuccess }: LogServiceFormProps) {
 
     return (
         <>
-        <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 pt-6 pb-4 custom-scrollbar">
-        <div className="space-y-6">
+        <form
+            id="log-service-form"
+            onSubmit={(event) => {
+                event.preventDefault();
+                handleSubmit();
+            }}
+            className="px-6 py-6 min-h-full"
+        >
+        <div className="max-w-350 mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_20rem] gap-6 items-start">
+        <div className="space-y-6 min-w-0">
             <div className="flex gap-3 p-4 bg-primary/5 border border-primary/10 rounded-xl">
                 <MaterialIcon name="info" className="text-primary text-xl flex-shrink-0" />
                 <div className="text-sm">
@@ -126,29 +136,28 @@ export function LogServiceForm({ onSuccess }: LogServiceFormProps) {
             </div>
 
         </div>
+        <aside className="lg:sticky lg:top-6 space-y-4">
+            <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <MaterialIcon name="article" className="text-primary text-xl" />
+                    </div>
+                    <div className="min-w-0">
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                            {name || t('logServices.add.title')}
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-text-muted-dark truncate">
+                            {id || 'my-api-server'}
+                        </p>
+                    </div>
+                </div>
+                <div className="space-y-2 text-xs text-slate-500 dark:text-text-muted-dark leading-relaxed">
+                    <p>{t('logServices.add.infoDesc', { defaultValue: 'Create a log service to generate an API key automatically. Then choose an integration method and connect your app.' })}</p>
+                </div>
+            </div>
+        </aside>
         </div>
-        <div className="flex-none border-t border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-6 py-4 flex gap-3">
-            <button
-                onClick={closePanel}
-                className="flex-1 py-3 rounded-lg border border-slate-200 dark:border-ui-border-dark text-slate-600 dark:text-text-muted-dark font-bold hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-all"
-            >
-                {t('common.cancel')}
-            </button>
-            <button
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="flex-1 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-all shadow-md active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-                {submitting ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                    <>
-                        <MaterialIcon name="save" className="text-lg" />
-                        {t('common.save')}
-                    </>
-                )}
-            </button>
-        </div>
+        </form>
         </>
     );
 }

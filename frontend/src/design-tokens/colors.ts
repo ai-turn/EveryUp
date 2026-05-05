@@ -67,6 +67,18 @@ export const infraStatusColorClasses = {
     dot: 'bg-red-500 dark:bg-red-400',
     badge: 'bg-red-400/10 text-red-500',
   },
+  paused: {
+    bg: 'bg-slate-500/10',
+    text: 'text-slate-500 dark:text-text-muted-dark',
+    dot: 'bg-slate-500 dark:bg-slate-400',
+    badge: 'bg-slate-500/10 text-slate-500',
+  },
+  unknown: {
+    bg: 'bg-amber-400/10',
+    text: 'text-amber-500 dark:text-amber-400',
+    dot: 'bg-amber-500 dark:bg-amber-400',
+    badge: 'bg-amber-400/10 text-amber-500',
+  },
 } as const;
 
 /**
