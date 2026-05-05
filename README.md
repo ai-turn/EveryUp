@@ -89,6 +89,15 @@ Collects and displays logs from external services in a unified dashboard.
 - **Integration tab**: Generate API keys and view code snippets for log agent setup
 - **Capture settings**: Log level filter and API capture mode managed independently per service
 
+**How data is sent to EveryUp:**
+
+| What | How |
+|------|-----|
+| **Log collection** | Deploy `everyup-log-agent` as a Docker container. The agent tails your log files and forwards entries to EveryUp — no code changes required. |
+| **API request capture** | Integrate the EveryUp SDK as middleware in your service. The SDK sends request/response data to EveryUp directly over HTTP. |
+
+Both methods use the API key shown in the **Integration** tab of each log service.
+
 ### Infra
 
 Collects real-time server resource usage and records historical trends.

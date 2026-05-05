@@ -1,15 +1,11 @@
 # EveryUp Log Agent
 
-![EveryUp Log Agent Overview](../docs/images/log-agent-overview.png)
-
 The EveryUp Log Agent collects logs from your application and forwards them to your EveryUp server.
 
 Use this option when:
 - your app already writes logs to a file
 - you do not want to change application code
 - you want to collect logs at the server or container level
-
-If you can edit the application code easily, the HTTP Appender examples in the EveryUp UI may be a simpler starting point. If you want to collect existing log files with minimal code changes, choose Log Agent.
 
 The container image supports `linux/amd64` and `linux/arm64`. Docker pulls the correct image automatically.
 
