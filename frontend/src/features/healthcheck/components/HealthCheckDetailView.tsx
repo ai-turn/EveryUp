@@ -150,10 +150,6 @@ function DesktopLayout(props: HealthCheckDetailViewProps) {
         <Breadcrumbs items={[{ label: tc('common.backToList'), href: '/healthcheck' }]} />
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-3 py-2">
-            <div className="relative flex h-2 w-2 shrink-0">
-              {isLive && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
-              <span className={`relative inline-flex h-2 w-2 rounded-full ${isLive ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
-            </div>
             <Toggle checked={isLive} onChange={onLiveToggle} />
           </div>
           <button
@@ -224,10 +220,6 @@ function MobileLayout(props: HealthCheckDetailViewProps) {
         </button>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark">
-            <div className="relative flex h-2 w-2 shrink-0">
-              {isLive && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
-              <span className={`relative inline-flex h-2 w-2 rounded-full ${isLive ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
-            </div>
             <Toggle checked={isLive} onChange={onLiveToggle} />
           </div>
           <button onClick={onRefresh} className="p-2.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-secondary-dark active:scale-95 transition-transform">
