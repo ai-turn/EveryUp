@@ -111,23 +111,19 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-bold text-sm truncate text-slate-900 dark:text-white">{service.name}</h3>
-          <p className="text-[11px] text-slate-400 dark:text-text-dim-dark truncate">{service.id}</p>
+          <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-slate-400 dark:text-text-dim-dark">
+            <span className="font-bold tabular-nums text-slate-600 dark:text-text-muted-dark">{recentLogs.length}</span>
+            <span>recent</span>
+            <span className="text-slate-300 dark:text-ui-border-dark">·</span>
+            <MaterialIcon name="schedule" className="text-xs" />
+            <span>{formatTimeAgo(latestLog?.createdAt)}</span>
+          </div>
         </div>
-        <StatusBadge status={service.status} />
-      </div>
-
-      {/* Stats row: count + last seen + sparkline */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-baseline gap-1">
-          <span className="text-base font-black tabular-nums text-slate-900 dark:text-white">{recentLogs.length}</span>
-          <span className="text-[11px] text-slate-400 dark:text-text-dim-dark">recent</span>
-        </div>
-        <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-text-muted-dark">
-          <MaterialIcon name="schedule" className="text-sm" />
-          {formatTimeAgo(latestLog?.createdAt)}
-        </div>
-        <div className="ml-auto text-primary">
-          <MiniSparkline logs={recentLogs} />
+        <div className="flex flex-col items-end gap-1.5 shrink-0">
+          <StatusBadge status={service.status} />
+          <div className="text-primary">
+            <MiniSparkline logs={recentLogs} />
+          </div>
         </div>
       </div>
 
