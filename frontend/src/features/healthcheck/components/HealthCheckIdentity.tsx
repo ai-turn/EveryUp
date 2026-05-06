@@ -63,11 +63,11 @@ export function HealthCheckIdentity({
 
   const statusConfig = {
     online: {
-      bg: 'bg-green-500/10',
-      border: 'border-green-500/20',
-      text: 'text-green-500',
-      dot: 'bg-green-500',
-      ping: 'bg-green-400',
+      bg: 'bg-emerald-500/10',
+      border: 'border-emerald-500/20',
+      text: 'text-emerald-500',
+      dot: 'bg-emerald-500',
+      ping: 'bg-emerald-400',
       labelKey: 'common.online',
     },
     offline: {

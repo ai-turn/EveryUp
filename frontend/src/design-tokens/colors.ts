@@ -44,11 +44,11 @@ export const statusColorClasses = {
  */
 export const infraStatusColorClasses = {
   healthy: {
-    bg: 'bg-lime-400/10',
-    text: 'text-lime-500 dark:text-lime-400',
-    dot: 'bg-lime-500 dark:bg-lime-400',
-    badge: 'bg-lime-400/10 text-lime-500',
-    border: 'border-lime-500/20',
+    bg: 'bg-emerald-500/10',
+    text: 'text-emerald-500 dark:text-emerald-400',
+    dot: 'bg-emerald-500 dark:bg-emerald-400',
+    badge: 'bg-emerald-500/10 text-emerald-500',
+    border: 'border-emerald-500/20',
   },
   warning: {
     bg: 'bg-amber-400/10',
