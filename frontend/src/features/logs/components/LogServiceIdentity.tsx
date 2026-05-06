@@ -4,6 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
 import { MaterialIcon } from '../../../components/common';
 import { LogLevel, LOG_LEVELS, Service, api } from '../../../services/api';
+import { statusColorClasses } from '../../../design-tokens/colors';
 import type { ApiCaptureConfig } from '../../../services/api';
 import { env } from '../../../config/env';
 
@@ -72,12 +73,23 @@ export function LogServiceIdentity({ service }: Props) {
     return filter.length === 0 ? new Set(LOG_LEVELS) : new Set(filter);
   }, [service.logLevelFilter]);
 
+  const sc = statusColorClasses[service.status as keyof typeof statusColorClasses] ?? statusColorClasses.offline;
+
   return (
     <div className="mb-8">
       <div className="min-w-0">
-        {/* Name */}
+        {/* Name + status */}
         <div className="flex items-center gap-3 mb-1.5">
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white truncate">{service.name}</h1>
+          <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${sc.bg} border ${sc.border}`}>
+            <span className="relative flex h-2 w-2">
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${sc.pulse} opacity-75`} />
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${sc.pulse}`} />
+            </span>
+            <span className={`${sc.text} text-xs font-bold uppercase tracking-wider`}>
+              {t(`common.${service.status}`)}
+            </span>
+          </div>
         </div>
 
         {/* Service ID */}
