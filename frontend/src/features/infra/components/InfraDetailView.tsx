@@ -76,17 +76,19 @@ function HostHeader({
         </>
       ) : (
         <>
-          <h1 className="text-slate-900 dark:text-white text-2xl sm:text-3xl font-black tracking-tight">
-            {name}
-          </h1>
-          <div className="flex flex-wrap items-center gap-2 mt-2 mb-1">
-            <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${sc.bg} ${sc.text} text-xs font-bold uppercase tracking-wider`}>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-slate-900 dark:text-white text-2xl sm:text-3xl font-black tracking-tight">
+              {name}
+            </h1>
+            <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${sc.bg} border ${sc.border}`}>
               <span className="relative flex h-2 w-2">
                 <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${sc.dot} opacity-75`} />
                 <span className={`relative inline-flex rounded-full h-2 w-2 ${sc.dot}`} />
               </span>
-              {t(`common.${status}`)}
-            </span>
+              <span className={`${sc.text} text-xs font-bold uppercase tracking-wider`}>
+                {t(`common.${status}`)}
+              </span>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-1.5 mt-1">
             {host?.type && (

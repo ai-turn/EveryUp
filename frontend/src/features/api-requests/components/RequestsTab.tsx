@@ -333,7 +333,7 @@ function StatCard({
             {label}
             {tooltip && (
               <span className="relative group/tip cursor-default">
-                <MaterialIcon name="info_outline" className="text-xs text-slate-400 hover:text-slate-500 dark:text-text-dim-dark" />
+                <MaterialIcon name="info" className="text-xs text-slate-400 hover:text-slate-500 dark:text-text-dim-dark" />
                 <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-52 rounded-lg bg-slate-800 dark:bg-slate-700 px-2.5 py-1.5 text-[11px] font-normal text-white shadow-lg opacity-0 group-hover/tip:opacity-100 transition-opacity z-10 whitespace-normal text-center leading-snug">
                   {tooltip}
                 </span>

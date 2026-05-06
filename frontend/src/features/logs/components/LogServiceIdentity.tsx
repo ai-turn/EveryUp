@@ -1,9 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
 import { MaterialIcon } from '../../../components/common';
-import { LogLevel, LOG_LEVELS, Service } from '../../../services/api';
+import { LogLevel, LOG_LEVELS, Service, api } from '../../../services/api';
+import type { ApiCaptureConfig } from '../../../services/api';
+import { env } from '../../../config/env';
 
 interface Props {
   service: Service;
@@ -29,8 +31,32 @@ function InfoChip({ icon, label, value, accent }: { icon: string; label: string;
   );
 }
 
+const DEMO_CAPTURE_CONFIG: ApiCaptureConfig = {
+  mode: 'sampled',
+  sampleRate: 10,
+  bodyMaxBytes: 8192,
+  maskedHeaders: ['authorization', 'x-api-key', 'cookie'],
+  maskedBodyFields: ['password', 'token', 'secret'],
+};
+
+const CAPTURE_MODE_LABEL: Record<string, string> = {
+  disabled: '캡처 안함',
+  errors_only: '에러만',
+  sampled: '샘플링',
+  all: '모든 요청',
+};
+
 export function LogServiceIdentity({ service }: Props) {
   const { t, i18n } = useTranslation(['logs', 'common']);
+  const [captureConfig, setCaptureConfig] = useState<ApiCaptureConfig | null>(null);
+
+  useEffect(() => {
+    if (env.useMock || env.isDemoMode) {
+      setCaptureConfig(DEMO_CAPTURE_CONFIG);
+      return;
+    }
+    api.getApiCaptureConfig(service.id).then(setCaptureConfig).catch(() => {});
+  }, [service.id]);
 
   const dateLocale = useMemo(
     () => (i18n.language.startsWith('ko') ? ko : enUS),
@@ -92,6 +118,36 @@ export function LogServiceIdentity({ service }: Props) {
             </div>
           </div>
         </div>
+
+        {/* API Capture config badges */}
+        {captureConfig && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20">
+              <MaterialIcon name="filter_alt" className="text-sm text-primary" />
+              <span className="text-xs font-semibold text-primary">
+                {CAPTURE_MODE_LABEL[captureConfig.mode] ?? captureConfig.mode}
+                {captureConfig.mode === 'sampled' && ` ${captureConfig.sampleRate}%`}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark">
+              <MaterialIcon name="shield" className="text-sm text-slate-400 dark:text-text-dim-dark" />
+              <span className="text-xs font-semibold text-slate-600 dark:text-text-base-dark">
+                {captureConfig.maskedHeaders.length > 0
+                  ? captureConfig.maskedHeaders.slice(0, 2).join(', ') + (captureConfig.maskedHeaders.length > 2 ? ` 외 ${captureConfig.maskedHeaders.length - 2}개` : '')
+                  : '헤더 마스킹 없음'}
+              </span>
+            </div>
+            {captureConfig.maskedBodyFields.length > 0 && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark">
+                <MaterialIcon name="lock" className="text-sm text-slate-400 dark:text-text-dim-dark" />
+                <span className="text-xs font-semibold text-slate-600 dark:text-text-base-dark">
+                  {captureConfig.maskedBodyFields.slice(0, 2).join(', ')}
+                  {captureConfig.maskedBodyFields.length > 2 && ` 외 ${captureConfig.maskedBodyFields.length - 2}개`}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

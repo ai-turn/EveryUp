@@ -48,36 +48,42 @@ export const infraStatusColorClasses = {
     text: 'text-lime-500 dark:text-lime-400',
     dot: 'bg-lime-500 dark:bg-lime-400',
     badge: 'bg-lime-400/10 text-lime-500',
+    border: 'border-lime-500/20',
   },
   warning: {
     bg: 'bg-amber-400/10',
     text: 'text-amber-500 dark:text-amber-400',
     dot: 'bg-amber-500 dark:bg-amber-400',
     badge: 'bg-amber-400/10 text-amber-500',
+    border: 'border-amber-500/20',
   },
   critical: {
     bg: 'bg-red-400/10',
     text: 'text-red-500 dark:text-red-400',
     dot: 'bg-red-500 dark:bg-red-400',
     badge: 'bg-red-400/10 text-red-500',
+    border: 'border-red-500/20',
   },
   error: {
     bg: 'bg-red-400/10',
     text: 'text-red-500 dark:text-red-400',
     dot: 'bg-red-500 dark:bg-red-400',
     badge: 'bg-red-400/10 text-red-500',
+    border: 'border-red-500/20',
   },
   paused: {
     bg: 'bg-slate-500/10',
     text: 'text-slate-500 dark:text-text-muted-dark',
     dot: 'bg-slate-500 dark:bg-slate-400',
     badge: 'bg-slate-500/10 text-slate-500',
+    border: 'border-slate-500/20',
   },
   unknown: {
     bg: 'bg-amber-400/10',
     text: 'text-amber-500 dark:text-amber-400',
     dot: 'bg-amber-500 dark:bg-amber-400',
     badge: 'bg-amber-400/10 text-amber-500',
+    border: 'border-amber-500/20',
   },
 } as const;
 
