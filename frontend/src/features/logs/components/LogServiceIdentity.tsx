@@ -86,8 +86,8 @@ export function LogServiceIdentity({ service }: Props) {
           <code className="text-xs">{service.id}</code>
         </p>
 
-        {/* Info chips */}
-        <div className="flex flex-wrap gap-2 items-center">
+        {/* All chips in one scrollable row */}
+        <div className="flex gap-2 overflow-x-auto">
           {service.apiKeyMasked && (
             <InfoChip
               icon="key"
@@ -103,7 +103,7 @@ export function LogServiceIdentity({ service }: Props) {
           />
 
           {/* Log level filter — read-only dots */}
-          <div className="relative group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark cursor-default">
+          <div className="shrink-0 relative group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark cursor-default">
             <MaterialIcon name="filter_alt" className="text-sm text-slate-400 dark:text-text-dim-dark" />
             <span className="flex items-center gap-1">
               {LOG_LEVELS.map((lvl) => (
@@ -117,37 +117,36 @@ export function LogServiceIdentity({ service }: Props) {
               {t('logServices.identity.levelFilter')}
             </div>
           </div>
-        </div>
 
-        {/* API Capture config badges */}
-        {captureConfig && (
-          <div className="flex gap-2 mt-3 overflow-x-auto">
-            <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20">
-              <MaterialIcon name="filter_alt" className="text-sm text-primary" />
-              <span className="text-xs font-semibold text-primary whitespace-nowrap">
-                {CAPTURE_MODE_LABEL[captureConfig.mode] ?? captureConfig.mode}
-                {captureConfig.mode === 'sampled' && ` ${captureConfig.sampleRate}%`}
-              </span>
-            </div>
-            <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark">
-              <MaterialIcon name="shield" className="text-sm text-slate-400 dark:text-text-dim-dark" />
-              <span className="text-xs font-semibold text-slate-600 dark:text-text-base-dark whitespace-nowrap">
-                {captureConfig.maskedHeaders.length > 0
-                  ? captureConfig.maskedHeaders.slice(0, 2).join(', ') + (captureConfig.maskedHeaders.length > 2 ? ` 외 ${captureConfig.maskedHeaders.length - 2}개` : '')
-                  : '헤더 마스킹 없음'}
-              </span>
-            </div>
-            {captureConfig.maskedBodyFields.length > 0 && (
-              <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark">
-                <MaterialIcon name="lock" className="text-sm text-slate-400 dark:text-text-dim-dark" />
-                <span className="text-xs font-semibold text-slate-600 dark:text-text-base-dark whitespace-nowrap">
-                  {captureConfig.maskedBodyFields.slice(0, 2).join(', ')}
-                  {captureConfig.maskedBodyFields.length > 2 && ` 외 ${captureConfig.maskedBodyFields.length - 2}개`}
+          {captureConfig && (
+            <>
+              <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20">
+                <MaterialIcon name="api" className="text-sm text-primary" />
+                <span className="text-xs font-semibold text-primary whitespace-nowrap">
+                  {CAPTURE_MODE_LABEL[captureConfig.mode] ?? captureConfig.mode}
+                  {captureConfig.mode === 'sampled' && ` ${captureConfig.sampleRate}%`}
                 </span>
               </div>
-            )}
-          </div>
-        )}
+              <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark">
+                <MaterialIcon name="shield" className="text-sm text-slate-400 dark:text-text-dim-dark" />
+                <span className="text-xs font-semibold text-slate-600 dark:text-text-base-dark whitespace-nowrap">
+                  {captureConfig.maskedHeaders.length > 0
+                    ? captureConfig.maskedHeaders.slice(0, 2).join(', ') + (captureConfig.maskedHeaders.length > 2 ? ` 외 ${captureConfig.maskedHeaders.length - 2}개` : '')
+                    : '헤더 마스킹 없음'}
+                </span>
+              </div>
+              {captureConfig.maskedBodyFields.length > 0 && (
+                <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark">
+                  <MaterialIcon name="lock" className="text-sm text-slate-400 dark:text-text-dim-dark" />
+                  <span className="text-xs font-semibold text-slate-600 dark:text-text-base-dark whitespace-nowrap">
+                    {captureConfig.maskedBodyFields.slice(0, 2).join(', ')}
+                    {captureConfig.maskedBodyFields.length > 2 && ` 외 ${captureConfig.maskedBodyFields.length - 2}개`}
+                  </span>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
