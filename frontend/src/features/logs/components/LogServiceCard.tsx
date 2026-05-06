@@ -18,13 +18,6 @@ const levelBadgeStyle: Record<string, string> = {
   trace: 'bg-slate-400/10 text-slate-500 dark:text-slate-400',
 };
 
-const levelCountStyle: Record<LogLevel, string> = {
-  error: 'text-red-500',
-  warn:  'text-amber-500',
-  info:  'text-sky-500',
-  debug: 'text-violet-400',
-  trace: 'text-slate-400',
-};
 
 const levelDotStyle: Record<LogLevel, string> = {
   error: 'bg-red-500',
@@ -128,17 +121,15 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
       </div>
 
       {/* Level counts */}
-      <div className="grid grid-cols-5 gap-1.5">
+      <div className="flex gap-2">
         {levelsOrder.map((level) => (
-          <div
-            key={level}
-            className={`flex flex-col items-center py-2 rounded-lg border border-slate-100 dark:border-ui-border-dark text-center transition-colors hover:bg-slate-50 dark:hover:bg-ui-hover-dark ${levelCounts[level] === 0 ? 'opacity-35' : ''}`}
-          >
-            <span className={`text-base font-black tabular-nums leading-none ${levelCounts[level] > 0 ? levelCountStyle[level] : 'text-slate-400 dark:text-text-dim-dark'}`}>
+          <div key={level} className="flex-1 flex flex-col items-center gap-0.5">
+            <div className="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400 dark:text-text-dim-dark">
+              <span className={`w-1.5 h-1.5 rounded-full ${levelDotStyle[level]}`} />
+              <span>{level}</span>
+            </div>
+            <span className={`text-sm font-black tabular-nums ${levelCounts[level] > 0 ? (level === 'error' ? 'text-red-500' : level === 'warn' ? 'text-amber-500' : level === 'info' ? 'text-sky-500' : level === 'debug' ? 'text-violet-400' : 'text-slate-400') : 'text-slate-400 dark:text-text-dim-dark'}`}>
               {levelCounts[level]}
-            </span>
-            <span className="text-[9px] uppercase font-bold tracking-wide text-slate-400 dark:text-text-dim-dark mt-1">
-              {level}
             </span>
           </div>
         ))}
