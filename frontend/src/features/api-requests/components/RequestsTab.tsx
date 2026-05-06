@@ -2,7 +2,8 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { MaterialIcon } from '../../../components/common';
 import { useApiRequests } from '../hooks/useApiRequests';
 import { RequestFilters } from './RequestFilters';
-import type { ApiRequest, ApiRequestListParams } from '../../../services/api';
+import { api } from '../../../services/api';
+import type { ApiRequest, ApiRequestListParams, ApiCaptureConfig } from '../../../services/api';
 
 export interface RequestsTabProps {
   serviceId: string;
@@ -304,12 +305,14 @@ function StatCard({
   icon,
   tone,
   suffix,
+  tooltip,
 }: {
   label: string;
   value: string | number;
   icon: string;
   tone: 'primary' | 'red' | 'amber' | 'sky' | 'slate';
   suffix?: string;
+  tooltip?: string;
 }) {
   const toneClass = {
     primary: 'bg-primary/10 text-primary',
@@ -326,7 +329,17 @@ function StatCard({
           <MaterialIcon name={icon} className="text-lg" />
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-semibold text-slate-500 dark:text-text-muted-dark">{label}</p>
+          <p className="flex items-center gap-1 text-xs font-semibold text-slate-500 dark:text-text-muted-dark">
+            {label}
+            {tooltip && (
+              <span className="relative group/tip cursor-default">
+                <MaterialIcon name="info_outline" className="text-xs text-slate-400 hover:text-slate-500 dark:text-text-dim-dark" />
+                <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-52 rounded-lg bg-slate-800 dark:bg-slate-700 px-2.5 py-1.5 text-[11px] font-normal text-white shadow-lg opacity-0 group-hover/tip:opacity-100 transition-opacity z-10 whitespace-normal text-center leading-snug">
+                  {tooltip}
+                </span>
+              </span>
+            )}
+          </p>
           <p className="text-xl font-black tabular-nums text-slate-900 dark:text-white">
             {value}
             {suffix && <span className="ml-1 text-xs font-bold text-slate-400 dark:text-text-dim-dark">{suffix}</span>}
@@ -634,6 +647,11 @@ export function RequestsTab({ serviceId, onGoToSettings }: RequestsTabProps) {
     setOffset((prev) => prev + DEFAULT_LIMIT);
   }, []);
 
+  const [captureConfig, setCaptureConfig] = useState<ApiCaptureConfig | null>(null);
+  useEffect(() => {
+    api.getApiCaptureConfig(serviceId).then(setCaptureConfig).catch(() => {});
+  }, [serviceId]);
+
   const exampleRequests = useMemo(() => buildExampleRequests(serviceId), [serviceId]);
   const isExampleMode = !loading && !error && accumulatedItems.length === 0;
   const displayItems = useMemo(
@@ -661,15 +679,41 @@ export function RequestsTab({ serviceId, onGoToSettings }: RequestsTabProps) {
       <div className="grid grid-cols-2 xl:grid-cols-5 gap-3">
         <StatCard label="요청 수" value={displayItems.length} icon="http" tone="primary" />
         <StatCard label="에러" value={errors} icon="error" tone={errors > 0 ? 'red' : 'slate'} suffix={`${errorRate.toFixed(1)}%`} />
-        <StatCard label="P50 응답시간" value={percentile(durations, 0.5)} icon="speed" tone="sky" suffix="ms" />
-        <StatCard label="P95 응답시간" value={percentile(durations, 0.95)} icon="monitoring" tone="amber" suffix="ms" />
+        <StatCard label="P50 응답시간" value={percentile(durations, 0.5)} icon="speed" tone="sky" suffix="ms" tooltip="전체 요청 중 50%가 이 시간 이하로 응답했습니다 (중앙값)." />
+        <StatCard label="P95 응답시간" value={percentile(durations, 0.95)} icon="monitoring" tone="amber" suffix="ms" tooltip="전체 요청 중 95%가 이 시간 이하로 응답했습니다. 느린 요청의 기준선입니다." />
         <StatCard label="엔드포인트" value={aggregates.length} icon="account_tree" tone="slate" />
       </div>
 
       {isExampleMode && displayItems.length > 0 && (
-        <div className="flex items-center gap-2 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-2 text-xs font-semibold text-amber-700 dark:text-amber-300">
-          <MaterialIcon name="science" className="text-sm" />
-          실제 API 요청 캡처가 없어 예시 데이터로 화면 구성을 보여줍니다.
+        <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-xs text-amber-700 dark:text-amber-300">
+          <div className="flex items-center gap-2 font-semibold mb-2">
+            <MaterialIcon name="science" className="text-sm" />
+            실제 API 요청 캡처가 없어 예시 데이터로 화면 구성을 보여줍니다.
+          </div>
+          {captureConfig && (
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-amber-600 dark:text-amber-400 font-medium">
+              <span className="flex items-center gap-1">
+                <MaterialIcon name="filter_alt" className="text-xs" />
+                캡처 모드:&nbsp;
+                <span className="font-bold">{{
+                  disabled: '캡처 안함',
+                  errors_only: '에러만',
+                  sampled: `샘플링 ${captureConfig.sampleRate}%`,
+                  all: '모든 요청',
+                }[captureConfig.mode] ?? captureConfig.mode}</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <MaterialIcon name="shield" className="text-xs" />
+                마스킹 헤더:&nbsp;
+                <span className="font-bold">{captureConfig.maskedHeaders.length > 0 ? captureConfig.maskedHeaders.slice(0, 3).join(', ') + (captureConfig.maskedHeaders.length > 3 ? ` 외 ${captureConfig.maskedHeaders.length - 3}개` : '') : '없음'}</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <MaterialIcon name="lock" className="text-xs" />
+                마스킹 필드:&nbsp;
+                <span className="font-bold">{captureConfig.maskedBodyFields.length > 0 ? captureConfig.maskedBodyFields.slice(0, 3).join(', ') + (captureConfig.maskedBodyFields.length > 3 ? ` 외 ${captureConfig.maskedBodyFields.length - 3}개` : '') : '없음'}</span>
+              </span>
+            </div>
+          )}
         </div>
       )}
 

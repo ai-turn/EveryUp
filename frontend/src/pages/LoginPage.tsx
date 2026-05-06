@@ -127,7 +127,7 @@ export function LoginPage() {
                     onChange={e => { setUsername(e.target.value); setError(''); }}
                     required
                     autoFocus
-                    className={`w-full bg-slate-50 dark:bg-ui-hover-dark border ${inputErrorClass} rounded-lg px-3 py-3 text-slate-900 dark:text-white text-sm placeholder-slate-400 outline-none focus:ring-2 focus:border-transparent transition-all`}
+                    className={`w-full bg-slate-50 dark:bg-ui-hover-dark border ${inputErrorClass} rounded-lg px-3 py-3 text-slate-900 dark:text-white text-base sm:text-sm placeholder-slate-400 outline-none focus:ring-2 focus:border-transparent transition-all`}
                     placeholder="admin"
                   />
                 </div>
@@ -141,7 +141,7 @@ export function LoginPage() {
                     value={password}
                     onChange={e => { setPassword(e.target.value); setError(''); }}
                     required
-                    className={`w-full bg-slate-50 dark:bg-ui-hover-dark border ${inputErrorClass} rounded-lg px-3 py-3 text-slate-900 dark:text-white text-sm placeholder-slate-400 outline-none focus:ring-2 focus:border-transparent transition-all`}
+                    className={`w-full bg-slate-50 dark:bg-ui-hover-dark border ${inputErrorClass} rounded-lg px-3 py-3 text-slate-900 dark:text-white text-base sm:text-sm placeholder-slate-400 outline-none focus:ring-2 focus:border-transparent transition-all`}
                     placeholder={isSetup ? t('login.passwordMinLength') : t('login.password')}
                   />
                 </div>

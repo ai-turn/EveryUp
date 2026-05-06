@@ -78,7 +78,7 @@ export function NotificationChannelStatus() {
         {/* Channel List */}
         {!loading && totalCount > 0 && (
           <div className="space-y-2">
-            {(channels || []).map((channel) => {
+            {(channels || []).slice(0, 5).map((channel) => {
               const meta = CHANNEL_META[channel.type] ?? { icon: 'notifications', color: 'text-slate-500', bg: 'bg-slate-500/10' };
               return (
                 <div
@@ -118,6 +118,14 @@ export function NotificationChannelStatus() {
                 </div>
               );
             })}
+            {totalCount > 5 && (
+              <button
+                onClick={() => navigate('/alerts')}
+                className="w-full py-2 text-xs font-semibold text-slate-400 dark:text-text-dim-dark hover:text-primary dark:hover:text-primary transition-colors text-center"
+              >
+                +{totalCount - 5}개 더보기
+              </button>
+            )}
           </div>
         )}
       </div>

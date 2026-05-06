@@ -11,13 +11,14 @@ const SEVERITY_COLOR: Record<string, { text: string; bg: string; dot: string }> 
   info: { text: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/10', dot: 'bg-blue-500' },
 };
 
-const METRIC_SHORT: Record<string, string> = {
-  cpu: 'CPU',
-  memory: 'Mem',
-  disk: 'Disk',
-  http_status: 'HTTP',
-  response_time: 'RT',
-  status_change: 'Status',
+const METRIC_ICON: Record<string, string> = {
+  cpu: 'memory',
+  memory: 'storage',
+  disk: 'hard_drive',
+  http_status: 'http',
+  response_time: 'speed',
+  status_change: 'compare_arrows',
+  api_status_code: 'code',
 };
 
 export function AlertRulesStatus() {
@@ -94,16 +95,16 @@ export function AlertRulesStatus() {
                 </button>
               </div>
             ) : (
-              rules.map((rule) => {
+              rules.slice(0, 5).map((rule) => {
                 const sev = SEVERITY_COLOR[rule.severity] ?? SEVERITY_COLOR.info;
-                const metricLabel = METRIC_SHORT[rule.metric] ?? rule.metric;
+                const metricIcon = METRIC_ICON[rule.metric] ?? 'notifications';
                 return (
                   <div
                     key={rule.id}
                     className={`flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-ui-hover-dark/60 transition-colors ${!rule.isEnabled ? 'opacity-50' : ''}`}
                   >
                     <div className={`w-8 h-8 rounded-lg ${sev.bg} flex items-center justify-center shrink-0`}>
-                      <span className={`text-xs font-bold ${sev.text}`}>{metricLabel}</span>
+                      <MaterialIcon name={metricIcon} className={`text-base ${sev.text}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-slate-800 dark:text-text-base-dark truncate">
@@ -127,6 +128,14 @@ export function AlertRulesStatus() {
                   </div>
                 );
               })
+            )}
+            {rules.length > 5 && (
+              <button
+                onClick={() => navigate('/alerts?tab=rules')}
+                className="w-full py-2 text-xs font-semibold text-slate-400 dark:text-text-dim-dark hover:text-primary dark:hover:text-primary transition-colors text-center"
+              >
+                +{rules.length - 5}개 더보기
+              </button>
             )}
           </div>
         )}

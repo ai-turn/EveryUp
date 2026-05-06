@@ -76,10 +76,10 @@ function HostHeader({
         </>
       ) : (
         <>
-          <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-slate-900 dark:text-white text-2xl sm:text-3xl font-black tracking-tight">
-              {name}
-            </h1>
+          <h1 className="text-slate-900 dark:text-white text-2xl sm:text-3xl font-black tracking-tight">
+            {name}
+          </h1>
+          <div className="flex flex-wrap items-center gap-2 mt-2 mb-1">
             <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${sc.bg} ${sc.text} text-xs font-bold uppercase tracking-wider`}>
               <span className="relative flex h-2 w-2">
                 <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${sc.dot} opacity-75`} />
