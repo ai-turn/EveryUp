@@ -197,6 +197,9 @@ func migrate() error {
 	if err := migrateV21(); err != nil {
 		return fmt.Errorf("v21 migration failed: %w", err)
 	}
+	if err := migrateV22(); err != nil {
+		return fmt.Errorf("v22 migration failed: %w", err)
+	}
 
 	return nil
 }
@@ -732,6 +735,32 @@ func migrateV21() error {
 			  AND (log_level_filter IS NULL OR log_level_filter = '' OR log_level_filter = 'null')
 		`)
 		return err
+	})
+}
+
+// migrateV22 drops body/header columns from api_requests and removes the
+// body capture config columns from services. API monitoring now stores
+// metadata only (method, path, status, duration) — bodies stay in service logs.
+// Added: 2026-05-07
+func migrateV22() error {
+	return Transaction(func(tx *sql.Tx) error {
+		stmts := []string{
+			`ALTER TABLE api_requests DROP COLUMN IF EXISTS req_headers`,
+			`ALTER TABLE api_requests DROP COLUMN IF EXISTS req_body`,
+			`ALTER TABLE api_requests DROP COLUMN IF EXISTS req_body_size`,
+			`ALTER TABLE api_requests DROP COLUMN IF EXISTS res_headers`,
+			`ALTER TABLE api_requests DROP COLUMN IF EXISTS res_body`,
+			`ALTER TABLE api_requests DROP COLUMN IF EXISTS res_body_size`,
+			`ALTER TABLE services DROP COLUMN IF EXISTS api_body_max_bytes`,
+			`ALTER TABLE services DROP COLUMN IF EXISTS api_masked_headers`,
+			`ALTER TABLE services DROP COLUMN IF EXISTS api_masked_body_fields`,
+		}
+		for _, s := range stmts {
+			if _, err := tx.Exec(s); err != nil {
+				return err
+			}
+		}
+		return nil
 	})
 }
 

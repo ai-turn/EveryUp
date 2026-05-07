@@ -35,9 +35,6 @@ function InfoChip({ icon, label, value, accent }: { icon: string; label: string;
 const DEMO_CAPTURE_CONFIG: ApiCaptureConfig = {
   mode: 'sampled',
   sampleRate: 10,
-  bodyMaxBytes: 8192,
-  maskedHeaders: ['authorization', 'x-api-key', 'cookie'],
-  maskedBodyFields: ['password', 'token', 'secret'],
 };
 
 const CAPTURE_MODE_LABEL: Record<string, string> = {
@@ -140,22 +137,9 @@ export function LogServiceIdentity({ service }: Props) {
                 </span>
               </div>
               <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark">
-                <MaterialIcon name="shield" className="text-sm text-slate-400 dark:text-text-dim-dark" />
-                <span className="text-xs font-semibold text-slate-600 dark:text-text-base-dark whitespace-nowrap">
-                  {captureConfig.maskedHeaders.length > 0
-                    ? captureConfig.maskedHeaders.slice(0, 2).join(', ') + (captureConfig.maskedHeaders.length > 2 ? ` 외 ${captureConfig.maskedHeaders.length - 2}개` : '')
-                    : '헤더 마스킹 없음'}
-                </span>
+                <MaterialIcon name="info" className="text-sm text-slate-400 dark:text-text-dim-dark" />
+                <span className="text-xs font-semibold text-slate-600 dark:text-text-base-dark whitespace-nowrap">메타데이터만 수집</span>
               </div>
-              {captureConfig.maskedBodyFields.length > 0 && (
-                <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark">
-                  <MaterialIcon name="lock" className="text-sm text-slate-400 dark:text-text-dim-dark" />
-                  <span className="text-xs font-semibold text-slate-600 dark:text-text-base-dark whitespace-nowrap">
-                    {captureConfig.maskedBodyFields.slice(0, 2).join(', ')}
-                    {captureConfig.maskedBodyFields.length > 2 && ` 외 ${captureConfig.maskedBodyFields.length - 2}개`}
-                  </span>
-                </div>
-              )}
             </>
           )}
         </div>

@@ -50,7 +50,6 @@ func (h *ApiRequestIngestHandler) Ingest(c *fiber.Ctx) error {
 		})
 	}
 
-	// Parse body
 	var payload models.ApiRequestIngestRequest
 	if err := json.Unmarshal(c.Body(), &payload); err != nil {
 		return c.Status(400).JSON(fiber.Map{
@@ -62,16 +61,13 @@ func (h *ApiRequestIngestHandler) Ingest(c *fiber.Ctx) error {
 		})
 	}
 
-	// Determine entries: batch or single
 	var entries []models.ApiRequestIngestEntry
 	if len(payload.Requests) > 0 {
 		entries = payload.Requests
 	} else {
-		// Single entry — use the embedded fields
 		entries = []models.ApiRequestIngestEntry{payload.ApiRequestIngestEntry}
 	}
 
-	// Enforce batch limit before any processing
 	if len(entries) > maxApiRequestBatchSize {
 		return c.Status(400).JSON(fiber.Map{
 			"success": false,
@@ -82,7 +78,6 @@ func (h *ApiRequestIngestHandler) Ingest(c *fiber.Ctx) error {
 		})
 	}
 
-	// Load capture config for service
 	cfg, err := h.serviceRepo.GetApiCaptureConfig(service.ID)
 	if err != nil {
 		log.Printf("[ApiRequestIngest] Failed to load capture config for service %s: %v", service.ID, err)
@@ -95,7 +90,6 @@ func (h *ApiRequestIngestHandler) Ingest(c *fiber.Ctx) error {
 	var batch []models.ApiRequest
 
 	for i, entry := range entries {
-		// Validate entry
 		if err := validateApiRequestEntry(&entry); err != nil {
 			log.Printf("[ApiRequestIngest] Entry #%d validation failed: %v", i, err)
 			errs++
@@ -109,42 +103,11 @@ func (h *ApiRequestIngestHandler) Ingest(c *fiber.Ctx) error {
 			continue
 		}
 
-		// Normalize path
-		pathTemplate := NormalizePath(entry.Path)
-
-		// Mask and marshal request headers
-		maskedReqHeaders := MaskHeaders(entry.ReqHeaders, cfg.MaskedHeaders)
-		var reqHeadersJSON json.RawMessage
-		if maskedReqHeaders != nil {
-			if data, err := json.Marshal(maskedReqHeaders); err == nil {
-				reqHeadersJSON = data
-			}
-		}
-
-		// Mask and marshal response headers
-		maskedResHeaders := MaskHeaders(entry.ResHeaders, cfg.MaskedHeaders)
-		var resHeadersJSON json.RawMessage
-		if maskedResHeaders != nil {
-			if data, err := json.Marshal(maskedResHeaders); err == nil {
-				resHeadersJSON = data
-			}
-		}
-
-		// Mask body fields
-		maskedReqBody := MaskJSONBody(entry.ReqBody, cfg.MaskedBodyFields)
-		maskedResBody := MaskJSONBody(entry.ResBody, cfg.MaskedBodyFields)
-
-		// Truncate bodies
-		truncatedReqBody, reqBodySize := TruncateBody(maskedReqBody, cfg.BodyMaxBytes)
-		truncatedResBody, resBodySize := TruncateBody(maskedResBody, cfg.BodyMaxBytes)
-
-		// Determine request ID
 		requestID := entry.RequestID
 		if requestID == "" {
 			requestID = newULID()
 		}
 
-		// Determine timestamp
 		var createdAt time.Time
 		if entry.Timestamp != nil {
 			createdAt = *entry.Timestamp
@@ -157,16 +120,10 @@ func (h *ApiRequestIngestHandler) Ingest(c *fiber.Ctx) error {
 			RequestID:    requestID,
 			Method:       strings.ToUpper(entry.Method),
 			Path:         entry.Path,
-			PathTemplate: pathTemplate,
+			PathTemplate: NormalizePath(entry.Path),
 			StatusCode:   entry.StatusCode,
 			DurationMs:   entry.DurationMs,
 			ClientIP:     entry.ClientIP,
-			ReqHeaders:   reqHeadersJSON,
-			ReqBody:      truncatedReqBody,
-			ReqBodySize:  reqBodySize,
-			ResHeaders:   resHeadersJSON,
-			ResBody:      truncatedResBody,
-			ResBodySize:  resBodySize,
 			Error:        entry.Error,
 			IsError:      isError,
 			CreatedAt:    createdAt,
@@ -193,9 +150,6 @@ func (h *ApiRequestIngestHandler) Ingest(c *fiber.Ctx) error {
 	})
 }
 
-// validateApiRequestEntry checks required fields and size constraints.
-// evaluateApiRequestAlerts dispatches alerts for any captured request matching an enabled rule.
-// Rule lookup is done once per ingest call; matching is per-entry status_code vs rule.Operator+Threshold.
 func (h *ApiRequestIngestHandler) evaluateApiRequestAlerts(service *models.Service, batch []models.ApiRequest) {
 	rules, err := h.ruleRepo.GetEnabledApiRequestRulesByServiceID(service.ID)
 	if err != nil {

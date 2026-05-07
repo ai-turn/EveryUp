@@ -8,6 +8,7 @@ import { useDebouncedValue } from '../../../hooks/useDebouncedValue';
 interface ErrorLogTableProps {
   serviceId?: string;
   refreshKey?: number;
+  initialSearch?: string;
 }
 
 const LIMIT_STEP = 50;
@@ -379,13 +380,13 @@ function ErrorGroupRow({
   );
 }
 
-export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
+export function ErrorLogTable({ serviceId, refreshKey, initialSearch }: ErrorLogTableProps) {
   const { t } = useTranslation(['logs', 'common']);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialSearch ?? '');
   const [levelFilter, setLevelFilter] = useState<LevelFilter>('all');
   const [isPaused, setIsPaused] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -430,7 +431,8 @@ export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
       const matchesSearch =
         !q ||
         log.message.toLowerCase().includes(q) ||
-        (log.fingerprint ?? '').toLowerCase().includes(q);
+        (log.fingerprint ?? '').toLowerCase().includes(q) ||
+        (log.metadata ? JSON.stringify(log.metadata).toLowerCase().includes(q) : false);
       return matchesLevel && matchesSearch;
     });
   }, [sourceLogs, levelFilter, debouncedSearch]);

@@ -20,6 +20,8 @@ No Prometheus, no Grafana, no cloud required — just a single binary and a SQLi
 
 **[Live Demo →](https://ai-turn.github.io/everyup/)**
 
+<img src="docs/images/everyup-main.png" alt="EveryUp Dashboard" width="100%">
+
 ---
 
 ## Table of Contents

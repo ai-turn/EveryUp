@@ -32,123 +32,12 @@ function buildExampleRequests(serviceId: string): ApiRequest[] {
   const ago = (seconds: number) => new Date(now - seconds * 1000).toISOString();
 
   return [
-    {
-      id: 9101,
-      serviceId,
-      requestId: 'req_EXAMPLE_1001',
-      method: 'GET',
-      path: '/api/v2/orders/8821',
-      pathTemplate: '/api/v2/orders/:id',
-      statusCode: 200,
-      durationMs: 42,
-      clientIp: '211.234.207.18',
-      reqHeaders: { authorization: '***', accept: 'application/json' },
-      reqBody: '',
-      reqBodySize: 0,
-      resHeaders: { 'content-type': 'application/json', 'x-request-id': 'req_EXAMPLE_1001' },
-      resBody: '{"id":"8821","status":"paid","total":14900}',
-      resBodySize: 42,
-      isError: false,
-      createdAt: ago(24),
-    },
-    {
-      id: 9102,
-      serviceId,
-      requestId: 'req_EXAMPLE_1002',
-      method: 'POST',
-      path: '/api/v2/orders',
-      pathTemplate: '/api/v2/orders',
-      statusCode: 500,
-      durationMs: 1284,
-      clientIp: '211.234.207.31',
-      reqHeaders: { authorization: '***', 'content-type': 'application/json' },
-      reqBody: '{"userId":"cust_8X2","items":[{"sku":"pro-plan","qty":1}]}',
-      reqBodySize: 60,
-      resHeaders: { 'content-type': 'application/json', 'x-request-id': 'req_EXAMPLE_1002' },
-      resBody: '{"error":{"code":"ORDER_PROCESSING_FAILED","message":"Cannot read properties of undefined"}}',
-      resBodySize: 88,
-      error: 'Cannot read properties of undefined (reading "id")',
-      isError: true,
-      createdAt: ago(47),
-    },
-    {
-      id: 9103,
-      serviceId,
-      requestId: 'req_EXAMPLE_1003',
-      method: 'POST',
-      path: '/api/v2/billing/charge',
-      pathTemplate: '/api/v2/billing/charge',
-      statusCode: 504,
-      durationMs: 5004,
-      clientIp: '211.234.207.88',
-      reqHeaders: { authorization: '***', 'content-type': 'application/json' },
-      reqBody: '{"invoiceId":"inv_004","amount":9900,"currency":"KRW"}',
-      reqBodySize: 56,
-      resHeaders: { 'content-type': 'application/json', 'x-request-id': 'req_EXAMPLE_1003' },
-      resBody: '{"error":{"code":"UPSTREAM_TIMEOUT","message":"billing-svc timeout after 5000ms"}}',
-      resBodySize: 82,
-      error: 'billing-svc timeout after 5000ms',
-      isError: true,
-      createdAt: ago(93),
-    },
-    {
-      id: 9104,
-      serviceId,
-      requestId: 'req_EXAMPLE_1004',
-      method: 'PATCH',
-      path: '/api/v2/users/me',
-      pathTemplate: '/api/v2/users/me',
-      statusCode: 422,
-      durationMs: 73,
-      clientIp: '211.234.207.42',
-      reqHeaders: { authorization: '***', 'content-type': 'application/json' },
-      reqBody: '{"email":"bad-email"}',
-      reqBodySize: 21,
-      resHeaders: { 'content-type': 'application/json', 'x-request-id': 'req_EXAMPLE_1004' },
-      resBody: '{"error":{"code":"VALIDATION_ERROR","field":"email"}}',
-      resBodySize: 54,
-      isError: true,
-      error: 'validation failed: email',
-      createdAt: ago(130),
-    },
-    {
-      id: 9105,
-      serviceId,
-      requestId: 'req_EXAMPLE_1005',
-      method: 'GET',
-      path: '/api/v2/reports/safe-eye',
-      pathTemplate: '/api/v2/reports/:type',
-      statusCode: 200,
-      durationMs: 218,
-      clientIp: '211.234.207.15',
-      reqHeaders: { authorization: '***', accept: 'application/json' },
-      reqBody: '',
-      reqBodySize: 0,
-      resHeaders: { 'content-type': 'application/json', 'x-request-id': 'req_EXAMPLE_1005' },
-      resBody: '{"ok":true,"items":[]}',
-      resBodySize: 22,
-      isError: false,
-      createdAt: ago(260),
-    },
-    {
-      id: 9106,
-      serviceId,
-      requestId: 'req_EXAMPLE_1006',
-      method: 'GET',
-      path: '/api/v2/orders/8821',
-      pathTemplate: '/api/v2/orders/:id',
-      statusCode: 200,
-      durationMs: 39,
-      clientIp: '211.234.207.18',
-      reqHeaders: { authorization: '***', accept: 'application/json' },
-      reqBody: '',
-      reqBodySize: 0,
-      resHeaders: { 'content-type': 'application/json', 'x-request-id': 'req_EXAMPLE_1006' },
-      resBody: '{"id":"8821","status":"paid","total":14900}',
-      resBodySize: 42,
-      isError: false,
-      createdAt: ago(390),
-    },
+    { id: 9101, serviceId, requestId: 'req_EXAMPLE_1001', method: 'GET',   path: '/api/v2/orders/8821',      pathTemplate: '/api/v2/orders/:id',       statusCode: 200, durationMs: 42,   clientIp: '211.234.207.18', isError: false, createdAt: ago(24) },
+    { id: 9102, serviceId, requestId: 'req_EXAMPLE_1002', method: 'POST',  path: '/api/v2/orders',           pathTemplate: '/api/v2/orders',           statusCode: 500, durationMs: 1284, clientIp: '211.234.207.31', isError: true,  error: 'Cannot read properties of undefined (reading "id")', createdAt: ago(47) },
+    { id: 9103, serviceId, requestId: 'req_EXAMPLE_1003', method: 'POST',  path: '/api/v2/billing/charge',   pathTemplate: '/api/v2/billing/charge',   statusCode: 504, durationMs: 5004, clientIp: '211.234.207.88', isError: true,  error: 'billing-svc timeout after 5000ms', createdAt: ago(93) },
+    { id: 9104, serviceId, requestId: 'req_EXAMPLE_1004', method: 'PATCH', path: '/api/v2/users/me',         pathTemplate: '/api/v2/users/me',         statusCode: 422, durationMs: 73,   clientIp: '211.234.207.42', isError: true,  error: 'validation failed: email', createdAt: ago(130) },
+    { id: 9105, serviceId, requestId: 'req_EXAMPLE_1005', method: 'GET',   path: '/api/v2/reports/safe-eye', pathTemplate: '/api/v2/reports/:type',    statusCode: 200, durationMs: 218,  clientIp: '211.234.207.15', isError: false, createdAt: ago(260) },
+    { id: 9106, serviceId, requestId: 'req_EXAMPLE_1006', method: 'GET',   path: '/api/v2/orders/8821',      pathTemplate: '/api/v2/orders/:id',       statusCode: 200, durationMs: 39,   clientIp: '211.234.207.18', isError: false, createdAt: ago(390) },
   ];
 }
 
@@ -176,8 +65,6 @@ function applyClientFilters(items: ApiRequest[], params: ApiRequestListParams): 
         item.path,
         item.pathTemplate,
         item.requestId,
-        item.reqBody,
-        item.resBody,
         item.error,
       ].join(' ').toLowerCase();
       if (!haystack.includes(search)) return false;
@@ -428,21 +315,6 @@ function PathAggregateTable({
   );
 }
 
-function BodyPreview({ value, empty = '바디 없음' }: { value?: string; empty?: string }) {
-  if (!value) return <p className="text-xs italic text-slate-400 dark:text-text-dim-dark">{empty}</p>;
-  let rendered = value;
-  try {
-    rendered = JSON.stringify(JSON.parse(value), null, 2);
-  } catch {
-    // keep plain text
-  }
-  return (
-    <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-slate-50 dark:bg-ui-hover-dark p-3 font-mono text-xs text-slate-700 dark:text-text-base-dark">
-      {rendered}
-    </pre>
-  );
-}
-
 function RequestRow({
   request,
   open,
@@ -498,9 +370,9 @@ function RequestRow({
                   <pre className="whitespace-pre-wrap break-all font-mono text-xs text-red-700 dark:text-red-300">{request.error}</pre>
                 </div>
               )}
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-                <PayloadPanel title="요청" headers={request.reqHeaders} body={request.reqBody} />
-                <PayloadPanel title="응답" headers={request.resHeaders} body={request.resBody} />
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark/30 text-xs text-slate-500 dark:text-text-muted-dark">
+                <MaterialIcon name="article" className="text-base shrink-0" />
+                <span>요청/응답 본문은 수집하지 않습니다. 상세 내용은 서비스 로그에서 <code className="bg-slate-200 dark:bg-ui-active-dark px-1 rounded">{request.requestId}</code>로 검색하세요.</span>
               </div>
             </div>
           </td>
@@ -515,35 +387,6 @@ function MetaCard({ label, value }: { label: string; value: string }) {
     <div className="rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark p-3">
       <div className="text-[10px] font-black uppercase tracking-wide text-slate-400 dark:text-text-dim-dark">{label}</div>
       <div className="mt-1 truncate font-mono text-xs text-slate-700 dark:text-text-base-dark" title={value}>{value}</div>
-    </div>
-  );
-}
-
-function PayloadPanel({ title, headers, body }: { title: string; headers?: Record<string, string>; body?: string }) {
-  return (
-    <div className="rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark p-3">
-      <div className="mb-3 flex items-center justify-between">
-        <h4 className="text-xs font-black uppercase tracking-wide text-slate-500 dark:text-text-muted-dark">{title}</h4>
-      </div>
-      <div className="mb-3">
-        <div className="mb-1 text-[10px] font-black uppercase text-slate-400 dark:text-text-dim-dark">헤더</div>
-        {headers && Object.keys(headers).length > 0 ? (
-          <div className="grid grid-cols-[140px_1fr] overflow-hidden rounded border border-slate-100 dark:border-ui-border-dark font-mono text-[11px]">
-            {Object.entries(headers).map(([key, value]) => (
-              <div key={`${title}-${key}`} className="contents">
-                <div className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark px-2 py-1 text-slate-500 dark:text-text-muted-dark">{key}</div>
-                <div className="border-b border-slate-100 dark:border-ui-border-dark px-2 py-1 text-slate-700 dark:text-text-base-dark break-all">{value}</div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-xs italic text-slate-400 dark:text-text-dim-dark">헤더 없음</p>
-        )}
-      </div>
-      <div>
-        <div className="mb-1 text-[10px] font-black uppercase text-slate-400 dark:text-text-dim-dark">바디</div>
-        <BodyPreview value={body} />
-      </div>
     </div>
   );
 }
@@ -701,16 +544,6 @@ export function RequestsTab({ serviceId, onGoToSettings }: RequestsTabProps) {
                   sampled: `샘플링 ${captureConfig.sampleRate}%`,
                   all: '모든 요청',
                 }[captureConfig.mode] ?? captureConfig.mode}</span>
-              </span>
-              <span className="flex items-center gap-1">
-                <MaterialIcon name="shield" className="text-xs" />
-                마스킹 헤더:&nbsp;
-                <span className="font-bold">{captureConfig.maskedHeaders.length > 0 ? captureConfig.maskedHeaders.slice(0, 3).join(', ') + (captureConfig.maskedHeaders.length > 3 ? ` 외 ${captureConfig.maskedHeaders.length - 3}개` : '') : '없음'}</span>
-              </span>
-              <span className="flex items-center gap-1">
-                <MaterialIcon name="lock" className="text-xs" />
-                마스킹 필드:&nbsp;
-                <span className="font-bold">{captureConfig.maskedBodyFields.length > 0 ? captureConfig.maskedBodyFields.slice(0, 3).join(', ') + (captureConfig.maskedBodyFields.length > 3 ? ` 외 ${captureConfig.maskedBodyFields.length - 3}개` : '') : '없음'}</span>
               </span>
             </div>
           )}

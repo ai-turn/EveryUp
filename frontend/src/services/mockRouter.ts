@@ -385,68 +385,17 @@ const now2 = Date.now();
 const s = (secondsAgo: number) => new Date(now2 - secondsAgo * 1000).toISOString();
 
 const mockApiRequests: ApiRequest[] = [
-  {
-    id: 1, serviceId: '1', requestId: '01HV8QZXKAB1', method: 'POST', path: '/api/v1/auth/login',
-    pathTemplate: '/api/v1/auth/login', statusCode: 200, durationMs: 42, clientIp: '10.0.0.5',
-    reqHeaders: { 'content-type': 'application/json', 'user-agent': 'curl/7.88.1' },
-    reqBody: '{"username":"admin"}', reqBodySize: 20,
-    resHeaders: { 'content-type': 'application/json' },
-    resBody: '{"success":true}', resBodySize: 16,
-    isError: false, createdAt: s(30),
-  },
-  {
-    id: 2, serviceId: '1', requestId: '01HV8QZXKAC2', method: 'GET', path: '/api/v1/users/42',
-    pathTemplate: '/api/v1/users/:id', statusCode: 200, durationMs: 18, clientIp: '10.0.0.12',
-    reqHeaders: { 'authorization': '***', 'accept': 'application/json' },
-    reqBody: '', reqBodySize: 0,
-    resHeaders: { 'content-type': 'application/json' },
-    resBody: '{"id":42,"name":"Alice"}', resBodySize: 23,
-    isError: false, createdAt: s(90),
-  },
-  {
-    id: 3, serviceId: '1', requestId: '01HV8QZXKAD3', method: 'PUT', path: '/api/v1/users/7/profile',
-    pathTemplate: '/api/v1/users/:id/profile', statusCode: 422, durationMs: 35, clientIp: '10.0.0.7',
-    reqHeaders: { 'content-type': 'application/json', 'authorization': '***' },
-    reqBody: '{"email":"bad-email"}', reqBodySize: 21,
-    resHeaders: { 'content-type': 'application/json' },
-    resBody: '{"error":{"code":"VALIDATION_ERROR","message":"invalid email"}}', resBodySize: 62,
-    isError: false, createdAt: s(200),
-  },
-  {
-    id: 4, serviceId: '1', requestId: '01HV8QZXKAE4', method: 'DELETE', path: '/api/v1/orders/1a2b3c4d',
-    pathTemplate: '/api/v1/orders/:id', statusCode: 500, durationMs: 312, clientIp: '10.0.0.3',
-    reqHeaders: { 'authorization': '***' },
-    reqBody: '', reqBodySize: 0,
-    resHeaders: { 'content-type': 'application/json' },
-    resBody: '{"error":{"code":"DATABASE_ERROR","message":"deadlock detected"}}', resBodySize: 65,
-    error: 'deadlock detected', isError: true, createdAt: s(400),
-  },
-  {
-    id: 5, serviceId: '1', requestId: '01HV8QZXKAF5', method: 'GET', path: '/api/v1/products',
-    pathTemplate: '/api/v1/products', statusCode: 200, durationMs: 67, clientIp: '10.0.0.9',
-    reqHeaders: { 'accept': 'application/json' },
-    reqBody: '', reqBodySize: 0,
-    resHeaders: { 'content-type': 'application/json' },
-    resBody: '[{"id":1},{"id":2},{"id":3}]', resBodySize: 28,
-    isError: false, createdAt: s(600),
-  },
-  {
-    id: 6, serviceId: '1', requestId: '01HV8QZXKAG6', method: 'POST', path: '/api/v1/payments',
-    pathTemplate: '/api/v1/payments', statusCode: 503, durationMs: 5001, clientIp: '10.0.0.15',
-    reqHeaders: { 'content-type': 'application/json', 'x-api-key': '***' },
-    reqBody: '{"amount":9900,"currency":"USD"}', reqBodySize: 31,
-    resHeaders: { 'content-type': 'application/json' },
-    resBody: '{"error":{"code":"SERVICE_UNAVAILABLE","message":"payment gateway timeout"}}', resBodySize: 75,
-    error: 'payment gateway timeout', isError: true, createdAt: s(900),
-  },
+  { id: 1, serviceId: '1', requestId: '01HV8QZXKAB1', method: 'POST',   path: '/api/v1/auth/login',        pathTemplate: '/api/v1/auth/login',        statusCode: 200, durationMs: 42,   clientIp: '10.0.0.5',  isError: false, createdAt: s(30) },
+  { id: 2, serviceId: '1', requestId: '01HV8QZXKAC2', method: 'GET',    path: '/api/v1/users/42',          pathTemplate: '/api/v1/users/:id',         statusCode: 200, durationMs: 18,   clientIp: '10.0.0.12', isError: false, createdAt: s(90) },
+  { id: 3, serviceId: '1', requestId: '01HV8QZXKAD3', method: 'PUT',    path: '/api/v1/users/7/profile',   pathTemplate: '/api/v1/users/:id/profile', statusCode: 422, durationMs: 35,   clientIp: '10.0.0.7',  isError: false, createdAt: s(200) },
+  { id: 4, serviceId: '1', requestId: '01HV8QZXKAE4', method: 'DELETE', path: '/api/v1/orders/1a2b3c4d',  pathTemplate: '/api/v1/orders/:id',        statusCode: 500, durationMs: 312,  clientIp: '10.0.0.3',  isError: true,  error: 'deadlock detected', createdAt: s(400) },
+  { id: 5, serviceId: '1', requestId: '01HV8QZXKAF5', method: 'GET',    path: '/api/v1/products',         pathTemplate: '/api/v1/products',          statusCode: 200, durationMs: 67,   clientIp: '10.0.0.9',  isError: false, createdAt: s(600) },
+  { id: 6, serviceId: '1', requestId: '01HV8QZXKAG6', method: 'POST',   path: '/api/v1/payments',         pathTemplate: '/api/v1/payments',          statusCode: 503, durationMs: 5001, clientIp: '10.0.0.15', isError: true,  error: 'payment gateway timeout', createdAt: s(900) },
 ];
 
 const mockApiCaptureConfig: ApiCaptureConfig = {
   mode: 'sampled',
   sampleRate: 10,
-  bodyMaxBytes: 8192,
-  maskedHeaders: ['authorization', 'cookie', 'set-cookie', 'x-api-key', 'proxy-authorization'],
-  maskedBodyFields: ['password', 'token', 'secret', 'access_token', 'refresh_token', 'apiKey', 'api_key'],
 };
 
 // ── Settings ──────────────────────────────────────────────────────────────────
@@ -495,7 +444,7 @@ export function mockRouter<T>(endpoint: string, method = 'GET'): T {
     if (maxStatus) filtered = filtered.filter(r => r.statusCode <= maxStatus);
     if (p.get('errorsOnly') === 'true') filtered = filtered.filter(r => r.isError);
     const search = p.get('search') ?? '';
-    if (search) filtered = filtered.filter(r => r.path.includes(search) || (r.reqBody ?? '').includes(search));
+    if (search) filtered = filtered.filter(r => r.path.includes(search) || (r.requestId ?? '').includes(search));
     return { items: [...filtered], total: filtered.length } as unknown as T;
   }
   // /services/:id

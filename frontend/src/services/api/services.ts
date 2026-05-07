@@ -184,12 +184,6 @@ export interface ApiRequest {
   statusCode: number;
   durationMs: number;
   clientIp?: string;
-  reqHeaders?: Record<string, string>;
-  reqBody?: string;
-  reqBodySize: number;
-  resHeaders?: Record<string, string>;
-  resBody?: string;
-  resBodySize: number;
   error?: string;
   isError: boolean;
   createdAt: string;
@@ -198,9 +192,6 @@ export interface ApiRequest {
 export interface ApiCaptureConfig {
   mode: ApiCaptureMode;
   sampleRate: number;
-  bodyMaxBytes: number;
-  maskedHeaders: string[];
-  maskedBodyFields: string[];
 }
 
 export interface ApiRequestListParams {
