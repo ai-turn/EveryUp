@@ -8,6 +8,7 @@ import type { ApiRequest, ApiRequestListParams, ApiCaptureConfig } from '../../.
 export interface RequestsTabProps {
   serviceId: string;
   onGoToSettings: () => void;
+  onGoToLogs?: (requestId: string) => void;
 }
 
 const DEFAULT_LIMIT = 50;
@@ -319,10 +320,12 @@ function RequestRow({
   request,
   open,
   onToggle,
+  onGoToLogs,
 }: {
   request: ApiRequest;
   open: boolean;
   onToggle: () => void;
+  onGoToLogs?: (requestId: string) => void;
 }) {
   return (
     <>
@@ -372,7 +375,17 @@ function RequestRow({
               )}
               <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark/30 text-xs text-slate-500 dark:text-text-muted-dark">
                 <MaterialIcon name="article" className="text-base shrink-0" />
-                <span>요청/응답 본문은 수집하지 않습니다. 상세 내용은 서비스 로그에서 <code className="bg-slate-200 dark:bg-ui-active-dark px-1 rounded">{request.requestId}</code>로 검색하세요.</span>
+                <span className="flex-1">요청/응답 본문은 수집하지 않습니다. 상세 내용은 서비스 로그에서 <code className="bg-slate-200 dark:bg-ui-active-dark px-1 rounded">{request.requestId}</code>로 검색하세요.</span>
+                {onGoToLogs && (
+                  <button
+                    type="button"
+                    onClick={() => onGoToLogs(request.requestId)}
+                    className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-colors"
+                  >
+                    <MaterialIcon name="open_in_new" className="text-sm" />
+                    로그에서 보기
+                  </button>
+                )}
               </div>
             </div>
           </td>
@@ -396,11 +409,13 @@ function RequestsStreamTable({
   loading,
   openId,
   onToggle,
+  onGoToLogs,
 }: {
   items: ApiRequest[];
   loading: boolean;
   openId: number | null;
   onToggle: (id: number) => void;
+  onGoToLogs?: (requestId: string) => void;
 }) {
   return (
     <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark overflow-hidden">
@@ -438,6 +453,7 @@ function RequestsStreamTable({
                 request={request}
                 open={openId === request.id}
                 onToggle={() => onToggle(request.id)}
+                onGoToLogs={onGoToLogs}
               />
             ))}
             {!loading && items.length === 0 && (
@@ -457,7 +473,7 @@ function RequestsStreamTable({
   );
 }
 
-export function RequestsTab({ serviceId, onGoToSettings }: RequestsTabProps) {
+export function RequestsTab({ serviceId, onGoToSettings, onGoToLogs }: RequestsTabProps) {
   const [filterParams, setFilterParams] = useState<ApiRequestListParams>({
     from: new Date(Date.now() - 24 * 3600_000).toISOString(),
   });
@@ -618,6 +634,7 @@ export function RequestsTab({ serviceId, onGoToSettings }: RequestsTabProps) {
             loading={loading}
             openId={openId}
             onToggle={(id) => setOpenId(openId === id ? null : id)}
+            onGoToLogs={onGoToLogs}
           />
 
           {!isExampleMode && accumulatedItems.length > 0 && (
