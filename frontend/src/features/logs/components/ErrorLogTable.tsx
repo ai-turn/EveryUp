@@ -42,17 +42,6 @@ const levelToneStyle: Record<LogLevel, string> = {
   trace: 'bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark',
 };
 
-interface LogGroup {
-  id: string;
-  level: LogLevel;
-  title: string;
-  count: number;
-  firstSeen: string;
-  lastSeen: string;
-  sample: LogEntry;
-  histogram: number[];
-}
-
 function buildExampleLogs(serviceId?: string): LogEntry[] {
   const now = Date.now();
   const ago = (minutes: number) => new Date(now - minutes * 60_000).toISOString();
@@ -149,23 +138,6 @@ function buildExampleLogs(serviceId?: string): LogEntry[] {
   ];
 }
 
-function formatTimeAgo(dateStr?: string): string {
-  if (!dateStr) return '-';
-  const diff = Math.max(0, Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000));
-  if (diff < 60) return `${diff}s`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
-  return `${Math.floor(diff / 86400)}d`;
-}
-
-function formatClock(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
-}
-
 function formatTimestamp(timestamp: string): string {
   return new Date(timestamp).toLocaleString([], {
     month: 'short',
@@ -187,39 +159,6 @@ function buildHistogram(logs: LogEntry[]): number[] {
     buckets[bucketIndex(log.createdAt)] += 1;
   });
   return buckets;
-}
-
-function buildGroups(logs: LogEntry[]): LogGroup[] {
-  const map = new Map<string, LogEntry[]>();
-  logs.forEach((log) => {
-    const key = log.fingerprint || `${log.level}:${log.message.slice(0, 160)}`;
-    map.set(key, [...(map.get(key) ?? []), log]);
-  });
-
-  return Array.from(map.entries())
-    .map(([id, groupLogs]) => {
-      const sorted = [...groupLogs].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
-      const last = sorted[0];
-      const first = sorted[sorted.length - 1];
-      return {
-        id,
-        level: last.level,
-        title: last.message,
-        count: sorted.length,
-        firstSeen: first.createdAt,
-        lastSeen: last.createdAt,
-        sample: last,
-        histogram: buildHistogram(sorted),
-      };
-    })
-    .sort((a, b) => {
-      const levelWeight = (level: LogLevel) => (level === 'error' ? 2 : level === 'warn' ? 1 : 0);
-      const byLevel = levelWeight(b.level) - levelWeight(a.level);
-      if (byLevel !== 0) return byLevel;
-      return b.count - a.count;
-    });
 }
 
 function HistogramBand({ logs }: { logs: LogEntry[] }) {
@@ -280,106 +219,6 @@ function HistogramBand({ logs }: { logs: LogEntry[] }) {
   );
 }
 
-function GroupSpark({ data, level }: { data: number[]; level: LogLevel }) {
-  const max = Math.max(...data, 1);
-  return (
-    <div className="flex h-8 items-end gap-0.5">
-      {data.map((value, index) => (
-        <span
-          key={index}
-          className={`w-1 rounded-t ${value > 0 ? levelDotStyle[level] : 'bg-slate-200 dark:bg-ui-hover-dark'}`}
-          style={{ height: `${Math.max(2, (value / max) * 32)}px` }}
-        />
-      ))}
-    </div>
-  );
-}
-
-function ErrorGroupRow({
-  group,
-  open,
-  onToggle,
-  onCopy,
-}: {
-  group: LogGroup;
-  open: boolean;
-  onToggle: () => void;
-  onCopy: (log: LogEntry) => void;
-}) {
-  return (
-    <div className={`border-b last:border-b-0 border-slate-100 dark:border-ui-border-dark/60 ${open ? 'bg-slate-50/60 dark:bg-ui-hover-dark/20' : ''}`}>
-      <button
-        type="button"
-        onClick={onToggle}
-        className="grid w-full grid-cols-[28px_minmax(280px,1fr)_96px_136px_112px] gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-ui-hover-dark/30 transition-colors"
-      >
-        <span className="flex items-center justify-center text-slate-400">
-          <MaterialIcon name={open ? 'expand_more' : 'chevron_right'} className="text-lg" />
-        </span>
-        <span className="min-w-0">
-          <span className="flex items-center gap-2">
-            <span className={`rounded px-2 py-0.5 text-[11px] font-black uppercase ${levelToneStyle[group.level]}`}>
-              {group.level}
-            </span>
-            <span className="font-mono text-sm font-semibold text-slate-900 dark:text-white truncate">
-              {group.title}
-            </span>
-          </span>
-          <span className="mt-1 block text-[11px] text-slate-400 dark:text-text-dim-dark">
-            최초 {formatTimeAgo(group.firstSeen)} 전 · 소스 {group.sample.source ?? '-'}
-          </span>
-        </span>
-        <span className="text-right">
-          <span className={`block text-lg font-black tabular-nums ${group.level === 'error' ? 'text-red-500' : group.level === 'warn' ? 'text-amber-500' : 'text-slate-700 dark:text-text-base-dark'}`}>
-            {group.count}
-          </span>
-          <span className="text-[10px] text-slate-400 dark:text-text-dim-dark">건</span>
-        </span>
-        <span className="flex items-center">
-          <GroupSpark data={group.histogram} level={group.level} />
-        </span>
-        <span className="text-right text-xs text-slate-500 dark:text-text-muted-dark">
-          <span className="block font-semibold text-slate-700 dark:text-text-base-dark">{formatTimeAgo(group.lastSeen)} 전</span>
-          <span>{formatClock(group.lastSeen)}</span>
-        </span>
-      </button>
-
-      {open && (
-        <div className="px-4 pb-4 pl-14">
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-            <div className="rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark p-3">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-[11px] font-black uppercase tracking-wide text-slate-400 dark:text-text-dim-dark">원본 메시지</span>
-                <button onClick={() => onCopy(group.sample)} className="text-xs font-bold text-primary hover:underline">
-                  복사
-                </button>
-              </div>
-              <pre className="whitespace-pre-wrap break-all font-mono text-xs leading-relaxed text-slate-700 dark:text-text-base-dark">
-                {group.sample.message}
-              </pre>
-            </div>
-            <div className="rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark p-3">
-              <div className="mb-2 text-[11px] font-black uppercase tracking-wide text-slate-400 dark:text-text-dim-dark">컨텍스트</div>
-              {group.sample.metadata && Object.keys(group.sample.metadata).length > 0 ? (
-                <pre className="max-h-52 overflow-auto rounded bg-slate-50 dark:bg-ui-hover-dark p-3 font-mono text-xs text-slate-600 dark:text-text-muted-dark">
-                  {JSON.stringify(group.sample.metadata, null, 2)}
-                </pre>
-              ) : (
-                <p className="text-xs text-slate-400 dark:text-text-dim-dark">추가 정보 없음</p>
-              )}
-              {group.sample.fingerprint && (
-                <p className="mt-2 font-mono text-[11px] text-slate-400 dark:text-text-dim-dark">
-                  fingerprint: {group.sample.fingerprint}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export function ErrorLogTable({ serviceId, refreshKey, initialSearch }: ErrorLogTableProps) {
   const { t } = useTranslation(['logs', 'common']);
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -389,8 +228,6 @@ export function ErrorLogTable({ serviceId, refreshKey, initialSearch }: ErrorLog
   const [searchQuery, setSearchQuery] = useState(initialSearch ?? '');
   const [levelFilter, setLevelFilter] = useState<LevelFilter>('all');
   const [isPaused, setIsPaused] = useState(false);
-  const [openId, setOpenId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'grouped' | 'raw'>('grouped');
   const [limit, setLimit] = useState(LIMIT_STEP);
   const { copy } = useCopyToClipboard();
 
@@ -436,8 +273,6 @@ export function ErrorLogTable({ serviceId, refreshKey, initialSearch }: ErrorLog
       return matchesLevel && matchesSearch;
     });
   }, [sourceLogs, levelFilter, debouncedSearch]);
-
-  const groups = useMemo(() => buildGroups(filteredLogs), [filteredLogs]);
 
   const levelCounts: Record<LevelFilter, number> = {
     all: sourceLogs.length,
@@ -513,20 +348,6 @@ export function ErrorLogTable({ serviceId, refreshKey, initialSearch }: ErrorLog
                 className="h-8 w-44 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark pl-8 pr-3 text-xs text-slate-900 dark:text-white outline-none focus:border-primary focus:w-56 transition-all"
               />
             </div>
-            <div className="inline-flex rounded-lg border border-slate-200 dark:border-ui-border-dark bg-slate-100 dark:bg-ui-hover-dark p-0.5">
-              <button
-                onClick={() => setViewMode('grouped')}
-                className={`rounded-md px-2.5 py-1 text-[11px] font-bold transition-colors ${viewMode === 'grouped' ? 'bg-white dark:bg-bg-surface-dark text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-text-muted-dark'}`}
-              >
-                그룹
-              </button>
-              <button
-                onClick={() => setViewMode('raw')}
-                className={`rounded-md px-2.5 py-1 text-[11px] font-bold transition-colors ${viewMode === 'raw' ? 'bg-white dark:bg-bg-surface-dark text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-text-muted-dark'}`}
-              >
-                원본
-              </button>
-            </div>
             <button
               onClick={() => setIsPaused(!isPaused)}
               className={`flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-bold transition-colors ${
@@ -554,23 +375,7 @@ export function ErrorLogTable({ serviceId, refreshKey, initialSearch }: ErrorLog
           </div>
         )}
 
-        {viewMode === 'grouped' && groups.length > 0 && (
-          <div className="overflow-x-auto">
-            <div className="min-w-[860px]">
-              {groups.map((group) => (
-                <ErrorGroupRow
-                  key={group.id}
-                  group={group}
-                  open={openId === group.id}
-                  onToggle={() => setOpenId(openId === group.id ? null : group.id)}
-                  onCopy={handleCopyLog}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {viewMode === 'raw' && filteredLogs.length > 0 && (
+        {filteredLogs.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <tbody className="divide-y divide-slate-100 dark:divide-ui-border-dark/60">
