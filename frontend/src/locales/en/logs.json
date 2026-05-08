@@ -272,6 +272,12 @@
         "notSureDesc": "Use Log Agent to collect log files or stdout. Use API Request Capture to record HTTP request and response data."
       },
       "paths": {
+        "otel": {
+          "label": "OpenTelemetry",
+          "tagline": "Send logs and traces with the OTLP standard",
+          "description": "Attach OpenTelemetry auto-instrumentation and configure a few environment variables. Your app emits logs and traces to /api/v1/otlp directly.",
+          "goodFor": ["See logs and API traces correlated", "Spring Boot / Python / Node.js apps", "Standard SDK, no app code changes"]
+        },
         "agent": {
           "label": "Log Agent",
           "tagline": "A Docker container that tails and forwards your log files",
@@ -308,7 +314,8 @@
       "endpoint": {
         "title": "Ingest endpoint",
         "description": "Accepts common logger formats and batches up to 100 logs per request.",
-        "apiCaptureDescription": "Accepts up to 50 API request entries per batch. Use the X-API-Key header for authentication."
+        "apiCaptureDescription": "Accepts up to 50 API request entries per batch. Use the X-API-Key header for authentication.",
+        "otelDescription": "OTLP/HTTP base URL. The SDK appends /v1/logs and /v1/traces automatically."
       },
       "test": {
         "title": "Test the connection first",
@@ -321,10 +328,13 @@
         "agentTitle": "Run the agent",
         "httpTitle": "Add the appender",
         "apiCaptureTitle": "Add the middleware",
+        "otelTitle": "Attach OpenTelemetry auto-instrumentation",
         "agentDesc": "Mount the log directory and start the EveryUp Log Agent.",
         "httpDesc": "Pick your framework and add the HTTP transport to your logger.",
         "apiCaptureDesc": "Pick your framework and add the middleware to your application.",
+        "otelDesc": "Pick your language, set the environment variables, and attach the auto-instrumentation agent. No code changes required.",
         "agentHint": "Quick start is enough for most setups. Change the mounted path to the directory where your application writes logs.",
+        "otelHint": "Point OTEL_EXPORTER_OTLP_ENDPOINT at EveryUp and the SDK fans out to /v1/logs and /v1/traces automatically. Pass the issued API key as the Authorization header.",
         "levelPrefixHint": "For plain text logs, prefix lines with [INFO], [WARN], or [ERROR] so EveryUp can classify levels correctly. JSON logs can use level, severity, logLevel, or lvl fields.",
         "apiCaptureHint": "Go to Settings - API Capture and enable a capture mode before data will be collected.",
         "otherOptions": "Other deployment options",
