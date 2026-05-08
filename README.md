@@ -40,7 +40,7 @@ No Prometheus, no Grafana, no cloud required — just a single binary and a SQLi
   - [Local Development](#local-development)
 - [Configuration](#configuration)
 - [Data Backup](#data-backup)
-- [Log Agent](#log-agent)
+- [OpenTelemetry Ingestion](#opentelemetry-ingestion)
 - [Documentation](#documentation)
 - [Contributing](#contributing)
 - [License](#license)
@@ -66,7 +66,7 @@ Most server monitoring tools solve one problem. EveryUp combines uptime checks, 
 | **Infrastructure** | Real-time CPU/memory/disk/network collection (local + SSH remote) |
 | **API Request Inspector** | Per-request capture with configurable sampling, server-side masking, and body inspection |
 | **Alerts** | Telegram / Discord / Slack integration, threshold-based rules |
-| **Log Management** | Unified log viewer, search, log agent collection, and per-request HTTP inspector |
+| **Log Management** | Unified log viewer, trace correlation, OTLP log ingestion, and per-request HTTP inspector |
 | **Real-time Streaming** | WebSocket-based live metric updates |
 
 ---
@@ -87,17 +87,17 @@ Collects and displays logs from external services in a unified dashboard.
 
 - **Log viewer**: Filter by level (error / warn / info / debug / trace), keyword search, and timeline view
 - **API Request Inspector**: Per-service HTTP request/response capture — configurable sampling rate, errors-only mode, and header/body masking
-- **Integration tab**: Generate API keys and view code snippets for log agent setup
+- **Integration tab**: Generate API keys and view OpenTelemetry OTLP setup snippets
 - **Capture settings**: Log level filter and API capture mode managed independently per service
 
 **How data is sent to EveryUp:**
 
 | What | How |
 |------|-----|
-| **Log collection** | Deploy `everyup-log-agent` as a Docker container. The agent tails your log files and forwards entries to EveryUp — no code changes required. |
-| **API request capture** | Integrate the EveryUp SDK as middleware in your service. The SDK sends request/response data to EveryUp directly over HTTP. |
+| **Logs and traces** | Use OpenTelemetry auto-instrumentation or SDKs and export OTLP/HTTP to EveryUp. |
+| **API request correlation** | EveryUp projects OTel SERVER spans with HTTP attributes into the API request inspector. |
 
-Both methods use the API key shown in the **Integration** tab of each log service.
+OTLP uses the API key shown in the **Integration** tab of each log service.
 
 ### Infra
 
@@ -240,7 +240,6 @@ go test ./internal/api/handlers/ -v
 everyup/
 ├── frontend/      # React + Vite + TypeScript + Tailwind CSS
 ├── backend/       # Go (Fiber) + SQLite + WebSocket
-└── log-agent/     # Fluent Bit-based log collection agent
 ```
 
 ---
@@ -277,33 +276,27 @@ docker cp everyup:/app/data/monitoring.db ./monitoring.db.bak
 
 ---
 
-## Log Agent
+## OpenTelemetry Ingestion
 
-Deploy `everyup-log-agent` on any server to collect logs from external services and forward them to your EveryUp dashboard.
+Use OpenTelemetry auto-instrumentation or SDKs to send logs and traces to EveryUp over OTLP/HTTP.
 
 **1. Get an API key**
 
-In the EveryUp dashboard, go to **Logs → Service detail → Integration** tab to generate an API key.
+In the EveryUp dashboard, go to **Logs -> Service detail -> Integration** tab to generate an API key.
 
-**2. Run the agent**
-
-```bash
-docker pull aiturn/everyup-log-agent:latest
-```
+**2. Configure OTLP**
 
 ```bash
-docker run -d \
-  --name everyup-log-agent \
-  -v /var/log/myapp:/var/log/app:ro \
-  -e LOG_AGENT_ENDPOINT=http://your-everyup-server:3001 \
-  -e LOG_AGENT_API_KEY=everyup_your_api_key \
-  --restart unless-stopped \
-  aiturn/everyup-log-agent:latest
+export OTEL_SERVICE_NAME="my-service"
+export OTEL_EXPORTER_OTLP_ENDPOINT="http://your-everyup-server:3001/api/v1/otlp"
+export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer everyup_your_api_key"
+export OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
+export OTEL_LOGS_EXPORTER="otlp"
+export OTEL_TRACES_EXPORTER="otlp"
+export OTEL_METRICS_EXPORTER="none"
 ```
 
-Supports `linux/amd64` and `linux/arm64` — Docker selects the correct variant automatically.
-
-See [log-agent/README.md](log-agent/README.md) for more details.
+The OTLP/HTTP receiver accepts `/api/v1/otlp/v1/logs` and `/api/v1/otlp/v1/traces`. Legacy JSON ingest endpoints remain available for existing deployments but are deprecated.
 
 ---
 
@@ -313,7 +306,6 @@ See [log-agent/README.md](log-agent/README.md) for more details.
 |----------|-------------|
 | [backend/README.md](backend/README.md) | Backend API and configuration reference |
 | [frontend/README.md](frontend/README.md) | Frontend dev setup and page structure |
-| [log-agent/README.md](log-agent/README.md) | Log agent deployment guide |
 | [docs/NOTIFICATION_SETUP.md](docs/NOTIFICATION_SETUP.md) | Telegram, Discord & Slack channel setup guide |
 
 ---

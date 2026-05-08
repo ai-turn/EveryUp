@@ -9,15 +9,15 @@
     },
     "guide": {
       "title": "로그 수집 방법",
-      "subtitle": "별도 SDK 없이 기존 로거 설정이나 로그 파일을 활용해 수집을 시작할 수 있습니다.",
+      "subtitle": "OpenTelemetry OTLP로 로그와 API 트레이스를 함께 수집할 수 있습니다. 별도 제품 SDK나 전용 컬렉터는 필요 없습니다.",
       "supported": "지원",
       "step1": {
         "title": "로그 서비스 만들기",
         "desc": "\"로그 추가\"를 눌러 서비스 이름을 만들면 전용 API 키가 자동으로 발급됩니다."
       },
       "step2": {
-        "title": "연동 방식 고르기",
-        "desc": "연동 탭에서 환경에 맞는 방식을 선택하세요. 앱 코드를 수정할 수 있으면 HTTP Appender, 로그 파일이나 stdout을 수집하려면 Log Agent가 적합합니다."
+        "title": "OpenTelemetry 연결",
+        "desc": "연동 탭에서 OTEL_EXPORTER_OTLP_ENDPOINT와 OTEL_SERVICE_NAME을 설정한 뒤 표준 OTLP 엔드포인트로 로그와 트레이스를 전송하세요."
       },
       "step3": {
         "title": "로그 확인 및 알림 연결",
@@ -173,12 +173,12 @@
   "logServices": {
     "viewLogs": "로그 보기",
     "empty": "등록된 로그 서비스가 없습니다",
-    "emptyDesc": "로그 서비스를 추가한 뒤 HTTP Appender 또는 Log Agent 방식으로 수집을 시작하세요.",
+    "emptyDesc": "로그 서비스를 추가한 뒤 OpenTelemetry OTLP로 애플리케이션을 연결하세요.",
     "add": {
       "title": "로그 추가",
       "submit": "로그 추가",
       "infoTitle": "로그 수집 서비스",
-      "infoDesc": "로그 서비스를 만들면 API 키가 자동으로 발급됩니다. 이후 연동 탭에서 HTTP Appender 또는 Log Agent 방식 중 하나를 선택해 바로 연결할 수 있습니다."
+      "infoDesc": "로그 서비스를 만들면 API 키가 자동으로 발급됩니다. 이후 연동 탭에서 OpenTelemetry로 앱을 연결하세요."
     },
     "edit": {
       "title": "로그 서비스 수정",
@@ -263,13 +263,13 @@
     "integration": {
       "picker": {
         "eyebrow": "연동",
-        "title": "무엇을 수집할까요?",
-        "subtitle": "수집하려는 데이터 종류에 맞는 방식을 선택하세요.",
+        "title": "OpenTelemetry로 연결",
+        "subtitle": "로그와 트레이스를 표준 OTLP 엔드포인트로 전송하세요.",
         "recommended": "권장",
         "goodFor": "이런 경우에 좋아요",
         "start": "이 방식으로 시작",
         "notSureTitle": "어떤 방식을 골라야 할지 모르겠나요?",
-        "notSureDesc": "로그 파일이나 stdout을 수집하려면 Log Agent, HTTP 요청/응답 데이터를 캡처하려면 API 요청 캡처를 선택하세요."
+        "notSureDesc": "OpenTelemetry 자동 계측부터 시작하세요. 로그와 트레이스를 함께 보내고 요청 상관관계를 유지할 수 있습니다."
       },
       "paths": {
         "otel": {
@@ -277,24 +277,6 @@
           "tagline": "표준 OTLP로 로그와 트레이스를 한 번에",
           "description": "OpenTelemetry 자동 계측을 붙이면 환경변수 설정만으로 로그와 트레이스가 동시에 수집됩니다. /api/v1/otlp 엔드포인트로 직접 전송됩니다.",
           "goodFor": ["로그와 API 트레이스를 같이 보고 싶을 때", "Spring Boot / Python / Node.js 앱", "앱 코드 수정 없이 표준 SDK로 통합"]
-        },
-        "agent": {
-          "label": "Log Agent",
-          "tagline": "로그 파일을 읽어 전송하는 Docker 컨테이너",
-          "description": "로그 디렉터리를 마운트하고 컨테이너를 실행합니다. 앱 코드는 수정하지 않아도 됩니다.",
-          "goodFor": ["파일 기반 로그 (.log, stdout)", "Docker / VM / 베어메탈 환경", "앱 코드를 건드리지 않는 경우"]
-        },
-        "apiCapture": {
-          "label": "API 요청 캡처",
-          "tagline": "앱에 미들웨어를 추가해 HTTP 요청/응답 수집",
-          "description": "Spring Boot, FastAPI, Express 등에 미들웨어 코드를 추가합니다. 메서드, 경로, 상태 코드, 응답 시간, 바디를 수집합니다.",
-          "goodFor": ["HTTP API 요청/응답 전체 캡처", "Spring Boot / FastAPI / Express / Go / Django", "인프라 변경 없이 코드만 수정"]
-        },
-        "httpAppender": {
-          "label": "HTTP Appender",
-          "tagline": "앱 로거에 HTTP endpoint 추가",
-          "description": "Winston, Logback, Serilog, Python logging에 HTTP transport를 추가합니다.",
-          "goodFor": ["기존 로깅 라이브러리를 쓰는 서비스", "Node.js / Spring Boot / .NET / Python", "전송 조건을 코드로 제어하는 경우"]
         }
       },
       "status": {
@@ -313,8 +295,7 @@
       },
       "endpoint": {
         "title": "수집 엔드포인트",
-        "description": "주요 로거 포맷을 자동 인식하며 요청당 최대 100개의 로그를 받을 수 있습니다.",
-        "apiCaptureDescription": "요청당 최대 50건의 API 요청을 받습니다. X-API-Key 헤더를 사용합니다.",
+        "description": "로그와 트레이스를 받는 OTLP/HTTP 베이스 URL입니다.",
         "otelDescription": "OTLP/HTTP 베이스 URL입니다. SDK가 /v1/logs와 /v1/traces를 자동으로 붙입니다."
       },
       "test": {
@@ -325,24 +306,13 @@
         "troubleshootingDesc": "리버스 프록시를 거친다면 Authorization 헤더가 백엔드로 전달되는지 확인하세요."
       },
       "setup": {
-        "agentTitle": "에이전트 실행",
-        "httpTitle": "Appender 추가",
-        "apiCaptureTitle": "미들웨어 추가",
         "otelTitle": "OpenTelemetry 자동 계측 적용",
-        "agentDesc": "로그 디렉터리를 마운트하고 EveryUp Log Agent를 시작합니다.",
-        "httpDesc": "프레임워크를 선택하고 로거에 HTTP 전송 설정을 추가합니다.",
-        "apiCaptureDesc": "프레임워크를 선택하고 미들웨어 코드를 앱에 추가합니다.",
         "otelDesc": "언어를 선택하고 환경변수와 자동 계측 에이전트를 적용하세요. 코드 변경은 필요 없습니다.",
-        "agentHint": "대부분은 Quick Start로 충분합니다. 앱이 로그를 쓰는 디렉터리 경로만 바꿔주세요.",
-        "otelHint": "OTEL_EXPORTER_OTLP_ENDPOINT만 EveryUp을 가리키게 하면 SDK가 /v1/logs와 /v1/traces로 분기해 보냅니다. 헤더에는 발급된 API 키를 그대로 넣으세요.",
-        "levelPrefixHint": "일반 텍스트 로그는 줄 앞에 [INFO], [WARN], [ERROR] 같은 prefix를 붙이면 레벨을 정확히 분류할 수 있습니다. JSON 로그는 level, severity, logLevel, lvl 필드를 사용할 수 있습니다.",
-        "apiCaptureHint": "설정 탭의 API 캡처에서 캡처 모드를 먼저 활성화해야 수집이 시작됩니다.",
-        "otherOptions": "다른 배포 옵션",
-        "otherOptionsDesc": "Fluent Bit 설정, Docker sidecar, Docker pipe, systemd 예시입니다."
+        "otelHint": "OTEL_EXPORTER_OTLP_ENDPOINT만 EveryUp을 가리키게 하면 SDK가 /v1/logs와 /v1/traces로 분기해 보냅니다. 헤더에는 발급된 API 키를 그대로 넣으세요."
       },
       "modals": {
         "regenerateTitle": "API 키를 재발급할까요?",
-        "regenerateDesc": "기존 키는 즉시 동작하지 않습니다. 실행 중인 에이전트나 appender 설정을 교체해야 합니다.",
+        "regenerateDesc": "기존 키는 즉시 동작하지 않습니다. 실행 중인 OpenTelemetry exporter 설정을 교체해야 합니다.",
         "newKeyTitle": "새 API 키가 발급되었습니다",
         "newKeyDesc": "지금 복사하세요. 잠시 후 다시 숨겨집니다.",
         "done": "확인"

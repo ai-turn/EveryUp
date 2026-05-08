@@ -142,8 +142,10 @@ docker run -d -p 3001:3001 `
 | Method | Endpoint | 설명 |
 |--------|----------|------|
 | GET | `/logs` | 로그 목록 (페이지네이션) |
-| POST | `/ingest/logs` | 로그 수집 (API Key 인증) |
-| POST | `/logs/ingest` | 로그 수집 legacy alias (API Key 인증) |
+| POST | `/otlp/v1/logs` | OpenTelemetry OTLP log ingest (API Key) |
+| POST | `/otlp/v1/traces` | OpenTelemetry OTLP trace ingest (API Key) |
+| POST | `/ingest/logs` | Legacy JSON log ingest, deprecated (API Key) |
+| POST | `/logs/ingest` | Legacy JSON log ingest alias, deprecated (API Key) |
 
 ### 대시보드
 

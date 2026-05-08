@@ -6,117 +6,26 @@ import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
 import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
 import { api, Service } from '../../../services/api';
-import {
-  buildAgentSnippets,
-  buildNginxSnippets,
-  buildAgentPullCommand,
-  buildApiCaptureMiddlewareSnippets,
-  buildOTelSnippets,
-} from './integrationSnippets';
+import { buildOTelSnippets } from './integrationSnippets';
 
 interface IntegrationPanelProps {
   service: Service;
   onApiKeyRegenerated: (newKey: string, maskedKey: string) => void;
 }
 
-type IntegrationPath = 'otel' | 'agent' | 'api-capture';
 type OTelLanguage = 'springboot' | 'python' | 'nodejs';
 
-interface PathOption {
-  key: IntegrationPath;
-  icon: string;
-  labelKey: string;
-  taglineKey: string;
-  descriptionKey: string;
-  recommended?: boolean;
-  goodForKeys: string[];
-}
-
-const PATH_OPTIONS: PathOption[] = [
-  {
-    key: 'otel',
-    icon: 'hub',
-    labelKey: 'logServices.integration.paths.otel.label',
-    taglineKey: 'logServices.integration.paths.otel.tagline',
-    descriptionKey: 'logServices.integration.paths.otel.description',
-    recommended: true,
-    goodForKeys: [
-      'logServices.integration.paths.otel.goodFor.0',
-      'logServices.integration.paths.otel.goodFor.1',
-      'logServices.integration.paths.otel.goodFor.2',
-    ],
-  },
-  {
-    key: 'agent',
-    icon: 'dns',
-    labelKey: 'logServices.integration.paths.agent.label',
-    taglineKey: 'logServices.integration.paths.agent.tagline',
-    descriptionKey: 'logServices.integration.paths.agent.description',
-    goodForKeys: [
-      'logServices.integration.paths.agent.goodFor.0',
-      'logServices.integration.paths.agent.goodFor.1',
-      'logServices.integration.paths.agent.goodFor.2',
-    ],
-  },
-  {
-    key: 'api-capture',
-    icon: 'api',
-    labelKey: 'logServices.integration.paths.apiCapture.label',
-    taglineKey: 'logServices.integration.paths.apiCapture.tagline',
-    descriptionKey: 'logServices.integration.paths.apiCapture.description',
-    goodForKeys: [
-      'logServices.integration.paths.apiCapture.goodFor.0',
-      'logServices.integration.paths.apiCapture.goodFor.1',
-      'logServices.integration.paths.apiCapture.goodFor.2',
-    ],
-  },
-];
-
-function ConnectionStatusBadge({
-  state,
-  secondsAgo,
-  t,
-}: {
-  state: 'waiting' | 'connected' | 'error';
-  secondsAgo: number | null;
-  t: (key: string, options?: Record<string, unknown>) => string;
-}) {
-  if (state === 'connected') {
-    return (
-      <span
-        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold"
-        aria-live="polite"
-      >
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-        {secondsAgo === null || secondsAgo > 60
-          ? t('logServices.integration.status.connected')
-          : t('logServices.integration.status.receivedAgo', { seconds: secondsAgo })}
-      </span>
-    );
-  }
-
-  if (state === 'error') {
-    return (
-      <span
-        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-semibold"
-        aria-live="polite"
-      >
-        <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-        {t('logServices.integration.status.testFailed')}
-      </span>
-    );
-  }
-
-  return (
-    <span
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark text-xs font-semibold"
-      aria-live="polite"
-    >
-      <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse" />
-      {t('logServices.integration.status.waiting')}
-    </span>
-  );
-}
+const OTEL_OPTION = {
+  icon: 'hub',
+  labelKey: 'logServices.integration.paths.otel.label',
+  taglineKey: 'logServices.integration.paths.otel.tagline',
+  descriptionKey: 'logServices.integration.paths.otel.description',
+  goodForKeys: [
+    'logServices.integration.paths.otel.goodFor.0',
+    'logServices.integration.paths.otel.goodFor.1',
+    'logServices.integration.paths.otel.goodFor.2',
+  ],
+};
 
 function CodeBlock({
   code,
@@ -211,161 +120,20 @@ function SegmentedControl<T extends string>({
   );
 }
 
-function PathPicker({
-  onSelect,
-  t,
-}: {
-  onSelect: (path: IntegrationPath) => void;
-  t: (key: string, options?: Record<string, unknown>) => string;
-}) {
-  return (
-    <div className="space-y-5">
-      <div>
-        <p className="text-xs font-bold text-primary/70 mb-1">
-          {t('logServices.integration.picker.eyebrow')}
-        </p>
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-          {t('logServices.integration.picker.title')}
-        </h2>
-        <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-1">
-          {t('logServices.integration.picker.subtitle')}
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {PATH_OPTIONS.map((option) => (
-          <button
-            key={option.key}
-            onClick={() => onSelect(option.key)}
-            className={`relative text-left p-5 rounded-xl bg-white dark:bg-bg-surface-dark border transition-all cursor-pointer hover:border-primary hover:shadow-lg ${
-              option.recommended
-                ? 'border-primary shadow-sm shadow-primary/10'
-                : 'border-slate-200 dark:border-ui-border-dark'
-            }`}
-          >
-            {option.recommended && (
-              <span className="absolute top-4 right-4 px-2.5 py-1 rounded-full bg-primary text-white text-xs font-bold">
-                {t('logServices.integration.picker.recommended')}
-              </span>
-            )}
-
-            <div className="w-11 h-11 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4">
-              <MaterialIcon name={option.icon} className="text-xl" />
-            </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
-              {t(option.labelKey)}
-            </h3>
-            <p className="text-sm font-semibold text-primary mt-1">{t(option.taglineKey)}</p>
-            <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-3 leading-relaxed">
-              {t(option.descriptionKey)}
-            </p>
-
-            <div className="pt-4 mt-4 border-t border-dashed border-slate-200 dark:border-ui-border-dark">
-              <p className="text-xs font-semibold text-slate-400 dark:text-text-dim-dark mb-2">
-                {t('logServices.integration.picker.goodFor')}
-              </p>
-              <div className="space-y-1.5">
-                {option.goodForKeys.map((itemKey) => (
-                  <div
-                    key={itemKey}
-                    className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-text-muted-dark"
-                  >
-                    <MaterialIcon name="check" className="text-sm text-emerald-500" />
-                    {t(itemKey)}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-1 mt-5 text-sm font-semibold text-primary">
-              {t('logServices.integration.picker.start')}
-              <MaterialIcon name="chevron_right" className="text-base" />
-            </div>
-          </button>
-        ))}
-      </div>
-
-      <div className="flex items-start gap-3 p-4 rounded-xl bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark">
-        <div className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark flex items-center justify-center shrink-0">
-          <MaterialIcon name="help_outline" className="text-lg" />
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-slate-800 dark:text-white">
-            {t('logServices.integration.picker.notSureTitle')}
-          </p>
-          <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-1 leading-relaxed">
-            {t('logServices.integration.picker.notSureDesc')}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPanelProps) {
   const { t } = useTranslation(['logs', 'common']);
   const { copy } = useCopyToClipboard();
-  const [selectedPath, setSelectedPath] = useState<IntegrationPath | null>(null);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
   const [revealCountdown, setRevealCountdown] = useState(0);
-  const [apiCaptureSnippet, setApiCaptureSnippet] = useState<'springboot' | 'fastapi' | 'express' | 'go' | 'django'>('springboot');
   const [otelSnippet, setOtelSnippet] = useState<OTelLanguage>('springboot');
-  const [activeNginxTab, setActiveNginxTab] = useState<'nginx_conf' | 'docker_compose' | 'docker_run'>('nginx_conf');
-  const [showTroubleshooting, setShowTroubleshooting] = useState(false);
-  const [testState, setTestState] = useState<'waiting' | 'connected' | 'error'>('waiting');
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const [latestLogAt, setLatestLogAt] = useState<Date | null>(null);
-  const [, setNowTick] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    const poll = async () => {
-      try {
-        const logs = await api.getServiceLogs(service.id, { limit: '1' });
-        if (cancelled) return;
-        if (logs.length > 0 && logs[0].createdAt) {
-          setLatestLogAt(new Date(logs[0].createdAt));
-          setTestState('connected');
-        }
-      } catch {
-        // Connection status is a convenience only.
-      }
-    };
-    poll();
-    const interval = setInterval(poll, 5000);
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [service.id]);
-
-  useEffect(() => {
-    const tick = setInterval(() => setNowTick((n) => n + 1), 1000);
-    return () => clearInterval(tick);
-  }, []);
-
-  const secondsAgo = latestLogAt
-    ? Math.max(0, Math.floor((Date.now() - latestLogAt.getTime()) / 1000))
-    : null;
-
-  const selectedOption = PATH_OPTIONS.find((option) => option.key === selectedPath);
   const maskedKey = service.apiKeyMasked || 'Not available';
-  const ingestUrl = `${window.location.origin}/api/v1/logs/ingest`;
   const displayKey = revealedKey || service.apiKey || '<YOUR_API_KEY>';
-  const realApiKey = revealedKey || service.apiKey || null;
-  const hostname = window.location.hostname;
-  const port = window.location.port || '443';
-  const isHttps = window.location.protocol === 'https:';
   const origin = window.location.origin;
 
-  const agentSnippets = buildAgentSnippets(hostname, port, isHttps, displayKey, origin);
-  const nginxSnippets = buildNginxSnippets(hostname);
-  const agentPullCmd = buildAgentPullCommand();
-  const apiCaptureMiddlewareSnippets = buildApiCaptureMiddlewareSnippets(origin, displayKey);
-  const apiCaptureIngestUrl = `${origin}/api/v1/ingest/requests`;
   const otelSnippets = buildOTelSnippets(origin, displayKey);
   const otelEndpointUrl = `${origin}/api/v1/otlp`;
 
@@ -411,55 +179,11 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
     }
   };
 
-  const curlCmd = `curl -X POST ${ingestUrl} \\
-  -H "Authorization: Bearer ${displayKey}" \\
-  -H "Content-Type: application/json" \\
-  -d '{"level":"info","message":"Connection test","service":"${service.id}"}'`;
-
-  const handleBrowserTest = async () => {
-    if (!realApiKey) {
-      toast.error(t('logServices.integration.toast.regenerateFirst'));
-      return;
-    }
-
-    setTestState('waiting');
-    try {
-      const response = await fetch(ingestUrl, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${realApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          level: 'info',
-          message: 'Connection test',
-          metadata: { source: 'integration-panel', serviceId: service.id },
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      const now = new Date();
-      setLatestLogAt(now);
-      setTestState('connected');
-      toast.success(t('logServices.integration.toast.testLogSent'));
-    } catch (error) {
-      setTestState('error');
-      toast.error(getErrorMessage(error));
-    }
-  };
-
-  if (!selectedPath || !selectedOption) {
-    return <PathPicker onSelect={setSelectedPath} t={t} />;
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3 p-4 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl">
         <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-          <MaterialIcon name={selectedOption.icon} className="text-xl" />
+          <MaterialIcon name={OTEL_OPTION.icon} className="text-xl" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold text-slate-400 dark:text-text-dim-dark">
@@ -467,25 +191,16 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-base font-bold text-slate-900 dark:text-white">
-              {t(selectedOption.labelKey)}
+              {t(OTEL_OPTION.labelKey)}
             </h2>
-            {selectedOption.recommended && (
-              <span className="inline-flex px-2 py-0.5 rounded-full bg-primary text-white text-xs font-bold">
-                {t('logServices.integration.picker.recommended')}
-              </span>
-            )}
+            <span className="inline-flex px-2 py-0.5 rounded-full bg-primary text-white text-xs font-bold">
+              {t('logServices.integration.picker.recommended')}
+            </span>
             <span className="text-xs text-slate-500 dark:text-text-muted-dark">
-              {t(selectedOption.taglineKey)}
+              {t(OTEL_OPTION.taglineKey)}
             </span>
           </div>
         </div>
-        <button
-          onClick={() => setSelectedPath(null)}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-ui-border-dark text-xs font-semibold text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors cursor-pointer"
-        >
-          <MaterialIcon name="swap_horiz" className="text-sm" />
-          {t('logServices.integration.changeMethod')}
-        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -536,22 +251,10 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           </div>
           <div className="flex items-center gap-2 px-3 py-2.5 bg-slate-50 dark:bg-ui-hover-dark rounded-lg font-mono text-xs border border-slate-100 dark:border-ui-border-dark">
             <span className="flex-1 text-slate-700 dark:text-text-base-dark truncate">
-              {selectedPath === 'otel'
-                ? otelEndpointUrl
-                : selectedPath === 'api-capture'
-                ? apiCaptureIngestUrl
-                : ingestUrl}
+              {otelEndpointUrl}
             </span>
             <button
-              onClick={() =>
-                copy(
-                  selectedPath === 'otel'
-                    ? otelEndpointUrl
-                    : selectedPath === 'api-capture'
-                    ? apiCaptureIngestUrl
-                    : ingestUrl
-                )
-              }
+              onClick={() => copy(otelEndpointUrl)}
               className="shrink-0 p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               title={t('common.copyToClipboard')}
               aria-label={t('common.copyToClipboard')}
@@ -561,183 +264,44 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           </div>
           <div className="flex items-center gap-2 mt-3 text-xs text-slate-500 dark:text-text-muted-dark">
             <MaterialIcon name="auto_awesome" className="text-sm text-primary" />
-            {selectedPath === 'otel'
-              ? t('logServices.integration.endpoint.otelDescription')
-              : selectedPath === 'api-capture'
-              ? t('logServices.integration.endpoint.apiCaptureDescription')
-              : t('logServices.integration.endpoint.description')}
+            {t('logServices.integration.endpoint.otelDescription')}
           </div>
         </div>
       </div>
 
-      {selectedPath === 'agent' && (
-        <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
-          <SectionTitle
-            number={1}
-            title={t('logServices.integration.test.title')}
-            description={t('logServices.integration.test.description')}
-            trailing={<ConnectionStatusBadge state={testState} secondsAgo={secondsAgo} t={t} />}
-          />
-          <CodeBlock
-            code={curlCmd}
-            onCopy={() => copy(curlCmd)}
-            copyTitle={t('common.copyToClipboard')}
-            size="sm"
-          />
-          <div className="flex flex-wrap gap-2 mt-3">
-            <button
-              onClick={handleBrowserTest}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors cursor-pointer"
-            >
-              <MaterialIcon name="send" className="text-sm" />
-              {t('logServices.integration.test.browserButton')}
-            </button>
-            <button
-              onClick={() => setShowTroubleshooting((prev) => !prev)}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-ui-border-dark text-xs font-semibold text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors cursor-pointer"
-            >
-              <MaterialIcon name={showTroubleshooting ? 'expand_less' : 'help_outline'} className="text-sm" />
-              {t('logServices.integration.test.troubleshooting')}
-            </button>
-          </div>
-
-          {showTroubleshooting && (
-            <div className="mt-4 border border-amber-200 dark:border-amber-700/30 bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 space-y-3">
-              <div className="flex items-start gap-2">
-                <span className="w-4 h-5 shrink-0 inline-flex items-center justify-center">
-                  <MaterialIcon name="warning" className="text-base leading-none text-amber-600 dark:text-amber-400" />
-                </span>
-                <p className="text-xs text-amber-700 dark:text-amber-300 leading-5">
-                  {t('logServices.integration.test.troubleshootingDesc')}
-                </p>
-              </div>
-              <SegmentedControl
-                options={[
-                  { key: 'nginx_conf' as const, label: 'nginx.conf' },
-                  { key: 'docker_compose' as const, label: 'Docker Compose' },
-                  { key: 'docker_run' as const, label: 'Docker Run' },
-                ]}
-                value={activeNginxTab}
-                onChange={setActiveNginxTab}
-              />
-              <CodeBlock
-                code={nginxSnippets[activeNginxTab]}
-                onCopy={() => copy(nginxSnippets[activeNginxTab])}
-                copyTitle={t('common.copyToClipboard')}
-                size="xs"
-              />
-            </div>
-          )}
-        </div>
-      )}
-
       <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
         <SectionTitle
-          number={selectedPath === 'agent' ? 2 : 1}
-          title={
-            selectedPath === 'agent'
-              ? t('logServices.integration.setup.agentTitle')
-              : selectedPath === 'otel'
-              ? t('logServices.integration.setup.otelTitle')
-              : t('logServices.integration.setup.apiCaptureTitle')
-          }
-          description={
-            selectedPath === 'agent'
-              ? t('logServices.integration.setup.agentDesc')
-              : selectedPath === 'otel'
-              ? t('logServices.integration.setup.otelDesc')
-              : t('logServices.integration.setup.apiCaptureDesc')
-          }
+          number={1}
+          title={t('logServices.integration.setup.otelTitle')}
+          description={t('logServices.integration.setup.otelDesc')}
         />
 
-        {selectedPath === 'otel' ? (
-          <div className="space-y-3">
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/20">
-              <span className="w-4 h-5 shrink-0 inline-flex items-center justify-center">
-                <MaterialIcon name="info" className="text-base leading-none text-primary" />
-              </span>
-              <p className="text-xs text-slate-600 dark:text-text-muted-dark leading-5">
-                {t('logServices.integration.setup.otelHint')}
-              </p>
-            </div>
-            <SegmentedControl
-              options={[
-                { key: 'springboot' as const, label: 'Spring Boot' },
-                { key: 'python' as const, label: 'Python' },
-                { key: 'nodejs' as const, label: 'Node.js' },
-              ]}
-              value={otelSnippet}
-              onChange={setOtelSnippet}
-            />
-            <CodeBlock
-              code={otelSnippets[otelSnippet]}
-              onCopy={() => copy(otelSnippets[otelSnippet])}
-              copyTitle={t('common.copyToClipboard')}
-              size="xs"
-              minHeight="320px"
-            />
+        <div className="space-y-3">
+          <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/20">
+            <span className="w-4 h-5 shrink-0 inline-flex items-center justify-center">
+              <MaterialIcon name="info" className="text-base leading-none text-primary" />
+            </span>
+            <p className="text-xs text-slate-600 dark:text-text-muted-dark leading-5">
+              {t('logServices.integration.setup.otelHint')}
+            </p>
           </div>
-        ) : selectedPath === 'agent' ? (
-          <div className="space-y-3">
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/20">
-              <span className="w-4 h-5 shrink-0 inline-flex items-center justify-center">
-                <MaterialIcon name="info" className="text-base leading-none text-primary" />
-              </span>
-              <p className="text-xs text-slate-600 dark:text-text-muted-dark leading-5">
-                {t('logServices.integration.setup.agentHint')}
-              </p>
-            </div>
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark">
-              <span className="w-4 h-5 shrink-0 inline-flex items-center justify-center">
-                <MaterialIcon name="sell" className="text-base leading-none text-slate-500 dark:text-text-muted-dark" />
-              </span>
-              <p className="text-xs text-slate-600 dark:text-text-muted-dark leading-5">
-                {t('logServices.integration.setup.levelPrefixHint')}
-              </p>
-            </div>
-            <CodeBlock
-              code={agentPullCmd}
-              onCopy={() => copy(agentPullCmd)}
-              copyTitle={t('common.copyToClipboard')}
-              size="xs"
-            />
-            <CodeBlock
-              code={agentSnippets['docker_sidecar']}
-              onCopy={() => copy(agentSnippets['docker_sidecar'])}
-              copyTitle={t('common.copyToClipboard')}
-              size="xs"
-            />
-          </div>
-        ) : selectedPath === 'api-capture' ? (
-          <div className="space-y-3">
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/30">
-              <span className="w-4 h-5 shrink-0 inline-flex items-center justify-center">
-                <MaterialIcon name="settings" className="text-base leading-none text-amber-600 dark:text-amber-400" />
-              </span>
-              <p className="text-xs text-amber-700 dark:text-amber-300 leading-5">
-                {t('logServices.integration.setup.apiCaptureHint')}
-              </p>
-            </div>
-            <SegmentedControl
-              options={[
-                { key: 'springboot' as const, label: 'Spring Boot' },
-                { key: 'fastapi' as const, label: 'FastAPI' },
-                { key: 'express' as const, label: 'Node.js' },
-                { key: 'go' as const, label: 'Go' },
-                { key: 'django' as const, label: 'Django' },
-              ]}
-              value={apiCaptureSnippet}
-              onChange={setApiCaptureSnippet}
-            />
-            <CodeBlock
-              code={apiCaptureMiddlewareSnippets[apiCaptureSnippet]}
-              onCopy={() => copy(apiCaptureMiddlewareSnippets[apiCaptureSnippet])}
-              copyTitle={t('common.copyToClipboard')}
-              size="xs"
-              minHeight="260px"
-            />
-          </div>
-        ) : null}
+          <SegmentedControl
+            options={[
+              { key: 'springboot' as const, label: 'Spring Boot' },
+              { key: 'python' as const, label: 'Python' },
+              { key: 'nodejs' as const, label: 'Node.js' },
+            ]}
+            value={otelSnippet}
+            onChange={setOtelSnippet}
+          />
+          <CodeBlock
+            code={otelSnippets[otelSnippet]}
+            onCopy={() => copy(otelSnippets[otelSnippet])}
+            copyTitle={t('common.copyToClipboard')}
+            size="xs"
+            minHeight="320px"
+          />
+        </div>
       </div>
 
       {showConfirm && (

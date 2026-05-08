@@ -9,15 +9,15 @@
     },
     "guide": {
       "title": "How to Collect Logs",
-      "subtitle": "Start collecting logs with your existing logger configuration or log files. No separate SDK is required.",
+      "subtitle": "Start collecting logs and API traces through OpenTelemetry OTLP. No product-specific SDK or collector is required.",
       "supported": "Supported",
       "step1": {
         "title": "Create a Log Service",
         "desc": "Click \"Add Log\" and create a service name. A dedicated API key is generated automatically for that service."
       },
       "step2": {
-        "title": "Choose an Integration Method",
-        "desc": "Open the Integration tab and choose the method that fits your environment. Use HTTP Appender when you can edit app code, or Log Agent when you want to collect log files or stdout."
+        "title": "Connect OpenTelemetry",
+        "desc": "Open the Integration tab, set OTEL_EXPORTER_OTLP_ENDPOINT and OTEL_SERVICE_NAME, then send logs and traces through the standard OTLP endpoint."
       },
       "step3": {
         "title": "Review Logs and Add Alerts",
@@ -173,12 +173,12 @@
   "logServices": {
     "viewLogs": "View Logs",
     "empty": "No log services yet",
-    "emptyDesc": "Add a log service, then start collecting logs with HTTP Appender or Log Agent.",
+    "emptyDesc": "Add a log service, then connect your application with OpenTelemetry OTLP.",
     "add": {
       "title": "Add Log",
       "submit": "Add Log",
       "infoTitle": "Log Collection Service",
-      "infoDesc": "Create a log service to generate an API key automatically. Then choose HTTP Appender or Log Agent in the Integration tab and connect your app."
+      "infoDesc": "Create a log service to generate an API key automatically. Then connect your app with OpenTelemetry in the Integration tab."
     },
     "edit": {
       "title": "Edit Log Service",
@@ -263,13 +263,13 @@
     "integration": {
       "picker": {
         "eyebrow": "Integration",
-        "title": "What do you want to collect?",
-        "subtitle": "Choose the method that matches the data you want to capture.",
+        "title": "Connect with OpenTelemetry",
+        "subtitle": "Use the standard OTLP endpoint for logs and traces.",
         "recommended": "Recommended",
         "goodFor": "Good for",
         "start": "Start with this",
         "notSureTitle": "Not sure which to pick?",
-        "notSureDesc": "Use Log Agent to collect log files or stdout. Use API Request Capture to record HTTP request and response data."
+        "notSureDesc": "Start with OpenTelemetry auto-instrumentation. It sends logs and traces together and keeps request correlation intact."
       },
       "paths": {
         "otel": {
@@ -277,24 +277,6 @@
           "tagline": "Send logs and traces with the OTLP standard",
           "description": "Attach OpenTelemetry auto-instrumentation and configure a few environment variables. Your app emits logs and traces to /api/v1/otlp directly.",
           "goodFor": ["See logs and API traces correlated", "Spring Boot / Python / Node.js apps", "Standard SDK, no app code changes"]
-        },
-        "agent": {
-          "label": "Log Agent",
-          "tagline": "A Docker container that tails and forwards your log files",
-          "description": "Mount your log directory and run the container. No changes to your application code.",
-          "goodFor": ["File-based logs (.log, stdout)", "Docker / VM / bare metal", "No app code changes"]
-        },
-        "apiCapture": {
-          "label": "API Request Capture",
-          "tagline": "Add middleware to capture HTTP requests and responses",
-          "description": "Add a middleware to Spring Boot, FastAPI, Express, and more. Captures method, path, status, duration, and body.",
-          "goodFor": ["Full HTTP request/response capture", "Spring Boot / FastAPI / Express / Go / Django", "No infrastructure changes, code only"]
-        },
-        "httpAppender": {
-          "label": "HTTP Appender",
-          "tagline": "Add an HTTP endpoint to your app logger",
-          "description": "Add an HTTP transport to Winston, Logback, Serilog, or Python logging.",
-          "goodFor": ["Existing logger setup", "Node.js / Spring Boot / .NET / Python", "Code-level control over log delivery"]
         }
       },
       "status": {
@@ -313,8 +295,7 @@
       },
       "endpoint": {
         "title": "Ingest endpoint",
-        "description": "Accepts common logger formats and batches up to 100 logs per request.",
-        "apiCaptureDescription": "Accepts up to 50 API request entries per batch. Use the X-API-Key header for authentication.",
+        "description": "OTLP/HTTP base URL for logs and traces.",
         "otelDescription": "OTLP/HTTP base URL. The SDK appends /v1/logs and /v1/traces automatically."
       },
       "test": {
@@ -325,24 +306,13 @@
         "troubleshootingDesc": "If the request reaches a reverse proxy, make sure the Authorization header is forwarded."
       },
       "setup": {
-        "agentTitle": "Run the agent",
-        "httpTitle": "Add the appender",
-        "apiCaptureTitle": "Add the middleware",
         "otelTitle": "Attach OpenTelemetry auto-instrumentation",
-        "agentDesc": "Mount the log directory and start the EveryUp Log Agent.",
-        "httpDesc": "Pick your framework and add the HTTP transport to your logger.",
-        "apiCaptureDesc": "Pick your framework and add the middleware to your application.",
         "otelDesc": "Pick your language, set the environment variables, and attach the auto-instrumentation agent. No code changes required.",
-        "agentHint": "Quick start is enough for most setups. Change the mounted path to the directory where your application writes logs.",
-        "otelHint": "Point OTEL_EXPORTER_OTLP_ENDPOINT at EveryUp and the SDK fans out to /v1/logs and /v1/traces automatically. Pass the issued API key as the Authorization header.",
-        "levelPrefixHint": "For plain text logs, prefix lines with [INFO], [WARN], or [ERROR] so EveryUp can classify levels correctly. JSON logs can use level, severity, logLevel, or lvl fields.",
-        "apiCaptureHint": "Go to Settings - API Capture and enable a capture mode before data will be collected.",
-        "otherOptions": "Other deployment options",
-        "otherOptionsDesc": "Fluent Bit config, Docker sidecar, Docker pipe, and systemd examples."
+        "otelHint": "Point OTEL_EXPORTER_OTLP_ENDPOINT at EveryUp and the SDK fans out to /v1/logs and /v1/traces automatically. Pass the issued API key as the Authorization header."
       },
       "modals": {
         "regenerateTitle": "Regenerate API key?",
-        "regenerateDesc": "The previous key stops working immediately. Update any running agents or appenders.",
+        "regenerateDesc": "The previous key stops working immediately. Update any running OpenTelemetry exporters.",
         "newKeyTitle": "New API key generated",
         "newKeyDesc": "Copy it now. It will be hidden again shortly.",
         "done": "Done"

@@ -79,7 +79,7 @@ export function LogServiceForm({ onSuccess, onCancel, onSubmittingChange }: LogS
                 <div className="text-sm">
                     <p className="font-bold text-slate-800 dark:text-text-base-dark mb-1">{t('logServices.add.infoTitle', { defaultValue: 'Log Collection Service' })}</p>
                     <p className="text-xs text-slate-500 dark:text-text-muted-dark leading-relaxed">
-                        {t('logServices.add.infoDesc', { defaultValue: 'Create a log service to generate an API key automatically. Then choose HTTP Appender or Log Agent in the Integration tab and connect your app.' })}
+                        {t('logServices.add.infoDesc', { defaultValue: 'Create a log service to generate an API key automatically. Then connect your app with OpenTelemetry in the Integration tab.' })}
                     </p>
                 </div>
             </div>
