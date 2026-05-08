@@ -1146,60 +1146,6 @@ func TestApiRequestIngest_ModeErrorsOnly(t *testing.T) {
 	}
 }
 
-func TestApiRequestIngest_MasksHeaders(t *testing.T) {
-	ts := setupTestServer(t)
-	apiKey := createLogServiceForIngest(t, ts, "req-svc-mask")
-
-	// Set capture mode to "all" and ensure authorization is in masked headers (it's in default)
-	_, err := database.DB.Exec(
-		`UPDATE services SET api_capture_mode = 'all' WHERE id = ?`,
-		"req-svc-mask",
-	)
-	if err != nil {
-		t.Fatalf("update capture mode: %v", err)
-	}
-
-	resp, result := ts.doRequest(t, "POST", "/api/v1/ingest/requests", map[string]interface{}{
-		"method":     "GET",
-		"path":       "/api/profile",
-		"statusCode": 200,
-		"durationMs": 30,
-		"reqHeaders": map[string]string{
-			"Authorization": "Bearer xyz-secret-token",
-			"Content-Type":  "application/json",
-		},
-	}, "Authorization", "Bearer "+apiKey)
-
-	if resp.StatusCode != 201 {
-		t.Errorf("status = %d, want 201", resp.StatusCode)
-	}
-	if !result.Success {
-		t.Fatalf("ingest failed: %v", result.Error)
-	}
-
-	// Query DB directly to verify authorization header is masked
-	var reqHeadersRaw string
-	queryErr := database.DB.QueryRow(
-		`SELECT req_headers FROM api_requests WHERE service_id = ? ORDER BY id DESC LIMIT 1`,
-		"req-svc-mask",
-	).Scan(&reqHeadersRaw)
-	if queryErr != nil {
-		t.Fatalf("query req_headers: %v", queryErr)
-	}
-
-	var headers map[string]string
-	if err := json.Unmarshal([]byte(reqHeadersRaw), &headers); err != nil {
-		t.Fatalf("parse req_headers JSON: %v", err)
-	}
-
-	if headers["Authorization"] != "***" {
-		t.Errorf("Authorization header = %q, want %q", headers["Authorization"], "***")
-	}
-	if headers["Content-Type"] != "application/json" {
-		t.Errorf("Content-Type = %q, want %q", headers["Content-Type"], "application/json")
-	}
-}
-
 func TestApiRequestIngest_BatchLimit(t *testing.T) {
 	ts := setupTestServer(t)
 	apiKey := createLogServiceForIngest(t, ts, "req-svc-batch")
@@ -1269,9 +1215,8 @@ func TestApiCaptureConfig_GetAndUpdate(t *testing.T) {
 	}
 
 	var cfg struct {
-		Mode         string `json:"mode"`
-		SampleRate   int    `json:"sampleRate"`
-		BodyMaxBytes int    `json:"bodyMaxBytes"`
+		Mode       string `json:"mode"`
+		SampleRate int    `json:"sampleRate"`
 	}
 	json.Unmarshal(getResult.Data, &cfg)
 	if cfg.Mode != "sampled" {
@@ -1283,11 +1228,8 @@ func TestApiCaptureConfig_GetAndUpdate(t *testing.T) {
 
 	// 3. PUT with updated values
 	resp, putResult := ts.doRequest(t, "PUT", "/api/v1/services/cfg-svc-1/api-capture-config", map[string]interface{}{
-		"mode":             "errors_only",
-		"sampleRate":       0,
-		"bodyMaxBytes":     4096,
-		"maskedHeaders":    []string{"authorization"},
-		"maskedBodyFields": []string{"password"},
+		"mode":       "errors_only",
+		"sampleRate": 0,
 	}, auth...)
 	if resp.StatusCode != 200 {
 		t.Errorf("PUT status = %d, want 200", resp.StatusCode)
@@ -1303,11 +1245,8 @@ func TestApiCaptureConfig_GetAndUpdate(t *testing.T) {
 	}
 
 	var cfg2 struct {
-		Mode             string   `json:"mode"`
-		SampleRate       int      `json:"sampleRate"`
-		BodyMaxBytes     int      `json:"bodyMaxBytes"`
-		MaskedHeaders    []string `json:"maskedHeaders"`
-		MaskedBodyFields []string `json:"maskedBodyFields"`
+		Mode       string `json:"mode"`
+		SampleRate int    `json:"sampleRate"`
 	}
 	json.Unmarshal(getResult2.Data, &cfg2)
 	if cfg2.Mode != "errors_only" {
@@ -1316,23 +1255,11 @@ func TestApiCaptureConfig_GetAndUpdate(t *testing.T) {
 	if cfg2.SampleRate != 0 {
 		t.Errorf("updated sampleRate = %d, want 0", cfg2.SampleRate)
 	}
-	if cfg2.BodyMaxBytes != 4096 {
-		t.Errorf("updated bodyMaxBytes = %d, want 4096", cfg2.BodyMaxBytes)
-	}
-	if len(cfg2.MaskedHeaders) != 1 || cfg2.MaskedHeaders[0] != "authorization" {
-		t.Errorf("updated maskedHeaders = %v, want [authorization]", cfg2.MaskedHeaders)
-	}
-	if len(cfg2.MaskedBodyFields) != 1 || cfg2.MaskedBodyFields[0] != "password" {
-		t.Errorf("updated maskedBodyFields = %v, want [password]", cfg2.MaskedBodyFields)
-	}
 
 	// 5. PUT with invalid mode → 400 VALIDATION_ERROR
 	resp, errResult := ts.doRequest(t, "PUT", "/api/v1/services/cfg-svc-1/api-capture-config", map[string]interface{}{
-		"mode":             "invalid_mode",
-		"sampleRate":       10,
-		"bodyMaxBytes":     8192,
-		"maskedHeaders":    []string{},
-		"maskedBodyFields": []string{},
+		"mode":       "invalid_mode",
+		"sampleRate": 10,
 	}, auth...)
 	if resp.StatusCode != 400 {
 		t.Errorf("invalid mode status = %d, want 400", resp.StatusCode)
@@ -1343,11 +1270,8 @@ func TestApiCaptureConfig_GetAndUpdate(t *testing.T) {
 
 	// 6. PUT with sampleRate 150 → 400 VALIDATION_ERROR
 	resp, errResult2 := ts.doRequest(t, "PUT", "/api/v1/services/cfg-svc-1/api-capture-config", map[string]interface{}{
-		"mode":             "sampled",
-		"sampleRate":       150,
-		"bodyMaxBytes":     8192,
-		"maskedHeaders":    []string{},
-		"maskedBodyFields": []string{},
+		"mode":       "sampled",
+		"sampleRate": 150,
 	}, auth...)
 	if resp.StatusCode != 400 {
 		t.Errorf("out-of-range sampleRate status = %d, want 400", resp.StatusCode)

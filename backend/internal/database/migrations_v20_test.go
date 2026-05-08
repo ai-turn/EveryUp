@@ -85,12 +85,10 @@ func TestMigrateV20_ServicesCaptureColumnsExist(t *testing.T) {
 	}
 	rows.Close()
 
+	// Body/header masking columns were dropped in migrateV22 (metadata-only capture).
 	want := []string{
 		"api_capture_mode",
 		"api_sample_rate",
-		"api_body_max_bytes",
-		"api_masked_headers",
-		"api_masked_body_fields",
 	}
 	for _, c := range want {
 		if !cols[c] {

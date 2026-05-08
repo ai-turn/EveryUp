@@ -17,49 +17,6 @@ func TestDefaultApiCaptureConfig(t *testing.T) {
 	if cfg.SampleRate != 10 {
 		t.Errorf("SampleRate = %d, want 10", cfg.SampleRate)
 	}
-	if cfg.BodyMaxBytes != 8192 {
-		t.Errorf("BodyMaxBytes = %d, want 8192", cfg.BodyMaxBytes)
-	}
-
-	if len(cfg.MaskedHeaders) != 5 {
-		t.Errorf("len(MaskedHeaders) = %d, want 5", len(cfg.MaskedHeaders))
-	}
-	hasAuthorization := false
-	hasCookie := false
-	for _, h := range cfg.MaskedHeaders {
-		if h == "authorization" {
-			hasAuthorization = true
-		}
-		if h == "cookie" {
-			hasCookie = true
-		}
-	}
-	if !hasAuthorization {
-		t.Error("MaskedHeaders missing 'authorization'")
-	}
-	if !hasCookie {
-		t.Error("MaskedHeaders missing 'cookie'")
-	}
-
-	if len(cfg.MaskedBodyFields) != 7 {
-		t.Errorf("len(MaskedBodyFields) = %d, want 7", len(cfg.MaskedBodyFields))
-	}
-	hasPassword := false
-	hasToken := false
-	for _, f := range cfg.MaskedBodyFields {
-		if f == "password" {
-			hasPassword = true
-		}
-		if f == "token" {
-			hasToken = true
-		}
-	}
-	if !hasPassword {
-		t.Error("MaskedBodyFields missing 'password'")
-	}
-	if !hasToken {
-		t.Error("MaskedBodyFields missing 'token'")
-	}
 }
 
 func TestApiRequestJSONRoundTrip(t *testing.T) {
@@ -74,12 +31,6 @@ func TestApiRequestJSONRoundTrip(t *testing.T) {
 		StatusCode:   201,
 		DurationMs:   55,
 		ClientIP:     "10.0.0.1",
-		ReqHeaders:   json.RawMessage(`{"content-type":"application/json"}`),
-		ReqBody:      `{"name":"alice"}`,
-		ReqBodySize:  16,
-		ResHeaders:   json.RawMessage(`{"x-request-id":"xyz"}`),
-		ResBody:      `{"id":123}`,
-		ResBodySize:  10,
 		Error:        "",
 		IsError:      false,
 		CreatedAt:    now,
@@ -120,13 +71,12 @@ func TestApiRequestJSONRoundTrip(t *testing.T) {
 		t.Errorf("CreatedAt = %v, want %v", decoded.CreatedAt, original.CreatedAt)
 	}
 
-	// Verify JSON field names via raw map
 	var raw map[string]json.RawMessage
 	if err := json.Unmarshal(data, &raw); err != nil {
 		t.Fatalf("raw unmarshal failed: %v", err)
 	}
 	for _, key := range []string{"id", "serviceId", "requestId", "method", "path", "pathTemplate",
-		"statusCode", "durationMs", "reqBodySize", "resBodySize", "isError", "createdAt"} {
+		"statusCode", "durationMs", "isError", "createdAt"} {
 		if _, ok := raw[key]; !ok {
 			t.Errorf("JSON key %q missing from marshaled output", key)
 		}
