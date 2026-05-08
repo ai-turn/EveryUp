@@ -142,6 +142,84 @@ func TestOTLPHTTPIngest_E2EStoresCorrelatedLogsSpansAndRequests(t *testing.T) {
 	}
 }
 
+func TestOTLPHTTPIngest_DisabledCaptureSkipsAPIRequestProjection(t *testing.T) {
+	ts := setupTestServer(t)
+	token := ts.setupAdmin(t, "admin", "testpass123")
+
+	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
+		"id":   "otel-disabled",
+		"name": "OTel Disabled",
+		"type": "log",
+	}, authHeader(token)...)
+	if !createResult.Success {
+		t.Fatalf("service create failed: %+v", createResult.Error)
+	}
+	var service models.Service
+	if err := json.Unmarshal(createResult.Data, &service); err != nil {
+		t.Fatalf("decode created service: %v", err)
+	}
+
+	if _, err := database.DB.Exec(
+		`UPDATE services SET api_capture_mode = ? WHERE id = ?`,
+		string(models.CaptureModeDisabled), "otel-disabled",
+	); err != nil {
+		t.Fatalf("set disabled mode: %v", err)
+	}
+
+	traceID := []byte{0xa, 0xb, 0xc, 0xd, 0xe, 0xf, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	spanID := []byte{1, 2, 3, 4, 5, 6, 7, 8}
+	start := uint64(time.Date(2026, 5, 8, 12, 0, 0, 0, time.UTC).UnixNano())
+
+	traceReq := &collectortracepb.ExportTraceServiceRequest{
+		ResourceSpans: []*tracepb.ResourceSpans{{
+			Resource: &resourcepb.Resource{Attributes: []*commonpb.KeyValue{
+				{Key: "service.name", Value: stringValue("disabled-svc")},
+			}},
+			ScopeSpans: []*tracepb.ScopeSpans{{
+				Spans: []*tracepb.Span{{
+					TraceId:           traceID,
+					SpanId:            spanID,
+					Name:              "POST /orders",
+					Kind:              tracepb.Span_SPAN_KIND_SERVER,
+					StartTimeUnixNano: start,
+					EndTimeUnixNano:   start + uint64(10*time.Millisecond),
+					Status:            &tracepb.Status{Code: tracepb.Status_STATUS_CODE_OK},
+					Attributes: []*commonpb.KeyValue{
+						{Key: "http.request.method", Value: stringValue("POST")},
+						{Key: "url.path", Value: stringValue("/orders")},
+						{Key: "http.response.status_code", Value: intValue(200)},
+					},
+				}},
+			}},
+		}},
+	}
+
+	postOTLP(t, ts, "/api/v1/otlp/v1/traces", service.ApiKey, traceReq)
+
+	// The span itself is still stored — disabled only affects api_requests
+	// projection, not span retention.
+	var spanCount int
+	if err := database.DB.QueryRow(
+		`SELECT COUNT(*) FROM spans WHERE service_id = ?`, "otel-disabled",
+	).Scan(&spanCount); err != nil {
+		t.Fatalf("count spans: %v", err)
+	}
+	if spanCount != 1 {
+		t.Fatalf("spans rows = %d, want 1 (disabled mode should not gate spans table)", spanCount)
+	}
+
+	// api_requests projection must be skipped entirely.
+	var requestCount int
+	if err := database.DB.QueryRow(
+		`SELECT COUNT(*) FROM api_requests WHERE service_id = ?`, "otel-disabled",
+	).Scan(&requestCount); err != nil {
+		t.Fatalf("count api_requests: %v", err)
+	}
+	if requestCount != 0 {
+		t.Fatalf("api_requests rows = %d, want 0 for disabled capture mode", requestCount)
+	}
+}
+
 func postOTLP(t *testing.T, ts *testServer, path, apiKey string, msg proto.Message) {
 	t.Helper()
 

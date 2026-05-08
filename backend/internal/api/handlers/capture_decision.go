@@ -36,6 +36,21 @@ func shouldCapture(cfg *models.ApiCaptureConfig, statusCode int, errorStr string
 	}
 }
 
+// shouldCaptureOTLP applies only the mode portion of the capture config to
+// OTLP-projected api_requests. Sampling is owned by the OTel client SDK and is
+// intentionally ignored here, so a "sampled" service receives every span the
+// collector forwards.
+func shouldCaptureOTLP(mode models.ApiCaptureMode, isError bool) bool {
+	switch mode {
+	case models.CaptureModeDisabled:
+		return false
+	case models.CaptureModeErrorsOnly:
+		return isError
+	default: // sampled, all, or unset
+		return true
+	}
+}
+
 // cryptoRandFloat64 returns a cryptographically random float64 in [0,1).
 func cryptoRandFloat64() float64 {
 	var b [8]byte

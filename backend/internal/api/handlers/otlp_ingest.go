@@ -27,17 +27,19 @@ import (
 
 // OTLPIngestHandler receives OpenTelemetry OTLP/HTTP protobuf payloads.
 type OTLPIngestHandler struct {
-	logHandler *LogIngestHandler
-	spanRepo   *database.SpanRepository
-	reqRepo    *database.ApiRequestRepository
+	logHandler  *LogIngestHandler
+	spanRepo    *database.SpanRepository
+	reqRepo     *database.ApiRequestRepository
+	serviceRepo *database.ServiceRepository
 }
 
 // NewOTLPIngestHandler creates an OTLP ingest handler.
 func NewOTLPIngestHandler() *OTLPIngestHandler {
 	return &OTLPIngestHandler{
-		logHandler: NewLogIngestHandler(),
-		spanRepo:   database.NewSpanRepository(),
-		reqRepo:    database.NewApiRequestRepository(),
+		logHandler:  NewLogIngestHandler(),
+		spanRepo:    database.NewSpanRepository(),
+		reqRepo:     database.NewApiRequestRepository(),
+		serviceRepo: database.NewServiceRepository(),
 	}
 }
 
@@ -158,6 +160,15 @@ func (h *OTLPIngestHandler) IngestTraces(c *fiber.Ctx) error {
 		})
 	}
 
+	// Per-service capture mode controls whether SERVER spans get projected
+	// into api_requests. Sampling is intentionally ignored — OTel clients own
+	// that decision. A repository miss falls back to the default (sampled) so
+	// a missing config never silently drops data.
+	captureMode := models.DefaultApiCaptureConfig().Mode
+	if cfg, cfgErr := h.serviceRepo.GetApiCaptureConfig(service.ID); cfgErr == nil && cfg != nil {
+		captureMode = cfg.Mode
+	}
+
 	var spans []models.Span
 	var requests []models.ApiRequest
 
@@ -174,8 +185,10 @@ func (h *OTLPIngestHandler) IngestTraces(c *fiber.Ctx) error {
 				modelSpan := spanToModel(service, serviceName, resourceJSON, span)
 				spans = append(spans, modelSpan)
 
-				if req, ok := spanToAPIRequest(service, serviceName, span); ok {
-					requests = append(requests, req)
+				if apiReq, ok := spanToAPIRequest(service, serviceName, span); ok {
+					if shouldCaptureOTLP(captureMode, apiReq.IsError) {
+						requests = append(requests, apiReq)
+					}
 				}
 			}
 		}
@@ -354,6 +367,7 @@ func attrsToMap(attrs []*commonpb.KeyValue) map[string]interface{} {
 	for _, attr := range attrs {
 		out[attr.GetKey()] = anyValueToInterface(attr.GetValue())
 	}
+	maskOTelAttrs(out)
 	return out
 }
 

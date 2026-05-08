@@ -192,6 +192,64 @@ func TestSpanToAPIRequestOnlyProjectsHTTPServerSpans(t *testing.T) {
 	}
 }
 
+func TestAttrsToMapMasksSensitiveHeaders(t *testing.T) {
+	attrs := []*commonpb.KeyValue{
+		{Key: "http.request.header.authorization", Value: stringValue("Bearer secret-token")},
+		{Key: "http.request.header.X-Api-Key", Value: stringValue("abc-123")},
+		{Key: "http.request.header.cookie", Value: stringValue("session=xyz")},
+		{Key: "http.response.header.Set-Cookie", Value: stringValue("auth=abcdef")},
+		{Key: "http.request.header.content-type", Value: stringValue("application/json")},
+		{Key: "http.request.body", Value: stringValue(`{"password":"hunter2"}`)},
+		{Key: "http.route", Value: stringValue("/orders/{id}")},
+	}
+
+	out := attrsToMap(attrs)
+
+	cases := map[string]string{
+		"http.request.header.authorization": otelMaskedValue,
+		"http.request.header.X-Api-Key":     otelMaskedValue,
+		"http.request.header.cookie":        otelMaskedValue,
+		"http.response.header.Set-Cookie":   otelMaskedValue,
+		"http.request.body":                 otelMaskedValue,
+		"http.request.header.content-type":  "application/json",
+		"http.route":                        "/orders/{id}",
+	}
+	for key, want := range cases {
+		got, ok := out[key]
+		if !ok {
+			t.Errorf("attribute %q missing from masked output", key)
+			continue
+		}
+		if got != want {
+			t.Errorf("attribute %q = %v, want %q", key, got, want)
+		}
+	}
+}
+
+func TestShouldCaptureOTLPHonorsModeAndIgnoresSampling(t *testing.T) {
+	tests := []struct {
+		name    string
+		mode    models.ApiCaptureMode
+		isError bool
+		want    bool
+	}{
+		{"disabled drops everything", models.CaptureModeDisabled, true, false},
+		{"errors_only keeps errors", models.CaptureModeErrorsOnly, true, true},
+		{"errors_only drops successes", models.CaptureModeErrorsOnly, false, false},
+		{"sampled keeps everything (no server-side sampling)", models.CaptureModeSampled, false, true},
+		{"all keeps everything", models.CaptureModeAll, false, true},
+		{"unset defaults to keep", models.ApiCaptureMode(""), false, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := shouldCaptureOTLP(tt.mode, tt.isError); got != tt.want {
+				t.Fatalf("shouldCaptureOTLP(%q, isError=%v) = %v, want %v",
+					tt.mode, tt.isError, got, tt.want)
+			}
+		})
+	}
+}
+
 func stringValue(value string) *commonpb.AnyValue {
 	return &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: value}}
 }
