@@ -745,18 +745,18 @@ func migrateV21() error {
 func migrateV22() error {
 	return Transaction(func(tx *sql.Tx) error {
 		stmts := []string{
-			`ALTER TABLE api_requests DROP COLUMN IF EXISTS req_headers`,
-			`ALTER TABLE api_requests DROP COLUMN IF EXISTS req_body`,
-			`ALTER TABLE api_requests DROP COLUMN IF EXISTS req_body_size`,
-			`ALTER TABLE api_requests DROP COLUMN IF EXISTS res_headers`,
-			`ALTER TABLE api_requests DROP COLUMN IF EXISTS res_body`,
-			`ALTER TABLE api_requests DROP COLUMN IF EXISTS res_body_size`,
-			`ALTER TABLE services DROP COLUMN IF EXISTS api_body_max_bytes`,
-			`ALTER TABLE services DROP COLUMN IF EXISTS api_masked_headers`,
-			`ALTER TABLE services DROP COLUMN IF EXISTS api_masked_body_fields`,
+			`ALTER TABLE api_requests DROP COLUMN req_headers`,
+			`ALTER TABLE api_requests DROP COLUMN req_body`,
+			`ALTER TABLE api_requests DROP COLUMN req_body_size`,
+			`ALTER TABLE api_requests DROP COLUMN res_headers`,
+			`ALTER TABLE api_requests DROP COLUMN res_body`,
+			`ALTER TABLE api_requests DROP COLUMN res_body_size`,
+			`ALTER TABLE services DROP COLUMN api_body_max_bytes`,
+			`ALTER TABLE services DROP COLUMN api_masked_headers`,
+			`ALTER TABLE services DROP COLUMN api_masked_body_fields`,
 		}
 		for _, s := range stmts {
-			if _, err := tx.Exec(s); err != nil {
+			if _, err := tx.Exec(s); err != nil && !isNoSuchColumnError(err) {
 				return err
 			}
 		}
@@ -765,6 +765,11 @@ func migrateV22() error {
 }
 
 // --- helpers ---
+
+// isNoSuchColumnError checks if the error is a "no such column" error (DROP COLUMN on already-absent column)
+func isNoSuchColumnError(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "no such column")
+}
 
 // isDuplicateColumnError checks if the error is a duplicate column error (migrateV2)
 func isDuplicateColumnError(err error) bool {
