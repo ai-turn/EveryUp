@@ -80,25 +80,25 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-stretch justify-center bg-slate-900/60 backdrop-blur-sm sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label="Trace detail"
     >
-      <div className="bg-white dark:bg-bg-surface-dark rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col">
+      <div className="bg-white dark:bg-bg-surface-dark shadow-2xl w-full max-w-3xl h-full max-h-full flex flex-col sm:h-auto sm:max-h-[85vh] sm:rounded-xl">
         <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 dark:border-ui-border-dark">
           <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary">
             <MaterialIcon name="timeline" className="text-lg" />
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">Trace</h3>
-            <div className="flex items-center gap-1 mt-0.5">
-              <code className="text-xs font-mono text-slate-500 dark:text-text-muted-dark truncate">
+            <div className="flex items-center gap-1 mt-0.5 min-w-0">
+              <code className="text-xs font-mono text-slate-500 dark:text-text-muted-dark break-all min-w-0">
                 {traceId}
               </code>
               <button
                 onClick={() => copy(traceId)}
-                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-ui-hover-dark text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-ui-hover-dark text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer shrink-0"
                 title="Copy trace ID"
                 aria-label="Copy trace ID"
               >
@@ -119,7 +119,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
           {loading && (
             <div className="flex items-center justify-center py-10 text-sm text-slate-500 dark:text-text-muted-dark">
               <MaterialIcon name="sync" className="text-base mr-2 animate-spin" />
-              Loading trace…
+              Loading trace...
             </div>
           )}
 
@@ -171,7 +171,7 @@ function SpanList({ spans }: { spans: TraceSpan[] }) {
         {spans.map((span) => (
           <li
             key={`${span.traceId}-${span.spanId}`}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-xs"
+            className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-xs sm:flex-nowrap"
           >
             <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 ${spanKindBadge(span.kind)}`}>
               {span.kind}
@@ -207,7 +207,7 @@ function ApiRequestList({ items }: { items: ApiRequest[] }) {
         {items.map((req) => (
           <li
             key={req.id}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-xs"
+            className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-xs sm:flex-nowrap"
           >
             <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-200 dark:bg-ui-active-dark text-slate-700 dark:text-text-base-dark shrink-0">
               {req.method}

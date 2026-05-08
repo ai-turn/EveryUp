@@ -142,7 +142,7 @@ export interface LogEntry {
   level: LogLevel;
   message: string;
   metadata?: Record<string, unknown>;
-  source?: 'internal' | 'external' | 'agent';
+  source?: 'internal' | 'external' | 'agent' | 'otlp';
   fingerprint?: string;
   traceId?: string;
   spanId?: string;

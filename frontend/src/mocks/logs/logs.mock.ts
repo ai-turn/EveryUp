@@ -9,6 +9,11 @@ import type { LogEntry } from '../../services/api';
 const now = Date.now();
 const m = (minutesAgo: number) => new Date(now - minutesAgo * 60 * 1000).toISOString();
 
+export const mockTraceIds = {
+  apiGatewayAuth: '4bf92f3577b34da6a3ce929d0e0e4736',
+  paymentWebhook: '8f3c1a2b9d7046e1a4c2f9b6d8e0a135',
+} as const;
+
 export const mockLogEntries: LogEntry[] = [
   // ── API Gateway (id: 1) ────────────────────────────────────────────────────
   {
@@ -17,7 +22,9 @@ export const mockLogEntries: LogEntry[] = [
     serviceName: 'API Gateway',
     level: 'error',
     message: 'Connection timeout to upstream service: auth.internal:8080 after 5000ms',
-    source: 'internal',
+    source: 'otlp',
+    traceId: mockTraceIds.apiGatewayAuth,
+    spanId: '00f067aa0ba902b7',
     createdAt: m(1),
   },
   {
@@ -44,7 +51,9 @@ export const mockLogEntries: LogEntry[] = [
     serviceName: 'API Gateway',
     level: 'error',
     message: 'TLS certificate validation failed for host payments.partner.io',
-    source: 'internal',
+    source: 'otlp',
+    traceId: mockTraceIds.paymentWebhook,
+    spanId: '7ad6b7169203331b',
     metadata: { host: 'payments.partner.io', error: 'certificate expired', expiredAt: '2025-01-15T00:00:00Z' },
     createdAt: m(12),
   },
@@ -73,7 +82,9 @@ export const mockLogEntries: LogEntry[] = [
     serviceName: 'API Gateway',
     level: 'error',
     message: 'Upstream returned HTTP 503: Service Unavailable — circuit breaker opened',
-    source: 'internal',
+    source: 'otlp',
+    traceId: mockTraceIds.apiGatewayAuth,
+    spanId: '00f067aa0ba902b7',
     metadata: { upstream: 'auth.internal:8080', status: 503, circuitBreaker: 'open' },
     createdAt: m(45),
   },
@@ -256,7 +267,9 @@ export const mockLogEntries: LogEntry[] = [
     serviceName: 'Payment Worker',
     level: 'error',
     message: 'Stripe webhook signature verification failed — webhook ignored',
-    source: 'external',
+    source: 'otlp',
+    traceId: mockTraceIds.paymentWebhook,
+    spanId: '7ad6b7169203331b',
     metadata: { webhookId: 'evt_3OX7rD2eZvKYlo2C0fVJIQdA', error: 'signature_mismatch' },
     createdAt: m(6),
   },

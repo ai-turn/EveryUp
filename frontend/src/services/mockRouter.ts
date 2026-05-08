@@ -6,7 +6,7 @@
 
 import { mockServices } from '../mocks/dashboard/services.mock';
 import { mockIncidents as mockDashboardIncidents } from '../mocks/dashboard/incidents.mock';
-import { mockLogEntries as allMockLogs } from '../mocks/logs/logs.mock';
+import { mockLogEntries as allMockLogs, mockTraceIds } from '../mocks/logs/logs.mock';
 import { mockResponseTimeChartData } from '../mocks/healthcheck/charts.mock';
 import { mockGauges } from '../mocks/infra';
 import { mockResources } from '../mocks/infra/resourceList.mock';
@@ -30,6 +30,7 @@ import type {
   AppSettings,
   ApiRequest,
   ApiCaptureConfig,
+  TraceDetail,
 } from './api';
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
@@ -385,13 +386,116 @@ const now2 = Date.now();
 const s = (secondsAgo: number) => new Date(now2 - secondsAgo * 1000).toISOString();
 
 const mockApiRequests: ApiRequest[] = [
-  { id: 1, serviceId: '1', requestId: '01HV8QZXKAB1', method: 'POST',   path: '/api/v1/auth/login',        pathTemplate: '/api/v1/auth/login',        statusCode: 200, durationMs: 42,   clientIp: '10.0.0.5',  isError: false, createdAt: s(30) },
+  { id: 1, serviceId: '1', requestId: '01HV8QZXKAB1', method: 'POST',   path: '/api/v1/auth/login',        pathTemplate: '/api/v1/auth/login',        statusCode: 200, durationMs: 42,   clientIp: '10.0.0.5',  isError: false, traceId: mockTraceIds.apiGatewayAuth, spanId: '00f067aa0ba902b7', createdAt: s(30) },
   { id: 2, serviceId: '1', requestId: '01HV8QZXKAC2', method: 'GET',    path: '/api/v1/users/42',          pathTemplate: '/api/v1/users/:id',         statusCode: 200, durationMs: 18,   clientIp: '10.0.0.12', isError: false, createdAt: s(90) },
   { id: 3, serviceId: '1', requestId: '01HV8QZXKAD3', method: 'PUT',    path: '/api/v1/users/7/profile',   pathTemplate: '/api/v1/users/:id/profile', statusCode: 422, durationMs: 35,   clientIp: '10.0.0.7',  isError: false, createdAt: s(200) },
   { id: 4, serviceId: '1', requestId: '01HV8QZXKAE4', method: 'DELETE', path: '/api/v1/orders/1a2b3c4d',  pathTemplate: '/api/v1/orders/:id',        statusCode: 500, durationMs: 312,  clientIp: '10.0.0.3',  isError: true,  error: 'deadlock detected', createdAt: s(400) },
   { id: 5, serviceId: '1', requestId: '01HV8QZXKAF5', method: 'GET',    path: '/api/v1/products',         pathTemplate: '/api/v1/products',          statusCode: 200, durationMs: 67,   clientIp: '10.0.0.9',  isError: false, createdAt: s(600) },
-  { id: 6, serviceId: '1', requestId: '01HV8QZXKAG6', method: 'POST',   path: '/api/v1/payments',         pathTemplate: '/api/v1/payments',          statusCode: 503, durationMs: 5001, clientIp: '10.0.0.15', isError: true,  error: 'payment gateway timeout', createdAt: s(900) },
+  { id: 6, serviceId: '5', requestId: '01HV8QZXKAG6', method: 'POST',   path: '/api/v1/payments',         pathTemplate: '/api/v1/payments',          statusCode: 503, durationMs: 5001, clientIp: '10.0.0.15', isError: true,  error: 'payment gateway timeout', traceId: mockTraceIds.paymentWebhook, spanId: '7ad6b7169203331b', createdAt: s(900) },
 ];
+
+const ns = (secondsAgo: number, offsetMs = 0) => (now2 - secondsAgo * 1000 + offsetMs) * 1_000_000;
+
+const mockTraceDetails: Record<string, TraceDetail> = {
+  [mockTraceIds.apiGatewayAuth]: {
+    traceId: mockTraceIds.apiGatewayAuth,
+    spans: [
+      {
+        id: 1,
+        serviceId: '1',
+        serviceName: 'API Gateway',
+        traceId: mockTraceIds.apiGatewayAuth,
+        spanId: '00f067aa0ba902b7',
+        name: 'POST /api/v1/auth/login',
+        kind: 'SERVER',
+        startUnixNano: ns(30),
+        endUnixNano: ns(30, 42),
+        durationMs: 42,
+        statusCode: 'OK',
+        attributes: {
+          'http.request.method': 'POST',
+          'url.path': '/api/v1/auth/login',
+          'http.response.status_code': 200,
+        },
+        resource: { 'service.name': 'api-gateway', 'deployment.environment': 'demo' },
+        createdAt: s(30),
+      },
+      {
+        id: 2,
+        serviceId: '2',
+        serviceName: 'Auth Service',
+        traceId: mockTraceIds.apiGatewayAuth,
+        spanId: 'b7ad6b7169203331',
+        parentSpanId: '00f067aa0ba902b7',
+        name: 'POST auth.internal:8080/session',
+        kind: 'CLIENT',
+        startUnixNano: ns(30, 8),
+        endUnixNano: ns(30, 40),
+        durationMs: 32,
+        statusCode: 'ERROR',
+        statusMessage: 'upstream timeout',
+        attributes: {
+          'server.address': 'auth.internal',
+          'server.port': 8080,
+          'error.type': 'timeout',
+        },
+        resource: { 'service.name': 'api-gateway', 'service.version': '1.8.0' },
+        createdAt: s(30),
+      },
+    ],
+    logs: allMockLogs.filter((log) => log.traceId === mockTraceIds.apiGatewayAuth),
+    apiRequests: mockApiRequests.filter((request) => request.traceId === mockTraceIds.apiGatewayAuth),
+  },
+  [mockTraceIds.paymentWebhook]: {
+    traceId: mockTraceIds.paymentWebhook,
+    spans: [
+      {
+        id: 3,
+        serviceId: '5',
+        serviceName: 'Payment Worker',
+        traceId: mockTraceIds.paymentWebhook,
+        spanId: '7ad6b7169203331b',
+        name: 'POST /api/v1/payments',
+        kind: 'SERVER',
+        startUnixNano: ns(900),
+        endUnixNano: ns(900, 5001),
+        durationMs: 5001,
+        statusCode: 'ERROR',
+        statusMessage: 'payment gateway timeout',
+        attributes: {
+          'http.request.method': 'POST',
+          'url.path': '/api/v1/payments',
+          'http.response.status_code': 503,
+        },
+        resource: { 'service.name': 'payment-worker', 'deployment.environment': 'demo' },
+        createdAt: s(900),
+      },
+      {
+        id: 4,
+        serviceId: '5',
+        serviceName: 'Payment Worker',
+        traceId: mockTraceIds.paymentWebhook,
+        spanId: 'c4da95f66b729f70',
+        parentSpanId: '7ad6b7169203331b',
+        name: 'POST payments.partner.io/charge',
+        kind: 'CLIENT',
+        startUnixNano: ns(900, 15),
+        endUnixNano: ns(900, 4990),
+        durationMs: 4975,
+        statusCode: 'ERROR',
+        statusMessage: 'certificate validation failed',
+        attributes: {
+          'server.address': 'payments.partner.io',
+          'error.type': 'tls_certificate',
+        },
+        resource: { 'service.name': 'payment-worker', 'service.version': '2.4.1' },
+        createdAt: s(900),
+      },
+    ],
+    logs: allMockLogs.filter((log) => log.traceId === mockTraceIds.paymentWebhook),
+    apiRequests: mockApiRequests.filter((request) => request.traceId === mockTraceIds.paymentWebhook),
+  },
+};
 
 const mockApiCaptureConfig: ApiCaptureConfig = {
   mode: 'sampled',
@@ -435,7 +539,7 @@ export function mockRouter<T>(endpoint: string, method = 'GET'): T {
   if (apiReqListMatch) {
     const [, qs] = endpoint.split('?');
     const p = new URLSearchParams(qs ?? '');
-    let filtered = mockApiRequests;
+    let filtered = mockApiRequests.filter(r => r.serviceId === apiReqListMatch[1]);
     const method = p.get('method');
     if (method) filtered = filtered.filter(r => r.method === method.toUpperCase());
     const minStatus = parseInt(p.get('minStatus') ?? '0');
@@ -446,6 +550,17 @@ export function mockRouter<T>(endpoint: string, method = 'GET'): T {
     const search = p.get('search') ?? '';
     if (search) filtered = filtered.filter(r => r.path.includes(search) || (r.requestId ?? '').includes(search));
     return { items: [...filtered], total: filtered.length } as unknown as T;
+  }
+  // /traces/:traceId
+  const traceMatch = endpoint.match(/^\/traces\/([^/?]+)/);
+  if (traceMatch) {
+    const traceId = decodeURIComponent(traceMatch[1]);
+    return (mockTraceDetails[traceId] ?? {
+      traceId,
+      spans: [],
+      logs: [],
+      apiRequests: [],
+    }) as T;
   }
   // /services/:id
   if (/^\/services\/[^/?]+$/.test(endpoint)) return mockApiServices[0] as T;

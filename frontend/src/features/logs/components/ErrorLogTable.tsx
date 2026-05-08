@@ -4,6 +4,7 @@ import { MaterialIcon } from '../../../components/common';
 import { api, type LogEntry, type LogLevel } from '../../../services/api';
 import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
 import { useDebouncedValue } from '../../../hooks/useDebouncedValue';
+import { TracePanel } from '../../traces/components/TracePanel';
 
 interface ErrorLogTableProps {
   serviceId?: string;
@@ -41,6 +42,10 @@ const levelToneStyle: Record<LogLevel, string> = {
   debug: 'bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400',
   trace: 'bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark',
 };
+
+function shortTraceId(traceId: string): string {
+  return traceId.length <= 16 ? traceId : `${traceId.slice(0, 16)}...`;
+}
 
 function buildExampleLogs(serviceId?: string): LogEntry[] {
   const now = Date.now();
@@ -229,6 +234,7 @@ export function ErrorLogTable({ serviceId, refreshKey, initialSearch }: ErrorLog
   const [levelFilter, setLevelFilter] = useState<LevelFilter>('all');
   const [isPaused, setIsPaused] = useState(false);
   const [limit, setLimit] = useState(LIMIT_STEP);
+  const [activeTraceId, setActiveTraceId] = useState<string | null>(null);
   const { copy } = useCopyToClipboard();
 
   useEffect(() => {
@@ -269,6 +275,8 @@ export function ErrorLogTable({ serviceId, refreshKey, initialSearch }: ErrorLog
         !q ||
         log.message.toLowerCase().includes(q) ||
         (log.fingerprint ?? '').toLowerCase().includes(q) ||
+        (log.traceId ?? '').toLowerCase().includes(q) ||
+        (log.spanId ?? '').toLowerCase().includes(q) ||
         (log.metadata ? JSON.stringify(log.metadata).toLowerCase().includes(q) : false);
       return matchesLevel && matchesSearch;
     });
@@ -390,7 +398,21 @@ export function ErrorLogTable({ serviceId, refreshKey, initialSearch }: ErrorLog
                       </span>
                     </td>
                     <td className="px-4 py-3 font-mono text-xs text-slate-700 dark:text-text-base-dark">
-                      {log.message}
+                      <div className="flex flex-col gap-1.5">
+                        <span>{log.message}</span>
+                        {log.traceId && (
+                          <button
+                            type="button"
+                            onClick={() => setActiveTraceId(log.traceId ?? null)}
+                            className="inline-flex w-fit max-w-full items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-[11px] font-semibold text-primary hover:bg-primary/10"
+                            title={log.traceId}
+                          >
+                            <MaterialIcon name="timeline" className="text-sm" />
+                            <span className="font-mono truncate">{shortTraceId(log.traceId)}</span>
+                            <span className="font-sans">View trace</span>
+                          </button>
+                        )}
+                      </div>
                     </td>
                     <td className="w-12 px-4 py-3 text-right">
                       <button onClick={() => handleCopyLog(log)} className="text-slate-400 hover:text-primary">
@@ -427,6 +449,9 @@ export function ErrorLogTable({ serviceId, refreshKey, initialSearch }: ErrorLog
           </div>
         )}
       </section>
+      {activeTraceId && (
+        <TracePanel traceId={activeTraceId} onClose={() => setActiveTraceId(null)} />
+      )}
     </div>
   );
 }
