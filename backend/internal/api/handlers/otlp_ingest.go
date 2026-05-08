@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"bytes"
+	"compress/gzip"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"strconv"
 	"strings"
@@ -46,7 +49,18 @@ func (h *OTLPIngestHandler) IngestLogs(c *fiber.Ctx) error {
 	}
 
 	var req collectorlogspb.ExportLogsServiceRequest
-	if err := proto.Unmarshal(c.Body(), &req); err != nil {
+	body, readErr := readOTLPBody(c)
+	if readErr != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"error": fiber.Map{
+				"code":    ErrCodeInvalidRequest,
+				"message": readErr.Error(),
+			},
+		})
+	}
+
+	if err := proto.Unmarshal(body, &req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"success": false,
 			"error": fiber.Map{
@@ -123,7 +137,18 @@ func (h *OTLPIngestHandler) IngestTraces(c *fiber.Ctx) error {
 	}
 
 	var req collectortracepb.ExportTraceServiceRequest
-	if err := proto.Unmarshal(c.Body(), &req); err != nil {
+	body, readErr := readOTLPBody(c)
+	if readErr != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"error": fiber.Map{
+				"code":    ErrCodeInvalidRequest,
+				"message": readErr.Error(),
+			},
+		})
+	}
+
+	if err := proto.Unmarshal(body, &req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"success": false,
 			"error": fiber.Map{
@@ -168,14 +193,14 @@ func (h *OTLPIngestHandler) IngestTraces(c *fiber.Ctx) error {
 		return internalError(c, ErrCodeDatabase, err)
 	}
 
-	body, err := proto.Marshal(&collectortracepb.ExportTraceServiceResponse{})
+	respBody, err := proto.Marshal(&collectortracepb.ExportTraceServiceResponse{})
 	if err != nil {
 		return err
 	}
 	c.Set(fiber.HeaderContentType, "application/x-protobuf")
 	c.Set("X-EveryUp-Spans", strconv.Itoa(insertedSpans))
 	c.Set("X-EveryUp-Api-Requests", strconv.Itoa(insertedRequests))
-	return c.Status(fiber.StatusOK).Send(body)
+	return c.Status(fiber.StatusOK).Send(respBody)
 }
 
 type otelLogFields struct {
@@ -465,6 +490,30 @@ func unauthorizedOTLP(c *fiber.Ctx) error {
 			"message": "Service not found in context",
 		},
 	})
+}
+
+func readOTLPBody(c *fiber.Ctx) ([]byte, error) {
+	body := c.Body()
+	if !strings.EqualFold(c.Get("Content-Encoding"), "gzip") {
+		return body, nil
+	}
+	if len(body) < 2 || body[0] != 0x1f || body[1] != 0x8b {
+		// fasthttp may already decode compressed request bodies while leaving
+		// the header intact; treat a non-gzip byte stream as already decoded.
+		return body, nil
+	}
+
+	reader, err := gzip.NewReader(bytes.NewReader(body))
+	if err != nil {
+		return nil, fmt.Errorf("invalid gzip OTLP payload: %w", err)
+	}
+	defer reader.Close()
+
+	decoded, err := io.ReadAll(reader)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read gzip OTLP payload: %w", err)
+	}
+	return decoded, nil
 }
 
 func _resourcePackageAnchor(_ *resourcepb.Resource) {}

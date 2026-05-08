@@ -1,10 +1,15 @@
 package handlers
 
 import (
+	"bytes"
+	"compress/gzip"
+	"io"
+	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/aiturn/everyup/internal/models"
+	"github.com/gofiber/fiber/v2"
 	commonpb "go.opentelemetry.io/proto/otlp/common/v1"
 	logspb "go.opentelemetry.io/proto/otlp/logs/v1"
 	tracepb "go.opentelemetry.io/proto/otlp/trace/v1"
@@ -30,6 +35,42 @@ func TestSeverityNumberToLevel(t *testing.T) {
 				t.Fatalf("severityNumberToLevel(%d) = %q, want %q", tt.number, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestReadOTLPBodySupportsGzip(t *testing.T) {
+	var buf bytes.Buffer
+	gz := gzip.NewWriter(&buf)
+	if _, err := gz.Write([]byte("payload")); err != nil {
+		t.Fatalf("gzip write: %v", err)
+	}
+	if err := gz.Close(); err != nil {
+		t.Fatalf("gzip close: %v", err)
+	}
+
+	app := fiber.New()
+	app.Post("/", func(c *fiber.Ctx) error {
+		body, err := readOTLPBody(c)
+		if err != nil {
+			return err
+		}
+		return c.Send(body)
+	})
+
+	req := httptest.NewRequest("POST", "/", bytes.NewReader(buf.Bytes()))
+	req.Header.Set("Content-Encoding", "gzip")
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatalf("app.Test: %v", err)
+	}
+	defer resp.Body.Close()
+
+	got, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("read body: %v", err)
+	}
+	if string(got) != "payload" {
+		t.Fatalf("decoded body = %q, want payload", got)
 	}
 }
 
