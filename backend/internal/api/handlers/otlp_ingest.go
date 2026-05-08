@@ -492,6 +492,12 @@ func unauthorizedOTLP(c *fiber.Ctx) error {
 	})
 }
 
+// maxOTLPDecodedSize caps the size of a decompressed OTLP payload. Compressed
+// payloads are already bounded by the Fiber BodyLimit, but a small gzipped
+// body can expand orders of magnitude (gzip bomb). Anything beyond this limit
+// is rejected before it can pressure memory.
+const maxOTLPDecodedSize = 16 << 20 // 16 MiB
+
 func readOTLPBody(c *fiber.Ctx) ([]byte, error) {
 	body := c.Body()
 	if !strings.EqualFold(c.Get("Content-Encoding"), "gzip") {
@@ -502,16 +508,24 @@ func readOTLPBody(c *fiber.Ctx) ([]byte, error) {
 		// the header intact; treat a non-gzip byte stream as already decoded.
 		return body, nil
 	}
+	return decodeGzipOTLP(body)
+}
 
+func decodeGzipOTLP(body []byte) ([]byte, error) {
 	reader, err := gzip.NewReader(bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("invalid gzip OTLP payload: %w", err)
 	}
 	defer reader.Close()
 
-	decoded, err := io.ReadAll(reader)
+	// Read one byte past the limit so we can distinguish "exactly limit" from "exceeded".
+	limited := io.LimitReader(reader, maxOTLPDecodedSize+1)
+	decoded, err := io.ReadAll(limited)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read gzip OTLP payload: %w", err)
+	}
+	if len(decoded) > maxOTLPDecodedSize {
+		return nil, fmt.Errorf("gzip OTLP payload exceeds %d bytes after decompression", maxOTLPDecodedSize)
 	}
 	return decoded, nil
 }

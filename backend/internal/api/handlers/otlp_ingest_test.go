@@ -74,6 +74,49 @@ func TestReadOTLPBodySupportsGzip(t *testing.T) {
 	}
 }
 
+func TestDecodeGzipOTLPRejectsOversized(t *testing.T) {
+	// Build a payload that compresses small but expands past the 16 MiB cap.
+	var buf bytes.Buffer
+	gz := gzip.NewWriter(&buf)
+	chunk := bytes.Repeat([]byte{'A'}, 1<<20) // 1 MiB
+	for i := 0; i < 17; i++ {                 // 17 MiB total > 16 MiB cap
+		if _, err := gz.Write(chunk); err != nil {
+			t.Fatalf("gzip write: %v", err)
+		}
+	}
+	if err := gz.Close(); err != nil {
+		t.Fatalf("gzip close: %v", err)
+	}
+
+	if _, err := decodeGzipOTLP(buf.Bytes()); err == nil {
+		t.Fatal("expected oversized gzip payload to be rejected, got nil error")
+	} else if !bytes.Contains([]byte(err.Error()), []byte("exceeds")) {
+		t.Fatalf("error = %v, want to contain 'exceeds'", err)
+	}
+}
+
+func TestDecodeGzipOTLPAcceptsAtLimit(t *testing.T) {
+	var buf bytes.Buffer
+	gz := gzip.NewWriter(&buf)
+	chunk := bytes.Repeat([]byte{'A'}, 1<<20) // 1 MiB
+	for i := 0; i < 16; i++ {                 // exactly 16 MiB
+		if _, err := gz.Write(chunk); err != nil {
+			t.Fatalf("gzip write: %v", err)
+		}
+	}
+	if err := gz.Close(); err != nil {
+		t.Fatalf("gzip close: %v", err)
+	}
+
+	decoded, err := decodeGzipOTLP(buf.Bytes())
+	if err != nil {
+		t.Fatalf("at-limit payload should be accepted, got: %v", err)
+	}
+	if len(decoded) != 16<<20 {
+		t.Fatalf("decoded length = %d, want %d", len(decoded), 16<<20)
+	}
+}
+
 func TestLogRecordToEntryPreservesOTelFields(t *testing.T) {
 	ts := uint64(time.Date(2026, 5, 8, 12, 0, 0, 0, time.UTC).UnixNano())
 	record := &logspb.LogRecord{
