@@ -219,6 +219,127 @@ func TestOTLPHTTPIngest_DisabledCaptureSkipsAPIRequestProjection(t *testing.T) {
 	}
 }
 
+func TestTraces_GetByTraceIDReturnsCorrelatedSpansLogsAndApiRequests(t *testing.T) {
+	ts := setupTestServer(t)
+	token := ts.setupAdmin(t, "admin", "testpass123")
+
+	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
+		"id":   "trace-corr",
+		"name": "Trace correlation",
+		"type": "log",
+	}, authHeader(token)...)
+	if !createResult.Success {
+		t.Fatalf("service create failed: %+v", createResult.Error)
+	}
+	var service models.Service
+	if err := json.Unmarshal(createResult.Data, &service); err != nil {
+		t.Fatalf("decode service: %v", err)
+	}
+
+	traceID := []byte{0xca, 0xfe, 0xca, 0xfe, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c}
+	spanID := []byte{0xab, 0xcd, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
+	start := uint64(time.Date(2026, 5, 8, 12, 0, 0, 0, time.UTC).UnixNano())
+	resourceAttrs := []*commonpb.KeyValue{
+		{Key: "service.name", Value: stringValue("trace-corr-svc")},
+	}
+
+	logReq := &collectorlogspb.ExportLogsServiceRequest{
+		ResourceLogs: []*logspb.ResourceLogs{{
+			Resource: &resourcepb.Resource{Attributes: resourceAttrs},
+			ScopeLogs: []*logspb.ScopeLogs{{
+				LogRecords: []*logspb.LogRecord{{
+					TimeUnixNano:   start,
+					SeverityNumber: logspb.SeverityNumber_SEVERITY_NUMBER_INFO,
+					Body:           stringValue("trace correlation log"),
+					TraceId:        traceID,
+					SpanId:         spanID,
+				}},
+			}},
+		}},
+	}
+	traceReq := &collectortracepb.ExportTraceServiceRequest{
+		ResourceSpans: []*tracepb.ResourceSpans{{
+			Resource: &resourcepb.Resource{Attributes: resourceAttrs},
+			ScopeSpans: []*tracepb.ScopeSpans{{
+				Spans: []*tracepb.Span{{
+					TraceId:           traceID,
+					SpanId:            spanID,
+					Name:              "GET /correlated",
+					Kind:              tracepb.Span_SPAN_KIND_SERVER,
+					StartTimeUnixNano: start,
+					EndTimeUnixNano:   start + uint64(12*time.Millisecond),
+					Status:            &tracepb.Status{Code: tracepb.Status_STATUS_CODE_OK},
+					Attributes: []*commonpb.KeyValue{
+						{Key: "http.request.method", Value: stringValue("GET")},
+						{Key: "url.path", Value: stringValue("/correlated")},
+						{Key: "http.response.status_code", Value: intValue(200)},
+					},
+				}},
+			}},
+		}},
+	}
+
+	postOTLP(t, ts, "/api/v1/otlp/v1/logs", service.ApiKey, logReq)
+	postOTLP(t, ts, "/api/v1/otlp/v1/traces", service.ApiKey, traceReq)
+
+	const traceHex = "cafecafe0102030405060708090a0b0c"
+	resp, result := ts.doRequest(t, "GET", "/api/v1/traces/"+traceHex, nil, authHeader(token)...)
+	if resp.StatusCode != 200 {
+		t.Fatalf("GET /traces status=%d, error=%+v", resp.StatusCode, result.Error)
+	}
+	if !result.Success {
+		t.Fatalf("response not successful: %+v", result.Error)
+	}
+
+	var data struct {
+		TraceID     string `json:"traceId"`
+		Spans       []struct{ SpanID, Kind string } `json:"spans"`
+		Logs        []struct{ Message string }      `json:"logs"`
+		ApiRequests []struct{ Method, Path string } `json:"apiRequests"`
+	}
+	if err := json.Unmarshal(result.Data, &data); err != nil {
+		t.Fatalf("decode trace payload: %v", err)
+	}
+
+	if data.TraceID != traceHex {
+		t.Fatalf("traceId = %q, want %q", data.TraceID, traceHex)
+	}
+	if len(data.Spans) != 1 || data.Spans[0].Kind != "SERVER" {
+		t.Fatalf("spans = %+v, want one SERVER span", data.Spans)
+	}
+	if len(data.Logs) != 1 || data.Logs[0].Message != "trace correlation log" {
+		t.Fatalf("logs = %+v, want correlation log", data.Logs)
+	}
+	if len(data.ApiRequests) != 1 || data.ApiRequests[0].Method != "GET" || data.ApiRequests[0].Path != "/correlated" {
+		t.Fatalf("apiRequests = %+v, want GET /correlated", data.ApiRequests)
+	}
+}
+
+func TestTraces_GetByUnknownTraceIDReturnsEmptyArrays(t *testing.T) {
+	ts := setupTestServer(t)
+	token := ts.setupAdmin(t, "admin", "testpass123")
+
+	resp, result := ts.doRequest(t, "GET", "/api/v1/traces/0123456789abcdef0123456789abcdef", nil, authHeader(token)...)
+	if resp.StatusCode != 200 {
+		t.Fatalf("status=%d", resp.StatusCode)
+	}
+	var data struct {
+		Spans       []json.RawMessage `json:"spans"`
+		Logs        []json.RawMessage `json:"logs"`
+		ApiRequests []json.RawMessage `json:"apiRequests"`
+	}
+	if err := json.Unmarshal(result.Data, &data); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	// Empty arrays, not null — guarantees idiomatic frontend handling.
+	if data.Spans == nil || data.Logs == nil || data.ApiRequests == nil {
+		t.Fatalf("expected empty arrays, got: spans=%v logs=%v apiRequests=%v", data.Spans, data.Logs, data.ApiRequests)
+	}
+	if len(data.Spans) != 0 || len(data.Logs) != 0 || len(data.ApiRequests) != 0 {
+		t.Fatalf("expected zero-length arrays, got %d/%d/%d", len(data.Spans), len(data.Logs), len(data.ApiRequests))
+	}
+}
+
 func postOTLP(t *testing.T, ts *testServer, path, apiKey string, msg proto.Message) {
 	t.Helper()
 

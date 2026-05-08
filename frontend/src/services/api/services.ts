@@ -144,6 +144,8 @@ export interface LogEntry {
   metadata?: Record<string, unknown>;
   source?: 'internal' | 'external' | 'agent';
   fingerprint?: string;
+  traceId?: string;
+  spanId?: string;
   createdAt: string;
 }
 
@@ -181,12 +183,42 @@ export interface ApiRequest {
   method: string;
   path: string;
   pathTemplate: string;
+  route?: string;
+  serviceName?: string;
+  traceId?: string;
+  spanId?: string;
   statusCode: number;
   durationMs: number;
   clientIp?: string;
   error?: string;
   isError: boolean;
   createdAt: string;
+}
+
+export interface TraceSpan {
+  id: number;
+  serviceId?: string;
+  serviceName?: string;
+  traceId: string;
+  spanId: string;
+  parentSpanId?: string;
+  name: string;
+  kind: string;
+  startUnixNano: number;
+  endUnixNano: number;
+  durationMs: number;
+  statusCode?: string;
+  statusMessage?: string;
+  attributes?: Record<string, unknown>;
+  resource?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface TraceDetail {
+  traceId: string;
+  spans: TraceSpan[];
+  logs: LogEntry[];
+  apiRequests: ApiRequest[];
 }
 
 export interface ApiCaptureConfig {
@@ -352,5 +384,8 @@ export function createServicesApi(request: RequestFn) {
         method: 'PUT',
         body: JSON.stringify(config),
       }),
+
+    getTrace: (traceId: string) =>
+      request<TraceDetail>(`/traces/${traceId}`),
   };
 }

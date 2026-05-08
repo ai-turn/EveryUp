@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { MaterialIcon } from '../../../components/common';
 import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
 import type { ApiRequest } from '../../../services/api';
+import { TracePanel } from '../../traces/components/TracePanel';
 
 export interface RequestDetailDrawerProps {
   request: ApiRequest;
@@ -62,6 +64,7 @@ function MetaItem({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 export function RequestDetailDrawer({ request, onViewInLogs }: RequestDetailDrawerProps) {
+  const [traceOpen, setTraceOpen] = useState(false);
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="flex flex-col gap-6 px-6 py-5">
@@ -131,6 +134,32 @@ export function RequestDetailDrawer({ request, onViewInLogs }: RequestDetailDraw
           </div>
         )}
 
+        {/* Trace correlation */}
+        {request.traceId && (
+          <div className="flex flex-col gap-2 p-4 rounded-xl border border-slate-200 dark:border-ui-border-dark bg-slate-50/60 dark:bg-ui-hover-dark/30">
+            <div className="flex items-center gap-2">
+              <MaterialIcon name="timeline" className="text-slate-400 text-base" />
+              <span className="text-sm font-semibold text-slate-700 dark:text-text-secondary-dark">
+                Trace
+              </span>
+              <code className="ml-auto text-[11px] font-mono text-slate-500 dark:text-text-muted-dark truncate" title={request.traceId}>
+                {request.traceId.slice(0, 16)}…
+              </code>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-text-muted-dark leading-relaxed">
+              Open the full trace to see all spans and correlated logs that share this trace ID.
+            </p>
+            <button
+              type="button"
+              onClick={() => setTraceOpen(true)}
+              className="mt-1 self-start flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-colors cursor-pointer"
+            >
+              <MaterialIcon name="open_in_full" className="text-sm" />
+              View trace
+            </button>
+          </div>
+        )}
+
         {/* Client IP */}
         {request.clientIp && (
           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-text-muted-dark">
@@ -139,6 +168,10 @@ export function RequestDetailDrawer({ request, onViewInLogs }: RequestDetailDraw
           </div>
         )}
       </div>
+
+      {traceOpen && request.traceId && (
+        <TracePanel traceId={request.traceId} onClose={() => setTraceOpen(false)} />
+      )}
     </div>
   );
 }

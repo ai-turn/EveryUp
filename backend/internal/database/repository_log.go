@@ -145,6 +145,60 @@ func (r *LogRepository) GetAll(filter models.LogFilter) ([]models.Log, int, erro
 	return logs, total, nil
 }
 
+// GetByTraceID returns logs that share the given OTel trace ID, ordered by
+// creation time. Returns nil with no error when none match.
+func (r *LogRepository) GetByTraceID(traceID string) ([]models.Log, error) {
+	if traceID == "" {
+		return nil, nil
+	}
+	rows, err := DB.Query(`
+		SELECT l.id, l.service_id, COALESCE(s.name, l.service_id, ''), l.level,
+			l.message, l.metadata, l.source, l.fingerprint, l.trace_id, l.span_id,
+			l.severity_number, l.observed_at, l.resource, l.attributes, l.created_at
+		FROM logs l LEFT JOIN services s ON s.id = l.service_id
+		WHERE l.trace_id = ?
+		ORDER BY l.created_at ASC
+	`, traceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var logs []models.Log
+	for rows.Next() {
+		var l models.Log
+		var serviceID, serviceName, metadata, source, fingerprint, traceCol, spanID, resource, attributes sql.NullString
+		var observedAt sql.NullTime
+		if err := rows.Scan(
+			&l.ID, &serviceID, &serviceName, &l.Level, &l.Message, &metadata,
+			&source, &fingerprint, &traceCol, &spanID, &l.SeverityNumber,
+			&observedAt, &resource, &attributes, &l.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		l.ServiceID = serviceID.String
+		l.ServiceName = serviceName.String
+		if metadata.Valid {
+			l.Metadata = json.RawMessage(metadata.String)
+		}
+		l.Source = source.String
+		l.Fingerprint = fingerprint.String
+		l.TraceID = traceCol.String
+		l.SpanID = spanID.String
+		if observedAt.Valid {
+			l.ObservedAt = &observedAt.Time
+		}
+		if resource.Valid {
+			l.Resource = json.RawMessage(resource.String)
+		}
+		if attributes.Valid {
+			l.Attributes = json.RawMessage(attributes.String)
+		}
+		logs = append(logs, l)
+	}
+	return logs, nil
+}
+
 // DeleteOld deletes logs older than the specified duration
 func (r *LogRepository) DeleteOld(retention time.Duration) (int64, error) {
 	result, err := DB.Exec(`

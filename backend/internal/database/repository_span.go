@@ -52,3 +52,49 @@ func (r *SpanRepository) CreateBatch(spans []models.Span) (int, error) {
 	})
 	return count, err
 }
+
+// GetByTraceID returns spans that share the given trace ID, ordered by start
+// time. Returns nil when none match.
+func (r *SpanRepository) GetByTraceID(traceID string) ([]models.Span, error) {
+	if traceID == "" {
+		return nil, nil
+	}
+	rows, err := DB.Query(`
+		SELECT id, service_id, service_name, trace_id, span_id, parent_span_id,
+			name, kind, start_unix_nano, end_unix_nano, duration_ms,
+			status_code, status_message, attributes, events, links, resource, created_at
+		FROM spans WHERE trace_id = ?
+		ORDER BY start_unix_nano ASC
+	`, traceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var spans []models.Span
+	for rows.Next() {
+		var s models.Span
+		var attributes, events, links, resource sql.NullString
+		if err := rows.Scan(
+			&s.ID, &s.ServiceID, &s.ServiceName, &s.TraceID, &s.SpanID, &s.ParentSpanID,
+			&s.Name, &s.Kind, &s.StartUnixNano, &s.EndUnixNano, &s.DurationMs,
+			&s.StatusCode, &s.StatusMessage, &attributes, &events, &links, &resource, &s.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		if attributes.Valid {
+			s.Attributes = []byte(attributes.String)
+		}
+		if events.Valid {
+			s.Events = []byte(events.String)
+		}
+		if links.Valid {
+			s.Links = []byte(links.String)
+		}
+		if resource.Valid {
+			s.Resource = []byte(resource.String)
+		}
+		spans = append(spans, s)
+	}
+	return spans, nil
+}

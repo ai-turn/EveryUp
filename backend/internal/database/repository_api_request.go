@@ -153,6 +153,49 @@ func (r *ApiRequestRepository) GetByID(id int64) (*models.ApiRequest, error) {
 	return &req, nil
 }
 
+// GetByTraceID returns ApiRequest projections that share the given trace ID,
+// ordered by creation time. Returns nil when none match.
+func (r *ApiRequestRepository) GetByTraceID(traceID string) ([]models.ApiRequest, error) {
+	if traceID == "" {
+		return nil, nil
+	}
+	rows, err := DB.Query(`
+		SELECT id, service_id, request_id, method, path, path_template,
+		       status_code, duration_ms, client_ip,
+		       error, is_error, created_at, trace_id, span_id, route, service_name
+		FROM api_requests WHERE trace_id = ?
+		ORDER BY created_at ASC
+	`, traceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []models.ApiRequest
+	for rows.Next() {
+		var (
+			statusCode, durationMs                                int
+			isError                                               int
+			rid64                                                 int64
+			serviceID, requestID, method, path, pathTemplate      string
+			serviceName, traceCol, spanID, route, clientIP, errStr sql.NullString
+			createdAt                                             time.Time
+		)
+		if err := rows.Scan(
+			&rid64, &serviceID, &requestID, &method, &path, &pathTemplate,
+			&statusCode, &durationMs, &clientIP,
+			&errStr, &isError, &createdAt, &traceCol, &spanID, &route, &serviceName,
+		); err != nil {
+			return nil, err
+		}
+		out = append(out, scanApiRequest(
+			&rid64, &serviceID, &requestID, &method, &path, &pathTemplate,
+			&statusCode, &durationMs, &serviceName, &traceCol, &spanID, &route, &clientIP, &errStr, &isError, &createdAt,
+		))
+	}
+	return out, nil
+}
+
 // List returns a paginated, filtered list of ApiRequests and the total count.
 // f.ServiceID is always applied. Other filters are optional (zero-value = skip).
 func (r *ApiRequestRepository) List(f *models.ApiRequestFilter) ([]models.ApiRequest, int, error) {

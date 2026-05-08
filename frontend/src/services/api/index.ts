@@ -48,6 +48,8 @@ export type {
   ApiCaptureConfig,
   ApiRequestListParams,
   ApiRequestListResponse,
+  TraceSpan,
+  TraceDetail,
 } from './services';
 export type {
   Host,

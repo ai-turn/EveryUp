@@ -1,0 +1,259 @@
+import { useEffect, useState } from 'react';
+import { MaterialIcon } from '../../../components/common';
+import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
+import { getErrorMessage } from '../../../utils/errors';
+import { api, TraceDetail, TraceSpan, LogEntry, ApiRequest } from '../../../services/api';
+
+interface TracePanelProps {
+  traceId: string;
+  onClose: () => void;
+}
+
+function formatDuration(ms: number): string {
+  if (ms < 1) return '<1ms';
+  if (ms < 1000) return `${ms}ms`;
+  return `${(ms / 1000).toFixed(2)}s`;
+}
+
+function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString('en-US', { hour12: false });
+}
+
+function spanKindBadge(kind: string): string {
+  switch (kind) {
+    case 'SERVER':   return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
+    case 'CLIENT':   return 'bg-sky-500/10 text-sky-600 dark:text-sky-400';
+    case 'PRODUCER':
+    case 'CONSUMER': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+    case 'INTERNAL': return 'bg-slate-500/10 text-slate-600 dark:text-slate-400';
+    default:         return 'bg-slate-500/10 text-slate-600 dark:text-slate-400';
+  }
+}
+
+function statusBadge(code: string | undefined): string {
+  if (code === 'ERROR') return 'bg-red-500/10 text-red-600 dark:text-red-400';
+  if (code === 'OK')    return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
+  return 'bg-slate-500/10 text-slate-500 dark:text-slate-400';
+}
+
+function logLevelBadge(level: string): string {
+  switch (level) {
+    case 'error': return 'bg-red-500/10 text-red-600 dark:text-red-400';
+    case 'warn':  return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+    case 'info':  return 'bg-sky-500/10 text-sky-600 dark:text-sky-400';
+    case 'debug': return 'bg-slate-500/10 text-slate-500 dark:text-slate-400';
+    case 'trace': return 'bg-slate-500/10 text-slate-400 dark:text-slate-500';
+    default:      return 'bg-slate-500/10 text-slate-500 dark:text-slate-400';
+  }
+}
+
+export function TracePanel({ traceId, onClose }: TracePanelProps) {
+  const { copy } = useCopyToClipboard();
+  const [data, setData] = useState<TraceDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    api
+      .getTrace(traceId)
+      .then((d) => {
+        if (!cancelled) setData(d);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(getErrorMessage(e));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [traceId]);
+
+  const spans = data?.spans ?? [];
+  const logs = data?.logs ?? [];
+  const apiRequests = data?.apiRequests ?? [];
+  const isEmpty = !loading && !error && spans.length === 0 && logs.length === 0 && apiRequests.length === 0;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Trace detail"
+    >
+      <div className="bg-white dark:bg-bg-surface-dark rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 dark:border-ui-border-dark">
+          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary">
+            <MaterialIcon name="timeline" className="text-lg" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">Trace</h3>
+            <div className="flex items-center gap-1 mt-0.5">
+              <code className="text-xs font-mono text-slate-500 dark:text-text-muted-dark truncate">
+                {traceId}
+              </code>
+              <button
+                onClick={() => copy(traceId)}
+                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-ui-hover-dark text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                title="Copy trace ID"
+                aria-label="Copy trace ID"
+              >
+                <MaterialIcon name="content_copy" className="text-sm" />
+              </button>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-ui-hover-dark text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+            aria-label="Close"
+          >
+            <MaterialIcon name="close" className="text-base" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+          {loading && (
+            <div className="flex items-center justify-center py-10 text-sm text-slate-500 dark:text-text-muted-dark">
+              <MaterialIcon name="sync" className="text-base mr-2 animate-spin" />
+              Loading trace…
+            </div>
+          )}
+
+          {error && (
+            <div className="flex items-start gap-2 px-3 py-2 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-700/30">
+              <MaterialIcon name="error" className="text-sm text-red-500 shrink-0 mt-0.5" />
+              <p className="text-xs text-red-700 dark:text-red-300">{error}</p>
+            </div>
+          )}
+
+          {isEmpty && (
+            <div className="text-center py-10 text-sm text-slate-500 dark:text-text-muted-dark">
+              No spans, logs, or API requests for this trace.
+            </div>
+          )}
+
+          {!loading && !error && spans.length > 0 && (
+            <SpanList spans={spans} />
+          )}
+          {!loading && !error && apiRequests.length > 0 && (
+            <ApiRequestList items={apiRequests} />
+          )}
+          {!loading && !error && logs.length > 0 && (
+            <LogList logs={logs} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionHeader({ icon, title, count }: { icon: string; title: string; count: number }) {
+  return (
+    <div className="flex items-center gap-2 mb-2">
+      <MaterialIcon name={icon} className="text-base text-primary" />
+      <h4 className="text-sm font-bold text-slate-900 dark:text-white">{title}</h4>
+      <span className="text-xs font-semibold text-slate-400 dark:text-text-dim-dark bg-slate-100 dark:bg-ui-active-dark px-2 py-0.5 rounded-md">
+        {count}
+      </span>
+    </div>
+  );
+}
+
+function SpanList({ spans }: { spans: TraceSpan[] }) {
+  return (
+    <section>
+      <SectionHeader icon="account_tree" title="Spans" count={spans.length} />
+      <ul className="space-y-1.5">
+        {spans.map((span) => (
+          <li
+            key={`${span.traceId}-${span.spanId}`}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-xs"
+          >
+            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 ${spanKindBadge(span.kind)}`}>
+              {span.kind}
+            </span>
+            <span className="font-mono text-slate-700 dark:text-text-base-dark truncate flex-1 min-w-0" title={span.name}>
+              {span.name || '(unnamed)'}
+            </span>
+            {span.serviceName && (
+              <span className="text-slate-500 dark:text-text-muted-dark shrink-0">
+                {span.serviceName}
+              </span>
+            )}
+            {span.statusCode && span.statusCode !== 'UNSET' && (
+              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold shrink-0 ${statusBadge(span.statusCode)}`}>
+                {span.statusCode}
+              </span>
+            )}
+            <span className="text-slate-500 dark:text-text-muted-dark font-mono shrink-0">
+              {formatDuration(span.durationMs)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function ApiRequestList({ items }: { items: ApiRequest[] }) {
+  return (
+    <section>
+      <SectionHeader icon="api" title="API requests" count={items.length} />
+      <ul className="space-y-1.5">
+        {items.map((req) => (
+          <li
+            key={req.id}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-xs"
+          >
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-200 dark:bg-ui-active-dark text-slate-700 dark:text-text-base-dark shrink-0">
+              {req.method}
+            </span>
+            <span className="font-mono text-slate-700 dark:text-text-base-dark truncate flex-1 min-w-0" title={req.path}>
+              {req.path}
+            </span>
+            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold shrink-0 ${
+              req.isError
+                ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+                : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+            }`}>
+              {req.statusCode}
+            </span>
+            <span className="text-slate-500 dark:text-text-muted-dark font-mono shrink-0">
+              {formatDuration(req.durationMs)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function LogList({ logs }: { logs: LogEntry[] }) {
+  return (
+    <section>
+      <SectionHeader icon="article" title="Logs" count={logs.length} />
+      <ul className="space-y-1.5">
+        {logs.map((log) => (
+          <li
+            key={log.id}
+            className="flex items-start gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-xs"
+          >
+            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 ${logLevelBadge(log.level)}`}>
+              {log.level.toUpperCase()}
+            </span>
+            <span className="text-slate-500 dark:text-text-muted-dark font-mono shrink-0 mt-0.5">
+              {formatTime(log.createdAt)}
+            </span>
+            <span className="text-slate-700 dark:text-text-base-dark break-all flex-1 min-w-0">
+              {log.message}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}

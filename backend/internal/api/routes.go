@@ -80,6 +80,10 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	local.Get("/logs", logHandler.GetAll)
 	local.Get("/services/:id/logs", logHandler.GetByServiceID)
 
+	// Trace correlation
+	tracesHandler := handlers.NewTracesHandler()
+	local.Get("/traces/:traceId", tracesHandler.GetByTraceID)
+
 	// Dashboard endpoints
 	dashboardHandler := handlers.NewDashboardHandler()
 	local.Get("/dashboard/timeline", dashboardHandler.GetTimeline)
