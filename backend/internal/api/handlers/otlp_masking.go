@@ -13,6 +13,7 @@ var sensitiveOTelHeaderNames = map[string]struct{}{
 	"cookie":              {},
 	"set-cookie":          {},
 	"x-api-key":           {},
+	"x-auth-token":        {},
 }
 
 // otelMaskedValue replaces sensitive attribute values.

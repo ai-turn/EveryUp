@@ -196,16 +196,15 @@ func TestOTLPHTTPIngest_DisabledCaptureSkipsAPIRequestProjection(t *testing.T) {
 
 	postOTLP(t, ts, "/api/v1/otlp/v1/traces", service.ApiKey, traceReq)
 
-	// The span itself is still stored — disabled only affects api_requests
-	// projection, not span retention.
+	// disabled mode gates both spans storage and api_requests projection.
 	var spanCount int
 	if err := database.DB.QueryRow(
 		`SELECT COUNT(*) FROM spans WHERE service_id = ?`, "otel-disabled",
 	).Scan(&spanCount); err != nil {
 		t.Fatalf("count spans: %v", err)
 	}
-	if spanCount != 1 {
-		t.Fatalf("spans rows = %d, want 1 (disabled mode should not gate spans table)", spanCount)
+	if spanCount != 0 {
+		t.Fatalf("spans rows = %d, want 0 for disabled capture mode", spanCount)
 	}
 
 	// api_requests projection must be skipped entirely.

@@ -168,6 +168,16 @@ func (h *OTLPIngestHandler) IngestTraces(c *fiber.Ctx) error {
 	if cfg, cfgErr := h.serviceRepo.GetApiCaptureConfig(service.ID); cfgErr == nil && cfg != nil {
 		captureMode = cfg.Mode
 	}
+	if captureMode == models.CaptureModeDisabled {
+		respBody, err := proto.Marshal(&collectortracepb.ExportTraceServiceResponse{})
+		if err != nil {
+			return err
+		}
+		c.Set(fiber.HeaderContentType, "application/x-protobuf")
+		c.Set("X-EveryUp-Spans", "0")
+		c.Set("X-EveryUp-Api-Requests", "0")
+		return c.Status(fiber.StatusOK).Send(respBody)
+	}
 
 	var spans []models.Span
 	var requests []models.ApiRequest
