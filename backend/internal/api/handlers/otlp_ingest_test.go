@@ -1,0 +1,117 @@
+package handlers
+
+import (
+	"testing"
+	"time"
+
+	"github.com/aiturn/everyup/internal/models"
+	commonpb "go.opentelemetry.io/proto/otlp/common/v1"
+	logspb "go.opentelemetry.io/proto/otlp/logs/v1"
+	tracepb "go.opentelemetry.io/proto/otlp/trace/v1"
+)
+
+func TestSeverityNumberToLevel(t *testing.T) {
+	tests := []struct {
+		name   string
+		number int
+		want   models.LogLevel
+	}{
+		{name: "unset defaults to info", number: 0, want: models.LogLevelInfo},
+		{name: "trace range", number: 4, want: models.LogLevelTrace},
+		{name: "debug range", number: 8, want: models.LogLevelDebug},
+		{name: "info range", number: 12, want: models.LogLevelInfo},
+		{name: "warn range", number: 16, want: models.LogLevelWarn},
+		{name: "error range", number: 24, want: models.LogLevelError},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := severityNumberToLevel(tt.number); got != tt.want {
+				t.Fatalf("severityNumberToLevel(%d) = %q, want %q", tt.number, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLogRecordToEntryPreservesOTelFields(t *testing.T) {
+	ts := uint64(time.Date(2026, 5, 8, 12, 0, 0, 0, time.UTC).UnixNano())
+	record := &logspb.LogRecord{
+		TimeUnixNano:         ts,
+		ObservedTimeUnixNano: ts + uint64(time.Second),
+		SeverityNumber:       logspb.SeverityNumber_SEVERITY_NUMBER_ERROR,
+		Body:                 stringValue("database failed"),
+		TraceId:              []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
+		SpanId:               []byte{16, 17, 18, 19, 20, 21, 22, 23},
+		Attributes: []*commonpb.KeyValue{
+			{Key: "exception.type", Value: stringValue("timeout")},
+		},
+	}
+
+	entry, otel := logRecordToEntry(record, map[string]interface{}{"service.name": "checkout"})
+	if entry.Level != models.LogLevelError {
+		t.Fatalf("entry.Level = %q, want error", entry.Level)
+	}
+	if entry.Message != "database failed" {
+		t.Fatalf("entry.Message = %q, want database failed", entry.Message)
+	}
+	if otel.traceID != "000102030405060708090a0b0c0d0e0f" {
+		t.Fatalf("traceID = %q", otel.traceID)
+	}
+	if otel.spanID != "1011121314151617" {
+		t.Fatalf("spanID = %q", otel.spanID)
+	}
+	if otel.severityNumber != int(logspb.SeverityNumber_SEVERITY_NUMBER_ERROR) {
+		t.Fatalf("severityNumber = %d", otel.severityNumber)
+	}
+	if otel.timestamp == nil || otel.observedAt == nil {
+		t.Fatal("timestamp and observedAt should be populated")
+	}
+}
+
+func TestSpanToAPIRequestOnlyProjectsHTTPServerSpans(t *testing.T) {
+	service := &models.Service{ID: "svc-1", Name: "Checkout"}
+	start := uint64(time.Date(2026, 5, 8, 12, 0, 0, 0, time.UTC).UnixNano())
+	serverSpan := &tracepb.Span{
+		TraceId:           []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
+		SpanId:            []byte{16, 17, 18, 19, 20, 21, 22, 23},
+		Name:              "POST /orders/{id}",
+		Kind:              tracepb.Span_SPAN_KIND_SERVER,
+		StartTimeUnixNano: start,
+		EndTimeUnixNano:   start + uint64(45*time.Millisecond),
+		Attributes: []*commonpb.KeyValue{
+			{Key: "http.request.method", Value: stringValue("post")},
+			{Key: "http.route", Value: stringValue("/orders/{id}")},
+			{Key: "url.path", Value: stringValue("/orders/42")},
+			{Key: "http.response.status_code", Value: intValue(201)},
+			{Key: "client.address", Value: stringValue("127.0.0.1")},
+		},
+	}
+
+	req, ok := spanToAPIRequest(service, "checkout-api", serverSpan)
+	if !ok {
+		t.Fatal("expected HTTP SERVER span to project to api_requests")
+	}
+	if req.Method != "POST" || req.Path != "/orders/42" || req.PathTemplate != "/orders/{id}" {
+		t.Fatalf("unexpected request projection: %+v", req)
+	}
+	if req.StatusCode != 201 || req.DurationMs != 45 {
+		t.Fatalf("unexpected status/duration: %+v", req)
+	}
+	if req.TraceID == "" || req.SpanID == "" {
+		t.Fatalf("trace/span correlation missing: %+v", req)
+	}
+
+	clientSpan := *serverSpan
+	clientSpan.Kind = tracepb.Span_SPAN_KIND_CLIENT
+	if _, ok := spanToAPIRequest(service, "checkout-api", &clientSpan); ok {
+		t.Fatal("client span should not project to api_requests")
+	}
+}
+
+func stringValue(value string) *commonpb.AnyValue {
+	return &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: value}}
+}
+
+func intValue(value int64) *commonpb.AnyValue {
+	return &commonpb.AnyValue{Value: &commonpb.AnyValue_IntValue{IntValue: value}}
+}

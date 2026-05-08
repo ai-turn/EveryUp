@@ -200,6 +200,15 @@ func migrate() error {
 	if err := migrateV22(); err != nil {
 		return fmt.Errorf("v22 migration failed: %w", err)
 	}
+	if err := migrateV23(); err != nil {
+		return fmt.Errorf("v23 migration failed: %w", err)
+	}
+	if err := migrateV24(); err != nil {
+		return fmt.Errorf("v24 migration failed: %w", err)
+	}
+	if err := migrateV25(); err != nil {
+		return fmt.Errorf("v25 migration failed: %w", err)
+	}
 
 	return nil
 }
@@ -757,6 +766,107 @@ func migrateV22() error {
 		}
 		for _, s := range stmts {
 			if _, err := tx.Exec(s); err != nil && !isNoSuchColumnError(err) {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+// migrateV23 adds OpenTelemetry correlation and attribute columns to logs.
+// Added: 2026-05-08
+func migrateV23() error {
+	return Transaction(func(tx *sql.Tx) error {
+		alterStatements := []string{
+			`ALTER TABLE logs ADD COLUMN trace_id TEXT DEFAULT ''`,
+			`ALTER TABLE logs ADD COLUMN span_id TEXT DEFAULT ''`,
+			`ALTER TABLE logs ADD COLUMN severity_number INTEGER DEFAULT 0`,
+			`ALTER TABLE logs ADD COLUMN observed_at DATETIME`,
+			`ALTER TABLE logs ADD COLUMN resource TEXT`,
+			`ALTER TABLE logs ADD COLUMN attributes TEXT`,
+		}
+		for _, stmt := range alterStatements {
+			if _, err := tx.Exec(stmt); err != nil && !strings.Contains(err.Error(), "duplicate column") {
+				return err
+			}
+		}
+
+		indexes := []string{
+			`CREATE INDEX IF NOT EXISTS idx_logs_trace ON logs(trace_id, created_at DESC)`,
+			`CREATE INDEX IF NOT EXISTS idx_logs_span ON logs(span_id, created_at DESC)`,
+		}
+		for _, stmt := range indexes {
+			if _, err := tx.Exec(stmt); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+// migrateV24 creates the spans table for OpenTelemetry trace data.
+// Added: 2026-05-08
+func migrateV24() error {
+	_, err := DB.Exec(`CREATE TABLE IF NOT EXISTS spans (
+		id               INTEGER PRIMARY KEY AUTOINCREMENT,
+		service_id       TEXT,
+		service_name     TEXT,
+		trace_id         TEXT NOT NULL,
+		span_id          TEXT NOT NULL,
+		parent_span_id   TEXT DEFAULT '',
+		name             TEXT NOT NULL,
+		kind             TEXT NOT NULL,
+		start_unix_nano  INTEGER NOT NULL,
+		end_unix_nano    INTEGER NOT NULL,
+		duration_ms      INTEGER NOT NULL DEFAULT 0,
+		status_code      TEXT DEFAULT '',
+		status_message   TEXT DEFAULT '',
+		attributes       TEXT,
+		events           TEXT,
+		links            TEXT,
+		resource         TEXT,
+		created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+	)`)
+	if err != nil {
+		return err
+	}
+
+	indexes := []string{
+		`CREATE INDEX IF NOT EXISTS idx_spans_trace ON spans(trace_id, start_unix_nano)`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_spans_unique_span ON spans(trace_id, span_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_spans_service_time ON spans(service_id, start_unix_nano DESC)`,
+		`CREATE INDEX IF NOT EXISTS idx_spans_kind_time ON spans(kind, start_unix_nano DESC)`,
+	}
+	for _, stmt := range indexes {
+		if _, err := DB.Exec(stmt); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// migrateV25 links HTTP request projections back to their source spans.
+// Added: 2026-05-08
+func migrateV25() error {
+	return Transaction(func(tx *sql.Tx) error {
+		alterStatements := []string{
+			`ALTER TABLE api_requests ADD COLUMN trace_id TEXT DEFAULT ''`,
+			`ALTER TABLE api_requests ADD COLUMN span_id TEXT DEFAULT ''`,
+			`ALTER TABLE api_requests ADD COLUMN route TEXT DEFAULT ''`,
+			`ALTER TABLE api_requests ADD COLUMN service_name TEXT DEFAULT ''`,
+		}
+		for _, stmt := range alterStatements {
+			if _, err := tx.Exec(stmt); err != nil && !strings.Contains(err.Error(), "duplicate column") {
+				return err
+			}
+		}
+
+		indexes := []string{
+			`CREATE INDEX IF NOT EXISTS idx_api_requests_trace ON api_requests(trace_id, created_at DESC)`,
+			`CREATE INDEX IF NOT EXISTS idx_api_requests_span ON api_requests(span_id)`,
+		}
+		for _, stmt := range indexes {
+			if _, err := tx.Exec(stmt); err != nil {
 				return err
 			}
 		}

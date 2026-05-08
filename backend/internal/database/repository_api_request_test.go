@@ -1,7 +1,6 @@
 package database_test
 
 import (
-	"encoding/json"
 	"testing"
 	"time"
 
@@ -30,7 +29,6 @@ func makeTestService(t *testing.T, id string) {
 
 // makeTestRequest returns a sample ApiRequest for insertion tests.
 func makeTestRequest(serviceID string, method string, path string, statusCode int, isError bool, createdAt time.Time) models.ApiRequest {
-	headers := json.RawMessage(`{"content-type":"application/json"}`)
 	return models.ApiRequest{
 		ServiceID:    serviceID,
 		RequestID:    "req-" + path + "-" + method,
@@ -40,12 +38,6 @@ func makeTestRequest(serviceID string, method string, path string, statusCode in
 		StatusCode:   statusCode,
 		DurationMs:   50,
 		ClientIP:     "127.0.0.1",
-		ReqHeaders:   headers,
-		ReqBody:      `{"key":"value"}`,
-		ReqBodySize:  15,
-		ResHeaders:   headers,
-		ResBody:      `{"ok":true}`,
-		ResBodySize:  11,
 		IsError:      isError,
 		CreatedAt:    createdAt,
 	}
@@ -101,18 +93,6 @@ func TestApiRequestRepo_CreateAndGetByID(t *testing.T) {
 	if got.ClientIP != req.ClientIP {
 		t.Errorf("ClientIP = %q, want %q", got.ClientIP, req.ClientIP)
 	}
-	if got.ReqBody != req.ReqBody {
-		t.Errorf("ReqBody = %q, want %q", got.ReqBody, req.ReqBody)
-	}
-	if got.ReqBodySize != req.ReqBodySize {
-		t.Errorf("ReqBodySize = %d, want %d", got.ReqBodySize, req.ReqBodySize)
-	}
-	if got.ResBody != req.ResBody {
-		t.Errorf("ResBody = %q, want %q", got.ResBody, req.ResBody)
-	}
-	if got.ResBodySize != req.ResBodySize {
-		t.Errorf("ResBodySize = %d, want %d", got.ResBodySize, req.ResBodySize)
-	}
 	if got.IsError != req.IsError {
 		t.Errorf("IsError = %v, want %v", got.IsError, req.IsError)
 	}
@@ -120,13 +100,6 @@ func TestApiRequestRepo_CreateAndGetByID(t *testing.T) {
 		t.Errorf("CreatedAt = %v, want %v", got.CreatedAt, now)
 	}
 
-	// Headers should round-trip as valid JSON.
-	if got.ReqHeaders == nil {
-		t.Error("ReqHeaders should not be nil")
-	}
-	if got.ResHeaders == nil {
-		t.Error("ResHeaders should not be nil")
-	}
 }
 
 func TestApiRequestRepo_GetByID_NotFound(t *testing.T) {
@@ -352,17 +325,11 @@ func TestServiceRepo_ApiCaptureConfig_DefaultsAndUpdate(t *testing.T) {
 	if cfg.SampleRate != defaults.SampleRate {
 		t.Errorf("SampleRate = %d, want default %d", cfg.SampleRate, defaults.SampleRate)
 	}
-	if cfg.BodyMaxBytes != defaults.BodyMaxBytes {
-		t.Errorf("BodyMaxBytes = %d, want default %d", cfg.BodyMaxBytes, defaults.BodyMaxBytes)
-	}
 
 	// 2. UpdateApiCaptureConfig with custom values.
 	custom := models.ApiCaptureConfig{
-		Mode:             models.CaptureModeAll,
-		SampleRate:       50,
-		BodyMaxBytes:     4096,
-		MaskedHeaders:    []string{"x-auth-token", "x-secret"},
-		MaskedBodyFields: []string{"password", "ssn"},
+		Mode:       models.CaptureModeAll,
+		SampleRate: 50,
 	}
 	if err := svcRepo.UpdateApiCaptureConfig("svc-cap", &custom); err != nil {
 		t.Fatalf("UpdateApiCaptureConfig: %v", err)
@@ -379,31 +346,6 @@ func TestServiceRepo_ApiCaptureConfig_DefaultsAndUpdate(t *testing.T) {
 	if got.SampleRate != custom.SampleRate {
 		t.Errorf("SampleRate = %d, want %d", got.SampleRate, custom.SampleRate)
 	}
-	if got.BodyMaxBytes != custom.BodyMaxBytes {
-		t.Errorf("BodyMaxBytes = %d, want %d", got.BodyMaxBytes, custom.BodyMaxBytes)
-	}
-
-	// 4. MaskedHeaders round-trip through comma-separated storage.
-	if len(got.MaskedHeaders) != len(custom.MaskedHeaders) {
-		t.Errorf("MaskedHeaders len = %d, want %d", len(got.MaskedHeaders), len(custom.MaskedHeaders))
-	} else {
-		for i, h := range custom.MaskedHeaders {
-			if got.MaskedHeaders[i] != h {
-				t.Errorf("MaskedHeaders[%d] = %q, want %q", i, got.MaskedHeaders[i], h)
-			}
-		}
-	}
-
-	// 5. MaskedBodyFields round-trip.
-	if len(got.MaskedBodyFields) != len(custom.MaskedBodyFields) {
-		t.Errorf("MaskedBodyFields len = %d, want %d", len(got.MaskedBodyFields), len(custom.MaskedBodyFields))
-	} else {
-		for i, f := range custom.MaskedBodyFields {
-			if got.MaskedBodyFields[i] != f {
-				t.Errorf("MaskedBodyFields[%d] = %q, want %q", i, got.MaskedBodyFields[i], f)
-			}
-		}
-	}
 }
 
 // --- TestApiRequestRepo_ListFilterExtended ---
@@ -418,14 +360,12 @@ func TestApiRequestRepo_ListFilterExtended(t *testing.T) {
 
 		// Row with alice in req_body.
 		r1 := makeTestRequest("svc-search", "POST", "/submit", 200, false, now)
-		r1.ReqBody = `{"user":"alice"}`
 		if err := repo.Create(&r1); err != nil {
 			t.Fatalf("Create r1: %v", err)
 		}
 
 		// Row with /search/foo in path.
 		r2 := makeTestRequest("svc-search", "GET", "/search/foo", 200, false, now.Add(time.Second))
-		r2.ReqBody = `{"key":"value"}`
 		if err := repo.Create(&r2); err != nil {
 			t.Fatalf("Create r2: %v", err)
 		}
@@ -433,16 +373,16 @@ func TestApiRequestRepo_ListFilterExtended(t *testing.T) {
 		// Search for "alice" — should match r1 via req_body.
 		items, total, err := repo.List(&models.ApiRequestFilter{
 			ServiceID: "svc-search",
-			Search:    "alice",
+			Search:    "submit",
 		})
 		if err != nil {
-			t.Fatalf("List Search=alice: %v", err)
+			t.Fatalf("List Search=submit: %v", err)
 		}
 		if total != 1 {
-			t.Errorf("Search=alice: total = %d, want 1", total)
+			t.Errorf("Search=submit: total = %d, want 1", total)
 		}
 		if len(items) == 1 && items[0].Path != "/submit" {
-			t.Errorf("Search=alice: got path %q, want /submit", items[0].Path)
+			t.Errorf("Search=submit: got path %q, want /submit", items[0].Path)
 		}
 
 		// Search for "foo" — should match r2 via path.
@@ -533,13 +473,11 @@ func TestApiRequestRepo_ListFilterExtended(t *testing.T) {
 				INSERT INTO api_requests
 					(service_id, request_id, method, path, path_template,
 					 status_code, duration_ms, client_ip,
-					 req_body, req_body_size, res_body, res_body_size,
 					 is_error, created_at)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			`,
 				"svc-fromto", "req-"+row.path, "GET", row.path, row.path,
 				200, 10, "127.0.0.1",
-				"", 0, "", 0,
 				0, row.createdAt,
 			)
 			if err != nil {
@@ -588,11 +526,8 @@ func TestServiceRepo_ApiCaptureConfig_EmptyMaskedLists(t *testing.T) {
 
 	// Update with empty masked lists.
 	cfg := models.ApiCaptureConfig{
-		Mode:             models.CaptureModeDisabled,
-		SampleRate:       0,
-		BodyMaxBytes:     0,
-		MaskedHeaders:    nil,
-		MaskedBodyFields: nil,
+		Mode:       models.CaptureModeDisabled,
+		SampleRate: 0,
 	}
 	if err := svcRepo.UpdateApiCaptureConfig("svc-empty", &cfg); err != nil {
 		t.Fatalf("UpdateApiCaptureConfig: %v", err)
@@ -604,11 +539,5 @@ func TestServiceRepo_ApiCaptureConfig_EmptyMaskedLists(t *testing.T) {
 	}
 	if got.Mode != models.CaptureModeDisabled {
 		t.Errorf("Mode = %q, want disabled", got.Mode)
-	}
-	if len(got.MaskedHeaders) != 0 {
-		t.Errorf("MaskedHeaders = %v, want empty", got.MaskedHeaders)
-	}
-	if len(got.MaskedBodyFields) != 0 {
-		t.Errorf("MaskedBodyFields = %v, want empty", got.MaskedBodyFields)
 	}
 }

@@ -12,6 +12,7 @@ func RegisterIngestRoutes(api fiber.Router, logIngestHandler *handlers.LogIngest
 		middleware.IngestRateLimiter(),
 		middleware.ApiKeyAuth(),
 	}
+	otlpIngestHandler := handlers.NewOTLPIngestHandler()
 
 	// Canonical log ingest endpoint. Keep ingest routes under /ingest/* so
 	// API-key middleware cannot accidentally cover JWT-protected /logs routes.
@@ -26,6 +27,9 @@ func RegisterIngestRoutes(api fiber.Router, logIngestHandler *handlers.LogIngest
 		apiRequestBodyLimit(),
 		apiRequestIngestHandler.Ingest,
 	)
+
+	api.Post("/otlp/v1/logs", append(logIngestMiddleware, otlpBodyLimit(), otlpIngestHandler.IngestLogs)...)
+	api.Post("/otlp/v1/traces", append(logIngestMiddleware, otlpBodyLimit(), otlpIngestHandler.IngestTraces)...)
 }
 
 func apiRequestBodyLimit() fiber.Handler {
@@ -37,6 +41,22 @@ func apiRequestBodyLimit() fiber.Handler {
 				"error": fiber.Map{
 					"code":    handlers.ErrCodeValidation,
 					"message": "Request body exceeds 1 MiB limit",
+				},
+			})
+		}
+		return c.Next()
+	}
+}
+
+func otlpBodyLimit() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		const maxBody = 4 * 1024 * 1024 // 4 MiB
+		if len(c.Body()) > maxBody {
+			return c.Status(fiber.StatusRequestEntityTooLarge).JSON(fiber.Map{
+				"success": false,
+				"error": fiber.Map{
+					"code":    handlers.ErrCodeValidation,
+					"message": "OTLP request body exceeds 4 MiB limit",
 				},
 			})
 		}

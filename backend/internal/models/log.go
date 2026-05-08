@@ -20,20 +20,27 @@ const (
 const (
 	LogSourceInternal = "internal"
 	LogSourceExternal = "external"
-	LogSourceAgent   = "agent"
+	LogSourceAgent    = "agent"
+	LogSourceOTLP     = "otlp"
 )
 
 // Log represents a log entry
 type Log struct {
-	ID          int64           `json:"id"`
-	ServiceID   string          `json:"serviceId,omitempty"`
-	ServiceName string          `json:"serviceName,omitempty"`
-	Level       LogLevel        `json:"level"`
-	Message     string          `json:"message"`
-	Metadata    json.RawMessage `json:"metadata,omitempty"`
-	Source      string          `json:"source"`
-	Fingerprint string          `json:"fingerprint,omitempty"`
-	CreatedAt   time.Time       `json:"createdAt"`
+	ID             int64           `json:"id"`
+	ServiceID      string          `json:"serviceId,omitempty"`
+	ServiceName    string          `json:"serviceName,omitempty"`
+	Level          LogLevel        `json:"level"`
+	SeverityNumber int             `json:"severityNumber,omitempty"`
+	Message        string          `json:"message"`
+	Metadata       json.RawMessage `json:"metadata,omitempty"`
+	Resource       json.RawMessage `json:"resource,omitempty"`
+	Attributes     json.RawMessage `json:"attributes,omitempty"`
+	TraceID        string          `json:"traceId,omitempty"`
+	SpanID         string          `json:"spanId,omitempty"`
+	Source         string          `json:"source"`
+	Fingerprint    string          `json:"fingerprint,omitempty"`
+	ObservedAt     *time.Time      `json:"observedAt,omitempty"`
+	CreatedAt      time.Time       `json:"createdAt"`
 }
 
 // LogCreateRequest represents a request to create a log entry

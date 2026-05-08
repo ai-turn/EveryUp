@@ -23,9 +23,13 @@ func (r *LogRepository) Create(l *models.Log) error {
 	}
 
 	result, err := DB.Exec(`
-		INSERT INTO logs (service_id, level, message, metadata, source, fingerprint, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
-	`, l.ServiceID, l.Level, l.Message, l.Metadata, l.Source, l.Fingerprint, l.CreatedAt)
+		INSERT INTO logs (
+			service_id, level, message, metadata, source, fingerprint, created_at,
+			trace_id, span_id, severity_number, observed_at, resource, attributes
+		)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`, l.ServiceID, l.Level, l.Message, l.Metadata, l.Source, l.Fingerprint, l.CreatedAt,
+		l.TraceID, l.SpanID, l.SeverityNumber, l.ObservedAt, l.Resource, l.Attributes)
 	if err != nil {
 		return err
 	}
@@ -39,7 +43,9 @@ func (r *LogRepository) Create(l *models.Log) error {
 func (r *LogRepository) GetAll(filter models.LogFilter) ([]models.Log, int, error) {
 	// Build query — JOIN services to include service name
 	baseWhere := " FROM logs l LEFT JOIN services s ON s.id = l.service_id WHERE 1=1"
-	query := "SELECT l.id, l.service_id, COALESCE(s.name, l.service_id, ''), l.level, l.message, l.metadata, l.created_at" + baseWhere
+	query := `SELECT l.id, l.service_id, COALESCE(s.name, l.service_id, ''), l.level,
+		l.message, l.metadata, l.source, l.fingerprint, l.trace_id, l.span_id,
+		l.severity_number, l.observed_at, l.resource, l.attributes, l.created_at` + baseWhere
 	countQuery := "SELECT COUNT(*)" + baseWhere
 	args := []interface{}{}
 
@@ -95,8 +101,13 @@ func (r *LogRepository) GetAll(filter models.LogFilter) ([]models.Log, int, erro
 	var logs []models.Log
 	for rows.Next() {
 		var l models.Log
-		var serviceID, serviceName, metadata sql.NullString
-		if err := rows.Scan(&l.ID, &serviceID, &serviceName, &l.Level, &l.Message, &metadata, &l.CreatedAt); err != nil {
+		var serviceID, serviceName, metadata, source, fingerprint, traceID, spanID, resource, attributes sql.NullString
+		var observedAt sql.NullTime
+		if err := rows.Scan(
+			&l.ID, &serviceID, &serviceName, &l.Level, &l.Message, &metadata,
+			&source, &fingerprint, &traceID, &spanID, &l.SeverityNumber,
+			&observedAt, &resource, &attributes, &l.CreatedAt,
+		); err != nil {
 			return nil, 0, err
 		}
 		if serviceID.Valid {
@@ -107,6 +118,27 @@ func (r *LogRepository) GetAll(filter models.LogFilter) ([]models.Log, int, erro
 		}
 		if metadata.Valid {
 			l.Metadata = json.RawMessage(metadata.String)
+		}
+		if source.Valid {
+			l.Source = source.String
+		}
+		if fingerprint.Valid {
+			l.Fingerprint = fingerprint.String
+		}
+		if traceID.Valid {
+			l.TraceID = traceID.String
+		}
+		if spanID.Valid {
+			l.SpanID = spanID.String
+		}
+		if observedAt.Valid {
+			l.ObservedAt = &observedAt.Time
+		}
+		if resource.Valid {
+			l.Resource = json.RawMessage(resource.String)
+		}
+		if attributes.Valid {
+			l.Attributes = json.RawMessage(attributes.String)
 		}
 		logs = append(logs, l)
 	}

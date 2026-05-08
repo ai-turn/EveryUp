@@ -20,7 +20,7 @@ func scanApiRequest(
 	id *int64,
 	serviceID, requestID, method, path, pathTemplate *string,
 	statusCode, durationMs *int,
-	clientIP, errStr *sql.NullString,
+	serviceName, traceID, spanID, route, clientIP, errStr *sql.NullString,
 	isError *int,
 	createdAt *time.Time,
 ) models.ApiRequest {
@@ -35,6 +35,18 @@ func scanApiRequest(
 		DurationMs:   *durationMs,
 		IsError:      *isError == 1,
 		CreatedAt:    *createdAt,
+	}
+	if serviceName.Valid {
+		req.ServiceName = serviceName.String
+	}
+	if traceID.Valid {
+		req.TraceID = traceID.String
+	}
+	if spanID.Valid {
+		req.SpanID = spanID.String
+	}
+	if route.Valid {
+		req.Route = route.String
 	}
 	if clientIP.Valid {
 		req.ClientIP = clientIP.String
@@ -51,12 +63,13 @@ func (r *ApiRequestRepository) Create(req *models.ApiRequest) error {
 		INSERT INTO api_requests
 			(service_id, request_id, method, path, path_template,
 			 status_code, duration_ms, client_ip,
-			 error, is_error, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			 error, is_error, created_at, trace_id, span_id, route, service_name)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`,
 		req.ServiceID, req.RequestID, req.Method, req.Path, req.PathTemplate,
 		req.StatusCode, req.DurationMs, req.ClientIP,
 		req.Error, boolToInt(req.IsError), req.CreatedAt,
+		req.TraceID, req.SpanID, req.Route, req.ServiceName,
 	)
 	if err != nil {
 		return err
@@ -79,8 +92,8 @@ func (r *ApiRequestRepository) CreateBatch(reqs []models.ApiRequest) (int, error
 			INSERT INTO api_requests
 				(service_id, request_id, method, path, path_template,
 				 status_code, duration_ms, client_ip,
-				 error, is_error, created_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+				 error, is_error, created_at, trace_id, span_id, route, service_name)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`)
 		if err != nil {
 			return err
@@ -92,6 +105,7 @@ func (r *ApiRequestRepository) CreateBatch(reqs []models.ApiRequest) (int, error
 				req.ServiceID, req.RequestID, req.Method, req.Path, req.PathTemplate,
 				req.StatusCode, req.DurationMs, req.ClientIP,
 				req.Error, boolToInt(req.IsError), req.CreatedAt,
+				req.TraceID, req.SpanID, req.Route, req.ServiceName,
 			)
 			if err != nil {
 				return err
@@ -107,23 +121,23 @@ func (r *ApiRequestRepository) CreateBatch(reqs []models.ApiRequest) (int, error
 // Returns nil, nil if not found.
 func (r *ApiRequestRepository) GetByID(id int64) (*models.ApiRequest, error) {
 	var (
-		statusCode, durationMs int
-		isError                int
-		rid64                  int64
-		serviceID, requestID, method, path, pathTemplate string
-		clientIP, errStr       sql.NullString
-		createdAt              time.Time
+		statusCode, durationMs                                int
+		isError                                               int
+		rid64                                                 int64
+		serviceID, requestID, method, path, pathTemplate      string
+		serviceName, traceID, spanID, route, clientIP, errStr sql.NullString
+		createdAt                                             time.Time
 	)
 
 	err := DB.QueryRow(`
 		SELECT id, service_id, request_id, method, path, path_template,
 		       status_code, duration_ms, client_ip,
-		       error, is_error, created_at
+		       error, is_error, created_at, trace_id, span_id, route, service_name
 		FROM api_requests WHERE id = ?
 	`, id).Scan(
 		&rid64, &serviceID, &requestID, &method, &path, &pathTemplate,
 		&statusCode, &durationMs, &clientIP,
-		&errStr, &isError, &createdAt,
+		&errStr, &isError, &createdAt, &traceID, &spanID, &route, &serviceName,
 	)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -134,7 +148,7 @@ func (r *ApiRequestRepository) GetByID(id int64) (*models.ApiRequest, error) {
 
 	req := scanApiRequest(
 		&rid64, &serviceID, &requestID, &method, &path, &pathTemplate,
-		&statusCode, &durationMs, &clientIP, &errStr, &isError, &createdAt,
+		&statusCode, &durationMs, &serviceName, &traceID, &spanID, &route, &clientIP, &errStr, &isError, &createdAt,
 	)
 	return &req, nil
 }
@@ -198,7 +212,7 @@ func (r *ApiRequestRepository) List(f *models.ApiRequestFilter) ([]models.ApiReq
 	}
 	dataQuery := "SELECT id, service_id, request_id, method, path, path_template," +
 		" status_code, duration_ms, client_ip," +
-		" error, is_error, created_at" +
+		" error, is_error, created_at, trace_id, span_id, route, service_name" +
 		" FROM api_requests WHERE " + where +
 		" ORDER BY created_at DESC LIMIT ?"
 	dataArgs := append(args, limit)
@@ -216,23 +230,23 @@ func (r *ApiRequestRepository) List(f *models.ApiRequestFilter) ([]models.ApiReq
 	var items []models.ApiRequest
 	for rows.Next() {
 		var (
-			statusCode, durationMs int
-			id64                   int64
-			isError                int
-			serviceID, requestID, method, path, pathTemplate string
-			clientIP, errStr       sql.NullString
-			createdAt              time.Time
+			statusCode, durationMs                                int
+			id64                                                  int64
+			isError                                               int
+			serviceID, requestID, method, path, pathTemplate      string
+			serviceName, traceID, spanID, route, clientIP, errStr sql.NullString
+			createdAt                                             time.Time
 		)
 		if err := rows.Scan(
 			&id64, &serviceID, &requestID, &method, &path, &pathTemplate,
 			&statusCode, &durationMs, &clientIP,
-			&errStr, &isError, &createdAt,
+			&errStr, &isError, &createdAt, &traceID, &spanID, &route, &serviceName,
 		); err != nil {
 			return nil, 0, err
 		}
 		items = append(items, scanApiRequest(
 			&id64, &serviceID, &requestID, &method, &path, &pathTemplate,
-			&statusCode, &durationMs, &clientIP, &errStr, &isError, &createdAt,
+			&statusCode, &durationMs, &serviceName, &traceID, &spanID, &route, &clientIP, &errStr, &isError, &createdAt,
 		))
 	}
 	if err := rows.Err(); err != nil {
