@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from '../../../components/common';
 import { useApiRequests } from '../hooks/useApiRequests';
 import { RequestFilters } from './RequestFilters';
@@ -240,10 +241,12 @@ function PathAggregateTable({
   items,
   pickedPath,
   onPickPath,
+  t,
 }: {
   items: PathAggregateItem[];
   pickedPath: string | null;
   onPickPath: (path: string | null) => void;
+  t: (key: string, options?: Record<string, unknown>) => string;
 }) {
   if (items.length === 0) return null;
 
@@ -251,22 +254,24 @@ function PathAggregateTable({
     <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark overflow-hidden">
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-ui-border-dark px-4 py-3">
         <div>
-          <h3 className="text-sm font-black text-slate-900 dark:text-white">Endpoint summary</h3>
-          <p className="text-xs text-slate-500 dark:text-text-muted-dark">Recent requests grouped by route.</p>
+          <h3 className="text-sm font-black text-slate-900 dark:text-white">{t('apiRequests.summary.title')}</h3>
+          <p className="text-xs text-slate-500 dark:text-text-muted-dark">{t('apiRequests.summary.description')}</p>
         </div>
-        <span className="font-mono text-xs text-slate-400 dark:text-text-dim-dark">{items.length} endpoints</span>
+        <span className="font-mono text-xs text-slate-400 dark:text-text-dim-dark">
+          {t('apiRequests.summary.endpointCount', { count: items.length })}
+        </span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50/70 dark:bg-ui-hover-dark/30 text-[11px] uppercase tracking-wide text-slate-400 dark:text-text-dim-dark">
-              <th className="px-4 py-2.5">Method</th>
-              <th className="px-4 py-2.5">Path</th>
-              <th className="px-4 py-2.5 text-right">Requests</th>
-              <th className="px-4 py-2.5">Errors</th>
-              <th className="px-4 py-2.5">Latency</th>
-              <th className="px-4 py-2.5">Trend</th>
-              <th className="px-4 py-2.5 text-right">Last seen</th>
+              <th className="px-4 py-2.5">{t('apiRequests.table.method')}</th>
+              <th className="px-4 py-2.5">{t('apiRequests.table.path')}</th>
+              <th className="px-4 py-2.5 text-right">{t('apiRequests.table.requests')}</th>
+              <th className="px-4 py-2.5">{t('apiRequests.table.errors')}</th>
+              <th className="px-4 py-2.5">{t('apiRequests.table.latency')}</th>
+              <th className="px-4 py-2.5">{t('apiRequests.table.trend')}</th>
+              <th className="px-4 py-2.5 text-right">{t('apiRequests.table.lastSeen')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-ui-border-dark/60">
@@ -303,7 +308,9 @@ function PathAggregateTable({
                   <td className="px-4 py-3">
                     <MiniBars buckets={item.buckets} errorBuckets={item.errorBuckets} />
                   </td>
-                  <td className="px-4 py-3 text-right text-xs text-slate-500 dark:text-text-muted-dark">{formatTimeAgo(item.lastSeen)} ago</td>
+                  <td className="px-4 py-3 text-right text-xs text-slate-500 dark:text-text-muted-dark">
+                    {t('apiRequests.timeAgo', { value: formatTimeAgo(item.lastSeen) })}
+                  </td>
                 </tr>
               );
             })}
@@ -319,11 +326,13 @@ function RequestRow({
   open,
   onToggle,
   onGoToLogs,
+  t,
 }: {
   request: ApiRequest;
   open: boolean;
   onToggle: () => void;
   onGoToLogs?: (requestId: string) => void;
+  t: (key: string, options?: Record<string, unknown>) => string;
 }) {
   return (
     <>
@@ -360,20 +369,24 @@ function RequestRow({
           <td colSpan={8} className="px-4 pb-4 pt-1">
             <div className="ml-8 space-y-3">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                <MetaCard label="Request ID" value={request.requestId} />
-                <MetaCard label="Path template" value={request.pathTemplate || '-'} />
-                <MetaCard label="Client IP" value={request.clientIp ?? '-'} />
-                <MetaCard label="Received at" value={new Date(request.createdAt).toLocaleString('ko-KR')} />
+                <MetaCard label={t('apiRequests.detail.requestId')} value={request.requestId} />
+                <MetaCard label={t('apiRequests.detail.pathTemplate')} value={request.pathTemplate || '-'} />
+                <MetaCard label={t('apiRequests.detail.clientIp')} value={request.clientIp ?? '-'} />
+                <MetaCard label={t('apiRequests.detail.receivedAt')} value={new Date(request.createdAt).toLocaleString()} />
               </div>
               {request.error && (
                 <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-3">
-                  <div className="mb-1 text-xs font-black uppercase text-red-600 dark:text-red-400">Error</div>
+                  <div className="mb-1 text-xs font-black uppercase text-red-600 dark:text-red-400">{t('apiRequests.detail.error')}</div>
                   <pre className="whitespace-pre-wrap break-all font-mono text-xs text-red-700 dark:text-red-300">{request.error}</pre>
                 </div>
               )}
               <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark/30 text-xs text-slate-500 dark:text-text-muted-dark">
                 <MaterialIcon name="article" className="text-base shrink-0" />
-                <span className="flex-1">Request and response bodies are not stored. Search service logs by <code className="bg-slate-200 dark:bg-ui-active-dark px-1 rounded">{request.requestId}</code> for more context.</span>
+                <span className="flex-1">
+                  {t('apiRequests.detail.logSearchHintPrefix')}{' '}
+                  <code className="bg-slate-200 dark:bg-ui-active-dark px-1 rounded">{request.requestId}</code>{' '}
+                  {t('apiRequests.detail.logSearchHintSuffix')}
+                </span>
                 {onGoToLogs && (
                   <button
                     type="button"
@@ -381,7 +394,7 @@ function RequestRow({
                     className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-colors"
                   >
                     <MaterialIcon name="open_in_new" className="text-sm" />
-                    濡쒓렇?먯꽌 蹂닿린
+                    {t('apiRequests.actions.viewLogs')}
                   </button>
                 )}
               </div>
@@ -408,19 +421,21 @@ function RequestsStreamTable({
   openId,
   onToggle,
   onGoToLogs,
+  t,
 }: {
   items: ApiRequest[];
   loading: boolean;
   openId: number | null;
   onToggle: (id: number) => void;
   onGoToLogs?: (requestId: string) => void;
+  t: (key: string, options?: Record<string, unknown>) => string;
 }) {
   return (
     <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark overflow-hidden">
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-ui-border-dark px-4 py-3">
         <div>
-          <h3 className="text-sm font-black text-slate-900 dark:text-white">Request stream</h3>
-          <p className="text-xs text-slate-500 dark:text-text-muted-dark">{items.length} rows</p>
+          <h3 className="text-sm font-black text-slate-900 dark:text-white">{t('apiRequests.stream.title')}</h3>
+          <p className="text-xs text-slate-500 dark:text-text-muted-dark">{t('apiRequests.stream.rows', { count: items.length })}</p>
         </div>
       </div>
       <div className="overflow-x-auto">
@@ -428,13 +443,13 @@ function RequestsStreamTable({
           <thead>
             <tr className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50/70 dark:bg-ui-hover-dark/30 text-[11px] uppercase tracking-wide text-slate-400 dark:text-text-dim-dark">
               <th className="w-10 px-4 py-2.5"></th>
-              <th className="px-4 py-2.5">Time</th>
-              <th className="px-4 py-2.5">Method</th>
-              <th className="px-4 py-2.5">Path</th>
-              <th className="px-4 py-2.5">Status</th>
-              <th className="px-4 py-2.5 text-right">Latency</th>
-              <th className="px-4 py-2.5">Client IP</th>
-              <th className="px-4 py-2.5">Request ID</th>
+              <th className="px-4 py-2.5">{t('apiRequests.table.time')}</th>
+              <th className="px-4 py-2.5">{t('apiRequests.table.method')}</th>
+              <th className="px-4 py-2.5">{t('apiRequests.table.path')}</th>
+              <th className="px-4 py-2.5">{t('apiRequests.table.status')}</th>
+              <th className="px-4 py-2.5 text-right">{t('apiRequests.table.latency')}</th>
+              <th className="px-4 py-2.5">{t('apiRequests.table.clientIp')}</th>
+              <th className="px-4 py-2.5">{t('apiRequests.table.requestId')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-ui-border-dark/60">
@@ -452,6 +467,7 @@ function RequestsStreamTable({
                 open={openId === request.id}
                 onToggle={() => onToggle(request.id)}
                 onGoToLogs={onGoToLogs}
+                t={t}
               />
             ))}
             {!loading && items.length === 0 && (
@@ -459,7 +475,7 @@ function RequestsStreamTable({
                 <td colSpan={8}>
                   <div className="py-14 text-center text-slate-500 dark:text-text-muted-dark">
                     <MaterialIcon name="api" className="text-4xl mb-2 text-slate-300 dark:text-text-dim-dark" />
-                    <p>No requests match the current filters.</p>
+                    <p>{t('apiRequests.empty.noResults')}</p>
                   </div>
                 </td>
               </tr>
@@ -472,6 +488,7 @@ function RequestsStreamTable({
 }
 
 export function RequestsTab({ serviceId, onGoToLogs }: RequestsTabProps) {
+  const { t } = useTranslation('logs');
   const [filterParams, setFilterParams] = useState<ApiRequestListParams>({
     from: new Date(Date.now() - 24 * 3600_000).toISOString(),
   });
@@ -529,18 +546,18 @@ export function RequestsTab({ serviceId, onGoToLogs }: RequestsTabProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 xl:grid-cols-5 gap-3">
-        <StatCard label="Requests" value={displayItems.length} icon="http" tone="primary" />
-        <StatCard label="Errors" value={errors} icon="error" tone={errors > 0 ? 'red' : 'slate'} suffix={`${errorRate.toFixed(1)}%`} />
-        <StatCard label="P50 latency" value={percentile(durations, 0.5)} icon="speed" tone="sky" suffix="ms" tooltip="50% of requests completed within this latency." />
-        <StatCard label="P95 latency" value={percentile(durations, 0.95)} icon="monitoring" tone="amber" suffix="ms" tooltip="95% of requests completed within this latency." />
-        <StatCard label="Endpoints" value={aggregates.length} icon="account_tree" tone="slate" />
+        <StatCard label={t('apiRequests.stats.requests')} value={displayItems.length} icon="http" tone="primary" />
+        <StatCard label={t('apiRequests.stats.errors')} value={errors} icon="error" tone={errors > 0 ? 'red' : 'slate'} suffix={`${errorRate.toFixed(1)}%`} />
+        <StatCard label={t('apiRequests.stats.p50')} value={percentile(durations, 0.5)} icon="speed" tone="sky" suffix="ms" tooltip={t('apiRequests.stats.p50Tooltip')} />
+        <StatCard label={t('apiRequests.stats.p95')} value={percentile(durations, 0.95)} icon="monitoring" tone="amber" suffix="ms" tooltip={t('apiRequests.stats.p95Tooltip')} />
+        <StatCard label={t('apiRequests.stats.endpoints')} value={aggregates.length} icon="account_tree" tone="slate" />
       </div>
 
       {isExampleMode && displayItems.length > 0 && (
         <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-xs text-amber-700 dark:text-amber-300">
           <div className="flex items-center gap-2 font-semibold mb-2">
             <MaterialIcon name="science" className="text-sm" />
-            No OTel request projections yet, so example data is shown.
+            {t('apiRequests.exampleMode')}
           </div>
         </div>
       )}
@@ -564,10 +581,10 @@ export function RequestsTab({ serviceId, onGoToLogs }: RequestsTabProps) {
             <MaterialIcon name="http" className="text-4xl text-slate-400 dark:text-text-dim-dark" />
           </div>
           <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-            ?꾩쭅 罹≪쿂???붿껌???놁뒿?덈떎
+            {t('apiRequests.empty.title')}
           </h3>
           <p className="text-slate-500 dark:text-text-muted-dark text-center max-w-md mb-6">
-            OpenTelemetry SERVER span이 수신되면 HTTP 요청 projection이 여기에 표시됩니다.
+            {t('apiRequests.empty.description')}
           </p>
         </div>
       )}
@@ -576,7 +593,7 @@ export function RequestsTab({ serviceId, onGoToLogs }: RequestsTabProps) {
         <div className="flex flex-col items-center justify-center py-12 px-4 rounded-xl border border-dashed border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark">
           <MaterialIcon name="search_off" className="text-4xl text-slate-300 dark:text-text-dim-dark mb-3" />
           <p className="text-slate-500 dark:text-text-muted-dark text-sm">
-            ?꾩옱 ?꾪꽣 議곌굔??留욌뒗 ?붿껌???놁뒿?덈떎.
+            {t('apiRequests.empty.noResults')}
           </p>
         </div>
       )}
@@ -586,6 +603,7 @@ export function RequestsTab({ serviceId, onGoToLogs }: RequestsTabProps) {
           <PathAggregateTable
             items={aggregates}
             pickedPath={pickedPath}
+            t={t}
             onPickPath={(path) => {
               setPickedPath(path);
               setOpenId(null);
@@ -597,7 +615,8 @@ export function RequestsTab({ serviceId, onGoToLogs }: RequestsTabProps) {
               <MaterialIcon name="filter_alt" className="text-sm" />
               <span className="font-mono">{pickedPath}</span>
               <button onClick={() => setPickedPath(null)} className="ml-auto rounded px-2 py-1 font-bold hover:bg-primary/10">
-                珥덇린??              </button>
+                {t('apiRequests.actions.clear')}
+              </button>
             </div>
           )}
 
@@ -607,18 +626,19 @@ export function RequestsTab({ serviceId, onGoToLogs }: RequestsTabProps) {
             openId={openId}
             onToggle={(id) => setOpenId(openId === id ? null : id)}
             onGoToLogs={onGoToLogs}
+            t={t}
           />
 
           {!isExampleMode && accumulatedItems.length > 0 && (
             <div className="flex items-center justify-between text-sm text-slate-500 dark:text-text-muted-dark px-1">
-              <span>{total}嫄?以?{accumulatedItems.length}嫄??쒖떆</span>
+              <span>{t('apiRequests.pagination.showing', { shown: accumulatedItems.length, total })}</span>
               {accumulatedItems.length < total && (
                 <button
                   onClick={handleLoadMore}
                   disabled={loading}
                   className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-ui-hover-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark font-bold text-slate-700 dark:text-text-secondary-dark transition-colors disabled:opacity-50"
                 >
-                  ??蹂닿린
+                  {t('apiRequests.actions.loadMore')}
                 </button>
               )}
             </div>

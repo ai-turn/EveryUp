@@ -102,13 +102,21 @@
       "path": "Path",
       "status": "Status",
       "duration": "Duration",
-      "requestId": "Request ID"
+      "requestId": "Request ID",
+      "requests": "Requests",
+      "errors": "Errors",
+      "latency": "Latency",
+      "trend": "Trend",
+      "lastSeen": "Last seen",
+      "clientIp": "Client IP"
     },
     "filters": {
       "search": "Search path, body...",
       "allMethods": "All",
       "allStatus": "All",
       "errorsOnly": "Errors only",
+      "matchingPaths": "Matching paths",
+      "recentPaths": "Recent paths",
       "timeRange": {
         "1h": "1h",
         "6h": "6h",
@@ -122,6 +130,13 @@
       "rawJson": "Raw JSON",
       "headers": "Headers",
       "body": "Body",
+      "requestId": "Request ID",
+      "pathTemplate": "Path template",
+      "clientIp": "Client IP",
+      "receivedAt": "Received at",
+      "error": "Error",
+      "logSearchHintPrefix": "Request and response bodies are not stored. Search service logs by",
+      "logSearchHintSuffix": "for more context.",
       "truncated": "Truncated: showing first {{shown}} bytes of {{total}} bytes total",
       "noBody": "No body",
       "copy": "Copy",
@@ -129,8 +144,38 @@
     },
     "empty": {
       "title": "No requests captured",
-      "description": "No OTel SERVER span projections have arrived yet."
-    }
+      "description": "No OTel SERVER span projections have arrived yet.",
+      "noResults": "No requests match the current filters."
+    },
+    "summary": {
+      "title": "Endpoint summary",
+      "description": "Recent requests grouped by route.",
+      "endpointCount": "{{count}} endpoints"
+    },
+    "stream": {
+      "title": "Request stream",
+      "rows": "{{count}} rows"
+    },
+    "stats": {
+      "requests": "Requests",
+      "errors": "Errors",
+      "p50": "P50 latency",
+      "p50Tooltip": "50% of requests completed within this latency.",
+      "p95": "P95 latency",
+      "p95Tooltip": "95% of requests completed within this latency.",
+      "endpoints": "Endpoints"
+    },
+    "actions": {
+      "viewLogs": "View in logs",
+      "clear": "Clear",
+      "clearSearch": "Clear search",
+      "loadMore": "Load more"
+    },
+    "pagination": {
+      "showing": "Showing {{shown}} of {{total}}"
+    },
+    "timeAgo": "{{value}} ago",
+    "exampleMode": "No OTel request projections yet, so example data is shown."
   },
   "logServices": {
     "viewLogs": "View Logs",

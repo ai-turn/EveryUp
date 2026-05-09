@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MaterialIcon, Toggle } from '../../../components/common';
 import type { ApiRequestListParams } from '../../../services/api';
 
@@ -52,6 +53,7 @@ function getActiveStatusFilter(
 }
 
 export function RequestFilters({ params, onChange, pathSuggestions = [] }: RequestFiltersProps) {
+  const { t } = useTranslation('logs');
   const activeTimeRange = getActiveTimeRange(params.from);
   const activeStatusFilter = getActiveStatusFilter(params.minStatus, params.maxStatus);
 
@@ -99,12 +101,12 @@ export function RequestFilters({ params, onChange, pathSuggestions = [] }: Reque
       <div className="flex flex-wrap items-center gap-2">
         {/* Method filter */}
         <div className={groupClass}>
-          <span className={groupLabelClass}>Method</span>
+          <span className={groupLabelClass}>{t('apiRequests.table.method')}</span>
           <button
             onClick={() => setMethod(undefined)}
             className={`${chipBase} ${!params.method ? chipActive : chipInactive}`}
           >
-            ALL
+            {t('apiRequests.filters.allMethods')}
           </button>
           {HTTP_METHODS.map((m) => (
             <button
@@ -119,21 +121,21 @@ export function RequestFilters({ params, onChange, pathSuggestions = [] }: Reque
 
         {/* Status quick filter */}
         <div className={groupClass}>
-          <span className={groupLabelClass}>Status</span>
+          <span className={groupLabelClass}>{t('apiRequests.table.status')}</span>
           {(['all', '2xx', '4xx', '5xx'] as StatusQuickFilter[]).map((f) => (
             <button
               key={f}
               onClick={() => setStatusFilter(f)}
               className={`${chipBase} ${activeStatusFilter === f ? chipActive : chipInactive}`}
             >
-              {f === 'all' ? 'All' : f}
+              {f === 'all' ? t('apiRequests.filters.allStatus') : f}
             </button>
           ))}
         </div>
 
         {/* Time range selector */}
         <div className={groupClass}>
-          <span className={groupLabelClass}>Time</span>
+          <span className={groupLabelClass}>{t('apiRequests.table.time')}</span>
           {TIME_RANGES.map((r) => (
             <button
               key={r.label}
@@ -152,7 +154,7 @@ export function RequestFilters({ params, onChange, pathSuggestions = [] }: Reque
             onChange={setErrorsOnly}
           />
           <span className="text-xs font-medium text-slate-600 dark:text-text-muted-dark select-none">
-            Errors only
+            {t('apiRequests.filters.errorsOnly')}
           </span>
         </label>
       </div>
@@ -162,6 +164,10 @@ export function RequestFilters({ params, onChange, pathSuggestions = [] }: Reque
         value={params.search ?? ''}
         onChange={setSearch}
         suggestions={pathSuggestions}
+        placeholder={t('apiRequests.filters.search')}
+        clearLabel={t('apiRequests.actions.clearSearch')}
+        matchingLabel={t('apiRequests.filters.matchingPaths')}
+        recentLabel={t('apiRequests.filters.recentPaths')}
       />
     </div>
   );
@@ -171,9 +177,13 @@ interface SearchComboboxProps {
   value: string;
   onChange: (v: string) => void;
   suggestions: string[];
+  placeholder: string;
+  clearLabel: string;
+  matchingLabel: string;
+  recentLabel: string;
 }
 
-function SearchCombobox({ value, onChange, suggestions }: SearchComboboxProps) {
+function SearchCombobox({ value, onChange, suggestions, placeholder, clearLabel, matchingLabel, recentLabel }: SearchComboboxProps) {
   const [open, setOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -239,7 +249,7 @@ function SearchCombobox({ value, onChange, suggestions }: SearchComboboxProps) {
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={handleKeyDown}
-          placeholder="Search path, body…"
+          placeholder={placeholder}
           autoComplete="off"
           role="combobox"
           aria-expanded={showDropdown}
@@ -259,7 +269,7 @@ function SearchCombobox({ value, onChange, suggestions }: SearchComboboxProps) {
               onChange('');
               setOpen(false);
             }}
-            aria-label="Clear search"
+            aria-label={clearLabel}
             className="absolute right-2 p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-text-base-dark hover:bg-slate-100 dark:hover:bg-ui-hover-dark transition-colors cursor-pointer"
           >
             <MaterialIcon name="close" className="text-sm" />
@@ -274,7 +284,7 @@ function SearchCombobox({ value, onChange, suggestions }: SearchComboboxProps) {
           className="absolute top-full left-0 right-0 z-20 max-h-64 overflow-y-auto bg-white dark:bg-bg-surface-dark border border-primary border-t-slate-200 dark:border-t-ui-border-dark rounded-b-lg shadow-lg ring-2 ring-primary/30 -mt-px"
         >
           <li className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-text-dim-dark border-b border-slate-100 dark:border-ui-border-dark select-none">
-            {query ? 'Matching paths' : 'Recent paths'}
+            {query ? matchingLabel : recentLabel}
           </li>
           {filtered.map((path, i) => {
             const isFocused = i === focusedIndex;
