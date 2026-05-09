@@ -209,6 +209,9 @@ func migrate() error {
 	if err := migrateV25(); err != nil {
 		return fmt.Errorf("v25 migration failed: %w", err)
 	}
+	if err := migrateV26(); err != nil {
+		return fmt.Errorf("v26 migration failed: %w", err)
+	}
 
 	return nil
 }
@@ -867,6 +870,26 @@ func migrateV25() error {
 		}
 		for _, stmt := range indexes {
 			if _, err := tx.Exec(stmt); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+// migrateV26 drops the now-unused API capture columns from services. The
+// surrounding code paths (capture_decision, ApiCaptureSettings, OTLP capture
+// gating) were removed in the OTel-only migration. Columns are dropped
+// idempotently — if they have already been removed, the statement is a no-op.
+// Added: 2026-05-09
+func migrateV26() error {
+	return Transaction(func(tx *sql.Tx) error {
+		stmts := []string{
+			`ALTER TABLE services DROP COLUMN api_capture_mode`,
+			`ALTER TABLE services DROP COLUMN api_sample_rate`,
+		}
+		for _, s := range stmts {
+			if _, err := tx.Exec(s); err != nil && !isNoSuchColumnError(err) {
 				return err
 			}
 		}

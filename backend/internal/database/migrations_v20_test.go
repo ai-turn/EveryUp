@@ -64,7 +64,11 @@ func TestMigrateV20_Idempotent(t *testing.T) {
 	}
 }
 
-func TestMigrateV20_ServicesCaptureColumnsExist(t *testing.T) {
+// TestMigrateV26_DropsApiCaptureColumns confirms api_capture_mode and
+// api_sample_rate are absent after the full migration chain runs. They were
+// added by migrateV20 and dropped by migrateV26 once the OTel-only refactor
+// removed every reader.
+func TestMigrateV26_DropsApiCaptureColumns(t *testing.T) {
 	openTestDB(t)
 
 	rows, err := database.DB.Query("PRAGMA table_info(services)")
@@ -85,14 +89,9 @@ func TestMigrateV20_ServicesCaptureColumnsExist(t *testing.T) {
 	}
 	rows.Close()
 
-	// Body/header masking columns were dropped in migrateV22 (metadata-only capture).
-	want := []string{
-		"api_capture_mode",
-		"api_sample_rate",
-	}
-	for _, c := range want {
-		if !cols[c] {
-			t.Errorf("services table missing column %q", c)
+	for _, c := range []string{"api_capture_mode", "api_sample_rate"} {
+		if cols[c] {
+			t.Errorf("services table still has column %q after migrateV26", c)
 		}
 	}
 }
