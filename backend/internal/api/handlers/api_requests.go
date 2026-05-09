@@ -12,23 +12,23 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// ApiRequestIngestHandler handles API request projection queries.
-type ApiRequestIngestHandler struct {
+// ApiRequestsHandler handles API request projection queries.
+type ApiRequestsHandler struct {
 	repo         *database.ApiRequestRepository
 	ruleRepo     *database.AlertRuleRepository
 	alertManager *alerter.Manager
 }
 
-// NewApiRequestIngestHandler creates a new ApiRequestIngestHandler.
-func NewApiRequestIngestHandler() *ApiRequestIngestHandler {
-	return &ApiRequestIngestHandler{
+// NewApiRequestsHandler creates a new ApiRequestsHandler.
+func NewApiRequestsHandler() *ApiRequestsHandler {
+	return &ApiRequestsHandler{
 		repo:         database.NewApiRequestRepository(),
 		ruleRepo:     database.NewAlertRuleRepository(),
 		alertManager: alerter.NewManager(),
 	}
 }
 
-func (h *ApiRequestIngestHandler) evaluateApiRequestAlerts(service *models.Service, batch []models.ApiRequest) {
+func (h *ApiRequestsHandler) evaluateApiRequestAlerts(service *models.Service, batch []models.ApiRequest) {
 	rules, err := h.ruleRepo.GetEnabledApiRequestRulesByServiceID(service.ID)
 	if err != nil {
 		log.Printf("[ApiRequestIngest] Failed to load API request rules for service %s: %v", service.ID, err)
@@ -57,7 +57,7 @@ func (h *ApiRequestIngestHandler) evaluateApiRequestAlerts(service *models.Servi
 }
 
 // List handles GET /api/v1/services/:id/api-requests.
-func (h *ApiRequestIngestHandler) List(c *fiber.Ctx) error {
+func (h *ApiRequestsHandler) List(c *fiber.Ctx) error {
 	serviceID := c.Params("id")
 
 	filter := &models.ApiRequestFilter{ServiceID: serviceID}
@@ -118,7 +118,7 @@ func (h *ApiRequestIngestHandler) List(c *fiber.Ctx) error {
 }
 
 // GetByID handles GET /api/v1/services/:id/api-requests/:reqId.
-func (h *ApiRequestIngestHandler) GetByID(c *fiber.Ctx) error {
+func (h *ApiRequestsHandler) GetByID(c *fiber.Ctx) error {
 	reqIDStr := c.Params("reqId")
 	reqID, err := strconv.ParseInt(reqIDStr, 10, 64)
 	if err != nil {

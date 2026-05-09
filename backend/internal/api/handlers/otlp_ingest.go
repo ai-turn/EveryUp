@@ -28,7 +28,7 @@ import (
 // OTLPIngestHandler receives OpenTelemetry OTLP/HTTP protobuf payloads.
 type OTLPIngestHandler struct {
 	logHandler        *LogIngestHandler
-	apiRequestHandler *ApiRequestIngestHandler
+	apiRequestHandler *ApiRequestsHandler
 	spanRepo          *database.SpanRepository
 	reqRepo           *database.ApiRequestRepository
 }
@@ -37,7 +37,7 @@ type OTLPIngestHandler struct {
 func NewOTLPIngestHandler() *OTLPIngestHandler {
 	return &OTLPIngestHandler{
 		logHandler:        NewLogIngestHandler(),
-		apiRequestHandler: NewApiRequestIngestHandler(),
+		apiRequestHandler: NewApiRequestsHandler(),
 		spanRepo:          database.NewSpanRepository(),
 		reqRepo:           database.NewApiRequestRepository(),
 	}

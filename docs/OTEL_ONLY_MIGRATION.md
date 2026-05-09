@@ -16,11 +16,15 @@ EveryUp now accepts logs and traces through OpenTelemetry OTLP/HTTP only.
 
 ## Replacement
 
-Configure OpenTelemetry SDKs or auto-instrumentation to export OTLP/HTTP:
+Configure OpenTelemetry SDKs or auto-instrumentation to export OTLP/HTTP.
+The endpoint is whatever URL fronts your EveryUp deployment:
+
+- **Behind a reverse proxy / public hostname:** `https://everyup.example.com/api/v1/otlp`
+- **Direct to the backend (typical local dev):** `http://localhost:3001/api/v1/otlp`
 
 ```bash
 export OTEL_SERVICE_NAME="my-service"
-export OTEL_EXPORTER_OTLP_ENDPOINT="http://your-everyup-server:3001/api/v1/otlp"
+export OTEL_EXPORTER_OTLP_ENDPOINT="https://everyup.example.com/api/v1/otlp"
 export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer everyup_your_api_key"
 export OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
 export OTEL_LOGS_EXPORTER="otlp"
