@@ -174,8 +174,6 @@ export interface HealthStatus {
   activeServices: number;
 }
 
-export type ApiCaptureMode = 'disabled' | 'errors_only' | 'sampled' | 'all';
-
 export interface ApiRequest {
   id: number;
   serviceId: string;
@@ -219,11 +217,6 @@ export interface TraceDetail {
   spans: TraceSpan[];
   logs: LogEntry[];
   apiRequests: ApiRequest[];
-}
-
-export interface ApiCaptureConfig {
-  mode: ApiCaptureMode;
-  sampleRate: number;
 }
 
 export interface ApiRequestListParams {
@@ -375,15 +368,6 @@ export function createServicesApi(request: RequestFn) {
 
     getApiRequestById: (serviceId: string, requestId: number) =>
       request<ApiRequest>(`/services/${serviceId}/api-requests/${requestId}`),
-
-    getApiCaptureConfig: (serviceId: string) =>
-      request<ApiCaptureConfig>(`/services/${serviceId}/api-capture-config`),
-
-    updateApiCaptureConfig: (serviceId: string, config: ApiCaptureConfig) =>
-      request<ApiCaptureConfig>(`/services/${serviceId}/api-capture-config`, {
-        method: 'PUT',
-        body: JSON.stringify(config),
-      }),
 
     getTrace: (traceId: string) =>
       request<TraceDetail>(`/traces/${traceId}`),

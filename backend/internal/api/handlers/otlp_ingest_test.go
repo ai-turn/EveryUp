@@ -226,30 +226,6 @@ func TestAttrsToMapMasksSensitiveHeaders(t *testing.T) {
 	}
 }
 
-func TestShouldCaptureOTLPHonorsModeAndIgnoresSampling(t *testing.T) {
-	tests := []struct {
-		name    string
-		mode    models.ApiCaptureMode
-		isError bool
-		want    bool
-	}{
-		{"disabled drops everything", models.CaptureModeDisabled, true, false},
-		{"errors_only keeps errors", models.CaptureModeErrorsOnly, true, true},
-		{"errors_only drops successes", models.CaptureModeErrorsOnly, false, false},
-		{"sampled keeps everything (no server-side sampling)", models.CaptureModeSampled, false, true},
-		{"all keeps everything", models.CaptureModeAll, false, true},
-		{"unset defaults to keep", models.ApiCaptureMode(""), false, true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := shouldCaptureOTLP(tt.mode, tt.isError); got != tt.want {
-				t.Fatalf("shouldCaptureOTLP(%q, isError=%v) = %v, want %v",
-					tt.mode, tt.isError, got, tt.want)
-			}
-		})
-	}
-}
-
 func stringValue(value string) *commonpb.AnyValue {
 	return &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: value}}
 }

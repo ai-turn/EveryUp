@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aiturn/everyup/internal/alerter"
@@ -19,7 +18,6 @@ var errLogFiltered = errors.New("log level filtered")
 
 const maxMessageBytes = 10 * 1024  // 10 KB
 const maxMetadataBytes = 50 * 1024 // 50 KB
-const maxBatchSize = 100
 
 // LogIngestHandler handles external log ingestion via API key
 type LogIngestHandler struct {
@@ -35,131 +33,6 @@ func NewLogIngestHandler() *LogIngestHandler {
 		ruleRepo:     database.NewAlertRuleRepository(),
 		alertManager: alerter.NewManager(),
 	}
-}
-
-// Ingest receives logs from external services authenticated by API key.
-// Auto-detects format from various logging libraries:
-//   - MT native:    { "level":"error", "message":"..." } or { "logs":[...] }
-//   - Winston:      { "level":"error", "message":"...", "timestamp":"..." }
-//   - Serilog:      { "events":[{ "@t":"...", "@mt":"...", "@l":"Error" }] }
-//   - Logstash:     { "@timestamp":"...", "level":"ERROR", "message":"..." }
-//   - Python dict:  { "levelname":"ERROR", "msg":"..." }
-//   - Form-encoded: levelname=ERROR&msg=... (Python HTTPHandler)
-func (h *LogIngestHandler) Ingest(c *fiber.Ctx) error {
-	service, ok := c.Locals("service").(*models.Service)
-	if !ok || service == nil {
-		return c.Status(401).JSON(fiber.Map{
-			"success": false,
-			"error": fiber.Map{
-				"code":    "UNAUTHORIZED",
-				"message": "Service not found in context",
-			},
-		})
-	}
-
-	contentType := strings.ToLower(c.Get("Content-Type"))
-	body := c.Body()
-
-	var entries []models.LogIngestEntry
-
-	if strings.Contains(contentType, "application/x-www-form-urlencoded") {
-		// Python HTTPHandler sends form-encoded data
-		entry, err := normalizeFormEncoded(string(body))
-		if err != nil {
-			return c.Status(400).JSON(fiber.Map{
-				"success": false,
-				"error": fiber.Map{
-					"code":    "INVALID_REQUEST",
-					"message": "Failed to parse form data: " + err.Error(),
-				},
-			})
-		}
-		entries = []models.LogIngestEntry{entry}
-	} else {
-		// JSON body — auto-detect format
-		var err error
-		entries, err = normalizeRawLogs(body)
-		if err != nil {
-			return c.Status(400).JSON(fiber.Map{
-				"success": false,
-				"error": fiber.Map{
-					"code":    "INVALID_REQUEST",
-					"message": "Invalid request body: " + err.Error(),
-				},
-			})
-		}
-	}
-
-	if len(entries) == 0 {
-		return c.Status(400).JSON(fiber.Map{
-			"success": false,
-			"error": fiber.Map{
-				"code":    "VALIDATION_ERROR",
-				"message": "No log entries found in request body",
-			},
-		})
-	}
-
-	if len(entries) > maxBatchSize {
-		return c.Status(400).JSON(fiber.Map{
-			"success": false,
-			"error": fiber.Map{
-				"code":    "VALIDATION_ERROR",
-				"message": fmt.Sprintf("batch size exceeds maximum of %d logs", maxBatchSize),
-			},
-		})
-	}
-
-	// Determine source from X-MT-Source header
-	source := models.LogSourceExternal
-	if c.Get("X-MT-Source") == "agent" {
-		source = models.LogSourceAgent
-	}
-
-	// Single log — return single response
-	if len(entries) == 1 {
-		logEntry, err := h.processEntry(service, &entries[0], source)
-		if errors.Is(err, errLogFiltered) {
-			// Level filtered out — acknowledge silently so agents don't retry
-			return c.Status(200).JSON(fiber.Map{
-				"success": true,
-				"data":    fiber.Map{"filtered": true},
-			})
-		}
-		if err != nil {
-			return c.Status(400).JSON(fiber.Map{
-				"success": false,
-				"error": fiber.Map{
-					"code":    "VALIDATION_ERROR",
-					"message": err.Error(),
-				},
-			})
-		}
-
-		if err := h.logRepo.Create(logEntry); err != nil {
-			log.Printf("Failed to create log entry: %v", err)
-			return c.Status(500).JSON(fiber.Map{
-				"success": false,
-				"error": fiber.Map{
-					"code":    "DATABASE_ERROR",
-					"message": "Failed to store log entry",
-				},
-			})
-		}
-
-		h.triggerAlertIfNeeded(service, logEntry, entries[0].Metadata)
-
-		return c.Status(201).JSON(fiber.Map{
-			"success": true,
-			"data": fiber.Map{
-				"id":          logEntry.ID,
-				"fingerprint": logEntry.Fingerprint,
-			},
-		})
-	}
-
-	// Batch — process all entries
-	return h.ingestBatch(c, service, entries, source)
 }
 
 // ingestBatch processes a batch of log entries

@@ -1,12 +1,10 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
 import { MaterialIcon } from '../../../components/common';
-import { LogLevel, LOG_LEVELS, Service, api } from '../../../services/api';
+import { LogLevel, LOG_LEVELS, Service } from '../../../services/api';
 import { statusColorClasses } from '../../../design-tokens/colors';
-import type { ApiCaptureConfig } from '../../../services/api';
-import { env } from '../../../config/env';
 
 interface Props {
   service: Service;
@@ -32,29 +30,8 @@ function InfoChip({ icon, label, value, accent }: { icon: string; label: string;
   );
 }
 
-const DEMO_CAPTURE_CONFIG: ApiCaptureConfig = {
-  mode: 'sampled',
-  sampleRate: 10,
-};
-
-const CAPTURE_MODE_LABEL: Record<string, string> = {
-  disabled: '캡처 안함',
-  errors_only: '에러만',
-  sampled: '샘플링',
-  all: '모든 요청',
-};
-
 export function LogServiceIdentity({ service }: Props) {
   const { t, i18n } = useTranslation(['logs', 'common']);
-  const [captureConfig, setCaptureConfig] = useState<ApiCaptureConfig | null>(null);
-
-  useEffect(() => {
-    if (env.useMock || env.isDemoMode) {
-      setCaptureConfig(DEMO_CAPTURE_CONFIG);
-      return;
-    }
-    api.getApiCaptureConfig(service.id).then(setCaptureConfig).catch(() => {});
-  }, [service.id]);
 
   const dateLocale = useMemo(
     () => (i18n.language.startsWith('ko') ? ko : enUS),
@@ -111,7 +88,7 @@ export function LogServiceIdentity({ service }: Props) {
             value={createdText}
           />
 
-          {/* Log level filter — read-only dots */}
+          {/* Log level filter ??read-only dots */}
           <div className="shrink-0 relative group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark cursor-default">
             <MaterialIcon name="filter_alt" className="text-sm text-slate-400 dark:text-text-dim-dark" />
             <span className="flex items-center gap-1">
@@ -126,22 +103,6 @@ export function LogServiceIdentity({ service }: Props) {
               {t('logServices.identity.levelFilter')}
             </div>
           </div>
-
-          {captureConfig && (
-            <>
-              <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20">
-                <MaterialIcon name="api" className="text-sm text-primary" />
-                <span className="text-xs font-semibold text-primary whitespace-nowrap">
-                  {CAPTURE_MODE_LABEL[captureConfig.mode] ?? captureConfig.mode}
-                  {captureConfig.mode === 'sampled' && ` ${captureConfig.sampleRate}%`}
-                </span>
-              </div>
-              <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark">
-                <MaterialIcon name="info" className="text-sm text-slate-400 dark:text-text-dim-dark" />
-                <span className="text-xs font-semibold text-slate-600 dark:text-text-base-dark whitespace-nowrap">메타데이터만 수집</span>
-              </div>
-            </>
-          )}
         </div>
       </div>
     </div>

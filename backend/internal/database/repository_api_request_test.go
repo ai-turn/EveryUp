@@ -160,7 +160,7 @@ func TestApiRequestRepo_ListFilters(t *testing.T) {
 	repo := database.NewApiRequestRepository()
 	base := time.Now().Add(-time.Hour)
 
-	// Insert 5 rows: 2×200, 1×400 error, 1×404 error, 1×500 error
+	// Insert 5 rows: 2횞200, 1횞400 error, 1횞404 error, 1횞500 error
 	rows := []models.ApiRequest{
 		makeTestRequest("svc-filter", "GET", "/users", 200, false, base),
 		makeTestRequest("svc-filter", "POST", "/users", 200, false, base.Add(time.Second)),
@@ -305,49 +305,6 @@ func TestApiRequestRepo_DeleteOlderThan(t *testing.T) {
 	}
 }
 
-// --- TestServiceRepo_ApiCaptureConfig_DefaultsAndUpdate ---
-
-func TestServiceRepo_ApiCaptureConfig_DefaultsAndUpdate(t *testing.T) {
-	openTestDB(t)
-	makeTestService(t, "svc-cap")
-
-	svcRepo := database.NewServiceRepository()
-
-	// 1. GetApiCaptureConfig on a service with all-NULL capture columns → defaults.
-	cfg, err := svcRepo.GetApiCaptureConfig("svc-cap")
-	if err != nil {
-		t.Fatalf("GetApiCaptureConfig: %v", err)
-	}
-	defaults := models.DefaultApiCaptureConfig()
-	if cfg.Mode != defaults.Mode {
-		t.Errorf("Mode = %q, want default %q", cfg.Mode, defaults.Mode)
-	}
-	if cfg.SampleRate != defaults.SampleRate {
-		t.Errorf("SampleRate = %d, want default %d", cfg.SampleRate, defaults.SampleRate)
-	}
-
-	// 2. UpdateApiCaptureConfig with custom values.
-	custom := models.ApiCaptureConfig{
-		Mode:       models.CaptureModeAll,
-		SampleRate: 50,
-	}
-	if err := svcRepo.UpdateApiCaptureConfig("svc-cap", &custom); err != nil {
-		t.Fatalf("UpdateApiCaptureConfig: %v", err)
-	}
-
-	// 3. GetApiCaptureConfig should return the updated values.
-	got, err := svcRepo.GetApiCaptureConfig("svc-cap")
-	if err != nil {
-		t.Fatalf("GetApiCaptureConfig after update: %v", err)
-	}
-	if got.Mode != custom.Mode {
-		t.Errorf("Mode = %q, want %q", got.Mode, custom.Mode)
-	}
-	if got.SampleRate != custom.SampleRate {
-		t.Errorf("SampleRate = %d, want %d", got.SampleRate, custom.SampleRate)
-	}
-}
-
 // --- TestApiRequestRepo_ListFilterExtended ---
 
 func TestApiRequestRepo_ListFilterExtended(t *testing.T) {
@@ -370,7 +327,7 @@ func TestApiRequestRepo_ListFilterExtended(t *testing.T) {
 			t.Fatalf("Create r2: %v", err)
 		}
 
-		// Search for "alice" — should match r1 via req_body.
+		// Search for "alice" ??should match r1 via req_body.
 		items, total, err := repo.List(&models.ApiRequestFilter{
 			ServiceID: "svc-search",
 			Search:    "submit",
@@ -385,7 +342,7 @@ func TestApiRequestRepo_ListFilterExtended(t *testing.T) {
 			t.Errorf("Search=submit: got path %q, want /submit", items[0].Path)
 		}
 
-		// Search for "foo" — should match r2 via path.
+		// Search for "foo" ??should match r2 via path.
 		items2, total2, err := repo.List(&models.ApiRequestFilter{
 			ServiceID: "svc-search",
 			Search:    "foo",
@@ -417,7 +374,7 @@ func TestApiRequestRepo_ListFilterExtended(t *testing.T) {
 			t.Fatalf("CreateBatch: %v", err)
 		}
 
-		// MaxStatus=399 → 200 and 301 qualify.
+		// MaxStatus=399 ??200 and 301 qualify.
 		items, total, err := repo.List(&models.ApiRequestFilter{
 			ServiceID: "svc-maxstatus",
 			MaxStatus: 399,
@@ -434,7 +391,7 @@ func TestApiRequestRepo_ListFilterExtended(t *testing.T) {
 			}
 		}
 
-		// MinStatus=200, MaxStatus=299 → only 200 qualifies.
+		// MinStatus=200, MaxStatus=299 ??only 200 qualifies.
 		items2, total2, err := repo.List(&models.ApiRequestFilter{
 			ServiceID: "svc-maxstatus",
 			MinStatus: 200,
@@ -487,7 +444,7 @@ func TestApiRequestRepo_ListFilterExtended(t *testing.T) {
 
 		repo := database.NewApiRequestRepository()
 
-		// From=t-90min, To=t+2h → should return /mid (t-1h) and /new (t+1h).
+		// From=t-90min, To=t+2h ??should return /mid (t-1h) and /new (t+1h).
 		from90 := now.Add(-90 * time.Minute)
 		toPlus2h := now.Add(2 * time.Hour)
 		items, total, err := repo.List(&models.ApiRequestFilter{
@@ -502,7 +459,7 @@ func TestApiRequestRepo_ListFilterExtended(t *testing.T) {
 			t.Errorf("From=-90min To=+2h: total = %d, want 2 (/mid, /new)", total)
 		}
 
-		// To=now → should return /old (t-2h) and /mid (t-1h).
+		// To=now ??should return /old (t-2h) and /mid (t-1h).
 		items2, total2, err := repo.List(&models.ApiRequestFilter{
 			ServiceID: "svc-fromto",
 			To:        now,
@@ -516,28 +473,4 @@ func TestApiRequestRepo_ListFilterExtended(t *testing.T) {
 		_ = items
 		_ = items2
 	})
-}
-
-func TestServiceRepo_ApiCaptureConfig_EmptyMaskedLists(t *testing.T) {
-	openTestDB(t)
-	makeTestService(t, "svc-empty")
-
-	svcRepo := database.NewServiceRepository()
-
-	// Update with empty masked lists.
-	cfg := models.ApiCaptureConfig{
-		Mode:       models.CaptureModeDisabled,
-		SampleRate: 0,
-	}
-	if err := svcRepo.UpdateApiCaptureConfig("svc-empty", &cfg); err != nil {
-		t.Fatalf("UpdateApiCaptureConfig: %v", err)
-	}
-
-	got, err := svcRepo.GetApiCaptureConfig("svc-empty")
-	if err != nil {
-		t.Fatalf("GetApiCaptureConfig: %v", err)
-	}
-	if got.Mode != models.CaptureModeDisabled {
-		t.Errorf("Mode = %q, want disabled", got.Mode)
-	}
 }

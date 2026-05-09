@@ -32,7 +32,7 @@ type testServer struct {
 func setupTestServer(t *testing.T) *testServer {
 	t.Helper()
 
-	// 1. In-memory SQLite — fresh DB per test
+	// 1. In-memory SQLite ??fresh DB per test
 	if err := database.Connect(":memory:"); err != nil {
 		t.Fatalf("DB connect: %v", err)
 	}
@@ -67,7 +67,7 @@ func setupTestServer(t *testing.T) *testServer {
 	serviceEval := alerter.NewServiceRuleEvaluator(alertMgr)
 	sched.SetServiceEvaluator(serviceEval)
 
-	// 4. Routes — allow all origins for tests
+	// 4. Routes ??allow all origins for tests
 	api.SetupRoutes(app, sched, collMgr, "*", "test")
 
 	// 5. Start scheduler with empty config
@@ -172,7 +172,7 @@ func authHeader(token string) []string {
 	return []string{"Authorization", "Bearer " + token}
 }
 
-// ─── Auth Flow Tests ───────────────────────────────────────────────
+// ??? Auth Flow Tests ???????????????????????????????????????????????
 
 func TestSetupStatus_NoUsers(t *testing.T) {
 	ts := setupTestServer(t)
@@ -327,7 +327,7 @@ func TestMe_WithoutToken(t *testing.T) {
 	}
 }
 
-// ─── Service CRUD Tests ────────────────────────────────────────────
+// ??? Service CRUD Tests ????????????????????????????????????????????
 
 func TestServiceCRUD(t *testing.T) {
 	ts := setupTestServer(t)
@@ -439,7 +439,7 @@ func TestServiceCreate_InputValidation(t *testing.T) {
 	}
 }
 
-// ─── Host Tests ────────────────────────────────────────────────────
+// ??? Host Tests ????????????????????????????????????????????????????
 
 func TestHostCreate_ReservedID(t *testing.T) {
 	ts := setupTestServer(t)
@@ -460,7 +460,7 @@ func TestHostCreate_ReservedID(t *testing.T) {
 	}
 }
 
-// ─── Health Check Tests ────────────────────────────────────────────
+// ??? Health Check Tests ????????????????????????????????????????????
 
 func TestHealth(t *testing.T) {
 	ts := setupTestServer(t)
@@ -493,7 +493,7 @@ func TestHealth(t *testing.T) {
 	}
 }
 
-// ─── Notification Channel Tests ────────────────────────────────────
+// ??? Notification Channel Tests ????????????????????????????????????
 
 func TestNotificationChannel_CRUD(t *testing.T) {
 	ts := setupTestServer(t)
@@ -590,79 +590,6 @@ func TestNotificationChannel_InvalidType(t *testing.T) {
 	}
 }
 
-// ─── Log Ingest Tests ──────────────────────────────────────────────
-
-func TestLogIngest_WithApiKey(t *testing.T) {
-	ts := setupTestServer(t)
-	token := ts.setupAdmin(t, "admin", "testpass123")
-	auth := authHeader(token)
-
-	// First create a log service to get an API key
-	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
-		"id":   "log-svc-1",
-		"name": "Log Service",
-		"type": "log",
-	}, auth...)
-
-	var svc struct {
-		ApiKey string `json:"apiKey"`
-	}
-	json.Unmarshal(createResult.Data, &svc)
-
-	// Ingest a log entry using the API key
-	resp, result := ts.doRequest(t, "POST", "/api/v1/logs/ingest", map[string]interface{}{
-		"level":   "error",
-		"message": "Test error log from integration test",
-	}, "Authorization", "Bearer "+svc.ApiKey)
-
-	if resp.StatusCode != 201 {
-		t.Errorf("status = %d, want 201", resp.StatusCode)
-	}
-	if !result.Success {
-		t.Fatalf("ingest failed: %v", result.Error)
-	}
-
-	// Verify log appears in list
-	_, logsResult := ts.doRequest(t, "GET", "/api/v1/services/log-svc-1/logs", nil, auth...)
-	if !logsResult.Success {
-		t.Fatalf("get logs failed: %v", logsResult.Error)
-	}
-}
-
-func TestLogIngest_CanonicalEndpointWithApiKey(t *testing.T) {
-	ts := setupTestServer(t)
-	token := ts.setupAdmin(t, "admin", "testpass123")
-	auth := authHeader(token)
-
-	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
-		"id":   "log-svc-canonical",
-		"name": "Canonical Log Service",
-		"type": "log",
-	}, auth...)
-
-	var svc struct {
-		ApiKey string `json:"apiKey"`
-	}
-	json.Unmarshal(createResult.Data, &svc)
-
-	resp, result := ts.doRequest(t, "POST", "/api/v1/ingest/logs", map[string]interface{}{
-		"level":   "error",
-		"message": "Test error log from canonical ingest endpoint",
-	}, "Authorization", "Bearer "+svc.ApiKey)
-
-	if resp.StatusCode != 201 {
-		t.Errorf("status = %d, want 201", resp.StatusCode)
-	}
-	if !result.Success {
-		t.Fatalf("ingest failed: %v", result.Error)
-	}
-
-	_, logsResult := ts.doRequest(t, "GET", "/api/v1/services/log-svc-canonical/logs", nil, auth...)
-	if !logsResult.Success {
-		t.Fatalf("get logs failed: %v", logsResult.Error)
-	}
-}
-
 func TestLogList_NotInterceptedByLogIngestApiKeyAuth(t *testing.T) {
 	ts := setupTestServer(t)
 	token := ts.setupAdmin(t, "admin", "testpass123")
@@ -700,7 +627,7 @@ func TestLogService_DefaultLogLevelFilter(t *testing.T) {
 	}
 
 	if len(svc.LogLevelFilter) != 3 {
-		t.Fatalf("logLevelFilter len = %d, want 3 — got %v", len(svc.LogLevelFilter), svc.LogLevelFilter)
+		t.Fatalf("logLevelFilter len = %d, want 3 ??got %v", len(svc.LogLevelFilter), svc.LogLevelFilter)
 	}
 	want := map[string]bool{"error": true, "warn": true, "info": true}
 	for _, l := range svc.LogLevelFilter {
@@ -710,578 +637,7 @@ func TestLogService_DefaultLogLevelFilter(t *testing.T) {
 	}
 }
 
-// TestLogIngest_DebugBlockedByDefault verifies that DEBUG logs are rejected
-// when the service has the default [error, warn, info] filter.
-func TestLogIngest_DebugBlockedByDefault(t *testing.T) {
-	ts := setupTestServer(t)
-	token := ts.setupAdmin(t, "admin", "testpass123")
-	auth := authHeader(token)
-
-	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
-		"id":   "log-debug-blocked",
-		"name": "Debug Blocked",
-		"type": "log",
-	}, auth...)
-
-	var svc struct {
-		ApiKey string `json:"apiKey"`
-	}
-	json.Unmarshal(createResult.Data, &svc)
-
-	// Send one DEBUG log + one ERROR log.
-	resp, result := ts.doRequest(t, "POST", "/api/v1/logs/ingest", map[string]interface{}{
-		"logs": []map[string]interface{}{
-			{"level": "debug", "message": "sql executed"},
-			{"level": "error", "message": "boom"},
-		},
-	}, "Authorization", "Bearer "+svc.ApiKey)
-
-	if resp.StatusCode != 201 {
-		t.Fatalf("status = %d, want 201, error = %v", resp.StatusCode, result.Error)
-	}
-
-	// Verify only the ERROR log was stored.
-	_, logsResult := ts.doRequest(t, "GET", "/api/v1/services/log-debug-blocked/logs", nil, auth...)
-	var logs []struct {
-		Level string `json:"level"`
-	}
-	json.Unmarshal(logsResult.Data, &logs)
-
-	if len(logs) != 1 {
-		t.Fatalf("len(logs) = %d, want 1 (DEBUG should be filtered out)", len(logs))
-	}
-	if logs[0].Level != "error" {
-		t.Errorf("stored level = %q, want %q", logs[0].Level, "error")
-	}
-}
-
-// TestLogIngest_DebugAllowedWhenFilterIncludesIt verifies that DEBUG logs are
-// stored when the service's filter explicitly includes "debug".
-func TestLogIngest_DebugAllowedWhenFilterIncludesIt(t *testing.T) {
-	ts := setupTestServer(t)
-	token := ts.setupAdmin(t, "admin", "testpass123")
-	auth := authHeader(token)
-
-	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
-		"id":             "log-debug-allowed",
-		"name":           "Debug Allowed",
-		"type":           "log",
-		"logLevelFilter": []string{"error", "warn", "info", "debug", "trace"},
-	}, auth...)
-
-	var svc struct {
-		ApiKey string `json:"apiKey"`
-	}
-	json.Unmarshal(createResult.Data, &svc)
-
-	resp, _ := ts.doRequest(t, "POST", "/api/v1/logs/ingest", map[string]interface{}{
-		"level":   "debug",
-		"message": "sql executed",
-	}, "Authorization", "Bearer "+svc.ApiKey)
-
-	if resp.StatusCode != 201 {
-		t.Fatalf("status = %d, want 201", resp.StatusCode)
-	}
-
-	_, logsResult := ts.doRequest(t, "GET", "/api/v1/services/log-debug-allowed/logs", nil, auth...)
-	var logs []struct {
-		Level string `json:"level"`
-	}
-	json.Unmarshal(logsResult.Data, &logs)
-
-	if len(logs) != 1 || logs[0].Level != "debug" {
-		t.Errorf("stored logs = %+v, want one debug entry", logs)
-	}
-}
-
-func TestLogIngest_InvalidApiKey(t *testing.T) {
-	ts := setupTestServer(t)
-
-	resp, _ := ts.doRequest(t, "POST", "/api/v1/logs/ingest", map[string]interface{}{
-		"level":   "error",
-		"message": "Should fail",
-	}, "Authorization", "Bearer invalid-key-12345")
-
-	if resp.StatusCode != 401 {
-		t.Errorf("status = %d, want 401", resp.StatusCode)
-	}
-}
-
-func TestLogIngest_RejectsNonLogServiceApiKey(t *testing.T) {
-	ts := setupTestServer(t)
-	token := ts.setupAdmin(t, "admin", "testpass123")
-	auth := authHeader(token)
-
-	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
-		"id":   "http-svc-1",
-		"name": "HTTP Service",
-		"type": "http",
-		"url":  "https://example.com",
-	}, auth...)
-
-	var svc struct {
-		ApiKey string `json:"apiKey"`
-	}
-	json.Unmarshal(createResult.Data, &svc)
-
-	resp, _ := ts.doRequest(t, "POST", "/api/v1/logs/ingest", map[string]interface{}{
-		"level":   "error",
-		"message": "Should be rejected",
-	}, "Authorization", "Bearer "+svc.ApiKey)
-
-	if resp.StatusCode != 403 {
-		t.Errorf("status = %d, want 403 for non-log service API key", resp.StatusCode)
-	}
-}
-
-func TestLogIngest_RejectsInactiveLogService(t *testing.T) {
-	ts := setupTestServer(t)
-	token := ts.setupAdmin(t, "admin", "testpass123")
-	auth := authHeader(token)
-
-	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
-		"id":   "log-inactive-1",
-		"name": "Inactive Log Service",
-		"type": "log",
-	}, auth...)
-
-	var svc struct {
-		ApiKey string `json:"apiKey"`
-	}
-	json.Unmarshal(createResult.Data, &svc)
-
-	_, pauseResult := ts.doRequest(t, "POST", "/api/v1/services/log-inactive-1/pause", nil, auth...)
-	if !pauseResult.Success {
-		t.Fatalf("pause failed: %v", pauseResult.Error)
-	}
-
-	resp, _ := ts.doRequest(t, "POST", "/api/v1/logs/ingest", map[string]interface{}{
-		"level":   "error",
-		"message": "Should be rejected while inactive",
-	}, "Authorization", "Bearer "+svc.ApiKey)
-
-	if resp.StatusCode != 403 {
-		t.Errorf("status = %d, want 403 for inactive log service", resp.StatusCode)
-	}
-}
-
-func TestLogIngest_BatchLimit(t *testing.T) {
-	ts := setupTestServer(t)
-	token := ts.setupAdmin(t, "admin", "testpass123")
-	auth := authHeader(token)
-
-	// Create service
-	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
-		"id": "log-batch", "name": "Batch Test", "type": "log",
-	}, auth...)
-
-	var svc struct {
-		ApiKey string `json:"apiKey"`
-	}
-	json.Unmarshal(createResult.Data, &svc)
-
-	// Send batch exceeding limit (101 entries, max is 100)
-	logs := make([]map[string]string, 101)
-	for i := range logs {
-		logs[i] = map[string]string{"level": "error", "message": "log entry"}
-	}
-
-	resp, _ := ts.doRequest(t, "POST", "/api/v1/logs/ingest", map[string]interface{}{
-		"logs": logs,
-	}, "Authorization", "Bearer "+svc.ApiKey)
-
-	if resp.StatusCode != 400 {
-		t.Errorf("status = %d, want 400 for exceeding batch limit", resp.StatusCode)
-	}
-}
-
-// ─── API Request Ingest Tests ──────────────────────────────────────
-
-// createLogServiceForIngest is a helper that creates a log service and returns its API key.
-func createLogServiceForIngest(t *testing.T, ts *testServer, id string) string {
-	t.Helper()
-	token := ts.setupAdmin(t, "admin", "testpass123")
-	auth := authHeader(token)
-
-	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
-		"id":   id,
-		"name": "Ingest Test Service",
-		"type": "log",
-	}, auth...)
-
-	if !createResult.Success {
-		t.Fatalf("create service failed: %v", createResult.Error)
-	}
-
-	var svc struct {
-		ApiKey string `json:"apiKey"`
-	}
-	json.Unmarshal(createResult.Data, &svc)
-	if svc.ApiKey == "" {
-		t.Fatal("apiKey missing from created service")
-	}
-	return svc.ApiKey
-}
-
-func TestApiRequestIngest_WithApiKey(t *testing.T) {
-	ts := setupTestServer(t)
-	apiKey := createLogServiceForIngest(t, ts, "req-svc-1")
-
-	// Set capture mode to "all" so the request is stored
-	_, err := database.DB.Exec(
-		`UPDATE services SET api_capture_mode = 'all' WHERE id = ?`,
-		"req-svc-1",
-	)
-	if err != nil {
-		t.Fatalf("update capture mode: %v", err)
-	}
-
-	resp, result := ts.doRequest(t, "POST", "/api/v1/ingest/requests", map[string]interface{}{
-		"method":     "GET",
-		"path":       "/api/users/123",
-		"statusCode": 200,
-		"durationMs": 45,
-	}, "Authorization", "Bearer "+apiKey)
-
-	if resp.StatusCode != 201 {
-		t.Errorf("status = %d, want 201", resp.StatusCode)
-	}
-	if !result.Success {
-		t.Fatalf("ingest failed: %v", result.Error)
-	}
-
-	var data struct {
-		Processed int `json:"processed"`
-		Filtered  int `json:"filtered"`
-		Errors    int `json:"errors"`
-		Total     int `json:"total"`
-	}
-	json.Unmarshal(result.Data, &data)
-	if data.Processed != 1 {
-		t.Errorf("processed = %d, want 1", data.Processed)
-	}
-	if data.Total != 1 {
-		t.Errorf("total = %d, want 1", data.Total)
-	}
-}
-
-func TestApiRequestIngest_TriggersAlertRule(t *testing.T) {
-	ts := setupTestServer(t)
-	apiKey := createLogServiceForIngest(t, ts, "req-svc-alert")
-
-	if _, err := database.DB.Exec(
-		`UPDATE services SET api_capture_mode = 'all' WHERE id = ?`,
-		"req-svc-alert",
-	); err != nil {
-		t.Fatalf("update capture mode: %v", err)
-	}
-
-	// Insert an enabled api_status_code rule directly
-	if _, err := database.DB.Exec(`
-		INSERT INTO alert_rules (id, name, type, service_id, metric, operator, threshold, duration, severity, is_enabled, cooldown, created_at)
-		VALUES ('rule-api-1', 'Server errors', 'log', 'req-svc-alert', 'api_status_code', 'gte', 500, 0, 'critical', 1, 0, datetime('now'))
-	`); err != nil {
-		t.Fatalf("insert rule: %v", err)
-	}
-
-	// Verify lookup returns the rule
-	repo := database.NewAlertRuleRepository()
-	rules, err := repo.GetEnabledApiRequestRulesByServiceID("req-svc-alert")
-	if err != nil {
-		t.Fatalf("rule lookup: %v", err)
-	}
-	if len(rules) != 1 {
-		t.Fatalf("expected 1 rule, got %d", len(rules))
-	}
-	if rules[0].Metric != "api_status_code" {
-		t.Errorf("metric = %q, want api_status_code", rules[0].Metric)
-	}
-
-	// And that log rule lookup excludes it
-	logRules, err := repo.GetEnabledLogRulesByServiceID("req-svc-alert")
-	if err != nil {
-		t.Fatalf("log rule lookup: %v", err)
-	}
-	if len(logRules) != 0 {
-		t.Errorf("expected 0 log rules (api_status_code excluded), got %d", len(logRules))
-	}
-
-	// Ingest a 500 — alert dispatch is async, but ingest should still succeed
-	resp, result := ts.doRequest(t, "POST", "/api/v1/ingest/requests", map[string]interface{}{
-		"method":     "POST",
-		"path":       "/api/orders",
-		"statusCode": 500,
-		"durationMs": 230,
-	}, "Authorization", "Bearer "+apiKey)
-
-	if resp.StatusCode != 201 {
-		t.Errorf("status = %d, want 201", resp.StatusCode)
-	}
-	if !result.Success {
-		t.Fatalf("ingest failed: %v", result.Error)
-	}
-}
-
-func TestApiRequestIngest_WithXAPIKey(t *testing.T) {
-	ts := setupTestServer(t)
-	apiKey := createLogServiceForIngest(t, ts, "req-svc-x-api-key")
-
-	_, err := database.DB.Exec(
-		`UPDATE services SET api_capture_mode = 'all' WHERE id = ?`,
-		"req-svc-x-api-key",
-	)
-	if err != nil {
-		t.Fatalf("update capture mode: %v", err)
-	}
-
-	resp, result := ts.doRequest(t, "POST", "/api/v1/ingest/requests", map[string]interface{}{
-		"method":     "POST",
-		"path":       "/api/users/123",
-		"statusCode": 201,
-		"durationMs": 52,
-	}, "X-API-Key", apiKey)
-
-	if resp.StatusCode != 201 {
-		t.Errorf("status = %d, want 201", resp.StatusCode)
-	}
-	if !result.Success {
-		t.Fatalf("ingest failed: %v", result.Error)
-	}
-
-	var data struct {
-		Processed int `json:"processed"`
-		Total     int `json:"total"`
-	}
-	json.Unmarshal(result.Data, &data)
-	if data.Processed != 1 {
-		t.Errorf("processed = %d, want 1", data.Processed)
-	}
-	if data.Total != 1 {
-		t.Errorf("total = %d, want 1", data.Total)
-	}
-}
-
-func TestApiRequestIngest_ModeDisabled(t *testing.T) {
-	ts := setupTestServer(t)
-	apiKey := createLogServiceForIngest(t, ts, "req-svc-disabled")
-
-	// Set capture mode to "disabled"
-	_, err := database.DB.Exec(
-		`UPDATE services SET api_capture_mode = 'disabled' WHERE id = ?`,
-		"req-svc-disabled",
-	)
-	if err != nil {
-		t.Fatalf("update capture mode: %v", err)
-	}
-
-	resp, result := ts.doRequest(t, "POST", "/api/v1/ingest/requests", map[string]interface{}{
-		"method":     "POST",
-		"path":       "/api/login",
-		"statusCode": 200,
-		"durationMs": 10,
-	}, "Authorization", "Bearer "+apiKey)
-
-	if resp.StatusCode != 201 {
-		t.Errorf("status = %d, want 201", resp.StatusCode)
-	}
-	if !result.Success {
-		t.Fatalf("ingest failed: %v", result.Error)
-	}
-
-	var data struct {
-		Processed int `json:"processed"`
-		Filtered  int `json:"filtered"`
-	}
-	json.Unmarshal(result.Data, &data)
-	if data.Filtered != 1 {
-		t.Errorf("filtered = %d, want 1 (mode=disabled should filter all)", data.Filtered)
-	}
-	if data.Processed != 0 {
-		t.Errorf("processed = %d, want 0", data.Processed)
-	}
-}
-
-func TestApiRequestIngest_ModeErrorsOnly(t *testing.T) {
-	ts := setupTestServer(t)
-	apiKey := createLogServiceForIngest(t, ts, "req-svc-errors")
-
-	// Set capture mode to "errors_only"
-	_, err := database.DB.Exec(
-		`UPDATE services SET api_capture_mode = 'errors_only' WHERE id = ?`,
-		"req-svc-errors",
-	)
-	if err != nil {
-		t.Fatalf("update capture mode: %v", err)
-	}
-
-	// Send two entries: a success and an error
-	resp, result := ts.doRequest(t, "POST", "/api/v1/ingest/requests", map[string]interface{}{
-		"requests": []map[string]interface{}{
-			{"method": "GET", "path": "/ok", "statusCode": 200, "durationMs": 10},
-			{"method": "GET", "path": "/fail", "statusCode": 500, "durationMs": 20},
-		},
-	}, "Authorization", "Bearer "+apiKey)
-
-	if resp.StatusCode != 201 {
-		t.Errorf("status = %d, want 201", resp.StatusCode)
-	}
-	if !result.Success {
-		t.Fatalf("ingest failed: %v", result.Error)
-	}
-
-	var data struct {
-		Processed int `json:"processed"`
-		Filtered  int `json:"filtered"`
-		Total     int `json:"total"`
-	}
-	json.Unmarshal(result.Data, &data)
-	if data.Processed != 1 {
-		t.Errorf("processed = %d, want 1 (only 500 should be stored)", data.Processed)
-	}
-	if data.Filtered != 1 {
-		t.Errorf("filtered = %d, want 1 (200 should be filtered)", data.Filtered)
-	}
-	if data.Total != 2 {
-		t.Errorf("total = %d, want 2", data.Total)
-	}
-}
-
-func TestApiRequestIngest_BatchLimit(t *testing.T) {
-	ts := setupTestServer(t)
-	apiKey := createLogServiceForIngest(t, ts, "req-svc-batch")
-
-	// Build 51 entries — over the 50 limit
-	entries := make([]map[string]interface{}, 51)
-	for i := range entries {
-		entries[i] = map[string]interface{}{
-			"method":     "GET",
-			"path":       "/api/test",
-			"statusCode": 200,
-			"durationMs": 5,
-		}
-	}
-
-	resp, result := ts.doRequest(t, "POST", "/api/v1/ingest/requests", map[string]interface{}{
-		"requests": entries,
-	}, "Authorization", "Bearer "+apiKey)
-
-	if resp.StatusCode != 400 {
-		t.Errorf("status = %d, want 400", resp.StatusCode)
-	}
-	if result.Error == nil || result.Error.Code != "VALIDATION_ERROR" {
-		t.Errorf("expected VALIDATION_ERROR, got %v", result.Error)
-	}
-}
-
-func TestApiRequestIngest_InvalidApiKey(t *testing.T) {
-	ts := setupTestServer(t)
-
-	resp, _ := ts.doRequest(t, "POST", "/api/v1/ingest/requests", map[string]interface{}{
-		"method":     "GET",
-		"path":       "/api/test",
-		"statusCode": 200,
-		"durationMs": 5,
-	}, "Authorization", "Bearer invalid-key-99999")
-
-	if resp.StatusCode != 401 {
-		t.Errorf("status = %d, want 401", resp.StatusCode)
-	}
-}
-
-// ─── API Capture Config Tests ─────────────────────────────────────
-
-func TestApiCaptureConfig_GetAndUpdate(t *testing.T) {
-	ts := setupTestServer(t)
-	token := ts.setupAdmin(t, "admin", "testpass123")
-	auth := authHeader(token)
-
-	// 1. Create a log service
-	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
-		"id":   "cfg-svc-1",
-		"name": "Config Test Service",
-		"type": "log",
-	}, auth...)
-	if !createResult.Success {
-		t.Fatalf("create service failed: %v", createResult.Error)
-	}
-
-	// 2. GET defaults — expect mode="sampled", sampleRate=10
-	resp, getResult := ts.doRequest(t, "GET", "/api/v1/services/cfg-svc-1/api-capture-config", nil, auth...)
-	if resp.StatusCode != 200 {
-		t.Errorf("GET status = %d, want 200", resp.StatusCode)
-	}
-	if !getResult.Success {
-		t.Fatalf("GET failed: %v", getResult.Error)
-	}
-
-	var cfg struct {
-		Mode       string `json:"mode"`
-		SampleRate int    `json:"sampleRate"`
-	}
-	json.Unmarshal(getResult.Data, &cfg)
-	if cfg.Mode != "sampled" {
-		t.Errorf("default mode = %q, want %q", cfg.Mode, "sampled")
-	}
-	if cfg.SampleRate != 10 {
-		t.Errorf("default sampleRate = %d, want 10", cfg.SampleRate)
-	}
-
-	// 3. PUT with updated values
-	resp, putResult := ts.doRequest(t, "PUT", "/api/v1/services/cfg-svc-1/api-capture-config", map[string]interface{}{
-		"mode":       "errors_only",
-		"sampleRate": 0,
-	}, auth...)
-	if resp.StatusCode != 200 {
-		t.Errorf("PUT status = %d, want 200", resp.StatusCode)
-	}
-	if !putResult.Success {
-		t.Fatalf("PUT failed: %v", putResult.Error)
-	}
-
-	// 4. GET again — verify updated values
-	_, getResult2 := ts.doRequest(t, "GET", "/api/v1/services/cfg-svc-1/api-capture-config", nil, auth...)
-	if !getResult2.Success {
-		t.Fatalf("second GET failed: %v", getResult2.Error)
-	}
-
-	var cfg2 struct {
-		Mode       string `json:"mode"`
-		SampleRate int    `json:"sampleRate"`
-	}
-	json.Unmarshal(getResult2.Data, &cfg2)
-	if cfg2.Mode != "errors_only" {
-		t.Errorf("updated mode = %q, want %q", cfg2.Mode, "errors_only")
-	}
-	if cfg2.SampleRate != 0 {
-		t.Errorf("updated sampleRate = %d, want 0", cfg2.SampleRate)
-	}
-
-	// 5. PUT with invalid mode → 400 VALIDATION_ERROR
-	resp, errResult := ts.doRequest(t, "PUT", "/api/v1/services/cfg-svc-1/api-capture-config", map[string]interface{}{
-		"mode":       "invalid_mode",
-		"sampleRate": 10,
-	}, auth...)
-	if resp.StatusCode != 400 {
-		t.Errorf("invalid mode status = %d, want 400", resp.StatusCode)
-	}
-	if errResult.Error == nil || errResult.Error.Code != "VALIDATION_ERROR" {
-		t.Errorf("expected VALIDATION_ERROR, got %v", errResult.Error)
-	}
-
-	// 6. PUT with sampleRate 150 → 400 VALIDATION_ERROR
-	resp, errResult2 := ts.doRequest(t, "PUT", "/api/v1/services/cfg-svc-1/api-capture-config", map[string]interface{}{
-		"mode":       "sampled",
-		"sampleRate": 150,
-	}, auth...)
-	if resp.StatusCode != 400 {
-		t.Errorf("out-of-range sampleRate status = %d, want 400", resp.StatusCode)
-	}
-	if errResult2.Error == nil || errResult2.Error.Code != "VALIDATION_ERROR" {
-		t.Errorf("expected VALIDATION_ERROR, got %v", errResult2.Error)
-	}
-}
-
-// ─── Alert Rule Tests ──────────────────────────────────────────────
+// ??? Alert Rule Tests ??????????????????????????????????????????????
 
 func TestAlertRule_CRUD(t *testing.T) {
 	ts := setupTestServer(t)

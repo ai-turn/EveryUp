@@ -129,45 +129,7 @@
     },
     "empty": {
       "title": "No requests captured",
-      "description": "No API requests captured yet. Configure capture settings to get started.",
-      "configureCapture": "Configure capture"
-    },
-    "settings": {
-      "title": "API Request Capture",
-      "subtitle": "Configure how requests and responses are captured for this service.",
-      "mode": {
-        "label": "Capture Mode",
-        "disabled": "Disabled",
-        "disabledDesc": "Do not capture any requests.",
-        "errorsOnly": "Errors Only",
-        "errorsOnlyDesc": "Capture only error responses (5xx).",
-        "sampled": "Sampled",
-        "sampledDesc": "Capture a sample of all requests.",
-        "all": "All",
-        "allDesc": "Capture every request."
-      },
-      "sampleRate": {
-        "label": "Sample Rate (%)",
-        "description": "Percentage of successful responses to capture (0-100)"
-      },
-      "bodyMaxBytes": {
-        "label": "Max Body Size",
-        "description": "Maximum body size to store"
-      },
-      "maskedHeaders": {
-        "label": "Masked Headers",
-        "description": "Header names to mask with ***",
-        "placeholder": "Add header name..."
-      },
-      "maskedBodyFields": {
-        "label": "Masked Body Fields",
-        "description": "JSON body field names to mask",
-        "placeholder": "Add field name..."
-      },
-      "save": "Save",
-      "saving": "Saving...",
-      "saveSuccess": "Capture settings saved.",
-      "saveError": "Save failed"
+      "description": "No OTel SERVER span projections have arrived yet."
     }
   },
   "logServices": {
@@ -182,7 +144,7 @@
     },
     "edit": {
       "title": "Edit Log Service",
-      "subtitle": "Update service name, log level filter, and API capture settings.",
+      "subtitle": "Update service name and log level filter.",
       "basicInfo": "Basic information",
       "basicInfoDesc": "Update the service name.",
       "levelFilterDesc": "Select which log levels the server will store.",

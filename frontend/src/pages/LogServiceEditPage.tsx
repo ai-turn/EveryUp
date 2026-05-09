@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../utils/errors';
 import { MaterialIcon } from '../components/common';
-import { ApiCaptureSettings } from '../features/api-requests/components/ApiCaptureSettings';
 import { api, LogLevel, LOG_LEVELS } from '../services/api';
 import type { Service } from '../services/api';
 
@@ -270,9 +269,6 @@ export function LogServiceEditPage() {
             <span>{t('logServices.edit.levelFilterHint')}</span>
           </div>
         </section>
-
-        {/* API Capture Settings */}
-        <ApiCaptureSettings serviceId={service.id} />
       </div>
     </div>
   );

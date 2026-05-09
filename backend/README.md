@@ -144,8 +144,6 @@ docker run -d -p 3001:3001 `
 | GET | `/logs` | 로그 목록 (페이지네이션) |
 | POST | `/otlp/v1/logs` | OpenTelemetry OTLP log ingest (API Key) |
 | POST | `/otlp/v1/traces` | OpenTelemetry OTLP trace ingest (API Key) |
-| POST | `/ingest/logs` | Legacy JSON log ingest, deprecated (API Key) |
-| POST | `/logs/ingest` | Legacy JSON log ingest alias, deprecated (API Key) |
 
 ### 대시보드
 

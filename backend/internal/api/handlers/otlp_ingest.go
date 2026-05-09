@@ -27,19 +27,19 @@ import (
 
 // OTLPIngestHandler receives OpenTelemetry OTLP/HTTP protobuf payloads.
 type OTLPIngestHandler struct {
-	logHandler  *LogIngestHandler
-	spanRepo    *database.SpanRepository
-	reqRepo     *database.ApiRequestRepository
-	serviceRepo *database.ServiceRepository
+	logHandler        *LogIngestHandler
+	apiRequestHandler *ApiRequestIngestHandler
+	spanRepo          *database.SpanRepository
+	reqRepo           *database.ApiRequestRepository
 }
 
 // NewOTLPIngestHandler creates an OTLP ingest handler.
 func NewOTLPIngestHandler() *OTLPIngestHandler {
 	return &OTLPIngestHandler{
-		logHandler:  NewLogIngestHandler(),
-		spanRepo:    database.NewSpanRepository(),
-		reqRepo:     database.NewApiRequestRepository(),
-		serviceRepo: database.NewServiceRepository(),
+		logHandler:        NewLogIngestHandler(),
+		apiRequestHandler: NewApiRequestIngestHandler(),
+		spanRepo:          database.NewSpanRepository(),
+		reqRepo:           database.NewApiRequestRepository(),
 	}
 }
 
@@ -160,25 +160,6 @@ func (h *OTLPIngestHandler) IngestTraces(c *fiber.Ctx) error {
 		})
 	}
 
-	// Per-service capture mode controls whether SERVER spans get projected
-	// into api_requests. Sampling is intentionally ignored — OTel clients own
-	// that decision. A repository miss falls back to the default (sampled) so
-	// a missing config never silently drops data.
-	captureMode := models.DefaultApiCaptureConfig().Mode
-	if cfg, cfgErr := h.serviceRepo.GetApiCaptureConfig(service.ID); cfgErr == nil && cfg != nil {
-		captureMode = cfg.Mode
-	}
-	if captureMode == models.CaptureModeDisabled {
-		respBody, err := proto.Marshal(&collectortracepb.ExportTraceServiceResponse{})
-		if err != nil {
-			return err
-		}
-		c.Set(fiber.HeaderContentType, "application/x-protobuf")
-		c.Set("X-EveryUp-Spans", "0")
-		c.Set("X-EveryUp-Api-Requests", "0")
-		return c.Status(fiber.StatusOK).Send(respBody)
-	}
-
 	var spans []models.Span
 	var requests []models.ApiRequest
 
@@ -196,9 +177,7 @@ func (h *OTLPIngestHandler) IngestTraces(c *fiber.Ctx) error {
 				spans = append(spans, modelSpan)
 
 				if apiReq, ok := spanToAPIRequest(service, serviceName, span); ok {
-					if shouldCaptureOTLP(captureMode, apiReq.IsError) {
-						requests = append(requests, apiReq)
-					}
+					requests = append(requests, apiReq)
 				}
 			}
 		}
@@ -214,6 +193,9 @@ func (h *OTLPIngestHandler) IngestTraces(c *fiber.Ctx) error {
 	if err != nil {
 		log.Printf("[OTLP] failed to store API request projections for service %s: %v", service.ID, err)
 		return internalError(c, ErrCodeDatabase, err)
+	}
+	if insertedRequests > 0 {
+		h.apiRequestHandler.evaluateApiRequestAlerts(service, requests)
 	}
 
 	respBody, err := proto.Marshal(&collectortracepb.ExportTraceServiceResponse{})

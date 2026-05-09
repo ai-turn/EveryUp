@@ -459,46 +459,6 @@ func (r *ServiceRepository) Delete(id string) error {
 	return err
 }
 
-// GetApiCaptureConfig returns the API capture configuration for the given service.
-func (r *ServiceRepository) GetApiCaptureConfig(serviceID string) (*models.ApiCaptureConfig, error) {
-	var (
-		mode       sql.NullString
-		sampleRate sql.NullInt64
-	)
-
-	err := DB.QueryRow(`
-		SELECT api_capture_mode, api_sample_rate
-		FROM services WHERE id = ?
-	`, serviceID).Scan(&mode, &sampleRate)
-	if err != nil {
-		return nil, err
-	}
-
-	cfg := models.DefaultApiCaptureConfig()
-	if mode.Valid && mode.String != "" {
-		cfg.Mode = models.ApiCaptureMode(mode.String)
-	}
-	if sampleRate.Valid {
-		cfg.SampleRate = int(sampleRate.Int64)
-	}
-	return &cfg, nil
-}
-
-// UpdateApiCaptureConfig persists the given capture configuration for a service.
-func (r *ServiceRepository) UpdateApiCaptureConfig(serviceID string, cfg *models.ApiCaptureConfig) error {
-	_, err := DB.Exec(`
-		UPDATE services
-		SET api_capture_mode = ?,
-		    api_sample_rate  = ?
-		WHERE id = ?
-	`,
-		string(cfg.Mode),
-		cfg.SampleRate,
-		serviceID,
-	)
-	return err
-}
-
 // splitCommaList splits a comma-separated string into a slice.
 // An empty string returns nil.
 func splitCommaList(s string) []string {

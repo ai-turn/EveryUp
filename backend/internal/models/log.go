@@ -51,19 +51,7 @@ type LogCreateRequest struct {
 	Metadata  map[string]interface{} `json:"metadata,omitempty"`
 }
 
-// LogIngestRequest represents a single-log or batch request from external services
-// Single: { "level": "error", "message": "...", "metadata": {...} }
-// Batch:  { "logs": [{ "level": "error", "message": "...", "metadata": {...} }, ...] }
-type LogIngestRequest struct {
-	// Single log fields
-	Level    LogLevel               `json:"level"`
-	Message  string                 `json:"message"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
-	// Batch field
-	Logs []LogIngestEntry `json:"logs,omitempty"`
-}
-
-// LogIngestEntry represents a single log entry within a batch request
+// LogIngestEntry represents a single log entry projected from OTLP.
 type LogIngestEntry struct {
 	Level    LogLevel               `json:"level"`
 	Message  string                 `json:"message"`

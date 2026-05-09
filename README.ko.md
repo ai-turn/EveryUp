@@ -38,7 +38,7 @@ Prometheus, Grafana, 클라우드 없이 — 단일 바이너리와 SQLite 파�
   - [로컬 개발](#로컬-개발)
 - [설정](#설정)
 - [데이터 백업](#데이터-백업)
-- [로그 에이전트](#로그-에이전트)
+- [OpenTelemetry 수집](#opentelemetry-수집)
 - [문서](#문서)
 - [기여](#기여)
 - [라이선스](#라이선스)
@@ -84,18 +84,18 @@ HTTP 및 TCP 엔드포인트의 가용성을 주기적으로 점검합니다.
 외부 서비스의 로그를 수집하고 대시보드에서 조회합니다.
 
 - **로그 뷰어**: 레벨(error / warn / info / debug / trace) 필터링, 키워드 검색, 타임라인 확인
-- **API 요청 인스펙터**: 서비스별 HTTP 요청·응답 캡처 — 샘플링 비율, 에러 전용 모드, 헤더·바디 마스킹 설정 포함
-- **통합 탭**: 로그 에이전트 연동용 API 키 발급 및 코드 스니펫 제공
-- **수집 설정**: 허용 로그 레벨 필터, API 캡처 모드를 서비스별로 독립 관리
+- **API 요청 인스펙터**: OTel SERVER span에서 projection된 HTTP 요청을 조회
+- **통합 탭**: OpenTelemetry OTLP 연동용 API 키 발급 및 코드 스니펫 제공
+- **수집 설정**: 허용 로그 레벨 필터를 서비스별로 관리
 
 **EveryUp으로 데이터를 보내는 방법:**
 
 | 종류 | 방법 |
 |------|------|
-| **로그 수집** | `everyup-log-agent`를 Docker 컨테이너로 배포합니다. 에이전트가 로그 파일을 tail하여 EveryUp으로 전달합니다 — 코드 변경 없이 연동 가능합니다. |
-| **API 요청 캡처** | 서비스 코드에 EveryUp SDK를 미들웨어로 추가합니다. SDK가 요청·응답 데이터를 HTTP로 EveryUp에 직접 전송합니다. |
+| **로그와 트레이스** | OpenTelemetry 자동 계측 또는 SDK를 사용해 OTLP/HTTP로 EveryUp에 전송합니다. |
+| **API 요청 상관관계** | EveryUp은 HTTP 속성이 있는 OTel SERVER span을 API 요청 인스펙터에 projection합니다. |
 
-두 방법 모두 각 로그 서비스의 **Integration** 탭에서 발급한 API 키를 사용합니다.
+OTLP는 각 로그 서비스의 **Integration** 탭에서 발급한 API 키를 사용합니다.
 
 ### 인프라
 
@@ -238,7 +238,6 @@ go test ./internal/api/handlers/ -v
 everyup/
 ├── frontend/      # React + Vite + TypeScript + Tailwind CSS
 ├── backend/       # Go (Fiber) + SQLite + WebSocket
-└── log-agent/     # Fluent Bit 기반 로그 수집 에이전트
 ```
 
 ---
@@ -275,33 +274,27 @@ docker cp everyup:/app/data/monitoring.db ./monitoring.db.bak
 
 ---
 
-## 로그 에이전트
+## OpenTelemetry 수집
 
-외부 서비스의 로그를 수집하여 EveryUp 대시보드로 전달하려면 해당 서버에 `everyup-log-agent`를 배포합니다.
+OpenTelemetry 자동 계측 또는 SDK를 사용해 로그와 트레이스를 OTLP/HTTP로 EveryUp에 전송합니다.
 
 **1. API 키 발급**
 
 EveryUp 대시보드 → **로그 → 서비스 상세 → Integration** 탭에서 API 키를 발급받습니다.
 
-**2. 에이전트 실행**
+**2. OTLP 설정**
 
 ```bash
-docker pull aiturn/everyup-log-agent:latest
+export OTEL_SERVICE_NAME="my-service"
+export OTEL_EXPORTER_OTLP_ENDPOINT="http://your-everyup-server:3001/api/v1/otlp"
+export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer everyup_your_api_key"
+export OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
+export OTEL_LOGS_EXPORTER="otlp"
+export OTEL_TRACES_EXPORTER="otlp"
+export OTEL_METRICS_EXPORTER="none"
 ```
 
-```bash
-docker run -d \
-  --name everyup-log-agent \
-  -v /var/log/myapp:/var/log/app:ro \
-  -e LOG_AGENT_ENDPOINT=http://your-everyup-server:3001 \
-  -e LOG_AGENT_API_KEY=everyup_your_api_key \
-  --restart unless-stopped \
-  aiturn/everyup-log-agent:latest
-```
-
-`linux/amd64`와 `linux/arm64` 모두 지원합니다 — Docker가 플랫폼에 맞는 이미지를 자동으로 선택합니다.
-
-자세한 내용은 [log-agent/README.md](log-agent/README.md)를 참고하세요.
+OTLP/HTTP 수신기는 `/api/v1/otlp/v1/logs`와 `/api/v1/otlp/v1/traces`를 지원합니다.
 
 ---
 
@@ -311,7 +304,6 @@ docker run -d \
 |------|------|
 | [backend/README.md](backend/README.md) | 백엔드 API 및 설정 문서 |
 | [frontend/README.md](frontend/README.md) | 프론트엔드 개발 환경 및 페이지 구조 |
-| [log-agent/README.md](log-agent/README.md) | 로그 에이전트 배포 가이드 |
 | [docs/NOTIFICATION_SETUP.ko.md](docs/NOTIFICATION_SETUP.ko.md) | 텔레그램, 디스코드 & 슬랙 채널 설정 가이드 |
 
 ---

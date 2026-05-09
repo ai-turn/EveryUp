@@ -2,12 +2,10 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { MaterialIcon } from '../../../components/common';
 import { useApiRequests } from '../hooks/useApiRequests';
 import { RequestFilters } from './RequestFilters';
-import { api } from '../../../services/api';
-import type { ApiRequest, ApiRequestListParams, ApiCaptureConfig } from '../../../services/api';
+import type { ApiRequest, ApiRequestListParams } from '../../../services/api';
 
 export interface RequestsTabProps {
   serviceId: string;
-  onGoToSettings: () => void;
   onGoToLogs?: (requestId: string) => void;
 }
 
@@ -253,22 +251,22 @@ function PathAggregateTable({
     <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark overflow-hidden">
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-ui-border-dark px-4 py-3">
         <div>
-          <h3 className="text-sm font-black text-slate-900 dark:text-white">엔드포인트별 집계</h3>
-          <p className="text-xs text-slate-500 dark:text-text-muted-dark">최근 요청을 경로별로 집계합니다.</p>
+          <h3 className="text-sm font-black text-slate-900 dark:text-white">Endpoint summary</h3>
+          <p className="text-xs text-slate-500 dark:text-text-muted-dark">Recent requests grouped by route.</p>
         </div>
-        <span className="font-mono text-xs text-slate-400 dark:text-text-dim-dark">{items.length} 엔드포인트</span>
+        <span className="font-mono text-xs text-slate-400 dark:text-text-dim-dark">{items.length} endpoints</span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50/70 dark:bg-ui-hover-dark/30 text-[11px] uppercase tracking-wide text-slate-400 dark:text-text-dim-dark">
-              <th className="px-4 py-2.5">메서드</th>
-              <th className="px-4 py-2.5">경로</th>
-              <th className="px-4 py-2.5 text-right">요청 수</th>
-              <th className="px-4 py-2.5">에러율</th>
-              <th className="px-4 py-2.5">응답시간</th>
-              <th className="px-4 py-2.5">활동</th>
-              <th className="px-4 py-2.5 text-right">마지막</th>
+              <th className="px-4 py-2.5">Method</th>
+              <th className="px-4 py-2.5">Path</th>
+              <th className="px-4 py-2.5 text-right">Requests</th>
+              <th className="px-4 py-2.5">Errors</th>
+              <th className="px-4 py-2.5">Latency</th>
+              <th className="px-4 py-2.5">Trend</th>
+              <th className="px-4 py-2.5 text-right">Last seen</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-ui-border-dark/60">
@@ -305,7 +303,7 @@ function PathAggregateTable({
                   <td className="px-4 py-3">
                     <MiniBars buckets={item.buckets} errorBuckets={item.errorBuckets} />
                   </td>
-                  <td className="px-4 py-3 text-right text-xs text-slate-500 dark:text-text-muted-dark">{formatTimeAgo(item.lastSeen)} 전</td>
+                  <td className="px-4 py-3 text-right text-xs text-slate-500 dark:text-text-muted-dark">{formatTimeAgo(item.lastSeen)} ago</td>
                 </tr>
               );
             })}
@@ -362,20 +360,20 @@ function RequestRow({
           <td colSpan={8} className="px-4 pb-4 pt-1">
             <div className="ml-8 space-y-3">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                <MetaCard label="요청 ID" value={request.requestId} />
-                <MetaCard label="경로 템플릿" value={request.pathTemplate || '-'} />
-                <MetaCard label="클라이언트 IP" value={request.clientIp ?? '-'} />
-                <MetaCard label="수신 시각" value={new Date(request.createdAt).toLocaleString('ko-KR')} />
+                <MetaCard label="Request ID" value={request.requestId} />
+                <MetaCard label="Path template" value={request.pathTemplate || '-'} />
+                <MetaCard label="Client IP" value={request.clientIp ?? '-'} />
+                <MetaCard label="Received at" value={new Date(request.createdAt).toLocaleString('ko-KR')} />
               </div>
               {request.error && (
                 <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-3">
-                  <div className="mb-1 text-xs font-black uppercase text-red-600 dark:text-red-400">에러</div>
+                  <div className="mb-1 text-xs font-black uppercase text-red-600 dark:text-red-400">Error</div>
                   <pre className="whitespace-pre-wrap break-all font-mono text-xs text-red-700 dark:text-red-300">{request.error}</pre>
                 </div>
               )}
               <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark/30 text-xs text-slate-500 dark:text-text-muted-dark">
                 <MaterialIcon name="article" className="text-base shrink-0" />
-                <span className="flex-1">요청/응답 본문은 수집하지 않습니다. 상세 내용은 서비스 로그에서 <code className="bg-slate-200 dark:bg-ui-active-dark px-1 rounded">{request.requestId}</code>로 검색하세요.</span>
+                <span className="flex-1">Request and response bodies are not stored. Search service logs by <code className="bg-slate-200 dark:bg-ui-active-dark px-1 rounded">{request.requestId}</code> for more context.</span>
                 {onGoToLogs && (
                   <button
                     type="button"
@@ -383,7 +381,7 @@ function RequestRow({
                     className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-colors"
                   >
                     <MaterialIcon name="open_in_new" className="text-sm" />
-                    로그에서 보기
+                    濡쒓렇?먯꽌 蹂닿린
                   </button>
                 )}
               </div>
@@ -421,8 +419,8 @@ function RequestsStreamTable({
     <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark overflow-hidden">
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-ui-border-dark px-4 py-3">
         <div>
-          <h3 className="text-sm font-black text-slate-900 dark:text-white">요청 스트림</h3>
-          <p className="text-xs text-slate-500 dark:text-text-muted-dark">{items.length}건 표시</p>
+          <h3 className="text-sm font-black text-slate-900 dark:text-white">Request stream</h3>
+          <p className="text-xs text-slate-500 dark:text-text-muted-dark">{items.length} rows</p>
         </div>
       </div>
       <div className="overflow-x-auto">
@@ -430,13 +428,13 @@ function RequestsStreamTable({
           <thead>
             <tr className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50/70 dark:bg-ui-hover-dark/30 text-[11px] uppercase tracking-wide text-slate-400 dark:text-text-dim-dark">
               <th className="w-10 px-4 py-2.5"></th>
-              <th className="px-4 py-2.5">시각</th>
-              <th className="px-4 py-2.5">메서드</th>
-              <th className="px-4 py-2.5">경로</th>
-              <th className="px-4 py-2.5">상태</th>
-              <th className="px-4 py-2.5 text-right">응답시간</th>
-              <th className="px-4 py-2.5">클라이언트 IP</th>
-              <th className="px-4 py-2.5">요청 ID</th>
+              <th className="px-4 py-2.5">Time</th>
+              <th className="px-4 py-2.5">Method</th>
+              <th className="px-4 py-2.5">Path</th>
+              <th className="px-4 py-2.5">Status</th>
+              <th className="px-4 py-2.5 text-right">Latency</th>
+              <th className="px-4 py-2.5">Client IP</th>
+              <th className="px-4 py-2.5">Request ID</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-ui-border-dark/60">
@@ -461,7 +459,7 @@ function RequestsStreamTable({
                 <td colSpan={8}>
                   <div className="py-14 text-center text-slate-500 dark:text-text-muted-dark">
                     <MaterialIcon name="api" className="text-4xl mb-2 text-slate-300 dark:text-text-dim-dark" />
-                    <p>현재 필터 조건에 맞는 요청이 없습니다.</p>
+                    <p>No requests match the current filters.</p>
                   </div>
                 </td>
               </tr>
@@ -473,7 +471,7 @@ function RequestsStreamTable({
   );
 }
 
-export function RequestsTab({ serviceId, onGoToSettings, onGoToLogs }: RequestsTabProps) {
+export function RequestsTab({ serviceId, onGoToLogs }: RequestsTabProps) {
   const [filterParams, setFilterParams] = useState<ApiRequestListParams>({
     from: new Date(Date.now() - 24 * 3600_000).toISOString(),
   });
@@ -506,11 +504,6 @@ export function RequestsTab({ serviceId, onGoToSettings, onGoToLogs }: RequestsT
     setOffset((prev) => prev + DEFAULT_LIMIT);
   }, []);
 
-  const [captureConfig, setCaptureConfig] = useState<ApiCaptureConfig | null>(null);
-  useEffect(() => {
-    api.getApiCaptureConfig(serviceId).then(setCaptureConfig).catch(() => {});
-  }, [serviceId]);
-
   const exampleRequests = useMemo(() => buildExampleRequests(serviceId), [serviceId]);
   const isExampleMode = !loading && !error && accumulatedItems.length === 0;
   const displayItems = useMemo(
@@ -536,33 +529,19 @@ export function RequestsTab({ serviceId, onGoToSettings, onGoToLogs }: RequestsT
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 xl:grid-cols-5 gap-3">
-        <StatCard label="요청 수" value={displayItems.length} icon="http" tone="primary" />
-        <StatCard label="에러" value={errors} icon="error" tone={errors > 0 ? 'red' : 'slate'} suffix={`${errorRate.toFixed(1)}%`} />
-        <StatCard label="P50 응답시간" value={percentile(durations, 0.5)} icon="speed" tone="sky" suffix="ms" tooltip="전체 요청 중 50%가 이 시간 이하로 응답했습니다 (중앙값)." />
-        <StatCard label="P95 응답시간" value={percentile(durations, 0.95)} icon="monitoring" tone="amber" suffix="ms" tooltip="전체 요청 중 95%가 이 시간 이하로 응답했습니다. 느린 요청의 기준선입니다." />
-        <StatCard label="엔드포인트" value={aggregates.length} icon="account_tree" tone="slate" />
+        <StatCard label="Requests" value={displayItems.length} icon="http" tone="primary" />
+        <StatCard label="Errors" value={errors} icon="error" tone={errors > 0 ? 'red' : 'slate'} suffix={`${errorRate.toFixed(1)}%`} />
+        <StatCard label="P50 latency" value={percentile(durations, 0.5)} icon="speed" tone="sky" suffix="ms" tooltip="50% of requests completed within this latency." />
+        <StatCard label="P95 latency" value={percentile(durations, 0.95)} icon="monitoring" tone="amber" suffix="ms" tooltip="95% of requests completed within this latency." />
+        <StatCard label="Endpoints" value={aggregates.length} icon="account_tree" tone="slate" />
       </div>
 
       {isExampleMode && displayItems.length > 0 && (
         <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-xs text-amber-700 dark:text-amber-300">
           <div className="flex items-center gap-2 font-semibold mb-2">
             <MaterialIcon name="science" className="text-sm" />
-            실제 API 요청 캡처가 없어 예시 데이터로 화면 구성을 보여줍니다.
+            No OTel request projections yet, so example data is shown.
           </div>
-          {captureConfig && (
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-amber-600 dark:text-amber-400 font-medium">
-              <span className="flex items-center gap-1">
-                <MaterialIcon name="filter_alt" className="text-xs" />
-                캡처 모드:&nbsp;
-                <span className="font-bold">{{
-                  disabled: '캡처 안함',
-                  errors_only: '에러만',
-                  sampled: `샘플링 ${captureConfig.sampleRate}%`,
-                  all: '모든 요청',
-                }[captureConfig.mode] ?? captureConfig.mode}</span>
-              </span>
-            </div>
-          )}
         </div>
       )}
 
@@ -585,17 +564,11 @@ export function RequestsTab({ serviceId, onGoToSettings, onGoToLogs }: RequestsT
             <MaterialIcon name="http" className="text-4xl text-slate-400 dark:text-text-dim-dark" />
           </div>
           <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-            아직 캡처된 요청이 없습니다
+            ?꾩쭅 罹≪쿂???붿껌???놁뒿?덈떎
           </h3>
           <p className="text-slate-500 dark:text-text-muted-dark text-center max-w-md mb-6">
-            API 캡처를 설정하면 이 서비스의 HTTP 요청이 기록됩니다.
+            OpenTelemetry SERVER span이 수신되면 HTTP 요청 projection이 여기에 표시됩니다.
           </p>
-          <button
-            onClick={onGoToSettings}
-            className="px-6 py-3 bg-primary hover:bg-primary/90 rounded-lg text-white font-bold transition-colors"
-          >
-            캡처 설정하기
-          </button>
         </div>
       )}
 
@@ -603,7 +576,7 @@ export function RequestsTab({ serviceId, onGoToSettings, onGoToLogs }: RequestsT
         <div className="flex flex-col items-center justify-center py-12 px-4 rounded-xl border border-dashed border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark">
           <MaterialIcon name="search_off" className="text-4xl text-slate-300 dark:text-text-dim-dark mb-3" />
           <p className="text-slate-500 dark:text-text-muted-dark text-sm">
-            현재 필터 조건에 맞는 요청이 없습니다.
+            ?꾩옱 ?꾪꽣 議곌굔??留욌뒗 ?붿껌???놁뒿?덈떎.
           </p>
         </div>
       )}
@@ -624,8 +597,7 @@ export function RequestsTab({ serviceId, onGoToSettings, onGoToLogs }: RequestsT
               <MaterialIcon name="filter_alt" className="text-sm" />
               <span className="font-mono">{pickedPath}</span>
               <button onClick={() => setPickedPath(null)} className="ml-auto rounded px-2 py-1 font-bold hover:bg-primary/10">
-                초기화
-              </button>
+                珥덇린??              </button>
             </div>
           )}
 
@@ -639,14 +611,14 @@ export function RequestsTab({ serviceId, onGoToSettings, onGoToLogs }: RequestsT
 
           {!isExampleMode && accumulatedItems.length > 0 && (
             <div className="flex items-center justify-between text-sm text-slate-500 dark:text-text-muted-dark px-1">
-              <span>{total}건 중 {accumulatedItems.length}건 표시</span>
+              <span>{total}嫄?以?{accumulatedItems.length}嫄??쒖떆</span>
               {accumulatedItems.length < total && (
                 <button
                   onClick={handleLoadMore}
                   disabled={loading}
                   className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-ui-hover-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark font-bold text-slate-700 dark:text-text-secondary-dark transition-colors disabled:opacity-50"
                 >
-                  더 보기
+                  ??蹂닿린
                 </button>
               )}
             </div>

@@ -37,9 +37,7 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	api.Post("/auth/logout", authHandler.Logout)
 
 	// Ingest routes are registered before the JWT group and isolated by prefix.
-	logIngestHandler := handlers.NewLogIngestHandler()
-	apiRequestIngestHandler := handlers.NewApiRequestIngestHandler()
-	apiroutes.RegisterIngestRoutes(api, logIngestHandler, apiRequestIngestHandler)
+	apiroutes.RegisterIngestRoutes(api)
 
 	// JWT-protected management routes
 	local := api.Group("", middleware.JWTAuth())
@@ -51,7 +49,6 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 
 	// Service endpoints
 	serviceHandler := handlers.NewServiceHandler(scheduler)
-	apiCaptureConfigHandler := handlers.NewApiCaptureConfigHandler()
 	local.Get("/services", serviceHandler.GetAll)
 	local.Get("/services/:id", serviceHandler.GetByID)
 	local.Post("/services", serviceHandler.Create)
@@ -60,8 +57,7 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	local.Post("/services/:id/pause", serviceHandler.Pause)
 	local.Post("/services/:id/resume", serviceHandler.Resume)
 	local.Post("/services/:id/regenerate-key", serviceHandler.RegenerateKey)
-	local.Get("/services/:id/api-capture-config", apiCaptureConfigHandler.GetConfig)
-	local.Put("/services/:id/api-capture-config", apiCaptureConfigHandler.UpdateConfig)
+	apiRequestIngestHandler := handlers.NewApiRequestIngestHandler()
 	local.Get("/services/:id/api-requests", apiRequestIngestHandler.List)
 	local.Get("/services/:id/api-requests/:reqId", apiRequestIngestHandler.GetByID)
 

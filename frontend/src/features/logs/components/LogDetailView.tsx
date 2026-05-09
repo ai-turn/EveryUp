@@ -73,11 +73,9 @@ function TabContent({
   serviceId,
   refreshKey,
   onApiKeyRegenerated,
-  onGoToEdit,
   onGoToLogs,
   logInitialSearch,
 }: Pick<LogDetailViewProps, 'activeTab' | 'service' | 'serviceId' | 'refreshKey' | 'onApiKeyRegenerated'> & {
-  onGoToEdit: () => void;
   onGoToLogs: (requestId: string) => void;
   logInitialSearch: string;
 }) {
@@ -87,7 +85,6 @@ function TabContent({
       {activeTab === 'requests' && (
         <RequestsTab
           serviceId={serviceId}
-          onGoToSettings={onGoToEdit}
           onGoToLogs={onGoToLogs}
         />
       )}
@@ -288,7 +285,6 @@ function DesktopLayout(props: LogDetailViewProps) {
         serviceId={serviceId}
         refreshKey={refreshKey}
         onApiKeyRegenerated={onApiKeyRegenerated}
-        onGoToEdit={() => navigate(`/logs/${serviceId}/edit`)}
         onGoToLogs={handleGoToLogs}
         logInitialSearch={logInitialSearch}
       />
@@ -380,7 +376,6 @@ function MobileLayout(props: LogDetailViewProps) {
         serviceId={serviceId}
         refreshKey={refreshKey}
         onApiKeyRegenerated={onApiKeyRegenerated}
-        onGoToEdit={() => navigate(`/logs/${serviceId}/edit`)}
         onGoToLogs={handleGoToLogs}
         logInitialSearch={logInitialSearch}
       />

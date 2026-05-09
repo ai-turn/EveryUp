@@ -129,45 +129,7 @@
     },
     "empty": {
       "title": "캡처된 요청 없음",
-      "description": "아직 캡처된 API 요청이 없습니다. 캡처 설정을 구성해 시작하세요.",
-      "configureCapture": "캡처 설정"
-    },
-    "settings": {
-      "title": "API 요청 캡처",
-      "subtitle": "이 서비스의 요청/응답 캡처 방식을 설정합니다.",
-      "mode": {
-        "label": "캡처 모드",
-        "disabled": "비활성화",
-        "disabledDesc": "요청을 캡처하지 않습니다.",
-        "errorsOnly": "오류만",
-        "errorsOnlyDesc": "5xx 오류 응답만 캡처합니다.",
-        "sampled": "샘플링",
-        "sampledDesc": "모든 요청 중 일부를 캡처합니다.",
-        "all": "전체",
-        "allDesc": "모든 요청을 캡처합니다."
-      },
-      "sampleRate": {
-        "label": "샘플링 비율 (%)",
-        "description": "성공 응답 캡처 비율 (0-100)"
-      },
-      "bodyMaxBytes": {
-        "label": "최대 바디 크기",
-        "description": "저장할 바디 크기 제한"
-      },
-      "maskedHeaders": {
-        "label": "마스킹 헤더",
-        "description": "값을 ***로 마스킹할 헤더 이름",
-        "placeholder": "헤더 이름 추가..."
-      },
-      "maskedBodyFields": {
-        "label": "마스킹 필드",
-        "description": "JSON 바디에서 마스킹할 필드 이름",
-        "placeholder": "필드 이름 추가..."
-      },
-      "save": "저장",
-      "saving": "저장 중...",
-      "saveSuccess": "캡처 설정이 저장되었습니다.",
-      "saveError": "저장 실패"
+      "description": "아직 OTel SERVER span projection이 도착하지 않았습니다."
     }
   },
   "logServices": {
@@ -182,7 +144,7 @@
     },
     "edit": {
       "title": "로그 서비스 수정",
-      "subtitle": "이름, 로그 레벨 필터, API 캡처 설정을 변경합니다.",
+      "subtitle": "이름과 로그 레벨 필터를 변경합니다.",
       "basicInfo": "기본 정보",
       "basicInfoDesc": "서비스 이름을 변경합니다.",
       "levelFilterDesc": "서버에 저장할 로그 레벨을 선택합니다.",

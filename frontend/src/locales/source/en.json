@@ -141,7 +141,6 @@
   "모든 요청을 캡처합니다 (비용 주의)": "Capture every request (high cost)",
   "캡처": "Capture",
   "이 서비스에서 어떤 요청을 캡처할지 선택합니다": "Choose which requests are captured for this service.",
-  "캡처 모드": "Capture Mode",
   "항상 포함": "Always included",
   "5xx 에러 응답은 모드와 샘플 비율에 관계없이 항상 캡처됩니다.": "5xx error responses are always captured regardless of mode or sample rate.",
   "샘플 비율": "Sample Rate",
@@ -168,7 +167,6 @@
   "저장하지 않은 변경사항이 있습니다": "You have unsaved changes.",
   "되돌리기": "Discard",
   "변경사항 저장": "Save changes",
-  "API 캡처 설정이 저장되었습니다": "API capture settings saved.",
   "{rate}% 샘플링": "{rate}% sampled",
   "본문 {size} 제한": "{size} body cap",
   "{count}개 마스킹": "{count} masked"

@@ -19,9 +19,6 @@ jobs:
           - image: aiturn/everyup
             context: .
             dockerfile: Dockerfile
-          - image: aiturn/everyup-log-agent
-            context: log-agent
-            dockerfile: log-agent/Dockerfile
 
     steps:
       - name: Checkout
