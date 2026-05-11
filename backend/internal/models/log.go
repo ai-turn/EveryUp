@@ -16,11 +16,11 @@ const (
 	LogLevelTrace LogLevel = "trace"
 )
 
-// LogSource represents where the log originated from
+// LogSource represents where the log originated from.
+// Only internal (server-generated) and otlp (OTLP ingest) are produced today;
+// older rows may still carry "external" or "agent" until they age out.
 const (
 	LogSourceInternal = "internal"
-	LogSourceExternal = "external"
-	LogSourceAgent    = "agent"
 	LogSourceOTLP     = "otlp"
 )
 

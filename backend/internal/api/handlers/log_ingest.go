@@ -10,7 +10,6 @@ import (
 	"github.com/aiturn/everyup/internal/alerter"
 	"github.com/aiturn/everyup/internal/database"
 	"github.com/aiturn/everyup/internal/models"
-	"github.com/gofiber/fiber/v2"
 )
 
 // errLogFiltered is returned by processEntry when the log level is filtered out by the service config.
@@ -19,7 +18,8 @@ var errLogFiltered = errors.New("log level filtered")
 const maxMessageBytes = 10 * 1024  // 10 KB
 const maxMetadataBytes = 50 * 1024 // 50 KB
 
-// LogIngestHandler handles external log ingestion via API key
+// LogIngestHandler processes log entries that arrive through OTLP and
+// exposes processEntry/triggerAlertIfNeeded helpers to the OTLP handler.
 type LogIngestHandler struct {
 	logRepo      *database.LogRepository
 	ruleRepo     *database.AlertRuleRepository
@@ -33,45 +33,6 @@ func NewLogIngestHandler() *LogIngestHandler {
 		ruleRepo:     database.NewAlertRuleRepository(),
 		alertManager: alerter.NewManager(),
 	}
-}
-
-// ingestBatch processes a batch of log entries
-func (h *LogIngestHandler) ingestBatch(c *fiber.Ctx, service *models.Service, logs []models.LogIngestEntry, source string) error {
-	processed := 0
-	filtered := 0
-	errs := 0
-
-	for i := range logs {
-		logEntry, err := h.processEntry(service, &logs[i], source)
-		if errors.Is(err, errLogFiltered) {
-			filtered++
-			continue
-		}
-		if err != nil {
-			log.Printf("Batch log #%d validation failed: %v", i, err)
-			errs++
-			continue
-		}
-
-		if err := h.logRepo.Create(logEntry); err != nil {
-			log.Printf("Batch log #%d DB failed: %v", i, err)
-			errs++
-			continue
-		}
-
-		h.triggerAlertIfNeeded(service, logEntry, logs[i].Metadata)
-		processed++
-	}
-
-	return c.Status(201).JSON(fiber.Map{
-		"success": true,
-		"data": fiber.Map{
-			"processed": processed,
-			"filtered":  filtered,
-			"errors":    errs,
-			"total":     len(logs),
-		},
-	})
 }
 
 // processEntry validates and converts a single log entry

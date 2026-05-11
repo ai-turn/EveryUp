@@ -135,8 +135,6 @@
       "clientIp": "Client IP",
       "receivedAt": "Received at",
       "error": "Error",
-      "logSearchHintPrefix": "Request and response bodies are not stored. Search service logs by",
-      "logSearchHintSuffix": "for more context.",
       "truncated": "Truncated: showing first {{shown}} bytes of {{total}} bytes total",
       "noBody": "No body",
       "copy": "Copy",
@@ -166,7 +164,6 @@
       "endpoints": "Endpoints"
     },
     "actions": {
-      "viewLogs": "View in logs",
       "clear": "Clear",
       "clearSearch": "Clear search",
       "loadMore": "Load more"

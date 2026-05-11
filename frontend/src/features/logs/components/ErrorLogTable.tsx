@@ -9,7 +9,6 @@ import { TracePanel } from '../../traces/components/TracePanel';
 interface ErrorLogTableProps {
   serviceId?: string;
   refreshKey?: number;
-  initialSearch?: string;
 }
 
 const LIMIT_STEP = 50;
@@ -128,13 +127,13 @@ function HistogramBand({ logs }: { logs: LogEntry[] }) {
   );
 }
 
-export function ErrorLogTable({ serviceId, refreshKey, initialSearch }: ErrorLogTableProps) {
+export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
   const { t } = useTranslation(['logs', 'common']);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState(initialSearch ?? '');
+  const [searchQuery, setSearchQuery] = useState('');
   const [levelFilter, setLevelFilter] = useState<LevelFilter>('all');
   const [isPaused, setIsPaused] = useState(false);
   const [limit, setLimit] = useState(LIMIT_STEP);

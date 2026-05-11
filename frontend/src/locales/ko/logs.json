@@ -135,8 +135,6 @@
       "clientIp": "클라이언트 IP",
       "receivedAt": "수신 시간",
       "error": "오류",
-      "logSearchHintPrefix": "요청과 응답 바디는 저장하지 않습니다. 더 많은 컨텍스트는 서비스 로그에서",
-      "logSearchHintSuffix": "로 검색하세요.",
       "truncated": "일부만 표시 중: 전체 {{total}}바이트 중 {{shown}}바이트",
       "noBody": "바디 없음",
       "copy": "복사",
@@ -166,7 +164,6 @@
       "endpoints": "엔드포인트"
     },
     "actions": {
-      "viewLogs": "로그에서 보기",
       "clear": "초기화",
       "clearSearch": "검색어 지우기",
       "loadMore": "더 보기"

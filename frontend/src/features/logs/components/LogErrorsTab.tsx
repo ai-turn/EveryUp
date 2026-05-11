@@ -21,8 +21,7 @@ const LEVEL_STYLES = {
 
 const SOURCE_LABELS: Record<string, string> = {
   internal: '내부',
-  external: '외부',
-  agent: 'Agent',
+  otlp: 'OTLP',
 };
 
 const COL = '68px 130px 150px 68px 1fr';

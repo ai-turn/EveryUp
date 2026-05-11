@@ -6,7 +6,6 @@ import { TracePanel } from '../../traces/components/TracePanel';
 
 export interface RequestDetailDrawerProps {
   request: ApiRequest;
-  onViewInLogs?: (requestId: string) => void;
   onClose?: () => void;
 }
 
@@ -63,7 +62,7 @@ function MetaItem({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export function RequestDetailDrawer({ request, onViewInLogs }: RequestDetailDrawerProps) {
+export function RequestDetailDrawer({ request }: RequestDetailDrawerProps) {
   const [traceOpen, setTraceOpen] = useState(false);
   return (
     <div className="flex-1 overflow-y-auto">
@@ -108,29 +107,6 @@ export function RequestDetailDrawer({ request, onViewInLogs }: RequestDetailDraw
           <div className="flex items-start gap-2 px-3 py-2 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-700/30">
             <MaterialIcon name="error" className="text-sm text-red-500 shrink-0 mt-0.5" />
             <p className="text-xs text-red-700 dark:text-red-300 break-all">{request.error}</p>
-          </div>
-        )}
-
-        {/* View in logs */}
-        {onViewInLogs && (
-          <div className="flex flex-col gap-2 p-4 rounded-xl border border-slate-200 dark:border-ui-border-dark bg-slate-50/60 dark:bg-ui-hover-dark/30">
-            <div className="flex items-center gap-2">
-              <MaterialIcon name="article" className="text-slate-400 text-base" />
-              <span className="text-sm font-semibold text-slate-700 dark:text-text-secondary-dark">
-                요청 본문 / 상세 로그
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 dark:text-text-muted-dark leading-relaxed">
-              API 요청 탭은 메타데이터만 수집합니다. 본문이나 상세 에러 스택이 필요하면 서비스 로그에서 이 <code className="bg-slate-200 dark:bg-ui-active-dark px-1 rounded">request_id</code>로 검색하세요.
-            </p>
-            <button
-              type="button"
-              onClick={() => onViewInLogs(request.requestId)}
-              className="mt-1 self-start flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-colors"
-            >
-              <MaterialIcon name="open_in_new" className="text-sm" />
-              로그에서 보기
-            </button>
           </div>
         )}
 

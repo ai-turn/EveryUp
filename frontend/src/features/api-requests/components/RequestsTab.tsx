@@ -7,7 +7,6 @@ import type { ApiRequest, ApiRequestListParams } from '../../../services/api';
 
 export interface RequestsTabProps {
   serviceId: string;
-  onGoToLogs?: (requestId: string) => void;
 }
 
 const DEFAULT_LIMIT = 50;
@@ -290,13 +289,11 @@ function RequestRow({
   request,
   open,
   onToggle,
-  onGoToLogs,
   t,
 }: {
   request: ApiRequest;
   open: boolean;
   onToggle: () => void;
-  onGoToLogs?: (requestId: string) => void;
   t: (key: string, options?: Record<string, unknown>) => string;
 }) {
   return (
@@ -345,24 +342,6 @@ function RequestRow({
                   <pre className="whitespace-pre-wrap break-all font-mono text-xs text-red-700 dark:text-red-300">{request.error}</pre>
                 </div>
               )}
-              <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark/30 text-xs text-slate-500 dark:text-text-muted-dark">
-                <MaterialIcon name="article" className="text-base shrink-0" />
-                <span className="flex-1">
-                  {t('apiRequests.detail.logSearchHintPrefix')}{' '}
-                  <code className="bg-slate-200 dark:bg-ui-active-dark px-1 rounded">{request.requestId}</code>{' '}
-                  {t('apiRequests.detail.logSearchHintSuffix')}
-                </span>
-                {onGoToLogs && (
-                  <button
-                    type="button"
-                    onClick={() => onGoToLogs(request.requestId)}
-                    className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-colors"
-                  >
-                    <MaterialIcon name="open_in_new" className="text-sm" />
-                    {t('apiRequests.actions.viewLogs')}
-                  </button>
-                )}
-              </div>
             </div>
           </td>
         </tr>
@@ -385,14 +364,12 @@ function RequestsStreamTable({
   loading,
   openId,
   onToggle,
-  onGoToLogs,
   t,
 }: {
   items: ApiRequest[];
   loading: boolean;
   openId: number | null;
   onToggle: (id: number) => void;
-  onGoToLogs?: (requestId: string) => void;
   t: (key: string, options?: Record<string, unknown>) => string;
 }) {
   return (
@@ -431,7 +408,6 @@ function RequestsStreamTable({
                 request={request}
                 open={openId === request.id}
                 onToggle={() => onToggle(request.id)}
-                onGoToLogs={onGoToLogs}
                 t={t}
               />
             ))}
@@ -452,7 +428,7 @@ function RequestsStreamTable({
   );
 }
 
-export function RequestsTab({ serviceId, onGoToLogs }: RequestsTabProps) {
+export function RequestsTab({ serviceId }: RequestsTabProps) {
   const { t } = useTranslation('logs');
   const [filterParams, setFilterParams] = useState<ApiRequestListParams>({
     from: new Date(Date.now() - 24 * 3600_000).toISOString(),
@@ -576,7 +552,6 @@ export function RequestsTab({ serviceId, onGoToLogs }: RequestsTabProps) {
             loading={loading}
             openId={openId}
             onToggle={(id) => setOpenId(openId === id ? null : id)}
-            onGoToLogs={onGoToLogs}
             t={t}
           />
 

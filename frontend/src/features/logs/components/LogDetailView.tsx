@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon, Toggle } from '../../../components/common';
@@ -73,21 +72,11 @@ function TabContent({
   serviceId,
   refreshKey,
   onApiKeyRegenerated,
-  onGoToLogs,
-  logInitialSearch,
-}: Pick<LogDetailViewProps, 'activeTab' | 'service' | 'serviceId' | 'refreshKey' | 'onApiKeyRegenerated'> & {
-  onGoToLogs: (requestId: string) => void;
-  logInitialSearch: string;
-}) {
+}: Pick<LogDetailViewProps, 'activeTab' | 'service' | 'serviceId' | 'refreshKey' | 'onApiKeyRegenerated'>) {
   return (
     <>
-      {activeTab === 'logs' && <ErrorLogTable serviceId={serviceId} refreshKey={refreshKey} initialSearch={logInitialSearch} />}
-      {activeTab === 'requests' && (
-        <RequestsTab
-          serviceId={serviceId}
-          onGoToLogs={onGoToLogs}
-        />
-      )}
+      {activeTab === 'logs' && <ErrorLogTable serviceId={serviceId} refreshKey={refreshKey} />}
+      {activeTab === 'requests' && <RequestsTab serviceId={serviceId} />}
       {activeTab === 'integration' && (
         <IntegrationPanel service={service} onApiKeyRegenerated={onApiKeyRegenerated} />
       )}
@@ -228,12 +217,6 @@ function DesktopLayout(props: LogDetailViewProps) {
     onApiKeyRegenerated, onRevealedKeyClose, onCopyKey,
   } = props;
 
-  const [logInitialSearch, setLogInitialSearch] = useState('');
-  const handleGoToLogs = (requestId: string) => {
-    setLogInitialSearch(requestId);
-    onTabChange('logs');
-  };
-
   const tabs: { key: TabKey; label: string; icon: string }[] = [
     { key: 'logs',        label: t('logServices.detail.tabs.logs'),        icon: 'article'                  },
     { key: 'requests',    label: t('apiRequests.tabs.requests'),           icon: 'http'                     },
@@ -285,8 +268,6 @@ function DesktopLayout(props: LogDetailViewProps) {
         serviceId={serviceId}
         refreshKey={refreshKey}
         onApiKeyRegenerated={onApiKeyRegenerated}
-        onGoToLogs={handleGoToLogs}
-        logInitialSearch={logInitialSearch}
       />
 
       {isDeleteDialogOpen && (
@@ -317,12 +298,6 @@ function MobileLayout(props: LogDetailViewProps) {
     onDeleteDialogOpen, onDeleteDialogClose,
     onApiKeyRegenerated, onRevealedKeyClose, onCopyKey,
   } = props;
-
-  const [logInitialSearch, setLogInitialSearch] = useState('');
-  const handleGoToLogs = (requestId: string) => {
-    setLogInitialSearch(requestId);
-    onTabChange('logs');
-  };
 
   const tabs: { key: TabKey; label: string; icon: string }[] = [
     { key: 'logs',        label: t('logServices.detail.tabs.logs'),        icon: 'article'                  },
@@ -376,8 +351,6 @@ function MobileLayout(props: LogDetailViewProps) {
         serviceId={serviceId}
         refreshKey={refreshKey}
         onApiKeyRegenerated={onApiKeyRegenerated}
-        onGoToLogs={handleGoToLogs}
-        logInitialSearch={logInitialSearch}
       />
 
       {isDeleteDialogOpen && (

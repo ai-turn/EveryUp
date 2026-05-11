@@ -39,8 +39,7 @@ const LEVEL_STYLES: Record<string, { dot: string; badge: string; rowHover: strin
 
 const SOURCE_LABELS: Record<string, string> = {
   internal: '내부',
-  external: '외부',
-  agent: 'Agent',
+  otlp: 'OTLP',
 };
 
 const ALL_LEVELS: LogLevel[] = ['error', 'warn', 'info', 'debug', 'trace'];
