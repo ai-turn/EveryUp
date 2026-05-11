@@ -174,8 +174,7 @@
     "pagination": {
       "showing": "Showing {{shown}} of {{total}}"
     },
-    "timeAgo": "{{value}} ago",
-    "exampleMode": "No OTel request projections yet, so example data is shown."
+    "timeAgo": "{{value}} ago"
   },
   "logServices": {
     "viewLogs": "View Logs",

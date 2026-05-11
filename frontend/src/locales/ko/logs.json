@@ -174,8 +174,7 @@
     "pagination": {
       "showing": "전체 {{total}}개 중 {{shown}}개 표시"
     },
-    "timeAgo": "{{value}} 전",
-    "exampleMode": "아직 OTel 요청 projection이 없어 예시 데이터를 표시합니다."
+    "timeAgo": "{{value}} 전"
   },
   "logServices": {
     "viewLogs": "로그 보기",

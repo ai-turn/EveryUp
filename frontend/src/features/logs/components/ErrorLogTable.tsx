@@ -47,102 +47,6 @@ function shortTraceId(traceId: string): string {
   return traceId.length <= 16 ? traceId : `${traceId.slice(0, 16)}...`;
 }
 
-function buildExampleLogs(serviceId?: string): LogEntry[] {
-  const now = Date.now();
-  const ago = (minutes: number) => new Date(now - minutes * 60_000).toISOString();
-  const id = serviceId || 'example-log-service';
-
-  return [
-    {
-      id: 9001,
-      serviceId: id,
-      serviceName: 'Example API',
-      level: 'error',
-      message: 'TypeError: Cannot read properties of undefined (reading "id") at processOrder',
-      source: 'external',
-      fingerprint: 'example-typeerror-order-id',
-      metadata: {
-        requestId: 'req_EXAMPLE_8X2',
-        path: '/api/v2/orders',
-        method: 'POST',
-        release: 'v2.4.1',
-      },
-      createdAt: ago(2),
-    },
-    {
-      id: 9002,
-      serviceId: id,
-      serviceName: 'Example API',
-      level: 'error',
-      message: 'TypeError: Cannot read properties of undefined (reading "id") at processOrder',
-      source: 'external',
-      fingerprint: 'example-typeerror-order-id',
-      metadata: {
-        requestId: 'req_EXAMPLE_8X7',
-        path: '/api/v2/orders',
-        method: 'POST',
-        release: 'v2.4.1',
-      },
-      createdAt: ago(18),
-    },
-    {
-      id: 9003,
-      serviceId: id,
-      serviceName: 'Example API',
-      level: 'error',
-      message: 'upstream timeout after 5000ms: billing-svc /charge',
-      source: 'agent',
-      fingerprint: 'example-billing-timeout',
-      metadata: {
-        requestId: 'req_EXAMPLE_KKP',
-        upstream: 'billing-svc',
-        timeoutMs: 5000,
-      },
-      createdAt: ago(41),
-    },
-    {
-      id: 9004,
-      serviceId: id,
-      serviceName: 'Example API',
-      level: 'warn',
-      message: 'rate-limit: 92% of window used for client 10.0.4.12',
-      source: 'internal',
-      fingerprint: 'example-rate-limit-window',
-      metadata: {
-        ip: '10.0.4.12',
-        used: 552,
-        limit: 600,
-        windowSec: 60,
-      },
-      createdAt: ago(7),
-    },
-    {
-      id: 9005,
-      serviceId: id,
-      serviceName: 'Example API',
-      level: 'warn',
-      message: 'slow query: SELECT * FROM events WHERE created_at > $1 took 1284ms',
-      source: 'internal',
-      fingerprint: 'example-slow-query-events',
-      metadata: {
-        table: 'events',
-        durationMs: 1284,
-        thresholdMs: 1000,
-      },
-      createdAt: ago(63),
-    },
-    {
-      id: 9006,
-      serviceId: id,
-      serviceName: 'Example API',
-      level: 'info',
-      message: 'worker pool scaled up to 8 concurrent processors',
-      source: 'internal',
-      createdAt: ago(96),
-    },
-  ];
-}
-
 function formatTimestamp(timestamp: string): string {
   return new Date(timestamp).toLocaleString([], {
     month: 'short',
@@ -263,9 +167,7 @@ export function ErrorLogTable({ serviceId, refreshKey, initialSearch }: ErrorLog
   }, [serviceId, refreshKey, isPaused, levelFilter, limit, t]);
 
   const debouncedSearch = useDebouncedValue(searchQuery);
-  const exampleLogs = useMemo(() => buildExampleLogs(serviceId), [serviceId]);
-  const isExampleMode = !error && logs.length === 0;
-  const sourceLogs = isExampleMode ? exampleLogs : logs;
+  const sourceLogs = logs;
 
   const filteredLogs = useMemo(() => {
     const q = debouncedSearch.toLowerCase();
@@ -313,12 +215,6 @@ export function ErrorLogTable({ serviceId, refreshKey, initialSearch }: ErrorLog
       <HistogramBand logs={filteredLogs.filter((log) => log.level === 'error' || log.level === 'warn')} />
 
       <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark overflow-hidden">
-        {isExampleMode && (
-          <div className="flex items-center gap-2 border-b border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-2 text-xs font-semibold text-amber-700 dark:text-amber-300">
-            <MaterialIcon name="science" className="text-sm" />
-            실제 수집 로그가 없어 예시 데이터로 화면 구성을 보여줍니다.
-          </div>
-        )}
         {/* Single filter row */}
         <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 dark:border-ui-border-dark px-4 py-2.5">
           {/* Level badge filters */}
@@ -433,7 +329,7 @@ export function ErrorLogTable({ serviceId, refreshKey, initialSearch }: ErrorLog
           </div>
         )}
 
-        {filteredLogs.length > 0 && !isExampleMode && logs.length >= limit && (
+        {filteredLogs.length > 0 && logs.length >= limit && (
           <div className="flex justify-center border-t border-slate-100 dark:border-ui-border-dark px-4 py-4">
             <button
               onClick={() => {

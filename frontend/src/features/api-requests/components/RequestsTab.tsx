@@ -27,20 +27,6 @@ interface PathAggregateItem {
   errorBuckets: number[];
 }
 
-function buildExampleRequests(serviceId: string): ApiRequest[] {
-  const now = Date.now();
-  const ago = (seconds: number) => new Date(now - seconds * 1000).toISOString();
-
-  return [
-    { id: 9101, serviceId, requestId: 'req_EXAMPLE_1001', method: 'GET',   path: '/api/v2/orders/8821',      pathTemplate: '/api/v2/orders/:id',       statusCode: 200, durationMs: 42,   clientIp: '211.234.207.18', isError: false, createdAt: ago(24) },
-    { id: 9102, serviceId, requestId: 'req_EXAMPLE_1002', method: 'POST',  path: '/api/v2/orders',           pathTemplate: '/api/v2/orders',           statusCode: 500, durationMs: 1284, clientIp: '211.234.207.31', isError: true,  error: 'Cannot read properties of undefined (reading "id")', createdAt: ago(47) },
-    { id: 9103, serviceId, requestId: 'req_EXAMPLE_1003', method: 'POST',  path: '/api/v2/billing/charge',   pathTemplate: '/api/v2/billing/charge',   statusCode: 504, durationMs: 5004, clientIp: '211.234.207.88', isError: true,  error: 'billing-svc timeout after 5000ms', createdAt: ago(93) },
-    { id: 9104, serviceId, requestId: 'req_EXAMPLE_1004', method: 'PATCH', path: '/api/v2/users/me',         pathTemplate: '/api/v2/users/me',         statusCode: 422, durationMs: 73,   clientIp: '211.234.207.42', isError: true,  error: 'validation failed: email', createdAt: ago(130) },
-    { id: 9105, serviceId, requestId: 'req_EXAMPLE_1005', method: 'GET',   path: '/api/v2/reports/safe-eye', pathTemplate: '/api/v2/reports/:type',    statusCode: 200, durationMs: 218,  clientIp: '211.234.207.15', isError: false, createdAt: ago(260) },
-    { id: 9106, serviceId, requestId: 'req_EXAMPLE_1006', method: 'GET',   path: '/api/v2/orders/8821',      pathTemplate: '/api/v2/orders/:id',       statusCode: 200, durationMs: 39,   clientIp: '211.234.207.18', isError: false, createdAt: ago(390) },
-  ];
-}
-
 function isDefaultParams(params: ApiRequestListParams): boolean {
   return (
     !params.search &&
@@ -50,27 +36,6 @@ function isDefaultParams(params: ApiRequestListParams): boolean {
     !params.pathPrefix &&
     !params.errorsOnly
   );
-}
-
-function applyClientFilters(items: ApiRequest[], params: ApiRequestListParams): ApiRequest[] {
-  const search = (params.search ?? '').trim().toLowerCase();
-  return items.filter((item) => {
-    if (params.method && item.method.toUpperCase() !== params.method.toUpperCase()) return false;
-    if (params.minStatus !== undefined && item.statusCode < params.minStatus) return false;
-    if (params.maxStatus !== undefined && item.statusCode > params.maxStatus) return false;
-    if (params.errorsOnly && !item.isError) return false;
-    if (params.pathPrefix && !(item.pathTemplate || item.path).startsWith(params.pathPrefix)) return false;
-    if (search) {
-      const haystack = [
-        item.path,
-        item.pathTemplate,
-        item.requestId,
-        item.error,
-      ].join(' ').toLowerCase();
-      if (!haystack.includes(search)) return false;
-    }
-    return true;
-  });
 }
 
 function formatDuration(ms: number): string {
@@ -521,12 +486,7 @@ export function RequestsTab({ serviceId, onGoToLogs }: RequestsTabProps) {
     setOffset((prev) => prev + DEFAULT_LIMIT);
   }, []);
 
-  const exampleRequests = useMemo(() => buildExampleRequests(serviceId), [serviceId]);
-  const isExampleMode = !loading && !error && accumulatedItems.length === 0;
-  const displayItems = useMemo(
-    () => isExampleMode ? applyClientFilters(exampleRequests, filterParams) : accumulatedItems,
-    [isExampleMode, exampleRequests, filterParams, accumulatedItems],
-  );
+  const displayItems = accumulatedItems;
 
   const aggregates = useMemo(() => aggregateByPath(displayItems), [displayItems]);
   const visibleItems = useMemo(
@@ -539,7 +499,7 @@ export function RequestsTab({ serviceId, onGoToLogs }: RequestsTabProps) {
   const errorRate = displayItems.length === 0 ? 0 : (errors / displayItems.length) * 100;
 
   const showEmpty =
-    !isExampleMode && !loading && !error && accumulatedItems.length === 0 && isDefaultParams(filterParams);
+    !loading && !error && accumulatedItems.length === 0 && isDefaultParams(filterParams);
   const showNoResults =
     !loading && !error && displayItems.length === 0 && !isDefaultParams(filterParams);
 
@@ -552,15 +512,6 @@ export function RequestsTab({ serviceId, onGoToLogs }: RequestsTabProps) {
         <StatCard label={t('apiRequests.stats.p95')} value={percentile(durations, 0.95)} icon="monitoring" tone="amber" suffix="ms" tooltip={t('apiRequests.stats.p95Tooltip')} />
         <StatCard label={t('apiRequests.stats.endpoints')} value={aggregates.length} icon="account_tree" tone="slate" />
       </div>
-
-      {isExampleMode && displayItems.length > 0 && (
-        <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-xs text-amber-700 dark:text-amber-300">
-          <div className="flex items-center gap-2 font-semibold mb-2">
-            <MaterialIcon name="science" className="text-sm" />
-            {t('apiRequests.exampleMode')}
-          </div>
-        </div>
-      )}
 
       <RequestFilters
         params={filterParams}
@@ -629,7 +580,7 @@ export function RequestsTab({ serviceId, onGoToLogs }: RequestsTabProps) {
             t={t}
           />
 
-          {!isExampleMode && accumulatedItems.length > 0 && (
+          {accumulatedItems.length > 0 && (
             <div className="flex items-center justify-between text-sm text-slate-500 dark:text-text-muted-dark px-1">
               <span>{t('apiRequests.pagination.showing', { shown: accumulatedItems.length, total })}</span>
               {accumulatedItems.length < total && (
