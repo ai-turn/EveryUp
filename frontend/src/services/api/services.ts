@@ -135,6 +135,14 @@ export interface UptimeParams {
   days?: string;
 }
 
+export interface LinkedRequest {
+  id: number;
+  method: string;
+  path: string;
+  statusCode: number;
+  isError: boolean;
+}
+
 export interface LogEntry {
   id: number;
   serviceId: string;
@@ -147,6 +155,7 @@ export interface LogEntry {
   traceId?: string;
   spanId?: string;
   createdAt: string;
+  linkedRequest?: LinkedRequest;
 }
 
 export interface LogsParams {
@@ -154,6 +163,7 @@ export interface LogsParams {
   from?: string;
   to?: string;
   limit?: string;
+  traceId?: string;
 }
 
 export interface Incident {
@@ -230,6 +240,7 @@ export interface ApiRequestListParams {
   search?: string;
   from?: string;
   to?: string;
+  traceId?: string;
 }
 
 export interface ApiRequestListResponse {
@@ -359,6 +370,7 @@ export function createServicesApi(request: RequestFn) {
             if (params.search !== undefined) p.set('search', params.search);
             if (params.from !== undefined) p.set('from', params.from);
             if (params.to !== undefined) p.set('to', params.to);
+            if (params.traceId !== undefined) p.set('traceId', params.traceId);
             const s = p.toString();
             return s ? `?${s}` : '';
           })()

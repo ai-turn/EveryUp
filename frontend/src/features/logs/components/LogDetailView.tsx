@@ -17,6 +17,7 @@ export interface LogDetailViewProps {
   refreshKey: number;
   isLive: boolean;
   activeTab: TabKey;
+  traceFilter: string | null;
   isDeleteDialogOpen: boolean;
   isDeleting: boolean;
   revealedKey: string | null;
@@ -30,6 +31,7 @@ export interface LogDetailViewProps {
   onApiKeyRegenerated: (newKey: string, maskedKey: string) => void;
   onRevealedKeyClose: () => void;
   onCopyKey: (key: string) => void;
+  onClearTraceFilter: () => void;
 }
 
 // --- 공통 서브컴포넌트 ---
@@ -71,12 +73,27 @@ function TabContent({
   service,
   serviceId,
   refreshKey,
+  traceFilter,
   onApiKeyRegenerated,
-}: Pick<LogDetailViewProps, 'activeTab' | 'service' | 'serviceId' | 'refreshKey' | 'onApiKeyRegenerated'>) {
+  onClearTraceFilter,
+}: Pick<LogDetailViewProps, 'activeTab' | 'service' | 'serviceId' | 'refreshKey' | 'traceFilter' | 'onApiKeyRegenerated' | 'onClearTraceFilter'>) {
   return (
     <>
-      {activeTab === 'logs' && <ErrorLogTable serviceId={serviceId} refreshKey={refreshKey} />}
-      {activeTab === 'requests' && <RequestsTab serviceId={serviceId} />}
+      {activeTab === 'logs' && (
+        <ErrorLogTable
+          serviceId={serviceId}
+          refreshKey={refreshKey}
+          traceFilter={traceFilter}
+          onClearTraceFilter={onClearTraceFilter}
+        />
+      )}
+      {activeTab === 'requests' && (
+        <RequestsTab
+          serviceId={serviceId}
+          initialTraceId={traceFilter}
+          onClearTraceFilter={onClearTraceFilter}
+        />
+      )}
       {activeTab === 'integration' && (
         <IntegrationPanel service={service} onApiKeyRegenerated={onApiKeyRegenerated} />
       )}
@@ -211,10 +228,11 @@ function DesktopLayout(props: LogDetailViewProps) {
   const navigate = useNavigate();
   const {
     service, serviceId, refreshKey, isLive,
-    activeTab, isDeleteDialogOpen, isDeleting, revealedKey, revealCountdown,
+    activeTab, traceFilter, isDeleteDialogOpen, isDeleting, revealedKey, revealCountdown,
     onTabChange, onLiveToggle, onRefresh, onDelete,
     onDeleteDialogOpen, onDeleteDialogClose,
     onApiKeyRegenerated, onRevealedKeyClose, onCopyKey,
+    onClearTraceFilter,
   } = props;
 
   const tabs: { key: TabKey; label: string; icon: string }[] = [
@@ -267,7 +285,9 @@ function DesktopLayout(props: LogDetailViewProps) {
         service={service}
         serviceId={serviceId}
         refreshKey={refreshKey}
+        traceFilter={traceFilter}
         onApiKeyRegenerated={onApiKeyRegenerated}
+        onClearTraceFilter={onClearTraceFilter}
       />
 
       {isDeleteDialogOpen && (
@@ -293,10 +313,11 @@ function MobileLayout(props: LogDetailViewProps) {
   const navigate = useNavigate();
   const {
     service, serviceId, refreshKey, isLive,
-    activeTab, isDeleteDialogOpen, isDeleting, revealedKey, revealCountdown,
+    activeTab, traceFilter, isDeleteDialogOpen, isDeleting, revealedKey, revealCountdown,
     onTabChange, onLiveToggle, onRefresh, onDelete,
     onDeleteDialogOpen, onDeleteDialogClose,
     onApiKeyRegenerated, onRevealedKeyClose, onCopyKey,
+    onClearTraceFilter,
   } = props;
 
   const tabs: { key: TabKey; label: string; icon: string }[] = [
@@ -350,7 +371,9 @@ function MobileLayout(props: LogDetailViewProps) {
         service={service}
         serviceId={serviceId}
         refreshKey={refreshKey}
+        traceFilter={traceFilter}
         onApiKeyRegenerated={onApiKeyRegenerated}
+        onClearTraceFilter={onClearTraceFilter}
       />
 
       {isDeleteDialogOpen && (

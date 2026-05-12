@@ -77,6 +77,9 @@ func (h *ApiRequestsHandler) List(c *fiber.Ctx) error {
 	if v := c.Query("search"); v != "" {
 		filter.Search = v
 	}
+	if v := c.Query("traceId"); v != "" {
+		filter.TraceID = v
+	}
 	if c.Query("errorsOnly") == "true" {
 		filter.ErrorsOnly = true
 	}

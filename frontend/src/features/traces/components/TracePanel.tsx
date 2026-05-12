@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from '../../../components/common';
 import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
 import { getErrorMessage } from '../../../utils/errors';
@@ -7,6 +9,12 @@ import { api, TraceDetail, TraceSpan, LogEntry, ApiRequest } from '../../../serv
 interface TracePanelProps {
   traceId: string;
   onClose: () => void;
+}
+
+// Returns the log-service detail path for a given serviceId. Cross-jump only
+// renders when the panel is opened from within a service context.
+function logServicePath(serviceId: string, tab: 'logs' | 'requests', traceId: string): string {
+  return `/logs/${serviceId}?tab=${tab}&traceId=${encodeURIComponent(traceId)}`;
 }
 
 function formatDuration(ms: number): string {
@@ -49,9 +57,18 @@ function logLevelBadge(level: string): string {
 
 export function TracePanel({ traceId, onClose }: TracePanelProps) {
   const { copy } = useCopyToClipboard();
+  const { t } = useTranslation('logs');
+  const navigate = useNavigate();
+  const { serviceId } = useParams<{ serviceId: string }>();
   const [data, setData] = useState<TraceDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const jumpTo = (tab: 'logs' | 'requests') => {
+    if (!serviceId) return;
+    onClose();
+    navigate(logServicePath(serviceId, tab, traceId));
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -133,6 +150,34 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
           {isEmpty && (
             <div className="text-center py-10 text-sm text-slate-500 dark:text-text-muted-dark">
               No spans, logs, or API requests for this trace.
+            </div>
+          )}
+
+          {!loading && !error && serviceId && (logs.length > 0 || apiRequests.length > 0) && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold text-slate-500 dark:text-text-muted-dark mr-1">
+                {t('apiRequests.tracePanel.jumpTo')}
+              </span>
+              {logs.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => jumpTo('logs')}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/10 cursor-pointer"
+                >
+                  <MaterialIcon name="article" className="text-sm" />
+                  {t('apiRequests.tracePanel.openInLogs', { count: logs.length })}
+                </button>
+              )}
+              {apiRequests.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => jumpTo('requests')}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/10 cursor-pointer"
+                >
+                  <MaterialIcon name="http" className="text-sm" />
+                  {t('apiRequests.tracePanel.openInRequests', { count: apiRequests.length })}
+                </button>
+              )}
             </div>
           )}
 

@@ -26,6 +26,7 @@ func (h *LogHandler) GetAll(c *fiber.Ctx) error {
 		ServiceID: c.Query("serviceId"),
 		Level:     models.LogLevel(c.Query("level")),
 		Search:    c.Query("search"),
+		TraceID:   c.Query("traceId"),
 	}
 
 	// Parse pagination
@@ -85,6 +86,8 @@ func (h *LogHandler) GetByServiceID(c *fiber.Ctx) error {
 	filter := models.LogFilter{
 		ServiceID: serviceID,
 		Level:     models.LogLevel(c.Query("level")),
+		Search:    c.Query("search"),
+		TraceID:   c.Query("traceId"),
 		Limit:     50,
 	}
 

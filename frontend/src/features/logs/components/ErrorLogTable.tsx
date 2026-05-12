@@ -9,6 +9,27 @@ import { TracePanel } from '../../traces/components/TracePanel';
 interface ErrorLogTableProps {
   serviceId?: string;
   refreshKey?: number;
+  traceFilter?: string | null;
+  onClearTraceFilter?: () => void;
+}
+
+function methodBadgeClass(method: string): string {
+  switch (method.toUpperCase()) {
+    case 'GET':    return 'bg-sky-500/10 text-sky-600 dark:text-sky-400';
+    case 'POST':   return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
+    case 'PUT':
+    case 'PATCH':  return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+    case 'DELETE': return 'bg-red-500/10 text-red-600 dark:text-red-400';
+    default:       return 'bg-slate-500/10 text-slate-600 dark:text-slate-400';
+  }
+}
+
+function statusBadgeClass(statusCode: number): string {
+  if (statusCode >= 500) return 'bg-red-500/10 text-red-600 dark:text-red-400';
+  if (statusCode >= 400) return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+  if (statusCode >= 300) return 'bg-sky-500/10 text-sky-600 dark:text-sky-400';
+  if (statusCode >= 200) return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
+  return 'bg-slate-500/10 text-slate-600 dark:text-slate-400';
 }
 
 const LIMIT_STEP = 50;
@@ -92,7 +113,7 @@ function HistogramBand({ logs }: { logs: LogEntry[] }) {
           </p>
         </div>
         <div className="text-right text-xs text-slate-400 dark:text-text-dim-dark">
-          <div className="font-mono">total {total}</div>
+          <div>total {total}</div>
           <div>peak -{23 - peakIndex}h</div>
         </div>
       </div>
@@ -127,7 +148,7 @@ function HistogramBand({ logs }: { logs: LogEntry[] }) {
   );
 }
 
-export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
+export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTraceFilter }: ErrorLogTableProps) {
   const { t } = useTranslation(['logs', 'common']);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -148,6 +169,7 @@ export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
         const params = {
           limit: String(limit),
           ...(levelFilter !== 'all' && { level: levelFilter }),
+          ...(traceFilter ? { traceId: traceFilter } : {}),
         };
         const data = serviceId
           ? await api.getServiceLogs(serviceId, params)
@@ -163,7 +185,7 @@ export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
     };
 
     fetchLogs();
-  }, [serviceId, refreshKey, isPaused, levelFilter, limit, t]);
+  }, [serviceId, refreshKey, isPaused, levelFilter, limit, traceFilter, t]);
 
   const debouncedSearch = useDebouncedValue(searchQuery);
   const sourceLogs = logs;
@@ -211,6 +233,19 @@ export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
 
   return (
     <div className="space-y-4">
+      {traceFilter && (
+        <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-primary">
+          <MaterialIcon name="timeline" className="text-sm" />
+          <span>{t('logs.traceFilter.label')}</span>
+          <code className="font-mono truncate" title={traceFilter}>{shortTraceId(traceFilter)}</code>
+          {onClearTraceFilter && (
+            <button onClick={onClearTraceFilter} className="ml-auto rounded px-2 py-1 font-bold hover:bg-primary/20">
+              {t('logs.traceFilter.clear')}
+            </button>
+          )}
+        </div>
+      )}
+
       <HistogramBand logs={filteredLogs.filter((log) => log.level === 'error' || log.level === 'warn')} />
 
       <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark overflow-hidden">
@@ -284,7 +319,7 @@ export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
               <tbody className="divide-y divide-slate-100 dark:divide-ui-border-dark/60">
                 {filteredLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-ui-hover-dark/30">
-                    <td className="w-28 px-4 py-3 font-mono text-xs text-slate-500 dark:text-text-muted-dark whitespace-nowrap">
+                    <td className="w-28 px-4 py-3 text-xs text-slate-500 dark:text-text-muted-dark whitespace-nowrap">
                       {formatTimestamp(log.createdAt)}
                     </td>
                     <td className="w-24 px-4 py-3">
@@ -292,21 +327,37 @@ export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
                         {log.level}
                       </span>
                     </td>
-                    <td className="px-4 py-3 font-mono text-sm text-slate-700 dark:text-text-base-dark">
+                    <td className="px-4 py-3 text-sm text-slate-700 dark:text-text-base-dark">
                       <div className="flex flex-col gap-1.5">
                         <span>{log.message}</span>
-                        {log.traceId && (
-                          <button
-                            type="button"
-                            onClick={() => setActiveTraceId(log.traceId ?? null)}
-                            className="inline-flex w-fit max-w-full items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary/10"
-                            title={log.traceId}
-                          >
-                            <MaterialIcon name="timeline" className="text-sm" />
-                            <span className="font-mono truncate">{shortTraceId(log.traceId)}</span>
-                            <span className="font-sans">View trace</span>
-                          </button>
-                        )}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {log.linkedRequest && (
+                            <span
+                              className="inline-flex max-w-full items-center gap-1 rounded-md border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark/40 px-2 py-0.5 text-[11px]"
+                              title={`${log.linkedRequest.method} ${log.linkedRequest.path}`}
+                            >
+                              <span className={`rounded px-1 py-px text-[10px] font-black ${methodBadgeClass(log.linkedRequest.method)}`}>
+                                {log.linkedRequest.method.toUpperCase()}
+                              </span>
+                              <span className="font-mono truncate text-slate-700 dark:text-text-base-dark">{log.linkedRequest.path}</span>
+                              <span className={`rounded px-1 py-px text-[10px] font-bold ${statusBadgeClass(log.linkedRequest.statusCode)}`}>
+                                {log.linkedRequest.statusCode}
+                              </span>
+                            </span>
+                          )}
+                          {log.traceId && (
+                            <button
+                              type="button"
+                              onClick={() => setActiveTraceId(log.traceId ?? null)}
+                              className="inline-flex w-fit max-w-full items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary/10 cursor-pointer"
+                              title={log.traceId}
+                            >
+                              <MaterialIcon name="timeline" className="text-sm" />
+                              <span className="truncate">{shortTraceId(log.traceId)}</span>
+                              <span>{t('logs.traceFilter.viewTrace')}</span>
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="w-12 px-4 py-3 text-right">

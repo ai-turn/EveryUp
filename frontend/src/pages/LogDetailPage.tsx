@@ -16,7 +16,7 @@ export function LogDetailPage() {
   const { serviceId } = useParams<{ serviceId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useTranslate();
   const { t: ti } = useTranslation(['logs', 'common']);
   const { copy } = useCopyToClipboard();
@@ -33,6 +33,15 @@ export function LogDetailPage() {
       ? 'integration'
       : 'logs'
   );
+  const traceFilter = searchParams.get('traceId');
+
+  const handleClearTraceFilter = useCallback(() => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('traceId');
+      return next;
+    });
+  }, [setSearchParams]);
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
   const [revealCountdown, setRevealCountdown] = useState(0);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -145,6 +154,7 @@ export function LogDetailPage() {
     refreshKey,
     isLive,
     activeTab,
+    traceFilter,
     isDeleteDialogOpen,
     isDeleting,
     revealedKey,
@@ -158,6 +168,7 @@ export function LogDetailPage() {
     onApiKeyRegenerated: handleApiKeyRegenerated,
     onRevealedKeyClose: () => setRevealedKey(null),
     onCopyKey: copy,
+    onClearTraceFilter: handleClearTraceFilter,
   } as const;
 
   return <LogDetailView {...sharedProps} />;

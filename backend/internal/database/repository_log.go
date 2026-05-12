@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/aiturn/everyup/internal/models"
@@ -63,6 +64,11 @@ func (r *LogRepository) GetAll(filter models.LogFilter) ([]models.Log, int, erro
 		query += " AND l.message LIKE ?"
 		countQuery += " AND l.message LIKE ?"
 		args = append(args, "%"+filter.Search+"%")
+	}
+	if filter.TraceID != "" {
+		query += " AND l.trace_id = ?"
+		countQuery += " AND l.trace_id = ?"
+		args = append(args, filter.TraceID)
 	}
 	if !filter.From.IsZero() {
 		query += " AND l.created_at >= ?"
@@ -142,7 +148,101 @@ func (r *LogRepository) GetAll(filter models.LogFilter) ([]models.Log, int, erro
 		}
 		logs = append(logs, l)
 	}
+	if err := attachLinkedRequests(logs); err != nil {
+		return nil, 0, err
+	}
 	return logs, total, nil
+}
+
+// attachLinkedRequests decorates logs with the earliest api_request matching
+// (service_id, trace_id). Runs as a separate query AFTER rows are closed so
+// it can't deadlock the single SQLite connection. Logs without trace_id are
+// skipped.
+func attachLinkedRequests(logs []models.Log) error {
+	if len(logs) == 0 {
+		return nil
+	}
+
+	// Collect distinct (service_id, trace_id) pairs from logs that have a trace.
+	type key struct{ service, trace string }
+	keys := map[key]struct{}{}
+	traceIDs := map[string]struct{}{}
+	for _, l := range logs {
+		if l.TraceID == "" || l.ServiceID == "" {
+			continue
+		}
+		keys[key{l.ServiceID, l.TraceID}] = struct{}{}
+		traceIDs[l.TraceID] = struct{}{}
+	}
+	if len(traceIDs) == 0 {
+		return nil
+	}
+
+	placeholders := make([]string, 0, len(traceIDs))
+	args := make([]interface{}, 0, len(traceIDs))
+	for id := range traceIDs {
+		placeholders = append(placeholders, "?")
+		args = append(args, id)
+	}
+
+	// Earliest row per (service_id, trace_id). SQLite's "MIN aggregate companion"
+	// trick returns the row matching MIN(created_at) in the same GROUP BY.
+	q := `
+		SELECT service_id, trace_id, id, method, path, status_code, is_error
+		FROM (
+			SELECT service_id, trace_id, id, method, path, status_code, is_error,
+			       created_at,
+			       MIN(created_at) OVER (PARTITION BY service_id, trace_id) AS first_at
+			FROM api_requests
+			WHERE trace_id IN (` + strings.Join(placeholders, ",") + `)
+		)
+		WHERE created_at = first_at
+	`
+	rows, err := DB.Query(q, args...)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	type row struct {
+		method, path string
+		id           int64
+		status       int
+		isError      bool
+	}
+	byKey := map[key]row{}
+	for rows.Next() {
+		var (
+			service, trace, method, path string
+			id                           int64
+			status, isErr                int
+		)
+		if err := rows.Scan(&service, &trace, &id, &method, &path, &status, &isErr); err != nil {
+			return err
+		}
+		k := key{service, trace}
+		if _, ok := keys[k]; !ok {
+			continue
+		}
+		if _, dup := byKey[k]; dup {
+			continue
+		}
+		byKey[k] = row{method: method, path: path, id: id, status: status, isError: isErr == 1}
+	}
+
+	for i := range logs {
+		k := key{logs[i].ServiceID, logs[i].TraceID}
+		if r, ok := byKey[k]; ok {
+			logs[i].LinkedRequest = &models.LinkedRequest{
+				ID:         r.id,
+				Method:     r.method,
+				Path:       r.path,
+				StatusCode: r.status,
+				IsError:    r.isError,
+			}
+		}
+	}
+	return nil
 }
 
 // GetByTraceID returns logs that share the given OTel trace ID, ordered by

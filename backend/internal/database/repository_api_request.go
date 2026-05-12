@@ -206,6 +206,10 @@ func (r *ApiRequestRepository) List(f *models.ApiRequestFilter) ([]models.ApiReq
 	where := "service_id = ?"
 	args := []interface{}{f.ServiceID}
 
+	if f.TraceID != "" {
+		where += " AND trace_id = ?"
+		args = append(args, f.TraceID)
+	}
 	if f.ErrorsOnly {
 		where += " AND is_error = 1"
 	}

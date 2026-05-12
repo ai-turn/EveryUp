@@ -24,6 +24,17 @@ const (
 	LogSourceOTLP     = "otlp"
 )
 
+// LinkedRequest is a minimal projection of an api_request that shares the
+// trace_id+service_id of a Log row, attached for at-a-glance correlation in
+// log tables. Populated by LogRepository.GetAll via a batched lookup.
+type LinkedRequest struct {
+	ID         int64  `json:"id"`
+	Method     string `json:"method"`
+	Path       string `json:"path"`
+	StatusCode int    `json:"statusCode"`
+	IsError    bool   `json:"isError"`
+}
+
 // Log represents a log entry
 type Log struct {
 	ID             int64           `json:"id"`
@@ -41,6 +52,7 @@ type Log struct {
 	Fingerprint    string          `json:"fingerprint,omitempty"`
 	ObservedAt     *time.Time      `json:"observedAt,omitempty"`
 	CreatedAt      time.Time       `json:"createdAt"`
+	LinkedRequest  *LinkedRequest  `json:"linkedRequest,omitempty"`
 }
 
 // LogCreateRequest represents a request to create a log entry
@@ -63,6 +75,7 @@ type LogFilter struct {
 	ServiceID string    `json:"serviceId,omitempty"`
 	Level     LogLevel  `json:"level,omitempty"`
 	Search    string    `json:"search,omitempty"`
+	TraceID   string    `json:"traceId,omitempty"`
 	From      time.Time `json:"from,omitempty"`
 	To        time.Time `json:"to,omitempty"`
 	Limit     int       `json:"limit,omitempty"`

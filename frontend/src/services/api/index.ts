@@ -41,6 +41,7 @@ export type {
   LogEntry,
   LogLevel,
   LogsParams,
+  LinkedRequest,
   Incident,
   HealthStatus,
   ApiRequest,

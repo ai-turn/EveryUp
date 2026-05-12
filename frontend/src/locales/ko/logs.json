@@ -71,6 +71,11 @@
       "debug": "디버그",
       "trace": "트레이스"
     },
+    "traceFilter": {
+      "label": "트레이스로 필터링됨",
+      "clear": "초기화",
+      "viewTrace": "트레이스 보기"
+    },
     "table": {
       "timestamp": "시간",
       "level": "레벨",
@@ -166,7 +171,16 @@
     "actions": {
       "clear": "초기화",
       "clearSearch": "검색어 지우기",
-      "loadMore": "더 보기"
+      "loadMore": "더 보기",
+      "viewTrace": "트레이스 보기"
+    },
+    "traceFilter": {
+      "label": "트레이스로 필터링됨"
+    },
+    "tracePanel": {
+      "jumpTo": "탭에서 보기:",
+      "openInLogs": "로그 ({{count}})",
+      "openInRequests": "API 요청 ({{count}})"
     },
     "pagination": {
       "showing": "전체 {{total}}개 중 {{shown}}개 표시"

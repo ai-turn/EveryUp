@@ -3,10 +3,17 @@ import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from '../../../components/common';
 import { useApiRequests } from '../hooks/useApiRequests';
 import { RequestFilters } from './RequestFilters';
+import { TracePanel } from '../../traces/components/TracePanel';
 import type { ApiRequest, ApiRequestListParams } from '../../../services/api';
 
 export interface RequestsTabProps {
   serviceId: string;
+  initialTraceId?: string | null;
+  onClearTraceFilter?: () => void;
+}
+
+function shortTraceId(traceId: string): string {
+  return traceId.length <= 16 ? traceId : `${traceId.slice(0, 16)}...`;
 }
 
 const DEFAULT_LIMIT = 50;
@@ -289,11 +296,13 @@ function RequestRow({
   request,
   open,
   onToggle,
+  onOpenTrace,
   t,
 }: {
   request: ApiRequest;
   open: boolean;
   onToggle: () => void;
+  onOpenTrace: (traceId: string) => void;
   t: (key: string, options?: Record<string, unknown>) => string;
 }) {
   return (
@@ -315,6 +324,21 @@ function RequestRow({
           <div className="font-mono text-xs font-semibold text-slate-900 dark:text-white truncate">{request.path}</div>
           {request.pathTemplate && request.pathTemplate !== request.path && (
             <div className="font-mono text-[10px] text-slate-400 dark:text-text-dim-dark truncate">{request.pathTemplate}</div>
+          )}
+          {request.traceId && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenTrace(request.traceId!);
+              }}
+              className="mt-1 inline-flex w-fit max-w-full items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-[10px] font-semibold text-primary hover:bg-primary/10 cursor-pointer"
+              title={request.traceId}
+            >
+              <MaterialIcon name="timeline" className="text-xs" />
+              <span className="truncate">{shortTraceId(request.traceId)}</span>
+              <span>{t('apiRequests.actions.viewTrace')}</span>
+            </button>
           )}
         </td>
         <td className="px-4 py-3">
@@ -364,12 +388,14 @@ function RequestsStreamTable({
   loading,
   openId,
   onToggle,
+  onOpenTrace,
   t,
 }: {
   items: ApiRequest[];
   loading: boolean;
   openId: number | null;
   onToggle: (id: number) => void;
+  onOpenTrace: (traceId: string) => void;
   t: (key: string, options?: Record<string, unknown>) => string;
 }) {
   return (
@@ -408,6 +434,7 @@ function RequestsStreamTable({
                 request={request}
                 open={openId === request.id}
                 onToggle={() => onToggle(request.id)}
+                onOpenTrace={onOpenTrace}
                 t={t}
               />
             ))}
@@ -428,15 +455,28 @@ function RequestsStreamTable({
   );
 }
 
-export function RequestsTab({ serviceId }: RequestsTabProps) {
+export function RequestsTab({ serviceId, initialTraceId, onClearTraceFilter }: RequestsTabProps) {
   const { t } = useTranslation('logs');
   const [filterParams, setFilterParams] = useState<ApiRequestListParams>({
     from: new Date(Date.now() - 24 * 3600_000).toISOString(),
+    ...(initialTraceId ? { traceId: initialTraceId } : {}),
   });
   const [offset, setOffset] = useState(0);
   const [pickedPath, setPickedPath] = useState<string | null>(null);
   const [openId, setOpenId] = useState<number | null>(null);
   const [accumulatedItems, setAccumulatedItems] = useState<ApiRequest[]>([]);
+  const [activeTraceId, setActiveTraceId] = useState<string | null>(null);
+
+  // Sync external traceId filter into local params when it changes.
+  useEffect(() => {
+    setFilterParams((prev) => {
+      const next = { ...prev };
+      if (initialTraceId) next.traceId = initialTraceId;
+      else delete next.traceId;
+      return next;
+    });
+    setOffset(0);
+  }, [initialTraceId]);
 
   const fetchParams: ApiRequestListParams = { ...filterParams, limit: DEFAULT_LIMIT, offset };
   const { items, total, loading, error } = useApiRequests(serviceId, fetchParams);
@@ -488,6 +528,19 @@ export function RequestsTab({ serviceId }: RequestsTabProps) {
         <StatCard label={t('apiRequests.stats.p95')} value={percentile(durations, 0.95)} icon="monitoring" tone="amber" suffix="ms" tooltip={t('apiRequests.stats.p95Tooltip')} />
         <StatCard label={t('apiRequests.stats.endpoints')} value={aggregates.length} icon="account_tree" tone="slate" />
       </div>
+
+      {initialTraceId && (
+        <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-primary">
+          <MaterialIcon name="timeline" className="text-sm" />
+          <span>{t('apiRequests.traceFilter.label')}</span>
+          <code className="font-mono truncate" title={initialTraceId}>{shortTraceId(initialTraceId)}</code>
+          {onClearTraceFilter && (
+            <button onClick={onClearTraceFilter} className="ml-auto rounded px-2 py-1 font-bold hover:bg-primary/20">
+              {t('apiRequests.actions.clear')}
+            </button>
+          )}
+        </div>
+      )}
 
       <RequestFilters
         params={filterParams}
@@ -552,6 +605,7 @@ export function RequestsTab({ serviceId }: RequestsTabProps) {
             loading={loading}
             openId={openId}
             onToggle={(id) => setOpenId(openId === id ? null : id)}
+            onOpenTrace={setActiveTraceId}
             t={t}
           />
 
@@ -570,6 +624,10 @@ export function RequestsTab({ serviceId }: RequestsTabProps) {
             </div>
           )}
         </>
+      )}
+
+      {activeTraceId && (
+        <TracePanel traceId={activeTraceId} onClose={() => setActiveTraceId(null)} />
       )}
     </div>
   );

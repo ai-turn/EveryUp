@@ -71,6 +71,11 @@
       "debug": "Debug",
       "trace": "Trace"
     },
+    "traceFilter": {
+      "label": "Filtered by trace",
+      "clear": "Clear",
+      "viewTrace": "View trace"
+    },
     "table": {
       "timestamp": "Time",
       "level": "Level",
@@ -166,7 +171,16 @@
     "actions": {
       "clear": "Clear",
       "clearSearch": "Clear search",
-      "loadMore": "Load more"
+      "loadMore": "Load more",
+      "viewTrace": "View trace"
+    },
+    "traceFilter": {
+      "label": "Filtered by trace"
+    },
+    "tracePanel": {
+      "jumpTo": "Open in:",
+      "openInLogs": "Logs ({{count}})",
+      "openInRequests": "API requests ({{count}})"
     },
     "pagination": {
       "showing": "Showing {{shown}} of {{total}}"
