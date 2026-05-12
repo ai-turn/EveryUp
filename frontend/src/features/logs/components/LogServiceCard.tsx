@@ -104,7 +104,7 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-bold text-sm truncate text-slate-900 dark:text-white">{service.name}</h3>
-          <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-slate-400 dark:text-text-dim-dark">
+          <div className="flex items-center gap-1.5 mt-0.5 text-xs text-slate-400 dark:text-text-dim-dark">
             <span className="font-bold tabular-nums text-slate-600 dark:text-text-muted-dark">{recentLogs.length}</span>
             <span>recent</span>
             <span className="text-slate-300 dark:text-ui-border-dark">·</span>
@@ -138,7 +138,7 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
       {/* Recent log preview */}
       <div className="space-y-1.5 min-h-15">
         {recentLogs.slice(0, 3).map((log) => (
-          <div key={log.id} className="grid grid-cols-[52px_8px_1fr] gap-2 items-center font-mono text-[11px]">
+          <div key={log.id} className="grid grid-cols-[52px_8px_1fr] gap-2 items-center font-mono text-xs">
             <span className="text-slate-400 dark:text-text-dim-dark tabular-nums">{formatClock(log.createdAt)}</span>
             <span className={`w-1.5 h-1.5 rounded-full ${levelDotStyle[log.level]}`} />
             <span className={`${log.level === 'error' ? 'text-red-500' : log.level === 'warn' ? 'text-amber-600 dark:text-amber-400' : 'text-slate-700 dark:text-text-base-dark'} truncate`}>
@@ -157,14 +157,14 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
       {/* Footer: level filter chips + arrow */}
       <div className="flex items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-ui-border-dark/50">
         {allLevels ? (
-          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark">
+          <span className="px-2 py-0.5 rounded text-xs font-bold bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark">
             ALL
           </span>
         ) : (
           levels.map((level) => (
             <span
               key={level}
-              className={`px-2 py-0.5 rounded text-[11px] font-bold uppercase ${levelBadgeStyle[level] ?? 'bg-slate-100 dark:bg-ui-hover-dark text-slate-500'}`}
+              className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${levelBadgeStyle[level] ?? 'bg-slate-100 dark:bg-ui-hover-dark text-slate-500'}`}
             >
               {level === 'warn' ? 'WARN' : level.toUpperCase()}
             </span>

@@ -190,7 +190,7 @@ export function LogErrorsTab({ logs, loading, services, onRefresh }: LogErrorsTa
         <div className="rounded-2xl bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark overflow-hidden">
           {/* Column header */}
           <div
-            className="grid gap-3 px-4 py-2.5 bg-slate-50/70 dark:bg-ui-hover-dark/50 border-b border-slate-100 dark:border-ui-border-dark text-[11px] font-semibold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide"
+            className="grid gap-3 px-4 py-2.5 bg-slate-50/70 dark:bg-ui-hover-dark/50 border-b border-slate-100 dark:border-ui-border-dark text-xs font-semibold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide"
             style={{ gridTemplateColumns: COL }}
           >
             <div>레벨</div>
@@ -202,7 +202,7 @@ export function LogErrorsTab({ logs, loading, services, onRefresh }: LogErrorsTa
 
           {grouped.map((group) => (
             <div key={group.dateLabel}>
-              <div className="px-4 py-1.5 bg-slate-50/40 dark:bg-ui-hover-dark/30 border-b border-t border-slate-100 dark:border-ui-border-dark text-[11px] text-slate-500 dark:text-text-muted-dark font-medium sticky top-0 z-10">
+              <div className="px-4 py-1.5 bg-slate-50/40 dark:bg-ui-hover-dark/30 border-b border-t border-slate-100 dark:border-ui-border-dark text-xs text-slate-500 dark:text-text-muted-dark font-medium sticky top-0 z-10">
                 {group.dateLabel}
               </div>
               {group.entries.map((log) => (
@@ -251,7 +251,7 @@ function ErrorLogRow({
         {/* Level */}
         <div className="flex items-center gap-1.5 pt-0.5">
           <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${style.dot}`} />
-          <span className={`text-[11px] font-bold uppercase px-1.5 py-0.5 rounded ${style.badge}`}>
+          <span className={`text-xs font-bold uppercase px-1.5 py-0.5 rounded ${style.badge}`}>
             {log.level}
           </span>
         </div>
@@ -278,7 +278,7 @@ function ErrorLogRow({
         {/* Source */}
         <div className="pt-0.5">
           {log.source ? (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark font-medium">
+            <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark font-medium">
               {SOURCE_LABELS[log.source] ?? log.source}
             </span>
           ) : (
@@ -289,14 +289,14 @@ function ErrorLogRow({
         {/* Message */}
         <div className="min-w-0 pt-0.5">
           <div className="flex flex-col gap-1.5">
-            <p className={`text-xs text-slate-700 dark:text-text-base-dark font-mono leading-relaxed ${expanded ? '' : 'truncate'}`}>
+            <p className={`text-sm text-slate-700 dark:text-text-base-dark font-mono leading-relaxed ${expanded ? '' : 'truncate'}`}>
               {log.message}
             </p>
             {log.traceId && (
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onOpenTrace(log.traceId ?? ''); }}
-                className="inline-flex w-fit max-w-full items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-[11px] font-semibold text-primary hover:bg-primary/10"
+                className="inline-flex w-fit max-w-full items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary/10"
                 title={log.traceId}
               >
                 <MaterialIcon name="timeline" className="text-sm" />
@@ -314,7 +314,7 @@ function ErrorLogRow({
           className={`px-4 py-3 border-b border-slate-100 dark:border-ui-border-dark ${style.expanded}`}
           style={{ gridColumn: '1 / -1' }}
         >
-          <p className="text-xs font-mono text-slate-700 dark:text-text-base-dark whitespace-pre-wrap break-all leading-relaxed mb-2">
+          <p className="text-sm font-mono text-slate-700 dark:text-text-base-dark whitespace-pre-wrap break-all leading-relaxed mb-2">
             {log.message}
           </p>
           {(log.traceId || log.spanId) && (
@@ -323,7 +323,7 @@ function ErrorLogRow({
                 <button
                   type="button"
                   onClick={() => onOpenTrace(log.traceId ?? '')}
-                  className="inline-flex max-w-full items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-1 text-[11px] font-semibold text-primary hover:bg-primary/10"
+                  className="inline-flex max-w-full items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-1 text-xs font-semibold text-primary hover:bg-primary/10"
                   title={log.traceId}
                 >
                   <MaterialIcon name="timeline" className="text-sm" />
@@ -332,7 +332,7 @@ function ErrorLogRow({
                 </button>
               )}
               {log.spanId && (
-                <span className="inline-flex max-w-full items-center gap-1 rounded-md border border-slate-200 dark:border-ui-border-dark bg-white/70 dark:bg-bg-surface-dark/70 px-2 py-1 text-[11px] font-mono text-slate-500 dark:text-text-muted-dark">
+                <span className="inline-flex max-w-full items-center gap-1 rounded-md border border-slate-200 dark:border-ui-border-dark bg-white/70 dark:bg-bg-surface-dark/70 px-2 py-1 text-xs font-mono text-slate-500 dark:text-text-muted-dark">
                   <MaterialIcon name="account_tree" className="text-sm" />
                   <span className="truncate" title={log.spanId}>{log.spanId}</span>
                 </span>
@@ -340,7 +340,7 @@ function ErrorLogRow({
             </div>
           )}
           {log.metadata && Object.keys(log.metadata).length > 0 && (
-            <pre className="text-[11px] font-mono text-slate-500 dark:text-text-muted-dark bg-slate-100/60 dark:bg-ui-hover-dark/60 rounded-lg p-3 overflow-x-auto">
+            <pre className="text-xs font-mono text-slate-500 dark:text-text-muted-dark bg-slate-100/60 dark:bg-ui-hover-dark/60 rounded-lg p-3 overflow-x-auto">
               {JSON.stringify(log.metadata, null, 2)}
             </pre>
           )}

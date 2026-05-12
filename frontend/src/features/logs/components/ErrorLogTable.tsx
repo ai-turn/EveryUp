@@ -84,7 +84,7 @@ function HistogramBand({ logs }: { logs: LogEntry[] }) {
     <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark p-4">
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
-          <h3 className="text-sm font-black text-slate-900 dark:text-white">
+          <h3 className="text-base font-bold text-slate-900 dark:text-white">
             24h Distribution
           </h3>
           <p className="mt-0.5 text-xs text-slate-500 dark:text-text-muted-dark">
@@ -224,7 +224,7 @@ export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
                 <button
                   key={level}
                   onClick={() => setLevelFilter(level)}
-                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold transition-colors whitespace-nowrap ${
+                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold transition-colors whitespace-nowrap ${
                     isActive ? levelActiveStyle[level] : levelInactiveStyle
                   }`}
                 >
@@ -253,7 +253,7 @@ export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
             </div>
             <button
               onClick={() => setIsPaused(!isPaused)}
-              className={`flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-bold transition-colors ${
+              className={`flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-bold transition-colors ${
                 isPaused
                   ? 'border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
                   : 'border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark'
@@ -288,18 +288,18 @@ export function ErrorLogTable({ serviceId, refreshKey }: ErrorLogTableProps) {
                       {formatTimestamp(log.createdAt)}
                     </td>
                     <td className="w-24 px-4 py-3">
-                      <span className={`rounded px-2 py-0.5 text-[11px] font-black uppercase ${levelToneStyle[log.level]}`}>
+                      <span className={`rounded px-2 py-0.5 text-xs font-black uppercase ${levelToneStyle[log.level]}`}>
                         {log.level}
                       </span>
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-slate-700 dark:text-text-base-dark">
+                    <td className="px-4 py-3 font-mono text-sm text-slate-700 dark:text-text-base-dark">
                       <div className="flex flex-col gap-1.5">
                         <span>{log.message}</span>
                         {log.traceId && (
                           <button
                             type="button"
                             onClick={() => setActiveTraceId(log.traceId ?? null)}
-                            className="inline-flex w-fit max-w-full items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-[11px] font-semibold text-primary hover:bg-primary/10"
+                            className="inline-flex w-fit max-w-full items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary/10"
                             title={log.traceId}
                           >
                             <MaterialIcon name="timeline" className="text-sm" />
