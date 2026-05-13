@@ -21,19 +21,7 @@
       "keepAliveInterval": 30
     }
   },
-  "services": [
-    {
-      "id": "example-api",
-      "name": "Example API",
-      "type": "http",
-      "url": "https://jsonplaceholder.typicode.com/posts/1",
-      "method": "GET",
-      "interval": 30,
-      "timeout": 5000,
-      "expectedStatus": 200,
-      "tags": ["example", "api"]
-    }
-  ],
+  "services": [],
   "alerts": {
     "enabled": false,
     "consecutiveFailures": 3,

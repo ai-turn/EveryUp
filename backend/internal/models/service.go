@@ -62,6 +62,11 @@ type Service struct {
 	// Log level filter (log-type services only). nil/empty = accept all levels.
 	LogLevelFilter []LogLevel `json:"logLevelFilter,omitempty"`
 
+	// API request path exclusions. Spans whose path matches any entry are
+	// dropped at OTLP ingest time. Supports exact (/health) and prefix
+	// wildcard (/actuator/*) matching.
+	ApiExcludePaths []string `json:"apiExcludePaths,omitempty"`
+
 	// Computed fields (not stored in DB, populated from metrics)
 	Status         ServiceStatus `json:"status,omitempty"`
 	LastCheckAt    *time.Time    `json:"lastCheckAt,omitempty"`
@@ -108,6 +113,8 @@ type ServiceCreateRequest struct {
 	CronExpression string            `json:"cronExpression,omitempty"`
 	// Log level filter (log-type services only). nil = don't update; []string{} = accept all; ["error"] = only error.
 	LogLevelFilter []string `json:"logLevelFilter,omitempty"`
+	// API request path exclusions. nil = don't update; []string{} = clear list.
+	ApiExcludePaths []string `json:"apiExcludePaths,omitempty"`
 }
 
 // ToService converts request to Service model
@@ -188,8 +195,9 @@ func (r *ServiceCreateRequest) ToService() *Service {
 		Tags:           r.Tags,
 		ScheduleType:   scheduleType,
 		CronExpression: r.CronExpression,
-		LogLevelFilter: logLevelFilter,
-		CreatedAt:      now,
+		LogLevelFilter:  logLevelFilter,
+		ApiExcludePaths: r.ApiExcludePaths,
+		CreatedAt:       now,
 		UpdatedAt:      now,
 		Status:         StatusUnknown,
 	}

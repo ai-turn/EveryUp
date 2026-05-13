@@ -316,6 +316,13 @@ func (h *ServiceHandler) Update(c *fiber.Ctx) error {
 			middleware.PutApiKeyCache(service.ApiKey, service)
 		}
 	}
+	// ApiExcludePaths: nil = not provided (keep existing); []string{} = clear
+	if req.ApiExcludePaths != nil {
+		service.ApiExcludePaths = req.ApiExcludePaths
+		if service.ApiKey != "" {
+			middleware.PutApiKeyCache(service.ApiKey, service)
+		}
+	}
 
 	if err := h.repo.Update(service); err != nil {
 		return internalError(c, "DATABASE_ERROR", err)

@@ -212,6 +212,9 @@ func migrate() error {
 	if err := migrateV26(); err != nil {
 		return fmt.Errorf("v26 migration failed: %w", err)
 	}
+	if err := migrateV27(); err != nil {
+		return fmt.Errorf("v27 migration failed: %w", err)
+	}
 
 	return nil
 }
@@ -895,6 +898,18 @@ func migrateV26() error {
 		}
 		return nil
 	})
+}
+
+// migrateV27 adds api_exclude_paths column to services for filtering out
+// noisy paths (health probes, root scanners) at OTLP ingest time.
+// Stored as a JSON array of strings; supports exact (/health) and prefix
+// wildcard (/actuator/*) matching, applied in spanToAPIRequest.
+func migrateV27() error {
+	_, err := DB.Exec(`ALTER TABLE services ADD COLUMN api_exclude_paths TEXT DEFAULT '[]'`)
+	if err != nil && !strings.Contains(err.Error(), "duplicate column name") {
+		return err
+	}
+	return nil
 }
 
 // --- helpers ---

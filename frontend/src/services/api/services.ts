@@ -26,6 +26,9 @@ export interface Service {
   createdAt?: string;
   // log-type services only. undefined/[] = accept all levels.
   logLevelFilter?: LogLevel[];
+  // OTLP server spans whose path matches any rule are dropped at ingest.
+  // Supports exact (/health) and prefix wildcard (/actuator/*).
+  apiExcludePaths?: string[];
   // computed from recent metrics — oldest→newest
   latencyHistory?: number[];
 }
@@ -49,6 +52,7 @@ export interface CreateServiceData {
   scheduleType?: 'interval' | 'cron';
   cronExpression?: string;
   logLevelFilter?: LogLevel[];
+  apiExcludePaths?: string[];
 }
 
 export interface CheckEntry {

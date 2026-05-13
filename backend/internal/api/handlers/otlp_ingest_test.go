@@ -192,6 +192,67 @@ func TestSpanToAPIRequestOnlyProjectsHTTPServerSpans(t *testing.T) {
 	}
 }
 
+func TestPathExcluded(t *testing.T) {
+	cases := []struct {
+		name  string
+		path  string
+		rules []string
+		want  bool
+	}{
+		{name: "empty rules", path: "/users", rules: nil, want: false},
+		{name: "exact match", path: "/health", rules: []string{"/health"}, want: true},
+		{name: "exact no match", path: "/healthz", rules: []string{"/health"}, want: false},
+		{name: "prefix wildcard match", path: "/actuator/health", rules: []string{"/actuator/*"}, want: true},
+		{name: "prefix wildcard no match", path: "/users/me", rules: []string{"/actuator/*"}, want: false},
+		{name: "root exact", path: "/", rules: []string{"/"}, want: true},
+		{name: "root does not match prefix", path: "/users", rules: []string{"/"}, want: false},
+		{name: "multiple rules first wins", path: "/actuator/info", rules: []string{"/health", "/actuator/*"}, want: true},
+		{name: "empty path", path: "", rules: []string{"/health"}, want: false},
+		{name: "skips empty rules", path: "/health", rules: []string{"", "/health"}, want: true},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := pathExcluded(tt.path, tt.rules); got != tt.want {
+				t.Fatalf("pathExcluded(%q, %v) = %v, want %v", tt.path, tt.rules, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSpanToAPIRequestRespectsExcludePaths(t *testing.T) {
+	service := &models.Service{
+		ID:              "svc-1",
+		Name:            "Checkout",
+		ApiExcludePaths: []string{"/", "/actuator/*"},
+	}
+	start := uint64(time.Date(2026, 5, 8, 12, 0, 0, 0, time.UTC).UnixNano())
+	build := func(path string) *tracepb.Span {
+		return &tracepb.Span{
+			TraceId:           []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
+			SpanId:            []byte{16, 17, 18, 19, 20, 21, 22, 23},
+			Name:              "GET " + path,
+			Kind:              tracepb.Span_SPAN_KIND_SERVER,
+			StartTimeUnixNano: start,
+			EndTimeUnixNano:   start + uint64(5*time.Millisecond),
+			Attributes: []*commonpb.KeyValue{
+				{Key: "http.request.method", Value: stringValue("GET")},
+				{Key: "url.path", Value: stringValue(path)},
+				{Key: "http.response.status_code", Value: intValue(403)},
+			},
+		}
+	}
+
+	if _, ok := spanToAPIRequest(service, "checkout-api", build("/")); ok {
+		t.Fatal("root path should be excluded")
+	}
+	if _, ok := spanToAPIRequest(service, "checkout-api", build("/actuator/health")); ok {
+		t.Fatal("actuator path should be excluded")
+	}
+	if _, ok := spanToAPIRequest(service, "checkout-api", build("/orders/42")); !ok {
+		t.Fatal("non-excluded path should still project")
+	}
+}
+
 func TestAttrsToMapMasksSensitiveHeaders(t *testing.T) {
 	attrs := []*commonpb.KeyValue{
 		{Key: "http.request.header.authorization", Value: stringValue("Bearer secret-token")},

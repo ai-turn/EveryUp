@@ -203,7 +203,11 @@
       "basicInfo": "Basic information",
       "basicInfoDesc": "Update the service name.",
       "levelFilterDesc": "Select which log levels the server will store.",
-      "levelFilterHint": "Defaults to error / warn / info — debug and trace must be explicitly enabled."
+      "levelFilterHint": "Defaults to error / warn / info — debug and trace must be explicitly enabled.",
+      "excludePathsTitle": "API request exclusions",
+      "excludePathsDesc": "API requests matching these paths are dropped before storage. End with * for prefix matching (e.g. /actuator/*).",
+      "excludePathsEmpty": "No exclusions — all paths are captured.",
+      "excludePathsHint": "Common: /, /health, /actuator/*. Matches url.path on incoming OTLP spans."
     },
     "validation": {
       "idRequired": "ID is required (min 2 chars)",

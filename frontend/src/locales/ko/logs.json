@@ -203,7 +203,11 @@
       "basicInfo": "기본 정보",
       "basicInfoDesc": "서비스 이름을 변경합니다.",
       "levelFilterDesc": "서버에 저장할 로그 레벨을 선택합니다.",
-      "levelFilterHint": "기본값은 error / warn / info이며, debug · trace는 명시적으로 추가해야 수집됩니다."
+      "levelFilterHint": "기본값은 error / warn / info이며, debug · trace는 명시적으로 추가해야 수집됩니다.",
+      "excludePathsTitle": "API 요청 제외 경로",
+      "excludePathsDesc": "여기에 등록한 경로의 API 요청은 저장 전에 드롭됩니다. 접두어 매칭은 끝에 *를 붙이세요 (예: /actuator/*).",
+      "excludePathsEmpty": "제외 경로가 없습니다 — 모든 경로가 수집됩니다.",
+      "excludePathsHint": "주로 쓰는 값: /, /health, /actuator/*. OTLP 스팬의 url.path와 매칭됩니다."
     },
     "validation": {
       "idRequired": "ID는 필수입니다 (최소 2자)",

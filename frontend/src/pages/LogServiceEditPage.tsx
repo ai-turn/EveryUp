@@ -30,6 +30,8 @@ export function LogServiceEditPage() {
   const [loading, setLoading] = useState(true);
   const [nameDraft, setNameDraft] = useState('');
   const [filterDraft, setFilterDraft] = useState<Set<LogLevel>>(new Set());
+  const [excludeDraft, setExcludeDraft] = useState<string[]>([]);
+  const [pathInput, setPathInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   const goBack = useCallback(() => navigate(`/logs/${serviceId}`), [navigate, serviceId]);
@@ -42,6 +44,7 @@ export function LogServiceEditPage() {
         setNameDraft(data.name);
         const initial = (data.logLevelFilter ?? []) as LogLevel[];
         setFilterDraft(initial.length === 0 ? new Set(LOG_LEVELS) : new Set(initial));
+        setExcludeDraft(data.apiExcludePaths ?? []);
       })
       .catch(() => navigate('/logs'))
       .finally(() => setLoading(false));
@@ -59,19 +62,39 @@ export function LogServiceEditPage() {
     });
   };
 
+  const addPath = () => {
+    const trimmed = pathInput.trim();
+    if (!trimmed) return;
+    if (excludeDraft.includes(trimmed)) {
+      setPathInput('');
+      return;
+    }
+    setExcludeDraft((prev) => [...prev, trimmed]);
+    setPathInput('');
+  };
+
+  const removePath = (path: string) => {
+    setExcludeDraft((prev) => prev.filter((p) => p !== path));
+  };
+
   const handleSave = async () => {
     if (!service) return;
     const trimmed = nameDraft.trim();
     const initialFilter = (service.logLevelFilter ?? []) as LogLevel[];
     const effectiveInitial = new Set<LogLevel>(initialFilter.length === 0 ? LOG_LEVELS : initialFilter);
+    const initialExcludes = service.apiExcludePaths ?? [];
     const nameDirtyNow = trimmed !== service.name;
     const filterDirtyNow = !setsEqual(filterDraft, effectiveInitial);
+    const excludeDirtyNow =
+      excludeDraft.length !== initialExcludes.length ||
+      excludeDraft.some((p, i) => p !== initialExcludes[i]);
 
-    if (!nameDirtyNow && !filterDirtyNow) { goBack(); return; }
+    if (!nameDirtyNow && !filterDirtyNow && !excludeDirtyNow) { goBack(); return; }
 
     const updates: Parameters<typeof api.updateService>[1] = {};
     if (nameDirtyNow) updates.name = trimmed;
     if (filterDirtyNow) updates.logLevelFilter = LOG_LEVELS.filter((l) => filterDraft.has(l));
+    if (excludeDirtyNow) updates.apiExcludePaths = excludeDraft;
 
     setIsSaving(true);
     try {
@@ -100,7 +123,11 @@ export function LogServiceEditPage() {
   const initialFilter = (service.logLevelFilter ?? []) as LogLevel[];
   const effectiveInitial = new Set<LogLevel>(initialFilter.length === 0 ? LOG_LEVELS : initialFilter);
   const filterDirty = !setsEqual(filterDraft, effectiveInitial);
-  const isDirty = nameDirty || filterDirty;
+  const initialExcludes = service.apiExcludePaths ?? [];
+  const excludeDirty =
+    excludeDraft.length !== initialExcludes.length ||
+    excludeDraft.some((p, i) => p !== initialExcludes[i]);
+  const isDirty = nameDirty || filterDirty || excludeDirty;
 
   return (
     <div className="-m-4 sm:-m-6 md:-m-8 bg-white dark:bg-bg-main-dark min-h-full">
@@ -267,6 +294,80 @@ export function LogServiceEditPage() {
           <div className="flex items-center gap-1.5 mt-4 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark text-xs text-slate-500 dark:text-text-muted-dark">
             <MaterialIcon name="info" className="text-xs shrink-0" />
             <span>{t('logServices.edit.levelFilterHint')}</span>
+          </div>
+        </section>
+
+        {/* API request exclude paths */}
+        <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark p-5 sm:p-6">
+          <div className="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-ui-border-dark/60">
+            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <MaterialIcon name="block" className="text-primary text-lg" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                {t('logServices.edit.excludePathsTitle', { defaultValue: 'Excluded paths' })}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">
+                {t('logServices.edit.excludePathsDesc', { defaultValue: 'API requests matching these paths are dropped before storage. Use /actuator/* for prefix matches.' })}
+              </p>
+            </div>
+          </div>
+
+          <div className="pt-4 space-y-3">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={pathInput}
+                onChange={(e) => setPathInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addPath();
+                  }
+                }}
+                placeholder="/actuator/* or /health"
+                className="flex-1 px-3 py-2 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-ui-hover-dark text-sm text-slate-900 dark:text-white outline-none focus:border-primary"
+              />
+              <button
+                type="button"
+                onClick={addPath}
+                disabled={!pathInput.trim()}
+                className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 disabled:opacity-40 active:scale-95 transition-all flex items-center gap-1.5"
+              >
+                <MaterialIcon name="add" className="text-sm" />
+                {t('common.add', { defaultValue: 'Add' })}
+              </button>
+            </div>
+
+            {excludeDraft.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {excludeDraft.map((path) => (
+                  <span
+                    key={path}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark px-3 py-1 text-xs font-mono text-slate-700 dark:text-text-base-dark"
+                  >
+                    {path}
+                    <button
+                      type="button"
+                      onClick={() => removePath(path)}
+                      className="text-slate-400 hover:text-red-500 transition-colors"
+                      aria-label={t('common.remove', { defaultValue: 'Remove' })}
+                    >
+                      <MaterialIcon name="close" className="text-sm" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400 dark:text-text-dim-dark italic">
+                {t('logServices.edit.excludePathsEmpty', { defaultValue: 'No exclusions — all paths are captured.' })}
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5 mt-4 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark text-xs text-slate-500 dark:text-text-muted-dark">
+            <MaterialIcon name="info" className="text-xs shrink-0" />
+            <span>{t('logServices.edit.excludePathsHint', { defaultValue: 'Common: /, /health, /actuator/*. Matches url.path on incoming OTLP spans.' })}</span>
           </div>
         </section>
       </div>

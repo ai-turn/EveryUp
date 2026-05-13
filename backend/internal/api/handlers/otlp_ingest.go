@@ -303,6 +303,29 @@ func spanToModel(service *models.Service, serviceName string, resource json.RawM
 	}
 }
 
+// pathExcluded reports whether a request path matches any rule in the
+// service's exclude list. Each rule is either an exact match (/health) or a
+// prefix wildcard ending in "*" (/actuator/*). Empty list = nothing excluded.
+func pathExcluded(path string, rules []string) bool {
+	if path == "" || len(rules) == 0 {
+		return false
+	}
+	for _, rule := range rules {
+		if rule == "" {
+			continue
+		}
+		if strings.HasSuffix(rule, "*") {
+			prefix := strings.TrimSuffix(rule, "*")
+			if strings.HasPrefix(path, prefix) {
+				return true
+			}
+		} else if path == rule {
+			return true
+		}
+	}
+	return false
+}
+
 func spanToAPIRequest(service *models.Service, serviceName string, span *tracepb.Span) (models.ApiRequest, bool) {
 	if span.GetKind() != tracepb.Span_SPAN_KIND_SERVER {
 		return models.ApiRequest{}, false
@@ -318,6 +341,9 @@ func spanToAPIRequest(service *models.Service, serviceName string, span *tracepb
 	path := firstString(attrs, "url.path", "http.target", "http.route")
 	if path == "" {
 		path = span.GetName()
+	}
+	if pathExcluded(path, service.ApiExcludePaths) {
+		return models.ApiRequest{}, false
 	}
 	route := firstString(attrs, "http.route")
 	pathTemplate := route

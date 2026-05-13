@@ -39,13 +39,34 @@ func marshalLogLevelFilter(filter []models.LogLevel) interface{} {
 	return string(b)
 }
 
+// unmarshalStringList parses a nullable JSON array column into []string.
+// Returns nil for NULL / empty / "[]" — caller can treat nil as empty list.
+func unmarshalStringList(col sql.NullString) []string {
+	if !col.Valid || col.String == "" || col.String == "[]" || col.String == "null" {
+		return nil
+	}
+	var out []string
+	json.Unmarshal([]byte(col.String), &out)
+	return out
+}
+
+// marshalStringList serialises []string to a JSON string for storage.
+// nil → "[]" so the column has a stable shape (preserves default).
+func marshalStringList(list []string) string {
+	if len(list) == 0 {
+		return "[]"
+	}
+	b, _ := json.Marshal(list)
+	return string(b)
+}
+
 // GetAll returns all services, optionally filtered by type.
 // Example: GetAll("http", "tcp") returns only http and tcp services.
 // Call with no arguments to return all services.
 func (r *ServiceRepository) GetAll(typeFilter ...string) ([]models.Service, error) {
 	query := `SELECT id, name, type, is_active, url, port, method, headers, body,
 		       expected_status, interval, timeout, tags, schedule_type, cron_expression,
-		       api_key_masked, log_level_filter, created_at, updated_at
+		       api_key_masked, log_level_filter, api_exclude_paths, created_at, updated_at
 		FROM services`
 
 	var args []interface{}
@@ -71,10 +92,10 @@ func (r *ServiceRepository) GetAll(typeFilter ...string) ([]models.Service, erro
 		var isActive int
 		var url, method, headers, body, tags, scheduleType, cronExpression sql.NullString
 		var port, expectedStatus, interval, timeout sql.NullInt64
-		var apiKeyMasked, logLevelFilter sql.NullString
+		var apiKeyMasked, logLevelFilter, apiExcludePaths sql.NullString
 		if err := rows.Scan(&s.ID, &s.Name, &s.Type, &isActive, &url, &port, &method, &headers, &body,
 			&expectedStatus, &interval, &timeout, &tags, &scheduleType, &cronExpression,
-			&apiKeyMasked, &logLevelFilter, &s.CreatedAt, &s.UpdatedAt); err != nil {
+			&apiKeyMasked, &logLevelFilter, &apiExcludePaths, &s.CreatedAt, &s.UpdatedAt); err != nil {
 			return nil, err
 		}
 		s.IsActive = isActive == 1
@@ -117,6 +138,7 @@ func (r *ServiceRepository) GetAll(typeFilter ...string) ([]models.Service, erro
 			s.ApiKeyMasked = apiKeyMasked.String
 		}
 		s.LogLevelFilter = unmarshalLogLevelFilter(logLevelFilter)
+		s.ApiExcludePaths = unmarshalStringList(apiExcludePaths)
 		s.Status = models.StatusUnknown
 		services = append(services, s)
 	}
@@ -129,16 +151,16 @@ func (r *ServiceRepository) GetByID(id string) (*models.Service, error) {
 	var isActive int
 	var url, method, headers, body, tags, scheduleType, cronExpression sql.NullString
 	var port, expectedStatus, interval, timeout sql.NullInt64
-	var apiKeyHash, apiKeyMasked, logLevelFilter sql.NullString
+	var apiKeyHash, apiKeyMasked, logLevelFilter, apiExcludePaths sql.NullString
 
 	err := DB.QueryRow(`
 		SELECT id, name, type, is_active, url, port, method, headers, body,
 		       expected_status, interval, timeout, tags, schedule_type, cron_expression,
-		       api_key, api_key_masked, log_level_filter, created_at, updated_at
+		       api_key, api_key_masked, log_level_filter, api_exclude_paths, created_at, updated_at
 		FROM services WHERE id = ?
 	`, id).Scan(&s.ID, &s.Name, &s.Type, &isActive, &url, &port, &method, &headers, &body,
 		&expectedStatus, &interval, &timeout, &tags, &scheduleType, &cronExpression,
-		&apiKeyHash, &apiKeyMasked, &logLevelFilter, &s.CreatedAt, &s.UpdatedAt)
+		&apiKeyHash, &apiKeyMasked, &logLevelFilter, &apiExcludePaths, &s.CreatedAt, &s.UpdatedAt)
 
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -190,6 +212,7 @@ func (r *ServiceRepository) GetByID(id string) (*models.Service, error) {
 		s.ApiKeyMasked = apiKeyMasked.String
 	}
 	s.LogLevelFilter = unmarshalLogLevelFilter(logLevelFilter)
+	s.ApiExcludePaths = unmarshalStringList(apiExcludePaths)
 	s.Status = models.StatusUnknown
 
 	return &s, nil
@@ -227,12 +250,12 @@ func (r *ServiceRepository) Create(s *models.Service) error {
 	_, err = DB.Exec(`
 		INSERT INTO services (id, name, type, is_active, url, port, method, headers, body,
 		                      expected_status, interval, timeout, tags, schedule_type, cron_expression,
-		                      api_key, api_key_masked, log_level_filter, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		                      api_key, api_key_masked, log_level_filter, api_exclude_paths, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`, s.ID, s.Name, s.Type, isActive, s.URL, s.Port, s.Method, string(headersJSON), s.Body,
 		s.ExpectedStatus, s.Interval, s.Timeout, string(tagsJSON), scheduleType, s.CronExpression,
 		crypto.HashApiKey(s.ApiKey), s.ApiKeyMasked, marshalLogLevelFilter(s.LogLevelFilter),
-		s.CreatedAt, s.UpdatedAt)
+		marshalStringList(s.ApiExcludePaths), s.CreatedAt, s.UpdatedAt)
 	return err
 }
 
@@ -277,11 +300,11 @@ func (r *ServiceRepository) Update(s *models.Service) error {
 		UPDATE services SET name = ?, type = ?, is_active = ?, url = ?, port = ?, method = ?,
 		                    headers = ?, body = ?, expected_status = ?, interval = ?, timeout = ?,
 		                    tags = ?, schedule_type = ?, cron_expression = ?,
-		                    log_level_filter = ?, updated_at = ?
+		                    log_level_filter = ?, api_exclude_paths = ?, updated_at = ?
 		WHERE id = ?
 	`, s.Name, s.Type, isActive, s.URL, s.Port, s.Method, string(headersJSON), s.Body,
 		s.ExpectedStatus, s.Interval, s.Timeout, string(tagsJSON), scheduleType, s.CronExpression,
-		marshalLogLevelFilter(s.LogLevelFilter), s.UpdatedAt, s.ID)
+		marshalLogLevelFilter(s.LogLevelFilter), marshalStringList(s.ApiExcludePaths), s.UpdatedAt, s.ID)
 	return err
 }
 
@@ -374,15 +397,15 @@ func (r *ServiceRepository) GetByApiKeyHash(apiKeyHash string) (*models.Service,
 	var isActive int
 	var url, method, body sql.NullString
 	var port, expectedStatus, interval, timeout sql.NullInt64
-	var headersJSON, tagsJSON, logLevelFilter sql.NullString
+	var headersJSON, tagsJSON, logLevelFilter, apiExcludePaths sql.NullString
 
 	err := DB.QueryRow(`
 		SELECT id, name, type, is_active, url, port, method, headers, body,
-		       expected_status, interval, timeout, tags, log_level_filter, created_at, updated_at
+		       expected_status, interval, timeout, tags, log_level_filter, api_exclude_paths, created_at, updated_at
 		FROM services WHERE api_key = ?
 	`, apiKeyHash).Scan(&s.ID, &s.Name, &s.Type, &isActive, &url, &port, &method,
 		&headersJSON, &body, &expectedStatus, &interval, &timeout,
-		&tagsJSON, &logLevelFilter, &s.CreatedAt, &s.UpdatedAt)
+		&tagsJSON, &logLevelFilter, &apiExcludePaths, &s.CreatedAt, &s.UpdatedAt)
 
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -420,6 +443,7 @@ func (r *ServiceRepository) GetByApiKeyHash(apiKeyHash string) (*models.Service,
 		json.Unmarshal([]byte(tagsJSON.String), &s.Tags)
 	}
 	s.LogLevelFilter = unmarshalLogLevelFilter(logLevelFilter)
+	s.ApiExcludePaths = unmarshalStringList(apiExcludePaths)
 
 	return &s, nil
 }
@@ -428,7 +452,7 @@ func (r *ServiceRepository) GetByApiKeyHash(apiKeyHash string) (*models.Service,
 // Includes log_level_filter so the cached service can apply per-service filtering.
 func (r *ServiceRepository) GetAllApiKeyMappings() (map[string]*models.Service, error) {
 	rows, err := DB.Query(`
-		SELECT id, name, type, is_active, api_key, log_level_filter
+		SELECT id, name, type, is_active, api_key, log_level_filter, api_exclude_paths
 		FROM services WHERE api_key != ''
 	`)
 	if err != nil {
@@ -441,12 +465,13 @@ func (r *ServiceRepository) GetAllApiKeyMappings() (map[string]*models.Service, 
 		var s models.Service
 		var isActive int
 		var apiKeyHash string
-		var logLevelFilter sql.NullString
-		if err := rows.Scan(&s.ID, &s.Name, &s.Type, &isActive, &apiKeyHash, &logLevelFilter); err != nil {
+		var logLevelFilter, apiExcludePaths sql.NullString
+		if err := rows.Scan(&s.ID, &s.Name, &s.Type, &isActive, &apiKeyHash, &logLevelFilter, &apiExcludePaths); err != nil {
 			return nil, err
 		}
 		s.IsActive = isActive == 1
 		s.LogLevelFilter = unmarshalLogLevelFilter(logLevelFilter)
+		s.ApiExcludePaths = unmarshalStringList(apiExcludePaths)
 		svc := s
 		result[apiKeyHash] = &svc
 	}
