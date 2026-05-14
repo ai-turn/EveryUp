@@ -321,25 +321,28 @@ function RequestRow({
           </span>
         </td>
         <td className="px-4 py-3 max-w-md">
-          <div className="font-mono text-xs font-semibold text-slate-900 dark:text-white truncate">{request.path}</div>
-          {request.pathTemplate && request.pathTemplate !== request.path && (
-            <div className="font-mono text-[10px] text-slate-400 dark:text-text-dim-dark truncate">{request.pathTemplate}</div>
-          )}
-          {request.traceId && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenTrace(request.traceId!);
-              }}
-              className="mt-1 inline-flex w-fit max-w-full items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-[10px] font-semibold text-primary hover:bg-primary/10 cursor-pointer"
-              title={request.traceId}
-            >
-              <MaterialIcon name="timeline" className="text-xs" />
-              <span className="truncate">{shortTraceId(request.traceId)}</span>
-              <span>{t('apiRequests.actions.viewTrace')}</span>
-            </button>
-          )}
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex-1 min-w-0">
+              <div className="font-mono text-xs font-semibold text-slate-900 dark:text-white truncate" title={request.path}>{request.path}</div>
+              {request.pathTemplate && request.pathTemplate !== request.path && (
+                <div className="font-mono text-[10px] text-slate-400 dark:text-text-dim-dark truncate">{request.pathTemplate}</div>
+              )}
+            </div>
+            {request.traceId && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenTrace(request.traceId!);
+                }}
+                className="shrink-0 inline-flex items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-[10px] font-semibold text-primary hover:bg-primary/10 cursor-pointer"
+                title={request.traceId}
+              >
+                <MaterialIcon name="timeline" className="text-xs" />
+                <span>{t('apiRequests.actions.viewTrace')}</span>
+              </button>
+            )}
+          </div>
         </td>
         <td className="px-4 py-3">
           <span className={`rounded px-2 py-0.5 text-[11px] font-bold ${statusBadge(request.statusCode)}`}>

@@ -328,36 +328,37 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-700 dark:text-text-base-dark">
-                      <div className="flex flex-col gap-1.5">
-                        <span>{log.message}</span>
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          {log.linkedRequest && (
-                            <span
-                              className="inline-flex max-w-full items-center gap-1 rounded-md border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark/40 px-2 py-0.5 text-[11px]"
-                              title={`${log.linkedRequest.method} ${log.linkedRequest.path}`}
-                            >
-                              <span className={`rounded px-1 py-px text-[10px] font-bold ${methodBadgeClass(log.linkedRequest.method)}`}>
-                                {log.linkedRequest.method.toUpperCase()}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="flex-1 min-w-0 truncate" title={log.message}>{log.message}</span>
+                        {(log.linkedRequest || log.traceId) && (
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {log.linkedRequest && (
+                              <span
+                                className="inline-flex max-w-65 items-center gap-1 rounded-md border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark/40 px-2 py-0.5 text-[11px]"
+                                title={`${log.linkedRequest.method} ${log.linkedRequest.path}`}
+                              >
+                                <span className={`rounded px-1 py-px text-[10px] font-bold ${methodBadgeClass(log.linkedRequest.method)}`}>
+                                  {log.linkedRequest.method.toUpperCase()}
+                                </span>
+                                <span className="font-mono truncate text-slate-700 dark:text-text-base-dark">{log.linkedRequest.path}</span>
+                                <span className={`rounded px-1 py-px text-[10px] font-bold ${statusBadgeClass(log.linkedRequest.statusCode)}`}>
+                                  {log.linkedRequest.statusCode}
+                                </span>
                               </span>
-                              <span className="font-mono truncate text-slate-700 dark:text-text-base-dark">{log.linkedRequest.path}</span>
-                              <span className={`rounded px-1 py-px text-[10px] font-bold ${statusBadgeClass(log.linkedRequest.statusCode)}`}>
-                                {log.linkedRequest.statusCode}
-                              </span>
-                            </span>
-                          )}
-                          {log.traceId && (
-                            <button
-                              type="button"
-                              onClick={() => setActiveTraceId(log.traceId ?? null)}
-                              className="inline-flex w-fit max-w-full items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary/10 cursor-pointer"
-                              title={log.traceId}
-                            >
-                              <MaterialIcon name="timeline" className="text-sm" />
-                              <span className="truncate">{shortTraceId(log.traceId)}</span>
-                              <span>{t('logs.traceFilter.viewTrace')}</span>
-                            </button>
-                          )}
-                        </div>
+                            )}
+                            {log.traceId && (
+                              <button
+                                type="button"
+                                onClick={() => setActiveTraceId(log.traceId ?? null)}
+                                className="inline-flex items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary/10 cursor-pointer"
+                                title={log.traceId}
+                              >
+                                <MaterialIcon name="timeline" className="text-sm" />
+                                <span>{t('logs.traceFilter.viewTrace')}</span>
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className="w-12 px-4 py-3 text-right">
