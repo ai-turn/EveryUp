@@ -56,7 +56,7 @@ export function SettingsMobileView({
     <div className="space-y-4">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-black text-slate-900 dark:text-white">{t('settings.title')}</h1>
+        <h1 className="text-xl font-bold text-slate-900 dark:text-white">{t('settings.title')}</h1>
         <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{t('settings.subtitle')}</p>
       </div>
 

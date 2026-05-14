@@ -70,7 +70,7 @@ export function AlertsMobileView({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-black text-slate-900 dark:text-white">{t('alerts.title')}</h1>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white">{t('alerts.title')}</h1>
           <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{t('alerts.subtitle')}</p>
         </div>
         {activeTab === 'channels' && (

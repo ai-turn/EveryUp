@@ -198,7 +198,7 @@ function StatCard({
               </span>
             )}
           </p>
-          <p className="text-xl font-black tabular-nums text-slate-900 dark:text-white">
+          <p className="text-xl font-bold tabular-nums text-slate-900 dark:text-white">
             {value}
             {suffix && <span className="ml-1 text-xs font-bold text-slate-400 dark:text-text-dim-dark">{suffix}</span>}
           </p>
@@ -225,7 +225,7 @@ function PathAggregateTable({
     <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark overflow-hidden">
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-ui-border-dark px-4 py-3">
         <div>
-          <h3 className="text-sm font-black text-slate-900 dark:text-white">{t('apiRequests.summary.title')}</h3>
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white">{t('apiRequests.summary.title')}</h3>
           <p className="text-xs text-slate-500 dark:text-text-muted-dark">{t('apiRequests.summary.description')}</p>
         </div>
         <span className="font-mono text-xs text-slate-400 dark:text-text-dim-dark">
@@ -255,12 +255,12 @@ function PathAggregateTable({
                   className={`cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-ui-hover-dark/30 ${active ? 'bg-primary/5 dark:bg-primary/10' : ''}`}
                 >
                   <td className="px-4 py-3">
-                    <span className={`rounded px-2 py-0.5 text-[11px] font-black ${methodBadge(item.method)}`}>
+                    <span className={`rounded px-2 py-0.5 text-[11px] font-bold ${methodBadge(item.method)}`}>
                       {item.method}
                     </span>
                   </td>
                   <td className="px-4 py-3 font-mono text-xs text-slate-800 dark:text-text-base-dark">{item.pathTemplate}</td>
-                  <td className="px-4 py-3 text-right font-mono text-sm font-black text-slate-900 dark:text-white">{item.count}</td>
+                  <td className="px-4 py-3 text-right font-mono text-sm font-bold text-slate-900 dark:text-white">{item.count}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="h-1.5 w-20 overflow-hidden rounded-full bg-slate-100 dark:bg-ui-hover-dark">
@@ -316,7 +316,7 @@ function RequestRow({
         </td>
         <td className="px-4 py-3 font-mono text-xs text-slate-500 dark:text-text-muted-dark whitespace-nowrap">{formatClock(request.createdAt)}</td>
         <td className="px-4 py-3">
-          <span className={`rounded px-2 py-0.5 text-[11px] font-black ${methodBadge(request.method)}`}>
+          <span className={`rounded px-2 py-0.5 text-[11px] font-bold ${methodBadge(request.method)}`}>
             {request.method.toUpperCase()}
           </span>
         </td>
@@ -342,7 +342,7 @@ function RequestRow({
           )}
         </td>
         <td className="px-4 py-3">
-          <span className={`rounded px-2 py-0.5 text-[11px] font-black ${statusBadge(request.statusCode)}`}>
+          <span className={`rounded px-2 py-0.5 text-[11px] font-bold ${statusBadge(request.statusCode)}`}>
             {request.statusCode}
           </span>
         </td>
@@ -362,7 +362,7 @@ function RequestRow({
               </div>
               {request.error && (
                 <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-3">
-                  <div className="mb-1 text-xs font-black uppercase text-red-600 dark:text-red-400">{t('apiRequests.detail.error')}</div>
+                  <div className="mb-1 text-xs font-bold uppercase text-red-600 dark:text-red-400">{t('apiRequests.detail.error')}</div>
                   <pre className="whitespace-pre-wrap break-all font-mono text-xs text-red-700 dark:text-red-300">{request.error}</pre>
                 </div>
               )}
@@ -377,7 +377,7 @@ function RequestRow({
 function MetaCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark p-3">
-      <div className="text-[10px] font-black uppercase tracking-wide text-slate-400 dark:text-text-dim-dark">{label}</div>
+      <div className="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-text-dim-dark">{label}</div>
       <div className="mt-1 truncate font-mono text-xs text-slate-700 dark:text-text-base-dark" title={value}>{value}</div>
     </div>
   );
@@ -402,7 +402,7 @@ function RequestsStreamTable({
     <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark overflow-hidden">
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-ui-border-dark px-4 py-3">
         <div>
-          <h3 className="text-sm font-black text-slate-900 dark:text-white">{t('apiRequests.stream.title')}</h3>
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white">{t('apiRequests.stream.title')}</h3>
           <p className="text-xs text-slate-500 dark:text-text-muted-dark">{t('apiRequests.stream.rows', { count: items.length })}</p>
         </div>
       </div>

@@ -146,7 +146,7 @@ export function ProcessTable({ hostId }: { hostId: string }) {
     <div>
       {/* 헤더 */}
       <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
+        <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
           프로세스
         </h2>
 
@@ -202,11 +202,11 @@ export function ProcessTable({ hostId }: { hostId: string }) {
         <span className="text-slate-400 dark:text-text-dim-dark">전체 {list.length}개 프로세스</span>
         <div className="flex items-center gap-1">
           <span className="text-slate-400 dark:text-text-dim-dark">CPU 합계</span>
-          <span className="font-black tabular-nums text-slate-700 dark:text-text-base-dark">{totalCpuPct.toFixed(1)}%</span>
+          <span className="font-bold tabular-nums text-slate-700 dark:text-text-base-dark">{totalCpuPct.toFixed(1)}%</span>
         </div>
         <div className="flex items-center gap-1">
           <span className="text-slate-400 dark:text-text-dim-dark">메모리 합계</span>
-          <span className="font-black tabular-nums text-slate-700 dark:text-text-base-dark">{formatMemMB(totalMemMB)}</span>
+          <span className="font-bold tabular-nums text-slate-700 dark:text-text-base-dark">{formatMemMB(totalMemMB)}</span>
         </div>
       </div>
 
@@ -328,7 +328,7 @@ function GroupRow({
             <p className="text-sm font-bold text-slate-800 dark:text-text-base-dark truncate">{group.name}</p>
           </div>
           {multiProc && (
-            <span className="shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
+            <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
               ×{group.count}
             </span>
           )}

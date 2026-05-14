@@ -30,7 +30,7 @@ export function RadialGauge({
         }}
       >
         <div className="absolute w-22.5 h-22.5 rounded-full bg-slate-50 dark:bg-chart-bg" />
-        <span className="relative z-10 text-slate-900 dark:text-white text-3xl font-black">
+        <span className="relative z-10 text-slate-900 dark:text-white text-3xl font-bold">
           {percentage}%
         </span>
       </div>

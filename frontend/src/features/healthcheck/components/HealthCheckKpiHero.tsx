@@ -27,7 +27,7 @@ function KpiBlock({
         <MaterialIcon name={icon} className="text-sm" />
         <span className="text-xs font-semibold uppercase tracking-wide">{label}</span>
       </div>
-      <p className={`text-2xl font-black tabular-nums ${toneClass[tone]}`}>{value}</p>
+      <p className={`text-2xl font-bold tabular-nums ${toneClass[tone]}`}>{value}</p>
     </div>
   );
 }

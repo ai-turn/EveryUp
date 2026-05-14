@@ -68,7 +68,7 @@ export function InfraTrends({ hostId }: InfraTrendsProps) {
       {/* Header */}
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
+          <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
             {t('infra.trends.title')}
           </h2>
           <p className="mt-1 text-sm font-medium text-slate-500 dark:text-text-muted-dark">
@@ -164,7 +164,7 @@ function ChartCard({
       {/* 카드 상단: 제목 + stat (같은 행) */}
       <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-3">
         <div className="min-w-0">
-          <p className="text-base font-black text-slate-900 dark:text-white">{chart.title}</p>
+          <p className="text-base font-bold text-slate-900 dark:text-white">{chart.title}</p>
           {/* 범례 */}
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {chart.series.map((s) => (
@@ -273,7 +273,7 @@ function InlineStat({ label, value, unit, color }: { label: string; value: numbe
     <div className="flex items-center gap-1">
       <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
       <span className="text-[11px] text-slate-400 dark:text-text-dim-dark">{label}</span>
-      <span className="text-sm font-black tabular-nums text-slate-800 dark:text-text-base-dark">
+      <span className="text-sm font-bold tabular-nums text-slate-800 dark:text-text-base-dark">
         {formatMetricValue(value)}
         <span className="ml-0.5 text-[10px] font-semibold text-slate-400 dark:text-text-dim-dark">{unit}</span>
       </span>

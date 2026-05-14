@@ -128,7 +128,7 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
               <span className={`w-1.5 h-1.5 rounded-full ${levelDotStyle[level]}`} />
               <span>{level}</span>
             </div>
-            <span className={`text-sm font-black tabular-nums ${levelCounts[level] > 0 ? (level === 'error' ? 'text-red-500' : level === 'warn' ? 'text-amber-500' : level === 'info' ? 'text-sky-500' : level === 'debug' ? 'text-violet-400' : 'text-slate-400') : 'text-slate-400 dark:text-text-dim-dark'}`}>
+            <span className={`text-sm font-bold tabular-nums ${levelCounts[level] > 0 ? (level === 'error' ? 'text-red-500' : level === 'warn' ? 'text-amber-500' : level === 'info' ? 'text-sky-500' : level === 'debug' ? 'text-violet-400' : 'text-slate-400') : 'text-slate-400 dark:text-text-dim-dark'}`}>
               {levelCounts[level]}
             </span>
           </div>

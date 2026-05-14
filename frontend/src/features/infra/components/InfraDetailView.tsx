@@ -56,7 +56,7 @@ function HostHeader({
     <>
       {mobile ? (
         <>
-          <h1 className="text-xl font-black text-slate-900 dark:text-white">{name}</h1>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white">{name}</h1>
           <div className="flex items-center gap-2 mt-1.5">
             <span className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${sc.bg} border ${sc.border} ${sc.text} text-xs font-bold uppercase tracking-wider`}>
               <span className="relative flex h-2 w-2">
@@ -77,7 +77,7 @@ function HostHeader({
       ) : (
         <>
           <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-slate-900 dark:text-white text-2xl sm:text-3xl font-black tracking-tight">
+            <h1 className="text-slate-900 dark:text-white text-2xl sm:text-3xl font-bold tracking-tight">
               {name}
             </h1>
             <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${sc.bg} border ${sc.border}`}>
@@ -435,8 +435,8 @@ function ScoreRing({ score, status, loading }: { score: number; status: string; 
     >
       <div className="grid h-16 w-16 place-items-center rounded-full bg-white shadow-inner dark:bg-bg-surface-dark">
         <div className="text-center">
-          <p className="text-2xl font-black tabular-nums text-slate-900 dark:text-white">{label}</p>
-          <p className="text-[10px] font-black uppercase text-slate-400 dark:text-text-dim-dark">{t('infra.metrics.score')}</p>
+          <p className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{label}</p>
+          <p className="text-[10px] font-bold uppercase text-slate-400 dark:text-text-dim-dark">{t('infra.metrics.score')}</p>
         </div>
       </div>
     </div>
@@ -451,7 +451,7 @@ function DetailMetricBar({ label, value, subtitle }: { label: string; value: num
     <div>
       <div className="mb-1.5 flex items-center justify-between gap-3">
         <span className="text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{label}</span>
-        <span className="text-sm font-black tabular-nums text-slate-900 dark:text-white">{pct}%</span>
+        <span className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">{pct}%</span>
       </div>
       <div className="h-2 rounded-full bg-slate-100 dark:bg-ui-hover-dark overflow-hidden">
         <div className={`h-full rounded-full ${tone}`} style={{ width: `${pct}%` }} />
@@ -470,8 +470,8 @@ function PressureColumn({ label, value }: { label: string; value: number }) {
       <div className="mx-auto flex h-20 w-8 items-end rounded-full bg-slate-200/70 p-1 dark:bg-ui-hover-dark">
         <div className={`w-full rounded-full ${tone}`} style={{ height: `${pct}%` }} />
       </div>
-      <p className="mt-2 truncate text-[11px] font-black uppercase text-slate-500 dark:text-text-muted-dark">{label}</p>
-      <p className="text-sm font-black tabular-nums text-slate-900 dark:text-white">{pct}%</p>
+      <p className="mt-2 truncate text-[11px] font-bold uppercase text-slate-500 dark:text-text-muted-dark">{label}</p>
+      <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">{pct}%</p>
     </div>
   );
 }
@@ -606,7 +606,7 @@ function MobileLayout(props: InfraDetailViewProps) {
                     <span className="text-sm font-bold text-slate-700 dark:text-text-base-dark uppercase tracking-wide">
                       {gauge.label}
                     </span>
-                    <span className="text-2xl font-black text-slate-900 dark:text-white">
+                    <span className="text-2xl font-bold text-slate-900 dark:text-white">
                       {gauge.percentage}%
                     </span>
                   </div>

@@ -323,7 +323,7 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
                       {formatTimestamp(log.createdAt)}
                     </td>
                     <td className="w-24 px-4 py-3">
-                      <span className={`rounded px-2 py-0.5 text-xs font-black uppercase ${levelToneStyle[log.level]}`}>
+                      <span className={`rounded px-2 py-0.5 text-xs font-bold uppercase ${levelToneStyle[log.level]}`}>
                         {log.level}
                       </span>
                     </td>
@@ -336,7 +336,7 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
                               className="inline-flex max-w-full items-center gap-1 rounded-md border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark/40 px-2 py-0.5 text-[11px]"
                               title={`${log.linkedRequest.method} ${log.linkedRequest.path}`}
                             >
-                              <span className={`rounded px-1 py-px text-[10px] font-black ${methodBadgeClass(log.linkedRequest.method)}`}>
+                              <span className={`rounded px-1 py-px text-[10px] font-bold ${methodBadgeClass(log.linkedRequest.method)}`}>
                                 {log.linkedRequest.method.toUpperCase()}
                               </span>
                               <span className="font-mono truncate text-slate-700 dark:text-text-base-dark">{log.linkedRequest.path}</span>

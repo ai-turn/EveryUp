@@ -66,7 +66,7 @@ export function HealthCheckMobileView({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-black text-slate-900 dark:text-white">{t('healthcheck.title')}</h1>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white">{t('healthcheck.title')}</h1>
           <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{t('healthcheck.subtitle')}</p>
         </div>
         <button
@@ -169,7 +169,7 @@ function MobileKPI({ icon, label, value }: { icon: string; label: string; value:
         <span className="text-[11px] font-bold">{label}</span>
         <MaterialIcon name={icon} className="text-sm" />
       </div>
-      <p className="text-lg font-black text-slate-900 dark:text-white mt-1">{value}</p>
+      <p className="text-lg font-bold text-slate-900 dark:text-white mt-1">{value}</p>
     </div>
   );
 }

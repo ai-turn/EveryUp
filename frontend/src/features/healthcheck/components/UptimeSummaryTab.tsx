@@ -334,7 +334,7 @@ function SlaCard({
     <div className="rounded-xl bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark p-4">
       <div className="text-[11px] text-slate-500 dark:text-text-muted-dark font-semibold">{label}</div>
       <div className="mt-1.5 flex items-baseline gap-1">
-        <span className={`text-2xl font-black tabular-nums ${valueColor[tone]}`}>{value}</span>
+        <span className={`text-2xl font-bold tabular-nums ${valueColor[tone]}`}>{value}</span>
         {unit && <span className="text-xs text-slate-400 dark:text-text-dim-dark">{unit}</span>}
       </div>
 

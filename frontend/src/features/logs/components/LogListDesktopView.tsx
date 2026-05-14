@@ -315,7 +315,7 @@ function LogServiceTable({
               {levelOrder.slice(0, 3).map((level) => (
                 <span
                   key={level}
-                  className={`rounded px-1.5 py-0.5 text-[10px] font-black tabular-nums ${
+                  className={`rounded px-1.5 py-0.5 text-[10px] font-bold tabular-nums ${
                     level === 'error' && counts[level] > 0
                       ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                       : level === 'warn' && counts[level] > 0
