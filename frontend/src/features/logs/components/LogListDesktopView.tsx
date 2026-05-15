@@ -2,10 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon, PageHeader, EmptyState, FilterBar, KPIChip } from '../../../components/common';
 import { LogServiceCard } from './LogServiceCard';
-import { LogStreamTab } from './LogStreamTab';
-import { LogErrorsTab } from './LogErrorsTab';
 import type { LogEntry, LogLevel, Service } from '../../../services/api';
-import type { LogListTab } from '../../../pages/LogListPage';
 
 type ServiceViewMode = 'cards' | 'table';
 
@@ -50,18 +47,10 @@ interface LogListDesktopViewProps {
   serviceLogs: Record<string, LogEntry[]>;
   loading: boolean;
   error: string | null;
-  activeTab: LogListTab;
   searchQuery: string;
-  streamLogs: LogEntry[];
-  streamLoading: boolean;
-  errorLogs: LogEntry[];
-  errorsLoading: boolean;
-  onTabChange: (tab: LogListTab) => void;
   onSearchChange: (query: string) => void;
   onAddService: () => void;
   onServiceClick: (id: string) => void;
-  onRefreshStream: () => void;
-  onRefreshErrors: () => void;
 }
 
 export function LogListDesktopView({
@@ -71,18 +60,10 @@ export function LogListDesktopView({
   serviceLogs,
   loading,
   error,
-  activeTab,
   searchQuery,
-  streamLogs,
-  streamLoading,
-  errorLogs,
-  errorsLoading,
-  onTabChange,
   onSearchChange,
   onAddService,
   onServiceClick,
-  onRefreshStream,
-  onRefreshErrors,
 }: LogListDesktopViewProps) {
   const { t } = useTranslation(['logs', 'common']);
   const [viewMode, setViewMode] = useState<ServiceViewMode>('cards');
@@ -93,12 +74,6 @@ export function LogListDesktopView({
   const warnCount = allRecentLogs.filter((log) => log.level === 'warn').length;
   const errorServiceCount = services.filter((s) => (serviceLogs[s.id] ?? []).some((l) => l.level === 'error')).length;
   const warnServiceCount = services.filter((s) => (serviceLogs[s.id] ?? []).some((l) => l.level === 'warn')).length;
-
-  const tabs: Array<{ key: LogListTab; label: string; icon: string; count?: number }> = [
-    { key: 'services', label: t('logs.list.tabs.services', { defaultValue: '서비스' }), icon: 'article' },
-    { key: 'stream', label: t('logs.list.tabs.stream', { defaultValue: '로그 스트림' }), icon: 'receipt_long' },
-    { key: 'errors', label: t('logs.list.tabs.errors', { defaultValue: '에러/경고' }), icon: 'error', count: errorCount + warnCount },
-  ];
 
   return (
     <>
@@ -120,148 +95,108 @@ export function LogListDesktopView({
         <KPIChip label={t('logs.kpi.warnings')} value={warnCount} tone={warnCount > 0 ? 'amber' : 'slate'} icon="warning" />
       </div>
 
-      <div className="flex items-end border-b border-slate-200 dark:border-ui-border-dark mb-5">
-        <div role="tablist" aria-label={t('logs.title')} className="flex gap-0">
-          {tabs.map((tab) => (
+      <FilterBar
+        searchValue={searchQuery}
+        onSearchChange={onSearchChange}
+        searchPlaceholder={t('logs.searchPlaceholder')}
+      />
+
+      {services.length > 0 && (
+        <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="px-3 py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold">
+              {t('logs.filter.all')} {services.length}
+            </span>
+            <span className="px-3 py-1.5 rounded-full border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs font-bold">
+              {t('logs.filter.error')} {errorServiceCount}
+            </span>
+            <span className="px-3 py-1.5 rounded-full border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-xs font-bold">
+              {t('logs.filter.warn')} {warnServiceCount}
+            </span>
+            <span className="px-3 py-1.5 rounded-full border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark text-slate-500 dark:text-text-muted-dark text-xs font-bold">
+              {t('logs.tabs.waiting')} {waitingCount}
+            </span>
+          </div>
+
+          <div className="inline-flex items-center rounded-lg border border-slate-200 dark:border-ui-border-dark bg-slate-100 dark:bg-bg-surface-dark/50 p-1">
             <button
-              key={tab.key}
-              role="tab"
-              aria-selected={activeTab === tab.key}
-              onClick={() => onTabChange(tab.key)}
-              className={`relative px-4 py-2.5 text-sm font-semibold transition-colors -mb-px border-b-2 whitespace-nowrap ${
-                activeTab === tab.key
-                  ? 'text-slate-900 dark:text-white border-primary'
-                  : 'text-slate-500 dark:text-text-muted-dark border-transparent hover:text-slate-700 dark:hover:text-text-base-dark'
+              type="button"
+              onClick={() => setViewMode('cards')}
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${
+                viewMode === 'cards'
+                  ? 'bg-white dark:bg-ui-hover-dark text-slate-900 dark:text-white shadow-sm'
+                  : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-base-dark'
               }`}
             >
-              <span className="inline-flex items-center gap-1.5">
-                <MaterialIcon name={tab.icon} className="text-sm" />
-                {tab.label}
-                {typeof tab.count === 'number' && (
-                  <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] ${activeTab === tab.key ? 'bg-primary/10 text-primary' : 'bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark'}`}>
-                    {tab.count}
-                  </span>
-                )}
-              </span>
+              <MaterialIcon name="grid_view" className="text-sm" />
+              {t('logs.view.cards', { defaultValue: '카드' })}
             </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('table')}
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${
+                viewMode === 'table'
+                  ? 'bg-white dark:bg-ui-hover-dark text-slate-900 dark:text-white shadow-sm'
+                  : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-base-dark'
+              }`}
+            >
+              <MaterialIcon name="view_list" className="text-sm" />
+              {t('logs.view.table', { defaultValue: '테이블' })}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {loading && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-64 rounded-xl bg-slate-100 dark:bg-ui-hover-dark animate-pulse" />
           ))}
         </div>
-      </div>
-
-      {activeTab === 'services' && (
-        <>
-          <FilterBar
-            searchValue={searchQuery}
-            onSearchChange={onSearchChange}
-            searchPlaceholder={t('logs.searchPlaceholder')}
-          />
-
-          {services.length > 0 && (
-            <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-3 py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold">
-                  {t('logs.filter.all')} {services.length}
-                </span>
-                <span className="px-3 py-1.5 rounded-full border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs font-bold">
-                  {t('logs.filter.error')} {errorServiceCount}
-                </span>
-                <span className="px-3 py-1.5 rounded-full border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-xs font-bold">
-                  {t('logs.filter.warn')} {warnServiceCount}
-                </span>
-                <span className="px-3 py-1.5 rounded-full border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark text-slate-500 dark:text-text-muted-dark text-xs font-bold">
-                  {t('logs.tabs.waiting')} {waitingCount}
-                </span>
-              </div>
-
-              <div className="inline-flex items-center rounded-lg border border-slate-200 dark:border-ui-border-dark bg-slate-100 dark:bg-bg-surface-dark/50 p-1">
-                <button
-                  type="button"
-                  onClick={() => setViewMode('cards')}
-                  className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${
-                    viewMode === 'cards'
-                      ? 'bg-white dark:bg-ui-hover-dark text-slate-900 dark:text-white shadow-sm'
-                      : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-base-dark'
-                  }`}
-                >
-                  <MaterialIcon name="grid_view" className="text-sm" />
-                  {t('logs.view.cards', { defaultValue: '카드' })}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('table')}
-                  className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${
-                    viewMode === 'table'
-                      ? 'bg-white dark:bg-ui-hover-dark text-slate-900 dark:text-white shadow-sm'
-                      : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-base-dark'
-                  }`}
-                >
-                  <MaterialIcon name="view_list" className="text-sm" />
-                  {t('logs.view.table', { defaultValue: '테이블' })}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {loading && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-64 rounded-xl bg-slate-100 dark:bg-ui-hover-dark animate-pulse" />
-              ))}
-            </div>
-          )}
-
-          {!loading && error && (
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
-              <MaterialIcon name="error_outline" className="text-xl shrink-0" />
-              <p className="text-sm font-medium">{t('common.error')}: {error}</p>
-            </div>
-          )}
-
-          {!loading && !error && services.length === 0 && (
-            <EmptyState
-              icon="article"
-              title={t('logServices.empty')}
-              description={t('logServices.emptyDesc')}
-              action={{ label: t('logServices.add.submit'), onClick: onAddService }}
-            />
-          )}
-
-          {!loading && !error && filteredServices.length > 0 && viewMode === 'cards' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-              {filteredServices.map((service) => (
-                <LogServiceCard
-                  key={service.id}
-                  service={service}
-                  recentLogs={serviceLogs[service.id] ?? []}
-                  onClick={() => onServiceClick(service.id)}
-                />
-              ))}
-            </div>
-          )}
-
-          {!loading && !error && filteredServices.length > 0 && viewMode === 'table' && (
-            <LogServiceTable
-              services={filteredServices}
-              serviceLogs={serviceLogs}
-              onServiceClick={onServiceClick}
-            />
-          )}
-
-          {!loading && !error && services.length > 0 && filteredServices.length === 0 && (
-            <div className="py-20 text-center border border-dashed border-slate-200 dark:border-ui-border-dark rounded-2xl bg-slate-50/50 dark:bg-bg-surface-dark/50">
-              <MaterialIcon name="search_off" className="text-5xl text-slate-300 mb-4" />
-              <p className="text-slate-500 dark:text-text-muted-dark font-medium">{t('logs.noResults')}</p>
-            </div>
-          )}
-        </>
       )}
 
-      {activeTab === 'stream' && (
-        <LogStreamTab logs={streamLogs} loading={streamLoading} services={services} onRefresh={onRefreshStream} />
+      {!loading && error && (
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
+          <MaterialIcon name="error_outline" className="text-xl shrink-0" />
+          <p className="text-sm font-medium">{t('common.error')}: {error}</p>
+        </div>
       )}
 
-      {activeTab === 'errors' && (
-        <LogErrorsTab logs={errorLogs} loading={errorsLoading} services={services} onRefresh={onRefreshErrors} />
+      {!loading && !error && services.length === 0 && (
+        <EmptyState
+          icon="article"
+          title={t('logServices.empty')}
+          description={t('logServices.emptyDesc')}
+          action={{ label: t('logServices.add.submit'), onClick: onAddService }}
+        />
+      )}
+
+      {!loading && !error && filteredServices.length > 0 && viewMode === 'cards' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+          {filteredServices.map((service) => (
+            <LogServiceCard
+              key={service.id}
+              service={service}
+              recentLogs={serviceLogs[service.id] ?? []}
+              onClick={() => onServiceClick(service.id)}
+            />
+          ))}
+        </div>
+      )}
+
+      {!loading && !error && filteredServices.length > 0 && viewMode === 'table' && (
+        <LogServiceTable
+          services={filteredServices}
+          serviceLogs={serviceLogs}
+          onServiceClick={onServiceClick}
+        />
+      )}
+
+      {!loading && !error && services.length > 0 && filteredServices.length === 0 && (
+        <div className="py-20 text-center border border-dashed border-slate-200 dark:border-ui-border-dark rounded-2xl bg-slate-50/50 dark:bg-bg-surface-dark/50">
+          <MaterialIcon name="search_off" className="text-5xl text-slate-300 mb-4" />
+          <p className="text-slate-500 dark:text-text-muted-dark font-medium">{t('logs.noResults')}</p>
+        </div>
       )}
     </>
   );
