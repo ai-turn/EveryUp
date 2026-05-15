@@ -12,8 +12,9 @@ FROM --platform=$BUILDPLATFORM node:22-alpine AS frontend
 
 WORKDIR /build/frontend
 
-# Enable corepack to use pnpm without separate install
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Enable corepack; the pnpm version is pinned via package.json's
+# "packageManager" field so the image matches local dev exactly.
+RUN corepack enable
 
 # Copy lockfile + manifest first for layer caching
 COPY frontend/package.json frontend/pnpm-lock.yaml ./
