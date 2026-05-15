@@ -60,7 +60,7 @@ export function Header() {
           <div className="h-full max-w-360 mx-auto flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
             {/* Left: Logo */}
             <Link to="/" className="flex items-center gap-2 group shrink-0 z-10 transition-transform active:scale-95">
-                <div className="flex items-center justify-center h-10 w-10 overflow-hidden">
+                <div className="flex items-center justify-center h-12 w-12 overflow-hidden">
                     <img src={theme === 'dark' ? logoDark : logo} alt="Monitoring Logo" className="h-full w-full object-contain" />
                 </div>
                 <div className="flex flex-col">

@@ -327,7 +327,7 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
                         {log.level}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-700 dark:text-text-base-dark">
+                    <td className="max-w-0 w-full px-4 py-3 text-sm text-slate-700 dark:text-text-base-dark">
                       <div className="flex items-center gap-3 min-w-0">
                         <span className="flex-1 min-w-0 truncate" title={log.message}>{log.message}</span>
                         {(log.linkedRequest || log.traceId) && (
