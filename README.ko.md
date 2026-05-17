@@ -25,7 +25,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/everyup-main.png" alt="EveryUp 대시보드" width="100%">
+  <img src="docs/images/everyup-main-ko.png" alt="EveryUp 대시보드" width="100%">
 </p>
 
 EveryUp은 작은 팀과 셀프 호스팅 환경을 위해 서비스 업타임, 서버 리소스, 애플리케이션 로그, OpenTelemetry 트레이스, 알림 발송 상태를 한 곳에서 볼 수 있게 해줍니다. Go 바이너리와 SQLite로 동작하므로 Prometheus, Grafana, Elasticsearch, 관리형 클라우드 스택 없이 배포할 수 있습니다.

@@ -25,7 +25,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/everyup-main.png" alt="EveryUp dashboard" width="100%">
+  <img src="docs/images/everyup-main-en.png" alt="EveryUp dashboard" width="100%">
 </p>
 
 EveryUp gives small teams and self-hosters a single place to watch service uptime, server resources, application logs, OpenTelemetry traces, and alert delivery. It runs as a Go binary with SQLite, so you can deploy it without Prometheus, Grafana, Elasticsearch, or a managed cloud stack.
