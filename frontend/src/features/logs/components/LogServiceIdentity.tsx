@@ -20,12 +20,10 @@ const LEVEL_STYLE: Record<LogLevel, { dot: string }> = {
 
 function InfoChip({ icon, label, value, accent }: { icon: string; label: string; value: string; accent?: boolean }) {
   return (
-    <div className="relative group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark cursor-default">
-      <MaterialIcon name={icon} className={`text-sm ${accent ? 'text-primary' : 'text-slate-400 dark:text-text-dim-dark'}`} />
-      <span className="text-xs font-semibold text-slate-700 dark:text-text-base-dark">{value}</span>
-      <div className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 dark:bg-slate-700 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-        {label}
-      </div>
+    <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark">
+      <MaterialIcon name={icon} className={`text-sm ${accent ? 'text-primary' : 'text-slate-500 dark:text-text-muted-dark'}`} />
+      <span className="text-xs text-slate-500 dark:text-text-muted-dark">{label}</span>
+      <span className="text-xs font-semibold text-slate-900 dark:text-white">{value}</span>
     </div>
   );
 }
@@ -88,9 +86,18 @@ export function LogServiceIdentity({ service }: Props) {
             value={createdText}
           />
 
-          {/* Log level filter ??read-only dots */}
-          <div className="shrink-0 relative group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark cursor-default">
-            <MaterialIcon name="filter_alt" className="text-sm text-slate-400 dark:text-text-dim-dark" />
+          {(service.apiExcludePaths?.length ?? 0) > 0 && (
+            <InfoChip
+              icon="block"
+              label={t('logServices.identity.excludePaths')}
+              value={String(service.apiExcludePaths!.length)}
+            />
+          )}
+
+          {/* Log level filter — read-only dots with visible label */}
+          <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark">
+            <MaterialIcon name="filter_alt" className="text-sm text-slate-500 dark:text-text-muted-dark" />
+            <span className="text-xs text-slate-500 dark:text-text-muted-dark">{t('logServices.identity.levelFilter')}</span>
             <span className="flex items-center gap-1">
               {LOG_LEVELS.map((lvl) => (
                 <span
@@ -99,9 +106,6 @@ export function LogServiceIdentity({ service }: Props) {
                 />
               ))}
             </span>
-            <div className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 dark:bg-slate-700 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-              {t('logServices.identity.levelFilter')}
-            </div>
           </div>
         </div>
       </div>

@@ -398,12 +398,12 @@ function MetaChip({ icon, labelKey, value, accent }: { icon: string; labelKey: s
       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border ${
         accent
           ? 'bg-primary/10 border-primary/20'
-          : 'bg-slate-100 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark'
+          : 'bg-white dark:bg-bg-surface-dark border-slate-200 dark:border-ui-border-dark'
       }`}
     >
-      <MaterialIcon name={icon} className={`text-[13px] shrink-0 ${accent ? 'text-primary' : 'text-slate-400 dark:text-text-dim-dark'}`} />
-      <span className="font-semibold text-slate-400 dark:text-text-dim-dark">{labelKey}:</span>
-      <span className={`font-bold ${accent ? 'text-primary' : 'text-slate-700 dark:text-text-base-dark'}`}>{value}</span>
+      <MaterialIcon name={icon} className={`text-[13px] shrink-0 ${accent ? 'text-primary' : 'text-slate-500 dark:text-text-muted-dark'}`} />
+      <span className="font-semibold text-slate-500 dark:text-text-muted-dark">{labelKey}:</span>
+      <span className={`font-bold ${accent ? 'text-primary' : 'text-slate-900 dark:text-white'}`}>{value}</span>
     </span>
   );
 }

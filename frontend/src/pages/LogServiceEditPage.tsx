@@ -192,7 +192,7 @@ export function LogServiceEditPage() {
               <MaterialIcon name="edit_note" className="text-primary text-lg" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                 {t('logServices.edit.basicInfo')}
               </h3>
               <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">
@@ -259,7 +259,7 @@ export function LogServiceEditPage() {
               <MaterialIcon name="filter_alt" className="text-primary text-lg" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                 {t('logServices.settings.levelFilterTitle')}
               </h3>
               <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">
@@ -304,7 +304,7 @@ export function LogServiceEditPage() {
               <MaterialIcon name="block" className="text-primary text-lg" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                 {t('logServices.edit.excludePathsTitle', { defaultValue: 'Excluded paths' })}
               </h3>
               <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">

@@ -247,6 +247,7 @@
       "apiKey": "API 키",
       "createdAt": "생성일",
       "levelFilter": "로그 레벨",
+      "excludePaths": "제외 경로",
       "acceptAll": "모든 레벨",
       "levelFilterHint": "클릭하면 설정 탭으로 이동합니다"
     },

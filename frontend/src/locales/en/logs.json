@@ -247,6 +247,7 @@
       "apiKey": "API Key",
       "createdAt": "Created",
       "levelFilter": "Log Level",
+      "excludePaths": "Excluded paths",
       "acceptAll": "All Levels",
       "levelFilterHint": "Click to go to the Settings tab"
     },
