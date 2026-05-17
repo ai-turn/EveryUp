@@ -107,7 +107,7 @@ function HostHeader({
               <MetaChip icon="memory" labelKey="커널" value={systemInfo.kernel} />
             )}
             {!!systemInfo?.uptime && (
-              <MetaChip icon="schedule" labelKey="업타임" value={formatUptime(systemInfo.uptime)} accent />
+              <MetaChip icon="schedule" labelKey="업타임" value={formatUptime(systemInfo.uptime)} />
             )}
             {systemInfo?.hostname && (
               <MetaChip icon="dns" labelKey="호스트명" value={systemInfo.hostname} />
