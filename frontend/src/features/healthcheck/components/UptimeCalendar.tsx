@@ -98,7 +98,7 @@ export function UptimeCalendar({ serviceId, refreshKey }: UptimeCalendarProps) {
     <div className="p-6 rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-chart-bg">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-slate-900 dark:text-white text-lg font-bold tracking-tight">
+        <h2 className="text-slate-900 dark:text-white text-xl font-bold tracking-tight">
           {t('헬스체크 상태')}
         </h2>
         <span className="text-green-500 text-sm font-bold">{stats.percentage}</span>

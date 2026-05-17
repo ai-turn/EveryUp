@@ -134,7 +134,7 @@ export function AlertRulesStatus() {
                 onClick={() => navigate('/alerts?tab=rules')}
                 className="w-full py-2 text-xs font-semibold text-slate-400 dark:text-text-dim-dark hover:text-primary dark:hover:text-primary transition-colors text-center"
               >
-                +{rules.length - 5}개 더보기
+                {t('common.showMore', { count: rules.length - 5 })}
               </button>
             )}
           </div>

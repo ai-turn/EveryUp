@@ -24,7 +24,7 @@ export function ResourceStatusGrid() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                 {t('dashboard.infrastructure.title', { defaultValue: 'Infrastructure' })}
               </h2>
               {!loading && items.length > 0 && (
@@ -33,7 +33,7 @@ export function ResourceStatusGrid() {
                 </span>
               )}
             </div>
-            <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">서버 리소스 사용률 현황</p>
+            <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{t('dashboard.infrastructure.subtitle')}</p>
           </div>
         </div>
         {!loading && !error && items.length > 0 && (

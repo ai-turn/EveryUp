@@ -35,6 +35,7 @@
         "collapse": "Collapse",
         "status": "Status",
         "viewMore": "Go to",
+        "showMore": "+{{count}} more",
         "backToList": "Back to List",
         "retry": "Retry",
         "saved": "Saved",

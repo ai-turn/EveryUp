@@ -2,18 +2,21 @@
     "dashboard": {
         "healthCheck": {
             "title": "헬스체크",
+            "subtitle": "HTTP / TCP 서비스 응답 모니터링",
             "empty": "등록된 헬스체크가 없습니다.",
             "emptyDesc": "헬스체크를 추가하여 URL 상태와 응답 시간을 모니터링하세요.",
             "add": "헬스체크 추가"
         },
         "infrastructure": {
             "title": "인프라",
+            "subtitle": "서버 리소스 사용률 현황",
             "empty": "등록된 인프라가 없습니다",
             "emptyDesc": "서버를 추가하여 CPU, 메모리, 디스크 모니터링을 시작하세요.",
             "add": "인프라 추가"
         },
         "logs": {
             "title": "로그",
+            "subtitle": "애플리케이션 로그 수집 현황",
             "empty": "등록된 로그가 없습니다",
             "emptyDesc": "로그를 추가하여 API 오류를 수집하고 분석하세요.",
             "add": "로그 추가"

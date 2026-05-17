@@ -54,7 +54,7 @@ export function LogServicesGrid() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                 {t('dashboard.logs.title')}
               </h2>
               {!loading && services.length > 0 && (
@@ -63,7 +63,7 @@ export function LogServicesGrid() {
                 </span>
               )}
             </div>
-            <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">애플리케이션 로그 수집 현황</p>
+            <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{t('dashboard.logs.subtitle')}</p>
           </div>
         </div>
         {!loading && services.length > 0 && (

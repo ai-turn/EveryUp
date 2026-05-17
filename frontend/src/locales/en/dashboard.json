@@ -2,18 +2,21 @@
     "dashboard": {
         "healthCheck": {
             "title": "Health Check",
+            "subtitle": "HTTP / TCP service response monitoring",
             "empty": "No health checks registered.",
             "emptyDesc": "Add a health check to start monitoring URL status and response times.",
             "add": "Add Health Check"
         },
         "infrastructure": {
             "title": "Infrastructure",
+            "subtitle": "Server resource utilization",
             "empty": "No infrastructure registered",
             "emptyDesc": "Add a server to start monitoring CPU, memory, and disk.",
             "add": "Add Infrastructure"
         },
         "logs": {
             "title": "Logs",
+            "subtitle": "Application log collection status",
             "empty": "No logs registered",
             "emptyDesc": "Add a log to collect and analyze error logs from your APIs.",
             "add": "Add Log"

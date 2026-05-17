@@ -103,7 +103,7 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
           <IconLogs size={20} className="text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-sm truncate text-slate-900 dark:text-white">{service.name}</h3>
+          <h3 className="font-bold text-base truncate text-slate-900 dark:text-white">{service.name}</h3>
           <div className="flex items-center gap-1.5 mt-0.5 text-xs text-slate-400 dark:text-text-dim-dark">
             <span className="font-bold tabular-nums text-slate-600 dark:text-text-muted-dark">{recentLogs.length}</span>
             <span>recent</span>

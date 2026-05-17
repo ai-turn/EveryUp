@@ -414,7 +414,7 @@ function SectionHeading({ icon, title }: { icon: string; title: string }) {
       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
         <MaterialIcon name={icon} className="text-base" />
       </div>
-      <h2 className="text-sm font-bold text-slate-900 dark:text-white">{title}</h2>
+      <h2 className="text-lg font-bold text-slate-900 dark:text-white">{title}</h2>
     </div>
   );
 }

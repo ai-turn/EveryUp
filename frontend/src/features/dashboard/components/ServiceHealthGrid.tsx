@@ -82,7 +82,7 @@ export function ServiceHealthGrid({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                   {t('dashboard.healthCheck.title')}
                 </h2>
                 {!loading && services && services.length > 0 && (
@@ -91,7 +91,7 @@ export function ServiceHealthGrid({
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">HTTP / TCP 서비스 응답 모니터링</p>
+              <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{t('dashboard.healthCheck.subtitle')}</p>
             </div>
           </div>
           {!loading && !error && services && services.length > 0 && (

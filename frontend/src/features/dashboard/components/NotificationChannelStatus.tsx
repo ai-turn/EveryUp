@@ -123,7 +123,7 @@ export function NotificationChannelStatus() {
                 onClick={() => navigate('/alerts')}
                 className="w-full py-2 text-xs font-semibold text-slate-400 dark:text-text-dim-dark hover:text-primary dark:hover:text-primary transition-colors text-center"
               >
-                +{totalCount - 5}개 더보기
+                {t('common.showMore', { count: totalCount - 5 })}
               </button>
             )}
           </div>
