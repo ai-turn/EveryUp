@@ -50,7 +50,9 @@ function formatDuration(ms: number): string {
 }
 
 function formatClock(isoString: string): string {
-  return new Date(isoString).toLocaleTimeString([], {
+  return new Date(isoString).toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
@@ -326,26 +328,10 @@ function RequestRow({
           </span>
         </td>
         <td className="px-4 py-3 max-w-md">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="flex-1 min-w-0">
-              <div className="font-mono text-xs font-semibold text-slate-900 dark:text-white truncate" title={request.path}>{request.path}</div>
-              {request.pathTemplate && request.pathTemplate !== request.path && (
-                <div className="font-mono text-[10px] text-slate-400 dark:text-text-dim-dark truncate">{request.pathTemplate}</div>
-              )}
-            </div>
-            {request.traceId && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenTrace(request.traceId!);
-                }}
-                className="shrink-0 inline-flex items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-[10px] font-semibold text-primary hover:bg-primary/10 cursor-pointer"
-                title={request.traceId}
-              >
-                <MaterialIcon name="timeline" className="text-xs" />
-                <span>{t('apiRequests.actions.viewTrace')}</span>
-              </button>
+          <div className="min-w-0">
+            <div className="font-mono text-xs font-semibold text-slate-900 dark:text-white truncate" title={request.path}>{request.path}</div>
+            {request.pathTemplate && request.pathTemplate !== request.path && (
+              <div className="font-mono text-[10px] text-slate-400 dark:text-text-dim-dark truncate">{request.pathTemplate}</div>
             )}
           </div>
         </td>
@@ -356,10 +342,28 @@ function RequestRow({
         </td>
         <td className="px-4 py-3 text-right font-mono text-xs font-bold text-slate-700 dark:text-text-base-dark">{formatDuration(request.durationMs)}</td>
         <td className="px-4 py-3 font-mono text-xs text-slate-500 dark:text-text-muted-dark">{request.clientIp ?? '-'}</td>
+        <td className="px-4 py-3 whitespace-nowrap">
+          {request.traceId && (
+            <div className="flex items-center justify-end">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenTrace(request.traceId!);
+                }}
+                className="inline-flex items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary/10 cursor-pointer"
+                title={request.traceId}
+              >
+                <MaterialIcon name="timeline" className="text-sm" />
+                <span>{t('apiRequests.actions.viewTrace')}</span>
+              </button>
+            </div>
+          )}
+        </td>
       </tr>
       {open && expandable && (
         <tr className="bg-slate-50/80 dark:bg-ui-hover-dark/20">
-          <td colSpan={7} className="px-4 pb-4 pt-1">
+          <td colSpan={8} className="px-4 pb-4 pt-1">
             <div className="ml-8 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-3">
               <div className="mb-1 text-xs font-bold uppercase text-red-600 dark:text-red-400">{t('apiRequests.detail.error')}</div>
               <pre className="whitespace-pre-wrap break-all font-mono text-xs text-red-700 dark:text-red-300">{request.error}</pre>
@@ -405,12 +409,13 @@ function RequestsStreamTable({
               <th className="px-4 py-2.5">{t('apiRequests.table.status')}</th>
               <th className="px-4 py-2.5 text-right">{t('apiRequests.table.latency')}</th>
               <th className="px-4 py-2.5">{t('apiRequests.table.clientIp')}</th>
+              <th className="px-4 py-2.5"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-ui-border-dark/60">
             {loading && items.length === 0 && [1, 2, 3, 4, 5].map((i) => (
               <tr key={i}>
-                <td colSpan={7} className="px-4 py-3">
+                <td colSpan={8} className="px-4 py-3">
                   <div className="h-8 rounded bg-slate-100 dark:bg-ui-hover-dark animate-pulse" />
                 </td>
               </tr>
@@ -427,7 +432,7 @@ function RequestsStreamTable({
             ))}
             {!loading && items.length === 0 && (
               <tr>
-                <td colSpan={7}>
+                <td colSpan={8}>
                   <div className="py-14 text-center text-slate-500 dark:text-text-muted-dark">
                     <MaterialIcon name="api" className="text-4xl mb-2 text-slate-300 dark:text-text-dim-dark" />
                     <p>{t('apiRequests.empty.noResults')}</p>
