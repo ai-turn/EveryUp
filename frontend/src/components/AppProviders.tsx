@@ -10,7 +10,12 @@ function TolgeeLanguageSync() {
   const { i18n } = useTranslation();
   useEffect(() => {
     tolgee.changeLanguage(i18n.language);
-  }, [i18n.language]);
+    // Keep <html lang> in sync with the rendered language so Chrome (esp.
+    // mobile) doesn't detect a lang/content mismatch and offer to translate
+    // the page. index.html hardcodes lang="en"; without this, Korean UI under
+    // lang="en" triggers the "원본으로 보기" banner.
+    document.documentElement.lang = i18n.resolvedLanguage ?? i18n.language;
+  }, [i18n.language, i18n.resolvedLanguage]);
   return null;
 }
 

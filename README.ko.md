@@ -1,174 +1,56 @@
 <p align="center">
-  <img src="docs/images/everyup_logo.png" alt="EveryUp" width="96">
+  <img src="docs/images/logo.webp" alt="EveryUp" width="88">
 </p>
 
-# EveryUp — 셀프 호스팅 모니터링 대시보드
+<h1 align="center">EveryUp</h1>
 
-<img src="docs/images/ascci.png" alt="EveryUp — 셀프 호스팅 업타임 및 인프라 모니터링" width="480">
+<p align="center">
+  업타임, 인프라, 로그, 알림을 하나로 묶은 가벼운 셀프 호스팅 모니터링 대시보드.
+</p>
 
-업타임 모니터링, 서버 메트릭, 로그 수집, 알림을 하나의 셀프 호스팅 대시보드에서.
-Prometheus, Grafana, 클라우드 없이 — 단일 바이너리와 SQLite 파일만으로 실행됩니다.
+<p align="center">
+  <a href="README.md">English</a> ·
+  <a href="https://ai-turn.github.io/everyup/">라이브 데모</a> ·
+  <a href="#빠른-시작">빠른 시작</a> ·
+  <a href="#문서">문서</a>
+</p>
 
-[English](README.md) | **한국어**
+<p align="center">
+  <a href="https://ai-turn.github.io/everyup/"><img src="https://img.shields.io/badge/Demo-live-brightgreen" alt="라이브 데모"></a>
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT 라이선스">
+  <img src="https://img.shields.io/badge/Go-1.24-00ADD8?logo=go" alt="Go 1.24">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react" alt="React 19">
+  <img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker" alt="Docker ready">
+  <img src="https://img.shields.io/docker/pulls/aiturn/everyup" alt="Docker pulls">
+</p>
 
-[![Demo](https://img.shields.io/badge/Demo-live-brightgreen)](https://ai-turn.github.io/everyup/)
-![License](https://img.shields.io/badge/license-MIT-blue)
-![Go](https://img.shields.io/badge/Go-1.24-00ADD8?logo=go)
-![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
-![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker)
-![Docker Pulls](https://img.shields.io/docker/pulls/aiturn/everyup)
+<p align="center">
+  <img src="docs/images/everyup-main.png" alt="EveryUp 대시보드" width="100%">
+</p>
 
-**[라이브 데모 보기 →](https://ai-turn.github.io/everyup/)**
+EveryUp은 작은 팀과 셀프 호스팅 환경을 위해 서비스 업타임, 서버 리소스, 애플리케이션 로그, OpenTelemetry 트레이스, 알림 발송 상태를 한 곳에서 볼 수 있게 해줍니다. Go 바이너리와 SQLite로 동작하므로 Prometheus, Grafana, Elasticsearch, 관리형 클라우드 스택 없이 배포할 수 있습니다.
 
----
+## 왜 EveryUp인가요?
 
-## 목차
-
-- [EveryUp을 선택하는 이유](#everyup을-선택하는-이유)
-- [주요 기능](#주요-기능)
-- [메뉴 안내](#메뉴-안내)
-  - [헬스체크](#헬스체크)
-  - [로그](#로그)
-  - [인프라](#인프라)
-  - [알림](#알림)
-  - [환경설정](#환경설정)
-- [빠른 시작](#빠른-시작)
-  - [Docker](#docker)
-  - [Docker Compose](#docker-compose)
-  - [로컬 개발](#로컬-개발)
-- [설정](#설정)
-- [데이터 백업](#데이터-백업)
-- [OpenTelemetry 수집](#opentelemetry-수집)
-- [문서](#문서)
-- [기여](#기여)
-- [라이선스](#라이선스)
-
----
-
-## EveryUp을 선택하는 이유
-
-대부분의 서버 모니터링 도구는 하나의 문제만 해결합니다. EveryUp은 업타임 체크, 인프라 메트릭, 로그 수집, 알림을 **단일 셀프 호스팅 바이너리**로 통합합니다 — Uptime Kuma + Grafana + 로그 수집기를 대체하는 경량 오픈소스 솔루션입니다.
-
-- **외부 의존성 제로** — Go 바이너리 + SQLite, Docker가 실행되는 어디서나 동작
-- **프라이버시 우선** — 모니터링 데이터가 내 인프라 밖으로 나가지 않음
-- **하나의 대시보드** — 헬스체크, 서버 메트릭, 로그, 알림을 한 곳에서
-- **무료 오픈소스** — MIT 라이선스, 몇 분 만에 셀프 호스팅 가능
-
----
+- **하나의 대시보드** - 헬스체크, 인프라 메트릭, 로그, API 요청 인스펙터, 알림을 함께 봅니다.
+- **셀프 호스팅 기본값** - 모니터링 데이터가 내 인프라 밖으로 나가지 않습니다.
+- **단순한 운영** - 하나의 컨테이너, 하나의 SQLite 파일, 최초 실행 시 자동 생성되는 시크릿으로 시작합니다.
+- **OpenTelemetry 친화적** - 기존 SDK나 자동 계측에서 OTLP 로그와 트레이스를 바로 받을 수 있습니다.
 
 ## 주요 기능
 
-| 기능 | 설명 |
-|------|------|
-| **업타임 모니터링** | HTTP/TCP 헬스체크, 업타임, 레이턴시 추적 |
-| **인프라** | CPU/메모리/디스크/네트워크 실시간 수집 (로컬 + SSH 원격) |
-| **API 요청 인스펙터** | 샘플링·서버사이드 마스킹·본문 검사가 가능한 요청/응답 단위 캡처 |
-| **알림** | Telegram / Discord / Slack 채널 연동, 임계값 기반 규칙 |
-| **로그 관리** | 통합 로그 뷰어, 검색, 로그 에이전트 수집 및 HTTP 요청/응답 인스펙터 |
-| **실시간 스트리밍** | WebSocket 기반 메트릭 실시간 업데이트 |
-
----
-
-## 메뉴 안내
-
-### 헬스체크
-
-HTTP 및 TCP 엔드포인트의 가용성을 주기적으로 점검합니다.
-
-- **모니터링 방식**: 일정 주기(interval) 또는 cron 표현식으로 체크 스케줄 설정
-- **상세 화면**: 실시간 메트릭, 응답 시간 차트, 최근 체크 이력 바, 장애 이력 확인
-- **장애 감지**: 연속 실패 횟수 초과 시 알림 채널로 즉시 발송
-
-### 로그
-
-외부 서비스의 로그를 수집하고 대시보드에서 조회합니다.
-
-- **로그 뷰어**: 레벨(error / warn / info / debug / trace) 필터링, 키워드 검색, 타임라인 확인
-- **API 요청 인스펙터**: OTel SERVER span에서 projection된 HTTP 요청을 조회
-- **통합 탭**: OpenTelemetry OTLP 연동용 API 키 발급 및 코드 스니펫 제공
-- **수집 설정**: 허용 로그 레벨 필터를 서비스별로 관리
-
-**EveryUp으로 데이터를 보내는 방법:**
-
-| 종류 | 방법 |
-|------|------|
-| **로그와 트레이스** | OpenTelemetry 자동 계측 또는 SDK를 사용해 OTLP/HTTP로 EveryUp에 전송합니다. |
-| **API 요청 상관관계** | EveryUp은 HTTP 속성이 있는 OTel SERVER span을 API 요청 인스펙터에 projection합니다. |
-
-OTLP는 각 로그 서비스의 **Integration** 탭에서 발급한 API 키를 사용합니다.
-
-### 인프라
-
-서버의 리소스 사용량을 실시간으로 수집하고 추이를 기록합니다.
-
-- **로컬 수집**: 에이전트가 설치된 서버의 CPU · 메모리 · 디스크 · 네트워크를 직접 수집
-- **SSH 원격 수집**: 별도 에이전트 없이 SSH 접속만으로 원격 서버 메트릭 수집
-- **상세 화면**: 방사형 게이지(실시간) + 트렌드 차트(시간대별 추이) + 프로세스 목록
-- **자격증명 보안**: SSH 비밀번호와 개인키는 AES-256-GCM으로 암호화된 후 데이터베이스에 저장됩니다. 암호화 키는 최초 실행 시 자동 생성되며 API를 통해 외부에 노출되지 않습니다.
-
-### 알림
-
-임계값 초과 또는 장애 발생 시 외부 채널로 즉시 알림을 발송합니다.
-
-- **채널**: Telegram · Discord · Slack · Webhook 지원, 다중 채널 동시 등록 가능
-- **규칙**: 헬스체크 다운, 인프라 CPU/메모리/디스크 임계값, 로그 에러/경고 발생 조건 설정
-- **이력**: 발송 성공·실패 내역을 채널 및 타임라인별로 조회
-
-### 환경설정
-
-EveryUp 전체에 적용되는 시스템 설정을 관리합니다.
-
-- **계정**: 관리자 비밀번호 변경
-- **데이터 보존**: 로그, 메트릭, 알림 이력의 보존 기간 설정
-- **수집 주기**: 인프라 메트릭 수집 및 저장 간격 설정
-- **테마**: 라이트 / 다크 모드 전환
-
----
+| 영역 | 제공 기능 |
+| --- | --- |
+| **업타임 모니터링** | HTTP/TCP 체크, 업타임 이력, 레이턴시 추이, 장애 감지 |
+| **인프라 메트릭** | 로컬 또는 SSH 원격 호스트의 CPU, 메모리, 디스크, 네트워크, 프로세스 모니터링 |
+| **로그와 트레이스** | 통합 로그 뷰어, 레벨 필터, 키워드 검색, OTLP/HTTP 수집 |
+| **API 요청 인스펙터** | OpenTelemetry SERVER span 기반 요청/응답 가시화, 마스킹, 샘플링 제어 |
+| **알림** | Telegram, Discord, Slack, Webhook 채널과 임계값 기반 규칙 |
+| **실시간 업데이트** | WebSocket 기반 메트릭 스트리밍 |
 
 ## 빠른 시작
 
-별도 설정이 필요 없습니다. 처음 실행 후 브라우저에서 관리자 계정을 직접 생성합니다. 암호화 키와 JWT 시크릿은 최초 실행 시 자동 생성됩니다.
-
-`linux/amd64`와 `linux/arm64` 모두 지원합니다 — Docker가 플랫폼에 맞는 이미지를 자동으로 선택합니다.
-
-### Docker
-
-```bash
-docker pull aiturn/everyup:latest
-```
-
-```bash
-docker run -d \
-  --name everyup \
-  -p 3001:3001 \
-  -v everyup-data:/app/data \
-  aiturn/everyup:latest
-```
-
-### Docker Compose
-
-**1.** `.env` 파일 생성 — 모든 항목은 선택 사항입니다. 기본값으로 충분하다면 이 파일 없이 진행해도 됩니다.
-
-```bash
-# Linux / macOS
-cp .env.example .env
-
-# Windows (PowerShell)
-Copy-Item .env.example .env
-```
-
-또는 변경이 필요한 항목만 직접 작성합니다:
-
-```dotenv
-# EVERYUP_SERVER_PORT=3001
-# EVERYUP_ADMIN_USERNAME=admin
-# EVERYUP_ADMIN_PASSWORD=changeme
-# TZ=Asia/Seoul
-```
-
-> `EVERYUP_ADMIN_USERNAME`와 `EVERYUP_ADMIN_PASSWORD`를 함께 설정하면 EveryUp은 시작할 때마다 해당 관리자 계정을 생성하거나 비밀번호를 다시 설정합니다. 초기 계정을 미리 만들거나 비밀번호를 재설정하려는 경우가 아니라면, 최초 설정 이후에는 비워 두는 것을 권장합니다.
-
-**2.** `docker-compose.yml` 생성:
+가장 빠른 방법은 Docker Compose입니다. 처음 실행한 뒤 브라우저에서 관리자 계정을 만들면 됩니다. 암호화 키와 JWT 시크릿은 자동 생성됩니다.
 
 ```yaml
 services:
@@ -176,113 +58,48 @@ services:
     image: aiturn/everyup:latest
     container_name: everyup
     ports:
-      - "${EVERYUP_SERVER_PORT:-3001}:3001"
+      - "3001:3001"
     volumes:
       - everyup-data:/app/data
-    env_file:
-      - path: .env
-        required: false
     restart: unless-stopped
 
 volumes:
   everyup-data:
 ```
 
-**3.** 시작:
-
 ```bash
 docker compose up -d
 ```
 
-**http://localhost:3001** 접속 후 관리자 계정을 생성합니다.
+`http://localhost:3001`로 접속합니다.
 
----
-
-### 로컬 개발
-
-**사전 준비:** [Go 1.24+](https://go.dev/dl/), [Node.js 22+](https://nodejs.org/), [pnpm](https://pnpm.io/installation)
+Docker 명령 한 줄로 실행하려면:
 
 ```bash
-git clone https://github.com/ai-turn/everyup.git
-cd everyup
+docker run -d --name everyup -p 3001:3001 -v everyup-data:/app/data aiturn/everyup:latest
 ```
 
-**백엔드**
-```bash
-cd backend
-go run ./cmd/server
-# → http://localhost:3001
-```
-
-> 로컬 개발 시 CORS 설정이 필요하면 `.env.example`을 `.env`로 복사하세요.
-> - Linux / macOS: `cp .env.example .env`
-> - Windows (PowerShell): `Copy-Item .env.example .env`
-> - Windows (CMD): `copy .env.example .env`
-
-**프론트엔드**
-```bash
-cd frontend
-pnpm install
-pnpm dev
-# → http://localhost:5173
-```
-
-**백엔드 테스트 실행**
-```bash
-cd backend
-go test ./internal/api/handlers/ -v
-```
-
-**프로젝트 구조**
-```
-everyup/
-├── frontend/      # React + Vite + TypeScript + Tailwind CSS
-├── backend/       # Go (Fiber) + SQLite + WebSocket
-```
-
----
+EveryUp Docker 이미지는 `linux/amd64`와 `linux/arm64`를 지원합니다.
 
 ## 설정
 
-`EVERYUP_` 접두사 환경 변수로 `config.json`의 모든 값을 오버라이드할 수 있습니다.
+대부분의 설치는 별도 설정 파일 없이 시작할 수 있습니다. 포트 변경, 관리자 계정 사전 생성, 데이터베이스 위치 변경, 타임존 지정이 필요할 때만 환경 변수를 사용하세요.
 
 | 환경 변수 | 기본값 | 설명 |
-|-----------|--------|------|
+| --- | --- | --- |
 | `EVERYUP_SERVER_MODE` | `production` | 실행 모드: `development` 또는 `production` |
-| `EVERYUP_SERVER_PORT` | `3001` | 서버 포트 |
-| `EVERYUP_SERVER_ALLOWORIGINS` | *(동일 오리진)* | 허용할 CORS 오리진 (예: `https://your-domain.com`) |
-| `EVERYUP_ADMIN_USERNAME` | *(미설정)* | 시작 시 관리자 계정 생성 또는 비밀번호 초기화 |
-| `EVERYUP_ADMIN_PASSWORD` | *(미설정)* | 위 계정의 비밀번호 |
-| `EVERYUP_DATABASE_PATH` | `./data/monitoring.db` | SQLite 파일 경로 |
-| `TZ` | 시스템 기본값 | 타임존 (예: `Asia/Seoul`) |
+| `EVERYUP_SERVER_PORT` | `3001` | HTTP 서버 포트 |
+| `EVERYUP_SERVER_ALLOWORIGINS` | 동일 오리진 | 분리 배포된 프론트엔드용 CORS 오리진 |
+| `EVERYUP_ADMIN_USERNAME` | 미설정 | 시작 시 관리자 계정 생성 또는 비밀번호 초기화 |
+| `EVERYUP_ADMIN_PASSWORD` | 미설정 | 위 관리자 계정의 비밀번호 |
+| `EVERYUP_DATABASE_PATH` | `./data/monitoring.db` | SQLite 데이터베이스 경로 |
+| `TZ` | 시스템 기본값 | 컨테이너 타임존, 예: `Asia/Seoul` |
 
-전체 설정 옵션은 [backend/README.md](backend/README.md)를 참고하세요.
-
----
-
-## 데이터 백업
-
-EveryUp의 모든 데이터는 SQLite 단일 파일에 저장됩니다.
-
-```bash
-# 볼륨 위치 확인
-docker volume inspect everyup-data
-
-# 로컬 머신으로 백업 (컨테이너 실행 중에도 가능)
-docker cp everyup:/app/data/monitoring.db ./monitoring.db.bak
-```
-
----
+> `EVERYUP_ADMIN_USERNAME`과 `EVERYUP_ADMIN_PASSWORD`를 함께 설정하면 EveryUp은 시작할 때마다 해당 계정을 생성하거나 비밀번호를 재설정합니다. 의도한 경우가 아니라면 초기 설정 후에는 비워 두는 편이 좋습니다.
 
 ## OpenTelemetry 수집
 
-OpenTelemetry 자동 계측 또는 SDK를 사용해 로그와 트레이스를 OTLP/HTTP로 EveryUp에 전송합니다.
-
-**1. API 키 발급**
-
-EveryUp 대시보드 → **로그 → 서비스 상세 → Integration** 탭에서 API 키를 발급받습니다.
-
-**2. OTLP 설정**
+**로그 -> 서비스 상세 -> Integration**에서 API 키를 만든 뒤 OpenTelemetry exporter를 EveryUp으로 지정합니다.
 
 ```bash
 export OTEL_SERVICE_NAME="my-service"
@@ -296,28 +113,74 @@ export OTEL_METRICS_EXPORTER="none"
 
 OTLP/HTTP 수신기는 `/api/v1/otlp/v1/logs`와 `/api/v1/otlp/v1/traces`를 지원합니다.
 
----
+## 데이터 백업
+
+EveryUp의 애플리케이션 데이터는 하나의 SQLite 데이터베이스 파일에 저장됩니다.
+
+```bash
+docker cp everyup:/app/data/monitoring.db ./monitoring.db.bak
+```
+
+## 로컬 개발
+
+사전 준비: [Go 1.24+](https://go.dev/dl/), [Node.js 22+](https://nodejs.org/), [pnpm](https://pnpm.io/installation).
+
+```bash
+git clone https://github.com/ai-turn/everyup.git
+cd everyup
+```
+
+백엔드 실행:
+
+```bash
+cd backend
+go run ./cmd/server
+```
+
+프론트엔드 실행:
+
+```bash
+cd frontend
+pnpm install
+pnpm dev
+```
+
+백엔드 테스트:
+
+```bash
+cd backend
+go test ./internal/api/handlers/ -v
+```
+
+## 프로젝트 구조
+
+```text
+everyup/
+├── backend/       # Go, Fiber, SQLite, WebSocket, collectors
+├── frontend/      # React, Vite, TypeScript, Tailwind CSS
+├── docs/          # 설정 가이드, 마이그레이션 노트, 제품 문서
+└── docs/images/   # README와 문서 이미지
+```
 
 ## 문서
 
 | 문서 | 설명 |
-|------|------|
-| [backend/README.md](backend/README.md) | 백엔드 API 및 설정 문서 |
-| [frontend/README.md](frontend/README.md) | 프론트엔드 개발 환경 및 페이지 구조 |
-| [docs/NOTIFICATION_SETUP.ko.md](docs/NOTIFICATION_SETUP.ko.md) | 텔레그램, 디스코드 & 슬랙 채널 설정 가이드 |
-
----
+| --- | --- |
+| [backend/README.md](backend/README.md) | 백엔드 API, 설정, 아키텍처 메모 |
+| [frontend/README.md](frontend/README.md) | 프론트엔드 설정, 환경 변수, 라우트 |
+| [docs/NOTIFICATION_SETUP.ko.md](docs/NOTIFICATION_SETUP.ko.md) | Telegram, Discord, Slack 설정 |
+| [docs/API_REQUEST_LOGGING_GUIDE.md](docs/API_REQUEST_LOGGING_GUIDE.md) | API 요청 로깅과 인스펙터 가이드 |
+| [docs/OTEL_ONLY_MIGRATION.md](docs/OTEL_ONLY_MIGRATION.md) | OpenTelemetry 전용 수집 전환 노트 |
 
 ## 기여
 
-버그 리포트나 기능 제안은 [GitHub Issues](https://github.com/ai-turn/everyup/issues)에 남겨주세요.
+버그 리포트와 기능 제안은 [GitHub Issues](https://github.com/ai-turn/everyup/issues)에 남겨주세요.
 
-Pull Request를 보내실 때:
-- 변경 사항과 이유를 간략히 설명해 주세요
-- `go test ./internal/api/handlers/ -v` 실행 후 테스트 통과를 확인해 주세요
-- 하나의 PR에는 하나의 관심사만 담아 주세요
+Pull Request를 열기 전에:
 
----
+- 무엇을 왜 바꿨는지 설명해 주세요.
+- 관련 백엔드 또는 프론트엔드 체크를 실행해 주세요.
+- 하나의 PR에는 하나의 관심사만 담아 주세요.
 
 ## 라이선스
 
