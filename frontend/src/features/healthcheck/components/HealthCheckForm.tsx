@@ -215,7 +215,7 @@ export function HealthCheckForm({ onSuccess, service, onSubmittingChange }: Heal
                     </div>
                     <div>
                         <h3 className="text-sm font-bold text-slate-800 dark:text-text-base-dark">{t('healthcheck.form.basicInfo')}</h3>
-                        <p className="text-xs text-slate-500 dark:text-text-muted-dark">{t('healthcheck.form.basicInfoDesc')}</p>
+                        <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('healthcheck.form.basicInfoDesc')}</p>
                     </div>
                 </div>
 
@@ -265,19 +265,19 @@ export function HealthCheckForm({ onSuccess, service, onSubmittingChange }: Heal
                     </div>
                     <div>
                         <h3 className="text-sm font-bold text-slate-800 dark:text-text-base-dark">{t('healthcheck.form.connection')}</h3>
-                        <p className="text-xs text-slate-500 dark:text-text-muted-dark">{t('healthcheck.form.connectionDesc')}</p>
+                        <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('healthcheck.form.connectionDesc')}</p>
                     </div>
                 </div>
 
                 <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('common.type')}</label>
                     <div className="flex gap-2">
-                        <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all ${selectedType === 'http' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark'}`}>
+                        <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all text-sm ${selectedType === 'http' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark'}`}>
                             <input {...register('type')} type="radio" value="http" className="hidden" />
                             <MaterialIcon name="api" className="text-lg" />
                             HTTP
                         </label>
-                        <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all ${selectedType === 'tcp' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark'}`}>
+                        <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all text-sm ${selectedType === 'tcp' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark'}`}>
                             <input {...register('type')} type="radio" value="tcp" className="hidden" />
                             <MaterialIcon name="dns" className="text-lg" />
                             TCP
@@ -344,19 +344,19 @@ export function HealthCheckForm({ onSuccess, service, onSubmittingChange }: Heal
                     </div>
                     <div>
                         <h3 className="text-sm font-bold text-slate-800 dark:text-text-base-dark">{t('healthcheck.form.schedule')}</h3>
-                        <p className="text-xs text-slate-500 dark:text-text-muted-dark">{t('healthcheck.form.scheduleDesc')}</p>
+                        <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('healthcheck.form.scheduleDesc')}</p>
                     </div>
                 </div>
 
                 <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('healthcheck.form.scheduleType')}</label>
                     <div className="flex flex-col sm:flex-row gap-2">
-                        <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all ${scheduleType === 'interval' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark'}`}>
+                        <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all text-sm ${scheduleType === 'interval' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark'}`}>
                             <input {...register('scheduleType')} type="radio" value="interval" className="hidden" />
                             <MaterialIcon name="schedule" className="text-lg" />
                             {t('healthcheck.form.interval')}
                         </label>
-                        <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all ${scheduleType === 'cron' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark'}`}>
+                        <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all text-sm ${scheduleType === 'cron' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark'}`}>
                             <input {...register('scheduleType')} type="radio" value="cron" className="hidden" />
                             <MaterialIcon name="calendar_month" className="text-lg" />
                             {t('healthcheck.form.cron')}
@@ -488,7 +488,7 @@ export function HealthCheckForm({ onSuccess, service, onSubmittingChange }: Heal
                     <MaterialIcon name="tips_and_updates" className="text-lg text-slate-400" />
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">{t('healthcheck.form.configTitle')}</h3>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-text-muted-dark leading-relaxed">
+                <p className="text-sm text-slate-500 dark:text-text-muted-dark leading-relaxed">
                     {selectedType === 'http'
                         ? t('healthcheck.form.httpConfigDesc')
                         : t('healthcheck.form.tcpConfigDesc')}

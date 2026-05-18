@@ -64,8 +64,8 @@ export function HealthCheckFormPage() {
 
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{title}</h1>
-            <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5 truncate">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{title}</h1>
+            <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5 truncate">
               {subtitle}
             </p>
           </div>

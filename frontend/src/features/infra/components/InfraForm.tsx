@@ -208,7 +208,7 @@ export function InfraForm({ onSuccess, onCancel, host, onSubmittingChange }: Inf
                     </div>
                     <div>
                         <h3 className="text-sm font-bold text-slate-800 dark:text-text-base-dark">{t('infra.sections.basicInfo')}</h3>
-                        <p className="text-xs text-slate-500 dark:text-text-muted-dark">{t('infra.form.basicInfoDesc')}</p>
+                        <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('infra.form.basicInfoDesc')}</p>
                     </div>
                 </div>
 
@@ -241,12 +241,12 @@ export function InfraForm({ onSuccess, onCancel, host, onSubmittingChange }: Inf
                 <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('common.type')}</label>
                     <div className="flex gap-2">
-                        <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all ${selectedType === 'local' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500'}`}>
+                        <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all text-sm ${selectedType === 'local' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500'}`}>
                             <input {...register('type')} type="radio" value="local" className="hidden" />
                             <MaterialIcon name="computer" className="text-lg" />
                             {t('infra.connectionTypes.local')}
                         </label>
-                        <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all ${selectedType === 'remote' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500'}`}>
+                        <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all text-sm ${selectedType === 'remote' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500'}`}>
                             <input {...register('type')} type="radio" value="remote" className="hidden" />
                             <MaterialIcon name="cloud" className="text-lg" />
                             {t('infra.connectionTypes.remote')}
@@ -284,7 +284,7 @@ export function InfraForm({ onSuccess, onCancel, host, onSubmittingChange }: Inf
                     </div>
                     <div>
                         <h3 className="text-sm font-bold text-slate-800 dark:text-text-base-dark">{t('infra.modal.sshSettings')}</h3>
-                        <p className="text-xs text-slate-500 dark:text-text-muted-dark">{t('infra.form.connectionDesc')}</p>
+                        <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('infra.form.connectionDesc')}</p>
                     </div>
                 </div>
 
@@ -495,7 +495,7 @@ export function InfraForm({ onSuccess, onCancel, host, onSubmittingChange }: Inf
                             {t('infra.modal.testConnection')}
                         </h3>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-text-muted-dark leading-relaxed">
+                    <p className="text-sm text-slate-500 dark:text-text-muted-dark leading-relaxed">
                         {selectedType === 'remote'
                             ? t('infra.form.testHint')
                             : t('infra.modal.localAutoManaged')}
