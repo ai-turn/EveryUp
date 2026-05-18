@@ -17,7 +17,6 @@ export function LogServiceForm({ onSuccess, onCancel, onSubmittingChange }: LogS
     const navigate = useNavigate();
     const [id, setId] = useState('');
     const [name, setName] = useState('');
-    const [submitting, setSubmitting] = useState(false);
     const [errors, setErrors] = useState<{ id?: string; name?: string }>({});
 
     const validate = (): boolean => {
@@ -37,7 +36,6 @@ export function LogServiceForm({ onSuccess, onCancel, onSubmittingChange }: LogS
     const handleSubmit = async () => {
         if (!validate()) return;
 
-        setSubmitting(true);
         onSubmittingChange?.(true);
         try {
             const created = await api.createService({
@@ -54,7 +52,6 @@ export function LogServiceForm({ onSuccess, onCancel, onSubmittingChange }: LogS
         } catch (err) {
             toast.error(getErrorMessage(err));
         } finally {
-            setSubmitting(false);
             onSubmittingChange?.(false);
         }
     };
@@ -75,7 +72,7 @@ export function LogServiceForm({ onSuccess, onCancel, onSubmittingChange }: LogS
         <div className="max-w-350 mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_20rem] gap-6 items-start">
         <div className="space-y-6 min-w-0">
             <div className="flex gap-3 p-4 bg-primary/5 border border-primary/10 rounded-xl">
-                <MaterialIcon name="info" className="text-primary text-xl flex-shrink-0" />
+                <MaterialIcon name="info" className="text-primary text-xl shrink-0" />
                 <div className="text-sm">
                     <p className="font-bold text-slate-800 dark:text-text-base-dark mb-1">{t('logServices.add.infoTitle', { defaultValue: 'Log Collection Service' })}</p>
                     <p className="text-xs text-slate-500 dark:text-text-muted-dark leading-relaxed">
