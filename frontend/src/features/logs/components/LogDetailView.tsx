@@ -21,6 +21,7 @@ export interface LogDetailViewProps {
   isDeleteDialogOpen: boolean;
   isDeleting: boolean;
   revealedKey: string | null;
+  showRevealedKeyModal: boolean;
   revealCountdown: number;
   onTabChange: (tab: TabKey) => void;
   onLiveToggle: (live: boolean) => void;
@@ -74,9 +75,10 @@ function TabContent({
   serviceId,
   refreshKey,
   traceFilter,
+  revealedKey,
   onApiKeyRegenerated,
   onClearTraceFilter,
-}: Pick<LogDetailViewProps, 'activeTab' | 'service' | 'serviceId' | 'refreshKey' | 'traceFilter' | 'onApiKeyRegenerated' | 'onClearTraceFilter'>) {
+}: Pick<LogDetailViewProps, 'activeTab' | 'service' | 'serviceId' | 'refreshKey' | 'traceFilter' | 'revealedKey' | 'onApiKeyRegenerated' | 'onClearTraceFilter'>) {
   return (
     <>
       {activeTab === 'logs' && (
@@ -95,7 +97,11 @@ function TabContent({
         />
       )}
       {activeTab === 'integration' && (
-        <IntegrationPanel service={service} onApiKeyRegenerated={onApiKeyRegenerated} />
+        <IntegrationPanel
+          service={service}
+          temporaryApiKey={revealedKey}
+          onApiKeyRegenerated={onApiKeyRegenerated}
+        />
       )}
     </>
   );
@@ -228,7 +234,7 @@ function DesktopLayout(props: LogDetailViewProps) {
   const navigate = useNavigate();
   const {
     service, serviceId, refreshKey, isLive,
-    activeTab, traceFilter, isDeleteDialogOpen, isDeleting, revealedKey, revealCountdown,
+    activeTab, traceFilter, isDeleteDialogOpen, isDeleting, revealedKey, showRevealedKeyModal, revealCountdown,
     onTabChange, onLiveToggle, onRefresh, onDelete,
     onDeleteDialogOpen, onDeleteDialogClose,
     onApiKeyRegenerated, onRevealedKeyClose, onCopyKey,
@@ -286,6 +292,7 @@ function DesktopLayout(props: LogDetailViewProps) {
         serviceId={serviceId}
         refreshKey={refreshKey}
         traceFilter={traceFilter}
+        revealedKey={revealedKey}
         onApiKeyRegenerated={onApiKeyRegenerated}
         onClearTraceFilter={onClearTraceFilter}
       />
@@ -294,7 +301,7 @@ function DesktopLayout(props: LogDetailViewProps) {
         <DeleteDialog service={service} isDeleting={isDeleting} onClose={onDeleteDialogClose} onDelete={onDelete} />
       )}
 
-      {revealedKey && (
+      {showRevealedKeyModal && revealedKey && (
         <RevealedKeyModal
           revealedKey={revealedKey}
           revealCountdown={revealCountdown}
@@ -313,7 +320,7 @@ function MobileLayout(props: LogDetailViewProps) {
   const navigate = useNavigate();
   const {
     service, serviceId, refreshKey, isLive,
-    activeTab, traceFilter, isDeleteDialogOpen, isDeleting, revealedKey, revealCountdown,
+    activeTab, traceFilter, isDeleteDialogOpen, isDeleting, revealedKey, showRevealedKeyModal, revealCountdown,
     onTabChange, onLiveToggle, onRefresh, onDelete,
     onDeleteDialogOpen, onDeleteDialogClose,
     onApiKeyRegenerated, onRevealedKeyClose, onCopyKey,
@@ -372,6 +379,7 @@ function MobileLayout(props: LogDetailViewProps) {
         serviceId={serviceId}
         refreshKey={refreshKey}
         traceFilter={traceFilter}
+        revealedKey={revealedKey}
         onApiKeyRegenerated={onApiKeyRegenerated}
         onClearTraceFilter={onClearTraceFilter}
       />
@@ -380,7 +388,7 @@ function MobileLayout(props: LogDetailViewProps) {
         <DeleteDialog service={service} isDeleting={isDeleting} onClose={onDeleteDialogClose} onDelete={onDelete} />
       )}
 
-      {revealedKey && (
+      {showRevealedKeyModal && revealedKey && (
         <RevealedKeyModal
           revealedKey={revealedKey}
           revealCountdown={revealCountdown}

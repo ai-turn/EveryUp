@@ -10,6 +10,7 @@ import { buildOTelSnippets } from './integrationSnippets';
 
 interface IntegrationPanelProps {
   service: Service;
+  temporaryApiKey?: string | null;
   onApiKeyRegenerated: (newKey: string, maskedKey: string) => void;
 }
 
@@ -120,7 +121,7 @@ function SegmentedControl<T extends string>({
   );
 }
 
-export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPanelProps) {
+export function IntegrationPanel({ service, temporaryApiKey, onApiKeyRegenerated }: IntegrationPanelProps) {
   const { t } = useTranslation(['logs', 'common']);
   const { copy } = useCopyToClipboard();
   const [isRegenerating, setIsRegenerating] = useState(false);
@@ -131,7 +132,8 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const maskedKey = service.apiKeyMasked || 'Not available';
-  const displayKey = revealedKey || service.apiKey || '<YOUR_API_KEY>';
+  const plainKey = revealedKey || temporaryApiKey || service.apiKey || null;
+  const displayKey = plainKey || '<YOUR_API_KEY>';
   const origin = window.location.origin;
 
   const otelSnippets = buildOTelSnippets(origin, displayKey);
@@ -217,13 +219,14 @@ export function IntegrationPanel({ service, onApiKeyRegenerated }: IntegrationPa
           <div className="flex items-center gap-2 px-3 py-2.5 bg-slate-50 dark:bg-ui-hover-dark rounded-lg font-mono text-sm border border-slate-100 dark:border-ui-border-dark">
             <MaterialIcon name="lock" className="text-sm text-slate-400 dark:text-text-dim-dark shrink-0" />
             <span className="flex-1 text-slate-700 dark:text-text-base-dark truncate select-all">
-              {revealedKey || maskedKey}
+              {plainKey || maskedKey}
             </span>
           </div>
           <div className="flex flex-wrap gap-2 mt-3">
             <button
-              onClick={() => copy(revealedKey || maskedKey)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark text-xs font-semibold text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark cursor-pointer"
+              onClick={() => plainKey && copy(plainKey)}
+              disabled={!plainKey}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark text-xs font-semibold text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <MaterialIcon name="content_copy" className="text-sm" />
               {t('logServices.integration.apiKey.copyVisible')}

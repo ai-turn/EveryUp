@@ -34,6 +34,9 @@ export function LogDetailPage() {
       : 'logs'
   );
   const traceFilter = searchParams.get('traceId');
+  const [revealedKey, setRevealedKey] = useState<string | null>(null);
+  const [showRevealedKeyModal, setShowRevealedKeyModal] = useState(false);
+  const [revealCountdown, setRevealCountdown] = useState(0);
 
   const handleClearTraceFilter = useCallback(() => {
     setSearchParams((prev) => {
@@ -42,8 +45,6 @@ export function LogDetailPage() {
       return next;
     });
   }, [setSearchParams]);
-  const [revealedKey, setRevealedKey] = useState<string | null>(null);
-  const [revealCountdown, setRevealCountdown] = useState(0);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -69,6 +70,7 @@ export function LogDetailPage() {
     const state = location.state as { newApiKey?: string } | null;
     if (state?.newApiKey) {
       setRevealedKey(state.newApiKey);
+      setShowRevealedKeyModal(true);
       setRevealCountdown(30);
       window.history.replaceState({}, '', location.pathname + location.search);
     }
@@ -81,6 +83,7 @@ export function LogDetailPage() {
       setRevealCountdown((prev) => {
         if (prev <= 1) {
           setRevealedKey(null);
+          setShowRevealedKeyModal(false);
           return 0;
         }
         return prev - 1;
@@ -96,6 +99,9 @@ export function LogDetailPage() {
 
   const handleApiKeyRegenerated = useCallback((newKey: string, maskedKey: string) => {
     setService((prev) => prev ? { ...prev, apiKey: newKey, apiKeyMasked: maskedKey } : prev);
+    setRevealedKey(newKey);
+    setShowRevealedKeyModal(false);
+    setRevealCountdown(30);
   }, []);
 
   const handleDelete = async () => {
@@ -158,6 +164,7 @@ export function LogDetailPage() {
     isDeleteDialogOpen,
     isDeleting,
     revealedKey,
+    showRevealedKeyModal,
     revealCountdown,
     onTabChange: handleTabChange,
     onLiveToggle: setIsLive,
@@ -166,7 +173,7 @@ export function LogDetailPage() {
     onDeleteDialogOpen: () => setIsDeleteDialogOpen(true),
     onDeleteDialogClose: () => setIsDeleteDialogOpen(false),
     onApiKeyRegenerated: handleApiKeyRegenerated,
-    onRevealedKeyClose: () => setRevealedKey(null),
+    onRevealedKeyClose: () => setShowRevealedKeyModal(false),
     onCopyKey: copy,
     onClearTraceFilter: handleClearTraceFilter,
   } as const;
