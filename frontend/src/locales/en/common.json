@@ -45,6 +45,12 @@
         "clearFilters": "Clear Filters",
         "disabled": "Disabled",
         "days": "days",
+        "relativeTime": {
+            "justNow": "Just now",
+            "minutesAgo": "{{count}}m ago",
+            "hoursAgo": "{{count}}h ago",
+            "daysAgo": "{{count}}d ago"
+        },
         "overview": "Overview",
         "deleting": "Deleting..."
     },

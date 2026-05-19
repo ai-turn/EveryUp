@@ -25,6 +25,12 @@ export const InfraCard = memo(function InfraCard({ resource, onClick }: InfraCar
     const { t } = useTranslation(['infra', 'common']);
     const isPaused = resource.isActive === false;
     const healthScore = getHealthScore(resource);
+    const relativeTimeLabels = {
+        justNow: t('common.relativeTime.justNow'),
+        minutesAgo: (count: number) => t('common.relativeTime.minutesAgo', { count }),
+        hoursAgo: (count: number) => t('common.relativeTime.hoursAgo', { count }),
+        daysAgo: (count: number) => t('common.relativeTime.daysAgo', { count }),
+    };
     const statusTone = resource.status === 'healthy'
         ? 'bg-emerald-500'
         : resource.status === 'warning' || resource.status === 'unknown'
@@ -121,7 +127,7 @@ export const InfraCard = memo(function InfraCard({ resource, onClick }: InfraCar
 
             <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100 dark:border-ui-border-dark/50">
                 <span className="text-xs text-slate-500 dark:text-text-muted-dark min-w-0 truncate">
-                    {t('infra.remote.lastCollected')}: {resource.lastCollectedAt ? relativeTime(resource.lastCollectedAt) : '-'}
+                    {t('infra.remote.lastCollected')}: {resource.lastCollectedAt ? relativeTime(resource.lastCollectedAt, relativeTimeLabels) : '-'}
                 </span>
                 <div className="flex items-center gap-1.5">
                     <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${typeBadgeColors[resource.type]}`}>

@@ -56,6 +56,12 @@ export function DashboardMobileView() {
   const [logServices, setLogServices] = useState<Service[]>([]);
   const [latestLogs, setLatestLogs] = useState<Record<string, LogEntry | null>>({});
   const [logLoading, setLogLoading] = useState(true);
+  const relativeTimeLabels = {
+    justNow: t('common.relativeTime.justNow'),
+    minutesAgo: (count: number) => t('common.relativeTime.minutesAgo', { count }),
+    hoursAgo: (count: number) => t('common.relativeTime.hoursAgo', { count }),
+    daysAgo: (count: number) => t('common.relativeTime.daysAgo', { count }),
+  };
 
   const fetchLogServices = useCallback(async () => {
     try {
@@ -210,7 +216,7 @@ export function DashboardMobileView() {
                             {latest.message}
                           </span>
                           <span className="text-xs text-slate-400 dark:text-text-dim-dark shrink-0">
-                            {relativeTime(latest.createdAt)}
+                            {relativeTime(latest.createdAt, relativeTimeLabels)}
                           </span>
                         </>
                       ) : (

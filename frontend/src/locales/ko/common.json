@@ -45,6 +45,12 @@
         "clearFilters": "필터 초기화",
         "disabled": "비활성",
         "days": "일",
+        "relativeTime": {
+            "justNow": "방금 전",
+            "minutesAgo": "{{count}}분 전",
+            "hoursAgo": "{{count}}시간 전",
+            "daysAgo": "{{count}}일 전"
+        },
         "overview": "개요",
         "deleting": "삭제 중..."
     },
