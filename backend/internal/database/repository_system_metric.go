@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"math"
 	"strings"
 	"time"
 
@@ -36,46 +37,85 @@ func (r *SystemMetricRepository) Create(m *models.SystemMetric) error {
 }
 
 // GetHistory returns system metrics for a given host and time range, downsampled into
-// bucketMinutes-wide AVG buckets so the chart always receives ~60-80 clean data points
-// regardless of how many 1-minute rows are stored.
+// bucketMinutes-wide AVG buckets so the chart always receives a clean, bounded set of
+// data points regardless of how many 1-minute rows are stored.
 //
-// bucket formula (SQLite):
-//
-//	strftime('%Y-%m-%dT%H:', ts) || printf('%02d', (strftime('%M', ts) / N) * N) || ':00Z'
+// Bucketing is done in Go, not SQL: the modernc.org/sqlite driver stores time.Time
+// via Go's time.Time.String() (e.g. "2026-05-18 22:56:18.1 +0900 KST m=+12.3"),
+// which SQLite's strftime() cannot parse — it returns NULL and the scan fails.
+// Scanning created_at back into a time.Time works, so we aggregate here instead.
 func (r *SystemMetricRepository) GetHistory(hostID string, since time.Time, bucketMinutes int) ([]models.SystemMetricPoint, error) {
 	if bucketMinutes <= 0 {
 		bucketMinutes = 1
 	}
 
 	rows, err := DB.Query(`
-		SELECT
-			strftime('%Y-%m-%dT%H:', created_at) ||
-			printf('%02d', (CAST(strftime('%M', created_at) AS INTEGER) / ?) * ?) || ':00Z' AS bucket,
-			ROUND(AVG(cpu_usage), 1)  AS cpu,
-			ROUND(AVG(mem_used),  2)  AS mem_used,
-			ROUND(AVG(disk_read), 3)  AS disk_read,
-			ROUND(AVG(disk_write),3)  AS disk_write,
-			ROUND(AVG(net_in),    3)  AS net_in,
-			ROUND(AVG(net_out),   3)  AS net_out
+		SELECT created_at, cpu_usage, mem_used, disk_read, disk_write, net_in, net_out
 		FROM system_metrics
 		WHERE host_id = ? AND created_at >= ?
-		GROUP BY bucket
-		ORDER BY bucket ASC
-	`, bucketMinutes, bucketMinutes, hostID, since)
+		ORDER BY created_at ASC
+	`, hostID, since)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var points []models.SystemMetricPoint
+	type acc struct {
+		cpu, memUsed, diskRead, diskWrite, netIn, netOut float64
+		n                                                int
+	}
+	bucketDur := time.Duration(bucketMinutes) * time.Minute
+	order := make([]time.Time, 0)
+	groups := make(map[time.Time]*acc)
+
 	for rows.Next() {
-		var p models.SystemMetricPoint
-		if err := rows.Scan(&p.Timestamp, &p.CPU, &p.MemUsed, &p.DiskRead, &p.DiskWrite, &p.NetIn, &p.NetOut); err != nil {
+		var (
+			createdAt                                        time.Time
+			cpu, memUsed, diskRead, diskWrite, netIn, netOut float64
+		)
+		if err := rows.Scan(&createdAt, &cpu, &memUsed, &diskRead, &diskWrite, &netIn, &netOut); err != nil {
 			return nil, err
 		}
-		points = append(points, p)
+		key := createdAt.UTC().Truncate(bucketDur)
+		a := groups[key]
+		if a == nil {
+			a = &acc{}
+			groups[key] = a
+			order = append(order, key)
+		}
+		a.cpu += cpu
+		a.memUsed += memUsed
+		a.diskRead += diskRead
+		a.diskWrite += diskWrite
+		a.netIn += netIn
+		a.netOut += netOut
+		a.n++
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	points := make([]models.SystemMetricPoint, 0, len(order))
+	for _, key := range order {
+		a := groups[key]
+		n := float64(a.n)
+		points = append(points, models.SystemMetricPoint{
+			Timestamp: key.Format("2006-01-02T15:04:05Z"),
+			CPU:       roundTo(a.cpu/n, 1),
+			MemUsed:   roundTo(a.memUsed/n, 2),
+			DiskRead:  roundTo(a.diskRead/n, 3),
+			DiskWrite: roundTo(a.diskWrite/n, 3),
+			NetIn:     roundTo(a.netIn/n, 3),
+			NetOut:    roundTo(a.netOut/n, 3),
+		})
 	}
 	return points, nil
+}
+
+// roundTo rounds v to the given number of decimal places.
+func roundTo(v float64, decimals int) float64 {
+	p := math.Pow(10, float64(decimals))
+	return math.Round(v*p) / p
 }
 
 // GetLatestByHosts returns the most recent metric for each host ID.
