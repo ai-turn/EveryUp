@@ -15,7 +15,7 @@
         "exportReport": "보고서 내보내기",
         "uptime": "가동 시간",
         "settings": "설정",
-        "editHost": "호스트 수정",
+        "editHost": "인프라 수정",
         "deleteHost": "호스트 삭제",
         "pauseMonitoring": "모니터링 일시정지",
         "resumeMonitoring": "모니터링 재개",
@@ -154,6 +154,8 @@
         "form": {
             "basicInfoDesc": "모니터링 화면에서 사용할 이름, 그룹, 리소스 유형을 설정합니다.",
             "connectionDesc": "수집, SSH 테스트, 호스트 식별에 필요한 연결 정보를 설정합니다.",
+            "editSubtitle": "호스트 메타데이터, 연결 정보, SSH 인증 정보를 수정합니다.",
+            "createSubtitle": "리소스 모니터링과 프로세스 추적을 위한 호스트를 등록합니다.",
             "testHint": "저장하기 전에 SSH 인증 정보와 지연 시간을 확인하세요."
         },
         "modal": {

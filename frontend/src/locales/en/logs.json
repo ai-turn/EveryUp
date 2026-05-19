@@ -198,7 +198,7 @@
       "infoDesc": "Create a log service to generate an API key automatically. Then connect your app with OpenTelemetry in the Integration tab."
     },
     "edit": {
-      "title": "Edit Log Service",
+      "title": "Edit Log",
       "subtitle": "Update service name and log level filter.",
       "basicInfo": "Basic information",
       "basicInfoDesc": "Update the service name.",

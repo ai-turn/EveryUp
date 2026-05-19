@@ -198,7 +198,7 @@
       "infoDesc": "로그 서비스를 만들면 API 키가 자동으로 발급됩니다. 이후 연동 탭에서 OpenTelemetry로 앱을 연결하세요."
     },
     "edit": {
-      "title": "로그 서비스 수정",
+      "title": "로그 수정",
       "subtitle": "이름과 로그 레벨 필터를 변경합니다.",
       "basicInfo": "기본 정보",
       "basicInfoDesc": "서비스 이름을 변경합니다.",

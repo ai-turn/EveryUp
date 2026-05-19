@@ -15,7 +15,7 @@
         "exportReport": "Export Report",
         "uptime": "Uptime",
         "settings": "Settings",
-        "editHost": "Edit Host",
+        "editHost": "Edit Infrastructure",
         "deleteHost": "Delete Host",
         "pauseMonitoring": "Pause Monitoring",
         "resumeMonitoring": "Resume Monitoring",
@@ -154,6 +154,8 @@
         "form": {
             "basicInfoDesc": "Name, group, and resource category used across monitoring views.",
             "connectionDesc": "Connection details for collection, SSH testing, and host identity.",
+            "editSubtitle": "Update host metadata, connection details, and SSH credentials.",
+            "createSubtitle": "Register a host for resource monitoring and process tracking.",
             "testHint": "Run a test before saving to confirm SSH credentials and latency."
         },
         "modal": {
