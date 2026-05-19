@@ -16,18 +16,6 @@ interface IntegrationPanelProps {
 
 type OTelLanguage = 'springboot' | 'python' | 'nodejs';
 
-const OTEL_OPTION = {
-  icon: 'hub',
-  labelKey: 'logServices.integration.paths.otel.label',
-  taglineKey: 'logServices.integration.paths.otel.tagline',
-  descriptionKey: 'logServices.integration.paths.otel.description',
-  goodForKeys: [
-    'logServices.integration.paths.otel.goodFor.0',
-    'logServices.integration.paths.otel.goodFor.1',
-    'logServices.integration.paths.otel.goodFor.2',
-  ],
-};
-
 function CodeBlock({
   code,
   onCopy,
@@ -183,28 +171,6 @@ export function IntegrationPanel({ service, temporaryApiKey, onApiKeyRegenerated
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 p-4 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl">
-        <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-          <MaterialIcon name={OTEL_OPTION.icon} className="text-xl" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-slate-400 dark:text-text-dim-dark">
-            {t('logServices.integration.selectedMethod')}
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-base font-bold text-slate-900 dark:text-white">
-              {t(OTEL_OPTION.labelKey)}
-            </h2>
-            <span className="inline-flex px-2 py-0.5 rounded-full bg-primary text-white text-xs font-bold">
-              {t('logServices.integration.picker.recommended')}
-            </span>
-            <span className="text-xs text-slate-500 dark:text-text-muted-dark">
-              {t(OTEL_OPTION.taglineKey)}
-            </span>
-          </div>
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">

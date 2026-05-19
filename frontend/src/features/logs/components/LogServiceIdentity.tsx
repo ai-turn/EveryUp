@@ -67,7 +67,7 @@ export function LogServiceIdentity({ service }: Props) {
         {/* Service ID */}
         <p className="text-sm text-slate-500 dark:text-text-muted-dark mb-4">
           <span className="text-slate-400 dark:text-text-dim-dark mr-1">{t('logServices.identity.id')}:</span>
-          <code className="text-xs">{service.id}</code>
+          <code>{service.id}</code>
         </p>
 
         {/* All chips in one scrollable row */}
