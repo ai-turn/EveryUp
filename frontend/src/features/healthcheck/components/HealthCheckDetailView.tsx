@@ -5,6 +5,7 @@ import { useTranslate } from '@tolgee/react';
 import { MaterialIcon, Toggle } from '../../../components/common';
 import { Breadcrumbs } from '../../../components/layout/Breadcrumbs';
 import { useIsMobile } from '../../../hooks/useMediaQuery';
+import { useSpinAction } from '../../../hooks/useSpinAction';
 import { HealthCheckIdentity } from './HealthCheckIdentity';
 import { CheckHistoryBar } from './CheckHistoryBar';
 import { RealtimeMetrics } from './RealtimeMetrics';
@@ -142,6 +143,7 @@ function DesktopLayout(props: HealthCheckDetailViewProps) {
     onLiveToggle, onRefresh, onManage, onDelete, onDeleteDialogOpen, onDeleteDialogClose,
     getIdentityStatus,
   } = props;
+  const { spinning, trigger: handleRefresh } = useSpinAction(onRefresh);
 
   return (
     <>
@@ -153,10 +155,10 @@ function DesktopLayout(props: HealthCheckDetailViewProps) {
             <Toggle checked={isLive} onChange={onLiveToggle} />
           </div>
           <button
-            onClick={onRefresh}
+            onClick={handleRefresh}
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-100 dark:bg-ui-hover-dark px-3 py-2 text-sm font-bold text-slate-600 dark:text-text-secondary-dark transition-colors hover:bg-slate-200 dark:hover:bg-ui-active-dark"
           >
-            <MaterialIcon name="refresh" className="text-base" />
+            <MaterialIcon name="refresh" className={`text-base ${spinning ? 'animate-spin' : ''}`} />
             {tc('common.refresh')}
           </button>
           {service.type !== 'log' && (
@@ -200,6 +202,7 @@ function MobileLayout(props: HealthCheckDetailViewProps) {
     onLiveToggle, onRefresh, onManage, onDelete, onDeleteDialogOpen, onDeleteDialogClose,
     getIdentityStatus,
   } = props;
+  const { spinning, trigger: handleRefresh } = useSpinAction(onRefresh);
 
   const tabs: { key: MobileTab; label: string; icon: string }[] = [
     { key: 'overview',     label: tc('common.overview'), icon: 'info'   },
@@ -222,8 +225,8 @@ function MobileLayout(props: HealthCheckDetailViewProps) {
           <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark">
             <Toggle checked={isLive} onChange={onLiveToggle} />
           </div>
-          <button onClick={onRefresh} className="p-2.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-secondary-dark active:scale-95 transition-transform">
-            <MaterialIcon name="refresh" className="text-lg" />
+          <button onClick={handleRefresh} className="p-2.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-secondary-dark active:scale-95 transition-transform">
+            <MaterialIcon name="refresh" className={`text-lg ${spinning ? 'animate-spin' : ''}`} />
           </button>
           {service.type !== 'log' && (
             <button onClick={onManage} className="p-2.5 rounded-lg bg-primary/10 text-primary active:scale-95 transition-transform cursor-pointer">

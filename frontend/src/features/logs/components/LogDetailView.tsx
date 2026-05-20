@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { MaterialIcon, Toggle } from '../../../components/common';
 import { Breadcrumbs } from '../../../components/layout/Breadcrumbs';
 import { useIsMobile } from '../../../hooks/useMediaQuery';
+import { useSpinAction } from '../../../hooks/useSpinAction';
 import { ErrorLogTable } from './ErrorLogTable';
 import { LogServiceIdentity } from './LogServiceIdentity';
 import { IntegrationPanel } from './IntegrationPanel';
@@ -240,6 +241,7 @@ function DesktopLayout(props: LogDetailViewProps) {
     onApiKeyRegenerated, onRevealedKeyClose, onCopyKey,
     onClearTraceFilter,
   } = props;
+  const { spinning, trigger: handleRefresh } = useSpinAction(onRefresh);
 
   const tabs: { key: TabKey; label: string; icon: string }[] = [
     { key: 'logs',        label: t('logServices.detail.tabs.logs'),        icon: 'article'                  },
@@ -257,10 +259,10 @@ function DesktopLayout(props: LogDetailViewProps) {
             <Toggle checked={isLive} onChange={onLiveToggle} />
           </div>
           <button
-            onClick={onRefresh}
+            onClick={handleRefresh}
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-100 dark:bg-ui-hover-dark px-3 py-2 text-sm font-bold text-slate-600 dark:text-text-secondary-dark transition-colors hover:bg-slate-200 dark:hover:bg-ui-active-dark"
           >
-            <MaterialIcon name="refresh" className="text-base" />
+            <MaterialIcon name="refresh" className={`text-base ${spinning ? 'animate-spin' : ''}`} />
             {t('common.refresh')}
           </button>
           <button
@@ -326,6 +328,7 @@ function MobileLayout(props: LogDetailViewProps) {
     onApiKeyRegenerated, onRevealedKeyClose, onCopyKey,
     onClearTraceFilter,
   } = props;
+  const { spinning, trigger: handleRefresh } = useSpinAction(onRefresh);
 
   const tabs: { key: TabKey; label: string; icon: string }[] = [
     { key: 'logs',        label: t('logServices.detail.tabs.logs'),        icon: 'article'                  },
@@ -349,10 +352,10 @@ function MobileLayout(props: LogDetailViewProps) {
             <Toggle checked={isLive} onChange={onLiveToggle} />
           </div>
           <button
-            onClick={onRefresh}
+            onClick={handleRefresh}
             className="p-2.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-secondary-dark active:scale-95 transition-transform"
           >
-            <MaterialIcon name="refresh" className="text-lg" />
+            <MaterialIcon name="refresh" className={`text-lg ${spinning ? 'animate-spin' : ''}`} />
           </button>
           <button
             onClick={() => navigate(`/logs/${serviceId}/edit`)}
