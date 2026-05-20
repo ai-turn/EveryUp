@@ -37,6 +37,29 @@ EveryUp gives small teams and self-hosters a single place to watch service uptim
 - **Simple operations** - a single container, one SQLite database file, and automatic first-run secrets.
 - **OpenTelemetry friendly** - ingest OTLP logs and traces from existing SDKs or auto-instrumentation.
 
+## Lightweight footprint
+
+| | Size |
+| --- | --- |
+| Go server binary (`linux/amd64`, stripped) | **~21 MB** |
+| Frontend bundle (served by the Go binary) | **~7 MB** |
+| Runtime container image (Alpine base) | **~40 MB** |
+| Persistent state | one SQLite file in `/app/data` |
+| External services required | **none** - no Prometheus, Grafana, Elasticsearch, Kafka, or Redis |
+
+Multi-arch images are published for `linux/amd64` and `linux/arm64`, so the same image runs on a regular VM or an ARM box.
+
+## OpenTelemetry adoption for existing services
+
+If your service already speaks OpenTelemetry, EveryUp is just another OTLP endpoint. If it doesn't, the language-specific auto-instrumentations below add it without touching application code:
+
+- **Spring Boot** - attach `opentelemetry-javaagent.jar` and set 4 env vars. Logback / Log4j / SLF4J output is forwarded with trace context.
+- **Python (FastAPI, Django, Flask)** - `pip install opentelemetry-distro`, then run via `opentelemetry-instrument`. Standard `logging` records are captured.
+- **Node.js (Express, Fastify, NestJS)** - register `@opentelemetry/auto-instrumentations-node` with `--require`. Pino / Winston / console logs flow through with span context.
+- **Any OTLP/HTTP source** - the receiver accepts logs and traces from collectors, sidecars, or custom SDKs.
+
+Typical adoption on an existing service is an env-var change and a restart.
+
 ## Features
 
 | Area | What you get |
@@ -108,10 +131,11 @@ export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer everyup_your_api_key"
 export OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
 export OTEL_LOGS_EXPORTER="otlp"
 export OTEL_TRACES_EXPORTER="otlp"
-export OTEL_METRICS_EXPORTER="none"
 ```
 
 The OTLP/HTTP receiver accepts `/api/v1/otlp/v1/logs` and `/api/v1/otlp/v1/traces`.
+
+<sub>Metrics (`OTEL_METRICS_EXPORTER`) are not supported yet — leave it unset or set it to `none`.</sub>
 
 ## Data Backup
 

@@ -37,6 +37,29 @@ EveryUp은 작은 팀과 셀프 호스팅 환경을 위해 서비스 업타임, 
 - **단순한 운영** - 하나의 컨테이너, 하나의 SQLite 파일, 최초 실행 시 자동 생성되는 시크릿으로 시작합니다.
 - **OpenTelemetry 친화적** - 기존 SDK나 자동 계측에서 OTLP 로그와 트레이스를 바로 받을 수 있습니다.
 
+## 가벼운 용량
+
+| | 크기 |
+| --- | --- |
+| Go 서버 바이너리 (`linux/amd64`, stripped) | **~21 MB** |
+| 프론트엔드 번들 (Go 바이너리가 직접 서빙) | **~7 MB** |
+| 런타임 컨테이너 이미지 (Alpine 베이스) | **~40 MB** |
+| 영속 데이터 | `/app/data`의 SQLite 파일 한 개 |
+| 필요한 외부 서비스 | **없음** - Prometheus, Grafana, Elasticsearch, Kafka, Redis 모두 불필요 |
+
+`linux/amd64`와 `linux/arm64` 멀티아키 이미지를 같이 배포하므로, 일반 VM이든 ARM 머신이든 동일한 이미지를 그대로 사용할 수 있습니다.
+
+## 운영 중인 서비스의 OpenTelemetry 도입
+
+이미 OpenTelemetry를 쓰는 서비스라면 EveryUp은 그냥 또 하나의 OTLP 엔드포인트입니다. 아직 안 쓴다면, 아래 자동 계측을 통해 애플리케이션 코드를 건드리지 않고 켤 수 있습니다.
+
+- **Spring Boot** - `opentelemetry-javaagent.jar`를 붙이고 환경변수 4개만 설정. Logback / Log4j / SLF4J 출력이 trace 컨텍스트와 함께 전달됩니다.
+- **Python (FastAPI, Django, Flask)** - `pip install opentelemetry-distro` 후 `opentelemetry-instrument`로 실행. 표준 `logging` 레코드가 그대로 수집됩니다.
+- **Node.js (Express, Fastify, NestJS)** - `@opentelemetry/auto-instrumentations-node`를 `--require`로 등록. Pino / Winston / console 로그가 span 컨텍스트와 함께 전달됩니다.
+- **OTLP/HTTP 호환 소스** - 컬렉터, 사이드카, 커스텀 SDK 어디서 보내든 수신기에서 받습니다.
+
+운영 서비스 도입은 보통 환경변수 변경과 재시작 한 번이면 끝입니다.
+
 ## 주요 기능
 
 | 영역 | 제공 기능 |
@@ -108,10 +131,11 @@ export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer everyup_your_api_key"
 export OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
 export OTEL_LOGS_EXPORTER="otlp"
 export OTEL_TRACES_EXPORTER="otlp"
-export OTEL_METRICS_EXPORTER="none"
 ```
 
 OTLP/HTTP 수신기는 `/api/v1/otlp/v1/logs`와 `/api/v1/otlp/v1/traces`를 지원합니다.
+
+<sub>메트릭(`OTEL_METRICS_EXPORTER`)은 아직 지원하지 않습니다 — 설정하지 않거나 `none`으로 두세요.</sub>
 
 ## 데이터 백업
 
