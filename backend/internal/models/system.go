@@ -13,6 +13,13 @@ type SystemInfo struct {
 	CPU      CPUInfo  `json:"cpu"`
 	Memory   MemInfo  `json:"memory"`
 	Disk     DiskInfo `json:"disk"`
+	Network  NetInfo  `json:"network"`
+}
+
+// NetInfo represents current network throughput in MB/s.
+type NetInfo struct {
+	In  float64 `json:"in"`  // MB/s
+	Out float64 `json:"out"` // MB/s
 }
 
 // CPUInfo represents CPU metrics

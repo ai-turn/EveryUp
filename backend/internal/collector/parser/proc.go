@@ -196,14 +196,21 @@ func ParseDiskIO(diskstatsContent string) (*DiskIORaw, error) {
 
 // CalculateDiskIO computes disk I/O in MB/s from two snapshots.
 // Sector size is 512 bytes.
+// Guards against uint64 underflow: when counters reset (device hot-add/remove,
+// reboot, or the underlying device set changes between samples) we return 0
+// instead of a wrapped 2^64-scale delta.
 func CalculateDiskIO(prev, curr *DiskIORaw, elapsedSec float64) (readMBps, writeMBps float64) {
 	if elapsedSec <= 0 {
 		return 0, 0
 	}
-	readBytes := float64(curr.ReadSectors-prev.ReadSectors) * 512
-	writeBytes := float64(curr.WriteSectors-prev.WriteSectors) * 512
-	readMBps = float64(int(readBytes/(1024*1024)/elapsedSec*10)) / 10
-	writeMBps = float64(int(writeBytes/(1024*1024)/elapsedSec*10)) / 10
+	if curr.ReadSectors >= prev.ReadSectors {
+		readBytes := float64(curr.ReadSectors-prev.ReadSectors) * 512
+		readMBps = float64(int(readBytes/(1024*1024)/elapsedSec*10)) / 10
+	}
+	if curr.WriteSectors >= prev.WriteSectors {
+		writeBytes := float64(curr.WriteSectors-prev.WriteSectors) * 512
+		writeMBps = float64(int(writeBytes/(1024*1024)/elapsedSec*10)) / 10
+	}
 	return
 }
 
@@ -237,12 +244,19 @@ func ParseNetwork(netdevContent string) (*NetworkRaw, error) {
 }
 
 // CalculateNetworkIO computes network I/O in MB/s from two snapshots.
+// Guards against uint64 underflow: interfaces appearing/disappearing between
+// samples (e.g. Docker veth pairs) make `curr.Bytes* < prev.Bytes*` possible,
+// which would otherwise wrap to a ~2^64 delta and pollute the metrics history.
 func CalculateNetworkIO(prev, curr *NetworkRaw, elapsedSec float64) (recvMBps, sentMBps float64) {
 	if elapsedSec <= 0 {
 		return 0, 0
 	}
-	recvMBps = float64(int(float64(curr.BytesRecv-prev.BytesRecv)/(1024*1024)/elapsedSec*10)) / 10
-	sentMBps = float64(int(float64(curr.BytesSent-prev.BytesSent)/(1024*1024)/elapsedSec*10)) / 10
+	if curr.BytesRecv >= prev.BytesRecv {
+		recvMBps = float64(int(float64(curr.BytesRecv-prev.BytesRecv)/(1024*1024)/elapsedSec*10)) / 10
+	}
+	if curr.BytesSent >= prev.BytesSent {
+		sentMBps = float64(int(float64(curr.BytesSent-prev.BytesSent)/(1024*1024)/elapsedSec*10)) / 10
+	}
 	return
 }
 

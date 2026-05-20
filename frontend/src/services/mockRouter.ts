@@ -221,6 +221,7 @@ const mockSystemInfo: SystemInfo = {
   cpu: { cores: 8, usage: mockGauges[0]?.percentage ?? 42 },
   memory: { total: 16, used: 9.6, usage: mockGauges[1]?.percentage ?? 60 },
   disk: { total: 500, used: 210, usage: mockGauges[2]?.percentage ?? 42, readSpeed: 120, writeSpeed: 80 },
+  network: { in: 3.2, out: 1.4 },
 };
 
 const mockSystemMetrics: SystemMetricsHistory = {

@@ -60,6 +60,7 @@ export interface SystemInfo {
   cpu: { cores: number; usage: number };
   memory: { total: number; used: number; usage: number };
   disk: { total: number; used: number; usage: number; readSpeed: number; writeSpeed: number };
+  network: { in: number; out: number }; // MB/s
 }
 
 export interface SystemMetricPoint {

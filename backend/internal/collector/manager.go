@@ -215,9 +215,16 @@ func (m *CollectorManager) collectOne(hostID string, mc *managedCollector) {
 		return
 	}
 
-	// Also get system info (cached for handler use)
+	// Also get system info (cached for handler use). Overlay the freshly
+	// computed delta-based metrics so the cached SystemInfo always reflects
+	// the latest CPU / disk-I/O / network values — GetSystemInfo() on its
+	// own cannot compute deltas (SSH returns CPU=0, no net/io fields).
 	info, err := mc.collector.GetSystemInfo()
 	if err == nil {
+		info.CPU.Usage = snapshot.CPUUsage
+		info.Disk.ReadSpeed = snapshot.DiskRead
+		info.Disk.WriteSpeed = snapshot.DiskWrite
+		info.Network = models.NetInfo{In: snapshot.NetIn, Out: snapshot.NetOut}
 		m.mu.Lock()
 		mc.latest = info
 		m.mu.Unlock()

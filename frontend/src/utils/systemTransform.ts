@@ -46,7 +46,10 @@ export function systemInfoToResources(info: SystemInfo): Resource[] {
 }
 
 // --- SystemInfo → GaugeData[] ---
-export function systemInfoToGauges(info: SystemInfo, history?: SystemMetricsHistory): GaugeData[] {
+// Network gauge uses a 125 MB/s baseline (1 Gbps link) to map throughput → %.
+const NETWORK_FULL_SCALE_MBPS = 125;
+
+export function systemInfoToGauges(info: SystemInfo, _history?: SystemMetricsHistory): GaugeData[] {
   const gauges: GaugeData[] = [
     {
       label: 'CPU',
@@ -74,25 +77,31 @@ export function systemInfoToGauges(info: SystemInfo, history?: SystemMetricsHist
     },
   ];
 
-  const latestPoint = history?.points?.at(-1);
-  if (latestPoint) {
-    const netIn = latestPoint.netIn || 0;
-    const netOut = latestPoint.netOut || 0;
-    const total = netIn + netOut;
+  const netIn = info.network?.in ?? 0;
+  const netOut = info.network?.out ?? 0;
+  const total = netIn + netOut;
+  const { value, unit } = formatThroughput(total);
 
-    gauges.push({
-      label: 'Network',
-      percentage: Math.max(0, Math.min(100, Math.round(total * 4))),
-      color: '#10b981',
-      subtitle: `In ${netIn.toFixed(1)} MB/s · Out ${netOut.toFixed(1)} MB/s`,
-      trend: `${total.toFixed(1)} MB/s`,
-      trendType: 'stable',
-      displayValue: total.toFixed(1),
-      displayUnit: 'MB/s',
-    });
-  }
+  gauges.push({
+    label: 'Network',
+    percentage: Math.max(0, Math.min(100, Math.round((total / NETWORK_FULL_SCALE_MBPS) * 100))),
+    color: '#10b981',
+    subtitle: `In ${formatThroughput(netIn).value} ${formatThroughput(netIn).unit} · Out ${formatThroughput(netOut).value} ${formatThroughput(netOut).unit}`,
+    trend: `${value} ${unit}`,
+    trendType: 'stable',
+    displayValue: value,
+    displayUnit: unit,
+  });
 
   return gauges;
+}
+
+// formatThroughput formats a MB/s value into the largest sensible unit.
+function formatThroughput(mbPerSec: number): { value: string; unit: string } {
+  if (!Number.isFinite(mbPerSec) || mbPerSec < 0) return { value: '0', unit: 'KB/s' };
+  if (mbPerSec >= 1024) return { value: (mbPerSec / 1024).toFixed(2), unit: 'GB/s' };
+  if (mbPerSec >= 1) return { value: mbPerSec.toFixed(2), unit: 'MB/s' };
+  return { value: (mbPerSec * 1024).toFixed(0), unit: 'KB/s' };
 }
 
 // --- SystemMetricsHistory → ChartData[] ---
