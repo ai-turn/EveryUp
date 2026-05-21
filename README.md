@@ -67,7 +67,40 @@ Pull the published image when you want to run EveryUp without cloning the reposi
 
 ```bash
 docker pull aiturn/everyup:latest
+```
+
+### Docker run
+
+```bash
 docker run -d --name everyup -p 3001:3001 -v everyup-data:/app/data aiturn/everyup:latest
+```
+
+### Docker Compose
+
+Create a `compose.yaml` file:
+
+```yaml
+services:
+  everyup:
+    image: aiturn/everyup:latest
+    container_name: everyup
+    ports:
+      - "3001:3001"
+    volumes:
+      - everyup-data:/app/data
+    env_file:
+      - path: .env
+        required: false
+    restart: unless-stopped
+
+volumes:
+  everyup-data:
+```
+
+Start it:
+
+```bash
+docker compose up -d
 ```
 
 Open `http://localhost:3001` and create the admin account.

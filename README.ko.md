@@ -67,7 +67,40 @@ docker compose up -d
 
 ```bash
 docker pull aiturn/everyup:latest
+```
+
+### Docker run
+
+```bash
 docker run -d --name everyup -p 3001:3001 -v everyup-data:/app/data aiturn/everyup:latest
+```
+
+### Docker Compose
+
+`compose.yaml` 파일을 만듭니다.
+
+```yaml
+services:
+  everyup:
+    image: aiturn/everyup:latest
+    container_name: everyup
+    ports:
+      - "3001:3001"
+    volumes:
+      - everyup-data:/app/data
+    env_file:
+      - path: .env
+        required: false
+    restart: unless-stopped
+
+volumes:
+  everyup-data:
+```
+
+실행합니다.
+
+```bash
+docker compose up -d
 ```
 
 `http://localhost:3001`로 접속해 관리자 계정을 만듭니다.
