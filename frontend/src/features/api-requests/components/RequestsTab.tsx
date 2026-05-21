@@ -234,7 +234,8 @@ function PathAggregateTable({
           {t('apiRequests.summary.endpointCount', { count: items.length })}
         </span>
       </div>
-      <div className="overflow-x-auto">
+      {/* Desktop: table */}
+      <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50/70 dark:bg-ui-hover-dark/30 text-[11px] uppercase tracking-wide text-slate-400 dark:text-text-dim-dark">
@@ -290,6 +291,42 @@ function PathAggregateTable({
           </tbody>
         </table>
       </div>
+
+      {/* Mobile: stacked cards */}
+      <ul className="sm:hidden divide-y divide-slate-100 dark:divide-ui-border-dark/60">
+        {items.map((item) => {
+          const active = pickedPath === item.pathTemplate;
+          return (
+            <li
+              key={item.key}
+              onClick={() => onPickPath(active ? null : item.pathTemplate)}
+              className={`cursor-pointer px-4 py-3 transition-colors ${active ? 'bg-primary/5 dark:bg-primary/10' : ''}`}
+            >
+              <div className="flex items-center gap-2">
+                <span className={`rounded px-2 py-0.5 text-[11px] font-bold ${methodBadge(item.method)}`}>
+                  {item.method}
+                </span>
+                <span className="min-w-0 flex-1 truncate font-mono text-xs text-slate-800 dark:text-text-base-dark">
+                  {item.pathTemplate}
+                </span>
+                <span className="font-mono text-sm font-bold text-slate-900 dark:text-white">{item.count}</span>
+              </div>
+              <div className="mt-2 flex items-center gap-3 font-mono text-[11px] text-slate-500 dark:text-text-muted-dark">
+                <span className={item.errorRate >= 0.05 ? 'text-red-600 dark:text-red-400' : item.errorRate > 0 ? 'text-amber-600 dark:text-amber-400' : ''}>
+                  {t('apiRequests.table.errors')} {(item.errorRate * 100).toFixed(1)}%
+                </span>
+                <span>
+                  <span className="font-bold text-slate-900 dark:text-white">{item.p50}</span>
+                  <span className="text-slate-400"> / {item.p95} / {item.p99}ms</span>
+                </span>
+                <span className="ml-auto whitespace-nowrap">
+                  {t('apiRequests.timeAgo', { value: formatTimeAgo(item.lastSeen) })}
+                </span>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </section>
   );
 }
@@ -375,6 +412,74 @@ function RequestRow({
   );
 }
 
+// Mobile request entry — stacked card replacing the table row on narrow screens.
+function RequestCard({
+  request,
+  open,
+  onToggle,
+  onOpenTrace,
+  t,
+}: {
+  request: ApiRequest;
+  open: boolean;
+  onToggle: () => void;
+  onOpenTrace: (traceId: string) => void;
+  t: (key: string, options?: Record<string, unknown>) => string;
+}) {
+  const expandable = !!request.error;
+  return (
+    <li
+      onClick={expandable ? onToggle : undefined}
+      className={`px-4 py-3 transition-colors ${expandable ? 'cursor-pointer' : ''} ${request.isError ? 'bg-red-50/30 dark:bg-red-900/10' : ''}`}
+    >
+      <div className="flex items-center gap-2">
+        <span className={`rounded px-2 py-0.5 text-[11px] font-bold ${methodBadge(request.method)}`}>
+          {request.method.toUpperCase()}
+        </span>
+        <span className={`rounded px-2 py-0.5 text-[11px] font-bold ${statusBadge(request.statusCode)}`}>
+          {request.statusCode}
+        </span>
+        <span className="ml-auto font-mono text-xs font-bold text-slate-700 dark:text-text-base-dark">
+          {formatDuration(request.durationMs)}
+        </span>
+        {expandable && (
+          <MaterialIcon name={open ? 'expand_more' : 'chevron_right'} className="text-lg text-slate-400" />
+        )}
+      </div>
+      <div className="mt-1.5 font-mono text-xs font-semibold text-slate-900 dark:text-white truncate" title={request.path}>
+        {request.path}
+      </div>
+      {request.pathTemplate && request.pathTemplate !== request.path && (
+        <div className="font-mono text-[10px] text-slate-400 dark:text-text-dim-dark truncate">{request.pathTemplate}</div>
+      )}
+      <div className="mt-1.5 flex items-center gap-3 font-mono text-[11px] text-slate-500 dark:text-text-muted-dark">
+        <span className="whitespace-nowrap">{formatClock(request.createdAt)}</span>
+        <span className="truncate">{request.clientIp ?? '-'}</span>
+        {request.traceId && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenTrace(request.traceId!);
+            }}
+            className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary/10 cursor-pointer"
+            title={request.traceId}
+          >
+            <MaterialIcon name="timeline" className="text-sm" />
+            <span>{t('apiRequests.actions.viewTrace')}</span>
+          </button>
+        )}
+      </div>
+      {open && expandable && (
+        <div className="mt-2 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-3">
+          <div className="mb-1 text-xs font-bold uppercase text-red-600 dark:text-red-400">{t('apiRequests.detail.error')}</div>
+          <pre className="whitespace-pre-wrap break-all font-mono text-xs text-red-700 dark:text-red-300">{request.error}</pre>
+        </div>
+      )}
+    </li>
+  );
+}
+
 function RequestsStreamTable({
   items,
   loading,
@@ -398,7 +503,8 @@ function RequestsStreamTable({
           <p className="text-xs text-slate-500 dark:text-text-muted-dark">{t('apiRequests.stream.rows', { count: items.length })}</p>
         </div>
       </div>
-      <div className="overflow-x-auto">
+      {/* Desktop: table */}
+      <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50/70 dark:bg-ui-hover-dark/30 text-[11px] uppercase tracking-wide text-slate-400 dark:text-text-dim-dark">
@@ -442,6 +548,37 @@ function RequestsStreamTable({
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile: stacked cards */}
+      <div className="sm:hidden">
+        {loading && items.length === 0 && (
+          <div className="space-y-2 p-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-8 rounded bg-slate-100 dark:bg-ui-hover-dark animate-pulse" />
+            ))}
+          </div>
+        )}
+        {items.length > 0 && (
+          <ul className="divide-y divide-slate-100 dark:divide-ui-border-dark/60">
+            {items.map((request) => (
+              <RequestCard
+                key={request.id}
+                request={request}
+                open={openId === request.id}
+                onToggle={() => onToggle(request.id)}
+                onOpenTrace={onOpenTrace}
+                t={t}
+              />
+            ))}
+          </ul>
+        )}
+        {!loading && items.length === 0 && (
+          <div className="py-14 text-center text-slate-500 dark:text-text-muted-dark">
+            <MaterialIcon name="api" className="text-4xl mb-2 text-slate-300 dark:text-text-dim-dark" />
+            <p>{t('apiRequests.empty.noResults')}</p>
+          </div>
+        )}
       </div>
     </section>
   );

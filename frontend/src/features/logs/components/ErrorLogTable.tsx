@@ -148,6 +148,85 @@ function HistogramBand({ logs }: { logs: LogEntry[] }) {
   );
 }
 
+// LinkedRequest + trace-view chips shared by the desktop row and mobile card.
+function LogMetaChips({
+  log,
+  onOpenTrace,
+  viewTraceLabel,
+}: {
+  log: LogEntry;
+  onOpenTrace: (traceId: string) => void;
+  viewTraceLabel: string;
+}) {
+  if (!log.linkedRequest && !log.traceId) return null;
+  return (
+    <>
+      {log.linkedRequest && (
+        <span
+          className="inline-flex max-w-65 items-center gap-1 rounded-md border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark/40 px-2 py-0.5 text-[11px]"
+          title={`${log.linkedRequest.method} ${log.linkedRequest.path}`}
+        >
+          <span className={`rounded px-1 py-px text-[10px] font-bold ${methodBadgeClass(log.linkedRequest.method)}`}>
+            {log.linkedRequest.method.toUpperCase()}
+          </span>
+          <span className="font-mono truncate text-slate-700 dark:text-text-base-dark">{log.linkedRequest.path}</span>
+          <span className={`rounded px-1 py-px text-[10px] font-bold ${statusBadgeClass(log.linkedRequest.statusCode)}`}>
+            {log.linkedRequest.statusCode}
+          </span>
+        </span>
+      )}
+      {log.traceId && (
+        <button
+          type="button"
+          onClick={() => onOpenTrace(log.traceId!)}
+          className="inline-flex items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary/10 cursor-pointer"
+          title={log.traceId}
+        >
+          <MaterialIcon name="timeline" className="text-sm" />
+          <span>{viewTraceLabel}</span>
+        </button>
+      )}
+    </>
+  );
+}
+
+// Mobile log entry — stacked card replacing the table row on narrow screens.
+function LogCard({
+  log,
+  onCopy,
+  onOpenTrace,
+  viewTraceLabel,
+}: {
+  log: LogEntry;
+  onCopy: (log: LogEntry) => void;
+  onOpenTrace: (traceId: string) => void;
+  viewTraceLabel: string;
+}) {
+  return (
+    <li className="px-4 py-3">
+      <div className="flex items-center gap-2">
+        <span className={`rounded px-2 py-0.5 text-xs font-bold uppercase ${levelToneStyle[log.level]}`}>
+          {log.level}
+        </span>
+        <span className="text-xs text-slate-500 dark:text-text-muted-dark whitespace-nowrap">
+          {formatTimestamp(log.createdAt)}
+        </span>
+        <button onClick={() => onCopy(log)} className="ml-auto text-slate-400 hover:text-primary">
+          <MaterialIcon name="content_copy" className="text-base" />
+        </button>
+      </div>
+      <p className="mt-1.5 text-sm text-slate-700 dark:text-text-base-dark break-words">
+        {log.message}
+      </p>
+      {(log.linkedRequest || log.traceId) && (
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <LogMetaChips log={log} onOpenTrace={onOpenTrace} viewTraceLabel={viewTraceLabel} />
+        </div>
+      )}
+    </li>
+  );
+}
+
 export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTraceFilter }: ErrorLogTableProps) {
   const { t } = useTranslation(['logs', 'common']);
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -249,10 +328,10 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
       <HistogramBand logs={filteredLogs.filter((log) => log.level === 'error' || log.level === 'warn')} />
 
       <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark overflow-hidden">
-        {/* Single filter row */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 dark:border-ui-border-dark px-4 py-2.5">
+        {/* Single filter row — stacks vertically on mobile */}
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 border-b border-slate-100 dark:border-ui-border-dark px-4 py-2.5">
           {/* Level badge filters */}
-          <div className="flex items-center gap-1.5 flex-wrap flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap sm:flex-1 sm:min-w-0">
             {LEVEL_FILTERS.map((level) => {
               const isActive = levelFilter === level;
               return (
@@ -276,14 +355,14 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
           </div>
 
           {/* Right controls */}
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="relative">
+          <div className="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
+            <div className="relative flex-1 sm:flex-none">
               <MaterialIcon name="search" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('logs.searchPlaceholder')}
-                className="h-8 w-44 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark pl-8 pr-3 text-xs text-slate-900 dark:text-white outline-none focus:border-primary focus:w-56 transition-all"
+                className="h-8 w-full sm:w-44 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark pl-8 pr-3 text-xs text-slate-900 dark:text-white outline-none focus:border-primary sm:focus:w-56 transition-all"
               />
             </div>
             <button
@@ -313,8 +392,9 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
           </div>
         )}
 
+        {/* Desktop: table */}
         {filteredLogs.length > 0 && (
-          <div className="overflow-x-auto">
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left">
               <tbody className="divide-y divide-slate-100 dark:divide-ui-border-dark/60">
                 {filteredLogs.map((log) => (
@@ -333,31 +413,11 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
                     <td className="px-4 py-3 whitespace-nowrap">
                       {(log.linkedRequest || log.traceId) && (
                         <div className="flex items-center justify-end gap-1.5">
-                          {log.linkedRequest && (
-                            <span
-                              className="inline-flex max-w-65 items-center gap-1 rounded-md border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark/40 px-2 py-0.5 text-[11px]"
-                              title={`${log.linkedRequest.method} ${log.linkedRequest.path}`}
-                            >
-                              <span className={`rounded px-1 py-px text-[10px] font-bold ${methodBadgeClass(log.linkedRequest.method)}`}>
-                                {log.linkedRequest.method.toUpperCase()}
-                              </span>
-                              <span className="font-mono truncate text-slate-700 dark:text-text-base-dark">{log.linkedRequest.path}</span>
-                              <span className={`rounded px-1 py-px text-[10px] font-bold ${statusBadgeClass(log.linkedRequest.statusCode)}`}>
-                                {log.linkedRequest.statusCode}
-                              </span>
-                            </span>
-                          )}
-                          {log.traceId && (
-                            <button
-                              type="button"
-                              onClick={() => setActiveTraceId(log.traceId ?? null)}
-                              className="inline-flex items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary/10 cursor-pointer"
-                              title={log.traceId}
-                            >
-                              <MaterialIcon name="timeline" className="text-sm" />
-                              <span>{t('logs.traceFilter.viewTrace')}</span>
-                            </button>
-                          )}
+                          <LogMetaChips
+                            log={log}
+                            onOpenTrace={setActiveTraceId}
+                            viewTraceLabel={t('logs.traceFilter.viewTrace')}
+                          />
                         </div>
                       )}
                     </td>
@@ -371,6 +431,21 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
               </tbody>
             </table>
           </div>
+        )}
+
+        {/* Mobile: stacked cards */}
+        {filteredLogs.length > 0 && (
+          <ul className="sm:hidden divide-y divide-slate-100 dark:divide-ui-border-dark/60">
+            {filteredLogs.map((log) => (
+              <LogCard
+                key={log.id}
+                log={log}
+                onCopy={handleCopyLog}
+                onOpenTrace={setActiveTraceId}
+                viewTraceLabel={t('logs.traceFilter.viewTrace')}
+              />
+            ))}
+          </ul>
         )}
 
         {filteredLogs.length === 0 && !error && (

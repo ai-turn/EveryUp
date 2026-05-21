@@ -91,7 +91,7 @@ export function RequestFilters({ params, onChange, pathSuggestions = [] }: Reque
     'bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-muted-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark';
 
   const groupClass =
-    'h-11 flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-2';
+    'w-full sm:w-auto min-h-11 flex flex-wrap items-center gap-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-2 py-1.5 sm:py-0';
   const groupLabelClass =
     'text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-text-dim-dark select-none pr-1 border-r border-slate-200 dark:border-ui-border-dark mr-1';
 
@@ -148,7 +148,7 @@ export function RequestFilters({ params, onChange, pathSuggestions = [] }: Reque
         </div>
 
         {/* Errors only toggle */}
-        <label className="h-11 flex items-center gap-2 cursor-pointer rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-3">
+        <label className="w-full sm:w-auto h-11 flex items-center gap-2 cursor-pointer rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-3">
           <Toggle
             checked={!!params.errorsOnly}
             onChange={setErrorsOnly}
