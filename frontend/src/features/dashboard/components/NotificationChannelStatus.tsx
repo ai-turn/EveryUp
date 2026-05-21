@@ -2,12 +2,9 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from '../../../components/common';
 import { IconAlerts } from '../../../components/icons/SidebarIcons';
+import { ChannelIcon } from '../../../components/icons/ChannelIcons';
+import { getChannelStyle } from '../../alerts/utils/channelMeta';
 import { useNotificationChannels } from '../../../hooks/useAlerts';
-
-const CHANNEL_META: Record<string, { icon: string; color: string; bg: string }> = {
-  telegram: { icon: 'send', color: 'text-sky-500', bg: 'bg-sky-500/10' },
-  discord: { icon: 'sports_esports', color: 'text-violet-500', bg: 'bg-violet-500/10' },
-};
 
 export function NotificationChannelStatus() {
   const { t } = useTranslation(['dashboard', 'common']);
@@ -79,15 +76,15 @@ export function NotificationChannelStatus() {
         {!loading && totalCount > 0 && (
           <div className="space-y-2">
             {(channels || []).slice(0, 5).map((channel) => {
-              const meta = CHANNEL_META[channel.type] ?? { icon: 'notifications', color: 'text-slate-500', bg: 'bg-slate-500/10' };
+              const style = getChannelStyle(channel.type);
               return (
                 <div
                   key={channel.id}
                   className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-ui-hover-dark/60 hover:bg-slate-100 dark:hover:bg-ui-hover-dark transition-colors"
                 >
                   {/* Icon */}
-                  <div className={`w-9 h-9 rounded-lg ${meta.bg} flex items-center justify-center shrink-0`}>
-                    <MaterialIcon name={meta.icon} className={`text-lg ${meta.color}`} />
+                  <div className={`w-9 h-9 rounded-lg ${style.bg} flex items-center justify-center shrink-0`}>
+                    <ChannelIcon type={channel.type} size={18} className={style.text} />
                   </div>
 
                   {/* Name & Type */}
