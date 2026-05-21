@@ -34,31 +34,8 @@ EveryUp gives small teams and self-hosters a single place to watch service uptim
 
 - **One dashboard, fewer moving parts** - health checks, infra metrics, logs, API request inspection, and alerts live together.
 - **Self-hosted by default** - your monitoring data stays on your own infrastructure.
-- **Simple operations** - a single container, one SQLite database file, and automatic first-run secrets.
-- **OpenTelemetry friendly** - ingest OTLP logs and traces from existing SDKs or auto-instrumentation.
-
-## Lightweight footprint
-
-| | Size |
-| --- | --- |
-| Go server binary (`linux/amd64`, stripped) | **~21 MB** |
-| Frontend bundle (served by the Go binary) | **~7 MB** |
-| Runtime container image (Alpine base) | **~40 MB** |
-| Persistent state | one SQLite file in `/app/data` |
-| External services required | **none** - no Prometheus, Grafana, Elasticsearch, Kafka, or Redis |
-
-Multi-arch images are published for `linux/amd64` and `linux/arm64`, so the same image runs on a regular VM or an ARM box.
-
-## OpenTelemetry adoption for existing services
-
-If your service already speaks OpenTelemetry, EveryUp is just another OTLP endpoint. If it doesn't, the language-specific auto-instrumentations below add it without touching application code:
-
-- **Spring Boot** - attach `opentelemetry-javaagent.jar` and set 4 env vars. Logback / Log4j / SLF4J output is forwarded with trace context.
-- **Python (FastAPI, Django, Flask)** - `pip install opentelemetry-distro`, then run via `opentelemetry-instrument`. Standard `logging` records are captured.
-- **Node.js (Express, Fastify, NestJS)** - register `@opentelemetry/auto-instrumentations-node` with `--require`. Pino / Winston / console logs flow through with span context.
-- **Any OTLP/HTTP source** - the receiver accepts logs and traces from collectors, sidecars, or custom SDKs.
-
-Typical adoption on an existing service is an env-var change and a restart.
+- **Simple operations** - start with one container and one persistent data volume instead of a separate monitoring stack.
+- **OpenTelemetry friendly** - send OTLP logs and traces from existing SDKs, collectors, or auto-instrumentation.
 
 ## Features
 
@@ -69,60 +46,47 @@ Typical adoption on an existing service is an env-var change and a restart.
 | **Logs and traces** | Unified log viewer, level filtering, keyword search, OTLP/HTTP ingestion |
 | **API request inspector** | Request/response visibility from OpenTelemetry SERVER spans with masking and sampling controls |
 | **Alerting** | Telegram, Discord, Slack, and webhook channels with threshold-based rules |
-| **Live updates** | WebSocket-powered metric streaming for responsive dashboards |
 
 ## Quick Start
 
-The fastest path is Docker Compose. On first launch, open the app in your browser and create the admin account. Encryption keys and JWT secrets are generated automatically.
-
-```yaml
-services:
-  everyup:
-    image: aiturn/everyup:latest
-    container_name: everyup
-    ports:
-      - "3001:3001"
-    volumes:
-      - everyup-data:/app/data
-    restart: unless-stopped
-
-volumes:
-  everyup-data:
-```
-
-```bash
-docker compose up -d
-```
-
-Open `http://localhost:3001`.
-
-Prefer a one-line Docker run?
+Start the published image, then create the admin account in your browser. EveryUp generates its first-run encryption key and JWT secret automatically.
 
 ```bash
 docker run -d --name everyup -p 3001:3001 -v everyup-data:/app/data aiturn/everyup:latest
 ```
 
-EveryUp publishes Docker images for `linux/amd64` and `linux/arm64`.
+Open `http://localhost:3001`.
+
+Prefer Docker Compose? The repository includes a compose file with the same data volume plus an optional `.env` file:
+
+```bash
+git clone https://github.com/ai-turn/everyup.git
+cd everyup
+docker compose up -d
+```
+
+Copy `.env.example` to `.env` before starting Compose when you need to customize ports, admin seeding, or timezone. Published images support `linux/amd64` and `linux/arm64`.
 
 ## Configuration
 
-Most installations can start without a config file. Use environment variables only when you need to change ports, seed an admin account, move the database, or set a timezone.
+Most installations can start without a config file. Docker Compose loads `.env` when present; use [`.env.example`](.env.example) as the starting point for overrides.
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `EVERYUP_SERVER_MODE` | `production` | Runtime mode: `development` or `production` |
-| `EVERYUP_SERVER_PORT` | `3001` | HTTP server port |
-| `EVERYUP_SERVER_ALLOWORIGINS` | same origin | CORS origins for separated frontend deployments |
-| `EVERYUP_ADMIN_USERNAME` | unset | Creates or resets an admin account on startup |
-| `EVERYUP_ADMIN_PASSWORD` | unset | Password for the seeded admin account |
-| `EVERYUP_DATABASE_PATH` | `./data/monitoring.db` | SQLite database path |
-| `TZ` | system default | Container timezone, for example `Asia/Seoul` |
+| Variable | Purpose |
+| --- | --- |
+| `EVERYUP_SERVER_PORT` | Change the exposed HTTP port |
+| `EVERYUP_ADMIN_USERNAME` | Seed or reset the admin account on startup |
+| `EVERYUP_ADMIN_PASSWORD` | Password paired with the seeded admin username |
+| `EVERYUP_DATABASE_PATH` | Move the SQLite database path |
+| `EVERYUP_ENCRYPTION_KEY` | Provide a production-managed 64-character hex encryption key |
+| `TZ` | Set the container timezone, for example `Asia/Seoul` |
 
 > If `EVERYUP_ADMIN_USERNAME` and `EVERYUP_ADMIN_PASSWORD` are both set, EveryUp creates or resets that account on every startup. Leave them unset after initial setup unless you intentionally want that behavior.
 
-## OpenTelemetry Ingestion
+Separated frontend deployments may also need `EVERYUP_SERVER_ALLOWORIGINS`. See [`.env.example`](.env.example) and [backend/README.md](backend/README.md) for backend configuration details.
 
-Create an API key from **Logs -> Service detail -> Integration**, then point your OpenTelemetry exporter at EveryUp:
+## Send Logs and Traces
+
+Create an API key from **Logs -> Service detail -> Integration**, then point an OTLP/HTTP exporter at EveryUp:
 
 ```bash
 export OTEL_SERVICE_NAME="my-service"
@@ -139,11 +103,9 @@ The OTLP/HTTP receiver accepts `/api/v1/otlp/v1/logs` and `/api/v1/otlp/v1/trace
 
 ## Data Backup
 
-EveryUp stores application data in a single SQLite database file.
+Back up the persistent data directory before upgrades or migrations. The default Docker setup keeps the SQLite database and generated encryption key material under `/app/data`; deployments that set `EVERYUP_ENCRYPTION_KEY` must retain that secret separately.
 
-```bash
-docker cp everyup:/app/data/monitoring.db ./monitoring.db.bak
-```
+See [Backup and Restore](docs/BACKUP_RESTORE.md).
 
 ## Local Development
 
@@ -154,14 +116,14 @@ git clone https://github.com/ai-turn/everyup.git
 cd everyup
 ```
 
-Run the backend:
+Run the backend in one terminal:
 
 ```bash
 cd backend
 go run ./cmd/server
 ```
 
-Run the frontend:
+Run the frontend in another terminal from the repository root:
 
 ```bash
 cd frontend
@@ -169,29 +131,17 @@ pnpm install
 pnpm dev
 ```
 
-Run backend tests:
-
-```bash
-cd backend
-go test ./internal/api/handlers/ -v
-```
-
-## Project Layout
-
-```text
-everyup/
-├── backend/       # Go, Fiber, SQLite, WebSocket, collectors
-├── frontend/      # React, Vite, TypeScript, Tailwind CSS
-├── docs/          # Setup guides, migration notes, product docs
-└── docs/images/   # README and documentation images
-```
+Component-specific setup and checks live in [backend/README.md](backend/README.md) and [frontend/README.md](frontend/README.md).
 
 ## Documentation
+
+The guides below are the supported starting points. The `doc/` directory keeps design notes and implementation specs for contributors.
 
 | Document | Description |
 | --- | --- |
 | [backend/README.md](backend/README.md) | Backend API, configuration, and architecture notes |
 | [frontend/README.md](frontend/README.md) | Frontend setup, environment variables, and routes |
+| [docs/BACKUP_RESTORE.md](docs/BACKUP_RESTORE.md) | Data backup, encryption key retention, and restore flow |
 | [docs/NOTIFICATION_SETUP.md](docs/NOTIFICATION_SETUP.md) | Telegram, Discord, and Slack setup |
 | [docs/API_REQUEST_LOGGING_GUIDE.md](docs/API_REQUEST_LOGGING_GUIDE.md) | API request logging and inspection guide |
 | [docs/OTEL_ONLY_MIGRATION.md](docs/OTEL_ONLY_MIGRATION.md) | OpenTelemetry-only ingestion migration notes |
