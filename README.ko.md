@@ -49,15 +49,7 @@ EveryUp은 작은 팀과 셀프 호스팅 환경에서 서비스 상태와 응�
 
 ## 빠른 시작
 
-배포된 이미지를 바로 실행한 뒤 브라우저에서 관리자 계정을 만듭니다. 처음 실행할 때 암호화 키와 JWT 서명 키가 자동으로 생성됩니다.
-
-```bash
-docker run -d --name everyup -p 3001:3001 -v everyup-data:/app/data aiturn/everyup:latest
-```
-
-`http://localhost:3001`로 접속합니다.
-
-Docker Compose를 선호한다면 저장소에 포함된 compose 파일을 사용하세요. 같은 데이터 볼륨을 사용하며, 필요하면 `.env` 파일로 설정을 바꿀 수 있습니다.
+Docker Compose로 시작하는 방법을 권장합니다. 저장소를 받은 뒤 포함된 compose 파일로 실행하고, 브라우저에서 관리자 계정을 만듭니다. 처음 실행할 때 암호화 키와 JWT 서명 키가 자동으로 생성됩니다.
 
 ```bash
 git clone https://github.com/ai-turn/everyup.git
@@ -65,7 +57,16 @@ cd everyup
 docker compose up -d
 ```
 
+`http://localhost:3001`로 접속합니다.
+
 포트나 시간대를 바꾸거나 관리자 계정을 미리 만들려면 Compose 실행 전에 `.env.example`을 `.env`로 복사해 수정하세요. 배포 이미지는 `linux/amd64`와 `linux/arm64`를 지원합니다.
+
+저장소를 받지 않고 배포 이미지만 바로 실행해 보려면:
+
+```bash
+docker pull aiturn/everyup:latest
+docker run -d --name everyup -p 3001:3001 -v everyup-data:/app/data aiturn/everyup:latest
+```
 
 ## 설정
 
@@ -89,9 +90,9 @@ docker compose up -d
 **로그 -> 서비스 상세 -> 연동**에서 API 키를 만든 뒤 OTLP/HTTP 전송 대상을 EveryUp으로 지정합니다.
 
 ```bash
-export OTEL_SERVICE_NAME="my-service"
+export OTEL_SERVICE_NAME="{your-service-name}"
 export OTEL_EXPORTER_OTLP_ENDPOINT="http://your-everyup-server:3001/api/v1/otlp"
-export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer everyup_your_api_key"
+export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer {your-everyup-api-key}"
 export OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
 export OTEL_LOGS_EXPORTER="otlp"
 export OTEL_TRACES_EXPORTER="otlp"

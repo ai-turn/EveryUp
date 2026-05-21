@@ -49,15 +49,7 @@ EveryUp gives small teams and self-hosters a single place to watch service uptim
 
 ## Quick Start
 
-Start the published image, then create the admin account in your browser. EveryUp generates its first-run encryption key and JWT secret automatically.
-
-```bash
-docker run -d --name everyup -p 3001:3001 -v everyup-data:/app/data aiturn/everyup:latest
-```
-
-Open `http://localhost:3001`.
-
-Prefer Docker Compose? The repository includes a compose file with the same data volume plus an optional `.env` file:
+Docker Compose is the recommended way to start EveryUp. Clone the repository, start the checked-in compose file, then create the admin account in your browser. EveryUp generates its first-run encryption key and JWT secret automatically.
 
 ```bash
 git clone https://github.com/ai-turn/everyup.git
@@ -65,7 +57,16 @@ cd everyup
 docker compose up -d
 ```
 
+Open `http://localhost:3001`.
+
 Copy `.env.example` to `.env` before starting Compose when you need to customize ports, admin seeding, or timezone. Published images support `linux/amd64` and `linux/arm64`.
+
+To try the published image without cloning the repository:
+
+```bash
+docker pull aiturn/everyup:latest
+docker run -d --name everyup -p 3001:3001 -v everyup-data:/app/data aiturn/everyup:latest
+```
 
 ## Configuration
 
@@ -89,9 +90,9 @@ Separated frontend deployments may also need `EVERYUP_SERVER_ALLOWORIGINS`. See 
 Create an API key from **Logs -> Service detail -> Integration**, then point an OTLP/HTTP exporter at EveryUp:
 
 ```bash
-export OTEL_SERVICE_NAME="my-service"
+export OTEL_SERVICE_NAME="{your-service-name}"
 export OTEL_EXPORTER_OTLP_ENDPOINT="http://your-everyup-server:3001/api/v1/otlp"
-export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer everyup_your_api_key"
+export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer {your-everyup-api-key}"
 export OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
 export OTEL_LOGS_EXPORTER="otlp"
 export OTEL_TRACES_EXPORTER="otlp"
