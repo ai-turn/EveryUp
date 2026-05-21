@@ -50,7 +50,7 @@ export function LogListMobileView({
         </button>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
+      <div className="grid grid-cols-2 gap-2">
         <MobileKpi label={t('logs.kpi.services')} value={services.length} />
         <MobileKpi label={t('logs.kpi.receiving')} value={receivingCount} tone="text-emerald-600 dark:text-emerald-400" />
         <MobileKpi label={t('logs.kpi.errors')} value={errorCount} tone={errorCount > 0 ? 'text-red-500' : undefined} />
@@ -114,7 +114,7 @@ export function LogListMobileView({
 
 function MobileKpi({ label, value, tone = 'text-slate-900 dark:text-white' }: { label: string; value: number; tone?: string }) {
   return (
-    <div className="shrink-0 min-w-28 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-3">
+    <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-3">
       <p className="text-xs font-medium text-slate-500 dark:text-text-muted-dark truncate">{label}</p>
       <p className={`text-xl font-bold tabular-nums ${tone}`}>{value}</p>
     </div>

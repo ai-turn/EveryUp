@@ -43,16 +43,16 @@ export function InfraGauges({ hostId }: InfraGaugesProps) {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
         {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-56 w-full rounded-xl" />
+          <Skeleton key={i} className="h-40 sm:h-56 w-full rounded-xl" />
         ))}
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
       {(gauges || []).map((gauge) => (
         <VitalGaugeCard
           key={gauge.label}
@@ -71,9 +71,9 @@ function VitalGaugeCard({ gauge, sparkline }: { gauge: GaugeData; sparkline?: nu
   const trendIcon = gauge.trendType === 'up' ? 'arrow_upward' : gauge.trendType === 'down' ? 'arrow_downward' : 'remove';
 
   return (
-    <article className="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-ui-border-dark dark:bg-bg-surface-dark">
+    <article className="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-ui-border-dark dark:bg-bg-surface-dark sm:p-5">
       {/* 상단: 레이블 + 추세 배지 */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-2 sm:gap-4">
         <div className="min-w-0">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
             {gauge.label}
@@ -88,8 +88,8 @@ function VitalGaugeCard({ gauge, sparkline }: { gauge: GaugeData; sparkline?: nu
         </span>
       </div>
 
-      {/* 링 게이지 + 우측 정보 */}
-      <div className="mt-4 flex items-center gap-4">
+      {/* 링 게이지 + 우측 정보 (모바일은 링만, sm+ 부터 우측 정보 표시) */}
+      <div className="mt-4 flex items-center justify-center gap-4 sm:justify-start">
         <div
           className="grid h-24 w-24 shrink-0 place-items-center rounded-full"
           style={{
@@ -105,7 +105,7 @@ function VitalGaugeCard({ gauge, sparkline }: { gauge: GaugeData; sparkline?: nu
           </div>
         </div>
 
-        <div className="min-w-0 flex-1 space-y-2">
+        <div className="hidden min-w-0 space-y-2 sm:block sm:flex-1">
           {/* 상태 라벨 */}
           <div className="flex items-center justify-between text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">
             <span>{t('infra.detail.load')}</span>

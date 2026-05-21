@@ -60,7 +60,7 @@ export function InfraMobileView({
         </button>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
+      <div className="grid grid-cols-2 gap-2">
         <MobileKpi label={t('infra.kpi.total')} value={resources.length} />
         <MobileKpi label={t('infra.kpi.healthy')} value={healthyCount} tone="text-emerald-600 dark:text-emerald-400" />
         <MobileKpi label={t('infra.kpi.incidents')} value={incidentCount} tone={incidentCount > 0 ? 'text-amber-600 dark:text-amber-400' : undefined} />
@@ -152,7 +152,7 @@ export function InfraMobileView({
 
 function MobileKpi({ label, value, tone = 'text-slate-900 dark:text-white' }: { label: string; value: number; tone?: string }) {
   return (
-    <div className="shrink-0 flex-1 min-w-24 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-3">
+    <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-3">
       <p className="text-xs font-medium text-slate-500 dark:text-text-muted-dark truncate">{label}</p>
       <p className={`text-xl font-bold ${tone}`}>{value}</p>
     </div>
