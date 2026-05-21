@@ -61,12 +61,16 @@ docker compose up -d
 
 포트나 시간대를 바꾸거나 관리자 계정을 미리 만들려면 Compose 실행 전에 `.env.example`을 `.env`로 복사해 수정하세요. 배포 이미지는 `linux/amd64`와 `linux/arm64`를 지원합니다.
 
-저장소를 받지 않고 배포 이미지만 바로 실행해 보려면:
+## Docker로 실행
+
+저장소를 받지 않고 EveryUp을 실행하려면 배포 이미지를 먼저 내려받습니다.
 
 ```bash
 docker pull aiturn/everyup:latest
 docker run -d --name everyup -p 3001:3001 -v everyup-data:/app/data aiturn/everyup:latest
 ```
+
+`http://localhost:3001`로 접속해 관리자 계정을 만듭니다.
 
 ## 설정
 

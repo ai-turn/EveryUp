@@ -61,12 +61,16 @@ Open `http://localhost:3001`.
 
 Copy `.env.example` to `.env` before starting Compose when you need to customize ports, admin seeding, or timezone. Published images support `linux/amd64` and `linux/arm64`.
 
-To try the published image without cloning the repository:
+## Run with Docker
+
+Pull the published image when you want to run EveryUp without cloning the repository:
 
 ```bash
 docker pull aiturn/everyup:latest
 docker run -d --name everyup -p 3001:3001 -v everyup-data:/app/data aiturn/everyup:latest
 ```
+
+Open `http://localhost:3001` and create the admin account.
 
 ## Configuration
 
