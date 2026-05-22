@@ -167,6 +167,47 @@ func (r *SystemMetricRepository) GetLatestByHosts(hostIDs []string) (map[string]
 	return latest, nil
 }
 
+// GetNetTrendByHosts returns recent total network throughput (net_in + net_out,
+// MB/s) per host since the given cutoff, ordered oldest-first. Used for the
+// compact network sparkline on infra cards.
+func (r *SystemMetricRepository) GetNetTrendByHosts(hostIDs []string, since time.Time) (map[string][]float64, error) {
+	trends := make(map[string][]float64, len(hostIDs))
+	if len(hostIDs) == 0 {
+		return trends, nil
+	}
+
+	placeholders := strings.TrimRight(strings.Repeat("?,", len(hostIDs)), ",")
+	args := make([]interface{}, 0, len(hostIDs)+1)
+	for _, id := range hostIDs {
+		args = append(args, id)
+	}
+	args = append(args, since)
+
+	rows, err := DB.Query(`
+		SELECT host_id, net_in, net_out
+		FROM system_metrics
+		WHERE host_id IN (`+placeholders+`) AND created_at >= ?
+		ORDER BY created_at ASC
+	`, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var hostID string
+		var netIn, netOut float64
+		if err := rows.Scan(&hostID, &netIn, &netOut); err != nil {
+			return nil, err
+		}
+		trends[hostID] = append(trends[hostID], roundTo(netIn+netOut, 3))
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return trends, nil
+}
+
 // GetLatestByHost returns the most recent metric for a host
 func (r *SystemMetricRepository) GetLatestByHost(hostID string) (*models.SystemMetric, error) {
 	var m models.SystemMetric

@@ -21,12 +21,10 @@
         "resumeMonitoring": "Resume Monitoring",
         "active": "Active",
         "paused": "Paused",
-        "connection": "Connection",
         "connectionTypes": {
             "local": "Local",
             "remote": "Remote",
-            "localShort": "Local",
-            "sshRemote": "SSH Remote"
+            "localShort": "Local"
         },
         "statuses": {
             "healthy": "Healthy",
@@ -81,32 +79,16 @@
         "metrics": {
             "memory": "Memory",
             "disk": "Disk",
-            "score": "Score"
+            "network": "Network",
+            "noData": "No data"
         },
         "detail": {
-            "operationalState": "Operational state",
-            "collectionToggle": "Collection status",
-            "liveVitals": "Live vitals",
-            "hostProfile": "Host profile",
             "load": "Load",
             "loadStates": {
                 "normal": "Normal",
                 "elevated": "Elevated",
                 "critical": "Critical"
-            },
-            "scoreVerdicts": {
-                "healthy": "Metrics are in a comfortable operating range.",
-                "watch": "Some resource pressure is building up.",
-                "risk": "Resource pressure needs attention.",
-                "paused": "Collection is paused for this host."
-            },
-            "resourcePressure": "Resource pressure",
-            "filesystem": "Filesystem",
-            "used": "Used",
-            "os": "OS",
-            "kernel": "Kernel",
-            "uptime": "Uptime",
-            "hostname": "Hostname"
+            }
         },
         "noResults": "No hosts match your filters",
         "resourceTypes": {

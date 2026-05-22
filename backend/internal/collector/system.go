@@ -10,7 +10,9 @@ func roundGB(bytes uint64) float64 {
 
 func roundMBs(bytesDelta uint64, seconds float64) float64 {
 	mbps := float64(bytesDelta) / (1024 * 1024) / seconds
-	return float64(int(mbps*10)) / 10
+	// 3-decimal precision (~KB/s): network/disk throughput often sits below
+	// 0.1 MB/s, which a coarser round would collapse to a flat 0.
+	return float64(int(mbps*1000)) / 1000
 }
 
 func formatBytes(b uint64) string {

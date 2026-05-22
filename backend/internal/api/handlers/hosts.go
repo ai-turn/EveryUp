@@ -43,10 +43,15 @@ func (h *HostHandler) GetSummary(c *fiber.Ctx) error {
 		return internalError(c, "DATABASE_ERROR", err)
 	}
 
+	netTrends, err := h.metricRepo.GetNetTrendByHosts(hostIDs, time.Now().Add(-30*time.Minute))
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+
 	summaries := make([]models.InfraResourceSummary, 0, len(hosts))
 	cutoff := time.Now().Add(-2 * time.Minute)
 	for i := range hosts {
-		summary := buildInfraResourceSummary(&hosts[i], latestMetrics[hosts[i].ID], cutoff)
+		summary := buildInfraResourceSummary(&hosts[i], latestMetrics[hosts[i].ID], netTrends[hosts[i].ID], cutoff)
 		summaries = append(summaries, summary)
 	}
 
@@ -87,7 +92,7 @@ func (h *HostHandler) GetAll(c *fiber.Ctx) error {
 	})
 }
 
-func buildInfraResourceSummary(host *models.Host, latest models.SystemMetric, cutoff time.Time) models.InfraResourceSummary {
+func buildInfraResourceSummary(host *models.Host, latest models.SystemMetric, netTrend []float64, cutoff time.Time) models.InfraResourceSummary {
 	isRemote := host.Type == models.HostTypeRemote || host.SSHUser != ""
 	status := models.InfraStatusUnknown
 	severity := models.InfraSeverityWarning
@@ -173,6 +178,7 @@ func buildInfraResourceSummary(host *models.Host, latest models.SystemMetric, cu
 		CPUUsage:        cpuUsage,
 		MemoryUsage:     memoryUsage,
 		DiskUsage:       diskUsage,
+		NetTrend:        netTrend,
 		CreatedAt:       host.CreatedAt,
 		UpdatedAt:       host.UpdatedAt,
 	}

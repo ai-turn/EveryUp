@@ -3,9 +3,12 @@ interface SparklineProps {
   width?: number;
   height?: number;
   color?: string;
+  // When true the SVG stretches to fill its container width (width is kept as
+  // the viewBox coordinate space). Stroke stays crisp via non-scaling-stroke.
+  fluid?: boolean;
 }
 
-export function Sparkline({ data, width = 80, height = 28, color = '#3b76c9' }: SparklineProps) {
+export function Sparkline({ data, width = 80, height = 28, color = '#3b76c9', fluid = false }: SparklineProps) {
   if (!data || data.length < 2) return null;
 
   const min = Math.min(...data);
@@ -24,7 +27,13 @@ export function Sparkline({ data, width = 80, height = 28, color = '#3b76c9' }: 
   const fillPath = `M ${first} L ${polyline} L ${last.split(',')[0]},${height} L 0,${height} Z`;
 
   return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
+    <svg
+      width={fluid ? '100%' : width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
+      preserveAspectRatio={fluid ? 'none' : undefined}
+      aria-hidden="true"
+    >
       <defs>
         <linearGradient id={`sg-${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={color} stopOpacity="0.25" />
@@ -39,6 +48,7 @@ export function Sparkline({ data, width = 80, height = 28, color = '#3b76c9' }: 
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
+        vectorEffect="non-scaling-stroke"
       />
     </svg>
   );

@@ -20,6 +20,7 @@ export interface Resource {
   cpuUsage?: number;
   memoryUsage?: number;
   diskUsage?: number;
+  netTrend?: number[];
   ssh?: {
     port?: number;
     user?: string;

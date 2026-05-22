@@ -25,6 +25,7 @@ export function InfraDetailPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isPausing, setIsPausing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const name = host?.name || hostId;
   const ip = host?.ip || '';
@@ -70,11 +71,17 @@ export function InfraDetailPage() {
     navigate(`/infra/${host.id}/edit`);
   };
 
+  const handleRefresh = () => {
+    setRefreshKey((k) => k + 1);
+    refetch();
+  };
+
   // --- Shared props ---
   const sharedProps = {
     host,
     hostId,
     hostLoading,
+    refreshKey,
     status,
     name,
     ip,
@@ -84,6 +91,7 @@ export function InfraDetailPage() {
     onPauseResume: handlePauseResume,
     onDelete: handleDelete,
     onEdit: handleEdit,
+    onRefresh: handleRefresh,
     onDeleteDialogOpen: () => {
       if (isLocal) {
         toast.error(t('infra.toast.cannotDeleteLocal'));

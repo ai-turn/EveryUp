@@ -58,8 +58,8 @@ const COL = 'minmax(0,1fr) 130px 150px 72px 32px';
 
 // ─── 루트 컴포넌트 ───────────────────────────────────────────────────────────
 
-export function ProcessTable({ hostId }: { hostId: string }) {
-  const { data: processes, loading } = useMonitoringProcesses(hostId);
+export function ProcessTable({ hostId, refreshKey = 0 }: { hostId: string; refreshKey?: number }) {
+  const { data: processes, loading } = useMonitoringProcesses(hostId, refreshKey);
 
   const [topN,          setTopN]          = useState<5 | 10 | 20>(10);
   const [sortBy,        setSortBy]        = useState<'cpu' | 'memory'>('cpu');

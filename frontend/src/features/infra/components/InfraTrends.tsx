@@ -16,6 +16,7 @@ import type { ChartData } from '../../../types/infra';
 
 interface InfraTrendsProps {
   hostId: string;
+  refreshKey?: number;
 }
 
 function getCssVar(name: string): string {
@@ -43,10 +44,10 @@ function movingAverage(data: Record<string, unknown>[], keys: string[], window =
   });
 }
 
-export function InfraTrends({ hostId }: InfraTrendsProps) {
+export function InfraTrends({ hostId, refreshKey = 0 }: InfraTrendsProps) {
   const { t } = useTranslation(['infra', 'common']);
   const [timeRange, setTimeRange] = useState<'6H' | '12H' | '24H'>('6H');
-  const { data: charts, loading } = useMonitoringTrends(hostId, timeRange.toLowerCase());
+  const { data: charts, loading } = useMonitoringTrends(hostId, timeRange.toLowerCase(), refreshKey);
 
   const isDark = getIsDark();
   const gridColor     = isDark ? getCssVar('--color-chart-border')   : '#e2e8f0';

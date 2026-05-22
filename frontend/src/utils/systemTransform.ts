@@ -97,7 +97,7 @@ export function systemInfoToGauges(info: SystemInfo, _history?: SystemMetricsHis
 }
 
 // formatThroughput formats a MB/s value into the largest sensible unit.
-function formatThroughput(mbPerSec: number): { value: string; unit: string } {
+export function formatThroughput(mbPerSec: number): { value: string; unit: string } {
   if (!Number.isFinite(mbPerSec) || mbPerSec < 0) return { value: '0', unit: 'KB/s' };
   if (mbPerSec >= 1024) return { value: (mbPerSec / 1024).toFixed(2), unit: 'GB/s' };
   if (mbPerSec >= 1) return { value: mbPerSec.toFixed(2), unit: 'MB/s' };

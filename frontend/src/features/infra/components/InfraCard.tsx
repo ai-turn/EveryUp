@@ -1,7 +1,9 @@
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon, StatusBadge } from '../../../components/common';
+import { Sparkline } from '../../../components/common/Sparkline';
 import { relativeTime } from '../../../utils/formatters';
+import { formatThroughput } from '../../../utils/systemTransform';
 import type { Resource } from '../../../types/infra';
 
 interface InfraCardProps {
@@ -24,7 +26,8 @@ const typeBadgeColors: Record<Resource['type'], string> = {
 export const InfraCard = memo(function InfraCard({ resource, onClick }: InfraCardProps) {
     const { t } = useTranslation(['infra', 'common']);
     const isPaused = resource.isActive === false;
-    const healthScore = getHealthScore(resource);
+    const netTrend = resource.netTrend ?? [];
+    const netCurrent = formatThroughput(netTrend[netTrend.length - 1] ?? 0);
     const relativeTimeLabels = {
         justNow: t('common.relativeTime.justNow'),
         minutesAgo: (count: number) => t('common.relativeTime.minutesAgo', { count }),
@@ -98,31 +101,22 @@ export const InfraCard = memo(function InfraCard({ resource, onClick }: InfraCar
                 />
             </div>
 
-            <div className="grid grid-cols-3 gap-2 mb-3">
-                <div className="rounded-lg bg-slate-50 dark:bg-ui-hover-dark/40 border border-slate-100 dark:border-ui-border-dark/50 px-3 py-2">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
-                        {t('common.type')}
-                    </div>
-                    <div className="text-sm font-bold text-slate-800 dark:text-text-base-dark truncate">
-                        {t(`infra.resourceTypes.${resource.type}`)}
-                    </div>
+            <div className={`rounded-lg bg-slate-50 dark:bg-ui-hover-dark/40 border border-slate-100 dark:border-ui-border-dark/50 px-3 py-2 mb-3 ${isPaused ? 'opacity-40' : ''}`}>
+                <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                        {t('infra.metrics.network')}
+                    </span>
+                    <span className="text-xs font-bold tabular-nums text-slate-700 dark:text-text-base-dark">
+                        {netTrend.length > 0 ? `${netCurrent.value} ${netCurrent.unit}` : '-'}
+                    </span>
                 </div>
-                <div className="rounded-lg bg-slate-50 dark:bg-ui-hover-dark/40 border border-slate-100 dark:border-ui-border-dark/50 px-3 py-2">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
-                        {t('infra.connection')}
+                {netTrend.length >= 2 ? (
+                    <Sparkline data={netTrend} height={28} color="#10b981" fluid />
+                ) : (
+                    <div className="h-7 flex items-center text-[11px] text-slate-400 dark:text-text-dim-dark">
+                        {t('infra.metrics.noData')}
                     </div>
-                    <div className="text-sm font-bold text-slate-800 dark:text-text-base-dark truncate">
-                        {resource.isRemote ? t('infra.connectionTypes.sshRemote') : t('infra.connectionTypes.local')}
-                    </div>
-                </div>
-                <div className="rounded-lg bg-slate-50 dark:bg-ui-hover-dark/40 border border-slate-100 dark:border-ui-border-dark/50 px-3 py-2">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
-                        {t('infra.metrics.score')}
-                    </div>
-                    <div className={`text-sm font-bold truncate ${healthScore >= 80 ? 'text-emerald-600 dark:text-emerald-400' : healthScore >= 60 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}`}>
-                        {isPaused ? '-' : healthScore}
-                    </div>
-                </div>
+                )}
             </div>
 
             <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100 dark:border-ui-border-dark/50">
@@ -168,12 +162,4 @@ function MiniMetricBar({ label, value, muted }: { label: string; value?: number;
             </div>
         </div>
     );
-}
-
-function getHealthScore(resource: Resource) {
-    const cpu = resource.cpuUsage ?? 0;
-    const mem = resource.memoryUsage ?? 0;
-    const disk = resource.diskUsage ?? 0;
-    const statusPenalty = resource.severity === 'critical' ? 22 : resource.severity === 'warning' ? 10 : 0;
-    return Math.max(0, Math.min(100, Math.round(100 - Math.max(0, cpu - 60) * 0.35 - Math.max(0, mem - 70) * 0.35 - Math.max(0, disk - 75) * 0.3 - statusPenalty)));
 }

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { MaterialIcon, Toggle } from '../../../components/common';
 import { Breadcrumbs } from '../../../components/layout/Breadcrumbs';
 import { useIsMobile } from '../../../hooks/useMediaQuery';
+import { useSpinAction } from '../../../hooks/useSpinAction';
 import { useMonitoringGauges, useMonitoringProcesses, useSystemInfo } from '../../../hooks/useInfra';
 import { InfraGauges } from './InfraGauges';
 import { InfraTrends } from './InfraTrends';
@@ -20,6 +21,7 @@ export interface InfraDetailViewProps {
   host: Host | null;
   hostId: string;
   hostLoading: boolean;
+  refreshKey: number;
   status: string;
   name: string;
   ip: string;
@@ -31,6 +33,7 @@ export interface InfraDetailViewProps {
   onPauseResume: () => void;
   onDelete: () => void;
   onEdit: () => void;
+  onRefresh: () => void;
   onDeleteDialogOpen: () => void;
   onDeleteDialogClose: () => void;
 }
@@ -152,11 +155,12 @@ function HostHeader({
 
 function DesktopLayout(props: InfraDetailViewProps) {
   const { t } = useTranslation(['infra', 'common']);
-  const { data: systemInfo } = useSystemInfo(props.hostId);
   const {
-    host, hostId, hostLoading, status, name, ip, cluster, isLocal, isPausing, isDeleting,
-    isDeleteDialogOpen, onPauseResume, onDelete, onEdit, onDeleteDialogOpen, onDeleteDialogClose,
+    host, hostId, hostLoading, refreshKey, status, name, ip, cluster, isLocal, isPausing, isDeleting,
+    isDeleteDialogOpen, onPauseResume, onDelete, onEdit, onRefresh, onDeleteDialogOpen, onDeleteDialogClose,
   } = props;
+  const { data: systemInfo } = useSystemInfo(hostId, refreshKey);
+  const { spinning, trigger: handleRefresh } = useSpinAction(onRefresh);
 
   return (
     <>
@@ -175,6 +179,15 @@ function DesktopLayout(props: InfraDetailViewProps) {
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={handleRefresh}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-100 dark:bg-ui-hover-dark px-3 py-2 text-sm font-bold text-slate-600 dark:text-text-secondary-dark transition-colors hover:bg-slate-200 dark:hover:bg-ui-active-dark"
+            >
+              <MaterialIcon name="refresh" className={`text-base ${spinning ? 'animate-spin' : ''}`} />
+              {t('common.refresh')}
+            </button>
+
             {/* 재연결 — critical/error 상태일 때만 표시 */}
             {host?.status === 'error' && !isLocal && (
               <button
@@ -216,9 +229,9 @@ function DesktopLayout(props: InfraDetailViewProps) {
           </div>
         </div>
 
-        <InfraGauges hostId={hostId} />
-        <InfraTrends hostId={hostId} />
-        <ProcessTable hostId={hostId} />
+        <InfraGauges hostId={hostId} refreshKey={refreshKey} />
+        <InfraTrends hostId={hostId} refreshKey={refreshKey} />
+        <ProcessTable hostId={hostId} refreshKey={refreshKey} />
       </main>
 
       {host && (
@@ -244,154 +257,6 @@ function formatUptime(seconds: number) {
   return `${minutes}m`;
 }
 
-function DetailRightPanel({
-  host,
-  hostId,
-  hostLoading,
-  status,
-  isLocal,
-  isPausing,
-  onPauseResume,
-  onEdit,
-  onDeleteDialogOpen,
-}: Pick<InfraDetailViewProps, 'host' | 'hostId' | 'hostLoading' | 'status' | 'isLocal' | 'isPausing' | 'onPauseResume' | 'onEdit' | 'onDeleteDialogOpen'>) {
-  const { t } = useTranslation(['infra', 'common']);
-  const { data: gauges, loading: gaugesLoading } = useMonitoringGauges(hostId);
-  const sc = infraStatusColorClasses[status as keyof typeof infraStatusColorClasses] || infraStatusColorClasses.unknown;
-  const score = calculateDetailScore(gauges, status);
-
-  return (
-    <aside className="xl:sticky xl:top-6 space-y-4">
-      <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark p-5">
-        <div className="flex items-center gap-4">
-          <ScoreRing score={score} status={status} loading={hostLoading} />
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
-              {t('infra.detail.operationalState')}
-            </p>
-            <div className={`mt-2 inline-flex items-center gap-2 px-2.5 py-1 rounded-full ${sc.bg} ${sc.text} text-xs font-bold uppercase`}>
-              <span className={`h-2 w-2 rounded-full ${sc.dot}`} />
-              {t(`infra.statuses.${status}`, { defaultValue: t(`common.${status}`, { defaultValue: status }) })}
-            </div>
-            <p className="mt-3 text-xs leading-5 text-slate-500 dark:text-text-muted-dark">
-              {t(`infra.detail.scoreVerdicts.${getScoreVerdict(score, status)}`)}
-            </p>
-          </div>
-        </div>
-
-        {host && !isLocal && (
-          <div className="mt-5 flex items-center justify-between gap-3 rounded-lg bg-slate-50 dark:bg-ui-hover-dark/40 border border-slate-100 dark:border-ui-border-dark/50 px-3 py-2">
-            <div>
-              <p className="text-xs font-bold text-slate-700 dark:text-text-base-dark">
-                {host.isActive ? t('infra.active') : t('infra.paused')}
-              </p>
-              <p className="text-xs text-slate-500 dark:text-text-muted-dark">
-                {t('infra.detail.collectionToggle')}
-              </p>
-            </div>
-            <div className={isPausing ? 'pointer-events-none opacity-60' : undefined}>
-              <Toggle checked={host.isActive} onChange={onPauseResume} />
-            </div>
-          </div>
-        )}
-
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={onEdit}
-            disabled={!host}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary/10 text-primary px-3 py-2 text-sm font-bold hover:bg-primary/20 transition-colors disabled:opacity-50"
-          >
-            <MaterialIcon name="edit" className="text-base" />
-            {t('common.edit')}
-          </button>
-          <button
-            type="button"
-            onClick={onDeleteDialogOpen}
-            disabled={!host || isLocal}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-500/10 text-red-500 px-3 py-2 text-sm font-bold hover:bg-red-500/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <MaterialIcon name="delete" className="text-base" />
-            {t('common.delete')}
-          </button>
-        </div>
-      </section>
-
-      <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark p-5">
-        <SectionHeading icon="speed" title={t('infra.detail.liveVitals')} />
-        {gaugesLoading ? (
-          <div className="mt-4 space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-12 rounded-lg bg-slate-100 dark:bg-ui-hover-dark animate-pulse" />
-            ))}
-          </div>
-        ) : (
-          <div className="mt-4 space-y-4">
-            {(gauges || []).map((gauge) => (
-              <DetailMetricBar
-                key={gauge.label}
-                label={gauge.label}
-                value={gauge.percentage}
-                subtitle={gauge.subtitle}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark p-5">
-        <SectionHeading icon="stacked_bar_chart" title={t('infra.detail.resourcePressure')} />
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          {(gauges || []).slice(0, 3).map((gauge) => (
-            <PressureColumn key={gauge.label} label={gauge.label} value={gauge.percentage} />
-          ))}
-        </div>
-        <div className="mt-4 rounded-lg border border-slate-100 bg-slate-50 p-3 dark:border-ui-border-dark/50 dark:bg-ui-hover-dark/30">
-          <div className="mb-2 flex items-center justify-between text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">
-            <span>{t('infra.detail.filesystem')}</span>
-            <span>{t('infra.detail.used')}</span>
-          </div>
-          {(gauges || []).filter((gauge) => /disk|storage|디스크/i.test(gauge.label)).slice(0, 1).map((gauge) => (
-            <DetailMetricBar
-              key={gauge.label}
-              label={gauge.label}
-              value={gauge.percentage}
-              subtitle={gauge.subtitle}
-            />
-          ))}
-          {!(gauges || []).some((gauge) => /disk|storage|디스크/i.test(gauge.label)) && (
-            <p className="text-xs text-slate-500 dark:text-text-muted-dark">-</p>
-          )}
-        </div>
-      </section>
-
-      <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark p-5">
-        <SectionHeading icon="dns" title={t('infra.detail.hostProfile')} />
-        <div className="mt-4 space-y-2">
-          <InfoRow label={t('common.id')} value={host?.id || '-'} />
-          <InfoRow label={t('common.type')} value={host ? t(`infra.connectionTypes.${host.type}`) : '-'} />
-          <InfoRow label={t('infra.modal.resourceCategory')} value={host?.resourceCategory ? t(`infra.resourceTypes.${host.resourceCategory}`) : '-'} />
-          <InfoRow label={t('infra.modal.group')} value={host?.group || '-'} />
-          <InfoRow label={t('infra.modal.ipAddress')} value={host?.ip || '-'} />
-          {!isLocal && <InfoRow label={t('infra.modal.sshPort')} value={host?.sshPort ? String(host.sshPort) : '22'} />}
-        </div>
-      </section>
-
-      {host?.lastError && (
-        <section className="rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-900/10 p-4">
-          <div className="flex items-start gap-2">
-            <MaterialIcon name="error_outline" className="text-lg text-red-500 shrink-0" />
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-red-700 dark:text-red-400">{t('infra.error.lastError')}</p>
-              <p className="mt-1 text-xs text-red-600 dark:text-red-300 break-words">{host.lastError}</p>
-            </div>
-          </div>
-        </section>
-      )}
-    </aside>
-  );
-}
-
 function MetaChip({ icon, labelKey, value, accent }: { icon: string; labelKey: string; value: string; accent?: boolean }) {
   return (
     <span
@@ -408,111 +273,20 @@ function MetaChip({ icon, labelKey, value, accent }: { icon: string; labelKey: s
   );
 }
 
-function SectionHeading({ icon, title }: { icon: string; title: string }) {
-  return (
-    <div className="flex items-center gap-2">
-      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-        <MaterialIcon name={icon} className="text-base" />
-      </div>
-      <h2 className="text-lg font-bold text-slate-900 dark:text-white">{title}</h2>
-    </div>
-  );
-}
-
-function ScoreRing({ score, status, loading }: { score: number; status: string; loading: boolean }) {
-  const { t } = useTranslation(['infra']);
-  const visibleScore = loading || status === 'paused' ? 0 : score;
-  const tone = visibleScore >= 80 ? '#10b981' : visibleScore >= 60 ? '#f59e0b' : '#ef4444';
-  const label = loading || status === 'paused' ? '-' : visibleScore;
-
-  return (
-    <div
-      className="grid h-24 w-24 shrink-0 place-items-center rounded-full"
-      style={{
-        background: `conic-gradient(${tone} ${visibleScore * 3.6}deg, rgba(148, 163, 184, 0.18) 0deg)`,
-      }}
-      aria-label={`${t('infra.metrics.score')} ${label}`}
-    >
-      <div className="grid h-16 w-16 place-items-center rounded-full bg-white shadow-inner dark:bg-bg-surface-dark">
-        <div className="text-center">
-          <p className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{label}</p>
-          <p className="text-[10px] font-bold uppercase text-slate-400 dark:text-text-dim-dark">{t('infra.metrics.score')}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function DetailMetricBar({ label, value, subtitle }: { label: string; value: number; subtitle: string }) {
-  const pct = Math.max(0, Math.min(100, Math.round(value)));
-  const tone = pct >= 90 ? 'bg-red-500' : pct >= 75 ? 'bg-amber-500' : 'bg-primary';
-
-  return (
-    <div>
-      <div className="mb-1.5 flex items-center justify-between gap-3">
-        <span className="text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{label}</span>
-        <span className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">{pct}%</span>
-      </div>
-      <div className="h-2 rounded-full bg-slate-100 dark:bg-ui-hover-dark overflow-hidden">
-        <div className={`h-full rounded-full ${tone}`} style={{ width: `${pct}%` }} />
-      </div>
-      <p className="mt-1 text-xs text-slate-500 dark:text-text-muted-dark truncate">{subtitle}</p>
-    </div>
-  );
-}
-
-function PressureColumn({ label, value }: { label: string; value: number }) {
-  const pct = Math.max(0, Math.min(100, Math.round(value)));
-  const tone = pct >= 90 ? 'bg-red-500' : pct >= 75 ? 'bg-amber-500' : 'bg-primary';
-
-  return (
-    <div className="rounded-lg bg-slate-50 p-2 text-center dark:bg-ui-hover-dark/30">
-      <div className="mx-auto flex h-20 w-8 items-end rounded-full bg-slate-200/70 p-1 dark:bg-ui-hover-dark">
-        <div className={`w-full rounded-full ${tone}`} style={{ height: `${pct}%` }} />
-      </div>
-      <p className="mt-2 truncate text-[11px] font-bold uppercase text-slate-500 dark:text-text-muted-dark">{label}</p>
-      <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">{pct}%</p>
-    </div>
-  );
-}
-
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 dark:bg-ui-hover-dark/40 border border-slate-100 dark:border-ui-border-dark/50 px-3 py-2">
-      <span className="text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{label}</span>
-      <span className="min-w-0 truncate text-right text-sm font-semibold text-slate-800 dark:text-text-base-dark">{value}</span>
-    </div>
-  );
-}
-
-function calculateDetailScore(gauges: ReturnType<typeof useMonitoringGauges>['data'], status: string) {
-  if (status === 'paused') return 0;
-  const values = gauges || [];
-  const maxUsage = Math.max(...values.map((g) => g.percentage), 0);
-  const statusPenalty = status === 'critical' || status === 'error' ? 20 : status === 'warning' ? 10 : 0;
-  return Math.max(0, Math.min(100, Math.round(100 - Math.max(0, maxUsage - 60) * 0.7 - statusPenalty)));
-}
-
-function getScoreVerdict(score: number, status: string) {
-  if (status === 'paused') return 'paused';
-  if (score >= 80) return 'healthy';
-  if (score >= 60) return 'watch';
-  return 'risk';
-}
-
 // --- 모바일 레이아웃 ---
 
 function MobileLayout(props: InfraDetailViewProps) {
   const { t } = useTranslation(['infra', 'common']);
   const navigate = useNavigate();
   const {
-    host, hostId, hostLoading, status, name, ip, cluster, isLocal, isDeleting,
-    isDeleteDialogOpen, onPauseResume, onDelete, onEdit, onDeleteDialogOpen, onDeleteDialogClose,
+    host, hostId, hostLoading, refreshKey, status, name, ip, cluster, isLocal, isDeleting,
+    isDeleteDialogOpen, onPauseResume, onDelete, onEdit, onRefresh, onDeleteDialogOpen, onDeleteDialogClose,
     isPausing,
   } = props;
 
-  const { data: gauges, loading: gaugesLoading } = useMonitoringGauges(hostId);
-  const { data: processes, loading: processesLoading } = useMonitoringProcesses(hostId);
+  const { data: gauges, loading: gaugesLoading } = useMonitoringGauges(hostId, refreshKey);
+  const { data: processes, loading: processesLoading } = useMonitoringProcesses(hostId, refreshKey);
+  const { spinning, trigger: handleRefresh } = useSpinAction(onRefresh);
   const [activeTab, setActiveTab] = useState<MobileTab>('overview');
 
   const tabs: { key: MobileTab; label: string; icon: string }[] = [
@@ -533,6 +307,13 @@ function MobileLayout(props: InfraDetailViewProps) {
           <span className="text-sm font-medium">{t('common.backToList')}</span>
         </button>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleRefresh}
+            className="p-2.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-secondary-dark active:scale-95 transition-transform cursor-pointer"
+          >
+            <MaterialIcon name="refresh" className={`text-lg ${spinning ? 'animate-spin' : ''}`} />
+          </button>
           {host && !isLocal && (
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark">
               <Toggle checked={host.isActive} onChange={onPauseResume} />
@@ -626,7 +407,7 @@ function MobileLayout(props: InfraDetailViewProps) {
         </div>
       )}
 
-      {activeTab === 'trends' && <InfraTrends hostId={hostId} />}
+      {activeTab === 'trends' && <InfraTrends hostId={hostId} refreshKey={refreshKey} />}
 
       {activeTab === 'processes' && (
         <div className="space-y-2">

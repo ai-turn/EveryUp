@@ -13,6 +13,7 @@ export const mockResources: Resource[] = [
         cpuUsage: 42,
         memoryUsage: 51,
         diskUsage: 38,
+        netTrend: [0.012, 0.018, 0.009, 0.024, 0.015, 0.031, 0.02, 0.014, 0.028, 0.017, 0.022, 0.013],
     },
     {
         id: 'api-server-01',
@@ -24,6 +25,7 @@ export const mockResources: Resource[] = [
         cpuUsage: 49,
         memoryUsage: 57,
         diskUsage: 43,
+        netTrend: [0.045, 0.06, 0.038, 0.072, 0.05, 0.088, 0.065, 0.041, 0.079, 0.055, 0.068, 0.049],
     },
     {
         id: 'cache-redis-01',
@@ -35,6 +37,7 @@ export const mockResources: Resource[] = [
         cpuUsage: 56,
         memoryUsage: 83,
         diskUsage: 48,
+        netTrend: [0.08, 0.11, 0.06, 0.14, 0.09, 0.17, 0.12, 0.07, 0.15, 0.1, 0.13, 0.085],
     },
     {
         id: 'worker-node-01',
@@ -46,5 +49,6 @@ export const mockResources: Resource[] = [
         cpuUsage: 91,
         memoryUsage: 69,
         diskUsage: 53,
+        netTrend: [0.21, 0.28, 0.16, 0.34, 0.23, 0.41, 0.3, 0.18, 0.37, 0.25, 0.32, 0.2],
     },
 ];

@@ -8,6 +8,7 @@ import type { GaugeData } from '../../../types/infra';
 
 interface InfraGaugesProps {
   hostId: string;
+  refreshKey?: number;
 }
 
 // 게이지 레이블 → 트렌드 데이터 키 매핑
@@ -18,9 +19,9 @@ const GAUGE_TREND_KEY: Record<string, string> = {
   'Network': 'netIn',
 };
 
-export function InfraGauges({ hostId }: InfraGaugesProps) {
-  const { data: gauges, loading } = useMonitoringGauges(hostId);
-  const { data: charts } = useMonitoringTrends(hostId, '6h');
+export function InfraGauges({ hostId, refreshKey = 0 }: InfraGaugesProps) {
+  const { data: gauges, loading } = useMonitoringGauges(hostId, refreshKey);
+  const { data: charts } = useMonitoringTrends(hostId, '6h', refreshKey);
 
   // 각 게이지에 대한 스파크라인 데이터 (최근 12포인트 = 약 1h)
   const sparklineMap = useMemo(() => {

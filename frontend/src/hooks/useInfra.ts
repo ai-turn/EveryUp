@@ -9,7 +9,7 @@ import {
   systemProcessesToProcesses,
 } from '../utils/systemTransform';
 
-export function useMonitoringGauges(hostId: string) {
+export function useMonitoringGauges(hostId: string, refreshKey = 0) {
   return useDataFetch(
     mockGauges,
     async () => {
@@ -21,37 +21,37 @@ export function useMonitoringGauges(hostId: string) {
         return systemInfoToGauges(info);
       }
     },
-    [hostId]
+    [hostId, refreshKey]
   );
 }
 
-export function useSystemInfo(hostId: string) {
+export function useSystemInfo(hostId: string, refreshKey = 0) {
   return useDataFetch(
     null,
     async () => api.getSystemInfo(hostId),
-    [hostId]
+    [hostId, refreshKey]
   );
 }
 
-export function useMonitoringTrends(hostId: string, range: string = '6h') {
+export function useMonitoringTrends(hostId: string, range: string = '6h', refreshKey = 0) {
   return useDataFetch(
     mockTrendCharts,
     async () => {
       const history = await api.getSystemMetricsHistory(hostId, range);
       return historyToCharts(history);
     },
-    [hostId, range]
+    [hostId, range, refreshKey]
   );
 }
 
-export function useMonitoringProcesses(hostId: string) {
+export function useMonitoringProcesses(hostId: string, refreshKey = 0) {
   return useDataFetch(
     mockProcesses,
     async () => {
       const procs = await api.getSystemProcesses(hostId, 20, 'cpu');
       return systemProcessesToProcesses(procs);
     },
-    [hostId]
+    [hostId, refreshKey]
   );
 }
 

@@ -21,12 +21,10 @@
         "resumeMonitoring": "모니터링 재개",
         "active": "활성",
         "paused": "일시정지",
-        "connection": "연결",
         "connectionTypes": {
             "local": "로컬",
             "remote": "원격",
-            "localShort": "로컬",
-            "sshRemote": "SSH 원격"
+            "localShort": "로컬"
         },
         "statuses": {
             "healthy": "정상",
@@ -81,32 +79,16 @@
         "metrics": {
             "memory": "메모리",
             "disk": "디스크",
-            "score": "점수"
+            "network": "네트워크",
+            "noData": "데이터 없음"
         },
         "detail": {
-            "operationalState": "운영 상태",
-            "collectionToggle": "수집 상태",
-            "liveVitals": "실시간 지표",
-            "hostProfile": "호스트 프로필",
             "load": "부하",
             "loadStates": {
                 "normal": "정상",
                 "elevated": "상승",
                 "critical": "위험"
-            },
-            "scoreVerdicts": {
-                "healthy": "지표가 안정적인 운영 범위에 있습니다.",
-                "watch": "일부 리소스 부하가 올라가고 있습니다.",
-                "risk": "리소스 부하 확인이 필요합니다.",
-                "paused": "이 호스트의 수집이 일시 중지되어 있습니다."
-            },
-            "resourcePressure": "리소스 압력",
-            "filesystem": "파일시스템",
-            "used": "사용률",
-            "os": "OS",
-            "kernel": "커널",
-            "uptime": "업타임",
-            "hostname": "호스트명"
+            }
         },
         "noResults": "필터와 일치하는 호스트가 없습니다",
         "resourceTypes": {

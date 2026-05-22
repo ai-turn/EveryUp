@@ -205,11 +205,11 @@ func CalculateDiskIO(prev, curr *DiskIORaw, elapsedSec float64) (readMBps, write
 	}
 	if curr.ReadSectors >= prev.ReadSectors {
 		readBytes := float64(curr.ReadSectors-prev.ReadSectors) * 512
-		readMBps = float64(int(readBytes/(1024*1024)/elapsedSec*10)) / 10
+		readMBps = float64(int(readBytes/(1024*1024)/elapsedSec*1000)) / 1000
 	}
 	if curr.WriteSectors >= prev.WriteSectors {
 		writeBytes := float64(curr.WriteSectors-prev.WriteSectors) * 512
-		writeMBps = float64(int(writeBytes/(1024*1024)/elapsedSec*10)) / 10
+		writeMBps = float64(int(writeBytes/(1024*1024)/elapsedSec*1000)) / 1000
 	}
 	return
 }
@@ -252,10 +252,10 @@ func CalculateNetworkIO(prev, curr *NetworkRaw, elapsedSec float64) (recvMBps, s
 		return 0, 0
 	}
 	if curr.BytesRecv >= prev.BytesRecv {
-		recvMBps = float64(int(float64(curr.BytesRecv-prev.BytesRecv)/(1024*1024)/elapsedSec*10)) / 10
+		recvMBps = float64(int(float64(curr.BytesRecv-prev.BytesRecv)/(1024*1024)/elapsedSec*1000)) / 1000
 	}
 	if curr.BytesSent >= prev.BytesSent {
-		sentMBps = float64(int(float64(curr.BytesSent-prev.BytesSent)/(1024*1024)/elapsedSec*10)) / 10
+		sentMBps = float64(int(float64(curr.BytesSent-prev.BytesSent)/(1024*1024)/elapsedSec*1000)) / 1000
 	}
 	return
 }

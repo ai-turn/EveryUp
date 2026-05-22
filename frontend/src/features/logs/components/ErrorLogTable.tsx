@@ -32,7 +32,7 @@ function statusBadgeClass(statusCode: number): string {
   return 'bg-slate-500/10 text-slate-600 dark:text-slate-400';
 }
 
-const LIMIT_STEP = 50;
+const LIMIT_STEP = 200;
 const LEVEL_FILTERS = ['all', 'error', 'warn', 'info', 'debug', 'trace'] as const;
 type LevelFilter = (typeof LEVEL_FILTERS)[number];
 

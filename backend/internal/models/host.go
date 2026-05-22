@@ -115,6 +115,7 @@ type InfraResourceSummary struct {
 	CPUUsage        *float64             `json:"cpuUsage,omitempty"`
 	MemoryUsage     *float64             `json:"memoryUsage,omitempty"`
 	DiskUsage       *float64             `json:"diskUsage,omitempty"`
+	NetTrend        []float64            `json:"netTrend,omitempty"`
 	SSH             *SSHSummary          `json:"ssh,omitempty"`
 	CreatedAt       time.Time            `json:"createdAt"`
 	UpdatedAt       time.Time            `json:"updatedAt"`

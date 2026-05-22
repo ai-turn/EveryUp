@@ -315,10 +315,12 @@ func (m *CollectorManager) storeAll() {
 		avg.DiskTotal = math.Round(avg.DiskTotal/n*10) / 10
 		avg.DiskUsed = math.Round(avg.DiskUsed/n*10) / 10
 		avg.DiskUsage = math.Round(avg.DiskUsage/n*10) / 10
-		avg.DiskRead = math.Round(avg.DiskRead/n*10) / 10
-		avg.DiskWrite = math.Round(avg.DiskWrite/n*10) / 10
-		avg.NetIn = math.Round(avg.NetIn/n*10) / 10
-		avg.NetOut = math.Round(avg.NetOut/n*10) / 10
+		// Throughput fields keep 3-decimal precision (~KB/s): rounding to
+		// 0.1 MB/s here would collapse normal sub-100KB/s traffic to 0.
+		avg.DiskRead = math.Round(avg.DiskRead/n*1000) / 1000
+		avg.DiskWrite = math.Round(avg.DiskWrite/n*1000) / 1000
+		avg.NetIn = math.Round(avg.NetIn/n*1000) / 1000
+		avg.NetOut = math.Round(avg.NetOut/n*1000) / 1000
 
 		mc.snapshots = mc.snapshots[:0]
 		toStore = append(toStore, avgJob{avg: avg})
