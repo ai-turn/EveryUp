@@ -101,9 +101,9 @@ export const InfraCard = memo(function InfraCard({ resource, onClick }: InfraCar
                 />
             </div>
 
-            <div className={`rounded-lg bg-slate-50 dark:bg-ui-hover-dark/40 border border-slate-100 dark:border-ui-border-dark/50 px-3 py-2 mb-3 ${isPaused ? 'opacity-40' : ''}`}>
+            <div className={`mb-3 ${isPaused ? 'opacity-40' : ''}`}>
                 <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                    <span className="text-[11px] font-bold uppercase text-slate-500 dark:text-text-muted-dark">
                         {t('infra.metrics.network')}
                     </span>
                     <span className="text-xs font-bold tabular-nums text-slate-700 dark:text-text-base-dark">
