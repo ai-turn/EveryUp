@@ -1,9 +1,10 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { MainLayout } from './components/layout';
 import { NetworkStatusBanner } from './components/feedback/NetworkStatusBanner';
 import { useAuth } from './contexts/AuthContext';
 import { env } from './config/env';
+import { lazyWithRetry as lazy } from './utils/lazyWithRetry';
 
 const DashboardPage        = lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
 const HealthCheckPage      = lazy(() => import('./pages/HealthCheckPage').then(m => ({ default: m.HealthCheckPage })));
