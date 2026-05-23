@@ -88,16 +88,16 @@ function getEvalPath(category: RuleCategory, metric: RuleFormValues['metric']): 
 
 // ─── Layout primitives ────────────────────────────────────────────────────────
 
-function FormStep({ n, title, subtitle, children }: { n: number; title: string; subtitle: string; children: ReactNode }) {
+function FormStep({ n, title, subtitle, children }: { n: number; title: string; subtitle?: string; children: ReactNode }) {
     return (
         <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30">
+            <div className={`flex items-center gap-3 px-5 ${subtitle ? 'py-4' : 'py-3'} border-b border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30`}>
                 <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs font-mono shrink-0">
                     {n}
                 </span>
                 <div>
-                    <p className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest">{title}</p>
-                    <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{subtitle}</p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">{title}</p>
+                    {subtitle && <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{subtitle}</p>}
                 </div>
             </div>
             <div className="p-5 space-y-5">{children}</div>
@@ -378,7 +378,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                 <div className="space-y-4 min-w-0">
 
                     {/* Step 1: Target */}
-                    <FormStep n={1} title="대상 (Target)" subtitle="무엇을 감시할 것인가">
+                    <FormStep n={1} title="대상 (Target)">
                         <Field label={t('alerts.rules.category', { defaultValue: '카테고리' })}>
                             <div className="flex gap-2">
                                 {([
@@ -458,7 +458,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                     </FormStep>
 
                     {/* Step 2: Condition */}
-                    <FormStep n={2} title="조건 (Condition)" subtitle="언제 발동할 것인가">
+                    <FormStep n={2} title="조건 (Condition)">
                         <Field label={t('alerts.rules.preset', { defaultValue: '프리셋' })}>
                             <div className="grid grid-cols-3 gap-2">
                                 {([
@@ -600,7 +600,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                     </FormStep>
 
                     {/* Step 3: Notify */}
-                    <FormStep n={3} title="알림 (Notify)" subtitle="누구에게 어떻게 보낼 것인가">
+                    <FormStep n={3} title="알림 (Notify)">
                         <Field label={t('alerts.rules.severity')}>
                             <div className="grid grid-cols-3 gap-2">
                                 {(['critical', 'warning', 'info'] as const).map(s => (
