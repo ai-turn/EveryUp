@@ -10,15 +10,6 @@ interface LogServiceCardProps {
   onClick?: () => void;
 }
 
-const levelBadgeStyle: Record<string, string> = {
-  error: 'bg-red-500/10 text-red-500',
-  warn:  'bg-amber-500/10 text-amber-500',
-  info:  'bg-blue-500/10 text-blue-500',
-  debug: 'bg-slate-500/10 text-slate-500 dark:text-slate-300',
-  trace: 'bg-slate-400/10 text-slate-500 dark:text-slate-400',
-};
-
-
 const levelDotStyle: Record<LogLevel, string> = {
   error: 'bg-red-500',
   warn: 'bg-amber-400',
@@ -174,8 +165,9 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
             levels.map((level) => (
               <span
                 key={level}
-                className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${levelBadgeStyle[level] ?? 'bg-slate-100 dark:bg-ui-hover-dark text-slate-500'}`}
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold uppercase bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark"
               >
+                <span className={`w-1.5 h-1.5 rounded-full ${levelDotStyle[level]}`} />
                 {level === 'warn' ? 'WARN' : level.toUpperCase()}
               </span>
             ))

@@ -17,11 +17,7 @@ const typeIcons: Record<Resource['type'], string> = {
     container: 'deployed_code',
 };
 
-const typeBadgeColors: Record<Resource['type'], string> = {
-    server: 'bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-muted-dark',
-    database: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400',
-    container: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400',
-};
+const mutedBadgeClass = 'bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark';
 
 export const InfraCard = memo(function InfraCard({ resource, onClick }: InfraCardProps) {
     const { t } = useTranslation(['infra', 'common']);
@@ -112,21 +108,14 @@ export const InfraCard = memo(function InfraCard({ resource, onClick }: InfraCar
                     {t('infra.remote.lastCollected')}: {resource.lastCollectedAt ? relativeTime(resource.lastCollectedAt, relativeTimeLabels) : '-'}
                 </span>
                 <div className="flex items-center gap-1.5">
-                    <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${typeBadgeColors[resource.type]}`}>
+                    <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${mutedBadgeClass}`}>
                         <MaterialIcon name={typeIcons[resource.type]} className="text-xs" />
                         {t(`infra.resourceTypes.${resource.type}`)}
                     </span>
-                    {resource.isRemote ? (
-                        <span className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
-                            <MaterialIcon name="key" className="text-xs" />
-                            SSH
-                        </span>
-                    ) : (
-                        <span className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                            <MaterialIcon name="computer" className="text-xs" />
-                            {t('infra.connectionTypes.localShort')}
-                        </span>
-                    )}
+                    <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${mutedBadgeClass}`}>
+                        <MaterialIcon name={resource.isRemote ? 'key' : 'computer'} className="text-xs" />
+                        {resource.isRemote ? 'SSH' : t('infra.connectionTypes.localShort')}
+                    </span>
                 </div>
             </div>
         </div>

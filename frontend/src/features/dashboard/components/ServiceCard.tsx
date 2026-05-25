@@ -120,11 +120,7 @@ export const ServiceCard = memo(function ServiceCard({ service, onClick }: Servi
             )}
           </span>
           {service.type && (
-            <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold uppercase shrink-0 ${
-              service.type === 'http'
-                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                : 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
-            }`}>
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold uppercase shrink-0 bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark">
               {service.type.toUpperCase()}
             </span>
           )}
