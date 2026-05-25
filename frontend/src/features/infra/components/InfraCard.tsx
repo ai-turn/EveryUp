@@ -34,13 +34,6 @@ export const InfraCard = memo(function InfraCard({ resource, onClick }: InfraCar
         hoursAgo: (count: number) => t('common.relativeTime.hoursAgo', { count }),
         daysAgo: (count: number) => t('common.relativeTime.daysAgo', { count }),
     };
-    const statusTone = resource.status === 'healthy'
-        ? 'bg-emerald-500'
-        : resource.status === 'warning' || resource.status === 'unknown'
-            ? 'bg-amber-500'
-            : resource.status === 'paused'
-                ? 'bg-slate-400'
-                : 'bg-red-500';
 
     return (
         <div
@@ -53,32 +46,27 @@ export const InfraCard = memo(function InfraCard({ resource, onClick }: InfraCar
             }`}
         >
             <div className="flex items-start gap-3 mb-4">
-                <div className="relative">
-                    <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-ui-hover-dark flex items-center justify-center">
-                        <MaterialIcon
-                            name={typeIcons[resource.type]}
-                            className="text-xl text-primary"
-                        />
-                    </div>
-                    <span className={`absolute -right-0.5 -bottom-0.5 w-3 h-3 rounded-full ring-2 ring-white dark:ring-bg-surface-dark ${statusTone}`} />
+                <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-ui-hover-dark flex items-center justify-center shrink-0">
+                    <MaterialIcon
+                        name={typeIcons[resource.type]}
+                        className="text-xl text-primary"
+                    />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                        <h3 className="font-bold text-base text-slate-900 dark:text-white truncate">
-                            {resource.name}
-                        </h3>
-                        {isPaused && (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
-                                {t('infra.paused')}
-                            </span>
-                        )}
-                    </div>
+                    <h3 className="font-bold text-base text-slate-900 dark:text-white truncate">
+                        {resource.name}
+                    </h3>
                     <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5 truncate">
                         {resource.cluster || t('common.unknown')} - {resource.ip}
                         {resource.isRemote && resource.sshPort ? `:${resource.sshPort}` : ''}
                     </p>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 shrink-0">
+                    {isPaused && (
+                        <span className="px-2 py-0.5 rounded-full text-xs font-bold uppercase bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+                            {t('infra.paused')}
+                        </span>
+                    )}
                     <StatusBadge status={resource.status} />
                 </div>
             </div>

@@ -57,13 +57,13 @@ export const ServiceCard = memo(function ServiceCard({ service, onClick }: Servi
 
   return (
     <div
-      className={`relative bg-white dark:bg-bg-surface-dark border border-slate-300 dark:border-ui-border-dark rounded-xl overflow-hidden transition-all duration-150 ${onClick ? 'cursor-pointer hover:border-primary/50 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2' : ''}`}
+      className={`relative bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden transition-all duration-150 ${onClick ? 'cursor-pointer hover:border-primary/50 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2' : ''}`}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
     >
-      <div className="pl-5 pr-5 pt-5 pb-4">
+      <div className="p-4">
         {/* Header */}
         <div className="flex justify-between items-start mb-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -93,11 +93,11 @@ export const ServiceCard = memo(function ServiceCard({ service, onClick }: Servi
         {/* Metrics row */}
         <div className="grid grid-cols-2 gap-x-6 gap-y-1">
           <div>
-            <p className="text-xs text-slate-500 dark:text-text-muted-dark uppercase font-semibold tracking-wide">{t('평균 지연 시간')}</p>
+            <p className="text-[11px] text-slate-500 dark:text-text-muted-dark uppercase font-bold tracking-wide">{t('평균 지연 시간')}</p>
             <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">{service.latency}</p>
           </div>
           <div>
-            <p className="text-xs text-slate-500 dark:text-text-muted-dark uppercase font-semibold tracking-wide">{t('가동률')}</p>
+            <p className="text-[11px] text-slate-500 dark:text-text-muted-dark uppercase font-bold tracking-wide">{t('가동률')}</p>
             <p className={`text-sm font-bold tabular-nums ${belowSla ? 'text-red-500' : 'text-slate-900 dark:text-white'}`}>{service.uptime}</p>
           </div>
         </div>
@@ -107,21 +107,25 @@ export const ServiceCard = memo(function ServiceCard({ service, onClick }: Servi
           <SparklineArea data={service.latencyHistory} belowSla={belowSla} id={service.id} />
         )}
 
-        {/* Footer badges */}
-        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-ui-border-dark/50">
+        {/* Footer: interval (left) + type badge (right) */}
+        <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-ui-border-dark/50">
+          <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-text-muted-dark min-w-0 truncate">
+            {service.interval != null ? (
+              <>
+                <MaterialIcon name="schedule" className="text-xs" />
+                {formatInterval(service.interval)}
+              </>
+            ) : (
+              <span>-</span>
+            )}
+          </span>
           {service.type && (
-            <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${
+            <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold uppercase shrink-0 ${
               service.type === 'http'
                 ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                 : 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
             }`}>
               {service.type.toUpperCase()}
-            </span>
-          )}
-          {service.interval != null && (
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark">
-              <MaterialIcon name="schedule" className="text-xs" />
-              {formatInterval(service.interval)}
             </span>
           )}
         </div>
