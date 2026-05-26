@@ -590,6 +590,44 @@ func TestNotificationChannel_InvalidType(t *testing.T) {
 	}
 }
 
+func TestNotificationChannel_TestConfigValidatesWithoutSaving(t *testing.T) {
+	ts := setupTestServer(t)
+	token := ts.setupAdmin(t, "admin", "testpass123")
+	auth := authHeader(token)
+
+	resp, result := ts.doRequest(t, "POST", "/api/v1/notifications/test", map[string]interface{}{
+		"name": "Telegram Draft",
+		"type": "telegram",
+		"config": map[string]string{
+			"botToken": "",
+			"chatId":   "",
+		},
+	}, auth...)
+
+	if resp.StatusCode != 400 {
+		t.Errorf("status = %d, want 400 for invalid draft config", resp.StatusCode)
+	}
+	if result.Success {
+		t.Fatal("expected success=false for invalid draft config")
+	}
+	if result.Error == nil || result.Error.Code != "VALIDATION_ERROR" {
+		t.Fatalf("expected VALIDATION_ERROR, got %v", result.Error)
+	}
+
+	_, listResult := ts.doRequest(t, "GET", "/api/v1/notifications", nil, auth...)
+	if !listResult.Success {
+		t.Fatalf("list channels failed: %v", listResult.Error)
+	}
+
+	var channels []map[string]interface{}
+	if err := json.Unmarshal(listResult.Data, &channels); err != nil {
+		t.Fatalf("decode channels: %v", err)
+	}
+	if len(channels) != 0 {
+		t.Fatalf("expected no saved channels after draft test validation failure, got %d", len(channels))
+	}
+}
+
 func TestLogList_NotInterceptedByLogIngestApiKeyAuth(t *testing.T) {
 	ts := setupTestServer(t)
 	token := ts.setupAdmin(t, "admin", "testpass123")

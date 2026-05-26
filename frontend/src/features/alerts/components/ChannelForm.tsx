@@ -20,17 +20,29 @@ import { SetupGuide } from './SetupGuide';
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
 const channelSchema = z.object({
-    name: z.string().min(2, 'Name is too short'),
+    name: z.string().trim().min(2, 'Name is too short'),
     type: z.enum(['telegram', 'discord', 'slack']),
     botToken: z.string().optional(),
     chatId: z.string().optional(),
     webhookUrl: z.string().optional(),
-}).refine(data => {
-    if (data.type === 'telegram' && (!data.botToken || !data.chatId)) return false;
-    if ((data.type === 'discord' || data.type === 'slack') && !data.webhookUrl) return false;
-    if ((data.type === 'discord' || data.type === 'slack') && data.webhookUrl && !/^https?:\/\/.+/.test(data.webhookUrl)) return false;
-    return true;
-}, { message: 'Please fill in all required fields', path: ['botToken'] });
+}).superRefine((data, ctx) => {
+    if (data.type === 'telegram') {
+        if (!data.botToken?.trim()) {
+            ctx.addIssue({ code: 'custom', path: ['botToken'], message: 'Bot Token is required' });
+        }
+        if (!data.chatId?.trim()) {
+            ctx.addIssue({ code: 'custom', path: ['chatId'], message: 'Chat ID is required' });
+        }
+    }
+
+    if (data.type === 'discord' || data.type === 'slack') {
+        if (!data.webhookUrl?.trim()) {
+            ctx.addIssue({ code: 'custom', path: ['webhookUrl'], message: 'Webhook URL is required' });
+        } else if (!/^https?:\/\/.+/.test(data.webhookUrl)) {
+            ctx.addIssue({ code: 'custom', path: ['webhookUrl'], message: 'Webhook URL must start with http:// or https://' });
+        }
+    }
+});
 
 type ChannelFormValues = z.infer<typeof channelSchema>;
 type ChannelType = 'telegram' | 'discord' | 'slack';
@@ -261,8 +273,6 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
     const { t } = useTranslation(['alerts', 'common']);
     const isEdit = !!channel;
 
-    // savedChannelId: set after channel is created via "Save & Test" in create mode
-    const [savedChannelId, setSavedChannelId] = useState<string | null>(isEdit ? channel.id : null);
     const [testState, setTestState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const [testError, setTestError] = useState('');
     const [testTime, setTestTime] = useState('');
@@ -321,19 +331,11 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                 toast.success(t('alerts.channelUpdated', { defaultValue: 'Channel updated' }));
                 onSuccess();
                 onCancel();
-            } else if (savedChannelId) {
-                // Already created via Save & Test — just navigate away
-                onSuccess();
-                onCancel();
             } else {
-                const created = await api.createNotificationChannel(buildPayload(data));
+                await api.createNotificationChannel(buildPayload(data));
                 toast.success(t('alerts.channelAdded'));
                 onSuccess();
                 onCancel();
-                // Background auto-test (silent)
-                if (created.id) {
-                    api.testNotificationChannel(created.id).catch(() => { });
-                }
             }
         } catch (error) {
             toast.error(getErrorMessage(error));
@@ -342,49 +344,30 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
         }
     };
 
-    // Test button handler: save if new, then test
+    // Test button handler: validate the current form values and send without saving.
     const handleTest = async () => {
-        const idToTest = savedChannelId ?? (isEdit ? channel.id : null);
-
-        if (!idToTest) {
-            // Create mode — need to save first
-            const valid = await trigger();
-            if (!valid) {
-                toast.error('필수 항목을 먼저 입력해주세요');
-                return;
-            }
-            onSubmittingChange?.(true);
-            setTestState('loading');
-            try {
-                const data = getValues();
-                const created = await api.createNotificationChannel(buildPayload(data));
-                toast.success(t('alerts.channelAdded'));
-                setSavedChannelId(created.id);
-                await api.testNotificationChannel(created.id);
-                setTestState('success');
-                setTestTime(new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-            } catch (error) {
-                setTestState('error');
-                setTestError(getErrorMessage(error));
-            } finally {
-                onSubmittingChange?.(false);
-            }
+        const valid = await trigger();
+        if (!valid) {
+            setTestState('error');
+            setTestError('Please fix the highlighted fields first.');
+            toast.error('Please fill in the required fields first.');
             return;
         }
 
-        // Edit mode or already saved — just test
         setTestState('loading');
         setTestError('');
+        onSubmittingChange?.(true);
         try {
-            await api.testNotificationChannel(idToTest);
+            await api.testNotificationChannelConfig(buildPayload(getValues()));
             setTestState('success');
             setTestTime(new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
         } catch (error) {
             setTestState('error');
             setTestError(getErrorMessage(error));
+        } finally {
+            onSubmittingChange?.(false);
         }
     };
-
     const maskToken = (v: string) => v.length > 8 ? v.slice(0, 6) + '••••' + v.slice(-4) : v ? '••••••' : '';
 
     return (
@@ -555,10 +538,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                             </div>
                             <div className="p-5 space-y-3">
                                 <p className="text-xs text-slate-500 dark:text-text-muted-dark leading-relaxed">
-                                    {!isEdit && !savedChannelId
-                                        ? <>입력한 연결 정보로 채널을 <span className="font-semibold text-slate-700 dark:text-slate-300">저장하고 즉시 테스트</span>합니다.</>
-                                        : <>위 형식의 테스트 메시지를 <span className={`font-semibold ${meta.color}`}>{channel?.name ?? watchedName}</span>으로 전송합니다.</>
-                                    }
+                                    Sends a test message using the current form values. The channel is not saved.
                                 </p>
 
                                 <button
@@ -570,12 +550,12 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                     {testState === 'loading' ? (
                                         <>
                                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                            {!isEdit && !savedChannelId ? '저장 중...' : '전송 중...'}
+                                            {'전송 중...'}
                                         </>
                                     ) : (
                                         <>
                                             <MaterialIcon name="send" className="text-sm" />
-                                            {!isEdit && !savedChannelId ? '저장하고 테스트' : '테스트 전송'}
+                                            {'테스트 전송'}
                                         </>
                                     )}
                                 </button>
@@ -585,10 +565,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                         <MaterialIcon name="check_circle" className="text-base text-emerald-500 mt-0.5 shrink-0" />
                                         <div>
                                             <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400">발송 성공</p>
-                                            <p className="text-[10px] text-emerald-600 dark:text-emerald-500 mt-0.5">{testTime}에 전송되었습니다</p>
-                                            {!isEdit && savedChannelId && (
-                                                <p className="text-[10px] text-emerald-600 dark:text-emerald-500 mt-0.5">채널이 저장되었습니다. 헤더의 완료 버튼을 누르세요.</p>
-                                            )}
+                                            <p className="text-[10px] text-emerald-600 dark:text-emerald-500 mt-0.5">{testTime}에 전송되었습니다</p>
                                         </div>
                                     </div>
                                 )}

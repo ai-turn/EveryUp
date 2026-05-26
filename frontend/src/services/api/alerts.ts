@@ -226,6 +226,12 @@ export function createAlertsApi(request: RequestFn) {
         method: 'POST',
       }),
 
+    testNotificationChannelConfig: (data: CreateNotificationChannelData) =>
+      request<{ message: string }>('/notifications/test', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+
     deleteNotificationChannel: (id: string) =>
       request<void>(`/notifications/${id}`, { method: 'DELETE' }),
 

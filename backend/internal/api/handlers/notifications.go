@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -24,6 +25,108 @@ func NewNotificationHandler() *NotificationHandler {
 		repo:    database.NewNotificationRepository(),
 		manager: alerter.NewManager(),
 	}
+}
+
+func testNotificationPayload() alerter.Notification {
+	return alerter.Notification{
+		ServiceID:   "test",
+		ServiceName: "Notification Test",
+		Status:      models.StatusHealthy,
+		Message:     "This is a test notification. Your EVERYUP notification channel is connected correctly.",
+		Time:        time.Now(),
+	}
+}
+
+func validateNotificationChannelRequest(req models.NotificationChannelCreateRequest) error {
+	if req.Name == "" {
+		return fmt.Errorf("channel name is required")
+	}
+	if req.Type != "telegram" && req.Type != "discord" && req.Type != "slack" {
+		return fmt.Errorf("type must be 'telegram', 'discord', or 'slack'")
+	}
+
+	configJSON, err := json.Marshal(req.Config)
+	if err != nil {
+		return fmt.Errorf("invalid configuration")
+	}
+
+	switch req.Type {
+	case "telegram":
+		var cfg models.TelegramConfig
+		if err := json.Unmarshal(configJSON, &cfg); err != nil {
+			return fmt.Errorf("invalid Telegram configuration")
+		}
+		if cfg.BotToken == "" {
+			return fmt.Errorf("Telegram bot token is required")
+		}
+		if cfg.ChatID == "" {
+			return fmt.Errorf("Telegram chat ID is required")
+		}
+	case "discord":
+		var cfg models.DiscordConfig
+		if err := json.Unmarshal(configJSON, &cfg); err != nil {
+			return fmt.Errorf("invalid Discord configuration")
+		}
+		if cfg.WebhookURL == "" {
+			return fmt.Errorf("Discord webhook URL is required")
+		}
+	case "slack":
+		var cfg models.SlackConfig
+		if err := json.Unmarshal(configJSON, &cfg); err != nil {
+			return fmt.Errorf("invalid Slack configuration")
+		}
+		if cfg.WebhookURL == "" {
+			return fmt.Errorf("Slack webhook URL is required")
+		}
+	}
+
+	return validateChannelWebhookURL(req.Type, configJSON)
+}
+
+func providerFromChannel(channelType string, configJSON []byte) (alerter.AlertProvider, error) {
+	switch channelType {
+	case "discord":
+		var config models.DiscordConfig
+		if err := json.Unmarshal(configJSON, &config); err != nil {
+			return nil, fmt.Errorf("invalid Discord configuration")
+		}
+		return alerter.NewDiscordProvider(config.WebhookURL), nil
+
+	case "telegram":
+		var config models.TelegramConfig
+		if err := json.Unmarshal(configJSON, &config); err != nil {
+			return nil, fmt.Errorf("invalid Telegram configuration")
+		}
+		return alerter.NewTelegramProvider(config.BotToken, config.ChatID), nil
+
+	case "slack":
+		var config models.SlackConfig
+		if err := json.Unmarshal(configJSON, &config); err != nil {
+			return nil, fmt.Errorf("invalid Slack configuration")
+		}
+		return alerter.NewSlackProvider(config.WebhookURL), nil
+	}
+
+	return nil, fmt.Errorf("unsupported channel type: %s", channelType)
+}
+
+func sendTestNotification(c *fiber.Ctx, provider alerter.AlertProvider) error {
+	if err := provider.Send(testNotificationPayload()); err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"success": false,
+			"error": fiber.Map{
+				"code":    "SEND_ERROR",
+				"message": err.Error(),
+			},
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"data": fiber.Map{
+			"message": "Test notification sent successfully",
+		},
+	})
 }
 
 // GetHealth returns per-channel usage/health stats over the last `days` (default 7).
@@ -89,13 +192,12 @@ func (h *NotificationHandler) Create(c *fiber.Ctx) error {
 		})
 	}
 
-	// Validate type
-	if req.Type != "telegram" && req.Type != "discord" && req.Type != "slack" {
+	if err := validateNotificationChannelRequest(req); err != nil {
 		return c.Status(400).JSON(fiber.Map{
 			"success": false,
 			"error": fiber.Map{
-				"code":    "INVALID_TYPE",
-				"message": "Type must be 'telegram', 'discord', or 'slack'",
+				"code":    "VALIDATION_ERROR",
+				"message": err.Error(),
 			},
 		})
 	}
@@ -108,17 +210,6 @@ func (h *NotificationHandler) Create(c *fiber.Ctx) error {
 			"error": fiber.Map{
 				"code":    "INVALID_CONFIG",
 				"message": "Invalid configuration",
-			},
-		})
-	}
-
-	// Validate webhook URL for SSRF protection
-	if err := validateChannelWebhookURL(req.Type, configJSON); err != nil {
-		return c.Status(400).JSON(fiber.Map{
-			"success": false,
-			"error": fiber.Map{
-				"code":    "SSRF_BLOCKED",
-				"message": err.Error(),
 			},
 		})
 	}
@@ -173,81 +264,66 @@ func (h *NotificationHandler) Test(c *fiber.Ctx) error {
 		})
 	}
 
-	// Create test notification
-	notification := alerter.Notification{
-		ServiceID:   "test",
-		ServiceName: "Notification Test",
-		Status:      models.StatusHealthy,
-		Message:     "This is a test notification. Your EVERYUP notification channel is connected correctly.",
-		Time:        time.Now(),
-	}
-
-	// Send via manager
-	var provider alerter.AlertProvider
-	switch channel.Type {
-	case "discord":
-		var config models.DiscordConfig
-		if err := json.Unmarshal([]byte(channel.Config), &config); err != nil {
-			return c.Status(400).JSON(fiber.Map{
-				"success": false,
-				"error": fiber.Map{
-					"code":    "INVALID_CONFIG",
-					"message": "Invalid Discord configuration",
-				},
-			})
-		}
-		provider = alerter.NewDiscordProvider(config.WebhookURL)
-
-	case "telegram":
-		var config models.TelegramConfig
-		if err := json.Unmarshal([]byte(channel.Config), &config); err != nil {
-			return c.Status(400).JSON(fiber.Map{
-				"success": false,
-				"error": fiber.Map{
-					"code":    "INVALID_CONFIG",
-					"message": "Invalid Telegram configuration",
-				},
-			})
-		}
-		provider = alerter.NewTelegramProvider(config.BotToken, config.ChatID)
-
-	case "slack":
-		var config models.SlackConfig
-		if err := json.Unmarshal([]byte(channel.Config), &config); err != nil {
-			return c.Status(400).JSON(fiber.Map{
-				"success": false,
-				"error": fiber.Map{
-					"code":    "INVALID_CONFIG",
-					"message": "Invalid Slack configuration",
-				},
-			})
-		}
-		provider = alerter.NewSlackProvider(config.WebhookURL)
-
-	default:
+	provider, err := providerFromChannel(channel.Type, []byte(channel.Config))
+	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
 			"success": false,
 			"error": fiber.Map{
-				"code":    "UNSUPPORTED_TYPE",
-				"message": "Unsupported channel type: " + channel.Type,
-			},
-		})
-	}
-
-	if err := provider.Send(notification); err != nil {
-		return c.Status(500).JSON(fiber.Map{
-			"success": false,
-			"error": fiber.Map{
-				"code":    "SEND_ERROR",
+				"code":    "INVALID_CONFIG",
 				"message": err.Error(),
 			},
 		})
 	}
 
-	return c.JSON(fiber.Map{
-		"success": true,
-		"message": "Test notification sent successfully",
-	})
+	return sendTestNotification(c, provider)
+}
+
+// TestConfig sends a test notification using the submitted configuration without saving it.
+func (h *NotificationHandler) TestConfig(c *fiber.Ctx) error {
+	var req models.NotificationChannelCreateRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"success": false,
+			"error": fiber.Map{
+				"code":    "INVALID_REQUEST",
+				"message": "Invalid request body",
+			},
+		})
+	}
+
+	if err := validateNotificationChannelRequest(req); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"success": false,
+			"error": fiber.Map{
+				"code":    "VALIDATION_ERROR",
+				"message": err.Error(),
+			},
+		})
+	}
+
+	configJSON, err := json.Marshal(req.Config)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"success": false,
+			"error": fiber.Map{
+				"code":    "INVALID_CONFIG",
+				"message": "Invalid configuration",
+			},
+		})
+	}
+
+	provider, err := providerFromChannel(req.Type, configJSON)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"success": false,
+			"error": fiber.Map{
+				"code":    "INVALID_CONFIG",
+				"message": err.Error(),
+			},
+		})
+	}
+
+	return sendTestNotification(c, provider)
 }
 
 // Update updates a notification channel
@@ -286,13 +362,12 @@ func (h *NotificationHandler) Update(c *fiber.Ctx) error {
 		})
 	}
 
-	// Validate type
-	if req.Type != "telegram" && req.Type != "discord" && req.Type != "slack" {
+	if err := validateNotificationChannelRequest(req); err != nil {
 		return c.Status(400).JSON(fiber.Map{
 			"success": false,
 			"error": fiber.Map{
-				"code":    "INVALID_TYPE",
-				"message": "Type must be 'telegram', 'discord', or 'slack'",
+				"code":    "VALIDATION_ERROR",
+				"message": err.Error(),
 			},
 		})
 	}
@@ -305,17 +380,6 @@ func (h *NotificationHandler) Update(c *fiber.Ctx) error {
 			"error": fiber.Map{
 				"code":    "INVALID_CONFIG",
 				"message": "Invalid configuration",
-			},
-		})
-	}
-
-	// Validate webhook URL for SSRF protection
-	if err := validateChannelWebhookURL(req.Type, configJSON); err != nil {
-		return c.Status(400).JSON(fiber.Map{
-			"success": false,
-			"error": fiber.Map{
-				"code":    "SSRF_BLOCKED",
-				"message": err.Error(),
 			},
 		})
 	}
