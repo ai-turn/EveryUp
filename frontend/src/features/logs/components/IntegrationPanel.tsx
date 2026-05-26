@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
-import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
+import { useClipboardCopy } from '../../../hooks/useClipboardCopy';
 import { api, Service } from '../../../services/api';
 import { buildOTelSnippets } from './integrationSnippets';
 
@@ -111,7 +111,7 @@ function SegmentedControl<T extends string>({
 
 export function IntegrationPanel({ service, temporaryApiKey, onApiKeyRegenerated }: IntegrationPanelProps) {
   const { t } = useTranslation(['logs', 'common']);
-  const { copy } = useCopyToClipboard();
+  const { copy } = useClipboardCopy();
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [revealedKey, setRevealedKey] = useState<string | null>(null);

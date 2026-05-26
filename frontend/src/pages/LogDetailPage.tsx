@@ -6,7 +6,7 @@ import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../utils/errors';
 import { MaterialIcon } from '../components/common';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
-import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
+import { useClipboardCopy } from '../hooks/useClipboardCopy';
 import { LogDetailView } from '../features/logs/components/LogDetailView';
 import { api, Service } from '../services/api';
 
@@ -19,7 +19,7 @@ export function LogDetailPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useTranslate();
   const { t: ti } = useTranslation(['logs', 'common']);
-  const { copy } = useCopyToClipboard();
+  const { copy } = useClipboardCopy();
 
   const [isLive, setIsLive] = useState(true);
   const [service, setService] = useState<Service | null>(null);
