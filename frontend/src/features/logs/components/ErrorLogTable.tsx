@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from '../../../components/common';
 import { api, type LogEntry, type LogLevel } from '../../../services/api';
-import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
+import { useClipboardCopy } from '../../../hooks/useClipboardCopy';
 import { useDebouncedValue } from '../../../hooks/useDebouncedValue';
 import { TracePanel } from '../../traces/components/TracePanel';
 
@@ -75,6 +75,13 @@ function formatTimestamp(timestamp: string): string {
     minute: '2-digit',
     second: '2-digit',
   });
+}
+
+function toISODateTime(value: string): string | undefined {
+  if (!value) return undefined;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return undefined;
+  return date.toISOString();
 }
 
 function bucketIndex(dateStr: string): number {
@@ -238,17 +245,37 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
   const [isPaused, setIsPaused] = useState(false);
   const [limit, setLimit] = useState(LIMIT_STEP);
   const [activeTraceId, setActiveTraceId] = useState<string | null>(null);
-  const { copy } = useCopyToClipboard();
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const { copy } = useClipboardCopy();
+
+  const dateRangeError = useMemo(() => {
+    if (!fromDate || !toDate) return null;
+    const from = new Date(fromDate);
+    const to = new Date(toDate);
+    if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
+      return 'Enter a valid date range.';
+    }
+    if (from.getTime() > to.getTime()) {
+      return 'Start date must be earlier than end date.';
+    }
+    return null;
+  }, [fromDate, toDate]);
 
   useEffect(() => {
     if (isPaused) return;
+    if (dateRangeError) return;
 
     const fetchLogs = async () => {
       try {
+        const from = toISODateTime(fromDate);
+        const to = toISODateTime(toDate);
         const params = {
           limit: String(limit),
           ...(levelFilter !== 'all' && { level: levelFilter }),
           ...(traceFilter ? { traceId: traceFilter } : {}),
+          ...(from ? { from } : {}),
+          ...(to ? { to } : {}),
         };
         const data = serviceId
           ? await api.getServiceLogs(serviceId, params)
@@ -264,7 +291,7 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
     };
 
     fetchLogs();
-  }, [serviceId, refreshKey, isPaused, levelFilter, limit, traceFilter, t]);
+  }, [serviceId, refreshKey, isPaused, levelFilter, limit, traceFilter, fromDate, toDate, dateRangeError, t]);
 
   const debouncedSearch = useDebouncedValue(searchQuery);
   const sourceLogs = logs;
@@ -327,11 +354,9 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
 
       <HistogramBand logs={filteredLogs.filter((log) => log.level === 'error' || log.level === 'warn')} />
 
-      <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark overflow-hidden">
-        {/* Single filter row — stacks vertically on mobile */}
-        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 border-b border-slate-100 dark:border-ui-border-dark px-4 py-2.5">
-          {/* Level badge filters */}
-          <div className="flex items-center gap-1.5 flex-wrap sm:flex-1 sm:min-w-0">
+      <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark p-4">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-1.5 flex-wrap">
             {LEVEL_FILTERS.map((level) => {
               const isActive = levelFilter === level;
               return (
@@ -354,20 +379,52 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
             })}
           </div>
 
-          {/* Right controls */}
-          <div className="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
-            <div className="relative flex-1 sm:flex-none">
+          <div className="grid grid-cols-1 gap-2 lg:grid-cols-[minmax(180px,1fr)_minmax(180px,220px)_minmax(180px,220px)_auto_auto] lg:items-center">
+            <div className="relative">
               <MaterialIcon name="search" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('logs.searchPlaceholder')}
-                className="h-8 w-full sm:w-44 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark pl-8 pr-3 text-xs text-slate-900 dark:text-white outline-none focus:border-primary sm:focus:w-56 transition-all"
+                className="h-9 w-full rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark pl-8 pr-3 text-xs text-slate-900 dark:text-white outline-none focus:border-primary"
               />
             </div>
+
+            <label className="flex h-9 items-center gap-2 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-3">
+              <span className="text-xs font-bold text-slate-500 dark:text-text-muted-dark">From</span>
+              <input
+                type="datetime-local"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="min-w-0 flex-1 bg-transparent text-xs text-slate-900 dark:text-white outline-none"
+              />
+            </label>
+
+            <label className="flex h-9 items-center gap-2 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-3">
+              <span className="text-xs font-bold text-slate-500 dark:text-text-muted-dark">To</span>
+              <input
+                type="datetime-local"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="min-w-0 flex-1 bg-transparent text-xs text-slate-900 dark:text-white outline-none"
+              />
+            </label>
+
+            <button
+              onClick={() => {
+                setFromDate('');
+                setToDate('');
+              }}
+              disabled={!fromDate && !toDate}
+              className="flex h-9 items-center justify-center gap-1 rounded-lg border border-slate-200 dark:border-ui-border-dark px-3 text-xs font-bold text-slate-500 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <MaterialIcon name="clear" className="text-sm" />
+              Clear
+            </button>
+
             <button
               onClick={() => setIsPaused(!isPaused)}
-              className={`flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-bold transition-colors ${
+              className={`flex h-9 items-center justify-center gap-1 rounded-lg border px-3 text-xs font-bold transition-colors ${
                 isPaused
                   ? 'border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
                   : 'border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark'
@@ -376,6 +433,27 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
               <MaterialIcon name={isPaused ? 'play_arrow' : 'pause'} className="text-sm" />
               {isPaused ? t('common.resume') : t('common.pause')}
             </button>
+          </div>
+
+          {dateRangeError && (
+            <div className="flex items-center gap-2 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-3 py-2 text-xs font-medium text-red-700 dark:text-red-300">
+              <MaterialIcon name="error_outline" className="text-base shrink-0" />
+              <span>{dateRangeError}</span>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark overflow-hidden">
+        <div className="flex flex-col gap-1 border-b border-slate-100 dark:border-ui-border-dark px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Log entries</h3>
+            <p className="text-xs text-slate-500 dark:text-text-muted-dark">
+              Showing {filteredLogs.length} of {sourceLogs.length} loaded logs
+            </p>
+          </div>
+          <div className="text-xs text-slate-400 dark:text-text-dim-dark">
+            Default latest {LIMIT_STEP}
           </div>
         </div>
 
@@ -396,6 +474,15 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
         {filteredLogs.length > 0 && (
           <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50/80 dark:bg-ui-hover-dark/30 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-text-muted-dark">
+                  <th className="w-28 px-4 py-2.5">Time</th>
+                  <th className="w-24 px-4 py-2.5">Level</th>
+                  <th className="px-4 py-2.5">Message</th>
+                  <th className="px-4 py-2.5 text-right">Context</th>
+                  <th className="w-12 px-4 py-2.5 text-right">Copy</th>
+                </tr>
+              </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-ui-border-dark/60">
                 {filteredLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-ui-hover-dark/30">

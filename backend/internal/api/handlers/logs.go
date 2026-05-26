@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"strconv"
+	"time"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/aiturn/everyup/internal/database"
 	"github.com/aiturn/everyup/internal/models"
+	"github.com/gofiber/fiber/v2"
 )
 
 // LogHandler handles log-related requests
@@ -20,6 +21,17 @@ func NewLogHandler() *LogHandler {
 	}
 }
 
+func parseLogTimeQuery(value string) time.Time {
+	if value == "" {
+		return time.Time{}
+	}
+	parsed, err := time.Parse(time.RFC3339Nano, value)
+	if err != nil {
+		return time.Time{}
+	}
+	return parsed
+}
+
 // GetAll returns logs with filters and pagination
 func (h *LogHandler) GetAll(c *fiber.Ctx) error {
 	filter := models.LogFilter{
@@ -27,6 +39,8 @@ func (h *LogHandler) GetAll(c *fiber.Ctx) error {
 		Level:     models.LogLevel(c.Query("level")),
 		Search:    c.Query("search"),
 		TraceID:   c.Query("traceId"),
+		From:      parseLogTimeQuery(c.Query("from")),
+		To:        parseLogTimeQuery(c.Query("to")),
 	}
 
 	// Parse pagination
@@ -88,6 +102,8 @@ func (h *LogHandler) GetByServiceID(c *fiber.Ctx) error {
 		Level:     models.LogLevel(c.Query("level")),
 		Search:    c.Query("search"),
 		TraceID:   c.Query("traceId"),
+		From:      parseLogTimeQuery(c.Query("from")),
+		To:        parseLogTimeQuery(c.Query("to")),
 		Limit:     50,
 	}
 
