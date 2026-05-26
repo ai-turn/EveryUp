@@ -255,7 +255,7 @@ func (r *ApiRequestRepository) List(f *models.ApiRequestFilter) ([]models.ApiReq
 
 	limit := f.Limit
 	if limit <= 0 {
-		limit = 50
+		limit = 200
 	}
 	dataQuery := "SELECT id, service_id, request_id, method, path, path_template," +
 		" status_code, duration_ms, client_ip," +

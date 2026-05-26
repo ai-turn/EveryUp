@@ -140,7 +140,7 @@ function filterLogs(endpoint: string, serviceId?: string): LogEntry[] {
   const [, qs] = endpoint.split('?');
   const params = new URLSearchParams(qs ?? '');
   const level = params.get('level') ?? '';
-  const limit = parseInt(params.get('limit') ?? '50', 10);
+  const limit = parseInt(params.get('limit') ?? '200', 10);
 
   let logs = allMockLogs;
   if (serviceId) logs = logs.filter(l => l.serviceId === serviceId);

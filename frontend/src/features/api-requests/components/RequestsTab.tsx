@@ -16,7 +16,7 @@ function shortTraceId(traceId: string): string {
   return traceId.length <= 16 ? traceId : `${traceId.slice(0, 16)}...`;
 }
 
-const DEFAULT_LIMIT = 50;
+const DEFAULT_LIMIT = 200;
 
 interface PathAggregateItem {
   key: string;
