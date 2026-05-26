@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from '../../../components/common';
-import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
+import { useClipboardCopy } from '../../../hooks/useClipboardCopy';
 import { getErrorMessage } from '../../../utils/errors';
 import { api, TraceDetail, TraceSpan, LogEntry, ApiRequest } from '../../../services/api';
 
@@ -55,8 +55,59 @@ function logLevelBadge(level: string): string {
   }
 }
 
+type CopyFn = (text: string) => Promise<boolean>;
+
+function copyButton(onClick: () => void, label: string) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="ml-auto shrink-0 rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-600 dark:hover:bg-ui-active-dark dark:hover:text-slate-200"
+      title={label}
+      aria-label={label}
+    >
+      <MaterialIcon name="content_copy" className="text-sm" />
+    </button>
+  );
+}
+
+function formatSpanCopy(span: TraceSpan): string {
+  return [
+    `kind=${span.kind}`,
+    `name=${span.name || '(unnamed)'}`,
+    span.serviceName ? `service=${span.serviceName}` : null,
+    span.statusCode && span.statusCode !== 'UNSET' ? `status=${span.statusCode}` : null,
+    `duration=${formatDuration(span.durationMs)}`,
+    `traceId=${span.traceId}`,
+    `spanId=${span.spanId}`,
+  ].filter(Boolean).join(' ');
+}
+
+function formatApiRequestCopy(req: ApiRequest): string {
+  return [
+    `method=${req.method}`,
+    `path=${req.path}`,
+    `status=${req.statusCode}`,
+    `duration=${formatDuration(req.durationMs)}`,
+    req.serviceName ? `service=${req.serviceName}` : null,
+    req.traceId ? `traceId=${req.traceId}` : null,
+    req.spanId ? `spanId=${req.spanId}` : null,
+  ].filter(Boolean).join(' ');
+}
+
+function formatLogCopy(log: LogEntry): string {
+  return [
+    `time=${log.createdAt}`,
+    `level=${log.level}`,
+    `message=${log.message}`,
+    log.serviceName ? `service=${log.serviceName}` : null,
+    log.traceId ? `traceId=${log.traceId}` : null,
+    log.spanId ? `spanId=${log.spanId}` : null,
+  ].filter(Boolean).join(' ');
+}
+
 export function TracePanel({ traceId, onClose }: TracePanelProps) {
-  const { copy } = useCopyToClipboard();
+  const { copy } = useClipboardCopy();
   const { t } = useTranslation('logs');
   const navigate = useNavigate();
   const { serviceId } = useParams<{ serviceId: string }>();
@@ -182,13 +233,13 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
           )}
 
           {!loading && !error && spans.length > 0 && (
-            <SpanList spans={spans} />
+            <SpanList spans={spans} onCopy={copy} />
           )}
           {!loading && !error && apiRequests.length > 0 && (
-            <ApiRequestList items={apiRequests} />
+            <ApiRequestList items={apiRequests} onCopy={copy} />
           )}
           {!loading && !error && logs.length > 0 && (
-            <LogList logs={logs} />
+            <LogList logs={logs} onCopy={copy} />
           )}
         </div>
       </div>
@@ -208,7 +259,7 @@ function SectionHeader({ icon, title, count }: { icon: string; title: string; co
   );
 }
 
-function SpanList({ spans }: { spans: TraceSpan[] }) {
+function SpanList({ spans, onCopy }: { spans: TraceSpan[]; onCopy: CopyFn }) {
   return (
     <section>
       <SectionHeader icon="account_tree" title="Spans" count={spans.length} />
@@ -237,6 +288,7 @@ function SpanList({ spans }: { spans: TraceSpan[] }) {
             <span className="text-slate-500 dark:text-text-muted-dark font-mono shrink-0">
               {formatDuration(span.durationMs)}
             </span>
+            {copyButton(() => { void onCopy(formatSpanCopy(span)); }, 'Copy span row')}
           </li>
         ))}
       </ul>
@@ -244,7 +296,7 @@ function SpanList({ spans }: { spans: TraceSpan[] }) {
   );
 }
 
-function ApiRequestList({ items }: { items: ApiRequest[] }) {
+function ApiRequestList({ items, onCopy }: { items: ApiRequest[]; onCopy: CopyFn }) {
   return (
     <section>
       <SectionHeader icon="api" title="API requests" count={items.length} />
@@ -270,6 +322,7 @@ function ApiRequestList({ items }: { items: ApiRequest[] }) {
             <span className="text-slate-500 dark:text-text-muted-dark font-mono shrink-0">
               {formatDuration(req.durationMs)}
             </span>
+            {copyButton(() => { void onCopy(formatApiRequestCopy(req)); }, 'Copy API request row')}
           </li>
         ))}
       </ul>
@@ -277,7 +330,7 @@ function ApiRequestList({ items }: { items: ApiRequest[] }) {
   );
 }
 
-function LogList({ logs }: { logs: LogEntry[] }) {
+function LogList({ logs, onCopy }: { logs: LogEntry[]; onCopy: CopyFn }) {
   return (
     <section>
       <SectionHeader icon="article" title="Logs" count={logs.length} />
@@ -296,6 +349,7 @@ function LogList({ logs }: { logs: LogEntry[] }) {
             <span className="text-slate-700 dark:text-text-base-dark break-all flex-1 min-w-0">
               {log.message}
             </span>
+            {copyButton(() => { void onCopy(formatLogCopy(log)); }, 'Copy log row')}
           </li>
         ))}
       </ul>
