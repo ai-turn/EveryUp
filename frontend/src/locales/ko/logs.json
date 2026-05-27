@@ -44,7 +44,8 @@
       }
     },
     "card": {
-      "noRecent": "최근 수신된 로그가 없습니다"
+      "noRecent": "최근 수신된 로그가 없습니다",
+      "recent": "최근 {{count}}건"
     },
     "view": {
       "cards": "카드",
@@ -95,6 +96,22 @@
     "errors": {
       "emptyTitle": "에러/경고 로그가 없습니다",
       "emptyDesc": "최근 수집된 에러와 경고가 없습니다"
+    },
+    "errorTable": {
+      "distribution": "24시간 분포",
+      "total": "전체",
+      "peak": "피크",
+      "bucketTooltip": "-{{hours}}시간 · 에러 {{error}} · 경고 {{warn}}",
+      "now": "현재",
+      "dateRangeInvalid": "유효한 날짜 범위를 입력하세요.",
+      "dateRangeOrder": "시작 날짜가 종료 날짜보다 빨라야 합니다.",
+      "from": "시작",
+      "to": "종료",
+      "clearDates": "초기화",
+      "entries": "로그 항목",
+      "showing": "불러온 로그 {{loaded}}건 중 {{shown}}건 표시",
+      "defaultLatest": "기본 최신 {{count}}건",
+      "context": "컨텍스트"
     }
   },
   "apiRequests": {

@@ -97,8 +97,7 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
         <div className="flex-1 min-w-0">
           <h3 className="font-bold text-base truncate text-slate-900 dark:text-white">{service.name}</h3>
           <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">
-            <span className="font-bold tabular-nums text-slate-600 dark:text-text-muted-dark">{recentLogs.length}</span>
-            {' '}recent
+            {t('logs.card.recent', { count: recentLogs.length })}
           </p>
         </div>
         <div className="flex flex-col items-end gap-1.5 shrink-0">

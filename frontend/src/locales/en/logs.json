@@ -44,7 +44,8 @@
       }
     },
     "card": {
-      "noRecent": "No recent logs received"
+      "noRecent": "No recent logs received",
+      "recent": "{{count}} recent"
     },
     "view": {
       "cards": "Cards",
@@ -95,6 +96,22 @@
     "errors": {
       "emptyTitle": "No error or warning logs",
       "emptyDesc": "No errors or warnings have been collected recently"
+    },
+    "errorTable": {
+      "distribution": "24h Distribution",
+      "total": "Total",
+      "peak": "Peak",
+      "bucketTooltip": "-{{hours}}h · error {{error}} · warn {{warn}}",
+      "now": "now",
+      "dateRangeInvalid": "Enter a valid date range.",
+      "dateRangeOrder": "Start date must be earlier than end date.",
+      "from": "From",
+      "to": "To",
+      "clearDates": "Clear",
+      "entries": "Log entries",
+      "showing": "Showing {{shown}} of {{loaded}} loaded logs",
+      "defaultLatest": "Default latest {{count}}",
+      "context": "Context"
     }
   },
   "apiRequests": {
