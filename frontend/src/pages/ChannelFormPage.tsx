@@ -73,8 +73,8 @@ export function ChannelFormPage() {
         </nav>
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{title}</h1>
-            <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{title}</h1>
+            <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">
               {isEdit
                 ? `${channel?.name ?? ''} · 채널 설정을 수정합니다`
                 : 'Telegram, Discord, Slack 중 채널을 선택하고 연결 정보를 입력하세요'}
