@@ -5,7 +5,7 @@ import { CheckHistoryTab } from './CheckHistoryTab';
 import { UptimeSummaryTab } from './UptimeSummaryTab';
 import type { Service } from '../../../types/service';
 import type { CheckEntry, ServiceUptimeSummary } from '../../../services/api';
-import type { HealthCheckTab } from '../../../pages/HealthCheckPage';
+import type { HealthCheckTab } from '../../../pages/healthcheck/HealthCheckPage';
 
 interface HealthCheckMobileViewProps {
   services: Service[];

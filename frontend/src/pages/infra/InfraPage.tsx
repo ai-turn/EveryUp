@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { InfraDesktopView } from '../features/infra/components/InfraDesktopView';
-import { InfraMobileView } from '../features/infra/components/InfraMobileView';
-import { useMonitoringResources } from '../hooks/useInfra';
-import { useIsMobile } from '../hooks/useMediaQuery';
+import { InfraDesktopView } from '../../features/infra/components/InfraDesktopView';
+import { InfraMobileView } from '../../features/infra/components/InfraMobileView';
+import { useMonitoringResources } from '../../hooks/useInfra';
+import { useIsMobile } from '../../hooks/useMediaQuery';
 
 export function InfraPage() {
   const navigate = useNavigate();

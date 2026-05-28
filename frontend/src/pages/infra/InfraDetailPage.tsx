@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
-import { getErrorMessage } from '../utils/errors';
-import { useHost } from '../hooks/useInfra';
-import { api } from '../services/api';
-import { InfraDetailView } from '../features/infra/components/InfraDetailView';
+import { getErrorMessage } from '../../utils/errors';
+import { useHost } from '../../hooks/useInfra';
+import { api } from '../../services/api';
+import { InfraDetailView } from '../../features/infra/components/InfraDetailView';
 
 const hostStatusMap: Record<string, string> = {
   online: 'healthy',

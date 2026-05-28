@@ -6,25 +6,25 @@ import { useAuth } from './contexts/AuthContext';
 import { env } from './config/env';
 import { lazyWithRetry as lazy } from './utils/lazyWithRetry';
 
-const DashboardPage        = lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
-const HealthCheckPage      = lazy(() => import('./pages/HealthCheckPage').then(m => ({ default: m.HealthCheckPage })));
-const HealthCheckDetailPage = lazy(() => import('./pages/HealthCheckDetailPage').then(m => ({ default: m.HealthCheckDetailPage })));
-const LogListPage          = lazy(() => import('./pages/LogListPage').then(m => ({ default: m.LogListPage })));
-const LogDetailPage        = lazy(() => import('./pages/LogDetailPage').then(m => ({ default: m.LogDetailPage })));
-const InfraPage            = lazy(() => import('./pages/InfraPage').then(m => ({ default: m.InfraPage })));
-const InfraDetailPage      = lazy(() => import('./pages/InfraDetailPage').then(m => ({ default: m.InfraDetailPage })));
-const AlertsPage           = lazy(() => import('./pages/AlertsPage').then(m => ({ default: m.AlertsPage })));
-const SettingsPage         = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const DashboardPage        = lazy(() => import('./pages/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage })));
+const HealthCheckPage      = lazy(() => import('./pages/healthcheck/HealthCheckPage').then(m => ({ default: m.HealthCheckPage })));
+const HealthCheckDetailPage = lazy(() => import('./pages/healthcheck/HealthCheckDetailPage').then(m => ({ default: m.HealthCheckDetailPage })));
+const LogListPage          = lazy(() => import('./pages/logs/LogListPage').then(m => ({ default: m.LogListPage })));
+const LogDetailPage        = lazy(() => import('./pages/logs/LogDetailPage').then(m => ({ default: m.LogDetailPage })));
+const InfraPage            = lazy(() => import('./pages/infra/InfraPage').then(m => ({ default: m.InfraPage })));
+const InfraDetailPage      = lazy(() => import('./pages/infra/InfraDetailPage').then(m => ({ default: m.InfraDetailPage })));
+const AlertsPage           = lazy(() => import('./pages/alerts/AlertsPage').then(m => ({ default: m.AlertsPage })));
+const SettingsPage         = lazy(() => import('./pages/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
 const NotFoundPage         = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
-const LoginPage            = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const LoginPage            = lazy(() => import('./pages/auth/LoginPage').then(m => ({ default: m.LoginPage })));
 
 // Form pages (replace SidePanel-based forms in v2)
-const ChannelFormPage      = lazy(() => import('./pages/ChannelFormPage').then(m => ({ default: m.ChannelFormPage })));
-const AlertRuleFormPage    = lazy(() => import('./pages/AlertRuleFormPage').then(m => ({ default: m.AlertRuleFormPage })));
-const HealthCheckFormPage  = lazy(() => import('./pages/HealthCheckFormPage').then(m => ({ default: m.HealthCheckFormPage })));
-const InfraFormPage        = lazy(() => import('./pages/InfraFormPage').then(m => ({ default: m.InfraFormPage })));
-const LogServiceFormPage   = lazy(() => import('./pages/LogServiceFormPage').then(m => ({ default: m.LogServiceFormPage })));
-const LogServiceEditPage   = lazy(() => import('./pages/LogServiceEditPage').then(m => ({ default: m.LogServiceEditPage })));
+const ChannelFormPage      = lazy(() => import('./pages/alerts/ChannelFormPage').then(m => ({ default: m.ChannelFormPage })));
+const AlertRuleFormPage    = lazy(() => import('./pages/alerts/AlertRuleFormPage').then(m => ({ default: m.AlertRuleFormPage })));
+const HealthCheckFormPage  = lazy(() => import('./pages/healthcheck/HealthCheckFormPage').then(m => ({ default: m.HealthCheckFormPage })));
+const InfraFormPage        = lazy(() => import('./pages/infra/InfraFormPage').then(m => ({ default: m.InfraFormPage })));
+const LogServiceFormPage   = lazy(() => import('./pages/logs/LogServiceFormPage').then(m => ({ default: m.LogServiceFormPage })));
+const LogServiceEditPage   = lazy(() => import('./pages/logs/LogServiceEditPage').then(m => ({ default: m.LogServiceEditPage })));
 
 function PageLoader() {
   return (

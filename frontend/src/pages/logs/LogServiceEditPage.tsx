@@ -2,10 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
-import { getErrorMessage } from '../utils/errors';
-import { MaterialIcon } from '../components/common';
-import { api, LogLevel, LOG_LEVELS } from '../services/api';
-import type { Service } from '../services/api';
+import { getErrorMessage } from '../../utils/errors';
+import { MaterialIcon } from '../../components/common';
+import { api, LogLevel, LOG_LEVELS } from '../../services/api';
+import type { Service } from '../../services/api';
 
 const LEVEL_STYLE: Record<LogLevel, { dot: string; label: string; active: string }> = {
   error: { dot: 'bg-red-500',    label: 'Error', active: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-300 dark:border-red-800'         },

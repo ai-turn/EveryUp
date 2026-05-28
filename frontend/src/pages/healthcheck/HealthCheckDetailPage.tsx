@@ -3,11 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useTranslate } from '@tolgee/react';
 import { toast } from 'react-hot-toast';
-import { getErrorMessage } from '../utils/errors';
-import { MaterialIcon } from '../components/common';
-import { useAutoRefresh } from '../hooks/useAutoRefresh';
-import { HealthCheckDetailView } from '../features/healthcheck/components/HealthCheckDetailView';
-import { api, Service } from '../services/api';
+import { getErrorMessage } from '../../utils/errors';
+import { MaterialIcon } from '../../components/common';
+import { useAutoRefresh } from '../../hooks/useAutoRefresh';
+import { HealthCheckDetailView } from '../../features/healthcheck/components/HealthCheckDetailView';
+import { api, Service } from '../../services/api';
 
 export function HealthCheckDetailPage() {
   const { serviceId } = useParams<{ serviceId: string }>();

@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useIsMobile } from '../hooks/useMediaQuery';
-import { useDashboardServices } from '../hooks/useDashboard';
-import { api, type CheckEntry, type ServiceUptimeSummary } from '../services/api';
-import { HealthCheckDesktopView } from '../features/healthcheck/components/HealthCheckDesktopView';
-import { HealthCheckMobileView } from '../features/healthcheck/components/HealthCheckMobileView';
+import { useIsMobile } from '../../hooks/useMediaQuery';
+import { useDashboardServices } from '../../hooks/useDashboard';
+import { api, type CheckEntry, type ServiceUptimeSummary } from '../../services/api';
+import { HealthCheckDesktopView } from '../../features/healthcheck/components/HealthCheckDesktopView';
+import { HealthCheckMobileView } from '../../features/healthcheck/components/HealthCheckMobileView';
 
 export type HealthCheckTab = 'services' | 'history' | 'uptime';
 

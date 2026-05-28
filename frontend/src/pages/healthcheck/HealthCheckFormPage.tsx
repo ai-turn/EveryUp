@@ -1,17 +1,49 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LogServiceForm } from '../features/logs/components/LogServiceForm';
-import { MaterialIcon } from '../components/common';
+import { toast } from 'react-hot-toast';
+import { api, type Service } from '../../services/api';
+import { HealthCheckForm } from '../../features/healthcheck/components/HealthCheckForm';
+import { MaterialIcon } from '../../components/common';
+import { getErrorMessage } from '../../utils/errors';
 
-export function LogServiceFormPage() {
+export function HealthCheckFormPage() {
+  const { serviceId } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation(['logs', 'common']);
+  const { t } = useTranslation(['healthcheck', 'common']);
+  const isEdit = !!serviceId;
+  const [service, setService] = useState<Service | undefined>();
+  const [loading, setLoading] = useState(isEdit);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const goBack = () => navigate('/logs');
-  const title = t('logServices.add.title', { defaultValue: 'Add Log Service' });
-  const subtitle = t('logServices.add.infoDesc', { defaultValue: 'Create a log service, then connect logs from the Integration tab.' });
+  useEffect(() => {
+    if (!serviceId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const s = await api.getServiceById(serviceId);
+        if (cancelled) return;
+        setService(s);
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+        navigate('/healthcheck');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [serviceId, navigate]);
+
+  const goBack = () => navigate(isEdit && serviceId ? `/healthcheck/${serviceId}` : '/healthcheck');
+
+  const title = isEdit
+    ? t('healthcheck.edit.title')
+    : t('healthcheck.add.title');
+  const subtitle = isEdit
+    ? t('healthcheck.edit.subtitle')
+    : t('healthcheck.add.subtitle');
 
   return (
     <div className="-m-4 sm:-m-6 md:-m-8 bg-white dark:bg-bg-main-dark">
@@ -19,14 +51,14 @@ export function LogServiceFormPage() {
         <nav className="flex items-center gap-1 text-xs text-slate-500 dark:text-text-muted-dark mb-2">
           <button
             type="button"
-            onClick={goBack}
+            onClick={() => navigate('/healthcheck')}
             className="hover:text-slate-800 dark:hover:text-white transition-colors"
           >
-            {t('logs.title')}
+            {t('healthcheck.title')}
           </button>
           <MaterialIcon name="chevron_right" className="text-sm opacity-50" />
           <span className="text-slate-900 dark:text-white font-medium truncate max-w-50">
-            {title}
+            {loading ? '...' : isEdit ? (service?.name ?? title) : title}
           </span>
         </nav>
 
@@ -47,8 +79,8 @@ export function LogServiceFormPage() {
             </button>
             <button
               type="submit"
-              form="log-service-form"
-              disabled={isSubmitting}
+              form="healthcheck-form"
+              disabled={loading || isSubmitting}
               className="px-5 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-all shadow-sm active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
             >
               {isSubmitting ? (
@@ -64,7 +96,18 @@ export function LogServiceFormPage() {
         </div>
       </header>
 
-      <LogServiceForm onSuccess={goBack} onCancel={goBack} onSubmittingChange={setIsSubmitting} />
+      {loading ? (
+        <div className="flex items-center justify-center min-h-80 text-slate-500">
+          <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+        </div>
+      ) : (
+        <HealthCheckForm
+          service={service}
+          onSuccess={goBack}
+          onCancel={goBack}
+          onSubmittingChange={setIsSubmitting}
+        />
+      )}
     </div>
   );
 }

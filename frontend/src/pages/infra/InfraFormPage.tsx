@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
-import { api, type Host } from '../services/api';
-import { InfraForm } from '../features/infra/components/InfraForm';
-import { MaterialIcon } from '../components/common';
-import { getErrorMessage } from '../utils/errors';
+import { api, type Host } from '../../services/api';
+import { InfraForm } from '../../features/infra/components/InfraForm';
+import { MaterialIcon } from '../../components/common';
+import { getErrorMessage } from '../../utils/errors';
 
 export function InfraFormPage() {
   const { resourceId } = useParams();

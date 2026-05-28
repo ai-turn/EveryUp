@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
-import { api, type NotificationChannel } from '../services/api';
-import { ChannelForm } from '../features/alerts/components/ChannelForm';
-import { MaterialIcon } from '../components/common';
-import { getErrorMessage } from '../utils/errors';
+import { api, type NotificationChannel } from '../../services/api';
+import { ChannelForm } from '../../features/alerts/components/ChannelForm';
+import { MaterialIcon } from '../../components/common';
+import { getErrorMessage } from '../../utils/errors';
 
 export function ChannelFormPage() {
   const { id } = useParams();

@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
-import { getErrorMessage } from '../utils/errors';
-import { useTheme } from '../contexts/ThemeContext';
-import { useAuth } from '../contexts/AuthContext';
-import { useIsMobile } from '../hooks/useMediaQuery';
-import { api } from '../services/api';
-import { env } from '../config/env';
-import { SettingsDesktopView } from '../features/settings/components/SettingsDesktopView';
-import { SettingsMobileView } from '../features/settings/components/SettingsMobileView';
+import { getErrorMessage } from '../../utils/errors';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useIsMobile } from '../../hooks/useMediaQuery';
+import { api } from '../../services/api';
+import { env } from '../../config/env';
+import { SettingsDesktopView } from '../../features/settings/components/SettingsDesktopView';
+import { SettingsMobileView } from '../../features/settings/components/SettingsMobileView';
 
 export function SettingsPage() {
   const { t, i18n } = useTranslation(['settings', 'common']);

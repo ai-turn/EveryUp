@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useAuth } from '../contexts/AuthContext'
-import { env } from '../config/env'
-import { MaterialIcon } from '../components/common'
-import { IconHealthCheck } from '../components/icons/SidebarIcons'
+import { useAuth } from '../../contexts/AuthContext'
+import { env } from '../../config/env'
+import { MaterialIcon } from '../../components/common'
+import { IconHealthCheck } from '../../components/icons/SidebarIcons'
 
 export function LoginPage() {
   const { login, isAuthenticated } = useAuth()

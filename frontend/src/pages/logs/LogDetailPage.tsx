@@ -3,12 +3,12 @@ import { useParams, useNavigate, useSearchParams, useLocation } from 'react-rout
 import { useTranslation } from 'react-i18next';
 import { useTranslate } from '@tolgee/react';
 import { toast } from 'react-hot-toast';
-import { getErrorMessage } from '../utils/errors';
-import { MaterialIcon } from '../components/common';
-import { useAutoRefresh } from '../hooks/useAutoRefresh';
-import { useClipboardCopy } from '../hooks/useClipboardCopy';
-import { LogDetailView } from '../features/logs/components/LogDetailView';
-import { api, Service } from '../services/api';
+import { getErrorMessage } from '../../utils/errors';
+import { MaterialIcon } from '../../components/common';
+import { useAutoRefresh } from '../../hooks/useAutoRefresh';
+import { useClipboardCopy } from '../../hooks/useClipboardCopy';
+import { LogDetailView } from '../../features/logs/components/LogDetailView';
+import { api, Service } from '../../services/api';
 
 type TabKey = 'logs' | 'requests' | 'integration';
 

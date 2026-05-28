@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useIsMobile } from '../hooks/useMediaQuery';
-import { LogListDesktopView } from '../features/logs/components/LogListDesktopView';
-import { LogListMobileView } from '../features/logs/components/LogListMobileView';
-import { api, type Service, type LogEntry } from '../services/api';
+import { useIsMobile } from '../../hooks/useMediaQuery';
+import { LogListDesktopView } from '../../features/logs/components/LogListDesktopView';
+import { LogListMobileView } from '../../features/logs/components/LogListMobileView';
+import { api, type Service, type LogEntry } from '../../services/api';
 
 export function LogListPage() {
   const navigate = useNavigate();

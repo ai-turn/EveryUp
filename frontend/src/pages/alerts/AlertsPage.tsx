@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
-import { getErrorMessage } from '../utils/errors';
-import { api, type NotificationChannel, type AlertRule, type NotificationHistory, type NotificationStats, type NotificationChannelHealth } from '../services/api';
-import { AlertsDesktopView } from '../features/alerts/components/AlertsDesktopView';
-import { AlertsMobileView } from '../features/alerts/components/AlertsMobileView';
-import { useIsMobile } from '../hooks/useMediaQuery';
-import { ConfirmDialog } from '../components/common';
+import { getErrorMessage } from '../../utils/errors';
+import { api, type NotificationChannel, type AlertRule, type NotificationHistory, type NotificationStats, type NotificationChannelHealth } from '../../services/api';
+import { AlertsDesktopView } from '../../features/alerts/components/AlertsDesktopView';
+import { AlertsMobileView } from '../../features/alerts/components/AlertsMobileView';
+import { useIsMobile } from '../../hooks/useMediaQuery';
+import { ConfirmDialog } from '../../components/common';
 
 type TabType = 'channels' | 'rules' | 'history';
 

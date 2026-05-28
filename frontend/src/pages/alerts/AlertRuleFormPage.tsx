@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
-import { api, type AlertRule, type NotificationChannel } from '../services/api';
-import { AlertRuleForm } from '../features/alerts/components/AlertRuleForm';
-import { MaterialIcon } from '../components/common';
-import { getErrorMessage } from '../utils/errors';
+import { api, type AlertRule, type NotificationChannel } from '../../services/api';
+import { AlertRuleForm } from '../../features/alerts/components/AlertRuleForm';
+import { MaterialIcon } from '../../components/common';
+import { getErrorMessage } from '../../utils/errors';
 
 export function AlertRuleFormPage() {
   const { id } = useParams();
