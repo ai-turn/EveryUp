@@ -44,14 +44,25 @@ export OTEL_PYTHON_LOG_LEVEL="info"
 # Endpoint note:
 # Set OTEL_EXPORTER_OTLP_ENDPOINT to the OTLP base URL only.
 # Do not add /v1/logs or /v1/traces; the Python SDK appends those paths.
-# If FastAPI runs in Docker, localhost points to that container. Use
-# host.docker.internal or the EveryUp backend service name instead.
 
 # 2. Run your app via opentelemetry-instrument
 # FastAPI:
 opentelemetry-instrument uvicorn main:app --host 0.0.0.0 --port 8000
 # Django:
 opentelemetry-instrument python manage.py runserver
+
+# Docker deployment:
+# No application source change is needed. In the Dockerfile, install the
+# OTel packages and wrap the start command with opentelemetry-instrument:
+#   RUN pip install opentelemetry-distro opentelemetry-exporter-otlp \\
+#    && opentelemetry-bootstrap -a install
+#   CMD ["opentelemetry-instrument", "uvicorn", "main:app", \\
+#        "--host", "0.0.0.0", "--port", "8000"]
+# Keep the OTEL_* values (especially the API key) out of the image: pass
+# them via docker run -e / compose "environment:" instead of the Dockerfile.
+# Inside a container localhost is the container itself, so set
+# OTEL_EXPORTER_OTLP_ENDPOINT to host.docker.internal or the EveryUp
+# backend service name (e.g. http://backend:3001/api/v1/otlp).
 
 # API Requests in EveryUp are projected from HTTP SERVER spans.
 # Logs in EveryUp come from Python logging records such as logger.info(...)

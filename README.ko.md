@@ -137,6 +137,8 @@ export OTEL_TRACES_EXPORTER="otlp"
 
 EveryUp은 `/api/v1/otlp/v1/logs`와 `/api/v1/otlp/v1/traces`에서 OTLP/HTTP 로그와 트레이스를 받습니다.
 
+**언어별 참고.** Java는 `-javaagent` jar로 코드 수정 없이 자동 계측됩니다. Python(FastAPI/Django)도 소스 수정은 필요 없습니다 — `opentelemetry-distro opentelemetry-exporter-otlp`를 설치하고 `opentelemetry-bootstrap -a install`을 실행한 뒤 `opentelemetry-instrument uvicorn main:app ...`로 띄우면 됩니다. Docker 배포라면 이 설치 + 실행 커맨드 감싸기를 Dockerfile에 넣고, `OTEL_*` 값(특히 API 키)은 `docker run -e` / compose `environment:`로 전달하세요. 컨테이너 안에서 `localhost`는 컨테이너 자기 자신이므로 `OTEL_EXPORTER_OTLP_ENDPOINT`는 `host.docker.internal` 또는 EveryUp 백엔드 서비스명으로 지정해야 합니다. 앱 내 **로그 -> 서비스 상세 -> 연동** 탭에 언어별 복사용 스니펫이 있습니다.
+
 <sub>메트릭(`OTEL_METRICS_EXPORTER`)은 아직 지원하지 않습니다 — 설정하지 않거나 `none`으로 두세요.</sub>
 
 ## 데이터 백업
