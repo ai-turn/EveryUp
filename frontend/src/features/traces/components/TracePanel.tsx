@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { MaterialIcon } from '../../../components/common';
+import { CopyButton, MaterialIcon } from '../../../components/common';
 import { useClipboardCopy } from '../../../hooks/useClipboardCopy';
 import { getErrorMessage } from '../../../utils/errors';
 import { api, TraceDetail, TraceSpan, LogEntry, ApiRequest } from '../../../services/api';
@@ -57,17 +57,14 @@ function logLevelBadge(level: string): string {
 
 type CopyFn = (text: string) => Promise<boolean>;
 
-function copyButton(onClick: () => void, label: string) {
+function copyButton(onCopy: () => Promise<boolean>, label: string) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <CopyButton
+      onCopy={onCopy}
       className="ml-auto shrink-0 rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-600 dark:hover:bg-ui-active-dark dark:hover:text-slate-200"
       title={label}
-      aria-label={label}
-    >
-      <MaterialIcon name="content_copy" className="text-sm" />
-    </button>
+      iconClassName="text-sm"
+    />
   );
 }
 
@@ -164,14 +161,12 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
               <code className="text-xs font-mono text-slate-500 dark:text-text-muted-dark break-all min-w-0">
                 {traceId}
               </code>
-              <button
-                onClick={() => copy(traceId)}
+              <CopyButton
+                onCopy={() => copy(traceId)}
                 className="p-1 rounded hover:bg-slate-100 dark:hover:bg-ui-hover-dark text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer shrink-0"
                 title="Copy trace ID"
-                aria-label="Copy trace ID"
-              >
-                <MaterialIcon name="content_copy" className="text-sm" />
-              </button>
+                iconClassName="text-sm"
+              />
             </div>
           </div>
           <button
@@ -269,7 +264,7 @@ function SpanList({ spans, onCopy }: { spans: TraceSpan[]; onCopy: CopyFn }) {
             key={`${span.traceId}-${span.spanId}`}
             className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-xs sm:flex-nowrap"
           >
-            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 ${spanKindBadge(span.kind)}`}>
+            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-bold shrink-0 ${spanKindBadge(span.kind)}`}>
               {span.kind}
             </span>
             <span className="font-mono text-slate-700 dark:text-text-base-dark truncate flex-1 min-w-0" title={span.name}>
@@ -281,14 +276,14 @@ function SpanList({ spans, onCopy }: { spans: TraceSpan[]; onCopy: CopyFn }) {
               </span>
             )}
             {span.statusCode && span.statusCode !== 'UNSET' && (
-              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold shrink-0 ${statusBadge(span.statusCode)}`}>
+              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-semibold shrink-0 ${statusBadge(span.statusCode)}`}>
                 {span.statusCode}
               </span>
             )}
             <span className="text-slate-500 dark:text-text-muted-dark font-mono shrink-0">
               {formatDuration(span.durationMs)}
             </span>
-            {copyButton(() => { void onCopy(formatSpanCopy(span)); }, 'Copy span row')}
+            {copyButton(() => onCopy(formatSpanCopy(span)), 'Copy span row')}
           </li>
         ))}
       </ul>
@@ -306,13 +301,13 @@ function ApiRequestList({ items, onCopy }: { items: ApiRequest[]; onCopy: CopyFn
             key={req.id}
             className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-xs sm:flex-nowrap"
           >
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-200 dark:bg-ui-active-dark text-slate-700 dark:text-text-base-dark shrink-0">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-bold bg-slate-200 dark:bg-ui-active-dark text-slate-700 dark:text-text-base-dark shrink-0">
               {req.method}
             </span>
             <span className="font-mono text-slate-700 dark:text-text-base-dark truncate flex-1 min-w-0" title={req.path}>
               {req.path}
             </span>
-            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold shrink-0 ${
+            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-semibold shrink-0 ${
               req.isError
                 ? 'bg-red-500/10 text-red-600 dark:text-red-400'
                 : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
@@ -322,7 +317,7 @@ function ApiRequestList({ items, onCopy }: { items: ApiRequest[]; onCopy: CopyFn
             <span className="text-slate-500 dark:text-text-muted-dark font-mono shrink-0">
               {formatDuration(req.durationMs)}
             </span>
-            {copyButton(() => { void onCopy(formatApiRequestCopy(req)); }, 'Copy API request row')}
+            {copyButton(() => onCopy(formatApiRequestCopy(req)), 'Copy API request row')}
           </li>
         ))}
       </ul>
@@ -340,7 +335,7 @@ function LogList({ logs, onCopy }: { logs: LogEntry[]; onCopy: CopyFn }) {
             key={log.id}
             className="flex items-start gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-xs"
           >
-            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 ${logLevelBadge(log.level)}`}>
+            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-bold shrink-0 ${logLevelBadge(log.level)}`}>
               {log.level.toUpperCase()}
             </span>
             <span className="text-slate-500 dark:text-text-muted-dark font-mono shrink-0 mt-0.5">
@@ -349,7 +344,7 @@ function LogList({ logs, onCopy }: { logs: LogEntry[]; onCopy: CopyFn }) {
             <span className="text-slate-700 dark:text-text-base-dark break-all flex-1 min-w-0">
               {log.message}
             </span>
-            {copyButton(() => { void onCopy(formatLogCopy(log)); }, 'Copy log row')}
+            {copyButton(() => onCopy(formatLogCopy(log)), 'Copy log row')}
           </li>
         ))}
       </ul>

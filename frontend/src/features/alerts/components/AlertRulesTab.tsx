@@ -307,13 +307,13 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                 <SortableTH label={t('alerts.rules.colName', { defaultValue: 'Rule' })} active={sortKey === 'name'} dir={sortDir} onClick={() => onSort('name')} />
                 <SortableTH label={t('alerts.rules.colCategory', { defaultValue: 'Category' })} active={sortKey === 'category'} dir={sortDir} onClick={() => onSort('category')} />
                 <SortableTH label={t('alerts.rules.colTarget', { defaultValue: 'Target' })} active={sortKey === 'target'} dir={sortDir} onClick={() => onSort('target')} />
-                <th className="px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <th className="px-3 py-2 text-left text-2xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.rules.colCondition', { defaultValue: 'Condition' })}
                 </th>
-                <th className="px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <th className="px-3 py-2 text-left text-2xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.rules.colChannels', { defaultValue: 'Channels' })}
                 </th>
-                <th className="px-3 py-2 text-right text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <th className="px-3 py-2 text-right text-2xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.rules.colActions', { defaultValue: 'Actions' })}
                 </th>
               </tr>
@@ -340,26 +340,26 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                       <td className="px-3 py-2.5 min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="font-semibold text-slate-900 dark:text-white truncate">{rule.name}</span>
-                          <span className={`px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded ${sevBadge}`}>
+                          <span className={`px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider rounded ${sevBadge}`}>
                             {rule.severity}
                           </span>
                           {rule.isSystem && (
-                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark rounded">
-                              <MaterialIcon name="lock" className="text-[10px]" />
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark rounded">
+                              <MaterialIcon name="lock" className="text-2xs" />
                               system
                             </span>
                           )}
                         </div>
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold uppercase rounded ${CATEGORY_TONE[cat]}`}>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-2xs font-bold uppercase rounded ${CATEGORY_TONE[cat]}`}>
                           {cat === 'endpoint' ? 'health' : cat}
                         </span>
                       </td>
                       <td className="px-3 py-2.5 text-xs text-slate-700 dark:text-text-muted-dark max-w-[200px]">
                         <span className="truncate block">{targetLabel(rule, services, hosts, t)}</span>
                       </td>
-                      <td className="px-3 py-2.5 font-mono text-[11.5px] text-slate-700 dark:text-text-muted-dark whitespace-nowrap">
+                      <td className="px-3 py-2.5 font-mono text-2xs text-slate-700 dark:text-text-muted-dark whitespace-nowrap">
                         <span className="text-slate-900 dark:text-white font-semibold">{conditionExpr(rule)}</span>
                         <span className="text-slate-400 dark:text-text-dim-dark"> · {suffixExpr(rule, services, t)}</span>
                       </td>
@@ -402,7 +402,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
             </tbody>
           </table>
         </div>
-        <div className="px-3 py-2 border-t border-slate-200 dark:border-ui-border-dark flex items-center justify-between text-[11px] text-slate-500 dark:text-text-muted-dark">
+        <div className="px-3 py-2 border-t border-slate-200 dark:border-ui-border-dark flex items-center justify-between text-2xs text-slate-500 dark:text-text-muted-dark">
           <span>
             {t('alerts.rules.shownCount', { defaultValue: '{{shown}} of {{total}}', shown: filteredRules.length, total: rules.length })}
           </span>
@@ -430,7 +430,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
 
 function SortableTH({ label, active, dir, onClick }: { label: string; active: boolean; dir: SortDir; onClick: () => void }) {
   return (
-    <th className="px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark cursor-pointer select-none" onClick={onClick}>
+    <th className="px-3 py-2 text-left text-2xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark cursor-pointer select-none" onClick={onClick}>
       <span className={`inline-flex items-center gap-1 ${active ? 'text-slate-900 dark:text-white' : ''}`}>
         {label}
         <span className={active ? 'opacity-100' : 'opacity-30'}>{active && dir === 'desc' ? '↓' : '↑'}</span>
@@ -443,7 +443,7 @@ function ChannelChips({ rule, channels }: { rule: AlertRule; channels: Notificat
   const { t } = useTranslation('alerts');
   if (!rule.channelIds || rule.channelIds.length === 0) {
     return (
-      <span className="text-[11px] italic text-slate-400 dark:text-text-dim-dark">
+      <span className="text-2xs italic text-slate-400 dark:text-text-dim-dark">
         {t('alerts.rules.allChannels', { defaultValue: 'all channels' })}
       </span>
     );
@@ -459,7 +459,7 @@ function ChannelChips({ rule, channels }: { rule: AlertRule; channels: Notificat
         return (
           <span
             key={cid}
-            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-semibold ${style.bg} ${style.text} max-w-[110px]`}
+            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-semibold ${style.bg} ${style.text} max-w-[110px]`}
           >
             <ChannelIcon type={ch.type} size={10} />
             <span className="truncate">{ch.name}</span>
@@ -467,7 +467,7 @@ function ChannelChips({ rule, channels }: { rule: AlertRule; channels: Notificat
         );
       })}
       {remaining > 0 && (
-        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-semibold bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark">
+        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-semibold bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark">
           +{remaining}
         </span>
       )}

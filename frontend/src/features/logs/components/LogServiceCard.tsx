@@ -119,7 +119,7 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
       <div className="flex gap-2">
         {levelsOrder.map((level) => (
           <div key={level} className="flex-1 flex flex-col items-center gap-0.5">
-            <div className="flex items-center gap-1 text-[11px] uppercase font-bold text-slate-400 dark:text-text-dim-dark">
+            <div className="flex items-center gap-1 text-2xs uppercase font-bold text-slate-400 dark:text-text-dim-dark">
               <span className={`w-1.5 h-1.5 rounded-full ${levelDotStyle[level]}`} />
               <span>{level}</span>
             </div>

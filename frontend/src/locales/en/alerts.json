@@ -89,7 +89,9 @@
             "slackWebhookUrlPlaceholder": "https://hooks.slack.com/services/...",
             "telegram": "Telegram",
             "discord": "Discord",
-            "slack": "Slack"
+            "slack": "Slack",
+            "channelType": "Channel Type",
+            "credentials": "Credentials"
         },
         "guide": {
             "title": "How to get the required keys?",
@@ -228,7 +230,13 @@
             "systemRule": "System Rule",
             "systemRuleDesc": "This rule is managed by the system. Only the message and notification channels can be modified.",
             "messageLabel": "Notification Message",
-            "noChannels": "No notification channels registered"
+            "noChannels": "No notification channels registered",
+            "colName": "Rule",
+            "colCategory": "Category",
+            "colTarget": "Target",
+            "colCondition": "Condition",
+            "colChannels": "Channels",
+            "colActions": "Actions"
         },
         "table": {
             "eventType": "Event Type",

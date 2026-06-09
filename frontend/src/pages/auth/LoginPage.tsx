@@ -187,7 +187,7 @@ export function LoginPage() {
                   </p>
                   <div className="space-y-1">
                     <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">① {t('login.recoveryMethod1Step1')}</p>
-                    <pre className="text-[11px] bg-slate-50 dark:bg-bg-main-dark border border-slate-200 dark:border-ui-border-dark rounded-lg p-2.5 overflow-x-auto text-slate-700 dark:text-slate-300 leading-relaxed">
+                    <pre className="text-2xs bg-slate-50 dark:bg-bg-main-dark border border-slate-200 dark:border-ui-border-dark rounded-lg p-2.5 overflow-x-auto text-slate-700 dark:text-slate-300 leading-relaxed">
 {`# docker-compose.yml
 environment:
   EVERYUP_ADMIN_USERNAME: admin
@@ -208,7 +208,7 @@ docker compose restart`}
                   <p className="text-xs text-slate-500 dark:text-text-muted-dark">
                     {t('login.recoveryMethod2Desc')}
                   </p>
-                  <pre className="text-[11px] bg-slate-50 dark:bg-bg-main-dark border border-slate-200 dark:border-ui-border-dark rounded-lg p-2.5 overflow-x-auto text-slate-700 dark:text-slate-300 leading-relaxed">
+                  <pre className="text-2xs bg-slate-50 dark:bg-bg-main-dark border border-slate-200 dark:border-ui-border-dark rounded-lg p-2.5 overflow-x-auto text-slate-700 dark:text-slate-300 leading-relaxed">
 {`# 컨테이너 중지 후 데이터 볼륨 삭제
 docker compose down
 docker volume rm everyup-data

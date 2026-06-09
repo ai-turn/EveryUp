@@ -3,7 +3,8 @@ import type React from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../../../utils/errors';
-import { MaterialIcon } from '../../../components/common';
+import { CopyButton, MaterialIcon } from '../../../components/common';
+import { env } from '../../../config/env';
 import { useClipboardCopy } from '../../../hooks/useClipboardCopy';
 import { api, Service } from '../../../services/api';
 import { buildOTelSnippets } from './integrationSnippets';
@@ -15,6 +16,14 @@ interface IntegrationPanelProps {
 }
 
 type OTelLanguage = 'springboot' | 'python' | 'nodejs';
+
+function buildOTLPEndpointUrl() {
+  const apiBaseUrl = env.apiBaseUrl.replace(/\/+$/, '');
+  if (/^https?:\/\//i.test(apiBaseUrl)) {
+    return apiBaseUrl.replace(/\/api\/v1$/i, '/api/v1/otlp');
+  }
+  return `${window.location.origin}/api/v1/otlp`;
+}
 
 function CodeBlock({
   code,
@@ -39,14 +48,12 @@ function CodeBlock({
       >
         <code>{code}</code>
       </pre>
-      <button
-        onClick={onCopy}
+      <CopyButton
+        onCopy={onCopy}
         title={copyTitle}
-        aria-label={copyTitle}
         className="absolute top-3 right-3 p-1.5 rounded-md bg-slate-700/80 hover:bg-slate-600 transition-colors text-slate-400 hover:text-slate-200 cursor-pointer"
-      >
-        <MaterialIcon name="content_copy" className="text-sm" />
-      </button>
+        iconClassName="text-sm"
+      />
     </div>
   );
 }
@@ -122,10 +129,9 @@ export function IntegrationPanel({ service, temporaryApiKey, onApiKeyRegenerated
   const maskedKey = service.apiKeyMasked || 'Not available';
   const plainKey = revealedKey || temporaryApiKey || service.apiKey || null;
   const displayKey = plainKey || '<YOUR_API_KEY>';
-  const origin = window.location.origin;
+  const otelEndpointUrl = buildOTLPEndpointUrl();
 
-  const otelSnippets = buildOTelSnippets(origin, displayKey);
-  const otelEndpointUrl = `${origin}/api/v1/otlp`;
+  const otelSnippets = buildOTelSnippets(otelEndpointUrl, displayKey);
 
   const dismissRevealedKey = useCallback(() => {
     setRevealedKey(null);
@@ -189,14 +195,15 @@ export function IntegrationPanel({ service, temporaryApiKey, onApiKeyRegenerated
             </span>
           </div>
           <div className="flex flex-wrap gap-2 mt-3">
-            <button
-              onClick={() => plainKey && copy(plainKey)}
+            <CopyButton
+              onCopy={() => (plainKey ? copy(plainKey) : false)}
               disabled={!plainKey}
+              title={t('logServices.integration.apiKey.copyVisible')}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark text-xs font-semibold text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              iconClassName="text-sm"
             >
-              <MaterialIcon name="content_copy" className="text-sm" />
               {t('logServices.integration.apiKey.copyVisible')}
-            </button>
+            </CopyButton>
             <button
               onClick={() => setShowConfirm(true)}
               disabled={isRegenerating}
@@ -222,14 +229,12 @@ export function IntegrationPanel({ service, temporaryApiKey, onApiKeyRegenerated
             <span className="flex-1 text-slate-700 dark:text-text-base-dark truncate">
               {otelEndpointUrl}
             </span>
-            <button
-              onClick={() => copy(otelEndpointUrl)}
+            <CopyButton
+              onCopy={() => copy(otelEndpointUrl)}
               className="shrink-0 p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               title={t('common.copyToClipboard')}
-              aria-label={t('common.copyToClipboard')}
-            >
-              <MaterialIcon name="content_copy" className="text-sm" />
-            </button>
+              iconClassName="text-sm"
+            />
           </div>
           <div className="flex items-center gap-2 mt-3 text-xs text-slate-500 dark:text-text-muted-dark">
             <MaterialIcon name="auto_awesome" className="text-sm text-primary" />
@@ -328,13 +333,12 @@ export function IntegrationPanel({ service, temporaryApiKey, onApiKeyRegenerated
               <span className="flex-1 text-slate-700 dark:text-text-base-dark break-all select-all">
                 {revealedKey}
               </span>
-              <button
-                onClick={() => copy(revealedKey)}
+              <CopyButton
+                onCopy={() => copy(revealedKey)}
                 className="shrink-0 p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-500 dark:text-text-muted-dark cursor-pointer"
                 title={t('common.copyToClipboard')}
-              >
-                <MaterialIcon name="content_copy" className="text-base" />
-              </button>
+                iconClassName="text-base"
+              />
             </div>
 
             <button

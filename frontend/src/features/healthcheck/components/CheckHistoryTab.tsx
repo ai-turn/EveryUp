@@ -124,7 +124,7 @@ export function CheckHistoryTab({ failures: entries, loading }: CheckHistoryTabP
       <div className="rounded-2xl bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark overflow-hidden">
         {/* Column header */}
         <div
-          className="grid gap-3 px-4 py-2.5 bg-slate-50/70 dark:bg-ui-hover-dark/50 border-b border-slate-100 dark:border-ui-border-dark text-[11px] font-semibold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide"
+          className="grid gap-3 px-4 py-2.5 bg-slate-50/70 dark:bg-ui-hover-dark/50 border-b border-slate-100 dark:border-ui-border-dark text-2xs font-semibold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide"
           style={{ gridTemplateColumns: '72px 108px 160px 80px 56px 1fr' }}
         >
           <div>상태</div>
@@ -149,7 +149,7 @@ export function CheckHistoryTab({ failures: entries, loading }: CheckHistoryTabP
         ) : (
           grouped.map((group) => (
             <div key={group.dateLabel}>
-              <div className="px-4 py-1.5 bg-slate-50/40 dark:bg-ui-hover-dark/30 border-b border-t border-slate-100 dark:border-ui-border-dark text-[11px] text-slate-500 dark:text-text-muted-dark font-medium sticky top-0 z-10">
+              <div className="px-4 py-1.5 bg-slate-50/40 dark:bg-ui-hover-dark/30 border-b border-t border-slate-100 dark:border-ui-border-dark text-2xs text-slate-500 dark:text-text-muted-dark font-medium sticky top-0 z-10">
                 {group.dateLabel}
               </div>
               {group.entries.map((e) => (
@@ -165,7 +165,7 @@ export function CheckHistoryTab({ failures: entries, loading }: CheckHistoryTabP
       </div>
 
       {entries.length > 0 && (
-        <p className="text-center text-[11px] text-slate-400 dark:text-text-dim-dark">
+        <p className="text-center text-2xs text-slate-400 dark:text-text-dim-dark">
           최근 {entries.length}건 표시 ({errorCount}건 실패 · {successCount}건 성공)
         </p>
       )}
@@ -204,7 +204,7 @@ function HistoryRow({
       {/* Status */}
       <div className="flex items-center gap-1.5">
         <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isOk ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-        <span className={`text-[11px] font-semibold ${isOk ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}`}>
+        <span className={`text-2xs font-semibold ${isOk ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}`}>
           {isOk ? '성공' : '실패'}
         </span>
       </div>
@@ -214,7 +214,7 @@ function HistoryRow({
         <span className="text-xs text-slate-700 dark:text-text-base-dark tabular-nums font-medium">
           {formatTime(e.checkedAt)}
         </span>
-        <span className="text-[10px] text-slate-400 dark:text-text-dim-dark">
+        <span className="text-2xs text-slate-400 dark:text-text-dim-dark">
           {formatTimeAgo(e.checkedAt)}
         </span>
       </div>
@@ -225,7 +225,7 @@ function HistoryRow({
         onClick={onServiceClick}
         className="flex items-center gap-1.5 min-w-0 text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded"
       >
-        <span className="text-[10px] px-1.5 py-0.5 rounded bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400 font-semibold shrink-0 uppercase">
+        <span className="text-2xs px-1.5 py-0.5 rounded bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400 font-semibold shrink-0 uppercase">
           {e.serviceType}
         </span>
         <span className="text-xs text-slate-800 dark:text-text-base-dark font-semibold truncate hover:text-primary dark:hover:text-primary">
@@ -243,7 +243,7 @@ function HistoryRow({
       {/* HTTP code */}
       <div className="flex justify-center">
         {e.statusCode ? (
-          <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+          <span className={`text-2xs font-mono px-1.5 py-0.5 rounded ${
             e.statusCode >= 200 && e.statusCode < 300
               ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
               : 'bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400'

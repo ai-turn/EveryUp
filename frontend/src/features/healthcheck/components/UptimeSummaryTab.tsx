@@ -169,7 +169,7 @@ export function UptimeSummaryTab({ summaries: initialSummaries, loading: initial
       <div className="rounded-2xl bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark overflow-hidden">
         {/* Header */}
         <div
-          className="grid gap-3 px-4 py-2.5 bg-slate-50/70 dark:bg-ui-hover-dark/50 border-b border-slate-100 dark:border-ui-border-dark text-[11px] font-semibold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide"
+          className="grid gap-3 px-4 py-2.5 bg-slate-50/70 dark:bg-ui-hover-dark/50 border-b border-slate-100 dark:border-ui-border-dark text-2xs font-semibold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide"
           style={{ gridTemplateColumns: '180px 1fr 88px 72px 100px' }}
         >
           <div>서비스</div>
@@ -224,7 +224,7 @@ export function UptimeSummaryTab({ summaries: initialSummaries, loading: initial
                 }`}>
                   {s.failures}
                 </span>
-                <span className="text-[10px] text-slate-400 dark:text-text-dim-dark">건</span>
+                <span className="text-2xs text-slate-400 dark:text-text-dim-dark">건</span>
               </div>
 
               {/* Checks */}
@@ -241,7 +241,7 @@ export function UptimeSummaryTab({ summaries: initialSummaries, loading: initial
       </div>
 
       {/* Legend */}
-      <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-text-muted-dark flex-wrap gap-2">
+      <div className="flex items-center justify-between text-2xs text-slate-500 dark:text-text-muted-dark flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <span className="inline-flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-sm bg-emerald-400" />정상
@@ -332,7 +332,7 @@ function SlaCard({
 
   return (
     <div className="rounded-xl bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark p-4">
-      <div className="text-[11px] text-slate-500 dark:text-text-muted-dark font-semibold">{label}</div>
+      <div className="text-2xs text-slate-500 dark:text-text-muted-dark font-semibold">{label}</div>
       <div className="mt-1.5 flex items-baseline gap-1">
         <span className={`text-2xl font-bold tabular-nums ${valueColor[tone]}`}>{value}</span>
         {unit && <span className="text-xs text-slate-400 dark:text-text-dim-dark">{unit}</span>}
@@ -359,7 +359,7 @@ function SlaCard({
       )}
 
       {sub && (
-        <div className="mt-1.5 text-[11px] text-slate-500 dark:text-text-muted-dark">{sub}</div>
+        <div className="mt-1.5 text-2xs text-slate-500 dark:text-text-muted-dark">{sub}</div>
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { MaterialIcon } from '../../../components/common';
-import { useMonitoringProcesses } from '../../../hooks/useInfra';
+import { useMonitoringProcesses, useSystemInfo } from '../../../hooks/useInfra';
 import { Skeleton } from '../../../components/skeleton';
 import type { Process } from '../../../types/infra';
 
@@ -60,6 +60,7 @@ const COL = 'minmax(0,1fr) 130px 150px 72px 32px';
 
 export function ProcessTable({ hostId, refreshKey = 0 }: { hostId: string; refreshKey?: number }) {
   const { data: processes, loading } = useMonitoringProcesses(hostId, refreshKey);
+  const { data: systemInfo } = useSystemInfo(hostId, refreshKey);
 
   const [topN,          setTopN]          = useState<5 | 10 | 20>(10);
   const [sortBy,        setSortBy]        = useState<'cpu' | 'memory'>('cpu');
@@ -67,6 +68,7 @@ export function ProcessTable({ hostId, refreshKey = 0 }: { hostId: string; refre
   const [groupByName,   setGroupByName]   = useState(true);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [openMenu,      setOpenMenu]      = useState<string | null>(null);
+  const cpuCoreCount = Math.max(1, systemInfo?.cpu.cores ?? 1);
 
   const list = useMemo(() => processes ?? [], [processes]);
 
@@ -214,7 +216,7 @@ export function ProcessTable({ hostId, refreshKey = 0 }: { hostId: string; refre
       <div className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark overflow-hidden shadow-sm">
         {/* 컬럼 헤더 */}
         <div
-          className="grid gap-3 px-4 py-2.5 bg-slate-50/70 dark:bg-ui-hover-dark/50 border-b border-slate-100 dark:border-ui-border-dark text-[11px] font-semibold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide"
+          className="grid gap-3 px-4 py-2.5 bg-slate-50/70 dark:bg-ui-hover-dark/50 border-b border-slate-100 dark:border-ui-border-dark text-2xs font-semibold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide"
           style={{ gridTemplateColumns: COL }}
         >
           <span>프로세스</span>
@@ -233,6 +235,7 @@ export function ProcessTable({ hostId, refreshKey = 0 }: { hostId: string; refre
                   key={group.name}
                   group={group}
                   maxMemMB={maxMemMB}
+                  cpuCoreCount={cpuCoreCount}
                   sortBy={sortBy}
                   expanded={expandedGroups.has(group.name)}
                   onToggle={() => toggleGroup(group.name)}
@@ -248,6 +251,7 @@ export function ProcessTable({ hostId, refreshKey = 0 }: { hostId: string; refre
                   key={proc.id}
                   proc={proc}
                   maxMemMB={maxMemMB}
+                  cpuCoreCount={cpuCoreCount}
                   sortBy={sortBy}
                   openMenu={openMenu}
                   onMenuToggle={setOpenMenu}
@@ -281,7 +285,7 @@ function SortHeader({
       }`}
     >
       {label}
-      <MaterialIcon name={active ? 'arrow_downward' : 'unfold_more'} className="text-[11px]" />
+      <MaterialIcon name={active ? 'arrow_downward' : 'unfold_more'} className="text-2xs" />
     </button>
   );
 }
@@ -295,10 +299,11 @@ function EmptyRow({ search }: { search: string }) {
 }
 
 function GroupRow({
-  group, maxMemMB, sortBy, expanded, onToggle, openMenu, onMenuToggle,
+  group, maxMemMB, cpuCoreCount, sortBy, expanded, onToggle, openMenu, onMenuToggle,
 }: {
   group:        ProcessGroup;
   maxMemMB:     number;
+  cpuCoreCount: number;
   sortBy:       'cpu' | 'memory';
   expanded:     boolean;
   onToggle:     () => void;
@@ -306,7 +311,7 @@ function GroupRow({
   onMenuToggle: (id: string | null) => void;
 }) {
   const memPct = (group.totalMemMB / maxMemMB) * 100;
-  const cpuPct = Math.min(group.totalCpuPct, 100);
+  const cpuPct = Math.min(group.totalCpuPct / cpuCoreCount, 100);
   const multiProc = group.count > 1;
 
   return (
@@ -328,7 +333,7 @@ function GroupRow({
             <p className="text-sm font-bold text-slate-800 dark:text-text-base-dark truncate">{group.name}</p>
           </div>
           {multiProc && (
-            <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
+            <span className="shrink-0 text-2xs font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
               ×{group.count}
             </span>
           )}
@@ -368,10 +373,10 @@ function GroupRow({
           <div className="flex items-center gap-2.5 min-w-0 pl-8">
             <div className="min-w-0">
               <p className="text-xs font-semibold text-slate-600 dark:text-text-muted-dark truncate">{proc.name}</p>
-              <p className="text-[10px] font-mono text-slate-400 dark:text-text-dim-dark">PID {proc.pid}</p>
+              <p className="text-2xs font-mono text-slate-400 dark:text-text-dim-dark">PID {proc.pid}</p>
             </div>
           </div>
-          <MetricBar value={parseCpuPct(proc.cpu)} pct={Math.min(parseCpuPct(proc.cpu), 100)} unit="%" active={sortBy === 'cpu'} isCpu dim />
+          <MetricBar value={parseCpuPct(proc.cpu)} pct={Math.min(parseCpuPct(proc.cpu) / cpuCoreCount, 100)} unit="%" active={sortBy === 'cpu'} isCpu dim />
           <MetricBar value={parseMemoryToMB(proc.memory)} pct={(parseMemoryToMB(proc.memory) / maxMemMB) * 100} unit="" active={sortBy === 'memory'} formatFn={formatMemMB} dim />
           <StatusDot status={proc.status} />
           <ActionMenu id={proc.id} openMenu={openMenu} onMenuToggle={onMenuToggle} />
@@ -382,15 +387,16 @@ function GroupRow({
 }
 
 function FlatRow({
-  proc, maxMemMB, sortBy, openMenu, onMenuToggle,
+  proc, maxMemMB, cpuCoreCount, sortBy, openMenu, onMenuToggle,
 }: {
   proc:         Process;
   maxMemMB:     number;
+  cpuCoreCount: number;
   sortBy:       'cpu' | 'memory';
   openMenu:     string | null;
   onMenuToggle: (id: string | null) => void;
 }) {
-  const cpuPct = Math.min(parseCpuPct(proc.cpu), 100);
+  const cpuPct = Math.min(parseCpuPct(proc.cpu) / cpuCoreCount, 100);
   const memMB  = parseMemoryToMB(proc.memory);
   const memPct = (memMB / maxMemMB) * 100;
 
@@ -405,7 +411,7 @@ function FlatRow({
         </div>
         <div className="min-w-0">
           <p className="text-sm font-bold text-slate-800 dark:text-text-base-dark truncate">{proc.name}</p>
-          <p className="text-[10px] font-mono text-slate-400 dark:text-text-dim-dark">PID {proc.pid}</p>
+          <p className="text-2xs font-mono text-slate-400 dark:text-text-dim-dark">PID {proc.pid}</p>
         </div>
       </div>
 
@@ -466,7 +472,7 @@ function StatusDot({ status }: { status: Process['status'] }) {
   return (
     <div className="flex items-center gap-1.5">
       <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[status]}`} />
-      <span className="text-[11px] text-slate-500 dark:text-text-muted-dark font-medium">
+      <span className="text-2xs text-slate-500 dark:text-text-muted-dark font-medium">
         {STATUS_LABEL[status]}
       </span>
     </div>

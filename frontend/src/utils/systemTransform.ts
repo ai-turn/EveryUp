@@ -111,9 +111,9 @@ function formatTimestamp(ts: string): string {
   return d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
-export function historyToCharts(history: SystemMetricsHistory): ChartData[] {
-  const points = history.points;
-  if (!points || points.length === 0) return [];
+export function historyToCharts(history: SystemMetricsHistory, currentInfo?: SystemInfo | null): ChartData[] {
+  const points = history.points ?? [];
+  if (points.length === 0 && !currentInfo) return [];
 
   const data = points.map((p) => ({
     time: formatTimestamp(p.timestamp),
@@ -126,8 +126,21 @@ export function historyToCharts(history: SystemMetricsHistory): ChartData[] {
     netOut: parseFloat((p.netOut || 0).toFixed(2)),
   }));
 
-  const diskMax = Math.max(...points.map((p) => Math.max(p.diskRead, p.diskWrite)), 1);
-  const networkMax = Math.max(...points.map((p) => Math.max(p.netIn || 0, p.netOut || 0)), 1);
+  if (currentInfo) {
+    data.push({
+      time: formatTimestamp(new Date().toISOString()),
+      cpu: Math.round(currentInfo.cpu.usage),
+      memUsed: parseFloat(currentInfo.memory.used.toFixed(1)),
+      memCached: 0,
+      diskRead: parseFloat((currentInfo.disk.readSpeed ?? 0).toFixed(2)),
+      diskWrite: parseFloat((currentInfo.disk.writeSpeed ?? 0).toFixed(2)),
+      netIn: parseFloat((currentInfo.network?.in ?? 0).toFixed(2)),
+      netOut: parseFloat((currentInfo.network?.out ?? 0).toFixed(2)),
+    });
+  }
+
+  const diskMax = Math.max(...data.map((p) => Math.max(p.diskRead, p.diskWrite)), 1);
+  const networkMax = Math.max(...data.map((p) => Math.max(p.netIn || 0, p.netOut || 0)), 1);
 
   return [
     {
@@ -198,7 +211,7 @@ export function systemProcessesToProcesses(procs: SystemProcess[]): Process[] {
       name: p.name,
       icon: iconMap[baseName] || 'terminal',
       pid: String(p.pid),
-      cpu: `${p.cpu}%`,
+      cpu: p.cpu.toFixed(1),
       cpuHighlight: p.cpu >= 15,
       memory: p.memory,
       status: statusMap[p.status] || 'RUNNING',

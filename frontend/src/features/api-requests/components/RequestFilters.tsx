@@ -93,7 +93,7 @@ export function RequestFilters({ params, onChange, pathSuggestions = [] }: Reque
   const groupClass =
     'w-full sm:w-auto min-h-11 flex flex-wrap items-center gap-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-2 py-1.5 sm:py-0';
   const groupLabelClass =
-    'text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-text-dim-dark select-none pr-1 border-r border-slate-200 dark:border-ui-border-dark mr-1';
+    'text-2xs font-semibold uppercase tracking-wider text-slate-400 dark:text-text-dim-dark select-none pr-1 border-r border-slate-200 dark:border-ui-border-dark mr-1';
 
   return (
     <div className="space-y-2">
@@ -283,7 +283,7 @@ function SearchCombobox({ value, onChange, suggestions, placeholder, clearLabel,
           role="listbox"
           className="absolute top-full left-0 right-0 z-20 max-h-64 overflow-y-auto bg-white dark:bg-bg-surface-dark border border-primary border-t-slate-200 dark:border-t-ui-border-dark rounded-b-lg shadow-lg ring-2 ring-primary/30 -mt-px"
         >
-          <li className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-text-dim-dark border-b border-slate-100 dark:border-ui-border-dark select-none">
+          <li className="px-3 py-1.5 text-2xs font-semibold uppercase tracking-wider text-slate-400 dark:text-text-dim-dark border-b border-slate-100 dark:border-ui-border-dark select-none">
             {query ? matchingLabel : recentLabel}
           </li>
           {filtered.map((path, i) => {

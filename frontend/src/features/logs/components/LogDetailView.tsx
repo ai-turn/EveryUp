@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { MaterialIcon, Toggle } from '../../../components/common';
+import { CopyButton, MaterialIcon, Toggle } from '../../../components/common';
 import { Breadcrumbs } from '../../../components/layout/Breadcrumbs';
 import { useIsMobile } from '../../../hooks/useMediaQuery';
 import { useSpinAction } from '../../../hooks/useSpinAction';
@@ -202,13 +202,12 @@ function RevealedKeyModal({
           <span className="flex-1 text-slate-700 dark:text-text-base-dark break-all select-all">
             {revealedKey}
           </span>
-          <button
-            onClick={() => onCopy(revealedKey)}
+          <CopyButton
+            onCopy={() => onCopy(revealedKey)}
             className="shrink-0 p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-ui-active-dark transition-colors text-slate-500 dark:text-text-muted-dark"
             title={t('common.copyToClipboard')}
-          >
-            <MaterialIcon name="content_copy" className="text-base" />
-          </button>
+            iconClassName="text-base"
+          />
         </div>
         <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg mb-4">
           <p className="text-xs text-amber-700 dark:text-amber-300 flex items-center gap-1.5">

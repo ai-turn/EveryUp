@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MaterialIcon } from '../../../components/common';
+import { CopyButton, MaterialIcon } from '../../../components/common';
 import { api, type LogEntry, type LogLevel } from '../../../services/api';
 import { useClipboardCopy } from '../../../hooks/useClipboardCopy';
 import { useDebouncedValue } from '../../../hooks/useDebouncedValue';
@@ -146,7 +146,7 @@ function HistogramBand({ logs }: { logs: LogEntry[] }) {
           );
         })}
       </div>
-      <div className="mt-2 grid grid-cols-4 text-[10px] text-slate-400 dark:text-text-dim-dark">
+      <div className="mt-2 grid grid-cols-4 text-2xs text-slate-400 dark:text-text-dim-dark">
         <span>-24h</span>
         <span className="text-center">-12h</span>
         <span className="text-center">-6h</span>
@@ -171,14 +171,14 @@ function LogMetaChips({
     <>
       {log.linkedRequest && (
         <span
-          className="inline-flex max-w-65 items-center gap-1 rounded-md border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark/40 px-2 py-0.5 text-[11px]"
+          className="inline-flex max-w-65 items-center gap-1 rounded-md border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark/40 px-2 py-0.5 text-2xs"
           title={`${log.linkedRequest.method} ${log.linkedRequest.path}`}
         >
-          <span className={`rounded px-1 py-px text-[10px] font-bold ${methodBadgeClass(log.linkedRequest.method)}`}>
+          <span className={`rounded px-1 py-px text-2xs font-bold ${methodBadgeClass(log.linkedRequest.method)}`}>
             {log.linkedRequest.method.toUpperCase()}
           </span>
           <span className="font-mono truncate text-slate-700 dark:text-text-base-dark">{log.linkedRequest.path}</span>
-          <span className={`rounded px-1 py-px text-[10px] font-bold ${statusBadgeClass(log.linkedRequest.statusCode)}`}>
+          <span className={`rounded px-1 py-px text-2xs font-bold ${statusBadgeClass(log.linkedRequest.statusCode)}`}>
             {log.linkedRequest.statusCode}
           </span>
         </span>
@@ -206,7 +206,7 @@ function LogCard({
   viewTraceLabel,
 }: {
   log: LogEntry;
-  onCopy: (log: LogEntry) => void;
+  onCopy: (log: LogEntry) => Promise<boolean>;
   onOpenTrace: (traceId: string) => void;
   viewTraceLabel: string;
 }) {
@@ -219,9 +219,12 @@ function LogCard({
         <span className="text-xs text-slate-500 dark:text-text-muted-dark whitespace-nowrap">
           {formatTimestamp(log.createdAt)}
         </span>
-        <button onClick={() => onCopy(log)} className="ml-auto text-slate-400 hover:text-primary">
-          <MaterialIcon name="content_copy" className="text-base" />
-        </button>
+        <CopyButton
+          onCopy={() => onCopy(log)}
+          className="ml-auto text-slate-400 hover:text-primary"
+          title="Copy log"
+          iconClassName="text-base"
+        />
       </div>
       <p className="mt-1.5 text-sm text-slate-700 dark:text-text-base-dark break-words">
         {log.message}
@@ -321,9 +324,7 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
     trace: sourceLogs.filter((l) => l.level === 'trace').length,
   };
 
-  const handleCopyLog = (log: LogEntry) => {
-    copy(`[${log.createdAt}] [${log.level}] ${log.message}`);
-  };
+  const handleCopyLog = (log: LogEntry) => copy(`[${log.createdAt}] [${log.level}] ${log.message}`);
 
   if (loading) {
     return (
@@ -476,7 +477,7 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
           <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50/80 dark:bg-ui-hover-dark/30 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-text-muted-dark">
+                <tr className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50/80 dark:bg-ui-hover-dark/30 text-2xs font-bold uppercase tracking-wide text-slate-500 dark:text-text-muted-dark">
                   <th className="w-28 px-4 py-2.5">{t('logs.table.timestamp')}</th>
                   <th className="w-24 px-4 py-2.5">{t('logs.table.level')}</th>
                   <th className="px-4 py-2.5">{t('logs.table.message')}</th>
@@ -510,9 +511,12 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
                       )}
                     </td>
                     <td className="w-12 px-4 py-3 text-right">
-                      <button onClick={() => handleCopyLog(log)} className="text-slate-400 hover:text-primary">
-                        <MaterialIcon name="content_copy" className="text-base" />
-                      </button>
+                      <CopyButton
+                        onCopy={() => handleCopyLog(log)}
+                        className="text-slate-400 hover:text-primary"
+                        title={t('common.copyToClipboard')}
+                        iconClassName="text-base"
+                      />
                     </td>
                   </tr>
                 ))}

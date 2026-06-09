@@ -166,7 +166,7 @@ function MobileKPI({ icon, label, value }: { icon: string; label: string; value:
   return (
     <div className="rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-3 py-2">
       <div className="flex items-center justify-between text-slate-500 dark:text-text-muted-dark">
-        <span className="text-[11px] font-bold">{label}</span>
+        <span className="text-2xs font-bold">{label}</span>
         <MaterialIcon name={icon} className="text-sm" />
       </div>
       <p className="text-lg font-bold text-slate-900 dark:text-white mt-1">{value}</p>

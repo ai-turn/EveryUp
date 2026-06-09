@@ -101,7 +101,7 @@ function VitalGaugeCard({ gauge, sparkline }: { gauge: GaugeData; sparkline?: nu
           <div className="grid h-16 w-16 place-items-center rounded-full bg-white shadow-inner dark:bg-bg-surface-dark">
             <div className="text-center">
               <p className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{gauge.displayValue ?? pct}</p>
-              <p className="text-[10px] font-bold uppercase text-slate-400 dark:text-text-dim-dark">{gauge.displayUnit ?? '%'}</p>
+              <p className="text-2xs font-bold uppercase text-slate-400 dark:text-text-dim-dark">{gauge.displayUnit ?? '%'}</p>
             </div>
           </div>
         </div>
@@ -121,7 +121,7 @@ function VitalGaugeCard({ gauge, sparkline }: { gauge: GaugeData; sparkline?: nu
           {/* 스파크라인 (최근 1h 추세) */}
           {sparkline && sparkline.length >= 2 ? (
             <div className="pt-1">
-              <p className="text-[10px] text-slate-400 dark:text-text-dim-dark mb-0.5">1시간 추세</p>
+              <p className="text-2xs text-slate-400 dark:text-text-dim-dark mb-0.5">1시간 추세</p>
               <Sparkline data={sparkline} width={100} height={24} color={gauge.color} />
             </div>
           ) : (

@@ -37,8 +37,11 @@ export function useMonitoringTrends(hostId: string, range: string = '6h', refres
   return useDataFetch(
     mockTrendCharts,
     async () => {
-      const history = await api.getSystemMetricsHistory(hostId, range);
-      return historyToCharts(history);
+      const [history, info] = await Promise.all([
+        api.getSystemMetricsHistory(hostId, range),
+        api.getSystemInfo(hostId).catch(() => null),
+      ]);
+      return historyToCharts(history, info);
     },
     [hostId, range, refreshKey]
   );

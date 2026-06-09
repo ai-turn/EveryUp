@@ -31,19 +31,6 @@ function getXAxisInterval(pointCount: number): number {
   return Math.max(1, Math.floor(pointCount / 12));
 }
 
-function movingAverage(data: Record<string, unknown>[], keys: string[], window = 3): Record<string, unknown>[] {
-  const half = Math.floor(window / 2);
-  return data.map((point, i) => {
-    const smoothed: Record<string, unknown> = { ...point };
-    for (const key of keys) {
-      const slice = data.slice(Math.max(0, i - half), Math.min(data.length, i + half + 1));
-      const vals = slice.map((p) => Number(p[key])).filter(Number.isFinite);
-      smoothed[key] = vals.length > 0 ? parseFloat((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2)) : point[key];
-    }
-    return smoothed;
-  });
-}
-
 export function InfraTrends({ hostId, refreshKey = 0 }: InfraTrendsProps) {
   const { t } = useTranslation(['infra', 'common']);
   const [timeRange, setTimeRange] = useState<'6H' | '12H' | '24H'>('6H');
@@ -94,7 +81,7 @@ export function InfraTrends({ hostId, refreshKey = 0 }: InfraTrendsProps) {
               </button>
             ))}
           </div>
-          <p className="text-[11px] text-slate-400 dark:text-text-dim-dark">전체 차트에 적용</p>
+          <p className="text-2xs text-slate-400 dark:text-text-dim-dark">전체 차트에 적용</p>
         </div>
       </div>
 
@@ -145,9 +132,6 @@ function ChartCard({
   tooltipBg: string;
   tooltipBorder: string;
 }) {
-  const seriesKeys = chart.series.map((s) => s.key);
-  const smoothedData = movingAverage(chart.data as Record<string, unknown>[], seriesKeys, 3);
-
   const primary = chart.series[0];
   const values  = chart.data.map((p) => Number(p[primary.key])).filter(Number.isFinite);
   const latest  = values.length > 0 ? values[values.length - 1] : 0;
@@ -171,7 +155,7 @@ function ChartCard({
             {chart.series.map((s) => (
               <span
                 key={s.key}
-                className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 dark:bg-ui-hover-dark/50 px-2 py-0.5 text-[11px] font-semibold text-slate-500 dark:text-text-muted-dark"
+                className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 dark:bg-ui-hover-dark/50 px-2 py-0.5 text-2xs font-semibold text-slate-500 dark:text-text-muted-dark"
               >
                 <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
                 {s.label}
@@ -200,7 +184,7 @@ function ChartCard({
         <div className="px-3 pb-4">
           <div className="rounded-lg bg-slate-50/60 dark:bg-chart-surface/30 px-1 pt-2 pb-1">
             <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={smoothedData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+              <AreaChart data={chart.data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                 <defs>
                   {chart.series.map((s, si) => (
                     <linearGradient key={s.key} id={`grad-${chartIndex}-${si}`} x1="0" y1="0" x2="0" y2="1">
@@ -249,7 +233,7 @@ function ChartCard({
                 {chart.series.map((s, si) => (
                   <Area
                     key={s.key}
-                    type="basis"
+                    type="monotone"
                     dataKey={s.key}
                     name={s.label}
                     stroke={s.color}
@@ -273,10 +257,10 @@ function InlineStat({ label, value, unit, color }: { label: string; value: numbe
   return (
     <div className="flex items-center gap-1">
       <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
-      <span className="text-[11px] text-slate-400 dark:text-text-dim-dark">{label}</span>
+      <span className="text-2xs text-slate-400 dark:text-text-dim-dark">{label}</span>
       <span className="text-sm font-bold tabular-nums text-slate-800 dark:text-text-base-dark">
         {formatMetricValue(value)}
-        <span className="ml-0.5 text-[10px] font-semibold text-slate-400 dark:text-text-dim-dark">{unit}</span>
+        <span className="ml-0.5 text-2xs font-semibold text-slate-400 dark:text-text-dim-dark">{unit}</span>
       </span>
     </div>
   );

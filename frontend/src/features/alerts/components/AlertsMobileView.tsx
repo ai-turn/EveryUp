@@ -169,7 +169,7 @@ export function AlertsMobileView({
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{channel.name}</p>
                         {!channel.isEnabled && (
-                          <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-slate-200 dark:bg-ui-active-dark text-slate-500 dark:text-text-muted-dark rounded-full shrink-0">
+                          <span className="px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider bg-slate-200 dark:bg-ui-active-dark text-slate-500 dark:text-text-muted-dark rounded-full shrink-0">
                             {t('common.disabled', { defaultValue: 'Disabled' })}
                           </span>
                         )}

@@ -244,13 +244,13 @@ function LogServiceTable({
             </div>
             <div className="flex flex-col justify-center text-xs text-slate-500 dark:text-text-muted-dark">
               <span className="font-semibold tabular-nums text-slate-700 dark:text-text-base-dark">{formatTimeAgo(latest?.createdAt)}</span>
-              <span className="text-[10px]">{logs.length} recent</span>
+              <span className="text-2xs">{logs.length} recent</span>
             </div>
             <div className="flex items-center gap-1.5">
               {levelOrder.slice(0, 3).map((level) => (
                 <span
                   key={level}
-                  className={`rounded px-1.5 py-0.5 text-[10px] font-bold tabular-nums ${
+                  className={`rounded px-1.5 py-0.5 text-2xs font-bold tabular-nums ${
                     level === 'error' && counts[level] > 0
                       ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                       : level === 'warn' && counts[level] > 0

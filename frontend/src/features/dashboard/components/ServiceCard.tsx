@@ -75,7 +75,7 @@ export const ServiceCard = memo(function ServiceCard({ service, onClick }: Servi
               {service.url && (
                 <p className="flex items-center gap-1 mt-0.5 min-w-0">
                   <MaterialIcon name="link" className="text-xs text-slate-400 dark:text-text-dim-dark shrink-0" />
-                  <span className="text-[11px] font-mono text-slate-400 dark:text-text-dim-dark truncate">{service.url}</span>
+                  <span className="text-2xs font-mono text-slate-400 dark:text-text-dim-dark truncate">{service.url}</span>
                 </p>
               )}
             </div>
@@ -93,11 +93,11 @@ export const ServiceCard = memo(function ServiceCard({ service, onClick }: Servi
         {/* Metrics row */}
         <div className="grid grid-cols-2 gap-x-6 gap-y-1">
           <div>
-            <p className="text-[11px] text-slate-500 dark:text-text-muted-dark uppercase font-bold tracking-wide">{t('평균 지연 시간')}</p>
+            <p className="text-2xs text-slate-500 dark:text-text-muted-dark uppercase font-bold tracking-wide">{t('평균 지연 시간')}</p>
             <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">{service.latency}</p>
           </div>
           <div>
-            <p className="text-[11px] text-slate-500 dark:text-text-muted-dark uppercase font-bold tracking-wide">{t('가동률')}</p>
+            <p className="text-2xs text-slate-500 dark:text-text-muted-dark uppercase font-bold tracking-wide">{t('가동률')}</p>
             <p className={`text-sm font-bold tabular-nums ${belowSla ? 'text-red-500' : 'text-slate-900 dark:text-white'}`}>{service.uptime}</p>
           </div>
         </div>

@@ -266,7 +266,7 @@ function MetaChip({ icon, labelKey, value, accent }: { icon: string; labelKey: s
           : 'bg-white dark:bg-bg-surface-dark border-slate-200 dark:border-ui-border-dark'
       }`}
     >
-      <MaterialIcon name={icon} className={`text-[13px] shrink-0 ${accent ? 'text-primary' : 'text-slate-500 dark:text-text-muted-dark'}`} />
+      <MaterialIcon name={icon} className={`text-xs shrink-0 ${accent ? 'text-primary' : 'text-slate-500 dark:text-text-muted-dark'}`} />
       <span className="font-semibold text-slate-500 dark:text-text-muted-dark">{labelKey}:</span>
       <span className={`font-bold ${accent ? 'text-primary' : 'text-slate-900 dark:text-white'}`}>{value}</span>
     </span>

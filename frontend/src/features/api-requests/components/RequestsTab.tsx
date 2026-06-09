@@ -194,7 +194,7 @@ function StatCard({
             {tooltip && (
               <span className="relative group/tip cursor-default">
                 <MaterialIcon name="info" className="text-xs text-slate-400 hover:text-slate-500 dark:text-text-dim-dark" />
-                <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-52 rounded-lg bg-slate-800 dark:bg-slate-700 px-2.5 py-1.5 text-[11px] font-normal text-white shadow-lg opacity-0 group-hover/tip:opacity-100 transition-opacity z-10 whitespace-normal text-center leading-snug">
+                <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-52 rounded-lg bg-slate-800 dark:bg-slate-700 px-2.5 py-1.5 text-2xs font-normal text-white shadow-lg opacity-0 group-hover/tip:opacity-100 transition-opacity z-10 whitespace-normal text-center leading-snug">
                   {tooltip}
                 </span>
               </span>
@@ -238,7 +238,7 @@ function PathAggregateTable({
       <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50/70 dark:bg-ui-hover-dark/30 text-[11px] uppercase tracking-wide text-slate-400 dark:text-text-dim-dark">
+            <tr className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50/70 dark:bg-ui-hover-dark/30 text-2xs uppercase tracking-wide text-slate-400 dark:text-text-dim-dark">
               <th className="px-4 py-2.5">{t('apiRequests.table.method')}</th>
               <th className="px-4 py-2.5">{t('apiRequests.table.path')}</th>
               <th className="px-4 py-2.5 text-right">{t('apiRequests.table.requests')}</th>
@@ -258,7 +258,7 @@ function PathAggregateTable({
                   className={`cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-ui-hover-dark/30 ${active ? 'bg-primary/5 dark:bg-primary/10' : ''}`}
                 >
                   <td className="px-4 py-3">
-                    <span className={`rounded px-2 py-0.5 text-[11px] font-bold ${methodBadge(item.method)}`}>
+                    <span className={`rounded px-2 py-0.5 text-2xs font-bold ${methodBadge(item.method)}`}>
                       {item.method}
                     </span>
                   </td>
@@ -303,7 +303,7 @@ function PathAggregateTable({
               className={`cursor-pointer px-4 py-3 transition-colors ${active ? 'bg-primary/5 dark:bg-primary/10' : ''}`}
             >
               <div className="flex items-center gap-2">
-                <span className={`rounded px-2 py-0.5 text-[11px] font-bold ${methodBadge(item.method)}`}>
+                <span className={`rounded px-2 py-0.5 text-2xs font-bold ${methodBadge(item.method)}`}>
                   {item.method}
                 </span>
                 <span className="min-w-0 flex-1 truncate font-mono text-xs text-slate-800 dark:text-text-base-dark">
@@ -311,7 +311,7 @@ function PathAggregateTable({
                 </span>
                 <span className="font-mono text-sm font-bold text-slate-900 dark:text-white">{item.count}</span>
               </div>
-              <div className="mt-2 flex items-center gap-3 font-mono text-[11px] text-slate-500 dark:text-text-muted-dark">
+              <div className="mt-2 flex items-center gap-3 font-mono text-2xs text-slate-500 dark:text-text-muted-dark">
                 <span className={item.errorRate >= 0.05 ? 'text-red-600 dark:text-red-400' : item.errorRate > 0 ? 'text-amber-600 dark:text-amber-400' : ''}>
                   {t('apiRequests.table.errors')} {(item.errorRate * 100).toFixed(1)}%
                 </span>
@@ -360,7 +360,7 @@ function RequestRow({
         </td>
         <td className="px-4 py-3 font-mono text-xs text-slate-500 dark:text-text-muted-dark whitespace-nowrap">{formatClock(request.createdAt)}</td>
         <td className="px-4 py-3">
-          <span className={`rounded px-2 py-0.5 text-[11px] font-bold ${methodBadge(request.method)}`}>
+          <span className={`rounded px-2 py-0.5 text-2xs font-bold ${methodBadge(request.method)}`}>
             {request.method.toUpperCase()}
           </span>
         </td>
@@ -368,12 +368,12 @@ function RequestRow({
           <div className="min-w-0">
             <div className="font-mono text-xs font-semibold text-slate-900 dark:text-white truncate" title={request.path}>{request.path}</div>
             {request.pathTemplate && request.pathTemplate !== request.path && (
-              <div className="font-mono text-[10px] text-slate-400 dark:text-text-dim-dark truncate">{request.pathTemplate}</div>
+              <div className="font-mono text-2xs text-slate-400 dark:text-text-dim-dark truncate">{request.pathTemplate}</div>
             )}
           </div>
         </td>
         <td className="px-4 py-3">
-          <span className={`rounded px-2 py-0.5 text-[11px] font-bold ${statusBadge(request.statusCode)}`}>
+          <span className={`rounded px-2 py-0.5 text-2xs font-bold ${statusBadge(request.statusCode)}`}>
             {request.statusCode}
           </span>
         </td>
@@ -433,10 +433,10 @@ function RequestCard({
       className={`px-4 py-3 transition-colors ${expandable ? 'cursor-pointer' : ''} ${request.isError ? 'bg-red-50/30 dark:bg-red-900/10' : ''}`}
     >
       <div className="flex items-center gap-2">
-        <span className={`rounded px-2 py-0.5 text-[11px] font-bold ${methodBadge(request.method)}`}>
+        <span className={`rounded px-2 py-0.5 text-2xs font-bold ${methodBadge(request.method)}`}>
           {request.method.toUpperCase()}
         </span>
-        <span className={`rounded px-2 py-0.5 text-[11px] font-bold ${statusBadge(request.statusCode)}`}>
+        <span className={`rounded px-2 py-0.5 text-2xs font-bold ${statusBadge(request.statusCode)}`}>
           {request.statusCode}
         </span>
         <span className="ml-auto font-mono text-xs font-bold text-slate-700 dark:text-text-base-dark">
@@ -450,9 +450,9 @@ function RequestCard({
         {request.path}
       </div>
       {request.pathTemplate && request.pathTemplate !== request.path && (
-        <div className="font-mono text-[10px] text-slate-400 dark:text-text-dim-dark truncate">{request.pathTemplate}</div>
+        <div className="font-mono text-2xs text-slate-400 dark:text-text-dim-dark truncate">{request.pathTemplate}</div>
       )}
-      <div className="mt-1.5 flex items-center gap-3 font-mono text-[11px] text-slate-500 dark:text-text-muted-dark">
+      <div className="mt-1.5 flex items-center gap-3 font-mono text-2xs text-slate-500 dark:text-text-muted-dark">
         <span className="whitespace-nowrap">{formatClock(request.createdAt)}</span>
         <span className="truncate">{request.clientIp ?? '-'}</span>
         {request.traceId && (
@@ -507,7 +507,7 @@ function RequestsStreamTable({
       <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50/70 dark:bg-ui-hover-dark/30 text-[11px] uppercase tracking-wide text-slate-400 dark:text-text-dim-dark">
+            <tr className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50/70 dark:bg-ui-hover-dark/30 text-2xs uppercase tracking-wide text-slate-400 dark:text-text-dim-dark">
               <th className="w-10 px-4 py-2.5"></th>
               <th className="px-4 py-2.5">{t('apiRequests.table.time')}</th>
               <th className="px-4 py-2.5">{t('apiRequests.table.method')}</th>

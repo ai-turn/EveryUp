@@ -2,8 +2,7 @@
  * OpenTelemetry snippet builders used by IntegrationPanel.
  */
 
-export function buildOTelSnippets(origin: string, displayKey: string): Record<string, string> {
-  const otlpBase = `${origin}/api/v1/otlp`;
+export function buildOTelSnippets(otlpBase: string, displayKey: string): Record<string, string> {
   return {
     springboot: `# Spring Boot - OpenTelemetry Java Agent (auto-instrumentation)
 
@@ -39,6 +38,14 @@ export OTEL_LOGS_EXPORTER="otlp"
 export OTEL_TRACES_EXPORTER="otlp"
 export OTEL_METRICS_EXPORTER="none"
 export OTEL_PYTHON_LOG_CORRELATION="true"
+export OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED="true"
+export OTEL_PYTHON_LOG_LEVEL="info"
+
+# Endpoint note:
+# Set OTEL_EXPORTER_OTLP_ENDPOINT to the OTLP base URL only.
+# Do not add /v1/logs or /v1/traces; the Python SDK appends those paths.
+# If FastAPI runs in Docker, localhost points to that container. Use
+# host.docker.internal or the EveryUp backend service name instead.
 
 # 2. Run your app via opentelemetry-instrument
 # FastAPI:
@@ -46,7 +53,16 @@ opentelemetry-instrument uvicorn main:app --host 0.0.0.0 --port 8000
 # Django:
 opentelemetry-instrument python manage.py runserver
 
-# Spans for incoming HTTP requests, DB calls, and outbound HTTP are emitted automatically.
+# API Requests in EveryUp are projected from HTTP SERVER spans.
+# Logs in EveryUp come from Python logging records such as logger.info(...)
+# or logger.error(...). Plain FastAPI access traffic can appear as API requests
+# even when your application code does not emit many log records.
+#
+# Quick log test:
+#   import logging
+#   logger = logging.getLogger("my-service")
+#   logger.setLevel(logging.INFO)
+#   logger.info("hello otel log")
 # Standard logging records are forwarded to OTLP with trace context attached.`,
 
     nodejs: `// Node.js (Express) - auto-instrumentations-node
