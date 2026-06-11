@@ -99,7 +99,7 @@ export function RealtimeMetrics({ serviceId, refreshKey }: RealtimeMetricsProps)
               {metric.value}
             </p>
           </div>
-          <p className="text-slate-400 dark:text-text-chart-dim text-xs">{metric.subtext}</p>
+          <p className="text-slate-400 dark:text-text-chart-dim text-sm">{metric.subtext}</p>
         </div>
       ))}
     </div>

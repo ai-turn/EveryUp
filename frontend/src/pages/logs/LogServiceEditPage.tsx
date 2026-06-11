@@ -133,7 +133,7 @@ export function LogServiceEditPage() {
     <div className="-m-4 sm:-m-6 md:-m-8 bg-white dark:bg-bg-main-dark min-h-full">
       {/* Sticky header */}
       <header className="sticky top-0 z-20 border-b border-slate-200 dark:border-ui-border-dark px-6 py-3 bg-white/95 dark:bg-bg-main-dark/95 backdrop-blur">
-        <nav className="flex items-center gap-1 text-xs text-slate-500 dark:text-text-muted-dark mb-2">
+        <nav className="flex items-center gap-1 text-sm text-slate-500 dark:text-text-muted-dark mb-2">
           <button
             type="button"
             onClick={goBack}
@@ -291,7 +291,7 @@ export function LogServiceEditPage() {
             })}
           </div>
 
-          <div className="flex items-center gap-1.5 mt-4 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark text-xs text-slate-500 dark:text-text-muted-dark">
+          <div className="flex items-center gap-1.5 mt-4 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark text-sm text-slate-500 dark:text-text-muted-dark">
             <MaterialIcon name="info" className="text-xs shrink-0" />
             <span>{t('logServices.edit.levelFilterHint')}</span>
           </div>
@@ -365,7 +365,7 @@ export function LogServiceEditPage() {
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 mt-4 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark text-xs text-slate-500 dark:text-text-muted-dark">
+          <div className="flex items-center gap-1.5 mt-4 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark text-sm text-slate-500 dark:text-text-muted-dark">
             <MaterialIcon name="info" className="text-xs shrink-0" />
             <span>{t('logServices.edit.excludePathsHint', { defaultValue: 'Common: /, /health, /actuator/*. Matches url.path on incoming OTLP spans.' })}</span>
           </div>

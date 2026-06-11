@@ -75,7 +75,7 @@ export function LogServiceForm({ onSuccess, onCancel, onSubmittingChange }: LogS
                 <MaterialIcon name="info" className="text-primary text-xl shrink-0" />
                 <div className="text-sm">
                     <p className="font-bold text-slate-800 dark:text-text-base-dark mb-1">{t('logServices.add.infoTitle', { defaultValue: 'Log Collection Service' })}</p>
-                    <p className="text-xs text-slate-500 dark:text-text-muted-dark leading-relaxed">
+                    <p className="text-sm text-slate-500 dark:text-text-muted-dark leading-relaxed">
                         {t('logServices.add.infoDesc', { defaultValue: 'Create a log service to generate an API key automatically. Then connect your app with OpenTelemetry in the Integration tab.' })}
                     </p>
                 </div>
@@ -143,12 +143,12 @@ export function LogServiceForm({ onSuccess, onCancel, onSubmittingChange }: LogS
                         <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate">
                             {name || t('logServices.add.title')}
                         </h3>
-                        <p className="text-xs text-slate-500 dark:text-text-muted-dark truncate">
+                        <p className="text-sm text-slate-500 dark:text-text-muted-dark truncate">
                             {id || 'my-api-server'}
                         </p>
                     </div>
                 </div>
-                <div className="space-y-2 text-xs text-slate-500 dark:text-text-muted-dark leading-relaxed">
+                <div className="space-y-2 text-sm text-slate-500 dark:text-text-muted-dark leading-relaxed">
                     <p>{t('logServices.add.infoDesc', { defaultValue: 'Create a log service to generate an API key automatically. Then choose an integration method and connect your app.' })}</p>
                 </div>
             </div>

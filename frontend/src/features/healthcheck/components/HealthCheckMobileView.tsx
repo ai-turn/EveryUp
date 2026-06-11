@@ -67,11 +67,11 @@ export function HealthCheckMobileView({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">{t('healthcheck.title')}</h1>
-          <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{t('healthcheck.subtitle')}</p>
+          <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{t('healthcheck.subtitle')}</p>
         </div>
         <button
           onClick={onAddService}
-          className="flex items-center gap-1.5 px-3 py-2 bg-primary/10 hover:bg-primary/20 rounded-lg text-xs font-bold text-primary transition-all cursor-pointer active:scale-95 shrink-0"
+          className="flex items-center gap-1.5 px-3 py-2 bg-primary/10 hover:bg-primary/20 rounded-lg text-sm font-bold text-primary transition-all cursor-pointer active:scale-95 shrink-0"
         >
           <MaterialIcon name="add" className="text-base" />
           {t('healthcheck.addService')}
@@ -90,7 +90,7 @@ export function HealthCheckMobileView({
             key={tab.key}
             type="button"
             onClick={() => onTabChange(tab.key)}
-            className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap border transition-colors ${
+            className={`px-3 py-2 rounded-lg text-sm font-bold whitespace-nowrap border transition-colors ${
               activeTab === tab.key
                 ? 'bg-primary text-white border-primary'
                 : 'bg-white dark:bg-bg-surface-dark border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark'
@@ -124,7 +124,7 @@ export function HealthCheckMobileView({
                 key={opt.value}
                 type="button"
                 onClick={() => onStatusFilterChange(opt.value)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap border transition-colors shrink-0 ${
+                className={`px-3 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap border transition-colors shrink-0 ${
                   statusFilter === opt.value
                     ? 'bg-primary text-white border-primary'
                     : 'bg-white dark:bg-bg-surface-dark border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark'
@@ -166,8 +166,8 @@ function MobileKPI({ icon, label, value }: { icon: string; label: string; value:
   return (
     <div className="rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-3 py-2">
       <div className="flex items-center justify-between text-slate-500 dark:text-text-muted-dark">
-        <span className="text-2xs font-bold">{label}</span>
-        <MaterialIcon name={icon} className="text-sm" />
+        <span className="text-sm font-bold">{label}</span>
+        <MaterialIcon name={icon} className="text-lg" />
       </div>
       <p className="text-lg font-bold text-slate-900 dark:text-white mt-1">{value}</p>
     </div>

@@ -39,7 +39,7 @@ export function LogListMobileView({
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">{t('logs.title')}</h1>
-          <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5 line-clamp-2">{t('logs.subtitle')}</p>
+          <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5 line-clamp-2">{t('logs.subtitle')}</p>
         </div>
         <button
           onClick={onAddService}
@@ -115,7 +115,7 @@ export function LogListMobileView({
 function MobileKpi({ label, value, tone = 'text-slate-900 dark:text-white' }: { label: string; value: number; tone?: string }) {
   return (
     <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-3">
-      <p className="text-xs font-medium text-slate-500 dark:text-text-muted-dark truncate">{label}</p>
+      <p className="text-sm font-medium text-slate-500 dark:text-text-muted-dark truncate">{label}</p>
       <p className={`text-xl font-bold tabular-nums ${tone}`}>{value}</p>
     </div>
   );

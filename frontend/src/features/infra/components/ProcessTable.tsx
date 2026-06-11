@@ -216,7 +216,7 @@ export function ProcessTable({ hostId, refreshKey = 0 }: { hostId: string; refre
       <div className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark overflow-hidden shadow-sm">
         {/* 컬럼 헤더 */}
         <div
-          className="grid gap-3 px-4 py-2.5 bg-slate-50/70 dark:bg-ui-hover-dark/50 border-b border-slate-100 dark:border-ui-border-dark text-2xs font-semibold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide"
+          className="grid gap-3 px-4 py-2.5 bg-slate-50/70 dark:bg-ui-hover-dark/50 border-b border-slate-100 dark:border-ui-border-dark text-xs font-semibold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide"
           style={{ gridTemplateColumns: COL }}
         >
           <span>프로세스</span>
@@ -285,7 +285,7 @@ function SortHeader({
       }`}
     >
       {label}
-      <MaterialIcon name={active ? 'arrow_downward' : 'unfold_more'} className="text-2xs" />
+      <MaterialIcon name={active ? 'arrow_downward' : 'unfold_more'} className="text-xs" />
     </button>
   );
 }
@@ -333,7 +333,7 @@ function GroupRow({
             <p className="text-sm font-bold text-slate-800 dark:text-text-base-dark truncate">{group.name}</p>
           </div>
           {multiProc && (
-            <span className="shrink-0 text-2xs font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
+            <span className="shrink-0 text-xs font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
               ×{group.count}
             </span>
           )}
@@ -373,7 +373,7 @@ function GroupRow({
           <div className="flex items-center gap-2.5 min-w-0 pl-8">
             <div className="min-w-0">
               <p className="text-xs font-semibold text-slate-600 dark:text-text-muted-dark truncate">{proc.name}</p>
-              <p className="text-2xs font-mono text-slate-400 dark:text-text-dim-dark">PID {proc.pid}</p>
+              <p className="text-xs font-mono text-slate-400 dark:text-text-dim-dark">PID {proc.pid}</p>
             </div>
           </div>
           <MetricBar value={parseCpuPct(proc.cpu)} pct={Math.min(parseCpuPct(proc.cpu) / cpuCoreCount, 100)} unit="%" active={sortBy === 'cpu'} isCpu dim />
@@ -411,7 +411,7 @@ function FlatRow({
         </div>
         <div className="min-w-0">
           <p className="text-sm font-bold text-slate-800 dark:text-text-base-dark truncate">{proc.name}</p>
-          <p className="text-2xs font-mono text-slate-400 dark:text-text-dim-dark">PID {proc.pid}</p>
+          <p className="text-xs font-mono text-slate-400 dark:text-text-dim-dark">PID {proc.pid}</p>
         </div>
       </div>
 
@@ -472,7 +472,7 @@ function StatusDot({ status }: { status: Process['status'] }) {
   return (
     <div className="flex items-center gap-1.5">
       <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[status]}`} />
-      <span className="text-2xs text-slate-500 dark:text-text-muted-dark font-medium">
+      <span className="text-sm text-slate-500 dark:text-text-muted-dark font-medium">
         {STATUS_LABEL[status]}
       </span>
     </div>

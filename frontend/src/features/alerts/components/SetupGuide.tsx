@@ -76,7 +76,7 @@ export function SetupGuide({ type }: SetupGuideProps) {
                         href="https://github.com/ai-turn/everyup/blob/main/docs/NOTIFICATION_SETUP.md"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                        className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
                     >
                         <MaterialIcon name="open_in_new" className="text-sm" />
                         {t('alerts.guide.detailLink')}

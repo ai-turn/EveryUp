@@ -52,7 +52,7 @@ export const InfraCard = memo(function InfraCard({ resource, onClick }: InfraCar
                     <h3 className="font-bold text-base text-slate-900 dark:text-white truncate">
                         {resource.name}
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5 truncate">
+                    <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5 truncate">
                         {resource.cluster || t('common.unknown')} - {resource.ip}
                         {resource.isRemote && resource.sshPort ? `:${resource.sshPort}` : ''}
                     </p>
@@ -87,7 +87,7 @@ export const InfraCard = memo(function InfraCard({ resource, onClick }: InfraCar
 
             <div className={`mb-3 ${isPaused ? 'opacity-40' : ''}`}>
                 <div className="flex items-center justify-between mb-1">
-                    <span className="text-2xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">
+                    <span className="text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">
                         {t('infra.metrics.network')}
                     </span>
                     <span className="text-xs font-bold tabular-nums text-slate-700 dark:text-text-base-dark">
@@ -97,14 +97,14 @@ export const InfraCard = memo(function InfraCard({ resource, onClick }: InfraCar
                 {netTrend.length >= 2 ? (
                     <Sparkline data={netTrend} height={28} color="#10b981" fluid />
                 ) : (
-                    <div className="h-7 flex items-center text-2xs text-slate-400 dark:text-text-dim-dark">
+                    <div className="h-7 flex items-center text-xs text-slate-400 dark:text-text-dim-dark">
                         {t('infra.metrics.noData')}
                     </div>
                 )}
             </div>
 
             <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-100 dark:border-ui-border-dark/50">
-                <span className="text-xs text-slate-500 dark:text-text-muted-dark min-w-0 truncate">
+                <span className="text-sm text-slate-500 dark:text-text-muted-dark min-w-0 truncate">
                     {t('infra.remote.lastCollected')}: {resource.lastCollectedAt ? relativeTime(resource.lastCollectedAt, relativeTimeLabels) : '-'}
                 </span>
                 <div className="flex items-center gap-1.5">
@@ -129,7 +129,7 @@ function MiniMetricBar({ label, value, muted }: { label: string; value?: number;
     return (
         <div className={muted ? 'opacity-40' : undefined}>
             <div className="flex items-center justify-between gap-3 mb-1">
-                <span className="text-2xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{label}</span>
+                <span className="text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{label}</span>
                 <span className="text-xs font-bold tabular-nums text-slate-700 dark:text-text-base-dark">
                     {value === undefined ? '-' : `${pct}%`}
                 </span>

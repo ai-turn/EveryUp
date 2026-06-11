@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -220,7 +220,7 @@ export function HealthCheckForm({ onSuccess, service, onSubmittingChange }: Heal
                 </div>
 
                 <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('common.id')}</label>
+                    <label className="text-sm font-bold text-slate-500 uppercase tracking-wider">{t('common.id')}</label>
                     <input
                         {...register('id')}
                         placeholder="my-api-server"
@@ -228,12 +228,12 @@ export function HealthCheckForm({ onSuccess, service, onSubmittingChange }: Heal
                         className={`${getInputClassName(!!errors.id)} ${isEditMode ? 'opacity-50 cursor-not-allowed' : ''}`}
                     />
                     {errors.id ? (
-                        <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+                        <p className="text-sm text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
                             <MaterialIcon name="error" className="text-sm" />
                             {errors.id.message}
                         </p>
                     ) : (
-                        <p className="text-xs text-slate-500 flex items-center gap-1">
+                        <p className="text-sm text-slate-500 flex items-center gap-1">
                             <MaterialIcon name="info" className="text-xs" />
                             {isEditMode ? t('healthcheck.form.idCannotChange') : t('healthcheck.form.idHint')}
                         </p>
@@ -241,14 +241,14 @@ export function HealthCheckForm({ onSuccess, service, onSubmittingChange }: Heal
                 </div>
 
                 <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('common.name')}</label>
+                    <label className="text-sm font-bold text-slate-500 uppercase tracking-wider">{t('common.name')}</label>
                     <input
                         {...register('name')}
                         placeholder={t('healthcheck.form.namePlaceholder')}
                         className={getInputClassName(!!errors.name)}
                     />
                     {errors.name && (
-                        <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+                        <p className="text-sm text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
                             <MaterialIcon name="error" className="text-sm" />
                             {errors.name.message}
                         </p>
@@ -270,7 +270,7 @@ export function HealthCheckForm({ onSuccess, service, onSubmittingChange }: Heal
                 </div>
 
                 <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('common.type')}</label>
+                    <label className="text-sm font-bold text-slate-500 uppercase tracking-wider">{t('common.type')}</label>
                     <div className="flex gap-2">
                         <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all text-sm ${selectedType === 'http' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark'}`}>
                             <input {...register('type')} type="radio" value="http" className="hidden" />
@@ -287,14 +287,14 @@ export function HealthCheckForm({ onSuccess, service, onSubmittingChange }: Heal
 
                 {selectedType === 'http' ? (
                     <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">URL</label>
+                        <label className="text-sm font-bold text-slate-500 uppercase tracking-wider">URL</label>
                         <input
                             {...register('url')}
                             placeholder="https://api.example.com/health"
                             className={getInputClassName(!!errors.url)}
                         />
                         {errors.url && (
-                            <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+                            <p className="text-sm text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
                                 <MaterialIcon name="error" className="text-sm" />
                                 {errors.url.message}
                             </p>
@@ -303,21 +303,21 @@ export function HealthCheckForm({ onSuccess, service, onSubmittingChange }: Heal
                 ) : (
                     <div className="grid grid-cols-3 gap-4">
                         <div className="col-span-2 space-y-1">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Host</label>
+                            <label className="text-sm font-bold text-slate-500 uppercase tracking-wider">Host</label>
                             <input
                                 {...register('host')}
                                 placeholder="8.8.8.8"
                                 className={getInputClassName(!!errors.host || !!errors.url)}
                             />
                             {errors.url && (
-                                <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+                                <p className="text-sm text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
                                     <MaterialIcon name="error" className="text-sm" />
                                     {errors.url.message}
                                 </p>
                             )}
                         </div>
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('healthcheck.form.port')}</label>
+                            <label className="text-sm font-bold text-slate-500 uppercase tracking-wider">{t('healthcheck.form.port')}</label>
                             <input
                                 {...register('port', { valueAsNumber: true })}
                                 type="number"
@@ -325,7 +325,7 @@ export function HealthCheckForm({ onSuccess, service, onSubmittingChange }: Heal
                                 className={getInputClassName(!!errors.port)}
                             />
                             {errors.port && (
-                                <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+                                <p className="text-sm text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
                                     <MaterialIcon name="error" className="text-sm" />
                                     {errors.port.message}
                                 </p>
@@ -349,7 +349,7 @@ export function HealthCheckForm({ onSuccess, service, onSubmittingChange }: Heal
                 </div>
 
                 <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('healthcheck.form.scheduleType')}</label>
+                    <label className="text-sm font-bold text-slate-500 uppercase tracking-wider">{t('healthcheck.form.scheduleType')}</label>
                     <div className="flex flex-col sm:flex-row gap-2">
                         <label className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border cursor-pointer transition-all text-sm ${scheduleType === 'interval' ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-slate-50 dark:bg-ui-hover-dark border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark'}`}>
                             <input {...register('scheduleType')} type="radio" value="interval" className="hidden" />
@@ -367,28 +367,28 @@ export function HealthCheckForm({ onSuccess, service, onSubmittingChange }: Heal
                 {scheduleType === 'interval' ? (
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('healthcheck.form.checkInterval')} (s)</label>
+                            <label className="text-sm font-bold text-slate-500 uppercase tracking-wider">{t('healthcheck.form.checkInterval')} (s)</label>
                             <input
                                 {...register('interval', { valueAsNumber: true })}
                                 type="number"
                                 className={getInputClassName(!!errors.interval)}
                             />
                             {errors.interval && (
-                                <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+                                <p className="text-sm text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
                                     <MaterialIcon name="error" className="text-sm" />
                                     {errors.interval.message}
                                 </p>
                             )}
                         </div>
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('healthcheck.form.timeout')} (ms)</label>
+                            <label className="text-sm font-bold text-slate-500 uppercase tracking-wider">{t('healthcheck.form.timeout')} (ms)</label>
                             <input
                                 {...register('timeout', { valueAsNumber: true })}
                                 type="number"
                                 className={getInputClassName(!!errors.timeout)}
                             />
                             {errors.timeout && (
-                                <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+                                <p className="text-sm text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
                                     <MaterialIcon name="error" className="text-sm" />
                                     {errors.timeout.message}
                                 </p>
@@ -444,7 +444,7 @@ export function HealthCheckForm({ onSuccess, service, onSubmittingChange }: Heal
                                 min="0" max="59"
                             />
                         </div>
-                        <div className="p-3 bg-primary/5 border border-primary/10 rounded-lg text-xs text-primary font-medium">
+                        <div className="p-3 bg-primary/5 border border-primary/10 rounded-lg text-sm text-primary font-medium">
                             {cronPreviewText}
                         </div>
                     </div>
@@ -464,7 +464,7 @@ export function HealthCheckForm({ onSuccess, service, onSubmittingChange }: Heal
                         <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate">
                             {watchedName || t('healthcheck.form.namePlaceholder')}
                         </h3>
-                        <p className="text-xs text-slate-500 dark:text-text-muted-dark truncate">
+                        <p className="text-sm text-slate-500 dark:text-text-muted-dark truncate">
                             {watchedId || 'my-api-server'}
                         </p>
                     </div>
@@ -510,3 +510,4 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
         </div>
     );
 }
+

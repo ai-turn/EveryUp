@@ -77,7 +77,7 @@ function SectionTitle({
       <div className="flex-1 min-w-0">
         <h3 className="text-base font-bold text-slate-900 dark:text-white leading-tight">{title}</h3>
         {description && (
-          <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-1 leading-relaxed">
+          <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-1 leading-relaxed">
             {description}
           </p>
         )}
@@ -236,7 +236,7 @@ export function IntegrationPanel({ service, temporaryApiKey, onApiKeyRegenerated
               iconClassName="text-sm"
             />
           </div>
-          <div className="flex items-center gap-2 mt-3 text-xs text-slate-500 dark:text-text-muted-dark">
+          <div className="flex items-center gap-2 mt-3 text-sm text-slate-500 dark:text-text-muted-dark">
             <MaterialIcon name="auto_awesome" className="text-sm text-primary" />
             {t('logServices.integration.endpoint.otelDescription')}
           </div>
@@ -289,7 +289,7 @@ export function IntegrationPanel({ service, temporaryApiKey, onApiKeyRegenerated
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   {t('logServices.integration.modals.regenerateTitle')}
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">
+                <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">
                   {t('logServices.integration.modals.regenerateDesc')}
                 </p>
               </div>
@@ -323,7 +323,7 @@ export function IntegrationPanel({ service, temporaryApiKey, onApiKeyRegenerated
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   {t('logServices.integration.modals.newKeyTitle')}
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">
+                <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">
                   {t('logServices.integration.modals.newKeyDesc')}
                 </p>
               </div>

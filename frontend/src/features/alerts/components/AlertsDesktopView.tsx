@@ -135,7 +135,7 @@ export function AlertsDesktopView({
               <span className="inline-flex items-center gap-2">
                 {tab.label}
                 {tab.count != null && (
-                  <span className={`text-2xs font-bold px-1.5 py-0.5 rounded-md ${
+                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded-md ${
                     activeTab === tab.key
                       ? 'bg-primary/10 text-primary'
                       : 'bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark'
@@ -238,16 +238,16 @@ function ChannelsGrid({ channels, channelHealth, isLoading, togglingIds, onAdd, 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <h3 className="font-bold text-slate-900 dark:text-white truncate">{channel.name}</h3>
-                  <span className={`px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider rounded ${style.bg} ${style.text}`}>
+                  <span className={`px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider rounded ${style.bg} ${style.text}`}>
                     {getChannelTypeLabel(channel.type, t)}
                   </span>
                   {!channel.isEnabled && (
-                    <span className="px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark rounded">
+                    <span className="px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark rounded">
                       {t('common.disabled')}
                     </span>
                   )}
                 </div>
-                <div className="text-2xs text-slate-500 dark:text-text-muted-dark mt-0.5">
+                <div className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">
                   {lastSent
                     ? t('alerts.health.lastSentAgo', { ago: formatDistanceToNow(lastSent, { addSuffix: true, locale }) })
                     : t('alerts.health.never')}
@@ -268,7 +268,7 @@ function ChannelsGrid({ channels, channelHealth, isLoading, togglingIds, onAdd, 
             {/* KPI tile */}
             <div className="grid grid-cols-3 gap-3 px-3 py-2 bg-slate-50 dark:bg-ui-hover-dark/40 border border-slate-100 dark:border-ui-border-dark/50 rounded-lg">
               <div>
-                <div className="text-2xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.health.successRate7d')}
                 </div>
                 <div className={`text-base font-bold tabular-nums ${rateColor}`}>
@@ -276,7 +276,7 @@ function ChannelsGrid({ channels, channelHealth, isLoading, togglingIds, onAdd, 
                 </div>
               </div>
               <div>
-                <div className="text-2xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.kpi.sent7d')}
                 </div>
                 <div className="text-base font-bold text-slate-900 dark:text-white tabular-nums">
@@ -285,7 +285,7 @@ function ChannelsGrid({ channels, channelHealth, isLoading, togglingIds, onAdd, 
                 </div>
               </div>
               <div>
-                <div className="text-2xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.health.linkedRules')}
                 </div>
                 <div className="text-base font-bold text-slate-900 dark:text-white tabular-nums">

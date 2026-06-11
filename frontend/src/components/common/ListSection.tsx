@@ -53,7 +53,7 @@ export function ListSection({
         <div className="flex-1 min-w-0">
           <h2 className="text-base font-bold text-slate-900 dark:text-white truncate">{title}</h2>
           {subtitle != null && (
-            <div className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5 truncate">
+            <div className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5 truncate">
               {subtitle}
             </div>
           )}

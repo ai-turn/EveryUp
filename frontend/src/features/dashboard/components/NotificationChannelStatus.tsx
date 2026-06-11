@@ -65,7 +65,7 @@ export function NotificationChannelStatus() {
             </p>
             <button
               onClick={() => navigate('/alerts')}
-              className="mt-3 text-xs font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer"
+              className="mt-3 text-sm font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer"
             >
               {t('dashboard.notifications.add')} →
             </button>
@@ -92,7 +92,7 @@ export function NotificationChannelStatus() {
                     <p className="text-sm font-semibold text-slate-800 dark:text-text-base-dark truncate">
                       {channel.name}
                     </p>
-                    <p className="text-xs text-slate-400 dark:text-text-dim-dark capitalize">
+                    <p className="text-sm text-slate-400 dark:text-text-dim-dark capitalize">
                       {channel.type}
                     </p>
                   </div>
@@ -118,7 +118,7 @@ export function NotificationChannelStatus() {
             {totalCount > 5 && (
               <button
                 onClick={() => navigate('/alerts')}
-                className="w-full py-2 text-xs font-semibold text-slate-400 dark:text-text-dim-dark hover:text-primary dark:hover:text-primary transition-colors text-center"
+                className="w-full py-2 text-sm font-semibold text-slate-400 dark:text-text-dim-dark hover:text-primary dark:hover:text-primary transition-colors text-center"
               >
                 {t('common.showMore', { count: totalCount - 5 })}
               </button>

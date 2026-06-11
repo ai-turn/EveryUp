@@ -126,7 +126,7 @@ export function HealthCheckDesktopView({
                   key={opt.value}
                   type="button"
                   onClick={() => onStatusFilterChange(opt.value)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-all ${
+                  className={`px-3 py-1.5 rounded-md text-sm font-semibold whitespace-nowrap transition-all ${
                     statusFilter === opt.value
                       ? 'bg-white dark:bg-bg-surface-dark text-slate-900 dark:text-white shadow-sm'
                       : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-base-dark'
@@ -153,7 +153,7 @@ export function HealthCheckDesktopView({
           />
 
           {!loading && !error && pausedCount > 0 && (
-            <p className="mt-4 text-xs text-center text-slate-400 dark:text-text-muted-dark">
+            <p className="mt-4 text-sm text-center text-slate-400 dark:text-text-muted-dark">
               일시정지된 서비스 {pausedCount}개 포함
             </p>
           )}

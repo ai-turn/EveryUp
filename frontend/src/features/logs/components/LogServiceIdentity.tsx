@@ -22,7 +22,7 @@ function InfoChip({ icon, label, value, accent }: { icon: string; label: string;
   return (
     <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark">
       <MaterialIcon name={icon} className={`text-sm ${accent ? 'text-primary' : 'text-slate-500 dark:text-text-muted-dark'}`} />
-      <span className="text-xs text-slate-500 dark:text-text-muted-dark">{label}</span>
+      <span className="text-sm text-slate-500 dark:text-text-muted-dark">{label}</span>
       <span className="text-xs font-semibold text-slate-900 dark:text-white">{value}</span>
     </div>
   );
@@ -97,7 +97,7 @@ export function LogServiceIdentity({ service }: Props) {
           {/* Log level filter — read-only dots with visible label */}
           <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark">
             <MaterialIcon name="filter_alt" className="text-sm text-slate-500 dark:text-text-muted-dark" />
-            <span className="text-xs text-slate-500 dark:text-text-muted-dark">{t('logServices.identity.levelFilter')}</span>
+            <span className="text-sm text-slate-500 dark:text-text-muted-dark">{t('logServices.identity.levelFilter')}</span>
             <span className="flex items-center gap-1">
               {LOG_LEVELS.map((lvl) => (
                 <span

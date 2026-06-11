@@ -49,7 +49,7 @@ export function AlertRuleFormPage() {
     <div className="-m-4 sm:-m-6 md:-m-8 flex flex-col bg-white dark:bg-bg-main-dark h-[calc(100dvh-3.5rem)] lg:h-[calc(100dvh-4rem)]">
       {/* Page header */}
       <header className="flex-none border-b border-slate-200 dark:border-ui-border-dark px-6 py-3 bg-white dark:bg-bg-main-dark">
-        <nav className="flex items-center gap-1 text-xs text-slate-500 dark:text-text-muted-dark mb-2">
+        <nav className="flex items-center gap-1 text-sm text-slate-500 dark:text-text-muted-dark mb-2">
           <button
             type="button"
             onClick={goBack}

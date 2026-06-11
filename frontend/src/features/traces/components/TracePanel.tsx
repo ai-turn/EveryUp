@@ -264,7 +264,7 @@ function SpanList({ spans, onCopy }: { spans: TraceSpan[]; onCopy: CopyFn }) {
             key={`${span.traceId}-${span.spanId}`}
             className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-xs sm:flex-nowrap"
           >
-            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-bold shrink-0 ${spanKindBadge(span.kind)}`}>
+            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold shrink-0 ${spanKindBadge(span.kind)}`}>
               {span.kind}
             </span>
             <span className="font-mono text-slate-700 dark:text-text-base-dark truncate flex-1 min-w-0" title={span.name}>
@@ -276,7 +276,7 @@ function SpanList({ spans, onCopy }: { spans: TraceSpan[]; onCopy: CopyFn }) {
               </span>
             )}
             {span.statusCode && span.statusCode !== 'UNSET' && (
-              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-semibold shrink-0 ${statusBadge(span.statusCode)}`}>
+              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold shrink-0 ${statusBadge(span.statusCode)}`}>
                 {span.statusCode}
               </span>
             )}
@@ -301,13 +301,13 @@ function ApiRequestList({ items, onCopy }: { items: ApiRequest[]; onCopy: CopyFn
             key={req.id}
             className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-xs sm:flex-nowrap"
           >
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-bold bg-slate-200 dark:bg-ui-active-dark text-slate-700 dark:text-text-base-dark shrink-0">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold bg-slate-200 dark:bg-ui-active-dark text-slate-700 dark:text-text-base-dark shrink-0">
               {req.method}
             </span>
             <span className="font-mono text-slate-700 dark:text-text-base-dark truncate flex-1 min-w-0" title={req.path}>
               {req.path}
             </span>
-            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-semibold shrink-0 ${
+            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold shrink-0 ${
               req.isError
                 ? 'bg-red-500/10 text-red-600 dark:text-red-400'
                 : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
@@ -335,7 +335,7 @@ function LogList({ logs, onCopy }: { logs: LogEntry[]; onCopy: CopyFn }) {
             key={log.id}
             className="flex items-start gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-xs"
           >
-            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-bold shrink-0 ${logLevelBadge(log.level)}`}>
+            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold shrink-0 ${logLevelBadge(log.level)}`}>
               {log.level.toUpperCase()}
             </span>
             <span className="text-slate-500 dark:text-text-muted-dark font-mono shrink-0 mt-0.5">

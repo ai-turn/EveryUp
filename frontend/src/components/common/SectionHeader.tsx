@@ -46,7 +46,7 @@ export function SectionHeader({
       <div className="flex-1 min-w-0">
         <h2 className="text-base font-bold text-slate-900 dark:text-white truncate">{title}</h2>
         {subtitle != null && (
-          <div className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5 truncate">{subtitle}</div>
+          <div className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5 truncate">{subtitle}</div>
         )}
       </div>
       {right && <div className="flex-none flex items-center gap-2">{right}</div>}

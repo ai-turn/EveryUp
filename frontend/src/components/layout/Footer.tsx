@@ -33,7 +33,7 @@ export function Footer() {
               <span className="text-sm font-semibold text-slate-900 dark:text-white">
                 EveryUp
               </span>
-              <span className="text-xs text-slate-500 dark:text-text-muted-dark">
+              <span className="text-sm text-slate-500 dark:text-text-muted-dark">
                 © {currentYear} {t('footer.rights')}
               </span>
             </div>

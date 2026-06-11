@@ -57,7 +57,7 @@ export function SettingsMobileView({
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold text-slate-900 dark:text-white">{t('settings.title')}</h1>
-        <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{t('settings.subtitle')}</p>
+        <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{t('settings.subtitle')}</p>
       </div>
 
       {/* Interface */}
@@ -65,7 +65,7 @@ export function SettingsMobileView({
         {/* Language */}
         <div className="space-y-2">
           <p className="text-sm font-medium text-slate-900 dark:text-white">{t('settings.interface.language')}</p>
-          <p className="text-xs text-slate-500 dark:text-text-muted-dark">{t('settings.interface.languageDesc')}</p>
+          <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('settings.interface.languageDesc')}</p>
           <div className="flex gap-1 bg-slate-100 dark:bg-ui-hover-dark p-1 rounded-lg">
             {(['ko', 'en'] as const).map((lng) => (
               <button
@@ -88,7 +88,7 @@ export function SettingsMobileView({
         {/* Theme */}
         <div className="space-y-2">
           <p className="text-sm font-medium text-slate-900 dark:text-white">{t('settings.interface.theme')}</p>
-          <p className="text-xs text-slate-500 dark:text-text-muted-dark">{t('settings.interface.themeDesc')}</p>
+          <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('settings.interface.themeDesc')}</p>
           <div className="flex gap-1 bg-slate-100 dark:bg-ui-hover-dark p-1 rounded-lg">
             {(['light', 'dark'] as const).map((t_) => (
               <button
@@ -120,7 +120,7 @@ export function SettingsMobileView({
             {/* Metrics */}
             <div className="space-y-2">
               <p className="text-sm font-medium text-slate-900 dark:text-white">{t('settings.retention.metrics')}</p>
-              <p className="text-xs text-slate-500 dark:text-text-muted-dark">{t('settings.retention.metricsDesc')}</p>
+              <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('settings.retention.metricsDesc')}</p>
               <div className="flex gap-1.5 flex-wrap">
                 {METRICS_RETENTION_OPTIONS.map((opt) => (
                   <button
@@ -143,7 +143,7 @@ export function SettingsMobileView({
             {/* Logs */}
             <div className="space-y-2">
               <p className="text-sm font-medium text-slate-900 dark:text-white">{t('settings.retention.logs')}</p>
-              <p className="text-xs text-slate-500 dark:text-text-muted-dark">{t('settings.retention.logsDesc')}</p>
+              <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('settings.retention.logsDesc')}</p>
               <div className="flex gap-1.5 flex-wrap">
                 {LOGS_RETENTION_OPTIONS.map((opt) => (
                   <button
@@ -188,7 +188,7 @@ export function SettingsMobileView({
         )}
         <div className="space-y-2">
           <p className="text-sm font-medium text-slate-900 dark:text-white">{t('settings.accountReset.title')}</p>
-          <p className="text-xs text-slate-500 dark:text-text-muted-dark">{t('settings.accountReset.subtitle')}</p>
+          <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('settings.accountReset.subtitle')}</p>
           <button
             onClick={onResetClick}
             disabled={env.useMock}

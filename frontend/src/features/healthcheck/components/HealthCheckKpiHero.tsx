@@ -24,8 +24,8 @@ function KpiBlock({
   return (
     <div className="flex flex-col gap-0.5">
       <div className="flex items-center gap-1 text-slate-400 dark:text-text-muted-dark">
-        <MaterialIcon name={icon} className="text-sm" />
-        <span className="text-xs font-semibold uppercase tracking-wide">{label}</span>
+        <MaterialIcon name={icon} className="text-lg" />
+        <span className="text-sm font-semibold uppercase tracking-wide">{label}</span>
       </div>
       <p className={`text-2xl font-bold tabular-nums ${toneClass[tone]}`}>{value}</p>
     </div>
@@ -88,7 +88,7 @@ export function HealthCheckKpiHero({ refreshKey = 0 }: Props) {
         {/* 24h sparkline */}
         {kpi.latencyHistory.length >= 2 && (
           <div className="flex flex-col items-end gap-1">
-            <span className="text-2xs text-slate-400 dark:text-text-dim-dark uppercase tracking-wide font-semibold">
+            <span className="text-xs text-slate-400 dark:text-text-dim-dark uppercase tracking-wide font-semibold">
               24h 응답 시간 추이
             </span>
             <Sparkline data={kpi.latencyHistory} width={120} height={36} color="#3b76c9" />
@@ -98,8 +98,8 @@ export function HealthCheckKpiHero({ refreshKey = 0 }: Props) {
 
       {kpi.activeIncidents > 0 && (
         <div className="mt-4 pt-4 border-t border-slate-100 dark:border-ui-border-dark flex items-center gap-2 text-red-500">
-          <MaterialIcon name="crisis_alert" className="text-sm" />
-          <span className="text-xs font-bold">활성 인시던트 {kpi.activeIncidents}건 진행 중</span>
+          <MaterialIcon name="crisis_alert" className="text-lg" />
+          <span className="text-sm font-bold">활성 인시던트 {kpi.activeIncidents}건 진행 중</span>
         </div>
       )}
     </div>

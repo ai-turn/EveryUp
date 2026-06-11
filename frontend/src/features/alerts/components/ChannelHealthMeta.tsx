@@ -30,7 +30,7 @@ export function ChannelHealthMeta({ health, compact = false }: Props) {
       : 'text-red-500';
 
   const gap = compact ? 'gap-3' : 'gap-4';
-  const text = compact ? 'text-2xs' : 'text-xs';
+  const text = compact ? 'text-xs' : 'text-xs';
 
   return (
     <div className={`flex items-center flex-wrap ${gap} ${text} text-slate-500 dark:text-text-muted-dark`}>

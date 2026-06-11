@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -41,11 +42,24 @@ func (p *TelegramProvider) Send(notification Notification) error {
 		message = p.buildHealthCheckMessage(notification)
 	}
 
+	if err := p.sendMessage(message, true); err != nil {
+		fallbackErr := p.sendMessage(message, false)
+		if fallbackErr == nil {
+			return nil
+		}
+		return fmt.Errorf("%w; plain-text fallback failed: %v", err, fallbackErr)
+	}
 
+	return nil
+}
+
+func (p *TelegramProvider) sendMessage(message string, markdown bool) error {
 	payload := map[string]interface{}{
-		"chat_id":    p.ChatID,
-		"text":       message,
-		"parse_mode": "Markdown",
+		"chat_id": p.ChatID,
+		"text":    message,
+	}
+	if markdown {
+		payload["parse_mode"] = "Markdown"
 	}
 
 	payloadBytes, err := json.Marshal(payload)
@@ -61,7 +75,12 @@ func (p *TelegramProvider) Send(notification Notification) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Telegram API returned status %d", resp.StatusCode)
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
+		bodyText := strings.TrimSpace(string(body))
+		if bodyText == "" {
+			return fmt.Errorf("Telegram API returned status %d", resp.StatusCode)
+		}
+		return fmt.Errorf("Telegram API returned status %d: %s", resp.StatusCode, bodyText)
 	}
 
 	return nil

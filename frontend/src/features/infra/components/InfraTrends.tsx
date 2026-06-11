@@ -81,7 +81,7 @@ export function InfraTrends({ hostId, refreshKey = 0 }: InfraTrendsProps) {
               </button>
             ))}
           </div>
-          <p className="text-2xs text-slate-400 dark:text-text-dim-dark">전체 차트에 적용</p>
+          <p className="text-xs text-slate-400 dark:text-text-dim-dark">전체 차트에 적용</p>
         </div>
       </div>
 
@@ -155,7 +155,7 @@ function ChartCard({
             {chart.series.map((s) => (
               <span
                 key={s.key}
-                className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 dark:bg-ui-hover-dark/50 px-2 py-0.5 text-2xs font-semibold text-slate-500 dark:text-text-muted-dark"
+                className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 dark:bg-ui-hover-dark/50 px-2 py-0.5 text-xs font-semibold text-slate-500 dark:text-text-muted-dark"
               >
                 <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
                 {s.label}
@@ -257,10 +257,10 @@ function InlineStat({ label, value, unit, color }: { label: string; value: numbe
   return (
     <div className="flex items-center gap-1">
       <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
-      <span className="text-2xs text-slate-400 dark:text-text-dim-dark">{label}</span>
+      <span className="text-xs text-slate-400 dark:text-text-dim-dark">{label}</span>
       <span className="text-sm font-bold tabular-nums text-slate-800 dark:text-text-base-dark">
         {formatMetricValue(value)}
-        <span className="ml-0.5 text-2xs font-semibold text-slate-400 dark:text-text-dim-dark">{unit}</span>
+        <span className="ml-0.5 text-xs font-semibold text-slate-400 dark:text-text-dim-dark">{unit}</span>
       </span>
     </div>
   );

@@ -137,11 +137,10 @@ function FailureRow({ metric, dateLocale }: FailureRowProps) {
 
       {/* Error message */}
       {metric.errorMessage && (
-        <p className="mt-1.5 ml-5 text-xs text-red-600 dark:text-red-400 font-mono break-all">
+        <p className="mt-1.5 ml-5 text-sm text-red-600 dark:text-red-400 font-mono break-all">
           {metric.errorMessage}
         </p>
       )}
     </div>
   );
 }
-

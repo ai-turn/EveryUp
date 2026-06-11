@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MaterialIcon } from '../../../components/common';
 import { api } from '../../../services/api';
+import { getUptimeBarClass, getUptimeTextClass, getUptimeTone } from '../uptimeTone';
 import type { ServiceUptimeSummary, UptimeDay } from '../../../services/api';
 
 interface UptimeSummaryTabProps {
@@ -74,6 +75,8 @@ export function UptimeSummaryTab({ summaries: initialSummaries, loading: initial
   const overallUptime = summaries.length > 0
     ? summaries.reduce((acc, s) => acc + s.uptime, 0) / summaries.length
     : 0;
+  const overallTone = getUptimeTone(overallUptime);
+  const overallCardTone = overallTone === 'healthy' ? 'emerald' : overallTone === 'warning' ? 'amber' : 'red';
   const slaCompliant = summaries.filter((s) => s.uptime >= SLA_TARGET).length;
   const totalIncidents = summaries.reduce((acc, s) => acc + s.failures, 0);
 
@@ -114,7 +117,7 @@ export function UptimeSummaryTab({ summaries: initialSummaries, loading: initial
               key={r.id}
               type="button"
               onClick={() => setSelectedDays(r.id)}
-              className={`px-3 py-1.5 text-xs rounded-md font-semibold transition-colors ${
+              className={`px-3 py-1.5 text-sm rounded-md font-semibold transition-colors ${
                 selectedDays === r.id
                   ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
                   : 'text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark'
@@ -125,7 +128,7 @@ export function UptimeSummaryTab({ summaries: initialSummaries, loading: initial
           ))}
         </div>
 
-        <div className="flex items-center gap-2 text-xs">
+        <div className="flex items-center gap-2 text-sm">
           <span className="text-slate-500 dark:text-text-muted-dark">정렬</span>
           <select
             value={sortKey}
@@ -146,7 +149,7 @@ export function UptimeSummaryTab({ summaries: initialSummaries, loading: initial
           value={`${overallUptime.toFixed(2)}`}
           unit="%"
           sub={`SLA ${SLA_TARGET}%`}
-          tone={overallUptime >= SLA_TARGET ? 'emerald' : 'amber'}
+          tone={overallCardTone}
           bar={overallUptime}
         />
         <SlaCard
@@ -169,7 +172,7 @@ export function UptimeSummaryTab({ summaries: initialSummaries, loading: initial
       <div className="rounded-2xl bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark overflow-hidden">
         {/* Header */}
         <div
-          className="grid gap-3 px-4 py-2.5 bg-slate-50/70 dark:bg-ui-hover-dark/50 border-b border-slate-100 dark:border-ui-border-dark text-2xs font-semibold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide"
+          className="grid gap-3 px-4 py-2.5 bg-slate-50/70 dark:bg-ui-hover-dark/50 border-b border-slate-100 dark:border-ui-border-dark text-sm font-semibold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide"
           style={{ gridTemplateColumns: '180px 1fr 88px 72px 100px' }}
         >
           <div>서비스</div>
@@ -181,13 +184,8 @@ export function UptimeSummaryTab({ summaries: initialSummaries, loading: initial
 
         {sorted.map((s) => {
           const days = dayData.get(s.serviceId) ?? [];
-          const uptimeColor =
-            s.uptime >= 99.9 ? 'text-emerald-600 dark:text-emerald-400' :
-            s.uptime >= 95 ? 'text-amber-600 dark:text-amber-400' :
-            'text-rose-600 dark:text-rose-400';
-          const dotColor =
-            s.uptime >= 99 ? 'bg-emerald-500' :
-            s.uptime >= 95 ? 'bg-amber-500' : 'bg-rose-500';
+          const uptimeColor = getUptimeTextClass(s.uptime);
+          const dotColor = getUptimeBarClass(s.uptime);
 
           return (
             <div
@@ -224,11 +222,11 @@ export function UptimeSummaryTab({ summaries: initialSummaries, loading: initial
                 }`}>
                   {s.failures}
                 </span>
-                <span className="text-2xs text-slate-400 dark:text-text-dim-dark">건</span>
+                <span className="text-xs text-slate-400 dark:text-text-dim-dark">건</span>
               </div>
 
               {/* Checks */}
-              <div className="text-right text-xs text-slate-500 dark:text-text-muted-dark tabular-nums">
+              <div className="text-right text-sm text-slate-500 dark:text-text-muted-dark tabular-nums">
                 <span className={s.failures > 0 ? 'text-rose-600 dark:text-rose-400 font-semibold' : ''}>
                   {s.failures.toLocaleString()}
                 </span>
@@ -241,7 +239,7 @@ export function UptimeSummaryTab({ summaries: initialSummaries, loading: initial
       </div>
 
       {/* Legend */}
-      <div className="flex items-center justify-between text-2xs text-slate-500 dark:text-text-muted-dark flex-wrap gap-2">
+      <div className="flex items-center justify-between text-sm text-slate-500 dark:text-text-muted-dark flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <span className="inline-flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-sm bg-emerald-400" />정상
@@ -332,7 +330,7 @@ function SlaCard({
 
   return (
     <div className="rounded-xl bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark p-4">
-      <div className="text-2xs text-slate-500 dark:text-text-muted-dark font-semibold">{label}</div>
+      <div className="text-sm text-slate-500 dark:text-text-muted-dark font-semibold">{label}</div>
       <div className="mt-1.5 flex items-baseline gap-1">
         <span className={`text-2xl font-bold tabular-nums ${valueColor[tone]}`}>{value}</span>
         {unit && <span className="text-xs text-slate-400 dark:text-text-dim-dark">{unit}</span>}
@@ -359,7 +357,7 @@ function SlaCard({
       )}
 
       {sub && (
-        <div className="mt-1.5 text-2xs text-slate-500 dark:text-text-muted-dark">{sub}</div>
+        <div className="mt-1.5 text-sm text-slate-500 dark:text-text-muted-dark">{sub}</div>
       )}
     </div>
   );

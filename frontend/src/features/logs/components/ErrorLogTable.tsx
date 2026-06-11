@@ -116,7 +116,7 @@ function HistogramBand({ logs }: { logs: LogEntry[] }) {
           <h3 className="text-base font-bold text-slate-900 dark:text-white">
             {t('logs.errorTable.distribution')}
           </h3>
-          <p className="mt-0.5 text-xs text-slate-500 dark:text-text-muted-dark">
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-text-muted-dark">
             {t('logs.filter.error')} {errorBuckets.reduce((a, b) => a + b, 0)} · {t('logs.filter.warn')} {warnBuckets.reduce((a, b) => a + b, 0)}
           </p>
         </div>
@@ -146,7 +146,7 @@ function HistogramBand({ logs }: { logs: LogEntry[] }) {
           );
         })}
       </div>
-      <div className="mt-2 grid grid-cols-4 text-2xs text-slate-400 dark:text-text-dim-dark">
+      <div className="mt-2 grid grid-cols-4 text-xs text-slate-400 dark:text-text-dim-dark">
         <span>-24h</span>
         <span className="text-center">-12h</span>
         <span className="text-center">-6h</span>
@@ -171,14 +171,14 @@ function LogMetaChips({
     <>
       {log.linkedRequest && (
         <span
-          className="inline-flex max-w-65 items-center gap-1 rounded-md border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark/40 px-2 py-0.5 text-2xs"
+          className="inline-flex max-w-65 items-center gap-1 rounded-md border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark/40 px-2 py-0.5 text-xs"
           title={`${log.linkedRequest.method} ${log.linkedRequest.path}`}
         >
-          <span className={`rounded px-1 py-px text-2xs font-bold ${methodBadgeClass(log.linkedRequest.method)}`}>
+          <span className={`rounded px-1 py-px text-xs font-bold ${methodBadgeClass(log.linkedRequest.method)}`}>
             {log.linkedRequest.method.toUpperCase()}
           </span>
           <span className="font-mono truncate text-slate-700 dark:text-text-base-dark">{log.linkedRequest.path}</span>
-          <span className={`rounded px-1 py-px text-2xs font-bold ${statusBadgeClass(log.linkedRequest.statusCode)}`}>
+          <span className={`rounded px-1 py-px text-xs font-bold ${statusBadgeClass(log.linkedRequest.statusCode)}`}>
             {log.linkedRequest.statusCode}
           </span>
         </span>
@@ -187,7 +187,7 @@ function LogMetaChips({
         <button
           type="button"
           onClick={() => onOpenTrace(log.traceId!)}
-          className="inline-flex items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary/10 cursor-pointer"
+          className="inline-flex items-center gap-1 rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-sm font-semibold text-primary hover:bg-primary/10 cursor-pointer"
           title={log.traceId}
         >
           <MaterialIcon name="timeline" className="text-sm" />
@@ -216,7 +216,7 @@ function LogCard({
         <span className={`rounded px-2 py-0.5 text-xs font-bold uppercase ${levelToneStyle[log.level]}`}>
           {log.level}
         </span>
-        <span className="text-xs text-slate-500 dark:text-text-muted-dark whitespace-nowrap">
+        <span className="text-sm text-slate-500 dark:text-text-muted-dark whitespace-nowrap">
           {formatTimestamp(log.createdAt)}
         </span>
         <CopyButton
@@ -450,7 +450,7 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
         <div className="flex flex-col gap-1 border-b border-slate-100 dark:border-ui-border-dark px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-sm font-bold text-slate-900 dark:text-white">{t('logs.errorTable.entries')}</h3>
-            <p className="text-xs text-slate-500 dark:text-text-muted-dark">
+            <p className="text-sm text-slate-500 dark:text-text-muted-dark">
               {t('logs.errorTable.showing', { shown: filteredLogs.length, loaded: sourceLogs.length })}
             </p>
           </div>
@@ -477,7 +477,7 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
           <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50/80 dark:bg-ui-hover-dark/30 text-2xs font-bold uppercase tracking-wide text-slate-500 dark:text-text-muted-dark">
+                <tr className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50/80 dark:bg-ui-hover-dark/30 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-text-muted-dark">
                   <th className="w-28 px-4 py-2.5">{t('logs.table.timestamp')}</th>
                   <th className="w-24 px-4 py-2.5">{t('logs.table.level')}</th>
                   <th className="px-4 py-2.5">{t('logs.table.message')}</th>
@@ -488,7 +488,7 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
               <tbody className="divide-y divide-slate-100 dark:divide-ui-border-dark/60">
                 {filteredLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-ui-hover-dark/30">
-                    <td className="w-28 px-4 py-3 text-xs text-slate-500 dark:text-text-muted-dark whitespace-nowrap">
+                    <td className="w-28 px-4 py-3 text-sm text-slate-500 dark:text-text-muted-dark whitespace-nowrap">
                       {formatTimestamp(log.createdAt)}
                     </td>
                     <td className="w-24 px-4 py-3">

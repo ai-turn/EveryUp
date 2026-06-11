@@ -51,7 +51,7 @@ export function KPICard({ label, value, subValue, color, onClick }: KPICardProps
 
             {/* SubValue — always neutral */}
             {subValue && (
-                <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-2">{subValue}</p>
+                <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-2">{subValue}</p>
             )}
         </div>
     );

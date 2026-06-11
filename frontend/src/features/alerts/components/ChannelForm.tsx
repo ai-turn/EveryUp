@@ -90,7 +90,7 @@ function FormStep({ n, title, subtitle, children }: { n: number; title: string; 
                 </span>
                 <div>
                     <p className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">{title}</p>
-                    {subtitle && <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{subtitle}</p>}
+                    {subtitle && <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{subtitle}</p>}
                 </div>
             </div>
             <div className="p-5 space-y-5">{children}</div>
@@ -104,12 +104,12 @@ function Field({ label, hint, required, children, error }: {
     return (
         <div>
             <div className="flex items-center gap-1 mb-2">
-                <label className="text-xs font-bold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide">{label}</label>
+                <label className="text-sm font-bold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide">{label}</label>
                 {required && <span className="text-red-500 text-xs">*</span>}
             </div>
             {children}
             {error && <p className="text-xs text-red-500 font-medium mt-1">{error}</p>}
-            {hint && !error && <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-1.5 italic">{hint}</p>}
+            {hint && !error && <p className="text-sm text-slate-400 dark:text-text-dim-dark mt-1.5 italic">{hint}</p>}
         </div>
     );
 }
@@ -123,15 +123,15 @@ const inputMonoCls = inputCls + " font-mono";
 function TelegramPreview({ name }: { name: string }) {
     const now = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
     return (
-        <div className="rounded-xl overflow-hidden border border-slate-700 font-sans text-2xs">
+        <div className="rounded-xl overflow-hidden border border-slate-700 font-sans text-xs">
             {/* Header bar */}
             <div className="flex items-center gap-2 px-3 py-2 bg-[#17212B]">
                 <div className="w-7 h-7 rounded-full bg-[#26A5E4] flex items-center justify-center shrink-0">
                     <IconTelegram size={14} className="text-white" />
                 </div>
                 <div className="min-w-0">
-                    <p className="text-white font-semibold text-2xs leading-tight truncate">{name || 'EveryUp Bot'}</p>
-                    <p className="text-[#7C91A7] text-2xs">bot</p>
+                    <p className="text-white font-semibold text-xs leading-tight truncate">{name || 'EveryUp Bot'}</p>
+                    <p className="text-[#7C91A7] text-xs">bot</p>
                 </div>
             </div>
             {/* Chat body */}
@@ -151,7 +151,7 @@ function TelegramPreview({ name }: { name: string }) {
                         <span className="text-[#7C91A7]">Message: </span>
                         <span className="text-slate-400">This is a test notification. Your EVERYUP notification channel is connected correctly.</span>
                     </p>
-                    <p className="text-[#7C91A7] text-2xs text-right">{now}</p>
+                    <p className="text-[#7C91A7] text-xs text-right">{now}</p>
                 </div>
             </div>
         </div>
@@ -161,7 +161,7 @@ function TelegramPreview({ name }: { name: string }) {
 // Discord: embed card matching backend output
 function DiscordPreview({ name }: { name: string }) {
     return (
-        <div className="rounded-xl overflow-hidden border border-[#1e1f22] font-sans text-2xs">
+        <div className="rounded-xl overflow-hidden border border-[#1e1f22] font-sans text-xs">
             {/* Header bar */}
             <div className="flex items-center gap-2 px-3 py-2 bg-[#313338]">
                 <div className="w-7 h-7 rounded-full bg-[#5865F2] flex items-center justify-center shrink-0">
@@ -169,7 +169,7 @@ function DiscordPreview({ name }: { name: string }) {
                 </div>
                 <div className="flex items-center gap-1.5">
                     <span className="text-white font-semibold">{name || 'EVERYUP'}</span>
-                    <span className="px-1 py-px bg-[#5865F2] text-white text-2xs font-bold rounded uppercase">APP</span>
+                    <span className="px-1 py-px bg-[#5865F2] text-white text-xs font-bold rounded uppercase">APP</span>
                 </div>
             </div>
             {/* Message area */}
@@ -186,16 +186,16 @@ function DiscordPreview({ name }: { name: string }) {
                         {/* Fields row */}
                         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 pt-1">
                             <div>
-                                <p className="text-[#b5bac1] text-2xs font-bold uppercase mb-0.5">Service ID</p>
+                                <p className="text-[#b5bac1] text-xs font-bold uppercase mb-0.5">Service ID</p>
                                 <p className="text-[#dbdee1]">test</p>
                             </div>
                             <div>
-                                <p className="text-[#b5bac1] text-2xs font-bold uppercase mb-0.5">Status</p>
+                                <p className="text-[#b5bac1] text-xs font-bold uppercase mb-0.5">Status</p>
                                 <p className="text-[#dbdee1]">healthy</p>
                             </div>
                         </div>
                         {/* Footer */}
-                        <p className="text-[#87898c] text-2xs pt-1 border-t border-[#3f4147]">
+                        <p className="text-[#87898c] text-xs pt-1 border-t border-[#3f4147]">
                             EVERYUP • {new Date().toISOString().slice(0, 10)}
                         </p>
                     </div>
@@ -208,7 +208,7 @@ function DiscordPreview({ name }: { name: string }) {
 // Slack: Block Kit attachment matching backend output
 function SlackPreview({ name }: { name: string }) {
     return (
-        <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-[#424242] font-sans text-2xs">
+        <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-[#424242] font-sans text-xs">
             {/* Header bar */}
             <div className="flex items-center gap-2 px-3 py-2 bg-[#4A154B]">
                 <div className="w-7 h-7 rounded bg-white flex items-center justify-center shrink-0">
@@ -216,7 +216,7 @@ function SlackPreview({ name }: { name: string }) {
                 </div>
                 <div className="flex items-center gap-1.5">
                     <span className="text-white font-semibold">{name || 'EVERYUP'}</span>
-                    <span className="px-1 py-px bg-white/25 text-white text-2xs font-bold rounded uppercase">APP</span>
+                    <span className="px-1 py-px bg-white/25 text-white text-xs font-bold rounded uppercase">APP</span>
                 </div>
             </div>
             {/* Message body */}
@@ -234,16 +234,16 @@ function SlackPreview({ name }: { name: string }) {
                     {/* Fields row */}
                     <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 pt-0.5">
                         <div>
-                            <p className="font-bold text-slate-700 dark:text-slate-300 text-2xs">Service ID</p>
+                            <p className="font-bold text-slate-700 dark:text-slate-300 text-xs">Service ID</p>
                             <p className="text-slate-500 dark:text-slate-400">test</p>
                         </div>
                         <div>
-                            <p className="font-bold text-slate-700 dark:text-slate-300 text-2xs">Status</p>
+                            <p className="font-bold text-slate-700 dark:text-slate-300 text-xs">Status</p>
                             <p className="text-slate-500 dark:text-slate-400">healthy</p>
                         </div>
                     </div>
                     {/* Context footer */}
-                    <p className="text-slate-400 dark:text-slate-500 text-2xs pt-1">
+                    <p className="text-slate-400 dark:text-slate-500 text-xs pt-1">
                         EVERYUP • {new Date().toISOString().slice(0, 10).replace(/-/g, '-')} {new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                     </p>
                 </div>
@@ -396,7 +396,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                             <input {...register('type')} type="radio" value={type} className="sr-only" />
                                             <m.Icon size={26} className={active ? m.color : 'text-slate-400 dark:text-text-dim-dark'} />
                                             <span className={`text-sm font-bold ${active ? m.color : 'text-slate-600 dark:text-text-muted-dark'}`}>{m.label}</span>
-                                            <span className="text-2xs font-semibold uppercase tracking-wider text-slate-400">{m.sub}</span>
+                                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">{m.sub}</span>
                                         </label>
                                     );
                                 })}
@@ -472,8 +472,8 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                             <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30">
                                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                                 <div>
-                                    <p className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest">채널 미리보기</p>
-                                    <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">실제 전송 메시지 형식</p>
+                                    <p className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest">채널 미리보기</p>
+                                    <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">실제 전송 메시지 형식</p>
                                 </div>
                             </div>
                             <div className="p-5 space-y-4">
@@ -491,17 +491,17 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                 </div>
 
                                 {/* Config summary */}
-                                <div className="space-y-1.5 text-2xs">
+                                <div className="space-y-1.5 text-xs">
                                     {watchedType === 'telegram' ? (
                                         <>
                                             <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-lg">
-                                                <span className="text-slate-400 font-mono uppercase text-2xs tracking-wide">Bot Token</span>
+                                                <span className="text-slate-400 font-mono uppercase text-xs tracking-wide">Bot Token</span>
                                                 <span className="font-mono text-slate-600 dark:text-slate-400">
                                                     {watchedBotToken ? maskToken(watchedBotToken) : <span className="text-slate-300 dark:text-slate-600 italic">미입력</span>}
                                                 </span>
                                             </div>
                                             <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-lg">
-                                                <span className="text-slate-400 font-mono uppercase text-2xs tracking-wide">Chat ID</span>
+                                                <span className="text-slate-400 font-mono uppercase text-xs tracking-wide">Chat ID</span>
                                                 <span className="font-mono text-slate-600 dark:text-slate-400">
                                                     {watchedChatId || <span className="text-slate-300 dark:text-slate-600 italic">미입력</span>}
                                                 </span>
@@ -509,7 +509,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                         </>
                                     ) : (
                                         <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-lg gap-3">
-                                            <span className="text-slate-400 font-mono uppercase text-2xs tracking-wide shrink-0">Webhook</span>
+                                            <span className="text-slate-400 font-mono uppercase text-xs tracking-wide shrink-0">Webhook</span>
                                             <span className="font-mono text-slate-600 dark:text-slate-400 truncate text-right">
                                                 {watchedWebhook
                                                     ? watchedWebhook.replace(/^https?:\/\//, '').slice(0, 32) + (watchedWebhook.length > 40 ? '…' : '')
@@ -521,7 +521,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
 
                                 {/* Actual message preview */}
                                 <div>
-                                    <p className="text-2xs font-bold text-slate-400 uppercase tracking-widest mb-2">테스트 메시지 미리보기</p>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">테스트 메시지 미리보기</p>
                                     <PreviewComponent name={watchedName} />
                                 </div>
                             </div>
@@ -532,12 +532,12 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                             <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30">
                                 <MaterialIcon name="send" className="text-base text-slate-400" />
                                 <div>
-                                    <p className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest">테스트 전송</p>
-                                    <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">실제 채널로 테스트 메시지 발송</p>
+                                    <p className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest">테스트 전송</p>
+                                    <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">실제 채널로 테스트 메시지 발송</p>
                                 </div>
                             </div>
                             <div className="p-5 space-y-3">
-                                <p className="text-xs text-slate-500 dark:text-text-muted-dark leading-relaxed">
+                                <p className="text-sm text-slate-500 dark:text-text-muted-dark leading-relaxed">
                                     Sends a test message using the current form values. The channel is not saved.
                                 </p>
 
@@ -565,7 +565,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                         <MaterialIcon name="check_circle" className="text-base text-emerald-500 mt-0.5 shrink-0" />
                                         <div>
                                             <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400">발송 성공</p>
-                                            <p className="text-2xs text-emerald-600 dark:text-emerald-500 mt-0.5">{testTime}에 전송되었습니다</p>
+                                            <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-0.5">{testTime}에 전송되었습니다</p>
                                         </div>
                                     </div>
                                 )}
@@ -575,7 +575,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                         <MaterialIcon name="error" className="text-base text-red-500 mt-0.5 shrink-0" />
                                         <div>
                                             <p className="text-xs font-bold text-red-700 dark:text-red-400">발송 실패</p>
-                                            <p className="text-2xs text-red-600 dark:text-red-500 mt-0.5">{testError}</p>
+                                            <p className="text-xs text-red-600 dark:text-red-500 mt-0.5">{testError}</p>
                                         </div>
                                     </div>
                                 )}

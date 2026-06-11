@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTranslate } from '@tolgee/react';
 import { api, Metric, UptimeData } from '../../../services/api';
+import { getUptimeBarClass, getUptimeTextClass } from '../uptimeTone';
 
 interface CheckHistoryBarProps {
   serviceId: string;
@@ -69,12 +70,10 @@ export function CheckHistoryBar({ serviceId, refreshKey }: CheckHistoryBarProps)
         </div>
         {!loading && successRate !== null && (
           <div className="text-right shrink-0">
-            <span className={`text-2xl font-bold ${
-              successRate >= 99 ? 'text-green-500' : successRate >= 95 ? 'text-amber-500' : 'text-red-500'
-            }`}>
+            <span className={`text-2xl font-bold ${getUptimeTextClass(successRate)}`}>
               {successRate}%
             </span>
-            <p className="text-xs text-slate-400 dark:text-text-muted-dark">
+            <p className="text-sm text-slate-400 dark:text-text-muted-dark">
               {t('성공률')}
             </p>
           </div>
@@ -147,16 +146,14 @@ export function CheckHistoryBar({ serviceId, refreshKey }: CheckHistoryBarProps)
         </div>
       ) : (
         <div className="flex items-center gap-6">
-          {/* Uptime percentage — large */}
+          {/* Uptime percentage - large */}
           <div className="shrink-0">
             <p className={`text-3xl font-bold tabular-nums leading-none ${
-              (uptimeData?.percentage ?? 0) >= 99 ? 'text-green-500'
-              : (uptimeData?.percentage ?? 0) >= 95 ? 'text-amber-500'
-              : 'text-red-500'
+              uptimeData ? getUptimeTextClass(uptimeData.percentage) : 'text-slate-400 dark:text-text-dim-dark'
             }`}>
               {uptimeData ? `${uptimeData.percentage.toFixed(2)}%` : '-'}
             </p>
-            <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-1">
+            <p className="text-sm text-slate-400 dark:text-text-dim-dark mt-1">
               {t('가동률')} (90{tc('common.days')})
             </p>
           </div>
@@ -166,14 +163,12 @@ export function CheckHistoryBar({ serviceId, refreshKey }: CheckHistoryBarProps)
             <div className="w-full h-2.5 rounded-full bg-slate-100 dark:bg-ui-hover-dark overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-500 ${
-                  (uptimeData?.percentage ?? 0) >= 99 ? 'bg-green-500'
-                  : (uptimeData?.percentage ?? 0) >= 95 ? 'bg-amber-500'
-                  : 'bg-red-500'
+                  uptimeData ? getUptimeBarClass(uptimeData.percentage) : 'bg-slate-300 dark:bg-ui-active-dark'
                 }`}
                 style={{ width: `${uptimeData?.percentage ?? 0}%` }}
               />
             </div>
-            <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center justify-between text-sm">
               <span className="text-slate-400 dark:text-text-muted-dark">{t('총 인시던트')}</span>
               <span className={`font-semibold ${incidentDays > 0 ? 'text-amber-500' : 'text-slate-900 dark:text-white'}`}>
                 {incidentDays > 0 ? `${incidentDays}${tc('common.days')}` : tc('common.none', { defaultValue: '-' })}

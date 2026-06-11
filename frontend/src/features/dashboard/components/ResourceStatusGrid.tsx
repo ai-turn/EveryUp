@@ -29,7 +29,7 @@ export function ResourceStatusGrid() {
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{t('dashboard.infrastructure.subtitle')}</p>
+          <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{t('dashboard.infrastructure.subtitle')}</p>
         </div>
         {!loading && !error && items.length > 0 && (
           <button
@@ -47,7 +47,7 @@ export function ResourceStatusGrid() {
         <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
           <MaterialIcon name="error_outline" className="text-lg text-red-500 shrink-0" />
           <p className="text-sm text-red-700 dark:text-red-400 flex-1">{t('common.loadError', { defaultValue: 'Failed to load' })}</p>
-          <button onClick={refetch} className="text-xs font-bold text-red-600 dark:text-red-400 hover:underline cursor-pointer shrink-0">
+          <button onClick={refetch} className="text-sm font-bold text-red-600 dark:text-red-400 hover:underline cursor-pointer shrink-0">
             {t('common.retry', { defaultValue: 'Retry' })}
           </button>
         </div>

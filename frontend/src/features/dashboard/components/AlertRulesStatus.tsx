@@ -89,7 +89,7 @@ export function AlertRulesStatus() {
                 </p>
                 <button
                   onClick={() => navigate('/alerts?tab=rules')}
-                  className="mt-3 text-xs font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer"
+                  className="mt-3 text-sm font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer"
                 >
                   {t('dashboard.alertRules.add')} →
                 </button>
@@ -110,7 +110,7 @@ export function AlertRulesStatus() {
                       <p className="text-sm font-semibold text-slate-800 dark:text-text-base-dark truncate">
                         {rule.name}
                       </p>
-                      <p className="text-xs text-slate-400 dark:text-text-dim-dark capitalize">
+                      <p className="text-sm text-slate-400 dark:text-text-dim-dark capitalize">
                         {rule.severity} · {rule.metric}
                       </p>
                     </div>
@@ -132,7 +132,7 @@ export function AlertRulesStatus() {
             {rules.length > 5 && (
               <button
                 onClick={() => navigate('/alerts?tab=rules')}
-                className="w-full py-2 text-xs font-semibold text-slate-400 dark:text-text-dim-dark hover:text-primary dark:hover:text-primary transition-colors text-center"
+                className="w-full py-2 text-sm font-semibold text-slate-400 dark:text-text-dim-dark hover:text-primary dark:hover:text-primary transition-colors text-center"
               >
                 {t('common.showMore', { count: rules.length - 5 })}
               </button>

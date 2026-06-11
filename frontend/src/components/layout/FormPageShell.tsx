@@ -35,7 +35,7 @@ export function FormPageShell({ title, subtitle, children, backTo }: FormPageShe
         </button>
         <div className="min-w-0">
           <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight truncate">{title}</h1>
-          {subtitle && <p className="text-xs text-slate-500 dark:text-text-muted-dark truncate">{subtitle}</p>}
+          {subtitle && <p className="text-sm text-slate-500 dark:text-text-muted-dark truncate">{subtitle}</p>}
         </div>
       </header>
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">{children}</div>

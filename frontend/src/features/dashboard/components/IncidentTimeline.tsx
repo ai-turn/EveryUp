@@ -45,7 +45,7 @@ export function IncidentTimeline() {
           ) : error || !incidents || incidents.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-6 text-center">
               <MaterialIcon name="check_circle" className="text-3xl text-emerald-400 dark:text-emerald-500 mb-2" />
-              <p className="text-xs font-medium text-slate-400 dark:text-text-muted-dark">
+              <p className="text-sm font-medium text-slate-400 dark:text-text-muted-dark">
                 {t('dashboard.timeline.empty')}
               </p>
             </div>
@@ -70,7 +70,7 @@ export function IncidentTimeline() {
                       <p className="text-sm font-semibold text-slate-800 dark:text-text-base-dark truncate">
                         {incident.serviceName}
                       </p>
-                      <p className="text-xs text-slate-400 dark:text-text-dim-dark truncate">
+                      <p className="text-sm text-slate-400 dark:text-text-dim-dark truncate">
                         {incident.message}
                       </p>
                     </div>

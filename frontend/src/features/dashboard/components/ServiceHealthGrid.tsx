@@ -87,7 +87,7 @@ export function ServiceHealthGrid({
                 </span>
               )}
             </div>
-            <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{t('dashboard.healthCheck.subtitle')}</p>
+            <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{t('dashboard.healthCheck.subtitle')}</p>
           </div>
           {!loading && !error && services && services.length > 0 && (
             <button

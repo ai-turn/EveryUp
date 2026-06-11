@@ -49,7 +49,7 @@ export function InfraMobileView({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">{t('infra.title')}</h1>
-          <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{t('infra.subtitle')}</p>
+          <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{t('infra.subtitle')}</p>
         </div>
         <button
           onClick={onAddResource}
@@ -140,7 +140,7 @@ export function InfraMobileView({
           <p className="text-sm text-slate-400 dark:text-text-muted-dark mt-2">{t('infra.noResults')}</p>
           <button
             onClick={onClearFilters}
-            className="mt-2 text-xs font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer"
+            className="mt-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer"
           >
             {t('common.clearFilters')}
           </button>
@@ -153,7 +153,7 @@ export function InfraMobileView({
 function MobileKpi({ label, value, tone = 'text-slate-900 dark:text-white' }: { label: string; value: number; tone?: string }) {
   return (
     <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-3">
-      <p className="text-xs font-medium text-slate-500 dark:text-text-muted-dark truncate">{label}</p>
+      <p className="text-sm font-medium text-slate-500 dark:text-text-muted-dark truncate">{label}</p>
       <p className={`text-xl font-bold ${tone}`}>{value}</p>
     </div>
   );

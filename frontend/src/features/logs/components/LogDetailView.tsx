@@ -131,7 +131,7 @@ function DeleteDialog({
             <h3 className="text-base font-bold text-slate-900 dark:text-white">
               {t('logServices.delete.title')}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">
+            <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">
               {t('logServices.delete.subtitle')}
             </p>
           </div>
@@ -193,7 +193,7 @@ function RevealedKeyModal({
             <h3 className="text-base font-bold text-slate-900 dark:text-white">
               {t('logServices.apiKey.revealTitle')}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">
+            <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">
               {t('logServices.apiKey.revealDesc')}
             </p>
           </div>

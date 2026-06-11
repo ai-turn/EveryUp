@@ -96,7 +96,7 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-bold text-base truncate text-slate-900 dark:text-white">{service.name}</h3>
-          <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">
+          <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">
             {t('logs.card.recent', { count: recentLogs.length })}
           </p>
         </div>
@@ -119,7 +119,7 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
       <div className="flex gap-2">
         {levelsOrder.map((level) => (
           <div key={level} className="flex-1 flex flex-col items-center gap-0.5">
-            <div className="flex items-center gap-1 text-2xs uppercase font-bold text-slate-400 dark:text-text-dim-dark">
+            <div className="flex items-center gap-1 text-xs uppercase font-bold text-slate-400 dark:text-text-dim-dark">
               <span className={`w-1.5 h-1.5 rounded-full ${levelDotStyle[level]}`} />
               <span>{level}</span>
             </div>
@@ -151,7 +151,7 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
 
       {/* Footer: last activity (left) + level filter chips (right) */}
       <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-ui-border-dark/50">
-        <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-text-muted-dark min-w-0 truncate">
+        <span className="flex items-center gap-1 text-sm text-slate-500 dark:text-text-muted-dark min-w-0 truncate">
           <MaterialIcon name="schedule" className="text-xs" />
           {formatTimeAgo(latestLog?.createdAt)}
         </span>

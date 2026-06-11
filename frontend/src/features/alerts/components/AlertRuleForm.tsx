@@ -97,7 +97,7 @@ function FormStep({ n, title, subtitle, children }: { n: number; title: string; 
                 </span>
                 <div>
                     <p className="text-sm font-bold text-slate-900 dark:text-white">{title}</p>
-                    {subtitle && <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{subtitle}</p>}
+                    {subtitle && <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{subtitle}</p>}
                 </div>
             </div>
             <div className="p-5 space-y-5">{children}</div>
@@ -109,11 +109,11 @@ function Field({ label, hint, required, children }: { label: string; hint?: stri
     return (
         <div>
             <div className="flex items-center gap-1 mb-2">
-                <label className="text-xs font-bold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide">{label}</label>
+                <label className="text-sm font-bold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide">{label}</label>
                 {required && <span className="text-red-500 text-xs">*</span>}
             </div>
             {children}
-            {hint && <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-1.5 italic">{hint}</p>}
+            {hint && <p className="text-sm text-slate-400 dark:text-text-dim-dark mt-1.5 italic">{hint}</p>}
         </div>
     );
 }
@@ -400,7 +400,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                             <MaterialIcon name={cat.icon} className="text-base" />
                                             {cat.label}
                                         </span>
-                                        <span className="text-2xs font-semibold uppercase tracking-wider opacity-60">{cat.sub}</span>
+                                        <span className="text-xs font-semibold uppercase tracking-wider opacity-60">{cat.sub}</span>
                                     </button>
                                 ))}
                             </div>
@@ -480,7 +480,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                             <MaterialIcon name={p.icon} className="text-sm" />
                                             {p.label}
                                         </span>
-                                        <span className="text-2xs font-semibold uppercase tracking-wider opacity-60">{p.sub}</span>
+                                        <span className="text-xs font-semibold uppercase tracking-wider opacity-60">{p.sub}</span>
                                     </button>
                                 ))}
                             </div>
@@ -643,7 +643,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                     >
                                         <MaterialIcon name={ch.type === 'telegram' ? 'send' : 'sports_esports'} className="text-sm" />
                                         <span className="text-xs font-bold flex-1 text-left">{ch.name}</span>
-                                        <span className="text-2xs uppercase tracking-wider text-slate-400 font-mono">{ch.type}</span>
+                                        <span className="text-xs uppercase tracking-wider text-slate-400 font-mono">{ch.type}</span>
                                     </button>
                                 ))}
                             </div>
@@ -651,7 +651,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
 
                         <div>
                             <div className="flex items-center gap-2 mb-2">
-                                <label className="text-xs font-bold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide">
+                                <label className="text-sm font-bold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide">
                                     <span className="text-sky-400 font-mono">"message"</span>
                                 </label>
                                 <span className="text-xs font-normal text-slate-400 normal-case">
@@ -689,15 +689,15 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                             <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30">
                                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                                 <div>
-                                    <p className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest">라이브 미리보기</p>
-                                    <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">입력값 변경 시 자동 갱신</p>
+                                    <p className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest">라이브 미리보기</p>
+                                    <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">입력값 변경 시 자동 갱신</p>
                                 </div>
                             </div>
                             <div className="p-5 space-y-5">
 
                                 {/* IF block */}
                                 <div>
-                                    <p className="text-2xs font-bold text-slate-400 uppercase tracking-widest mb-2">IF (조건)</p>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">IF (조건)</p>
                                     <div className="bg-slate-900 dark:bg-slate-950 rounded-lg px-4 py-3 font-mono text-xs leading-7">
                                         <div>
                                             <span className="text-sky-300">IF </span>
@@ -738,14 +738,14 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
 
                                 {/* THEN block */}
                                 <div>
-                                    <p className="text-2xs font-bold text-slate-400 uppercase tracking-widest mb-2">THEN (메시지)</p>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">THEN (메시지)</p>
                                     <div className={`border-l-4 pl-3 pr-3 py-3 rounded-r-lg ${severityClasses.border} ${severityClasses.bg}`}>
                                         <div className="flex items-center gap-2 mb-1.5">
-                                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-2xs font-bold uppercase tracking-wide ${severityClasses.badge}`}>
+                                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide ${severityClasses.badge}`}>
                                                 <span className={`w-1.5 h-1.5 rounded-full ${severityClasses.dot}`} />
                                                 {watchedSeverity}
                                             </span>
-                                            <span className="text-xs text-slate-500 dark:text-text-muted-dark truncate">{watchedName || '<규칙 이름>'}</span>
+                                            <span className="text-sm text-slate-500 dark:text-text-muted-dark truncate">{watchedName || '<규칙 이름>'}</span>
                                         </div>
                                         <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
                                             {customMessage || buildDefaultMessage(watchedMetric, watchedOperator, watchedThreshold, watchedDuration)}
@@ -755,7 +755,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
 
                                 {/* Channels */}
                                 <div>
-                                    <p className="text-2xs font-bold text-slate-400 uppercase tracking-widest mb-2">
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
                                         발송 → {watchedChannelIds.length === 0 ? `${channels.length}개 채널 전체` : `${watchedChannelIds.length}개 선택`}
                                     </p>
                                     <div className="space-y-1.5">
@@ -765,7 +765,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                             <div key={ch.id} className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-lg">
                                                 <MaterialIcon name={ch.type === 'telegram' ? 'send' : 'sports_esports'} className="text-sm text-slate-400" />
                                                 <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex-1 truncate">{ch.name}</span>
-                                                <span className="text-2xs text-slate-400 uppercase font-mono">{ch.type}</span>
+                                                <span className="text-xs text-slate-400 uppercase font-mono">{ch.type}</span>
                                             </div>
                                         ))}
                                         {previewChannels.length > 5 && (
@@ -776,7 +776,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
 
                                 {/* JSON payload */}
                                 <div>
-                                    <p className="text-2xs font-bold text-slate-400 uppercase tracking-widest mb-2">JSON 페이로드</p>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">JSON 페이로드</p>
                                     <div className="rounded-lg overflow-hidden border border-slate-700">
                                         <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 border-b border-slate-700">
                                             <div className="flex gap-1">
@@ -786,7 +786,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                             </div>
                                             <span className="text-xs text-slate-500 font-mono ml-1">payload.json</span>
                                         </div>
-                                        <div className="bg-slate-950 px-3 py-2.5 font-mono text-2xs leading-5 overflow-x-auto">
+                                        <div className="bg-slate-950 px-3 py-2.5 font-mono text-xs leading-5 overflow-x-auto">
                                             <span className="text-slate-500">{'{'}</span>
                                             <div className="pl-3 space-y-px">
                                                 <div><span className="text-sky-400">"type"</span><span className="text-slate-500">: </span><span className="text-emerald-400">"{isApiStatus ? 'api_request' : isLog ? 'log' : isEndpoint ? 'healthcheck' : 'resource'}"</span><span className="text-slate-500">,</span></div>
@@ -807,8 +807,8 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
 
                         {/* Eval path card */}
                         <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-4">
-                            <p className="text-2xs font-bold text-slate-400 uppercase tracking-widest mb-2">평가 경로</p>
-                            <p className="text-xs text-slate-500 dark:text-text-muted-dark font-mono leading-relaxed whitespace-pre-wrap">
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">평가 경로</p>
+                            <p className="text-sm text-slate-500 dark:text-text-muted-dark font-mono leading-relaxed whitespace-pre-wrap">
                                 {getEvalPath(watchedCategory, watchedMetric)}
                             </p>
                         </div>

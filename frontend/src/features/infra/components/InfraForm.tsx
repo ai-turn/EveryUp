@@ -470,7 +470,7 @@ export function InfraForm({ onSuccess, onCancel, host, onSubmittingChange }: Inf
                             <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate">
                                 {watchedName || t('infra.modal.hostNamePlaceholder')}
                             </h3>
-                            <p className="text-xs text-slate-500 dark:text-text-muted-dark truncate">
+                            <p className="text-sm text-slate-500 dark:text-text-muted-dark truncate">
                                 {watchedIp || t('infra.modal.ipPlaceholder')}
                             </p>
                         </div>

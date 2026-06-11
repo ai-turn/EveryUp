@@ -59,7 +59,7 @@ function ServiceContent({
 
       <div className="flex items-center gap-2 mt-2 mb-4">
         <MaterialIcon name="report" className="text-base text-slate-400 dark:text-text-dim-dark" />
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-text-dim-dark">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-400 dark:text-text-dim-dark">
           {t('장애')}
         </h2>
         <div className="flex-1 border-t border-slate-200 dark:border-ui-border-dark" />
@@ -245,13 +245,13 @@ function MobileLayout(props: HealthCheckDetailViewProps) {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-bold transition-all ${
               activeTab === tab.key
                 ? 'bg-white dark:bg-bg-surface-dark text-slate-900 dark:text-white shadow-sm'
                 : 'text-slate-500 dark:text-text-muted-dark'
             }`}
           >
-            <MaterialIcon name={tab.icon} className="text-sm" />
+            <MaterialIcon name={tab.icon} className="text-lg" />
             {tab.label}
           </button>
         ))}

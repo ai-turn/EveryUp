@@ -71,7 +71,7 @@ export function AlertsMobileView({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">{t('alerts.title')}</h1>
-          <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{t('alerts.subtitle')}</p>
+          <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{t('alerts.subtitle')}</p>
         </div>
         {activeTab === 'channels' && (
           <button
@@ -88,7 +88,7 @@ export function AlertsMobileView({
       {stats && (
         <div className="grid grid-cols-3 gap-2">
           <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-3">
-            <p className="text-xs font-medium text-slate-500 dark:text-text-muted-dark truncate">
+            <p className="text-sm font-medium text-slate-500 dark:text-text-muted-dark truncate">
               {t('alerts.history.stats.successRate', { defaultValue: 'Success' })}
             </p>
             <p className="text-xl font-bold text-slate-900 dark:text-white">{stats.successRate.toFixed(0)}%</p>
@@ -169,7 +169,7 @@ export function AlertsMobileView({
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{channel.name}</p>
                         {!channel.isEnabled && (
-                          <span className="px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wider bg-slate-200 dark:bg-ui-active-dark text-slate-500 dark:text-text-muted-dark rounded-full shrink-0">
+                          <span className="px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider bg-slate-200 dark:bg-ui-active-dark text-slate-500 dark:text-text-muted-dark rounded-full shrink-0">
                             {t('common.disabled', { defaultValue: 'Disabled' })}
                           </span>
                         )}
@@ -244,7 +244,7 @@ export function AlertsMobileView({
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{rule.name}</p>
-                      <p className="text-xs text-slate-500 dark:text-text-muted-dark capitalize">
+                      <p className="text-sm text-slate-500 dark:text-text-muted-dark capitalize">
                         {rule.severity} · {rule.metric} {rule.operator} {rule.threshold}
                       </p>
                     </div>
@@ -289,7 +289,7 @@ export function AlertsMobileView({
                       <p className="text-sm font-semibold text-slate-800 dark:text-text-base-dark truncate">
                         {item.hostName || item.serviceName || item.channelName}
                       </p>
-                      <p className="text-xs text-slate-500 dark:text-text-muted-dark truncate mt-0.5">
+                      <p className="text-sm text-slate-500 dark:text-text-muted-dark truncate mt-0.5">
                         {item.message}
                       </p>
                       <div className="flex items-center gap-2 mt-1">

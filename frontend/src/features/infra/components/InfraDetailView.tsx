@@ -397,7 +397,7 @@ function MobileLayout(props: InfraDetailViewProps) {
                       style={{ width: `${gauge.percentage}%` }}
                     />
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-1.5">
+                  <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-1.5">
                     {gauge.subtitle}
                   </p>
                 </div>
@@ -438,7 +438,7 @@ function MobileLayout(props: InfraDetailViewProps) {
                       {proc.status}
                     </span>
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-text-muted-dark">
+                  <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-text-muted-dark">
                     <span>PID {proc.pid}</span>
                     <span className="font-mono">CPU {proc.cpu}%</span>
                     <span className="font-mono">MEM {proc.memory}</span>

@@ -59,7 +59,7 @@ export function LogServicesGrid() {
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">{t('dashboard.logs.subtitle')}</p>
+          <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{t('dashboard.logs.subtitle')}</p>
         </div>
         {!loading && services.length > 0 && (
           <button

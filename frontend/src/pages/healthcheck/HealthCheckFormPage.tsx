@@ -48,7 +48,7 @@ export function HealthCheckFormPage() {
   return (
     <div className="-m-4 sm:-m-6 md:-m-8 bg-white dark:bg-bg-main-dark">
       <header className="sticky top-0 z-20 border-b border-slate-200 dark:border-ui-border-dark px-6 py-3 bg-white/95 dark:bg-bg-main-dark/95 backdrop-blur">
-        <nav className="flex items-center gap-1 text-xs text-slate-500 dark:text-text-muted-dark mb-2">
+        <nav className="flex items-center gap-1 text-sm text-slate-500 dark:text-text-muted-dark mb-2">
           <button
             type="button"
             onClick={() => navigate('/healthcheck')}

@@ -103,7 +103,7 @@ export function DashboardMobileView() {
           </div>
           <button
             onClick={() => navigate('/healthcheck')}
-            className="text-xs font-semibold text-primary"
+            className="text-sm font-semibold text-primary"
           >
             {t('common.viewMore', { defaultValue: 'View More' })}
           </button>
@@ -118,10 +118,10 @@ export function DashboardMobileView() {
           ) : !services || services.length === 0 ? (
             <div className="rounded-xl border-2 border-dashed border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30 py-6 text-center">
               <IconHealthCheck size={28} className="text-slate-300 dark:text-text-dim-dark block mx-auto" />
-              <p className="text-xs font-medium text-slate-400 dark:text-text-muted-dark mt-2">
+              <p className="text-sm font-medium text-slate-400 dark:text-text-muted-dark mt-2">
                 {t('dashboard.healthCheck.empty')}
               </p>
-              <p className="text-xs text-slate-300 dark:text-text-dim-dark mt-0.5">
+              <p className="text-sm text-slate-300 dark:text-text-dim-dark mt-0.5">
                 {t('dashboard.healthCheck.emptyDesc')}
               </p>
             </div>
@@ -144,7 +144,7 @@ export function DashboardMobileView() {
                     <span className="text-xs font-mono text-slate-500 dark:text-text-muted-dark shrink-0">
                       {svc.latency}
                     </span>
-                    <span className={`text-xs font-bold shrink-0 ${sc.text}`}>
+                    <span className={`text-sm font-bold shrink-0 ${sc.text}`}>
                       {svc.uptime}
                     </span>
                   </button>
@@ -167,7 +167,7 @@ export function DashboardMobileView() {
           </div>
           <button
             onClick={() => navigate('/logs')}
-            className="text-xs font-semibold text-primary cursor-pointer"
+            className="text-sm font-semibold text-primary cursor-pointer"
           >
             {t('common.viewMore', { defaultValue: 'View More' })}
           </button>
@@ -182,10 +182,10 @@ export function DashboardMobileView() {
           ) : logServices.length === 0 ? (
             <div className="rounded-xl border-2 border-dashed border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30 py-6 text-center">
               <IconLogs size={28} className="text-slate-300 dark:text-text-dim-dark block mx-auto" />
-              <p className="text-xs font-medium text-slate-400 dark:text-text-muted-dark mt-2">
+              <p className="text-sm font-medium text-slate-400 dark:text-text-muted-dark mt-2">
                 {t('dashboard.logs.empty')}
               </p>
-              <p className="text-xs text-slate-300 dark:text-text-dim-dark mt-0.5">
+              <p className="text-sm text-slate-300 dark:text-text-dim-dark mt-0.5">
                 {t('dashboard.logs.emptyDesc')}
               </p>
             </div>
@@ -212,7 +212,7 @@ export function DashboardMobileView() {
                           <span className={`text-xs font-bold px-1.5 py-0.5 rounded uppercase shrink-0 ${logLevelBadge[latest.level]}`}>
                             {latest.level.toUpperCase()}
                           </span>
-                          <span className="text-xs text-slate-500 dark:text-text-muted-dark flex-1 truncate">
+                          <span className="text-sm text-slate-500 dark:text-text-muted-dark flex-1 truncate">
                             {latest.message}
                           </span>
                           <span className="text-xs text-slate-400 dark:text-text-dim-dark shrink-0">
@@ -220,7 +220,7 @@ export function DashboardMobileView() {
                           </span>
                         </>
                       ) : (
-                        <span className="text-xs text-slate-400 dark:text-text-dim-dark italic">
+                        <span className="text-sm text-slate-400 dark:text-text-dim-dark italic">
                           {t('logs.noLogs')}
                         </span>
                       )}
@@ -245,7 +245,7 @@ export function DashboardMobileView() {
           </div>
           <button
             onClick={() => navigate('/infra')}
-            className="text-xs font-semibold text-primary cursor-pointer"
+            className="text-sm font-semibold text-primary cursor-pointer"
           >
             {t('common.viewMore', { defaultValue: 'View More' })}
           </button>
@@ -266,12 +266,12 @@ export function DashboardMobileView() {
               <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-ui-hover-dark flex items-center justify-center mb-2">
                 <IconInfra size={20} className="text-slate-400" />
               </div>
-              <p className="text-xs font-medium text-slate-400 dark:text-text-dim-dark">
+              <p className="text-sm font-medium text-slate-400 dark:text-text-dim-dark">
                 {t('dashboard.infrastructure.empty', { defaultValue: 'No hosts registered' })}
               </p>
               <button
                 onClick={() => navigate('/infra')}
-                className="mt-2 text-xs font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer"
+                className="mt-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer"
               >
                 {t('dashboard.infrastructure.add', { defaultValue: 'Add Infrastructure' })} →
               </button>
@@ -290,7 +290,7 @@ export function DashboardMobileView() {
                       {res.name}
                     </p>
                   </div>
-                  <span className={`text-xs font-bold capitalize ${resourceStatusText[res.status] || 'text-slate-400'}`}>
+                  <span className={`text-sm font-bold capitalize ${resourceStatusText[res.status] || 'text-slate-400'}`}>
                     {res.status}
                   </span>
                 </button>
