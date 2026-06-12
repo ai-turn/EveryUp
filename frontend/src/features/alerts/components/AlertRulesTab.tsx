@@ -245,7 +245,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
             <button
               key={c.id}
               onClick={() => setCategoryFilter(c.id)}
-              className={`px-2.5 py-1.5 text-xs font-bold rounded-md transition-colors ${
+              className={`px-2.5 py-1.5 text-sm font-bold rounded-md transition-colors ${
                 categoryFilter === c.id
                   ? 'bg-white dark:bg-ui-hover-dark text-primary shadow-sm'
                   : 'text-slate-500 hover:text-slate-700 dark:text-text-muted-dark dark:hover:text-white'
@@ -307,13 +307,13 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                 <SortableTH label={t('alerts.rules.colName', { defaultValue: 'Rule' })} active={sortKey === 'name'} dir={sortDir} onClick={() => onSort('name')} />
                 <SortableTH label={t('alerts.rules.colCategory', { defaultValue: 'Category' })} active={sortKey === 'category'} dir={sortDir} onClick={() => onSort('category')} />
                 <SortableTH label={t('alerts.rules.colTarget', { defaultValue: 'Target' })} active={sortKey === 'target'} dir={sortDir} onClick={() => onSort('target')} />
-                <th className="px-3 py-2 text-left text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <th className="px-3 py-2 text-left text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.rules.colCondition', { defaultValue: 'Condition' })}
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <th className="px-3 py-2 text-left text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.rules.colChannels', { defaultValue: 'Channels' })}
                 </th>
-                <th className="px-3 py-2 text-right text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <th className="px-3 py-2 text-right text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.rules.colActions', { defaultValue: 'Actions' })}
                 </th>
               </tr>
@@ -356,10 +356,10 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                           {cat === 'endpoint' ? 'health' : cat}
                         </span>
                       </td>
-                      <td className="px-3 py-2.5 text-xs text-slate-700 dark:text-text-muted-dark max-w-[200px]">
+                      <td className="px-3 py-2.5 text-sm text-slate-700 dark:text-text-muted-dark max-w-[200px]">
                         <span className="truncate block">{targetLabel(rule, services, hosts, t)}</span>
                       </td>
-                      <td className="px-3 py-2.5 font-mono text-xs text-slate-700 dark:text-text-muted-dark whitespace-nowrap">
+                      <td className="px-3 py-2.5 font-mono text-sm text-slate-700 dark:text-text-muted-dark whitespace-nowrap">
                         <span className="text-slate-900 dark:text-white font-semibold">{conditionExpr(rule)}</span>
                         <span className="text-slate-400 dark:text-text-dim-dark"> · {suffixExpr(rule, services, t)}</span>
                       </td>
@@ -430,7 +430,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
 
 function SortableTH({ label, active, dir, onClick }: { label: string; active: boolean; dir: SortDir; onClick: () => void }) {
   return (
-    <th className="px-3 py-2 text-left text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark cursor-pointer select-none" onClick={onClick}>
+    <th className="px-3 py-2 text-left text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark cursor-pointer select-none" onClick={onClick}>
       <span className={`inline-flex items-center gap-1 ${active ? 'text-slate-900 dark:text-white' : ''}`}>
         {label}
         <span className={active ? 'opacity-100' : 'opacity-30'}>{active && dir === 'desc' ? '↓' : '↑'}</span>
@@ -443,7 +443,7 @@ function ChannelChips({ rule, channels }: { rule: AlertRule; channels: Notificat
   const { t } = useTranslation('alerts');
   if (!rule.channelIds || rule.channelIds.length === 0) {
     return (
-      <span className="text-xs italic text-slate-400 dark:text-text-dim-dark">
+      <span className="text-sm italic text-slate-400 dark:text-text-dim-dark">
         {t('alerts.rules.allChannels', { defaultValue: 'all channels' })}
       </span>
     );

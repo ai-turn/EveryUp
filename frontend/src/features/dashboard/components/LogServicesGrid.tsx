@@ -54,7 +54,7 @@ export function LogServicesGrid() {
               {t('dashboard.logs.title')}
             </h2>
             {!loading && services.length > 0 && (
-              <span className="text-xs font-semibold text-slate-500 dark:text-text-muted-dark bg-slate-100 dark:bg-ui-hover-dark px-2 py-0.5 rounded-full">
+              <span className="text-sm font-semibold text-slate-500 dark:text-text-muted-dark bg-slate-100 dark:bg-ui-hover-dark px-2 py-0.5 rounded-full">
                 {services.length}
               </span>
             )}

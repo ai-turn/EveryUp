@@ -134,7 +134,7 @@ export function ResponseTimeChart({ serviceId, refreshKey, timeout }: ResponseTi
               key={range}
               onClick={() => setTimeRange(range)}
               aria-pressed={timeRange === range}
-              className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${
+              className={`px-3 py-1.5 text-sm font-bold rounded-md transition-colors ${
                 timeRange === range
                   ? 'bg-slate-200 dark:bg-chart-border text-slate-900 dark:text-white'
                   : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-900 dark:hover:text-white'

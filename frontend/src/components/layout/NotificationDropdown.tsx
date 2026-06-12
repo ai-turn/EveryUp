@@ -76,16 +76,16 @@ function NotificationItem({ item, isUnread, lang, onRead }: NotificationItemProp
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className={`text-xs leading-snug line-clamp-2 ${isUnread ? 'text-text-base dark:text-text-base-dark font-medium' : 'text-text-muted dark:text-text-muted-dark'}`}>
+        <p className={`text-sm leading-snug line-clamp-2 ${isUnread ? 'text-text-base dark:text-text-base-dark font-medium' : 'text-text-muted dark:text-text-muted-dark'}`}>
           {item.message}
         </p>
         <div className="flex items-center gap-2 mt-1">
-          <MaterialIcon name={statusIcon.name} className={`text-xs ${statusIcon.className}`} />
-          <span className="text-xs text-text-dim dark:text-text-dim-dark">
+          <MaterialIcon name={statusIcon.name} className={`text-sm ${statusIcon.className}`} />
+          <span className="text-sm text-text-dim dark:text-text-dim-dark">
             {timeAgo(item.createdAt, lang)}
           </span>
           {item.serviceName && (
-            <span className="text-xs text-text-dim dark:text-text-dim-dark truncate">
+            <span className="text-sm text-text-dim dark:text-text-dim-dark truncate">
               · {item.serviceName}
             </span>
           )}
@@ -189,7 +189,7 @@ export function NotificationDropdown({ open, onClose, onToggle }: NotificationDr
                 {t('notificationBell.title')}
               </span>
               {unreadCount > 0 && (
-                <span className="text-xs font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+                <span className="text-sm font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
                   {unreadCount > 9 ? '9+' : unreadCount} {t('notificationBell.unreadLabel')}
                 </span>
               )}
@@ -197,7 +197,7 @@ export function NotificationDropdown({ open, onClose, onToggle }: NotificationDr
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
-                className="text-xs text-primary hover:text-primary-hover transition-colors cursor-pointer"
+                className="text-sm text-primary hover:text-primary-hover transition-colors cursor-pointer"
               >
                 {t('notificationBell.markAllRead')}
               </button>
@@ -241,7 +241,7 @@ export function NotificationDropdown({ open, onClose, onToggle }: NotificationDr
           <div className="border-t border-ui-border dark:border-ui-border-dark">
             <button
               onClick={handleViewAll}
-              className="w-full px-4 py-2.5 text-xs font-medium text-primary hover:bg-ui-hover dark:hover:bg-ui-hover-dark transition-colors cursor-pointer"
+              className="w-full px-4 py-2.5 text-sm font-medium text-primary hover:bg-ui-hover dark:hover:bg-ui-hover-dark transition-colors cursor-pointer"
             >
               {t('notificationBell.viewAll')}
             </button>

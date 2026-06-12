@@ -76,7 +76,7 @@ export function AlertsMobileView({
         {activeTab === 'channels' && (
           <button
             onClick={onAddChannel}
-            className="flex items-center gap-1.5 px-3 py-2 bg-primary/10 hover:bg-primary/20 rounded-lg text-xs font-bold text-primary transition-all cursor-pointer active:scale-95 shrink-0"
+            className="flex items-center gap-1.5 px-3 py-2 bg-primary/10 hover:bg-primary/20 rounded-lg text-sm font-bold text-primary transition-all cursor-pointer active:scale-95 shrink-0"
           >
             <MaterialIcon name="add" className="text-base" />
             {t('alerts.addChannel')}
@@ -94,13 +94,13 @@ export function AlertsMobileView({
             <p className="text-xl font-bold text-slate-900 dark:text-white">{stats.successRate.toFixed(0)}%</p>
           </div>
           <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-3">
-            <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 truncate">
+            <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400 truncate">
               {t('alerts.history.stats.sent', { defaultValue: 'Sent' })}
             </p>
             <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{stats.totalSent}</p>
           </div>
           <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-3">
-            <p className="text-xs font-medium text-red-500 truncate">
+            <p className="text-sm font-medium text-red-500 truncate">
               {t('alerts.history.stats.failed', { defaultValue: 'Failed' })}
             </p>
             <p className="text-xl font-bold text-red-500">{stats.totalFailed}</p>
@@ -116,13 +116,13 @@ export function AlertsMobileView({
             role="tab"
             aria-selected={activeTab === tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-bold transition-all ${
               activeTab === tab.key
                 ? 'bg-white dark:bg-bg-surface-dark text-slate-900 dark:text-white shadow-sm'
                 : 'text-slate-500 dark:text-text-muted-dark'
             }`}
           >
-            <MaterialIcon name={tab.icon} className="text-sm" />
+            <MaterialIcon name={tab.icon} className="text-lg" />
             {tab.label}
             {tab.count !== undefined && (
               <span className="text-xs bg-slate-200 dark:bg-ui-active-dark px-1.5 py-0.5 rounded-full">
@@ -174,7 +174,7 @@ export function AlertsMobileView({
                           </span>
                         )}
                       </div>
-                      <p className={`text-xs font-semibold ${meta.text}`}>{getChannelTypeLabel(channel.type, t)}</p>
+                      <p className={`text-sm font-semibold ${meta.text}`}>{getChannelTypeLabel(channel.type, t)}</p>
                     </div>
                     <button
                       onClick={() => onToggleChannel(channel.id)}
@@ -189,7 +189,7 @@ export function AlertsMobileView({
                   <div className="flex gap-2">
                     <button
                       onClick={() => onTestChannel(channel.id)}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary text-xs font-bold active:scale-95 transition-transform"
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary text-sm font-bold active:scale-95 transition-transform"
                     >
                       <MaterialIcon name="send" className="text-sm" />
                       {t('alerts.test')}
@@ -293,10 +293,10 @@ export function AlertsMobileView({
                         {item.message}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs text-slate-400 dark:text-text-dim-dark">
+                        <span className="text-sm text-slate-400 dark:text-text-dim-dark">
                           {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true, locale: dateLocale })}
                         </span>
-                        <span className="text-xs capitalize text-slate-400 dark:text-text-dim-dark">
+                        <span className="text-sm capitalize text-slate-400 dark:text-text-dim-dark">
                           {item.channelType}
                         </span>
                       </div>

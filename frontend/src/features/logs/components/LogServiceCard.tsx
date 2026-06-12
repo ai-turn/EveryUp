@@ -119,7 +119,7 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
       <div className="flex gap-2">
         {levelsOrder.map((level) => (
           <div key={level} className="flex-1 flex flex-col items-center gap-0.5">
-            <div className="flex items-center gap-1 text-xs uppercase font-bold text-slate-400 dark:text-text-dim-dark">
+            <div className="flex items-center gap-1 text-sm uppercase font-bold text-slate-400 dark:text-text-dim-dark">
               <span className={`w-1.5 h-1.5 rounded-full ${levelDotStyle[level]}`} />
               <span>{level}</span>
             </div>
@@ -133,7 +133,7 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
       {/* Recent log preview */}
       <div className="space-y-1.5 min-h-15">
         {recentLogs.slice(0, 3).map((log) => (
-          <div key={log.id} className="grid grid-cols-[52px_8px_1fr] gap-2 items-center text-xs">
+          <div key={log.id} className="grid grid-cols-[60px_8px_1fr] gap-2 items-center text-sm">
             <span className="text-slate-400 dark:text-text-dim-dark tabular-nums">{formatClock(log.createdAt)}</span>
             <span className={`w-1.5 h-1.5 rounded-full ${levelDotStyle[log.level]}`} />
             <span className={`${log.level === 'error' ? 'text-red-500' : log.level === 'warn' ? 'text-amber-600 dark:text-amber-400' : 'text-slate-700 dark:text-text-base-dark'} truncate`}>
@@ -142,7 +142,7 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
           </div>
         ))}
         {recentLogs.length === 0 && (
-          <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-text-dim-dark">
+          <div className="flex items-center gap-2 text-sm text-slate-400 dark:text-text-dim-dark">
             <MaterialIcon name="hourglass_empty" className="text-base" />
             {t('logs.card.noRecent', { defaultValue: '최근 수신된 로그가 없습니다' })}
           </div>
@@ -152,7 +152,7 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
       {/* Footer: last activity (left) + level filter chips (right) */}
       <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-ui-border-dark/50">
         <span className="flex items-center gap-1 text-sm text-slate-500 dark:text-text-muted-dark min-w-0 truncate">
-          <MaterialIcon name="schedule" className="text-xs" />
+          <MaterialIcon name="schedule" className="text-sm" />
           {formatTimeAgo(latestLog?.createdAt)}
         </span>
         <div className="flex items-center gap-1.5 flex-wrap justify-end shrink-0">

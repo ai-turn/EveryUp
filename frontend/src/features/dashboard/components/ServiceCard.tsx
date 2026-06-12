@@ -80,8 +80,8 @@ export const ServiceCard = memo(function ServiceCard({ service, onClick }: Servi
               <h3 className="font-bold text-base truncate text-slate-900 dark:text-white">{service.name}</h3>
               {service.url && (
                 <p className="flex items-center gap-1 mt-0.5 min-w-0">
-                  <MaterialIcon name="link" className="text-xs text-slate-400 dark:text-text-dim-dark shrink-0" />
-                  <span className="text-xs font-mono text-slate-400 dark:text-text-dim-dark truncate">{service.url}</span>
+                  <MaterialIcon name="link" className="text-sm text-slate-400 dark:text-text-dim-dark shrink-0" />
+                  <span className="text-sm font-mono text-slate-400 dark:text-text-dim-dark truncate">{service.url}</span>
                 </p>
               )}
             </div>
@@ -118,7 +118,7 @@ export const ServiceCard = memo(function ServiceCard({ service, onClick }: Servi
           <span className="flex items-center gap-1 text-sm text-slate-500 dark:text-text-muted-dark min-w-0 truncate">
             {service.interval != null ? (
               <>
-                <MaterialIcon name="schedule" className="text-xs" />
+                <MaterialIcon name="schedule" className="text-sm" />
                 {formatInterval(service.interval)}
               </>
             ) : (

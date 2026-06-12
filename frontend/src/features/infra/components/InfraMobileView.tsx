@@ -53,7 +53,7 @@ export function InfraMobileView({
         </div>
         <button
           onClick={onAddResource}
-          className="flex items-center gap-1.5 px-3 py-2 bg-primary/10 hover:bg-primary/20 rounded-lg text-xs font-bold text-primary transition-all cursor-pointer active:scale-95 shrink-0"
+          className="flex items-center gap-1.5 px-3 py-2 bg-primary/10 hover:bg-primary/20 rounded-lg text-sm font-bold text-primary transition-all cursor-pointer active:scale-95 shrink-0"
         >
           <MaterialIcon name="add" className="text-base" />
           {t('infra.addResource')}
@@ -84,7 +84,7 @@ export function InfraMobileView({
         <select
           value={typeFilter}
           onChange={(e) => onTypeFilterChange(e.target.value)}
-          className="flex-1 px-3 py-2 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-lg text-xs font-medium text-slate-700 dark:text-text-muted-dark outline-none cursor-pointer"
+          className="flex-1 px-3 py-2 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-lg text-sm font-medium text-slate-700 dark:text-text-muted-dark outline-none cursor-pointer"
         >
           <option value="">{t('common.type')}: {t('common.all')}</option>
           <option value="server">{t('infra.resourceTypes.server')}</option>
@@ -94,7 +94,7 @@ export function InfraMobileView({
         <select
           value={statusFilter}
           onChange={(e) => onStatusFilterChange(e.target.value)}
-          className="flex-1 px-3 py-2 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-lg text-xs font-medium text-slate-700 dark:text-text-muted-dark outline-none cursor-pointer"
+          className="flex-1 px-3 py-2 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-lg text-sm font-medium text-slate-700 dark:text-text-muted-dark outline-none cursor-pointer"
         >
           <option value="">{t('common.status')}: {t('common.all')}</option>
           <option value="healthy">{t('common.healthy')}</option>
@@ -110,8 +110,8 @@ export function InfraMobileView({
       {error && (
         <div className="flex items-center gap-3 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
           <MaterialIcon name="error_outline" className="text-lg shrink-0" />
-          <p className="text-xs font-medium flex-1">{t('common.loadError')}</p>
-          <button onClick={onRetry} className="text-xs font-bold hover:underline cursor-pointer shrink-0">
+          <p className="text-sm font-medium flex-1">{t('common.loadError')}</p>
+          <button onClick={onRetry} className="text-sm font-bold hover:underline cursor-pointer shrink-0">
             {t('common.retry')}
           </button>
         </div>

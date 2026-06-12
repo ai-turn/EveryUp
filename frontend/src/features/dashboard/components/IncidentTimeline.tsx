@@ -75,7 +75,7 @@ export function IncidentTimeline() {
                       </p>
                     </div>
                     {/* Time / chevron */}
-                    <span className="text-xs text-slate-400 dark:text-text-dim-dark shrink-0 font-mono">
+                    <span className="text-sm text-slate-400 dark:text-text-dim-dark shrink-0 font-mono">
                       {incident.time}
                     </span>
                     {clickable && (

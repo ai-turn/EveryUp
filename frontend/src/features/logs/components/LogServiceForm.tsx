@@ -83,7 +83,7 @@ export function LogServiceForm({ onSuccess, onCancel, onSubmittingChange }: LogS
 
             <div className="space-y-4">
                 <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    <label className="text-sm font-bold text-slate-500 uppercase tracking-wider">
                         {t('common.id')}
                     </label>
                     <input
@@ -97,20 +97,20 @@ export function LogServiceForm({ onSuccess, onCancel, onSubmittingChange }: LogS
                         className={getInputClassName(!!errors.id)}
                     />
                     {errors.id ? (
-                        <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+                        <p className="text-sm text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
                             <MaterialIcon name="error" className="text-sm" />
                             {errors.id}
                         </p>
                     ) : (
-                        <p className="text-xs text-slate-500 flex items-center gap-1">
-                            <MaterialIcon name="info" className="text-xs" />
+                        <p className="text-sm text-slate-500 flex items-center gap-1">
+                            <MaterialIcon name="info" className="text-sm" />
                             {t('logServices.validation.idFormat')}
                         </p>
                     )}
                 </div>
 
                 <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    <label className="text-sm font-bold text-slate-500 uppercase tracking-wider">
                         {t('common.name')}
                     </label>
                     <input
@@ -124,7 +124,7 @@ export function LogServiceForm({ onSuccess, onCancel, onSubmittingChange }: LogS
                         className={getInputClassName(!!errors.name)}
                     />
                     {errors.name && (
-                        <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+                        <p className="text-sm text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
                             <MaterialIcon name="error" className="text-sm" />
                             {errors.name}
                         </p>

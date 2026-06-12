@@ -208,8 +208,8 @@ export function LogServiceEditPage() {
                 <p className="text-sm font-semibold text-slate-800 dark:text-white">
                   {t('common.id', { defaultValue: 'ID' })}
                 </p>
-                <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-1 flex items-center gap-1">
-                  <MaterialIcon name="lock" className="text-xs" />
+                <p className="text-sm text-slate-400 dark:text-text-dim-dark mt-1 flex items-center gap-1">
+                  <MaterialIcon name="lock" className="text-sm" />
                   {t('logServices.validation.idFormat', { defaultValue: 'Cannot be changed' })}
                 </p>
               </div>
@@ -242,7 +242,7 @@ export function LogServiceEditPage() {
                   }`}
                 />
                 {nameError && (
-                  <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+                  <p className="text-sm text-red-500 mt-1.5 flex items-center gap-1">
                     <MaterialIcon name="error" className="text-sm" />
                     {t('logServices.validation.nameRequired')}
                   </p>
@@ -285,14 +285,14 @@ export function LogServiceEditPage() {
                 >
                   <span className={`w-2 h-2 rounded-full shrink-0 ${s.dot} ${active ? '' : 'opacity-25'}`} />
                   {s.label}
-                  {active && <MaterialIcon name="check" className="text-xs ml-0.5" />}
+                  {active && <MaterialIcon name="check" className="text-sm ml-0.5" />}
                 </button>
               );
             })}
           </div>
 
           <div className="flex items-center gap-1.5 mt-4 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark text-sm text-slate-500 dark:text-text-muted-dark">
-            <MaterialIcon name="info" className="text-xs shrink-0" />
+            <MaterialIcon name="info" className="text-sm shrink-0" />
             <span>{t('logServices.edit.levelFilterHint')}</span>
           </div>
         </section>
@@ -344,7 +344,7 @@ export function LogServiceEditPage() {
                 {excludeDraft.map((path) => (
                   <span
                     key={path}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark px-3 py-1 text-xs font-mono text-slate-700 dark:text-text-base-dark"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark px-3 py-1 text-sm font-mono text-slate-700 dark:text-text-base-dark"
                   >
                     {path}
                     <button
@@ -359,14 +359,14 @@ export function LogServiceEditPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-slate-400 dark:text-text-dim-dark italic">
+              <p className="text-sm text-slate-400 dark:text-text-dim-dark italic">
                 {t('logServices.edit.excludePathsEmpty', { defaultValue: 'No exclusions — all paths are captured.' })}
               </p>
             )}
           </div>
 
           <div className="flex items-center gap-1.5 mt-4 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark text-sm text-slate-500 dark:text-text-muted-dark">
-            <MaterialIcon name="info" className="text-xs shrink-0" />
+            <MaterialIcon name="info" className="text-sm shrink-0" />
             <span>{t('logServices.edit.excludePathsHint', { defaultValue: 'Common: /, /health, /actuator/*. Matches url.path on incoming OTLP spans.' })}</span>
           </div>
         </section>

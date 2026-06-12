@@ -47,7 +47,7 @@ export function BottomNavMobile() {
           `}
         >
           <item.Icon size={23} />
-          <span className="text-xs font-medium whitespace-nowrap">{t(item.labelKey)}</span>
+          <span className="text-sm font-medium whitespace-nowrap">{t(item.labelKey)}</span>
           {isActive(item.href) && (
             <span className="absolute top-1.5 w-1 h-1 rounded-full bg-primary" />
           )}

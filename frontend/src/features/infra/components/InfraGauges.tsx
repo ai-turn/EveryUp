@@ -76,10 +76,10 @@ function VitalGaugeCard({ gauge, sparkline }: { gauge: GaugeData; sparkline?: nu
       {/* 상단: 레이블 + 추세 배지 */}
       <div className="flex items-start justify-between gap-2 sm:gap-4">
         <div className="min-w-0">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+          <p className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
             {gauge.label}
           </p>
-          <p className="mt-0.5 truncate text-xs text-slate-400 dark:text-text-dim-dark">
+          <p className="mt-0.5 truncate text-sm text-slate-400 dark:text-text-dim-dark">
             {gauge.subtitle}
           </p>
         </div>
@@ -101,14 +101,14 @@ function VitalGaugeCard({ gauge, sparkline }: { gauge: GaugeData; sparkline?: nu
           <div className="grid h-16 w-16 place-items-center rounded-full bg-white shadow-inner dark:bg-bg-surface-dark">
             <div className="text-center">
               <p className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{gauge.displayValue ?? pct}</p>
-              <p className="text-xs font-bold uppercase text-slate-400 dark:text-text-dim-dark">{gauge.displayUnit ?? '%'}</p>
+              <p className="text-sm font-bold uppercase text-slate-400 dark:text-text-dim-dark">{gauge.displayUnit ?? '%'}</p>
             </div>
           </div>
         </div>
 
         <div className="hidden min-w-0 space-y-2 sm:block sm:flex-1">
           {/* 상태 라벨 */}
-          <div className="flex items-center justify-between text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">
+          <div className="flex items-center justify-between text-sm font-bold uppercase text-slate-500 dark:text-text-muted-dark">
             <span>{t('infra.detail.load')}</span>
             <span className={tone.text}>{t(`infra.detail.loadStates.${getGaugeState(pct)}`)}</span>
           </div>
@@ -121,7 +121,7 @@ function VitalGaugeCard({ gauge, sparkline }: { gauge: GaugeData; sparkline?: nu
           {/* 스파크라인 (최근 1h 추세) */}
           {sparkline && sparkline.length >= 2 ? (
             <div className="pt-1">
-              <p className="text-xs text-slate-400 dark:text-text-dim-dark mb-0.5">1시간 추세</p>
+              <p className="text-sm text-slate-400 dark:text-text-dim-dark mb-0.5">1시간 추세</p>
               <Sparkline data={sparkline} width={100} height={24} color={gauge.color} />
             </div>
           ) : (

@@ -96,7 +96,7 @@ export function Header() {
                     <button
                         onClick={toggleLanguage}
                         aria-label={i18n.language.startsWith('ko') ? 'Switch to English' : '한국어로 전환'}
-                        className="w-9 h-9 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-bg-surface-dark text-xs font-bold text-slate-600 dark:text-text-muted-dark active:scale-95 transition-all"
+                        className="w-9 h-9 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-bg-surface-dark text-sm font-bold text-slate-600 dark:text-text-muted-dark active:scale-95 transition-all"
                     >
                         {i18n.language.startsWith('ko') ? 'EN' : 'KO'}
                     </button>
@@ -104,7 +104,7 @@ export function Header() {
                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-bg-surface-dark p-1 rounded-lg">
                         <button
                             onClick={() => changeLanguage('ko')}
-                            className={`px-2.5 py-1.5 text-xs font-bold rounded-md transition-all ${i18n.language.startsWith('ko')
+                            className={`px-2.5 py-1.5 text-sm font-bold rounded-md transition-all ${i18n.language.startsWith('ko')
                                 ? 'bg-white dark:bg-ui-hover-dark text-primary shadow-sm'
                                 : 'text-slate-500 hover:text-slate-700 dark:text-text-muted-dark dark:hover:text-white'
                                 }`}
@@ -113,7 +113,7 @@ export function Header() {
                         </button>
                         <button
                             onClick={() => changeLanguage('en')}
-                            className={`px-2 py-1 text-xs font-bold rounded-md transition-all ${i18n.language.startsWith('en')
+                            className={`px-2 py-1 text-sm font-bold rounded-md transition-all ${i18n.language.startsWith('en')
                                 ? 'bg-white dark:bg-ui-hover-dark text-primary shadow-sm'
                                 : 'text-slate-500 hover:text-slate-700 dark:text-text-muted-dark dark:hover:text-white'
                                 }`}

@@ -121,7 +121,7 @@ export function SettingsDesktopView({
                     <button
                       key={opt}
                       onClick={() => onMetricsRetentionChange(opt)}
-                      className={`cursor-pointer px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                      className={`cursor-pointer px-3 py-1 rounded-full text-sm font-semibold border transition-all ${
                         metricsRetention === opt
                           ? 'bg-primary text-white border-primary'
                           : 'bg-transparent text-slate-500 dark:text-text-muted-dark border-slate-200 dark:border-ui-border-dark hover:border-primary/50'
@@ -139,7 +139,7 @@ export function SettingsDesktopView({
                     <button
                       key={opt}
                       onClick={() => onLogsRetentionChange(opt)}
-                      className={`cursor-pointer px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                      className={`cursor-pointer px-3 py-1 rounded-full text-sm font-semibold border transition-all ${
                         logsRetention === opt
                           ? 'bg-primary text-white border-primary'
                           : 'bg-transparent text-slate-500 dark:text-text-muted-dark border-slate-200 dark:border-ui-border-dark hover:border-primary/50'
@@ -174,7 +174,7 @@ export function SettingsDesktopView({
           {env.useMock && (
             <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
               <MaterialIcon name="info" className="text-sm text-amber-500 shrink-0" />
-              <p className="text-xs text-amber-700 dark:text-amber-400">{t('settings.accountReset.demoNotice')}</p>
+              <p className="text-sm text-amber-700 dark:text-amber-400">{t('settings.accountReset.demoNotice')}</p>
             </div>
           )}
           <SettingRow label={t('settings.accountReset.title')} description={t('settings.accountReset.subtitle')}>

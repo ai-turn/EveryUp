@@ -56,7 +56,7 @@ function TabBar({
           key={tab.key}
           onClick={() => onTabChange(tab.key)}
           className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-bold transition-all
-            ${fullWidth ? 'flex-1 text-xs' : 'px-4 text-sm'}
+            ${fullWidth ? 'flex-1 text-sm' : 'px-4 text-sm'}
             ${activeTab === tab.key
               ? 'bg-white dark:bg-bg-surface-dark text-slate-900 dark:text-white shadow-sm'
               : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
@@ -210,7 +210,7 @@ function RevealedKeyModal({
           />
         </div>
         <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg mb-4">
-          <p className="text-xs text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+          <p className="text-sm text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
             <MaterialIcon name="warning" className="text-sm" />
             {t('logServices.apiKey.revealOnce')}
           </p>

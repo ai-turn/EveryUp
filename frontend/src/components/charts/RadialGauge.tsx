@@ -36,7 +36,7 @@ export function RadialGauge({
       </div>
       <div className="text-center">
         <p className="text-slate-900 dark:text-white font-medium">{subtitle}</p>
-        <p className={`${trendColor} text-xs font-bold`}>{trend}</p>
+        <p className={`${trendColor} text-sm font-bold`}>{trend}</p>
       </div>
     </div>
   );

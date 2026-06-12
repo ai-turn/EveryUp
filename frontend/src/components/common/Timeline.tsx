@@ -30,7 +30,7 @@ export function Timeline({ title, events, emptyMessage = 'No events found', acti
                     {action && (
                         <span
                             onClick={action.onClick}
-                            className="text-xs text-primary font-medium cursor-pointer hover:underline"
+                            className="text-sm text-primary font-medium cursor-pointer hover:underline"
                         >
                             {action.label}
                         </span>
@@ -47,7 +47,7 @@ export function Timeline({ title, events, emptyMessage = 'No events found', acti
                             onClick={event.onClick}
                             className={`px-6 py-4 flex items-center gap-4 transition-colors ${event.onClick ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-ui-hover-dark/50 active:bg-slate-100 dark:active:bg-ui-hover-dark' : ''}`}
                         >
-                            <span className="text-xs text-slate-500 font-mono w-24 shrink-0">{event.time}</span>
+                            <span className="text-sm text-slate-500 font-mono w-24 shrink-0">{event.time}</span>
                             <MaterialIcon name={event.icon} className={`${event.iconColorClass} text-lg shrink-0`} />
                             <div className="text-sm text-slate-700 dark:text-text-secondary-dark flex-1 min-w-0">
                                 {event.content}

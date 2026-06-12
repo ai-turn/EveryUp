@@ -234,7 +234,7 @@ export function HealthCheckForm({ onSuccess, service, onSubmittingChange }: Heal
                         </p>
                     ) : (
                         <p className="text-sm text-slate-500 flex items-center gap-1">
-                            <MaterialIcon name="info" className="text-xs" />
+                            <MaterialIcon name="info" className="text-sm" />
                             {isEditMode ? t('healthcheck.form.idCannotChange') : t('healthcheck.form.idHint')}
                         </p>
                     )}
@@ -420,7 +420,7 @@ export function HealthCheckForm({ onSuccess, service, onSubmittingChange }: Heal
                                         key={idx}
                                         type="button"
                                         onClick={() => setScheduledWeekday(idx)}
-                                        className={`px-2 py-1 rounded text-xs font-bold transition-all ${scheduledWeekday === idx ? 'bg-primary text-white' : 'bg-slate-100 dark:bg-ui-active-dark text-slate-500'}`}
+                                        className={`px-2 py-1 rounded text-sm font-bold transition-all ${scheduledWeekday === idx ? 'bg-primary text-white' : 'bg-slate-100 dark:bg-ui-active-dark text-slate-500'}`}
                                     >
                                         {day.substring(0, 3)}
                                     </button>
@@ -505,7 +505,7 @@ export function HealthCheckForm({ onSuccess, service, onSubmittingChange }: Heal
 function SummaryRow({ label, value }: { label: string; value: string }) {
     return (
         <div className="flex items-center justify-between gap-3 py-2 border-b border-slate-100 dark:border-ui-border-dark/50 last:border-0">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{label}</span>
+            <span className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{label}</span>
             <span className="text-sm font-semibold text-slate-800 dark:text-text-base-dark truncate">{value}</span>
         </div>
     );

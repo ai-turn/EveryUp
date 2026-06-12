@@ -161,7 +161,7 @@ export function ProcessTable({ hostId, refreshKey = 0 }: { hostId: string; refre
               placeholder="이름으로 검색..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-lg outline-none focus:ring-2 focus:ring-primary/50 dark:text-white dark:placeholder-text-muted-dark w-36"
+              className="pl-8 pr-3 py-1.5 text-sm bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-lg outline-none focus:ring-2 focus:ring-primary/50 dark:text-white dark:placeholder-text-muted-dark w-36"
             />
           </div>
 
@@ -169,7 +169,7 @@ export function ProcessTable({ hostId, refreshKey = 0 }: { hostId: string; refre
           <button
             type="button"
             onClick={() => setGroupByName((v) => !v)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-bold border transition-colors ${
               groupByName
                 ? 'bg-primary/10 border-primary/20 text-primary'
                 : 'bg-white dark:bg-bg-surface-dark border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark'
@@ -186,7 +186,7 @@ export function ProcessTable({ hostId, refreshKey = 0 }: { hostId: string; refre
                 key={n}
                 type="button"
                 onClick={() => setTopN(n)}
-                className={`px-2.5 py-1 text-xs font-bold rounded-md transition-colors ${
+                className={`px-2.5 py-1 text-sm font-bold rounded-md transition-colors ${
                   topN === n
                     ? 'bg-white dark:bg-bg-surface-dark text-slate-900 dark:text-white shadow-sm'
                     : 'text-slate-500 dark:text-text-muted-dark'
@@ -200,7 +200,7 @@ export function ProcessTable({ hostId, refreshKey = 0 }: { hostId: string; refre
       </div>
 
       {/* 요약 바 */}
-      <div className="mb-3 flex items-center gap-4 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark/40 border border-slate-100 dark:border-ui-border-dark/50 text-xs flex-wrap">
+      <div className="mb-3 flex items-center gap-4 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark/40 border border-slate-100 dark:border-ui-border-dark/50 text-sm flex-wrap">
         <span className="text-slate-400 dark:text-text-dim-dark">전체 {list.length}개 프로세스</span>
         <div className="flex items-center gap-1">
           <span className="text-slate-400 dark:text-text-dim-dark">CPU 합계</span>
@@ -216,7 +216,7 @@ export function ProcessTable({ hostId, refreshKey = 0 }: { hostId: string; refre
       <div className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark overflow-hidden shadow-sm">
         {/* 컬럼 헤더 */}
         <div
-          className="grid gap-3 px-4 py-2.5 bg-slate-50/70 dark:bg-ui-hover-dark/50 border-b border-slate-100 dark:border-ui-border-dark text-xs font-semibold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide"
+          className="grid gap-3 px-4 py-2.5 bg-slate-50/70 dark:bg-ui-hover-dark/50 border-b border-slate-100 dark:border-ui-border-dark text-sm font-semibold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide"
           style={{ gridTemplateColumns: COL }}
         >
           <span>프로세스</span>
@@ -285,7 +285,7 @@ function SortHeader({
       }`}
     >
       {label}
-      <MaterialIcon name={active ? 'arrow_downward' : 'unfold_more'} className="text-xs" />
+      <MaterialIcon name={active ? 'arrow_downward' : 'unfold_more'} className="text-sm" />
     </button>
   );
 }
@@ -372,7 +372,7 @@ function GroupRow({
           {/* 들여쓰기 */}
           <div className="flex items-center gap-2.5 min-w-0 pl-8">
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-slate-600 dark:text-text-muted-dark truncate">{proc.name}</p>
+              <p className="text-sm font-semibold text-slate-600 dark:text-text-muted-dark truncate">{proc.name}</p>
               <p className="text-xs font-mono text-slate-400 dark:text-text-dim-dark">PID {proc.pid}</p>
             </div>
           </div>
@@ -454,7 +454,7 @@ function MetricBar({
   return (
     <div className={dim ? 'opacity-70' : ''}>
       <div className="flex items-center justify-between mb-1 gap-2">
-        <span className={`text-xs font-bold tabular-nums ${active ? textColor : 'text-slate-500 dark:text-text-muted-dark'}`}>
+        <span className={`text-sm font-bold tabular-nums ${active ? textColor : 'text-slate-500 dark:text-text-muted-dark'}`}>
           {label}
         </span>
       </div>
@@ -515,7 +515,7 @@ function ActionMenu({
           <button
             type="button"
             onClick={() => onMenuToggle(null)}
-            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-1.5 text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
           >
             <MaterialIcon name="cancel" className="text-sm" />
             종료 (Terminate)

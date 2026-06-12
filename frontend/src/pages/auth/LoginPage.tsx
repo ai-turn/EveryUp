@@ -89,7 +89,7 @@ export function LoginPage() {
           <h2 className="text-xl font-bold text-slate-900 dark:text-white">
             {isSetup ? t('login.setupTitle') : t('login.loginTitle')}
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
             {isSetup ? t('login.setupSubtitle') : t('login.loginSubtitle')}
           </p>
         </div>
@@ -150,7 +150,7 @@ export function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowForgot(!showForgot)}
-                      className="text-xs text-blue-500 hover:text-blue-600 underline underline-offset-2 transition-colors"
+                      className="text-sm text-blue-500 hover:text-blue-600 underline underline-offset-2 transition-colors"
                     >
                       {t('login.forgotPassword')}
                     </button>
@@ -186,7 +186,7 @@ export function LoginPage() {
                     {t('login.recoveryMethod1Desc')}
                   </p>
                   <div className="space-y-1">
-                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">① {t('login.recoveryMethod1Step1')}</p>
+                    <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">① {t('login.recoveryMethod1Step1')}</p>
                     <pre className="text-xs bg-slate-50 dark:bg-bg-main-dark border border-slate-200 dark:border-ui-border-dark rounded-lg p-2.5 overflow-x-auto text-slate-700 dark:text-slate-300 leading-relaxed">
 {`# docker-compose.yml
 environment:
@@ -196,8 +196,8 @@ environment:
 docker compose restart`}
                     </pre>
                   </div>
-                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">② {t('login.recoveryMethod1Step2')}</p>
-                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">③ {t('login.recoveryMethod1Step3')}</p>
+                  <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">② {t('login.recoveryMethod1Step2')}</p>
+                  <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">③ {t('login.recoveryMethod1Step3')}</p>
                 </div>
 
                 {/* Method 2: Remove data volume */}
@@ -223,7 +223,7 @@ docker compose up -d`}
                   href="https://github.com/ai-turn/everyup#readme"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-text-dim-dark hover:text-primary dark:hover:text-primary transition-colors"
+                  className="flex items-center gap-1.5 text-sm text-slate-400 dark:text-text-dim-dark hover:text-primary dark:hover:text-primary transition-colors"
                 >
                   <MaterialIcon name="open_in_new" className="text-sm" />
                   GitHub README
@@ -232,7 +232,7 @@ docker compose up -d`}
             )}
           </div>{/* end relative wrapper */}
 
-          <p className="text-center text-slate-400 dark:text-slate-600 text-xs mt-4">
+          <p className="text-center text-slate-400 dark:text-slate-600 text-sm mt-4">
             {t('login.hint')}
           </p>
         </div>

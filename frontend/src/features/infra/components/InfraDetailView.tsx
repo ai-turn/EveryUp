@@ -61,7 +61,7 @@ function HostHeader({
         <>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">{name}</h1>
           <div className="flex items-center gap-2 mt-1.5">
-            <span className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${sc.bg} border ${sc.border} ${sc.text} text-xs font-bold uppercase tracking-wider`}>
+            <span className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${sc.bg} border ${sc.border} ${sc.text} text-sm font-bold uppercase tracking-wider`}>
               <span className="relative flex h-2 w-2">
                 <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${sc.dot} opacity-75`} />
                 <span className={`relative inline-flex rounded-full h-2 w-2 ${sc.dot}`} />
@@ -88,7 +88,7 @@ function HostHeader({
                 <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${sc.dot} opacity-75`} />
                 <span className={`relative inline-flex rounded-full h-2 w-2 ${sc.dot}`} />
               </span>
-              <span className={`${sc.text} text-xs font-bold uppercase tracking-wider`}>
+              <span className={`${sc.text} text-sm font-bold uppercase tracking-wider`}>
                 {t(`common.${status}`)}
               </span>
             </div>
@@ -124,23 +124,23 @@ function HostHeader({
           <div className="mt-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
             <div className="flex items-center gap-2 mb-1">
               <MaterialIcon name="error_outline" className="text-sm text-red-500" />
-              <p className="text-xs font-bold text-red-700 dark:text-red-400">{t('infra.error.lastError')}</p>
+              <p className="text-sm font-bold text-red-700 dark:text-red-400">{t('infra.error.lastError')}</p>
             </div>
-            <p className="text-xs text-red-600 dark:text-red-500 truncate">{host.lastError}</p>
+            <p className="text-sm text-red-600 dark:text-red-500 truncate">{host.lastError}</p>
           </div>
         ) : (
           <div className="mt-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 min-w-0">
               <MaterialIcon name="error_outline" className="text-lg text-red-500 shrink-0" />
               <div className="min-w-0">
-                <p className="text-xs font-bold text-red-700 dark:text-red-400">{t('infra.error.lastError')}</p>
-                <p className="text-xs text-red-600 dark:text-red-500 truncate">{host.lastError}</p>
+                <p className="text-sm font-bold text-red-700 dark:text-red-400">{t('infra.error.lastError')}</p>
+                <p className="text-sm text-red-600 dark:text-red-500 truncate">{host.lastError}</p>
               </div>
             </div>
             <button
               onClick={onPauseResume}
               disabled={isPausing}
-              className="shrink-0 px-3 py-1.5 rounded-lg bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 text-xs font-bold hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors disabled:opacity-50"
+              className="shrink-0 px-3 py-1.5 rounded-lg bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 text-sm font-bold hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors disabled:opacity-50"
             >
               {t('infra.error.retryConnection')}
             </button>
@@ -260,13 +260,13 @@ function formatUptime(seconds: number) {
 function MetaChip({ icon, labelKey, value, accent }: { icon: string; labelKey: string; value: string; accent?: boolean }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border ${
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-sm border ${
         accent
           ? 'bg-primary/10 border-primary/20'
           : 'bg-white dark:bg-bg-surface-dark border-slate-200 dark:border-ui-border-dark'
       }`}
     >
-      <MaterialIcon name={icon} className={`text-xs shrink-0 ${accent ? 'text-primary' : 'text-slate-500 dark:text-text-muted-dark'}`} />
+      <MaterialIcon name={icon} className={`text-base shrink-0 ${accent ? 'text-primary' : 'text-slate-500 dark:text-text-muted-dark'}`} />
       <span className="font-semibold text-slate-500 dark:text-text-muted-dark">{labelKey}:</span>
       <span className={`font-bold ${accent ? 'text-primary' : 'text-slate-900 dark:text-white'}`}>{value}</span>
     </span>
@@ -355,13 +355,13 @@ function MobileLayout(props: InfraDetailViewProps) {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-bold transition-all ${
               activeTab === tab.key
                 ? 'bg-white dark:bg-bg-surface-dark text-slate-900 dark:text-white shadow-sm'
                 : 'text-slate-500 dark:text-text-muted-dark'
             }`}
           >
-            <MaterialIcon name={tab.icon} className="text-sm" />
+            <MaterialIcon name={tab.icon} className="text-lg" />
             {tab.label}
           </button>
         ))}

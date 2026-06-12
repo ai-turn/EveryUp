@@ -103,7 +103,7 @@ function SegmentedControl<T extends string>({
           key={opt.key}
           onClick={() => onChange(opt.key)}
           aria-pressed={value === opt.key}
-          className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+          className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-all cursor-pointer ${
             value === opt.key
               ? 'bg-white dark:bg-ui-active-dark text-slate-900 dark:text-white shadow-sm'
               : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
@@ -184,7 +184,7 @@ export function IntegrationPanel({ service, temporaryApiKey, onApiKeyRegenerated
             <h3 className="text-sm font-bold text-slate-900 dark:text-white">
               {t('logServices.integration.apiKey.title')}
             </h3>
-            <span className="ml-auto text-xs font-semibold text-slate-400 dark:text-text-dim-dark bg-slate-100 dark:bg-ui-active-dark px-2 py-0.5 rounded-md">
+            <span className="ml-auto text-sm font-semibold text-slate-400 dark:text-text-dim-dark bg-slate-100 dark:bg-ui-active-dark px-2 py-0.5 rounded-md">
               {t('logServices.integration.apiKey.masked')}
             </span>
           </div>
@@ -199,7 +199,7 @@ export function IntegrationPanel({ service, temporaryApiKey, onApiKeyRegenerated
               onCopy={() => (plainKey ? copy(plainKey) : false)}
               disabled={!plainKey}
               title={t('logServices.integration.apiKey.copyVisible')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark text-xs font-semibold text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark text-sm font-semibold text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               iconClassName="text-sm"
             >
               {t('logServices.integration.apiKey.copyVisible')}
@@ -207,7 +207,7 @@ export function IntegrationPanel({ service, temporaryApiKey, onApiKeyRegenerated
             <button
               onClick={() => setShowConfirm(true)}
               disabled={isRegenerating}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/20 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/20 text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 disabled:opacity-50 cursor-pointer"
             >
               <MaterialIcon name={isRegenerating ? 'sync' : 'refresh'} className={`text-sm ${isRegenerating ? 'animate-spin' : ''}`} />
               {t('logServices.integration.apiKey.regenerate')}
@@ -225,7 +225,7 @@ export function IntegrationPanel({ service, temporaryApiKey, onApiKeyRegenerated
               POST
             </span>
           </div>
-          <div className="flex items-center gap-2 px-3 py-2.5 bg-slate-50 dark:bg-ui-hover-dark rounded-lg font-mono text-xs border border-slate-100 dark:border-ui-border-dark">
+          <div className="flex items-center gap-2 px-3 py-2.5 bg-slate-50 dark:bg-ui-hover-dark rounded-lg font-mono text-sm border border-slate-100 dark:border-ui-border-dark">
             <span className="flex-1 text-slate-700 dark:text-text-base-dark truncate">
               {otelEndpointUrl}
             </span>
@@ -255,7 +255,7 @@ export function IntegrationPanel({ service, temporaryApiKey, onApiKeyRegenerated
             <span className="w-4 h-5 shrink-0 inline-flex items-center justify-center">
               <MaterialIcon name="info" className="text-base leading-none text-primary" />
             </span>
-            <p className="text-xs text-slate-600 dark:text-text-muted-dark leading-5">
+            <p className="text-sm text-slate-600 dark:text-text-muted-dark leading-5">
               {t('logServices.integration.setup.otelHint')}
             </p>
           </div>

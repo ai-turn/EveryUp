@@ -108,7 +108,7 @@ function Field({ label, hint, required, children, error }: {
                 {required && <span className="text-red-500 text-xs">*</span>}
             </div>
             {children}
-            {error && <p className="text-xs text-red-500 font-medium mt-1">{error}</p>}
+            {error && <p className="text-sm text-red-500 font-medium mt-1">{error}</p>}
             {hint && !error && <p className="text-sm text-slate-400 dark:text-text-dim-dark mt-1.5 italic">{hint}</p>}
         </div>
     );
@@ -396,7 +396,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                             <input {...register('type')} type="radio" value={type} className="sr-only" />
                                             <m.Icon size={26} className={active ? m.color : 'text-slate-400 dark:text-text-dim-dark'} />
                                             <span className={`text-sm font-bold ${active ? m.color : 'text-slate-600 dark:text-text-muted-dark'}`}>{m.label}</span>
-                                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">{m.sub}</span>
+                                            <span className="text-sm font-semibold uppercase tracking-wider text-slate-400">{m.sub}</span>
                                         </label>
                                     );
                                 })}
@@ -486,12 +486,12 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                         <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
                                             {watchedName || <span className="text-slate-400 font-normal italic">채널 이름 미입력</span>}
                                         </p>
-                                        <p className={`text-xs font-semibold ${meta.color}`}>{meta.label}</p>
+                                        <p className={`text-sm font-semibold ${meta.color}`}>{meta.label}</p>
                                     </div>
                                 </div>
 
                                 {/* Config summary */}
-                                <div className="space-y-1.5 text-xs">
+                                <div className="space-y-1.5 text-sm">
                                     {watchedType === 'telegram' ? (
                                         <>
                                             <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-lg">
@@ -521,7 +521,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
 
                                 {/* Actual message preview */}
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">테스트 메시지 미리보기</p>
+                                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">테스트 메시지 미리보기</p>
                                     <PreviewComponent name={watchedName} />
                                 </div>
                             </div>
@@ -564,8 +564,8 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                     <div className="flex items-start gap-2 px-3 py-2.5 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl">
                                         <MaterialIcon name="check_circle" className="text-base text-emerald-500 mt-0.5 shrink-0" />
                                         <div>
-                                            <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400">발송 성공</p>
-                                            <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-0.5">{testTime}에 전송되었습니다</p>
+                                            <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">발송 성공</p>
+                                            <p className="text-sm text-emerald-600 dark:text-emerald-500 mt-0.5">{testTime}에 전송되었습니다</p>
                                         </div>
                                     </div>
                                 )}
@@ -574,8 +574,8 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                     <div className="flex items-start gap-2 px-3 py-2.5 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl">
                                         <MaterialIcon name="error" className="text-base text-red-500 mt-0.5 shrink-0" />
                                         <div>
-                                            <p className="text-xs font-bold text-red-700 dark:text-red-400">발송 실패</p>
-                                            <p className="text-xs text-red-600 dark:text-red-500 mt-0.5">{testError}</p>
+                                            <p className="text-sm font-bold text-red-700 dark:text-red-400">발송 실패</p>
+                                            <p className="text-sm text-red-600 dark:text-red-500 mt-0.5">{testError}</p>
                                         </div>
                                     </div>
                                 )}

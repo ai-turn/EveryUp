@@ -189,11 +189,11 @@ function StatCard({
           <MaterialIcon name={icon} className="text-lg" />
         </div>
         <div className="min-w-0">
-          <p className="flex items-center gap-1 text-xs font-semibold text-slate-500 dark:text-text-muted-dark">
+          <p className="flex items-center gap-1 text-sm font-semibold text-slate-500 dark:text-text-muted-dark">
             {label}
             {tooltip && (
               <span className="relative group/tip cursor-default">
-                <MaterialIcon name="info" className="text-xs text-slate-400 hover:text-slate-500 dark:text-text-dim-dark" />
+                <MaterialIcon name="info" className="text-sm text-slate-400 hover:text-slate-500 dark:text-text-dim-dark" />
                 <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-52 rounded-lg bg-slate-800 dark:bg-slate-700 px-2.5 py-1.5 text-xs font-normal text-white shadow-lg opacity-0 group-hover/tip:opacity-100 transition-opacity z-10 whitespace-normal text-center leading-snug">
                   {tooltip}
                 </span>
@@ -202,7 +202,7 @@ function StatCard({
           </p>
           <p className="text-xl font-bold tabular-nums text-slate-900 dark:text-white">
             {value}
-            {suffix && <span className="ml-1 text-xs font-bold text-slate-400 dark:text-text-dim-dark">{suffix}</span>}
+            {suffix && <span className="ml-1 text-sm font-bold text-slate-400 dark:text-text-dim-dark">{suffix}</span>}
           </p>
         </div>
       </div>
@@ -230,7 +230,7 @@ function PathAggregateTable({
           <h3 className="text-sm font-bold text-slate-900 dark:text-white">{t('apiRequests.summary.title')}</h3>
           <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('apiRequests.summary.description')}</p>
         </div>
-        <span className="font-mono text-xs text-slate-400 dark:text-text-dim-dark">
+        <span className="font-mono text-sm text-slate-400 dark:text-text-dim-dark">
           {t('apiRequests.summary.endpointCount', { count: items.length })}
         </span>
       </div>
@@ -238,7 +238,7 @@ function PathAggregateTable({
       <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50/70 dark:bg-ui-hover-dark/30 text-xs uppercase tracking-wide text-slate-400 dark:text-text-dim-dark">
+            <tr className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50/70 dark:bg-ui-hover-dark/30 text-sm uppercase tracking-wide text-slate-400 dark:text-text-dim-dark">
               <th className="px-4 py-2.5">{t('apiRequests.table.method')}</th>
               <th className="px-4 py-2.5">{t('apiRequests.table.path')}</th>
               <th className="px-4 py-2.5 text-right">{t('apiRequests.table.requests')}</th>
@@ -262,7 +262,7 @@ function PathAggregateTable({
                       {item.method}
                     </span>
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs text-slate-800 dark:text-text-base-dark">{item.pathTemplate}</td>
+                  <td className="px-4 py-3 font-mono text-sm text-slate-800 dark:text-text-base-dark">{item.pathTemplate}</td>
                   <td className="px-4 py-3 text-right font-mono text-sm font-bold text-slate-900 dark:text-white">{item.count}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
@@ -275,7 +275,7 @@ function PathAggregateTable({
                       <span className="font-mono text-sm text-slate-500 dark:text-text-muted-dark">{(item.errorRate * 100).toFixed(1)}%</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs text-slate-600 dark:text-text-muted-dark">
+                  <td className="px-4 py-3 font-mono text-sm text-slate-600 dark:text-text-muted-dark">
                     <span className="font-bold text-slate-900 dark:text-white">{item.p50}</span>
                     <span className="text-slate-400"> / {item.p95} / {item.p99}ms</span>
                   </td>
@@ -306,7 +306,7 @@ function PathAggregateTable({
                 <span className={`rounded px-2 py-0.5 text-xs font-bold ${methodBadge(item.method)}`}>
                   {item.method}
                 </span>
-                <span className="min-w-0 flex-1 truncate font-mono text-xs text-slate-800 dark:text-text-base-dark">
+                <span className="min-w-0 flex-1 truncate font-mono text-sm text-slate-800 dark:text-text-base-dark">
                   {item.pathTemplate}
                 </span>
                 <span className="font-mono text-sm font-bold text-slate-900 dark:text-white">{item.count}</span>
@@ -366,9 +366,9 @@ function RequestRow({
         </td>
         <td className="px-4 py-3 max-w-md">
           <div className="min-w-0">
-            <div className="font-mono text-xs font-semibold text-slate-900 dark:text-white truncate" title={request.path}>{request.path}</div>
+            <div className="font-mono text-sm font-semibold text-slate-900 dark:text-white truncate" title={request.path}>{request.path}</div>
             {request.pathTemplate && request.pathTemplate !== request.path && (
-              <div className="font-mono text-xs text-slate-400 dark:text-text-dim-dark truncate">{request.pathTemplate}</div>
+              <div className="font-mono text-sm text-slate-400 dark:text-text-dim-dark truncate">{request.pathTemplate}</div>
             )}
           </div>
         </td>
@@ -377,7 +377,7 @@ function RequestRow({
             {request.statusCode}
           </span>
         </td>
-        <td className="px-4 py-3 text-right font-mono text-xs font-bold text-slate-700 dark:text-text-base-dark">{formatDuration(request.durationMs)}</td>
+        <td className="px-4 py-3 text-right font-mono text-sm font-bold text-slate-700 dark:text-text-base-dark">{formatDuration(request.durationMs)}</td>
         <td className="px-4 py-3 font-mono text-sm text-slate-500 dark:text-text-muted-dark">{request.clientIp ?? '-'}</td>
         <td className="px-4 py-3 whitespace-nowrap">
           {request.traceId && (
@@ -402,8 +402,8 @@ function RequestRow({
         <tr className="bg-slate-50/80 dark:bg-ui-hover-dark/20">
           <td colSpan={8} className="px-4 pb-4 pt-1">
             <div className="ml-8 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-3">
-              <div className="mb-1 text-xs font-bold uppercase text-red-600 dark:text-red-400">{t('apiRequests.detail.error')}</div>
-              <pre className="whitespace-pre-wrap break-all font-mono text-xs text-red-700 dark:text-red-300">{request.error}</pre>
+              <div className="mb-1 text-sm font-bold uppercase text-red-600 dark:text-red-400">{t('apiRequests.detail.error')}</div>
+              <pre className="whitespace-pre-wrap break-all font-mono text-sm text-red-700 dark:text-red-300">{request.error}</pre>
             </div>
           </td>
         </tr>
@@ -439,18 +439,18 @@ function RequestCard({
         <span className={`rounded px-2 py-0.5 text-xs font-bold ${statusBadge(request.statusCode)}`}>
           {request.statusCode}
         </span>
-        <span className="ml-auto font-mono text-xs font-bold text-slate-700 dark:text-text-base-dark">
+        <span className="ml-auto font-mono text-sm font-bold text-slate-700 dark:text-text-base-dark">
           {formatDuration(request.durationMs)}
         </span>
         {expandable && (
           <MaterialIcon name={open ? 'expand_more' : 'chevron_right'} className="text-lg text-slate-400" />
         )}
       </div>
-      <div className="mt-1.5 font-mono text-xs font-semibold text-slate-900 dark:text-white truncate" title={request.path}>
+      <div className="mt-1.5 font-mono text-sm font-semibold text-slate-900 dark:text-white truncate" title={request.path}>
         {request.path}
       </div>
       {request.pathTemplate && request.pathTemplate !== request.path && (
-        <div className="font-mono text-xs text-slate-400 dark:text-text-dim-dark truncate">{request.pathTemplate}</div>
+        <div className="font-mono text-sm text-slate-400 dark:text-text-dim-dark truncate">{request.pathTemplate}</div>
       )}
       <div className="mt-1.5 flex items-center gap-3 font-mono text-sm text-slate-500 dark:text-text-muted-dark">
         <span className="whitespace-nowrap">{formatClock(request.createdAt)}</span>
@@ -472,8 +472,8 @@ function RequestCard({
       </div>
       {open && expandable && (
         <div className="mt-2 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-3">
-          <div className="mb-1 text-xs font-bold uppercase text-red-600 dark:text-red-400">{t('apiRequests.detail.error')}</div>
-          <pre className="whitespace-pre-wrap break-all font-mono text-xs text-red-700 dark:text-red-300">{request.error}</pre>
+          <div className="mb-1 text-sm font-bold uppercase text-red-600 dark:text-red-400">{t('apiRequests.detail.error')}</div>
+          <pre className="whitespace-pre-wrap break-all font-mono text-sm text-red-700 dark:text-red-300">{request.error}</pre>
         </div>
       )}
     </li>
@@ -507,7 +507,7 @@ function RequestsStreamTable({
       <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50/70 dark:bg-ui-hover-dark/30 text-xs uppercase tracking-wide text-slate-400 dark:text-text-dim-dark">
+            <tr className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50/70 dark:bg-ui-hover-dark/30 text-sm uppercase tracking-wide text-slate-400 dark:text-text-dim-dark">
               <th className="w-10 px-4 py-2.5"></th>
               <th className="px-4 py-2.5">{t('apiRequests.table.time')}</th>
               <th className="px-4 py-2.5">{t('apiRequests.table.method')}</th>
@@ -659,7 +659,7 @@ export function RequestsTab({ serviceId, initialTraceId, onClearTraceFilter }: R
       </div>
 
       {initialTraceId && (
-        <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-primary">
+        <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-primary">
           <MaterialIcon name="timeline" className="text-sm" />
           <span>{t('apiRequests.traceFilter.label')}</span>
           <code className="font-mono truncate" title={initialTraceId}>{shortTraceId(initialTraceId)}</code>
@@ -720,7 +720,7 @@ export function RequestsTab({ serviceId, initialTraceId, onClearTraceFilter }: R
           />
 
           {pickedPath && (
-            <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-primary">
+            <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-primary">
               <MaterialIcon name="filter_alt" className="text-sm" />
               <span className="font-mono">{pickedPath}</span>
               <button onClick={() => setPickedPath(null)} className="ml-auto rounded px-2 py-1 font-bold hover:bg-primary/10">

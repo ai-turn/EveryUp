@@ -43,7 +43,7 @@ export function SetupGuide({ type }: SetupGuideProps) {
                     name="help_outline"
                     className="text-base text-primary shrink-0"
                 />
-                <span className="text-xs font-semibold text-slate-600 dark:text-text-secondary-dark flex-1">
+                <span className="text-sm font-semibold text-slate-600 dark:text-text-secondary-dark flex-1">
                     {t('alerts.guide.title')}
                 </span>
                 <MaterialIcon
@@ -56,7 +56,7 @@ export function SetupGuide({ type }: SetupGuideProps) {
                 <div className="px-3 pb-3 space-y-3 border-t border-slate-100 dark:border-ui-border-dark">
                     <ol className="mt-3 space-y-2">
                         {steps.map((step, i) => (
-                            <li key={i} className="flex gap-2 text-xs text-slate-600 dark:text-text-secondary-dark">
+                            <li key={i} className="flex gap-2 text-sm text-slate-600 dark:text-text-secondary-dark">
                                 <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
                                     {i + 1}
                                 </span>
@@ -68,7 +68,7 @@ export function SetupGuide({ type }: SetupGuideProps) {
                     {tip && (
                         <div className="flex gap-2 px-2.5 py-2 rounded-md bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
                             <MaterialIcon name="lightbulb" className="text-sm text-amber-500 shrink-0 mt-0.5" />
-                            <p className="text-xs text-amber-700 dark:text-amber-400">{tip}</p>
+                            <p className="text-sm text-amber-700 dark:text-amber-400">{tip}</p>
                         </div>
                     )}
 

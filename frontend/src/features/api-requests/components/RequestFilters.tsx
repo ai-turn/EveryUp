@@ -85,7 +85,7 @@ export function RequestFilters({ params, onChange, pathSuggestions = [] }: Reque
   }
 
   const chipBase =
-    'px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all duration-100 select-none';
+    'px-3 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all duration-100 select-none';
   const chipActive = 'bg-primary text-white';
   const chipInactive =
     'bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-muted-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark';
@@ -93,7 +93,7 @@ export function RequestFilters({ params, onChange, pathSuggestions = [] }: Reque
   const groupClass =
     'w-full sm:w-auto min-h-11 flex flex-wrap items-center gap-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-2 py-1.5 sm:py-0';
   const groupLabelClass =
-    'text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-text-dim-dark select-none pr-1 border-r border-slate-200 dark:border-ui-border-dark mr-1';
+    'text-sm font-semibold uppercase tracking-wider text-slate-400 dark:text-text-dim-dark select-none pr-1 border-r border-slate-200 dark:border-ui-border-dark mr-1';
 
   return (
     <div className="space-y-2">
@@ -153,7 +153,7 @@ export function RequestFilters({ params, onChange, pathSuggestions = [] }: Reque
             checked={!!params.errorsOnly}
             onChange={setErrorsOnly}
           />
-          <span className="text-xs font-medium text-slate-600 dark:text-text-muted-dark select-none">
+          <span className="text-sm font-medium text-slate-600 dark:text-text-muted-dark select-none">
             {t('apiRequests.filters.errorsOnly')}
           </span>
         </label>
@@ -283,7 +283,7 @@ function SearchCombobox({ value, onChange, suggestions, placeholder, clearLabel,
           role="listbox"
           className="absolute top-full left-0 right-0 z-20 max-h-64 overflow-y-auto bg-white dark:bg-bg-surface-dark border border-primary border-t-slate-200 dark:border-t-ui-border-dark rounded-b-lg shadow-lg ring-2 ring-primary/30 -mt-px"
         >
-          <li className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-text-dim-dark border-b border-slate-100 dark:border-ui-border-dark select-none">
+          <li className="px-3 py-1.5 text-sm font-semibold uppercase tracking-wider text-slate-400 dark:text-text-dim-dark border-b border-slate-100 dark:border-ui-border-dark select-none">
             {query ? matchingLabel : recentLabel}
           </li>
           {filtered.map((path, i) => {
@@ -309,7 +309,7 @@ function SearchCombobox({ value, onChange, suggestions, placeholder, clearLabel,
                   name="history"
                   className="text-sm text-slate-400 dark:text-text-dim-dark shrink-0"
                 />
-                <span className="truncate font-mono text-xs">{path}</span>
+                <span className="truncate font-mono text-sm">{path}</span>
               </li>
             );
           })}

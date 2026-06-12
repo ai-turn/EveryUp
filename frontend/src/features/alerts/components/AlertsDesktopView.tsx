@@ -268,7 +268,7 @@ function ChannelsGrid({ channels, channelHealth, isLoading, togglingIds, onAdd, 
             {/* KPI tile */}
             <div className="grid grid-cols-3 gap-3 px-3 py-2 bg-slate-50 dark:bg-ui-hover-dark/40 border border-slate-100 dark:border-ui-border-dark/50 rounded-lg">
               <div>
-                <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <div className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.health.successRate7d')}
                 </div>
                 <div className={`text-base font-bold tabular-nums ${rateColor}`}>
@@ -276,16 +276,16 @@ function ChannelsGrid({ channels, channelHealth, isLoading, togglingIds, onAdd, 
                 </div>
               </div>
               <div>
-                <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <div className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.kpi.sent7d')}
                 </div>
                 <div className="text-base font-bold text-slate-900 dark:text-white tabular-nums">
                   {sent}
-                  {failed > 0 && <span className="text-red-500 text-xs font-semibold ml-1">/ {failed}</span>}
+                  {failed > 0 && <span className="text-red-500 text-sm font-semibold ml-1">/ {failed}</span>}
                 </div>
               </div>
               <div>
-                <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <div className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.health.linkedRules')}
                 </div>
                 <div className="text-base font-bold text-slate-900 dark:text-white tabular-nums">
@@ -299,7 +299,7 @@ function ChannelsGrid({ channels, channelHealth, isLoading, togglingIds, onAdd, 
               <button
                 onClick={() => onTest(channel.id)}
                 disabled={!channel.isEnabled}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-primary text-xs font-bold rounded-md hover:bg-primary/10 dark:hover:bg-primary/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-primary text-sm font-bold rounded-md hover:bg-primary/10 dark:hover:bg-primary/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <MaterialIcon name="send" className="text-sm" />
                 {t('alerts.test')}

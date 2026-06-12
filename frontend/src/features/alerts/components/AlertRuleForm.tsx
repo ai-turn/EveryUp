@@ -170,7 +170,7 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
             <FormStep n={1} title={t('alerts.rules.systemRule')} subtitle={t('alerts.rules.systemRuleDesc')}>
                 <div className="p-4 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-xl">
                     <h3 className="font-bold text-slate-900 dark:text-white mb-1">{rule.name}</h3>
-                    <p className="text-xs text-slate-500">{t('alerts.rules.systemRuleDesc')}</p>
+                    <p className="text-sm text-slate-500">{t('alerts.rules.systemRuleDesc')}</p>
                 </div>
             </FormStep>
 
@@ -192,11 +192,11 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
                         <button key={ch.id} type="button" onClick={() => handleToggleChannel(ch.id)}
                             className={`w-full flex items-center gap-3 px-3 py-2.5 border-2 rounded-xl transition-all ${selectedChannels.includes(ch.id) ? 'border-primary bg-primary/5 text-primary' : 'border-slate-100 dark:border-ui-border-dark text-slate-500'}`}>
                             <MaterialIcon name={ch.type === 'telegram' ? 'send' : 'sports_esports'} className="text-sm" />
-                            <span className="text-xs font-bold flex-1 text-left">{ch.name}</span>
+                            <span className="text-sm font-bold flex-1 text-left">{ch.name}</span>
                         </button>
                     ))}
                     {selectedChannels.length === 0 && channels.length > 0 && (
-                        <p className="text-xs text-slate-400 italic">{t('alerts.rules.allChannels')}</p>
+                        <p className="text-sm text-slate-400 italic">{t('alerts.rules.allChannels')}</p>
                     )}
                 </div>
             </FormStep>
@@ -400,7 +400,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                             <MaterialIcon name={cat.icon} className="text-base" />
                                             {cat.label}
                                         </span>
-                                        <span className="text-xs font-semibold uppercase tracking-wider opacity-60">{cat.sub}</span>
+                                        <span className="text-sm font-semibold uppercase tracking-wider opacity-60">{cat.sub}</span>
                                     </button>
                                 ))}
                             </div>
@@ -435,7 +435,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                             key={m}
                                             type="button"
                                             onClick={() => handleMetricChange(m)}
-                                            className={`px-3 py-2 rounded-lg text-xs font-bold border-2 transition-all ${
+                                            className={`px-3 py-2 rounded-lg text-sm font-bold border-2 transition-all ${
                                                 watchedMetric === m
                                                     ? 'border-primary bg-primary/10 text-primary'
                                                     : 'border-slate-100 dark:border-ui-border-dark text-slate-500 hover:border-slate-200 dark:hover:border-slate-600'
@@ -476,11 +476,11 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                                 : 'border-slate-100 dark:border-ui-border-dark text-slate-500 hover:border-slate-200 dark:hover:border-slate-600'
                                         }`}
                                     >
-                                        <span className="flex items-center gap-1.5 text-xs font-bold">
+                                        <span className="flex items-center gap-1.5 text-sm font-bold">
                                             <MaterialIcon name={p.icon} className="text-sm" />
                                             {p.label}
                                         </span>
-                                        <span className="text-xs font-semibold uppercase tracking-wider opacity-60">{p.sub}</span>
+                                        <span className="text-sm font-semibold uppercase tracking-wider opacity-60">{p.sub}</span>
                                     </button>
                                 ))}
                             </div>
@@ -537,7 +537,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                     </Field>
                                 ) : (
                                     <Field label={t('alerts.rules.evalMode', { defaultValue: '평가 방식' })}>
-                                        <p className="text-xs text-slate-400 italic py-2.5">이벤트당 즉시 평가</p>
+                                        <p className="text-sm text-slate-400 italic py-2.5">이벤트당 즉시 평가</p>
                                     </Field>
                                 )}
                             </div>
@@ -546,8 +546,8 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                         {conditionPreset !== 'custom' && isEndpoint && (
                             <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-xl">
                                 <div>
-                                    <p className="text-xs font-bold text-slate-700 dark:text-white">{t('alerts.rules.consecutiveChecks')}</p>
-                                    <p className="text-xs text-slate-400">{t('alerts.rules.consecutiveChecksHint')}</p>
+                                    <p className="text-sm font-bold text-slate-700 dark:text-white">{t('alerts.rules.consecutiveChecks')}</p>
+                                    <p className="text-sm text-slate-400">{t('alerts.rules.consecutiveChecksHint')}</p>
                                 </div>
                                 <input
                                     type="number" min={1} max={20}
@@ -608,7 +608,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                         key={s}
                                         type="button"
                                         onClick={() => setValue('severity', s)}
-                                        className={`py-2.5 text-xs font-bold rounded-xl border-2 transition-all flex items-center justify-center gap-2 uppercase tracking-wide ${
+                                        className={`py-2.5 text-sm font-bold rounded-xl border-2 transition-all flex items-center justify-center gap-2 uppercase tracking-wide ${
                                             watchedSeverity === s
                                                 ? 'border-primary bg-primary/10 text-primary'
                                                 : 'border-slate-100 dark:border-ui-border-dark text-slate-500 hover:border-slate-200 dark:hover:border-slate-600'
@@ -642,8 +642,8 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                         }`}
                                     >
                                         <MaterialIcon name={ch.type === 'telegram' ? 'send' : 'sports_esports'} className="text-sm" />
-                                        <span className="text-xs font-bold flex-1 text-left">{ch.name}</span>
-                                        <span className="text-xs uppercase tracking-wider text-slate-400 font-mono">{ch.type}</span>
+                                        <span className="text-sm font-bold flex-1 text-left">{ch.name}</span>
+                                        <span className="text-sm uppercase tracking-wider text-slate-400 font-mono">{ch.type}</span>
                                     </button>
                                 ))}
                             </div>
@@ -654,7 +654,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                 <label className="text-sm font-bold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide">
                                     <span className="text-sky-400 font-mono">"message"</span>
                                 </label>
-                                <span className="text-xs font-normal text-slate-400 normal-case">
+                                <span className="text-sm font-normal text-slate-400 normal-case">
                                     {t('alerts.rules.messageOverridesHint')}
                                 </span>
                             </div>
@@ -663,9 +663,9 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                 onChange={e => setCustomMessage(e.target.value)}
                                 rows={2}
                                 placeholder={buildDefaultMessage(watchedMetric, watchedOperator, watchedThreshold, watchedDuration)}
-                                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs font-mono text-emerald-400 outline-none focus:border-primary resize-none placeholder:text-slate-600"
+                                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm font-mono text-emerald-400 outline-none focus:border-primary resize-none placeholder:text-slate-600"
                             />
-                            <p className="mt-1.5 text-xs text-slate-400 font-mono">
+                            <p className="mt-1.5 text-sm text-slate-400 font-mono">
                                 <span className="text-slate-500">// vars: </span>
                                 {isApiStatus
                                     ? <span className="text-violet-400">{'{service_name}'} {'{method}'} {'{path}'} {'{status}'} {'{duration}'}</span>
@@ -747,7 +747,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                             </span>
                                             <span className="text-sm text-slate-500 dark:text-text-muted-dark truncate">{watchedName || '<규칙 이름>'}</span>
                                         </div>
-                                        <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                                        <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
                                             {customMessage || buildDefaultMessage(watchedMetric, watchedOperator, watchedThreshold, watchedDuration)}
                                         </p>
                                     </div>
@@ -760,16 +760,16 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                     </p>
                                     <div className="space-y-1.5">
                                         {channels.length === 0 ? (
-                                            <p className="text-xs text-slate-400 italic">등록된 채널 없음</p>
+                                            <p className="text-sm text-slate-400 italic">등록된 채널 없음</p>
                                         ) : previewChannels.slice(0, 5).map(ch => (
                                             <div key={ch.id} className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-lg">
                                                 <MaterialIcon name={ch.type === 'telegram' ? 'send' : 'sports_esports'} className="text-sm text-slate-400" />
-                                                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex-1 truncate">{ch.name}</span>
+                                                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex-1 truncate">{ch.name}</span>
                                                 <span className="text-xs text-slate-400 uppercase font-mono">{ch.type}</span>
                                             </div>
                                         ))}
                                         {previewChannels.length > 5 && (
-                                            <p className="text-xs text-slate-400 italic pl-1">+{previewChannels.length - 5}개 더...</p>
+                                            <p className="text-sm text-slate-400 italic pl-1">+{previewChannels.length - 5}개 더...</p>
                                         )}
                                     </div>
                                 </div>

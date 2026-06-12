@@ -43,7 +43,7 @@ export function LogListMobileView({
         </div>
         <button
           onClick={onAddService}
-          className="flex items-center gap-1.5 px-3 py-2 bg-primary/10 hover:bg-primary/20 rounded-lg text-xs font-bold text-primary transition-all cursor-pointer active:scale-95 shrink-0"
+          className="flex items-center gap-1.5 px-3 py-2 bg-primary/10 hover:bg-primary/20 rounded-lg text-sm font-bold text-primary transition-all cursor-pointer active:scale-95 shrink-0"
         >
           <MaterialIcon name="add" className="text-base" />
           {t('logServices.add.submit')}

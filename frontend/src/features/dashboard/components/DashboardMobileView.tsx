@@ -141,7 +141,7 @@ export function DashboardMobileView() {
                         {svc.name}
                       </p>
                     </div>
-                    <span className="text-xs font-mono text-slate-500 dark:text-text-muted-dark shrink-0">
+                    <span className="text-sm font-mono text-slate-500 dark:text-text-muted-dark shrink-0">
                       {svc.latency}
                     </span>
                     <span className={`text-sm font-bold shrink-0 ${sc.text}`}>
@@ -215,7 +215,7 @@ export function DashboardMobileView() {
                           <span className="text-sm text-slate-500 dark:text-text-muted-dark flex-1 truncate">
                             {latest.message}
                           </span>
-                          <span className="text-xs text-slate-400 dark:text-text-dim-dark shrink-0">
+                          <span className="text-sm text-slate-400 dark:text-text-dim-dark shrink-0">
                             {relativeTime(latest.createdAt, relativeTimeLabels)}
                           </span>
                         </>

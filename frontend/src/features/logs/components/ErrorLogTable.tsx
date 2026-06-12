@@ -120,7 +120,7 @@ function HistogramBand({ logs }: { logs: LogEntry[] }) {
             {t('logs.filter.error')} {errorBuckets.reduce((a, b) => a + b, 0)} · {t('logs.filter.warn')} {warnBuckets.reduce((a, b) => a + b, 0)}
           </p>
         </div>
-        <div className="text-right text-xs text-slate-400 dark:text-text-dim-dark">
+        <div className="text-right text-sm text-slate-400 dark:text-text-dim-dark">
           <div>{t('logs.errorTable.total')} {total}</div>
           <div>{t('logs.errorTable.peak')} -{23 - peakIndex}h</div>
         </div>
@@ -342,7 +342,7 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
   return (
     <div className="space-y-4">
       {traceFilter && (
-        <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-primary">
+        <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-primary">
           <MaterialIcon name="timeline" className="text-sm" />
           <span>{t('logs.traceFilter.label')}</span>
           <code className="font-mono truncate" title={traceFilter}>{shortTraceId(traceFilter)}</code>
@@ -365,7 +365,7 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
                 <button
                   key={level}
                   onClick={() => setLevelFilter(level)}
-                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold transition-colors whitespace-nowrap ${
+                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-sm font-bold transition-colors whitespace-nowrap ${
                     isActive ? levelActiveStyle[level] : levelInactiveStyle
                   }`}
                 >
@@ -388,27 +388,27 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('logs.searchPlaceholder')}
-                className="h-9 w-full rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark pl-8 pr-3 text-xs text-slate-900 dark:text-white outline-none focus:border-primary"
+                className="h-9 w-full rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark pl-8 pr-3 text-sm text-slate-900 dark:text-white outline-none focus:border-primary"
               />
             </div>
 
             <label className="flex h-9 items-center gap-2 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-3">
-              <span className="text-xs font-bold text-slate-500 dark:text-text-muted-dark">{t('logs.errorTable.from')}</span>
+              <span className="text-sm font-bold text-slate-500 dark:text-text-muted-dark">{t('logs.errorTable.from')}</span>
               <input
                 type="datetime-local"
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
-                className="min-w-0 flex-1 bg-transparent text-xs text-slate-900 dark:text-white outline-none"
+                className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 dark:text-white outline-none"
               />
             </label>
 
             <label className="flex h-9 items-center gap-2 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-3">
-              <span className="text-xs font-bold text-slate-500 dark:text-text-muted-dark">{t('logs.errorTable.to')}</span>
+              <span className="text-sm font-bold text-slate-500 dark:text-text-muted-dark">{t('logs.errorTable.to')}</span>
               <input
                 type="datetime-local"
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
-                className="min-w-0 flex-1 bg-transparent text-xs text-slate-900 dark:text-white outline-none"
+                className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 dark:text-white outline-none"
               />
             </label>
 
@@ -418,7 +418,7 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
                 setToDate('');
               }}
               disabled={!fromDate && !toDate}
-              className="flex h-9 items-center justify-center gap-1 rounded-lg border border-slate-200 dark:border-ui-border-dark px-3 text-xs font-bold text-slate-500 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex h-9 items-center justify-center gap-1 rounded-lg border border-slate-200 dark:border-ui-border-dark px-3 text-sm font-bold text-slate-500 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark disabled:cursor-not-allowed disabled:opacity-40"
             >
               <MaterialIcon name="clear" className="text-sm" />
               {t('logs.errorTable.clearDates')}
@@ -426,7 +426,7 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
 
             <button
               onClick={() => setIsPaused(!isPaused)}
-              className={`flex h-9 items-center justify-center gap-1 rounded-lg border px-3 text-xs font-bold transition-colors ${
+              className={`flex h-9 items-center justify-center gap-1 rounded-lg border px-3 text-sm font-bold transition-colors ${
                 isPaused
                   ? 'border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
                   : 'border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark'
@@ -438,7 +438,7 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
           </div>
 
           {dateRangeError && (
-            <div className="flex items-center gap-2 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-3 py-2 text-xs font-medium text-red-700 dark:text-red-300">
+            <div className="flex items-center gap-2 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-3 py-2 text-sm font-medium text-red-700 dark:text-red-300">
               <MaterialIcon name="error_outline" className="text-base shrink-0" />
               <span>{dateRangeError}</span>
             </div>
@@ -454,7 +454,7 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
               {t('logs.errorTable.showing', { shown: filteredLogs.length, loaded: sourceLogs.length })}
             </p>
           </div>
-          <div className="text-xs text-slate-400 dark:text-text-dim-dark">
+          <div className="text-sm text-slate-400 dark:text-text-dim-dark">
             {t('logs.errorTable.defaultLatest', { count: LIMIT_STEP })}
           </div>
         </div>
@@ -477,7 +477,7 @@ export function ErrorLogTable({ serviceId, refreshKey, traceFilter, onClearTrace
           <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50/80 dark:bg-ui-hover-dark/30 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-text-muted-dark">
+                <tr className="border-b border-slate-100 dark:border-ui-border-dark bg-slate-50/80 dark:bg-ui-hover-dark/30 text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-text-muted-dark">
                   <th className="w-28 px-4 py-2.5">{t('logs.table.timestamp')}</th>
                   <th className="w-24 px-4 py-2.5">{t('logs.table.level')}</th>
                   <th className="px-4 py-2.5">{t('logs.table.message')}</th>

@@ -165,7 +165,7 @@ export function CheckHistoryTab({ failures: entries, loading }: CheckHistoryTabP
       </div>
 
       {entries.length > 0 && (
-        <p className="text-center text-xs text-slate-400 dark:text-text-dim-dark">
+        <p className="text-center text-sm text-slate-400 dark:text-text-dim-dark">
           최근 {entries.length}건 표시 ({errorCount}건 실패 · {successCount}건 성공)
         </p>
       )}
@@ -204,17 +204,17 @@ function HistoryRow({
       {/* Status */}
       <div className="flex items-center gap-1.5">
         <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isOk ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-        <span className={`text-xs font-semibold ${isOk ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}`}>
+        <span className={`text-sm font-semibold ${isOk ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}`}>
           {isOk ? '성공' : '실패'}
         </span>
       </div>
 
       {/* Time */}
       <div className="flex flex-col">
-        <span className="text-xs text-slate-700 dark:text-text-base-dark tabular-nums font-medium">
+        <span className="text-sm text-slate-700 dark:text-text-base-dark tabular-nums font-medium">
           {formatTime(e.checkedAt)}
         </span>
-        <span className="text-xs text-slate-400 dark:text-text-dim-dark">
+        <span className="text-sm text-slate-400 dark:text-text-dim-dark">
           {formatTimeAgo(e.checkedAt)}
         </span>
       </div>
@@ -251,7 +251,7 @@ function HistoryRow({
             {e.statusCode}
           </span>
         ) : (
-          <span className="text-slate-300 dark:text-text-dim-dark text-xs">—</span>
+          <span className="text-slate-300 dark:text-text-dim-dark text-sm">—</span>
         )}
       </div>
 
@@ -264,7 +264,7 @@ function HistoryRow({
         ) : isOk ? (
           <span className="text-sm text-slate-400 dark:text-text-dim-dark">정상 응답</span>
         ) : (
-          <span className="text-xs text-slate-300 dark:text-text-dim-dark">—</span>
+          <span className="text-sm text-slate-300 dark:text-text-dim-dark">—</span>
         )}
       </div>
     </div>

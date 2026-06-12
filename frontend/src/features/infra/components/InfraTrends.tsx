@@ -71,7 +71,7 @@ export function InfraTrends({ hostId, refreshKey = 0 }: InfraTrendsProps) {
               <button
                 key={range}
                 onClick={() => setTimeRange(range)}
-                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${
+                className={`px-3 py-1.5 text-sm font-bold rounded-md transition-colors ${
                   timeRange === range
                     ? 'bg-white dark:bg-chart-bg text-slate-900 dark:text-white shadow-sm'
                     : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-900 dark:hover:text-white'
@@ -81,7 +81,7 @@ export function InfraTrends({ hostId, refreshKey = 0 }: InfraTrendsProps) {
               </button>
             ))}
           </div>
-          <p className="text-xs text-slate-400 dark:text-text-dim-dark">전체 차트에 적용</p>
+          <p className="text-sm text-slate-400 dark:text-text-dim-dark">전체 차트에 적용</p>
         </div>
       </div>
 
@@ -178,7 +178,7 @@ function ChartCard({
       {isEmpty ? (
         <div className="flex flex-col items-center justify-center h-48 gap-2 text-slate-400 dark:text-text-dim-dark">
           <MaterialIcon name="bar_chart" className="text-3xl opacity-30" />
-          <p className="text-xs font-medium">최근 {timeRange} 동안 활동 없음</p>
+          <p className="text-sm font-medium">최근 {timeRange} 동안 활동 없음</p>
         </div>
       ) : (
         <div className="px-3 pb-4">
@@ -257,7 +257,7 @@ function InlineStat({ label, value, unit, color }: { label: string; value: numbe
   return (
     <div className="flex items-center gap-1">
       <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
-      <span className="text-xs text-slate-400 dark:text-text-dim-dark">{label}</span>
+      <span className="text-sm text-slate-400 dark:text-text-dim-dark">{label}</span>
       <span className="text-sm font-bold tabular-nums text-slate-800 dark:text-text-base-dark">
         {formatMetricValue(value)}
         <span className="ml-0.5 text-xs font-semibold text-slate-400 dark:text-text-dim-dark">{unit}</span>

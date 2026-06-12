@@ -189,7 +189,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
           {error && (
             <div className="flex items-start gap-2 px-3 py-2 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-700/30">
               <MaterialIcon name="error" className="text-sm text-red-500 shrink-0 mt-0.5" />
-              <p className="text-xs text-red-700 dark:text-red-300">{error}</p>
+              <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
             </div>
           )}
 
@@ -201,14 +201,14 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
 
           {!loading && !error && serviceId && (logs.length > 0 || apiRequests.length > 0) && (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-semibold text-slate-500 dark:text-text-muted-dark mr-1">
+              <span className="text-sm font-semibold text-slate-500 dark:text-text-muted-dark mr-1">
                 {t('apiRequests.tracePanel.jumpTo')}
               </span>
               {logs.length > 0 && (
                 <button
                   type="button"
                   onClick={() => jumpTo('logs')}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/10 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm font-bold text-primary hover:bg-primary/10 cursor-pointer"
                 >
                   <MaterialIcon name="article" className="text-sm" />
                   {t('apiRequests.tracePanel.openInLogs', { count: logs.length })}
@@ -218,7 +218,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
                 <button
                   type="button"
                   onClick={() => jumpTo('requests')}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/10 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm font-bold text-primary hover:bg-primary/10 cursor-pointer"
                 >
                   <MaterialIcon name="http" className="text-sm" />
                   {t('apiRequests.tracePanel.openInRequests', { count: apiRequests.length })}
@@ -262,7 +262,7 @@ function SpanList({ spans, onCopy }: { spans: TraceSpan[]; onCopy: CopyFn }) {
         {spans.map((span) => (
           <li
             key={`${span.traceId}-${span.spanId}`}
-            className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-xs sm:flex-nowrap"
+            className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-sm sm:flex-nowrap"
           >
             <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold shrink-0 ${spanKindBadge(span.kind)}`}>
               {span.kind}
@@ -299,7 +299,7 @@ function ApiRequestList({ items, onCopy }: { items: ApiRequest[]; onCopy: CopyFn
         {items.map((req) => (
           <li
             key={req.id}
-            className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-xs sm:flex-nowrap"
+            className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-sm sm:flex-nowrap"
           >
             <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold bg-slate-200 dark:bg-ui-active-dark text-slate-700 dark:text-text-base-dark shrink-0">
               {req.method}
@@ -333,7 +333,7 @@ function LogList({ logs, onCopy }: { logs: LogEntry[]; onCopy: CopyFn }) {
         {logs.map((log) => (
           <li
             key={log.id}
-            className="flex items-start gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-xs"
+            className="flex items-start gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-sm"
           >
             <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold shrink-0 ${logLevelBadge(log.level)}`}>
               {log.level.toUpperCase()}
