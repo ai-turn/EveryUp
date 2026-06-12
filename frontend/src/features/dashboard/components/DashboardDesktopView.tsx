@@ -7,11 +7,11 @@ import { AlertRulesStatus } from './AlertRulesStatus';
 
 export function DashboardDesktopView() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <ServiceHealthGrid maxItems={3} />
       <LogServicesGrid />
       <ResourceStatusGrid />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <NotificationChannelStatus />
         <AlertRulesStatus />
       </div>
