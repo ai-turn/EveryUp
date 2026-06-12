@@ -97,13 +97,13 @@ export function DashboardMobileView() {
         <div className="flex items-center justify-between p-4 pb-0">
           <div className="flex items-center gap-2">
             <IconHealthCheck size={18} className="text-primary" />
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
               {t('dashboard.healthCheck.title')}
             </h2>
           </div>
           <button
             onClick={() => navigate('/healthcheck')}
-            className="text-sm font-semibold text-primary"
+            className="text-sm font-medium text-primary"
           >
             {t('common.viewMore', { defaultValue: 'View More' })}
           </button>
@@ -137,14 +137,14 @@ export function DashboardMobileView() {
                   >
                     <span className={`w-2 h-2 rounded-full shrink-0 ${sc.dot}`} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-800 dark:text-text-base-dark truncate">
+                      <p className="text-sm font-medium text-slate-800 dark:text-text-base-dark truncate">
                         {svc.name}
                       </p>
                     </div>
                     <span className="text-sm font-mono text-slate-500 dark:text-text-muted-dark shrink-0">
                       {svc.latency}
                     </span>
-                    <span className={`text-sm font-bold shrink-0 ${sc.text}`}>
+                    <span className={`text-sm font-semibold shrink-0 ${sc.text}`}>
                       {svc.uptime}
                     </span>
                   </button>
@@ -161,13 +161,13 @@ export function DashboardMobileView() {
         <div className="flex items-center justify-between p-4 pb-3">
           <div className="flex items-center gap-2">
             <IconLogs size={18} className="text-primary" />
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
               {t('dashboard.logs.title')}
             </h2>
           </div>
           <button
             onClick={() => navigate('/logs')}
-            className="text-sm font-semibold text-primary cursor-pointer"
+            className="text-sm font-medium text-primary cursor-pointer"
           >
             {t('common.viewMore', { defaultValue: 'View More' })}
           </button>
@@ -202,14 +202,14 @@ export function DashboardMobileView() {
                   >
                     <div className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full shrink-0 ${sc.dot}`} />
-                      <span className="text-sm font-semibold text-slate-800 dark:text-text-base-dark flex-1 truncate">
+                      <span className="text-sm font-medium text-slate-800 dark:text-text-base-dark flex-1 truncate">
                         {svc.name}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 pl-4">
                       {latest ? (
                         <>
-                          <span className={`text-xs font-bold px-1.5 py-0.5 rounded uppercase shrink-0 ${logLevelBadge[latest.level]}`}>
+                          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded uppercase shrink-0 ${logLevelBadge[latest.level]}`}>
                             {latest.level.toUpperCase()}
                           </span>
                           <span className="text-sm text-slate-500 dark:text-text-muted-dark flex-1 truncate">
@@ -239,13 +239,13 @@ export function DashboardMobileView() {
         <div className="flex items-center justify-between p-4 pb-3">
           <div className="flex items-center gap-2">
             <IconInfra size={18} className="text-primary" />
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
               {t('dashboard.infrastructure.title', { defaultValue: 'Infrastructure' })}
             </h2>
           </div>
           <button
             onClick={() => navigate('/infra')}
-            className="text-sm font-semibold text-primary cursor-pointer"
+            className="text-sm font-medium text-primary cursor-pointer"
           >
             {t('common.viewMore', { defaultValue: 'View More' })}
           </button>
@@ -271,7 +271,7 @@ export function DashboardMobileView() {
               </p>
               <button
                 onClick={() => navigate('/infra')}
-                className="mt-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer"
+                className="mt-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer"
               >
                 {t('dashboard.infrastructure.add', { defaultValue: 'Add Infrastructure' })} →
               </button>
@@ -286,11 +286,11 @@ export function DashboardMobileView() {
                 >
                   <span className={`w-2 h-2 rounded-full shrink-0 ${resourceStatusDot[res.status] || 'bg-slate-400'}`} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 dark:text-text-base-dark truncate">
+                    <p className="text-sm font-medium text-slate-800 dark:text-text-base-dark truncate">
                       {res.name}
                     </p>
                   </div>
-                  <span className={`text-sm font-bold capitalize ${resourceStatusText[res.status] || 'text-slate-400'}`}>
+                  <span className={`text-sm font-semibold capitalize ${resourceStatusText[res.status] || 'text-slate-400'}`}>
                     {res.status}
                   </span>
                 </button>

@@ -23,7 +23,7 @@ export function IncidentTimeline() {
         {/* Header */}
         <div className="flex items-center p-4 pb-3">
           <MaterialIcon name="history" className="text-primary text-lg mr-2" />
-          <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
             {t('dashboard.timeline.title')}
           </h2>
         </div>
@@ -67,7 +67,7 @@ export function IncidentTimeline() {
                     </div>
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-800 dark:text-text-base-dark truncate">
+                      <p className="text-sm font-medium text-slate-800 dark:text-text-base-dark truncate">
                         {incident.serviceName}
                       </p>
                       <p className="text-sm text-slate-400 dark:text-text-dim-dark truncate">
@@ -104,7 +104,7 @@ export function IncidentTimeline() {
       onClick: incident.serviceId ? () => handleIncidentClick(incident.serviceId) : undefined,
       content: (
         <p>
-          <span className="font-semibold">{incident.serviceName}</span>{' '}
+          <span className="font-medium">{incident.serviceName}</span>{' '}
           <span>{incident.message}</span>
         </p>
       )
@@ -115,7 +115,7 @@ export function IncidentTimeline() {
     <div>
       {/* Header */}
       <div className="flex items-center mb-6">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
           {t('dashboard.timeline.title')}
         </h2>
       </div>

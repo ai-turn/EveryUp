@@ -77,7 +77,7 @@ export const ServiceCard = memo(function ServiceCard({ service, onClick }: Servi
               <IconHealthCheck size={20} className="text-primary" />
             </div>
             <div className="min-w-0">
-              <h3 className="font-bold text-base truncate text-slate-900 dark:text-white">{service.name}</h3>
+              <h3 className="font-semibold text-base truncate text-slate-900 dark:text-white">{service.name}</h3>
               {service.url && (
                 <p className="flex items-center gap-1 mt-0.5 min-w-0">
                   <MaterialIcon name="link" className="text-sm text-slate-400 dark:text-text-dim-dark shrink-0" />
@@ -88,7 +88,7 @@ export const ServiceCard = memo(function ServiceCard({ service, onClick }: Servi
           </div>
           <div className="flex items-center gap-1.5 shrink-0 ml-2">
             {service.isActive === false && (
-              <span className="px-2 py-0.5 rounded-full text-xs font-bold uppercase bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+              <span className="px-2 py-0.5 rounded-full text-xs font-semibold uppercase bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
                 {tc('common.pause')}
               </span>
             )}
@@ -99,12 +99,12 @@ export const ServiceCard = memo(function ServiceCard({ service, onClick }: Servi
         {/* Metrics row */}
         <div className="grid grid-cols-2 gap-x-6 gap-y-1">
           <div>
-            <p className="text-sm text-slate-500 dark:text-text-muted-dark uppercase font-bold tracking-wide">{t('평균 지연 시간')}</p>
-            <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">{service.latency}</p>
+            <p className="text-sm text-slate-500 dark:text-text-muted-dark uppercase font-medium tracking-wide">{t('평균 지연 시간')}</p>
+            <p className="text-sm font-semibold tabular-nums text-slate-900 dark:text-white">{service.latency}</p>
           </div>
           <div>
-            <p className="text-sm text-slate-500 dark:text-text-muted-dark uppercase font-bold tracking-wide">{t('가동률')}</p>
-            <p className={`text-sm font-bold tabular-nums ${uptimeTextClass}`}>{service.uptime}</p>
+            <p className="text-sm text-slate-500 dark:text-text-muted-dark uppercase font-medium tracking-wide">{t('가동률')}</p>
+            <p className={`text-sm font-semibold tabular-nums ${uptimeTextClass}`}>{service.uptime}</p>
           </div>
         </div>
 
@@ -126,7 +126,7 @@ export const ServiceCard = memo(function ServiceCard({ service, onClick }: Servi
             )}
           </span>
           {service.type && (
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold uppercase shrink-0 bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark">
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold uppercase shrink-0 bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark">
               {service.type.toUpperCase()}
             </span>
           )}

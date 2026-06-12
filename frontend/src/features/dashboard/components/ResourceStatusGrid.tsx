@@ -20,11 +20,11 @@ export function ResourceStatusGrid() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
               {t('dashboard.infrastructure.title', { defaultValue: 'Infrastructure' })}
             </h2>
             {!loading && items.length > 0 && (
-              <span className="text-sm font-semibold text-slate-500 dark:text-text-muted-dark bg-slate-100 dark:bg-ui-hover-dark px-2 py-0.5 rounded-full">
+              <span className="text-sm font-medium text-slate-500 dark:text-text-muted-dark bg-slate-100 dark:bg-ui-hover-dark px-2 py-0.5 rounded-full">
                 {items.length}
               </span>
             )}
@@ -34,7 +34,7 @@ export function ResourceStatusGrid() {
         {!loading && !error && items.length > 0 && (
           <button
             onClick={() => navigate('/infra')}
-            className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+            className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
           >
             {t('common.viewMore', { defaultValue: 'Go to' })}
             <MaterialIcon name="arrow_forward" className="text-sm" />
@@ -47,7 +47,7 @@ export function ResourceStatusGrid() {
         <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
           <MaterialIcon name="error_outline" className="text-lg text-red-500 shrink-0" />
           <p className="text-sm text-red-700 dark:text-red-400 flex-1">{t('common.loadError', { defaultValue: 'Failed to load' })}</p>
-          <button onClick={refetch} className="text-sm font-bold text-red-600 dark:text-red-400 hover:underline cursor-pointer shrink-0">
+          <button onClick={refetch} className="text-sm font-semibold text-red-600 dark:text-red-400 hover:underline cursor-pointer shrink-0">
             {t('common.retry', { defaultValue: 'Retry' })}
           </button>
         </div>

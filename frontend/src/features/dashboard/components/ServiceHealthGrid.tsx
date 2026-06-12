@@ -78,11 +78,11 @@ export function ServiceHealthGrid({
         <div className="flex items-center justify-between mb-6">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
                 {t('dashboard.healthCheck.title')}
               </h2>
               {!loading && services && services.length > 0 && (
-                <span className="text-sm font-semibold text-slate-500 dark:text-text-muted-dark bg-slate-100 dark:bg-ui-hover-dark px-2 py-0.5 rounded-full">
+                <span className="text-sm font-medium text-slate-500 dark:text-text-muted-dark bg-slate-100 dark:bg-ui-hover-dark px-2 py-0.5 rounded-full">
                   {services.length}
                 </span>
               )}
@@ -92,7 +92,7 @@ export function ServiceHealthGrid({
           {!loading && !error && services && services.length > 0 && (
             <button
               onClick={() => navigate('/healthcheck')}
-              className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+              className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
             >
               {t('common.viewMore', { defaultValue: 'Go to' })}
               <MaterialIcon name="arrow_forward" className="text-sm" />

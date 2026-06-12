@@ -49,7 +49,7 @@ export const InfraCard = memo(function InfraCard({ resource, onClick }: InfraCar
                     />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-base text-slate-900 dark:text-white truncate">
+                    <h3 className="font-semibold text-base text-slate-900 dark:text-white truncate">
                         {resource.name}
                     </h3>
                     <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5 truncate">
@@ -59,7 +59,7 @@ export const InfraCard = memo(function InfraCard({ resource, onClick }: InfraCar
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                     {isPaused && (
-                        <span className="px-2 py-0.5 rounded-full text-xs font-bold uppercase bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold uppercase bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
                             {t('infra.paused')}
                         </span>
                     )}
@@ -87,10 +87,10 @@ export const InfraCard = memo(function InfraCard({ resource, onClick }: InfraCar
 
             <div className={`mb-3 ${isPaused ? 'opacity-40' : ''}`}>
                 <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-bold uppercase text-slate-500 dark:text-text-muted-dark">
+                    <span className="text-sm font-medium uppercase text-slate-500 dark:text-text-muted-dark">
                         {t('infra.metrics.network')}
                     </span>
-                    <span className="text-sm font-bold tabular-nums text-slate-700 dark:text-text-base-dark">
+                    <span className="text-sm font-semibold tabular-nums text-slate-700 dark:text-text-base-dark">
                         {netTrend.length > 0 ? `${netCurrent.value} ${netCurrent.unit}` : '-'}
                     </span>
                 </div>
@@ -108,11 +108,11 @@ export const InfraCard = memo(function InfraCard({ resource, onClick }: InfraCar
                     {t('infra.remote.lastCollected')}: {resource.lastCollectedAt ? relativeTime(resource.lastCollectedAt, relativeTimeLabels) : '-'}
                 </span>
                 <div className="flex items-center gap-1.5">
-                    <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${mutedBadgeClass}`}>
+                    <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold ${mutedBadgeClass}`}>
                         <MaterialIcon name={typeIcons[resource.type]} className="text-sm" />
                         {t(`infra.resourceTypes.${resource.type}`)}
                     </span>
-                    <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${mutedBadgeClass}`}>
+                    <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold ${mutedBadgeClass}`}>
                         <MaterialIcon name={resource.isRemote ? 'key' : 'computer'} className="text-sm" />
                         {resource.isRemote ? 'SSH' : t('infra.connectionTypes.localShort')}
                     </span>
@@ -129,8 +129,8 @@ function MiniMetricBar({ label, value, muted }: { label: string; value?: number;
     return (
         <div className={muted ? 'opacity-40' : undefined}>
             <div className="flex items-center justify-between gap-3 mb-1">
-                <span className="text-sm font-bold uppercase text-slate-500 dark:text-text-muted-dark">{label}</span>
-                <span className="text-sm font-bold tabular-nums text-slate-700 dark:text-text-base-dark">
+                <span className="text-sm font-medium uppercase text-slate-500 dark:text-text-muted-dark">{label}</span>
+                <span className="text-sm font-semibold tabular-nums text-slate-700 dark:text-text-base-dark">
                     {value === undefined ? '-' : `${pct}%`}
                 </span>
             </div>

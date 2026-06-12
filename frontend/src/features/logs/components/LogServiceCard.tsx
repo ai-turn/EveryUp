@@ -95,7 +95,7 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
           <IconLogs size={20} className="text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-base truncate text-slate-900 dark:text-white">{service.name}</h3>
+          <h3 className="font-semibold text-base truncate text-slate-900 dark:text-white">{service.name}</h3>
           <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">
             {t('logs.card.recent', { count: recentLogs.length })}
           </p>
@@ -103,7 +103,7 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
         <div className="flex flex-col items-end gap-1.5 shrink-0">
           <div className="flex items-center gap-1.5">
             {isPaused && (
-              <span className="px-2 py-0.5 rounded-full text-xs font-bold uppercase bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+              <span className="px-2 py-0.5 rounded-full text-xs font-semibold uppercase bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
                 {t('common:common.pause')}
               </span>
             )}
@@ -119,11 +119,11 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
       <div className="flex gap-2">
         {levelsOrder.map((level) => (
           <div key={level} className="flex-1 flex flex-col items-center gap-0.5">
-            <div className="flex items-center gap-1 text-sm uppercase font-bold text-slate-400 dark:text-text-dim-dark">
+            <div className="flex items-center gap-1 text-sm uppercase font-medium text-slate-400 dark:text-text-dim-dark">
               <span className={`w-1.5 h-1.5 rounded-full ${levelDotStyle[level]}`} />
               <span>{level}</span>
             </div>
-            <span className={`text-sm font-bold tabular-nums ${levelCounts[level] > 0 ? (level === 'error' ? 'text-red-500' : level === 'warn' ? 'text-amber-500' : level === 'info' ? 'text-sky-500' : level === 'debug' ? 'text-violet-400' : 'text-slate-400') : 'text-slate-400 dark:text-text-dim-dark'}`}>
+            <span className={`text-sm font-semibold tabular-nums ${levelCounts[level] > 0 ? (level === 'error' ? 'text-red-500' : level === 'warn' ? 'text-amber-500' : level === 'info' ? 'text-sky-500' : level === 'debug' ? 'text-violet-400' : 'text-slate-400') : 'text-slate-400 dark:text-text-dim-dark'}`}>
               {levelCounts[level]}
             </span>
           </div>
@@ -157,14 +157,14 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
         </span>
         <div className="flex items-center gap-1.5 flex-wrap justify-end shrink-0">
           {allLevels ? (
-            <span className="px-2 py-0.5 rounded text-xs font-bold bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark">
+            <span className="px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark">
               ALL
             </span>
           ) : (
             levels.map((level) => (
               <span
                 key={level}
-                className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold uppercase bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark"
+                className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold uppercase bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark"
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${levelDotStyle[level]}`} />
                 {level === 'warn' ? 'WARN' : level.toUpperCase()}

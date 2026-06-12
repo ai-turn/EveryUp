@@ -42,18 +42,18 @@ export function AlertRulesStatus() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
             {t('dashboard.alertRules.title')}
           </h2>
           {!loading && (
-            <span className="text-sm font-semibold text-slate-500 dark:text-text-muted-dark bg-slate-100 dark:bg-ui-hover-dark px-2 py-0.5 rounded-full">
+            <span className="text-sm font-medium text-slate-500 dark:text-text-muted-dark bg-slate-100 dark:bg-ui-hover-dark px-2 py-0.5 rounded-full">
               {enabledCount}/{totalCount}
             </span>
           )}
         </div>
         <button
           onClick={() => navigate('/alerts?tab=rules')}
-          className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer"
+          className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer"
         >
           {t('dashboard.alertRules.manage')}
           <MaterialIcon name="arrow_forward" className="text-sm" />
@@ -89,7 +89,7 @@ export function AlertRulesStatus() {
                 </p>
                 <button
                   onClick={() => navigate('/alerts?tab=rules')}
-                  className="mt-3 text-sm font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer"
+                  className="mt-3 text-sm font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer"
                 >
                   {t('dashboard.alertRules.add')} →
                 </button>
@@ -107,7 +107,7 @@ export function AlertRulesStatus() {
                       <MaterialIcon name={metricIcon} className={`text-base ${sev.text}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-800 dark:text-text-base-dark truncate">
+                      <p className="text-sm font-medium text-slate-800 dark:text-text-base-dark truncate">
                         {rule.name}
                       </p>
                       <p className="text-sm text-slate-400 dark:text-text-dim-dark capitalize">
@@ -115,12 +115,12 @@ export function AlertRulesStatus() {
                       </p>
                     </div>
                     {rule.isEnabled ? (
-                      <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-lime-500/10 text-lime-600 dark:text-lime-400 text-xs font-bold shrink-0">
+                      <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-lime-500/10 text-lime-600 dark:text-lime-400 text-xs font-semibold shrink-0">
                         <span className="w-1.5 h-1.5 rounded-full bg-lime-500 animate-pulse" />
                         {t('dashboard.alertRules.active')}
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-200 dark:bg-ui-active-dark text-slate-500 dark:text-text-muted-dark text-xs font-bold shrink-0">
+                      <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-200 dark:bg-ui-active-dark text-slate-500 dark:text-text-muted-dark text-xs font-semibold shrink-0">
                         <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                         {t('dashboard.alertRules.inactive')}
                       </span>
@@ -132,7 +132,7 @@ export function AlertRulesStatus() {
             {rules.length > 5 && (
               <button
                 onClick={() => navigate('/alerts?tab=rules')}
-                className="w-full py-2 text-sm font-semibold text-slate-400 dark:text-text-dim-dark hover:text-primary dark:hover:text-primary transition-colors text-center"
+                className="w-full py-2 text-sm font-medium text-slate-400 dark:text-text-dim-dark hover:text-primary dark:hover:text-primary transition-colors text-center"
               >
                 {t('common.showMore', { count: rules.length - 5 })}
               </button>

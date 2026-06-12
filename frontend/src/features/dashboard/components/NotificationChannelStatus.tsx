@@ -19,18 +19,18 @@ export function NotificationChannelStatus() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
             {t('dashboard.notifications.title')}
           </h2>
           {!loading && totalCount > 0 && (
-            <span className="text-sm font-semibold text-slate-500 dark:text-text-muted-dark bg-slate-100 dark:bg-ui-hover-dark px-2 py-0.5 rounded-full">
+            <span className="text-sm font-medium text-slate-500 dark:text-text-muted-dark bg-slate-100 dark:bg-ui-hover-dark px-2 py-0.5 rounded-full">
               {activeCount}/{totalCount}
             </span>
           )}
         </div>
         <button
           onClick={() => navigate('/alerts')}
-          className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50 rounded"
+          className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50 rounded"
         >
           {t('dashboard.notifications.manage')}
           <MaterialIcon name="arrow_forward" className="text-sm" />
@@ -65,7 +65,7 @@ export function NotificationChannelStatus() {
             </p>
             <button
               onClick={() => navigate('/alerts')}
-              className="mt-3 text-sm font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer"
+              className="mt-3 text-sm font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer"
             >
               {t('dashboard.notifications.add')} →
             </button>
@@ -89,7 +89,7 @@ export function NotificationChannelStatus() {
 
                   {/* Name & Type */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 dark:text-text-base-dark truncate">
+                    <p className="text-sm font-medium text-slate-800 dark:text-text-base-dark truncate">
                       {channel.name}
                     </p>
                     <p className="text-sm text-slate-400 dark:text-text-dim-dark capitalize">
@@ -99,7 +99,7 @@ export function NotificationChannelStatus() {
 
                   {/* Status Badge */}
                   {channel.isEnabled ? (
-                    <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold shrink-0">
+                    <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold shrink-0">
                       <span className="relative flex w-1.5 h-1.5">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
                         <span className="relative inline-flex rounded-full w-1.5 h-1.5 bg-emerald-500" />
@@ -107,7 +107,7 @@ export function NotificationChannelStatus() {
                       {t('dashboard.notifications.active')}
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-200 dark:bg-ui-active-dark text-slate-500 dark:text-text-muted-dark text-xs font-bold shrink-0">
+                    <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-200 dark:bg-ui-active-dark text-slate-500 dark:text-text-muted-dark text-xs font-semibold shrink-0">
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                       {t('dashboard.notifications.inactive')}
                     </span>
@@ -118,7 +118,7 @@ export function NotificationChannelStatus() {
             {totalCount > 5 && (
               <button
                 onClick={() => navigate('/alerts')}
-                className="w-full py-2 text-sm font-semibold text-slate-400 dark:text-text-dim-dark hover:text-primary dark:hover:text-primary transition-colors text-center"
+                className="w-full py-2 text-sm font-medium text-slate-400 dark:text-text-dim-dark hover:text-primary dark:hover:text-primary transition-colors text-center"
               >
                 {t('common.showMore', { count: totalCount - 5 })}
               </button>
