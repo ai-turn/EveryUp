@@ -1,9 +1,9 @@
 import { ReactNode } from 'react';
 
 /**
- * Escape hatch that breaks out of MainLayout's `max-w-360 mx-auto` container.
+ * Escape hatch that breaks out of MainLayout's `max-w-320 mx-auto` container.
  *
- * MainLayout constrains every page to 1440px (max-w-360) for readability.
+ * MainLayout constrains every page to 1280px (max-w-320) for readability.
  * Wrap a chart-heavy or canvas-style section with `<PageBleed>` when you need
  * the full viewport width — typically dashboards with multi-column charts that
  * benefit from extra horizontal real estate.

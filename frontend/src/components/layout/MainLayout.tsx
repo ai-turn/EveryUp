@@ -29,7 +29,7 @@ export function MainLayout() {
         <main id="main-content" className="flex-1 flex flex-col overflow-hidden relative min-w-0 bg-white dark:bg-bg-main-dark transition-all duration-500 ease-in-out">
           <div className="flex-1 overflow-y-auto scroll-smooth [scrollbar-gutter:stable]">
             <div className="flex flex-col min-h-full pb-safe-bottom lg:pb-0">
-              <div className="p-4 sm:p-6 md:p-8 space-y-8 flex-1 w-full max-w-360 mx-auto">
+              <div className="p-4 sm:p-6 md:p-8 space-y-8 flex-1 w-full max-w-320 mx-auto">
                 <Outlet />
               </div>
               <Footer />
