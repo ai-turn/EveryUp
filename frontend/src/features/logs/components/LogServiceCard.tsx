@@ -20,6 +20,29 @@ const levelDotStyle: Record<LogLevel, string> = {
 
 const levelsOrder: LogLevel[] = ['error', 'warn', 'info', 'debug', 'trace'];
 
+const levelPillStyle: Record<LogLevel, { active: string; idle: string }> = {
+  error: {
+    active: 'border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300',
+    idle: 'border-red-100 bg-red-50/40 text-red-300 dark:border-red-900/30 dark:bg-red-950/10 dark:text-red-700',
+  },
+  warn: {
+    active: 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300',
+    idle: 'border-amber-100 bg-amber-50/40 text-amber-300 dark:border-amber-900/30 dark:bg-amber-950/10 dark:text-amber-700',
+  },
+  info: {
+    active: 'border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300',
+    idle: 'border-slate-200 bg-slate-50 text-slate-400 dark:border-ui-border-dark dark:bg-ui-hover-dark/40 dark:text-text-dim-dark',
+  },
+  debug: {
+    active: 'border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/60 dark:bg-violet-950/30 dark:text-violet-300',
+    idle: 'border-slate-200 bg-slate-50 text-slate-400 dark:border-ui-border-dark dark:bg-ui-hover-dark/40 dark:text-text-dim-dark',
+  },
+  trace: {
+    active: 'border-slate-300 bg-slate-100 text-slate-700 dark:border-ui-border-dark dark:bg-ui-hover-dark dark:text-text-base-dark',
+    idle: 'border-slate-200 bg-slate-50 text-slate-400 dark:border-ui-border-dark dark:bg-ui-hover-dark/40 dark:text-text-dim-dark',
+  },
+};
+
 function formatTimeAgo(dateStr?: string): string {
   if (!dateStr) return '-';
   const diff = Math.max(0, Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000));
@@ -129,8 +152,8 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
           <IconLogs size={20} className="text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-base truncate text-slate-900 dark:text-white">{service.name}</h3>
-          <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">
+          <h3 className="font-semibold text-base leading-tight truncate text-slate-900 dark:text-white">{service.name}</h3>
+          <p className="text-sm leading-snug text-slate-500 dark:text-text-muted-dark mt-px">
             {t('logs.card.recent', { count: recentLogs.length })}
           </p>
         </div>
@@ -150,18 +173,28 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
       </div>
 
       {/* Level counts */}
-      <div className="flex gap-2">
-        {levelsOrder.map((level) => (
-          <div key={level} className="flex-1 flex flex-col items-center gap-0.5">
-            <div className="flex items-center gap-1 text-sm uppercase font-medium text-slate-400 dark:text-text-dim-dark">
-              <span className={`w-1.5 h-1.5 rounded-full ${levelDotStyle[level]}`} />
-              <span>{level}</span>
+      <div className="grid grid-cols-5 gap-1.5">
+        {levelsOrder.map((level) => {
+          const count = levelCounts[level];
+          const isActive = count > 0;
+          const pillTone = isActive ? levelPillStyle[level].active : levelPillStyle[level].idle;
+          return (
+            <div
+              key={level}
+              className={`min-w-0 rounded-md border px-2 py-1.5 ${pillTone}`}
+              aria-label={`${level.toUpperCase()} ${count}`}
+            >
+              <div className="flex min-w-0 items-center justify-between gap-1">
+                <span className="truncate text-[11px] font-semibold uppercase leading-none tracking-normal">
+                  {level}
+                </span>
+                <span className={`text-sm font-bold leading-none tabular-nums ${isActive ? '' : 'opacity-60'}`}>
+                  {count}
+                </span>
+              </div>
             </div>
-            <span className={`text-sm font-semibold tabular-nums ${levelCounts[level] > 0 ? (level === 'error' ? 'text-red-500' : level === 'warn' ? 'text-amber-500' : level === 'info' ? 'text-sky-500' : level === 'debug' ? 'text-violet-400' : 'text-slate-400') : 'text-slate-400 dark:text-text-dim-dark'}`}>
-              {levelCounts[level]}
-            </span>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Recent log preview */}

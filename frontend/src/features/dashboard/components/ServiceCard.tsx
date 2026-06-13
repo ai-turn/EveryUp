@@ -109,11 +109,11 @@ export const ServiceCard = memo(function ServiceCard({ service, onClick }: Servi
               <IconHealthCheck size={20} className="text-primary" />
             </div>
             <div className="min-w-0">
-              <h3 className="font-semibold text-base truncate text-slate-900 dark:text-white">{service.name}</h3>
+              <h3 className="font-semibold text-base leading-tight truncate text-slate-900 dark:text-white">{service.name}</h3>
               {service.url && (
-                <p className="flex items-center gap-1 mt-0.5 min-w-0">
+                <p className="flex items-center gap-1 mt-px min-w-0">
                   <MaterialIcon name="link" className="text-sm text-slate-400 dark:text-text-dim-dark shrink-0" />
-                  <span className="text-sm font-mono text-slate-400 dark:text-text-dim-dark truncate">{service.url}</span>
+                  <span className="text-sm leading-snug font-mono text-slate-400 dark:text-text-dim-dark truncate">{service.url}</span>
                 </p>
               )}
             </div>

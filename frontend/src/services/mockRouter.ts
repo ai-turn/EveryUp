@@ -579,7 +579,12 @@ export function mockRouter<T>(endpoint: string, method = 'GET'): T {
   // /hosts
   if (endpoint.startsWith('/hosts')) return mockHosts as T;
 
-  if (endpoint.startsWith('/alert-rules')) return mockAlertRules as T;
+  const alertRuleMatch = endpoint.match(/^\/alert-rules\/([^/?]+)$/);
+  if (alertRuleMatch) {
+    const id = decodeURIComponent(alertRuleMatch[1]);
+    return (mockAlertRules.find(rule => rule.id === id) ?? null) as T;
+  }
+  if (endpoint === '/alert-rules') return mockAlertRules as T;
 
   if (endpoint.startsWith('/notification-history/stats')) return mockNotificationStats as T;
   if (endpoint.startsWith('/notification-history')) return mockNotificationHistory as T;

@@ -99,18 +99,20 @@ export function AlertRulesStatus() {
                 const sev = SEVERITY_COLOR[rule.severity] ?? SEVERITY_COLOR.info;
                 const metricIcon = METRIC_ICON[rule.metric] ?? 'notifications';
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={rule.id}
-                    className={`flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-ui-hover-dark/60 transition-colors ${!rule.isEnabled ? 'opacity-50' : ''}`}
+                    onClick={() => navigate(`/alerts/rules/${rule.id}/edit`)}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-ui-hover-dark/60 hover:bg-slate-100 dark:hover:bg-ui-hover-dark active:bg-slate-100 dark:active:bg-ui-active-dark transition-colors text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50 ${!rule.isEnabled ? 'opacity-50' : ''}`}
                   >
                     <div className={`w-8 h-8 rounded-lg ${sev.bg} flex items-center justify-center shrink-0`}>
                       <MaterialIcon name={metricIcon} className={`text-base ${sev.text}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-800 dark:text-text-base-dark truncate">
+                      <p className="text-sm leading-tight font-medium text-slate-800 dark:text-text-base-dark truncate">
                         {rule.name}
                       </p>
-                      <p className="text-sm text-slate-400 dark:text-text-dim-dark capitalize">
+                      <p className="text-sm leading-snug text-slate-400 dark:text-text-dim-dark capitalize">
                         {rule.severity} · {rule.metric}
                       </p>
                     </div>
@@ -125,7 +127,7 @@ export function AlertRulesStatus() {
                         {t('dashboard.alertRules.inactive')}
                       </span>
                     )}
-                  </div>
+                  </button>
                 );
               })
             )}

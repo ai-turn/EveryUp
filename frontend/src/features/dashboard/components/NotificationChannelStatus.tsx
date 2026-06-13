@@ -78,9 +78,11 @@ export function NotificationChannelStatus() {
             {(channels || []).slice(0, 5).map((channel) => {
               const style = getChannelStyle(channel.type);
               return (
-                <div
+                <button
+                  type="button"
                   key={channel.id}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-ui-hover-dark/60 hover:bg-slate-100 dark:hover:bg-ui-hover-dark transition-colors"
+                  onClick={() => navigate(`/alerts/channels/${channel.id}/edit`)}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-ui-hover-dark/60 hover:bg-slate-100 dark:hover:bg-ui-hover-dark active:bg-slate-100 dark:active:bg-ui-active-dark transition-colors text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50"
                 >
                   {/* Icon */}
                   <div className={`w-9 h-9 rounded-lg ${style.bg} flex items-center justify-center shrink-0`}>
@@ -89,10 +91,10 @@ export function NotificationChannelStatus() {
 
                   {/* Name & Type */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-800 dark:text-text-base-dark truncate">
+                    <p className="text-sm leading-tight font-medium text-slate-800 dark:text-text-base-dark truncate">
                       {channel.name}
                     </p>
-                    <p className="text-sm text-slate-400 dark:text-text-dim-dark capitalize">
+                    <p className="text-sm leading-snug text-slate-400 dark:text-text-dim-dark capitalize">
                       {channel.type}
                     </p>
                   </div>
@@ -112,7 +114,7 @@ export function NotificationChannelStatus() {
                       {t('dashboard.notifications.inactive')}
                     </span>
                   )}
-                </div>
+                </button>
               );
             })}
             {totalCount > 5 && (

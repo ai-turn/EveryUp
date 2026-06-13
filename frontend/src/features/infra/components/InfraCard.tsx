@@ -49,10 +49,10 @@ export const InfraCard = memo(function InfraCard({ resource, onClick }: InfraCar
                     />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-base text-slate-900 dark:text-white truncate">
+                    <h3 className="font-semibold text-base leading-tight text-slate-900 dark:text-white truncate">
                         {resource.name}
                     </h3>
-                    <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5 truncate">
+                    <p className="text-sm leading-snug text-slate-500 dark:text-text-muted-dark mt-px truncate">
                         {resource.cluster || t('common.unknown')} - {resource.ip}
                         {resource.isRemote && resource.sshPort ? `:${resource.sshPort}` : ''}
                     </p>
@@ -127,16 +127,14 @@ function MiniMetricBar({ label, value, muted }: { label: string; value?: number;
     const tone = pct >= 90 ? 'bg-red-500' : pct >= 75 ? 'bg-amber-500' : 'bg-primary';
 
     return (
-        <div className={muted ? 'opacity-40' : undefined}>
-            <div className="flex items-center justify-between gap-3 mb-1">
-                <span className="text-sm font-medium uppercase text-slate-500 dark:text-text-muted-dark">{label}</span>
-                <span className="text-sm font-semibold tabular-nums text-slate-700 dark:text-text-base-dark">
-                    {value === undefined ? '-' : `${pct}%`}
-                </span>
-            </div>
+        <div className={`grid grid-cols-[4.5rem_1fr_3rem] items-center gap-3 ${muted ? 'opacity-40' : ''}`}>
+            <span className="text-sm font-medium uppercase text-slate-500 dark:text-text-muted-dark truncate">{label}</span>
             <div className="h-1.5 rounded-full bg-slate-100 dark:bg-ui-hover-dark overflow-hidden">
                 <div className={`h-full rounded-full transition-all ${tone}`} style={{ width: value === undefined ? '0%' : `${pct}%` }} />
             </div>
+            <span className="text-sm font-semibold tabular-nums text-right text-slate-700 dark:text-text-base-dark">
+                {value === undefined ? '-' : `${pct}%`}
+            </span>
         </div>
     );
 }
