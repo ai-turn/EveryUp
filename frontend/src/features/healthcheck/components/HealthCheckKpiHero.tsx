@@ -91,7 +91,7 @@ export function HealthCheckKpiHero({ refreshKey = 0 }: Props) {
             <span className="text-sm text-slate-400 dark:text-text-dim-dark uppercase tracking-wide font-semibold">
               24h 응답 시간 추이
             </span>
-            <Sparkline data={kpi.latencyHistory} width={120} height={36} color="#3b76c9" />
+            <Sparkline data={kpi.latencyHistory} width={120} height={36} color="#3b82f6" />
           </div>
         )}
       </div>

@@ -240,6 +240,14 @@
         },
         "table": {
             "eventType": "Event Type",
+            "channel": "Channel",
+            "type": "Type",
+            "status": "Status",
+            "successRate7d": "7d success",
+            "sentFailed": "Sent / Failed",
+            "linkedRules": "Linked rules",
+            "lastSent": "Last sent",
+            "actions": "Actions",
             "slack": "Slack",
             "email": "Email",
             "pagerduty": "PagerDuty"

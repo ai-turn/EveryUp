@@ -240,6 +240,14 @@
         },
         "table": {
             "eventType": "이벤트 유형",
+            "channel": "채널",
+            "type": "타입",
+            "status": "상태",
+            "successRate7d": "7일 성공률",
+            "sentFailed": "발송 / 실패",
+            "linkedRules": "연결 규칙",
+            "lastSent": "최근 발송",
+            "actions": "작업",
             "slack": "Slack",
             "email": "이메일",
             "pagerduty": "PagerDuty"

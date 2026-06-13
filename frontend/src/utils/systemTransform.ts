@@ -148,15 +148,15 @@ export function historyToCharts(history: SystemMetricsHistory, currentInfo?: Sys
       unit: '%',
       yMax: 100,
       data,
-      series: [{ key: 'cpu', label: 'Usage', color: '#137fec' }],
+      series: [{ key: 'cpu', label: 'Usage', color: '#2563eb' }],
     },
     {
       title: 'Memory Flow',
       unit: 'GB',
       data,
       series: [
-        { key: 'memUsed',   label: 'Used',   color: '#3b76c9' },
-        { key: 'memCached', label: 'Cached', color: '#10b981' },
+        { key: 'memUsed',   label: 'Used',   color: '#3b82f6' },
+        { key: 'memCached', label: 'Cached', color: '#14b8a6' },
       ],
     },
     {
@@ -165,7 +165,7 @@ export function historyToCharts(history: SystemMetricsHistory, currentInfo?: Sys
       yMax: parseFloat((diskMax * 1.2).toFixed(2)),
       data,
       series: [
-        { key: 'diskRead', label: 'Read', color: '#a3e635' },
+        { key: 'diskRead', label: 'Read', color: '#0ea5e9' },
         { key: 'diskWrite', label: 'Write', color: '#f97316' },
       ],
     },

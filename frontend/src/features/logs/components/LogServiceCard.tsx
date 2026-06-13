@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StatusBadge, MaterialIcon } from '../../../components/common';
+import { StatusBadge, MaterialIcon, Sparkline } from '../../../components/common';
 import { IconLogs } from '../../../components/icons/SidebarIcons';
 import type { LogEntry, LogLevel, Service } from '../../../services/api';
 
@@ -61,7 +61,7 @@ function formatClock(dateStr: string): string {
   });
 }
 
-function MiniSparkline({ logs, id }: { logs: LogEntry[]; id: string }) {
+function MiniSparkline({ logs }: { logs: LogEntry[] }) {
   const buckets = Array.from({ length: 12 }, () => 0);
   const now = Date.now();
   logs.forEach((log) => {
@@ -69,61 +69,10 @@ function MiniSparkline({ logs, id }: { logs: LogEntry[]; id: string }) {
     const index = 11 - Math.min(11, Math.max(0, Math.floor(ageMinutes / 10)));
     buckets[index] += log.level === 'error' ? 3 : log.level === 'warn' ? 2 : 1;
   });
-  const max = Math.max(...buckets, 1);
-  const color = logs.some((l) => l.level === 'error') ? '#ef4444' : logs.some((l) => l.level === 'warn') ? '#f59e0b' : '#3b76c9';
-  const smoothed = buckets.map((value, index) => {
-    const previous = buckets[Math.max(0, index - 1)];
-    const next = buckets[Math.min(buckets.length - 1, index + 1)];
-    return previous * 0.2 + value * 0.6 + next * 0.2;
-  });
-  const W = 96, H = 30, PAD_X = 2, PAD_Y = 4;
-  const stepX = (W - PAD_X * 2) / (smoothed.length - 1);
-  const points = smoothed.map((value, index) => {
-    const x = PAD_X + index * stepX;
-    const y = PAD_Y + (H - PAD_Y * 2) - (value / max) * (H - PAD_Y * 2);
-    return { x, y: Math.max(PAD_Y, Math.min(H - PAD_Y, y)) };
-  });
-  const linePath = points.reduce((path, point, index, all) => {
-    if (index === 0) return `M${point.x.toFixed(1)},${point.y.toFixed(1)}`;
-    const previous = all[index - 1];
-    const beforePrevious = all[Math.max(0, index - 2)];
-    const next = all[Math.min(all.length - 1, index + 1)];
-    const smoothing = 0.18;
-    const cp1x = previous.x + (point.x - beforePrevious.x) * smoothing;
-    const cp1y = previous.y + (point.y - beforePrevious.y) * smoothing;
-    const cp2x = point.x - (next.x - previous.x) * smoothing;
-    const cp2y = point.y - (next.y - previous.y) * smoothing;
-    return `${path} C${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${point.x.toFixed(1)},${point.y.toFixed(1)}`;
-  }, '');
-  const lastPoint = points[points.length - 1];
-  const areaPath = `${linePath} L${W - PAD_X},${H - PAD_Y} L${PAD_X},${H - PAD_Y} Z`;
-  const safeId = id.replace(/[^a-zA-Z0-9]/g, '-');
-  const gradientId = `log-card-sparkline-fill-${safeId}`;
-  const glowId = `log-card-sparkline-glow-${safeId}`;
+  const color = logs.some((l) => l.level === 'error') ? '#ef4444' : logs.some((l) => l.level === 'warn') ? '#f59e0b' : '#3b82f6';
 
   return (
-    <svg className="h-7.5 w-24 overflow-visible" viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
-      <defs>
-        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity={0.22} />
-          <stop offset="60%" stopColor={color} stopOpacity={0.08} />
-          <stop offset="100%" stopColor={color} stopOpacity={0} />
-        </linearGradient>
-        <filter id={glowId} x="-10%" y="-60%" width="120%" height="220%">
-          <feGaussianBlur stdDeviation="1.4" result="blur" />
-          <feColorMatrix
-            in="blur"
-            type="matrix"
-            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.24 0"
-          />
-        </filter>
-      </defs>
-      <line x1={PAD_X} y1={H / 2} x2={W - PAD_X} y2={H / 2} stroke="currentColor" strokeWidth="1" className="text-slate-100 dark:text-ui-border-dark/60" />
-      <path d={areaPath} fill={`url(#${gradientId})`} />
-      <path d={linePath} fill="none" stroke={color} strokeWidth="3.4" strokeLinecap="round" filter={`url(#${glowId})`} opacity="0.28" />
-      <path d={linePath} fill="none" stroke={color} strokeWidth="1.9" strokeLinecap="round" />
-      <circle cx={lastPoint.x} cy={lastPoint.y} r="2.4" fill="white" stroke={color} strokeWidth="1.6" className="dark:fill-bg-surface-dark" />
-    </svg>
+    <Sparkline data={buckets} width={96} height={30} color={color} className="h-7.5 w-24 overflow-visible" />
   );
 }
 
@@ -167,7 +116,7 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
             <StatusBadge status={service.status} />
           </div>
           <div className="text-primary">
-            <MiniSparkline logs={recentLogs} id={service.id} />
+            <MiniSparkline logs={recentLogs} />
           </div>
         </div>
       </div>

@@ -70,6 +70,9 @@ function VitalGaugeCard({ gauge, sparkline }: { gauge: GaugeData; sparkline?: nu
   const pct = clampPercent(gauge.percentage);
   const tone = getGaugeTone(pct);
   const trendIcon = gauge.trendType === 'up' ? 'arrow_upward' : gauge.trendType === 'down' ? 'arrow_downward' : 'remove';
+  const displayValue = gauge.displayValue ?? pct;
+  const displayUnit = gauge.displayUnit ?? '%';
+  const isCompactValue = displayUnit !== '%';
 
   return (
     <article className="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-ui-border-dark dark:bg-bg-surface-dark sm:p-5">
@@ -96,13 +99,20 @@ function VitalGaugeCard({ gauge, sparkline }: { gauge: GaugeData; sparkline?: nu
           style={{
             background: `conic-gradient(${gauge.color} ${pct * 3.6}deg, rgba(148, 163, 184, 0.16) 0deg)`,
           }}
-          aria-label={`${gauge.label} ${gauge.displayValue ?? pct}${gauge.displayUnit ?? '%'}`}
+          aria-label={`${gauge.label} ${displayValue}${displayUnit}`}
         >
           <div className="grid h-16 w-16 place-items-center rounded-full bg-white shadow-inner dark:bg-bg-surface-dark">
-            <div className="text-center">
-              <p className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{gauge.displayValue ?? pct}</p>
-              <p className="text-sm font-bold uppercase text-slate-400 dark:text-text-dim-dark">{gauge.displayUnit ?? '%'}</p>
-            </div>
+            {isCompactValue ? (
+              <p className="max-w-[3.5rem] whitespace-nowrap text-center font-bold tabular-nums text-slate-900 dark:text-white">
+                <span className="text-[17px] leading-none">{displayValue}</span>
+                <span className="ml-0.5 text-[10px] leading-none text-slate-400 dark:text-text-dim-dark">{displayUnit}</span>
+              </p>
+            ) : (
+              <div className="text-center">
+                <p className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{displayValue}</p>
+                <p className="text-sm font-bold text-slate-400 dark:text-text-dim-dark">{displayUnit}</p>
+              </div>
+            )}
           </div>
         </div>
 

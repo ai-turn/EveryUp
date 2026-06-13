@@ -21,7 +21,7 @@ export const mockCharts: ChartData[] = [
     data: makePoints(12, (i) => ({
       cpu: Math.round(20 + Math.sin(i * 0.8) * 15 + (i % 3) * 4),
     })),
-    series: [{ key: 'cpu', label: 'Usage', color: '#137fec' }],
+    series: [{ key: 'cpu', label: 'Usage', color: '#2563eb' }],
   },
   {
     title: 'Memory Flow',
@@ -31,8 +31,8 @@ export const mockCharts: ChartData[] = [
       memCached: parseFloat((8 + Math.cos(i * 0.4) * 2).toFixed(1)),
     })),
     series: [
-      { key: 'memUsed', label: 'Used', color: '#137fec' },
-      { key: 'memCached', label: 'Cached', color: '#a855f7' },
+      { key: 'memUsed', label: 'Used', color: '#3b82f6' },
+      { key: 'memCached', label: 'Cached', color: '#14b8a6' },
     ],
   },
   {
@@ -43,7 +43,7 @@ export const mockCharts: ChartData[] = [
       diskWrite: parseFloat((Math.abs(Math.cos(i * 0.9)) * 40 + 5).toFixed(2)),
     })),
     series: [
-      { key: 'diskRead', label: 'Read', color: '#a3e635' },
+      { key: 'diskRead', label: 'Read', color: '#0ea5e9' },
       { key: 'diskWrite', label: 'Write', color: '#f97316' },
     ],
   },
