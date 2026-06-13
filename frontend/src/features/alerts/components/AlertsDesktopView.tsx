@@ -151,7 +151,7 @@ export function AlertsDesktopView({
       {activeTab === 'history' ? (
         <NotificationHistoryTab />
       ) : activeTab === 'channels' ? (
-        <ChannelsGrid
+        <ChannelsTable
           channels={channels}
           channelHealth={channelHealth}
           isLoading={isLoading}
@@ -183,13 +183,168 @@ interface ChannelsGridProps {
   onTest: (id: string) => void;
 }
 
+function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd, onEdit, onDelete, onToggle, onTest }: ChannelsGridProps) {
+  const { t, i18n } = useTranslation(['alerts', 'common']);
+  const locale = i18n.language === 'ko' ? ko : enUS;
+
+  if (isLoading) {
+    return (
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-ui-border-dark dark:bg-bg-surface-dark">
+        <div className="divide-y divide-slate-100 dark:divide-ui-border-dark">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="grid grid-cols-[minmax(220px,1.4fr)_120px_110px_130px_120px_150px_140px] gap-4 px-4 py-3 animate-pulse">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-lg bg-slate-100 dark:bg-ui-hover-dark" />
+                <div className="space-y-2">
+                  <div className="h-3 w-32 rounded bg-slate-100 dark:bg-ui-hover-dark" />
+                  <div className="h-2.5 w-20 rounded bg-slate-100 dark:bg-ui-hover-dark" />
+                </div>
+              </div>
+              <div className="h-5 rounded bg-slate-100 dark:bg-ui-hover-dark" />
+              <div className="h-5 rounded bg-slate-100 dark:bg-ui-hover-dark" />
+              <div className="h-5 rounded bg-slate-100 dark:bg-ui-hover-dark" />
+              <div className="h-5 rounded bg-slate-100 dark:bg-ui-hover-dark" />
+              <div className="h-5 rounded bg-slate-100 dark:bg-ui-hover-dark" />
+              <div className="h-7 rounded bg-slate-100 dark:bg-ui-hover-dark" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (channels.length === 0) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white dark:border-ui-border-dark dark:bg-bg-surface-dark">
+        <EmptyState
+          icon="notifications_off"
+          title={t('alerts.noChannels')}
+          description={t('alerts.noChannelsDesc')}
+          action={{ label: t('alerts.addChannel'), onClick: onAdd }}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-ui-border-dark dark:bg-bg-surface-dark">
+      <table className="min-w-full table-fixed">
+        <thead className="bg-slate-50 dark:bg-ui-hover-dark/40">
+          <tr className="border-b border-slate-200 dark:border-ui-border-dark">
+            <th className="w-[28%] px-4 py-3 text-left text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.channel', { defaultValue: 'Channel' })}</th>
+            <th className="w-[11%] px-4 py-3 text-left text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.type', { defaultValue: 'Type' })}</th>
+            <th className="w-[12%] px-4 py-3 text-left text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('common.status', { defaultValue: 'Status' })}</th>
+            <th className="w-[12%] px-4 py-3 text-right text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.health.successRate7d')}</th>
+            <th className="w-[12%] px-4 py-3 text-right text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.kpi.sent7d')}</th>
+            <th className="w-[10%] px-4 py-3 text-right text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.health.linkedRules')}</th>
+            <th className="w-[15%] px-4 py-3 text-left text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.health.lastSent', { defaultValue: 'Last sent' })}</th>
+            <th className="w-52 px-4 py-3 text-right text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('common.actions', { defaultValue: 'Actions' })}</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-100 dark:divide-ui-border-dark">
+          {channels.map(channel => {
+            const style = getChannelStyle(channel.type);
+            const health = channelHealth[channel.id];
+            const sent = health?.successCount ?? 0;
+            const failed = health?.failedCount ?? 0;
+            const total = sent + failed;
+            const rate = total > 0 ? Math.round((sent / total) * 100) : null;
+            const rateColor = rate == null ? 'text-slate-400 dark:text-text-dim-dark'
+              : rate >= 95 ? 'text-emerald-500'
+              : rate >= 80 ? 'text-amber-500'
+              : 'text-red-500';
+            const lastSent = health?.lastSentAt ? new Date(health.lastSentAt) : null;
+
+            return (
+              <tr
+                key={channel.id}
+                className={`transition-colors hover:bg-slate-50 dark:hover:bg-ui-hover-dark/40 ${!channel.isEnabled ? 'opacity-70' : ''}`}
+              >
+                <td className="px-4 py-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${style.bg}`}>
+                      <ChannelIcon type={channel.type} size={18} className={style.text} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-slate-900 dark:text-white">{channel.name}</p>
+                      <p className="truncate text-sm text-slate-500 dark:text-text-muted-dark">
+                        {channel.isEnabled ? t('common.enabled', { defaultValue: 'Enabled' }) : t('common.disabled')}
+                      </p>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-4 py-3">
+                  <span className={`inline-flex rounded px-2 py-0.5 text-xs font-bold uppercase ${style.bg} ${style.text}`}>
+                    {getChannelTypeLabel(channel.type, t)}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <button
+                    onClick={() => onToggle(channel.id)}
+                    disabled={togglingIds.has(channel.id)}
+                    className={`relative h-5.5 w-10 rounded-full transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${channel.isEnabled ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
+                    title={channel.isEnabled ? t('alerts.disable') : t('alerts.enable')}
+                  >
+                    <span className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${channel.isEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </button>
+                </td>
+                <td className={`px-4 py-3 text-right text-sm font-bold tabular-nums ${rateColor}`}>
+                  {rate != null ? `${rate}%` : '-'}
+                </td>
+                <td className="px-4 py-3 text-right text-sm font-bold tabular-nums text-slate-900 dark:text-white">
+                  {sent}
+                  {failed > 0 && <span className="ml-1 text-sm font-semibold text-red-500">/ {failed}</span>}
+                </td>
+                <td className="px-4 py-3 text-right text-sm font-bold tabular-nums text-slate-900 dark:text-white">
+                  {health?.ruleCount ?? 0}
+                </td>
+                <td className="px-4 py-3 text-sm text-slate-500 dark:text-text-muted-dark">
+                  {lastSent
+                    ? formatDistanceToNow(lastSent, { addSuffix: true, locale })
+                    : t('alerts.health.never')}
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-end gap-1">
+                    <button
+                      onClick={() => onTest(channel.id)}
+                      disabled={!channel.isEnabled}
+                      className="inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-sm font-bold text-primary transition-all hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-primary/20"
+                    >
+                      <MaterialIcon name="send" className="text-sm" />
+                      {t('alerts.test')}
+                    </button>
+                    <button
+                      onClick={() => onEdit(channel)}
+                      className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-ui-hover-dark dark:hover:text-white"
+                      title={t('common.edit')}
+                    >
+                      <MaterialIcon name="edit" className="text-base" />
+                    </button>
+                    <button
+                      onClick={() => onDelete(channel.id)}
+                      className="flex h-8 w-8 items-center justify-center rounded-md text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
+                      title={t('common.delete')}
+                    >
+                      <MaterialIcon name="delete" className="text-base" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function ChannelsGrid({ channels, channelHealth, isLoading, togglingIds, onAdd, onEdit, onDelete, onToggle, onTest }: ChannelsGridProps) {
   const { t, i18n } = useTranslation(['alerts', 'common']);
   const locale = i18n.language === 'ko' ? ko : enUS;
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-ui-border-dark dark:bg-bg-surface-dark">
         {[1, 2].map(i => (
           <div key={i} className="h-44 bg-slate-100 dark:bg-ui-hover-dark animate-pulse rounded-xl" />
         ))}

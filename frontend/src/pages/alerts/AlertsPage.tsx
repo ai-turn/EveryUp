@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../../utils/errors';
@@ -11,12 +11,19 @@ import { ConfirmDialog } from '../../components/common';
 
 type TabType = 'channels' | 'rules' | 'history';
 
+function parseTabParam(value: string | null): TabType {
+  return value === 'rules' || value === 'history' || value === 'channels'
+    ? value
+    : 'channels';
+}
+
 export function AlertsPage() {
   const { t } = useTranslation(['alerts', 'common']);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
 
-  const [activeTab, setActiveTab] = useState<TabType>('channels');
+  const [activeTab, setActiveTab] = useState<TabType>(() => parseTabParam(searchParams.get('tab')));
   const [channels, setChannels] = useState<NotificationChannel[]>([]);
   const [rules, setRules] = useState<AlertRule[]>([]);
   const [history, setHistory] = useState<NotificationHistory[]>([]);
@@ -91,6 +98,17 @@ export function AlertsPage() {
     loadHistory();
     loadStats();
   }, []);
+
+  useEffect(() => {
+    setActiveTab(parseTabParam(searchParams.get('tab')));
+  }, [searchParams]);
+
+  const handleSetActiveTab = (tab: TabType) => {
+    setActiveTab(tab);
+    const next = new URLSearchParams(searchParams);
+    next.set('tab', tab);
+    setSearchParams(next);
+  };
 
   // --- Handlers ---
   const handleToggleChannel = async (id: string) => {
@@ -195,7 +213,7 @@ export function AlertsPage() {
           rulesLoading={rulesLoading}
           historyLoading={historyLoading}
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={handleSetActiveTab}
           onAddChannel={handleAddChannel}
           onEditChannel={handleEditChannel}
           onDeleteChannel={handleDeleteChannel}
@@ -217,7 +235,7 @@ export function AlertsPage() {
         stats={stats}
         isLoading={isLoading}
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleSetActiveTab}
         togglingIds={togglingIds}
         rulesAddTrigger={rulesAddTrigger}
         onAddChannel={handleAddChannel}

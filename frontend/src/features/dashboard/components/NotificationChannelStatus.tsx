@@ -29,7 +29,7 @@ export function NotificationChannelStatus() {
           )}
         </div>
         <button
-          onClick={() => navigate('/alerts')}
+          onClick={() => navigate('/alerts?tab=channels')}
           className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50 rounded"
         >
           {t('dashboard.notifications.manage')}
@@ -64,7 +64,7 @@ export function NotificationChannelStatus() {
               {t('dashboard.notifications.empty')}
             </p>
             <button
-              onClick={() => navigate('/alerts')}
+              onClick={() => navigate('/alerts?tab=channels')}
               className="mt-3 text-sm font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer"
             >
               {t('dashboard.notifications.add')} →
@@ -81,7 +81,7 @@ export function NotificationChannelStatus() {
                 <button
                   type="button"
                   key={channel.id}
-                  onClick={() => navigate(`/alerts/channels/${channel.id}/edit`)}
+                  onClick={() => navigate('/alerts?tab=channels')}
                   className="w-full flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-ui-hover-dark/60 hover:bg-slate-100 dark:hover:bg-ui-hover-dark active:bg-slate-100 dark:active:bg-ui-active-dark transition-colors text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50"
                 >
                   {/* Icon */}
@@ -119,7 +119,7 @@ export function NotificationChannelStatus() {
             })}
             {totalCount > 5 && (
               <button
-                onClick={() => navigate('/alerts')}
+                onClick={() => navigate('/alerts?tab=channels')}
                 className="w-full py-2 text-sm font-medium text-slate-400 dark:text-text-dim-dark hover:text-primary dark:hover:text-primary transition-colors text-center"
               >
                 {t('common.showMore', { count: totalCount - 5 })}

@@ -102,7 +102,7 @@ export function AlertRulesStatus() {
                   <button
                     type="button"
                     key={rule.id}
-                    onClick={() => navigate(`/alerts/rules/${rule.id}/edit`)}
+                    onClick={() => navigate('/alerts?tab=rules')}
                     className={`w-full flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-ui-hover-dark/60 hover:bg-slate-100 dark:hover:bg-ui-hover-dark active:bg-slate-100 dark:active:bg-ui-active-dark transition-colors text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50 ${!rule.isEnabled ? 'opacity-50' : ''}`}
                   >
                     <div className={`w-8 h-8 rounded-lg ${sev.bg} flex items-center justify-center shrink-0`}>
