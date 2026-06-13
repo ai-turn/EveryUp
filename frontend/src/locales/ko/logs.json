@@ -45,7 +45,8 @@
     },
     "card": {
       "noRecent": "최근 수신된 로그가 없습니다",
-      "recent": "최근 {{count}}건"
+      "recent": "최근 {{count}}건",
+      "other": "기타"
     },
     "view": {
       "cards": "카드",

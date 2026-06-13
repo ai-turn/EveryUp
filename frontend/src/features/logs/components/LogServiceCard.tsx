@@ -13,31 +13,25 @@ interface LogServiceCardProps {
 const levelDotStyle: Record<LogLevel, string> = {
   error: 'bg-red-500',
   warn: 'bg-amber-400',
-  info: 'bg-sky-400',
-  debug: 'bg-violet-400',
+  info: 'bg-slate-300 dark:bg-slate-500',
+  debug: 'bg-slate-300 dark:bg-slate-500',
   trace: 'bg-slate-400',
 };
 
 const levelsOrder: LogLevel[] = ['error', 'warn', 'info', 'debug', 'trace'];
 
-const levelPillStyle: Record<LogLevel, { active: string; idle: string }> = {
+type LogSummaryTone = 'error' | 'warn' | 'other';
+
+const summaryPillStyle: Record<LogSummaryTone, { active: string; idle: string }> = {
   error: {
     active: 'border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300',
-    idle: 'border-red-100 bg-red-50/40 text-red-300 dark:border-red-900/30 dark:bg-red-950/10 dark:text-red-700',
+    idle: 'border-slate-200 bg-slate-50 text-slate-400 dark:border-ui-border-dark dark:bg-ui-hover-dark/40 dark:text-text-dim-dark',
   },
   warn: {
     active: 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300',
-    idle: 'border-amber-100 bg-amber-50/40 text-amber-300 dark:border-amber-900/30 dark:bg-amber-950/10 dark:text-amber-700',
-  },
-  info: {
-    active: 'border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300',
     idle: 'border-slate-200 bg-slate-50 text-slate-400 dark:border-ui-border-dark dark:bg-ui-hover-dark/40 dark:text-text-dim-dark',
   },
-  debug: {
-    active: 'border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/60 dark:bg-violet-950/30 dark:text-violet-300',
-    idle: 'border-slate-200 bg-slate-50 text-slate-400 dark:border-ui-border-dark dark:bg-ui-hover-dark/40 dark:text-text-dim-dark',
-  },
-  trace: {
+  other: {
     active: 'border-slate-300 bg-slate-100 text-slate-700 dark:border-ui-border-dark dark:bg-ui-hover-dark dark:text-text-base-dark',
     idle: 'border-slate-200 bg-slate-50 text-slate-400 dark:border-ui-border-dark dark:bg-ui-hover-dark/40 dark:text-text-dim-dark',
   },
@@ -69,10 +63,9 @@ function MiniSparkline({ logs }: { logs: LogEntry[] }) {
     const index = 11 - Math.min(11, Math.max(0, Math.floor(ageMinutes / 10)));
     buckets[index] += log.level === 'error' ? 3 : log.level === 'warn' ? 2 : 1;
   });
-  const color = logs.some((l) => l.level === 'error') ? '#ef4444' : logs.some((l) => l.level === 'warn') ? '#f59e0b' : '#3b82f6';
 
   return (
-    <Sparkline data={buckets} width={96} height={30} color={color} className="h-7.5 w-24 overflow-visible" />
+    <Sparkline data={buckets} width={96} height={30} color="#3b82f6" className="h-7.5 w-24 overflow-visible" />
   );
 }
 
@@ -86,6 +79,15 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
     acc[level] = recentLogs.filter((log) => log.level === level).length;
     return acc;
   }, { error: 0, warn: 0, info: 0, debug: 0, trace: 0 });
+  const summaryCounts: Array<{ key: LogSummaryTone; label: string; count: number }> = [
+    { key: 'error', label: 'ERROR', count: levelCounts.error },
+    { key: 'warn', label: 'WARN', count: levelCounts.warn },
+    {
+      key: 'other',
+      label: t('logs.card.other', { defaultValue: '기타' }),
+      count: levelCounts.info + levelCounts.debug + levelCounts.trace,
+    },
+  ];
 
   return (
     <div
@@ -122,23 +124,22 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
       </div>
 
       {/* Level counts */}
-      <div className="grid grid-cols-5 gap-1.5">
-        {levelsOrder.map((level) => {
-          const count = levelCounts[level];
-          const isActive = count > 0;
-          const pillTone = isActive ? levelPillStyle[level].active : levelPillStyle[level].idle;
+      <div className="grid grid-cols-3 gap-2">
+        {summaryCounts.map((item) => {
+          const isActive = item.count > 0;
+          const pillTone = isActive ? summaryPillStyle[item.key].active : summaryPillStyle[item.key].idle;
           return (
             <div
-              key={level}
-              className={`min-w-0 rounded-md border px-2 py-1.5 ${pillTone}`}
-              aria-label={`${level.toUpperCase()} ${count}`}
+              key={item.key}
+              className={`min-w-0 rounded-md border px-3 py-2 ${pillTone}`}
+              aria-label={`${item.label} ${item.count}`}
             >
               <div className="flex min-w-0 items-center justify-between gap-1">
                 <span className="truncate text-[11px] font-semibold uppercase leading-none tracking-normal">
-                  {level}
+                  {item.label}
                 </span>
-                <span className={`text-sm font-bold leading-none tabular-nums ${isActive ? '' : 'opacity-60'}`}>
-                  {count}
+                <span className={`text-base font-semibold leading-none tabular-nums ${isActive ? '' : 'opacity-60'}`}>
+                  {item.count}
                 </span>
               </div>
             </div>

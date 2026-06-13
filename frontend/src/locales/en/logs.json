@@ -45,7 +45,8 @@
     },
     "card": {
       "noRecent": "No recent logs received",
-      "recent": "{{count}} recent"
+      "recent": "{{count}} recent",
+      "other": "Other"
     },
     "view": {
       "cards": "Cards",

@@ -103,14 +103,14 @@ function VitalGaugeCard({ gauge, sparkline }: { gauge: GaugeData; sparkline?: nu
         >
           <div className="grid h-16 w-16 place-items-center rounded-full bg-white shadow-inner dark:bg-bg-surface-dark">
             {isCompactValue ? (
-              <p className="max-w-[3.5rem] whitespace-nowrap text-center font-bold tabular-nums text-slate-900 dark:text-white">
-                <span className="text-[17px] leading-none">{displayValue}</span>
-                <span className="ml-0.5 text-[10px] leading-none text-slate-400 dark:text-text-dim-dark">{displayUnit}</span>
+              <p className="max-w-[3.5rem] whitespace-nowrap text-center font-semibold tabular-nums text-slate-900 dark:text-white">
+                <span className="text-[16px] leading-none">{displayValue}</span>
+                <span className="ml-0.5 text-[10px] font-medium leading-none text-slate-400 dark:text-text-dim-dark">{displayUnit}</span>
               </p>
             ) : (
-              <div className="text-center">
-                <p className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{displayValue}</p>
-                <p className="text-sm font-bold text-slate-400 dark:text-text-dim-dark">{displayUnit}</p>
+              <div className="text-center leading-none">
+                <p className="text-[22px] font-semibold leading-none tabular-nums text-slate-900 dark:text-white">{displayValue}</p>
+                <p className="mt-0.5 text-[11px] font-medium leading-none text-slate-400 dark:text-text-dim-dark">{displayUnit}</p>
               </div>
             )}
           </div>
