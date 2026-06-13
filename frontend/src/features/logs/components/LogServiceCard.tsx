@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { Fragment, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StatusBadge, MaterialIcon, Sparkline } from '../../../components/common';
 import { IconLogs } from '../../../components/icons/SidebarIcons';
@@ -109,7 +109,7 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
       </div>
 
       {/* Level counts */}
-      <div className="flex min-w-0 items-center gap-2 text-sm">
+      <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center text-sm">
         {summaryCounts.map((item) => {
           const tone =
             item.count === 0
@@ -120,12 +120,16 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
                   ? 'text-amber-600 dark:text-amber-400'
                   : 'text-slate-600 dark:text-text-muted-dark';
           return (
-            <span key={item.key} className="flex min-w-0 items-center gap-2">
-              <span className={`min-w-0 truncate font-semibold uppercase leading-none tracking-normal ${tone}`}>
+            <Fragment key={item.key}>
+              <span
+                className={`min-w-0 truncate font-semibold uppercase leading-none tracking-normal ${
+                  item.key === 'error' ? 'text-left' : item.key === 'warn' ? 'text-center' : 'text-right'
+                } ${tone}`}
+              >
                 {item.label} <span className="tabular-nums">{item.count}</span>
               </span>
-              {item.key !== 'other' && <span className="h-3 w-px bg-slate-200 dark:bg-ui-border-dark" aria-hidden="true" />}
-            </span>
+              {item.key !== 'other' && <span className="mx-3 h-3 w-px bg-slate-200 dark:bg-ui-border-dark" aria-hidden="true" />}
+            </Fragment>
           );
         })}
       </div>
