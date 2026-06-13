@@ -22,21 +22,6 @@ const levelsOrder: LogLevel[] = ['error', 'warn', 'info', 'debug', 'trace'];
 
 type LogSummaryTone = 'error' | 'warn' | 'other';
 
-const summaryPillStyle: Record<LogSummaryTone, { active: string; idle: string }> = {
-  error: {
-    active: 'border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300',
-    idle: 'border-slate-200 bg-slate-50 text-slate-400 dark:border-ui-border-dark dark:bg-ui-hover-dark/40 dark:text-text-dim-dark',
-  },
-  warn: {
-    active: 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300',
-    idle: 'border-slate-200 bg-slate-50 text-slate-400 dark:border-ui-border-dark dark:bg-ui-hover-dark/40 dark:text-text-dim-dark',
-  },
-  other: {
-    active: 'border-slate-300 bg-slate-100 text-slate-700 dark:border-ui-border-dark dark:bg-ui-hover-dark dark:text-text-base-dark',
-    idle: 'border-slate-200 bg-slate-50 text-slate-400 dark:border-ui-border-dark dark:bg-ui-hover-dark/40 dark:text-text-dim-dark',
-  },
-};
-
 function formatTimeAgo(dateStr?: string): string {
   if (!dateStr) return '-';
   const diff = Math.max(0, Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000));
@@ -124,25 +109,23 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
       </div>
 
       {/* Level counts */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="flex min-w-0 items-center gap-2 text-sm">
         {summaryCounts.map((item) => {
-          const isActive = item.count > 0;
-          const pillTone = isActive ? summaryPillStyle[item.key].active : summaryPillStyle[item.key].idle;
+          const tone =
+            item.count === 0
+              ? 'text-slate-400 dark:text-text-dim-dark'
+              : item.key === 'error'
+                ? 'text-red-600 dark:text-red-400'
+                : item.key === 'warn'
+                  ? 'text-amber-600 dark:text-amber-400'
+                  : 'text-slate-600 dark:text-text-muted-dark';
           return (
-            <div
-              key={item.key}
-              className={`min-w-0 rounded-md border px-3 py-2 ${pillTone}`}
-              aria-label={`${item.label} ${item.count}`}
-            >
-              <div className="flex min-w-0 items-center justify-between gap-1">
-                <span className="truncate text-[11px] font-semibold uppercase leading-none tracking-normal">
-                  {item.label}
-                </span>
-                <span className={`text-base font-semibold leading-none tabular-nums ${isActive ? '' : 'opacity-60'}`}>
-                  {item.count}
-                </span>
-              </div>
-            </div>
+            <span key={item.key} className="flex min-w-0 items-center gap-2">
+              <span className={`min-w-0 truncate font-semibold uppercase leading-none tracking-normal ${tone}`}>
+                {item.label} <span className="tabular-nums">{item.count}</span>
+              </span>
+              {item.key !== 'other' && <span className="h-3 w-px bg-slate-200 dark:bg-ui-border-dark" aria-hidden="true" />}
+            </span>
           );
         })}
       </div>
