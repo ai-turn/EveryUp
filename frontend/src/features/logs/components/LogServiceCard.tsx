@@ -122,9 +122,7 @@ export const LogServiceCard = memo(function LogServiceCard({ service, recentLogs
           return (
             <Fragment key={item.key}>
               <span
-                className={`min-w-0 truncate font-semibold uppercase leading-none tracking-normal ${
-                  item.key === 'error' ? 'text-left' : item.key === 'warn' ? 'text-center' : 'text-right'
-                } ${tone}`}
+                className={`min-w-0 truncate text-center font-semibold uppercase leading-none tracking-normal ${tone}`}
               >
                 {item.label} <span className="tabular-nums">{item.count}</span>
               </span>
