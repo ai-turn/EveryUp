@@ -372,7 +372,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
             })}
             className="px-6 py-6 lg:px-8"
         >
-            <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] items-start">
+            <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_24rem] items-start">
 
                 {/* ── Left: form steps ─────────────────────────────────── */}
                 <div className="space-y-5 min-w-0">
@@ -681,7 +681,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                 </div>
 
                 {/* ── Right: sticky live preview (lg+) ─────────────────── */}
-                <div className="hidden xl:block">
+                <div className="hidden lg:block">
                     <div className="sticky top-6 space-y-4">
 
                         {/* Live preview card */}

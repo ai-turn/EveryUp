@@ -44,18 +44,21 @@ export function AlertRuleFormPage() {
   const title = isEdit
     ? t('alerts.rules.editTitle', { defaultValue: '규칙 편집' })
     : t('alerts.rules.newTitle', { defaultValue: '새 알림 규칙' });
+  const subtitle = isEdit
+    ? t('alerts.rules.editSubtitle', { defaultValue: '규칙 조건, 심각도, 알림 채널을 수정합니다.' })
+    : t('alerts.rules.newSubtitle', { defaultValue: '대상과 조건을 정의하고 알림 채널을 연결합니다.' });
 
   return (
-    <div className="-m-4 sm:-m-6 md:-m-8 flex flex-col bg-white dark:bg-bg-main-dark h-[calc(100dvh-3.5rem)] lg:h-[calc(100dvh-4rem)]">
+    <div className="-m-4 min-h-[calc(100dvh-3.5rem)] bg-white dark:bg-bg-main-dark sm:-m-6 md:-m-8 lg:min-h-[calc(100dvh-4rem)]">
       {/* Page header */}
-      <header className="flex-none border-b border-slate-200 dark:border-ui-border-dark px-6 py-3 bg-white dark:bg-bg-main-dark">
+      <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-6 py-3 backdrop-blur dark:border-ui-border-dark dark:bg-bg-main-dark/95">
         <nav className="flex items-center gap-1 text-sm text-slate-500 dark:text-text-muted-dark mb-2">
           <button
             type="button"
             onClick={goBack}
             className="hover:text-slate-800 dark:hover:text-white transition-colors"
           >
-            알림
+            {t('alerts.title')}
           </button>
           <MaterialIcon name="chevron_right" className="text-sm opacity-50" />
           <button
@@ -63,20 +66,18 @@ export function AlertRuleFormPage() {
             onClick={goBack}
             className="hover:text-slate-800 dark:hover:text-white transition-colors"
           >
-            규칙
+            {t('alerts.rulesTitle')}
           </button>
           <MaterialIcon name="chevron_right" className="text-sm opacity-50" />
           <span className="text-slate-900 dark:text-white font-medium truncate max-w-50">
-            {loading ? '...' : isEdit ? (rule?.name ?? '편집') : '새 알림 규칙'}
+            {loading ? '...' : isEdit ? (rule?.name ?? title) : title}
           </span>
         </nav>
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{title}</h1>
             <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5 truncate">
-              {isEdit
-                ? `${rule?.name ?? ''} · 알림 규칙을 수정합니다`
-                : '대상과 조건을 정의하면 미리보기가 자동으로 갱신됩니다'}
+              {subtitle}
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -98,7 +99,7 @@ export function AlertRuleFormPage() {
               ) : (
                 <>
                   <MaterialIcon name="check" className="text-sm" />
-                  {isEdit ? t('common.save') : '규칙 생성'}
+                  {isEdit ? t('common.save') : t('alerts.rules.create')}
                 </>
               )}
             </button>
@@ -107,9 +108,9 @@ export function AlertRuleFormPage() {
       </header>
 
       {/* Form body */}
-      <div className="flex-1 overflow-y-auto">
+      <div>
         {loading ? (
-          <div className="flex items-center justify-center h-full text-slate-500">
+          <div className="flex min-h-80 items-center justify-center text-slate-500">
             <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
           </div>
         ) : (

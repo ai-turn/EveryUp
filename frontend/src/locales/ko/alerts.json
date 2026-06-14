@@ -124,6 +124,8 @@
         "rules": {
             "newTitle": "새 알림 규칙",
             "editTitle": "알림 규칙 수정",
+            "newSubtitle": "대상과 조건을 정의하고 알림 채널을 연결합니다.",
+            "editSubtitle": "규칙 조건, 심각도, 알림 채널을 수정합니다.",
             "ruleType": "규칙 유형",
             "serverResource": "인프라",
             "endpointHealth": "헬스체크",

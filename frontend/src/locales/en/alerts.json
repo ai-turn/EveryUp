@@ -124,6 +124,8 @@
         "rules": {
             "newTitle": "New Alert Rule",
             "editTitle": "Edit Alert Rule",
+            "newSubtitle": "Define a target, condition, and notification channels.",
+            "editSubtitle": "Update the rule condition, severity, and notification channels.",
             "ruleType": "Rule Type",
             "serverResource": "Infrastructure",
             "endpointHealth": "Healthcheck",
