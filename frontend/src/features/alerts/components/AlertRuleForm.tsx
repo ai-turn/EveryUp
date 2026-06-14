@@ -91,16 +91,16 @@ function getEvalPath(category: RuleCategory, metric: RuleFormValues['metric']): 
 function FormStep({ n, title, subtitle, children }: { n: number; title: string; subtitle?: string; children: ReactNode }) {
     return (
         <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
-            <div className={`flex items-center gap-3 px-5 lg:px-6 ${subtitle ? 'py-4' : 'py-3'} border-b border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30`}>
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30">
                 <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs font-mono shrink-0">
                     {n}
                 </span>
                 <div>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">{title}</p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">{title}</p>
                     {subtitle && <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{subtitle}</p>}
                 </div>
             </div>
-            <div className="p-5 lg:p-6 space-y-5">{children}</div>
+            <div className="p-5 space-y-5">{children}</div>
         </div>
     );
 }
@@ -145,6 +145,7 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
     const { t } = useTranslation(['alerts', 'common']);
     const [message, setMessage] = useState(rule.message ?? '');
     const [selectedChannels, setSelectedChannels] = useState<string[]>(rule.channelIds || []);
+    const effectiveChannelCount = selectedChannels.length === 0 ? channels.length : selectedChannels.length;
 
     const handleToggleChannel = (id: string) => {
         setSelectedChannels(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
@@ -166,40 +167,82 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
     };
 
     return (
-        <form id="alert-rule-form" onSubmit={handleSubmit} className="mx-auto w-full max-w-[960px] px-6 py-6 space-y-4">
-            <FormStep n={1} title={t('alerts.rules.systemRule')} subtitle={t('alerts.rules.systemRuleDesc')}>
-                <div className="p-4 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-xl">
-                    <h3 className="font-bold text-slate-900 dark:text-white mb-1">{rule.name}</h3>
-                    <p className="text-sm text-slate-500">{t('alerts.rules.systemRuleDesc')}</p>
-                </div>
-            </FormStep>
+        <form id="alert-rule-form" onSubmit={handleSubmit} className="px-6 py-6">
+            <div className="max-w-350 mx-auto grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
+                <div className="space-y-4 min-w-0">
+                    <FormStep n={1} title={t('alerts.rules.systemRule')} subtitle={t('alerts.rules.systemRuleDesc')}>
+                        <div className="p-4 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-xl">
+                            <h3 className="font-bold text-slate-900 dark:text-white mb-1">{rule.name}</h3>
+                            <p className="text-sm text-slate-500">{t('alerts.rules.systemRuleDesc')}</p>
+                        </div>
+                    </FormStep>
 
-            <FormStep n={2} title={t('alerts.rules.messageLabel')} subtitle="알림 발송 시 사용될 메시지">
-                <textarea
-                    value={message}
-                    onChange={e => setMessage(e.target.value)}
-                    rows={3}
-                    placeholder="Server has been started"
-                    className={inputCls + " resize-none"}
-                />
-            </FormStep>
+                    <FormStep n={2} title={t('alerts.rules.messageLabel')} subtitle="알림 발송 시 사용될 메시지">
+                        <textarea
+                            value={message}
+                            onChange={e => setMessage(e.target.value)}
+                            rows={3}
+                            placeholder="Server has been started"
+                            className={inputCls + " resize-none"}
+                        />
+                    </FormStep>
 
-            <FormStep n={3} title={t('alerts.rules.notifyChannels')} subtitle="발송할 채널 선택">
-                <div className="space-y-2">
-                    {channels.length === 0 ? (
-                        <p className="text-sm text-slate-400">{t('alerts.rules.noChannels')}</p>
-                    ) : channels.map(ch => (
-                        <button key={ch.id} type="button" onClick={() => handleToggleChannel(ch.id)}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 border-2 rounded-xl transition-all ${selectedChannels.includes(ch.id) ? 'border-primary bg-primary/5 text-primary' : 'border-slate-100 dark:border-ui-border-dark text-slate-500'}`}>
-                            <MaterialIcon name={ch.type === 'telegram' ? 'send' : 'sports_esports'} className="text-sm" />
-                            <span className="text-sm font-bold flex-1 text-left">{ch.name}</span>
-                        </button>
-                    ))}
-                    {selectedChannels.length === 0 && channels.length > 0 && (
-                        <p className="text-sm text-slate-400 italic">{t('alerts.rules.allChannels')}</p>
-                    )}
+                    <FormStep n={3} title={t('alerts.rules.notifyChannels')} subtitle="발송할 채널 선택">
+                        <div className="space-y-2">
+                            {channels.length === 0 ? (
+                                <p className="text-sm text-slate-400">{t('alerts.rules.noChannels')}</p>
+                            ) : channels.map(ch => (
+                                <button key={ch.id} type="button" onClick={() => handleToggleChannel(ch.id)}
+                                    className={`w-full flex items-center gap-3 px-3 py-2.5 border-2 rounded-xl transition-all ${selectedChannels.includes(ch.id) ? 'border-primary bg-primary/5 text-primary' : 'border-slate-100 dark:border-ui-border-dark text-slate-500'}`}>
+                                    <MaterialIcon name={ch.type === 'telegram' ? 'send' : 'sports_esports'} className="text-sm" />
+                                    <span className="text-sm font-bold flex-1 text-left">{ch.name}</span>
+                                </button>
+                            ))}
+                            {selectedChannels.length === 0 && channels.length > 0 && (
+                                <p className="text-sm text-slate-400 italic">{t('alerts.rules.allChannels')}</p>
+                            )}
+                        </div>
+                    </FormStep>
                 </div>
-            </FormStep>
+
+                <div className="hidden lg:block">
+                    <div className="sticky top-6 space-y-4">
+                        <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
+                            <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30">
+                                <MaterialIcon name="lock" className="text-base text-slate-400" />
+                                <div>
+                                    <p className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest">
+                                        {t('alerts.rules.systemRule')}
+                                    </p>
+                                    <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">
+                                        {t('alerts.rules.preview')}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="p-5 space-y-4">
+                                <div className="rounded-xl bg-slate-50 dark:bg-ui-hover-dark/50 p-3">
+                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{t('alerts.rules.ruleName')}</p>
+                                    <p className="mt-1 truncate text-sm font-bold text-slate-900 dark:text-white">{rule.name}</p>
+                                </div>
+                                <div className="rounded-xl bg-slate-50 dark:bg-ui-hover-dark/50 p-3">
+                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{t('alerts.rules.notifyChannels')}</p>
+                                    <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white">
+                                        {selectedChannels.length === 0
+                                            ? t('alerts.rules.channelSummaryAll', { count: effectiveChannelCount })
+                                            : t('alerts.rules.channelSummarySelected', { count: effectiveChannelCount })}
+                                    </p>
+                                </div>
+                                <div className="rounded-xl border-l-4 border-primary bg-primary/5 p-3">
+                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{t('alerts.rules.messageLabel')}</p>
+                                    <p className="mt-2 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                                        {message || 'Server has been started'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </form>
     );
 }
@@ -370,12 +413,12 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                 const firstError = Object.values(validationErrors)[0];
                 toast.error(firstError?.message as string || t('alerts.rules.validationFailed', { defaultValue: 'Please check required fields' }));
             })}
-            className="px-6 py-6 lg:px-8"
+            className="px-6 py-6"
         >
-            <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_24rem] items-start">
+            <div className="max-w-350 mx-auto grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
 
                 {/* ── Left: form steps ─────────────────────────────────── */}
-                <div className="space-y-5 min-w-0">
+                <div className="space-y-4 min-w-0">
 
                     {/* Step 1: Target */}
                     <FormStep n={1} title="대상 (Target)">
