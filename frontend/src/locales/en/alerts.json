@@ -231,6 +231,7 @@
             "messageOverridesHint": "optional · overrides auto-generated",
             "systemRule": "System Rule",
             "systemRuleDesc": "This rule is managed by the system. Only the message and notification channels can be modified.",
+            "systemRuleDeleteDisabled": "System rules cannot be deleted",
             "messageLabel": "Notification Message",
             "noChannels": "No notification channels registered",
             "colName": "Rule",

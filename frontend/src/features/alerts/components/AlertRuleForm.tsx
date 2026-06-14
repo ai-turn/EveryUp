@@ -232,7 +232,7 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
                                             : t('alerts.rules.channelSummarySelected', { count: effectiveChannelCount })}
                                     </p>
                                 </div>
-                                <div className="rounded-xl border-l-4 border-primary bg-primary/5 p-3">
+                                <div className="rounded-xl bg-slate-50 dark:bg-ui-hover-dark/50 p-3">
                                     <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{t('alerts.rules.messageLabel')}</p>
                                     <p className="mt-2 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
                                         {message || 'Server has been started'}
@@ -782,7 +782,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                 {/* THEN block */}
                                 <div>
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">THEN (메시지)</p>
-                                    <div className={`border-l-4 pl-3 pr-3 py-3 rounded-r-lg ${severityClasses.border} ${severityClasses.bg}`}>
+                                    <div className={`rounded-xl px-3 py-3 ${severityClasses.bg}`}>
                                         <div className="flex items-center gap-2 mb-1.5">
                                             <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide ${severityClasses.badge}`}>
                                                 <span className={`w-1.5 h-1.5 rounded-full ${severityClasses.dot}`} />

@@ -456,16 +456,22 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                           >
                             <MaterialIcon name="edit" className="text-base" />
                           </button>
-                          {!rule.isSystem && (
-                            <button
-                              onClick={() => setDeleteTargetId(rule.id)}
-                              disabled={isDeleting}
-                              className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-all disabled:opacity-50"
-                              title={t('common.delete', { defaultValue: 'Delete' })}
-                            >
-                              <MaterialIcon name="delete" className="text-base" />
-                            </button>
-                          )}
+                          <button
+                            onClick={() => {
+                              if (!rule.isSystem) setDeleteTargetId(rule.id);
+                            }}
+                            disabled={rule.isSystem || isDeleting}
+                            className={`p-1 rounded transition-all ${
+                              rule.isSystem
+                                ? 'cursor-not-allowed text-slate-300 dark:text-text-dim-dark'
+                                : 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50'
+                            }`}
+                            title={rule.isSystem
+                              ? t('alerts.rules.systemRuleDeleteDisabled')
+                              : t('common.delete', { defaultValue: 'Delete' })}
+                          >
+                            <MaterialIcon name="delete" className="text-base" />
+                          </button>
                         </div>
                       </td>
                     </tr>

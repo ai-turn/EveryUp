@@ -232,14 +232,14 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
       <table className="w-full min-w-[1200px] table-fixed">
         <thead className="bg-slate-50 dark:bg-ui-hover-dark/40">
           <tr className="border-b border-slate-200 dark:border-ui-border-dark">
-            <th className="w-[270px] px-4 py-3 text-left text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.channel')}</th>
-            <th className="w-[120px] px-4 py-3 text-left text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.type')}</th>
-            <th className="w-[96px] px-4 py-3 text-left text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.status')}</th>
-            <th className="w-[135px] px-4 py-3 text-right text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.successRate7d')}</th>
-            <th className="w-[120px] px-4 py-3 text-right text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.sentFailed')}</th>
-            <th className="w-[120px] px-4 py-3 text-right text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.linkedRules')}</th>
-            <th className="w-[155px] px-4 py-3 text-left text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.lastSent')}</th>
-            <th className="w-[184px] px-4 py-3 text-right text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.actions')}</th>
+            <th className="w-[270px] px-4 py-3 text-left text-sm font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.channel')}</th>
+            <th className="w-[120px] px-4 py-3 text-left text-sm font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.type')}</th>
+            <th className="w-[96px] px-4 py-3 text-left text-sm font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.status')}</th>
+            <th className="w-[135px] px-4 py-3 text-right text-sm font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.successRate7d')}</th>
+            <th className="w-[120px] px-4 py-3 text-right text-sm font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.sentFailed')}</th>
+            <th className="w-[120px] px-4 py-3 text-right text-sm font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.linkedRules')}</th>
+            <th className="w-[155px] px-4 py-3 text-left text-sm font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.lastSent')}</th>
+            <th className="w-[184px] px-4 py-3 text-right text-sm font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.actions')}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-ui-border-dark">

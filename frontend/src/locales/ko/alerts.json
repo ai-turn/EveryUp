@@ -231,6 +231,7 @@
             "messageOverridesHint": "선택 · 자동 생성 메시지 대체",
             "systemRule": "시스템 규칙",
             "systemRuleDesc": "이 규칙은 시스템에 의해 관리됩니다. 메시지와 알림 채널만 수정할 수 있습니다.",
+            "systemRuleDeleteDisabled": "시스템 규칙은 삭제할 수 없습니다",
             "messageLabel": "알림 메시지",
             "noChannels": "등록된 알림 채널이 없습니다",
             "colName": "규칙",
