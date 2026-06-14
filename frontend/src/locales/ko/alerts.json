@@ -236,7 +236,48 @@
             "colTarget": "대상",
             "colCondition": "조건",
             "colChannels": "채널",
-            "colActions": "작업"
+            "colActions": "작업",
+            "colTrigger": "발생 조건",
+            "allChannelsDisplay": "전체 채널",
+            "categoryLabels": {
+                "endpoint": "헬스체크",
+                "log": "로그",
+                "resource": "인프라",
+                "system": "시스템"
+            },
+            "severityLabels": {
+                "critical": "긴급",
+                "warning": "경고",
+                "info": "정보"
+            },
+            "metricLabels": {
+                "cpu": "CPU",
+                "memory": "메모리",
+                "disk": "디스크",
+                "status_change": "상태 변경",
+                "http_status": "HTTP 상태",
+                "response_time": "응답 시간",
+                "log_level": "로그 레벨",
+                "api_status_code": "API 상태"
+            },
+            "operatorTemplates": {
+                "gt": "{{metric}} {{value}} 초과",
+                "gte": "{{metric}} {{value}} 이상",
+                "lt": "{{metric}} {{value}} 미만",
+                "lte": "{{metric}} {{value}} 이하",
+                "eq": "{{metric}} {{value}} 같음"
+            },
+            "eval": {
+                "endpoint": "헬스체크 결과가 조건에 맞을 때마다 평가",
+                "log": "로그/API 이벤트마다 평가",
+                "resource": "{{duration}} 동안 지속 · {{cooldown}} 쿨다운",
+                "system": "시스템에서 자동 평가"
+            },
+            "time": {
+                "seconds": "{{count}}초",
+                "minutes": "{{count}}분",
+                "hours": "{{count}}시간"
+            }
         },
         "table": {
             "eventType": "이벤트 유형",

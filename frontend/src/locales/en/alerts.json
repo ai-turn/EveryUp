@@ -236,7 +236,48 @@
             "colTarget": "Target",
             "colCondition": "Condition",
             "colChannels": "Channels",
-            "colActions": "Actions"
+            "colActions": "Actions",
+            "colTrigger": "Trigger",
+            "allChannelsDisplay": "All channels",
+            "categoryLabels": {
+                "endpoint": "Healthcheck",
+                "log": "Log",
+                "resource": "Infrastructure",
+                "system": "System"
+            },
+            "severityLabels": {
+                "critical": "Critical",
+                "warning": "Warning",
+                "info": "Info"
+            },
+            "metricLabels": {
+                "cpu": "CPU",
+                "memory": "Memory",
+                "disk": "Disk",
+                "status_change": "Status change",
+                "http_status": "HTTP status",
+                "response_time": "Response time",
+                "log_level": "Log level",
+                "api_status_code": "API status"
+            },
+            "operatorTemplates": {
+                "gt": "{{metric}} > {{value}}",
+                "gte": "{{metric}} >= {{value}}",
+                "lt": "{{metric}} < {{value}}",
+                "lte": "{{metric}} <= {{value}}",
+                "eq": "{{metric}} = {{value}}"
+            },
+            "eval": {
+                "endpoint": "Evaluated on every healthcheck result",
+                "log": "Evaluated on every log/API event",
+                "resource": "Sustained for {{duration}} · {{cooldown}} cooldown",
+                "system": "Managed by the system"
+            },
+            "time": {
+                "seconds": "{{count}}s",
+                "minutes": "{{count}}min",
+                "hours": "{{count}}h"
+            }
         },
         "table": {
             "eventType": "Event Type",

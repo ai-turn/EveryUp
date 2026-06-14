@@ -192,7 +192,7 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-ui-border-dark dark:bg-bg-surface-dark">
         <div className="divide-y divide-slate-100 dark:divide-ui-border-dark">
           {[1, 2, 3].map(i => (
-            <div key={i} className="grid grid-cols-[minmax(220px,1.4fr)_120px_110px_130px_120px_150px_140px] gap-4 px-4 py-3 animate-pulse">
+            <div key={i} className="grid grid-cols-[minmax(220px,1.4fr)_120px_96px_135px_120px_120px_155px_184px] gap-4 px-4 py-3 animate-pulse">
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-lg bg-slate-100 dark:bg-ui-hover-dark" />
                 <div className="space-y-2">
@@ -200,6 +200,7 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
                   <div className="h-2.5 w-20 rounded bg-slate-100 dark:bg-ui-hover-dark" />
                 </div>
               </div>
+              <div className="h-5 rounded bg-slate-100 dark:bg-ui-hover-dark" />
               <div className="h-5 rounded bg-slate-100 dark:bg-ui-hover-dark" />
               <div className="h-5 rounded bg-slate-100 dark:bg-ui-hover-dark" />
               <div className="h-5 rounded bg-slate-100 dark:bg-ui-hover-dark" />
@@ -228,17 +229,17 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
 
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-ui-border-dark dark:bg-bg-surface-dark">
-      <table className="min-w-[1180px] table-fixed">
+      <table className="w-full min-w-[1200px] table-fixed">
         <thead className="bg-slate-50 dark:bg-ui-hover-dark/40">
           <tr className="border-b border-slate-200 dark:border-ui-border-dark">
             <th className="w-[270px] px-4 py-3 text-left text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.channel')}</th>
             <th className="w-[120px] px-4 py-3 text-left text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.type')}</th>
-            <th className="w-[110px] px-4 py-3 text-left text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.status')}</th>
+            <th className="w-[96px] px-4 py-3 text-left text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.status')}</th>
             <th className="w-[135px] px-4 py-3 text-right text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.successRate7d')}</th>
             <th className="w-[120px] px-4 py-3 text-right text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.sentFailed')}</th>
             <th className="w-[120px] px-4 py-3 text-right text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.linkedRules')}</th>
             <th className="w-[155px] px-4 py-3 text-left text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.lastSent')}</th>
-            <th className="w-[150px] px-4 py-3 text-right text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.actions')}</th>
+            <th className="w-[184px] px-4 py-3 text-right text-xs font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.actions')}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-ui-border-dark">
@@ -308,7 +309,7 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
                     <button
                       onClick={() => onTest(channel.id)}
                       disabled={!channel.isEnabled}
-                      className="inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-sm font-bold text-primary transition-all hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-primary/20"
+                      className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md px-3 text-sm font-bold text-primary transition-all hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-primary/20"
                     >
                       <MaterialIcon name="send" className="text-sm" />
                       {t('alerts.test')}

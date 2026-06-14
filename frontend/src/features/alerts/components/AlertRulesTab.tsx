@@ -16,20 +16,20 @@ const SEVERITY_BADGE: Record<string, string> = {
 
 const SEVERITY_ORDER: Record<string, number> = { critical: 0, warning: 1, info: 2 };
 
-const METRIC_LABELS: Record<string, string> = {
-  cpu: 'cpu',
-  memory: 'memory',
-  disk: 'disk',
-  status_change: 'status',
-  http_status: 'http_status',
-  response_time: 'response_time',
-  log_level: 'log_level',
-  api_status_code: 'api_status',
+const METRIC_FALLBACKS: Record<string, string> = {
+  cpu: 'CPU',
+  memory: 'Memory',
+  disk: 'Disk',
+  status_change: 'Status change',
+  http_status: 'HTTP status',
+  response_time: 'Response time',
+  log_level: 'Log level',
+  api_status_code: 'API status',
 };
 
 const ENDPOINT_METRICS = new Set(['http_status', 'response_time']);
 
-const OPERATOR_LABELS: Record<string, string> = {
+const OPERATOR_SYMBOLS: Record<string, string> = {
   gt: '>',
   gte: '>=',
   lt: '<',
@@ -38,6 +38,8 @@ const OPERATOR_LABELS: Record<string, string> = {
 };
 
 type CategoryKey = 'all' | 'endpoint' | 'log' | 'resource' | 'system';
+type Translate = (key: string, options?: Record<string, unknown>) => string;
+
 const CATEGORY_TONE: Record<Exclude<CategoryKey, 'all'>, string> = {
   endpoint: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400',
   log: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400',
@@ -63,23 +65,70 @@ function targetLabel(rule: AlertRule, services: Service[], hosts: Host[], t: (k:
   return t('alerts.rules.allHosts');
 }
 
-function conditionExpr(rule: AlertRule): string {
-  const op = OPERATOR_LABELS[rule.operator] ?? rule.operator;
-  const metric = METRIC_LABELS[rule.metric] ?? rule.metric;
-  const unit = rule.metric === 'response_time' ? 'ms' : ENDPOINT_METRICS.has(rule.metric) || rule.metric === 'log_level' || rule.metric === 'api_status_code' ? '' : '%';
-  return `${metric} ${op} ${rule.threshold}${unit}`;
+function categoryLabel(category: Exclude<CategoryKey, 'all'>, t: Translate): string {
+  return t(`alerts.rules.categoryLabels.${category}`, {
+    defaultValue: category === 'endpoint' ? 'Healthcheck' : category,
+  });
 }
 
-function suffixExpr(rule: AlertRule, services: Service[], t: (k: string) => string): string {
-  if (rule.type === 'service') {
-    const svc = services.find(s => s.id === rule.serviceId);
-    if (!svc) return `${rule.duration}× fail`;
-    const sec = svc.interval;
-    const interval = sec >= 3600 ? `${Math.round(sec / 3600)}hr` : sec >= 60 ? `${Math.round(sec / 60)}min` : `${sec}s`;
-    return `every ${interval} · ${rule.duration}× fail`;
+function severityLabel(severity: string, t: Translate): string {
+  return t(`alerts.rules.severityLabels.${severity}`, { defaultValue: severity });
+}
+
+function metricLabel(metric: string, t: Translate): string {
+  return t(`alerts.rules.metricLabels.${metric}`, {
+    defaultValue: METRIC_FALLBACKS[metric] ?? metric,
+  });
+}
+
+function thresholdValue(rule: AlertRule): string {
+  const unit = rule.metric === 'response_time' ? 'ms' : ENDPOINT_METRICS.has(rule.metric) || rule.metric === 'log_level' || rule.metric === 'api_status_code' ? '' : '%';
+  return `${rule.threshold}${unit}`;
+}
+
+function conditionExpr(rule: AlertRule, t: Translate): string {
+  const metric = metricLabel(rule.metric, t);
+  const value = thresholdValue(rule);
+  const symbol = OPERATOR_SYMBOLS[rule.operator] ?? rule.operator;
+  return t(`alerts.rules.operatorTemplates.${rule.operator}`, {
+    metric,
+    value,
+    defaultValue: `${metric} ${symbol} ${value}`,
+  });
+}
+
+function formatMinutes(minutes: number, t: Translate): string {
+  if (minutes >= 60 && minutes % 60 === 0) {
+    return t('alerts.rules.time.hours', { count: minutes / 60, defaultValue: `${minutes / 60}h` });
   }
-  if (rule.type === 'log') return t('alerts.rules.perEvent');
-  return `for ${rule.duration}min · cd ${rule.cooldown}s`;
+  return t('alerts.rules.time.minutes', { count: minutes, defaultValue: `${minutes}min` });
+}
+
+function formatSeconds(seconds: number, t: Translate): string {
+  if (seconds >= 3600 && seconds % 3600 === 0) {
+    return t('alerts.rules.time.hours', { count: seconds / 3600, defaultValue: `${seconds / 3600}h` });
+  }
+  if (seconds >= 60 && seconds % 60 === 0) {
+    return t('alerts.rules.time.minutes', { count: seconds / 60, defaultValue: `${seconds / 60}min` });
+  }
+  return t('alerts.rules.time.seconds', { count: seconds, defaultValue: `${seconds}s` });
+}
+
+function evaluationSummary(rule: AlertRule, t: Translate): string {
+  if (rule.type === 'service') {
+    return t('alerts.rules.eval.endpoint', { defaultValue: 'Evaluated on every healthcheck result' });
+  }
+  if (rule.type === 'log') {
+    return t('alerts.rules.eval.log', { defaultValue: 'Evaluated on every log/API event' });
+  }
+  if (rule.isSystem) {
+    return t('alerts.rules.eval.system', { defaultValue: 'Managed by the system' });
+  }
+  return t('alerts.rules.eval.resource', {
+    duration: formatMinutes(rule.duration, t),
+    cooldown: formatSeconds(rule.cooldown, t),
+    defaultValue: `${formatMinutes(rule.duration, t)} sustained · ${formatSeconds(rule.cooldown, t)} cooldown`,
+  });
 }
 
 type SortKey = 'severity' | 'name' | 'target' | 'category';
@@ -301,19 +350,18 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
       {/* Table */}
       <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[1080px] table-fixed text-sm">
             <thead>
               <tr className="bg-slate-50 dark:bg-bg-surface-dark/50 border-b border-slate-200 dark:border-ui-border-dark">
-                <SortableTH label={t('alerts.rules.colName', { defaultValue: 'Rule' })} active={sortKey === 'name'} dir={sortDir} onClick={() => onSort('name')} />
-                <SortableTH label={t('alerts.rules.colCategory', { defaultValue: 'Category' })} active={sortKey === 'category'} dir={sortDir} onClick={() => onSort('category')} />
-                <SortableTH label={t('alerts.rules.colTarget', { defaultValue: 'Target' })} active={sortKey === 'target'} dir={sortDir} onClick={() => onSort('target')} />
-                <th className="px-3 py-2 text-left text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
-                  {t('alerts.rules.colCondition', { defaultValue: 'Condition' })}
+                <SortableTH className="w-[260px]" label={t('alerts.rules.colName', { defaultValue: 'Rule' })} active={sortKey === 'name'} dir={sortDir} onClick={() => onSort('name')} />
+                <SortableTH className="w-[220px]" label={t('alerts.rules.colTarget', { defaultValue: 'Target' })} active={sortKey === 'target'} dir={sortDir} onClick={() => onSort('target')} />
+                <th className="w-[330px] px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                  {t('alerts.rules.colTrigger', { defaultValue: 'Trigger' })}
                 </th>
-                <th className="px-3 py-2 text-left text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <th className="w-[210px] px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.rules.colChannels', { defaultValue: 'Channels' })}
                 </th>
-                <th className="px-3 py-2 text-right text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <th className="w-[130px] px-4 py-3 text-right text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.rules.colActions', { defaultValue: 'Actions' })}
                 </th>
               </tr>
@@ -321,7 +369,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
             <tbody>
               {filteredRules.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-10 text-center text-sm text-slate-500 dark:text-text-muted-dark">
+                  <td colSpan={5} className="p-10 text-center text-sm text-slate-500 dark:text-text-muted-dark">
                     {t('alerts.rules.noFilterResults', { defaultValue: 'No rules match your filters' })}{' · '}
                     <button onClick={clearFilters} className="text-primary hover:underline font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded">
                       {t('common.clearFilters', { defaultValue: 'Clear filters' })}
@@ -335,39 +383,48 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                   return (
                     <tr
                       key={rule.id}
-                      className={`border-t border-slate-100 dark:border-ui-border-dark/50 hover:bg-slate-50 dark:hover:bg-ui-hover-dark/40 transition-colors ${!rule.isEnabled ? 'opacity-60' : ''}`}
+                      className={`border-t border-slate-100 transition-colors hover:bg-slate-50 dark:border-ui-border-dark/50 dark:hover:bg-ui-hover-dark/40 ${!rule.isEnabled ? 'bg-slate-50/70 dark:bg-ui-hover-dark/20' : ''}`}
                     >
-                      <td className="px-3 py-2.5 min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-semibold text-slate-900 dark:text-white truncate">{rule.name}</span>
-                          <span className={`px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider rounded ${sevBadge}`}>
-                            {rule.severity}
-                          </span>
-                          {rule.isSystem && (
-                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark rounded">
-                              <MaterialIcon name="lock" className="text-xs" />
-                              system
+                      <td className="px-4 py-3 align-top">
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold text-slate-900 dark:text-white">{rule.name}</p>
+                          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                            <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-bold ${CATEGORY_TONE[cat]}`}>
+                              {categoryLabel(cat, t)}
                             </span>
-                          )}
+                            <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-bold ${sevBadge}`}>
+                              {severityLabel(rule.severity, t)}
+                            </span>
+                            {rule.isSystem && (
+                              <span className="inline-flex items-center gap-0.5 rounded bg-slate-100 px-1.5 py-0.5 text-xs font-bold text-slate-500 dark:bg-ui-hover-dark dark:text-text-muted-dark">
+                                <MaterialIcon name="lock" className="text-xs" />
+                                {t('alerts.rules.builtIn')}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold uppercase rounded ${CATEGORY_TONE[cat]}`}>
-                          {cat === 'endpoint' ? 'health' : cat}
+                      <td className="px-4 py-3 align-top text-sm text-slate-700 dark:text-text-muted-dark">
+                        <span className="block truncate font-medium text-slate-800 dark:text-text-base-dark">
+                          {targetLabel(rule, services, hosts, t)}
+                        </span>
+                        <span className="mt-1 block text-xs text-slate-400 dark:text-text-dim-dark">
+                          {categoryLabel(cat, t)}
                         </span>
                       </td>
-                      <td className="px-3 py-2.5 text-sm text-slate-700 dark:text-text-muted-dark max-w-[200px]">
-                        <span className="truncate block">{targetLabel(rule, services, hosts, t)}</span>
+                      <td className="px-4 py-3 align-top text-sm">
+                        <p className="font-semibold text-slate-900 dark:text-white">
+                          {conditionExpr(rule, t)}
+                        </p>
+                        <p className="mt-1 text-xs leading-snug text-slate-500 dark:text-text-muted-dark">
+                          {evaluationSummary(rule, t)}
+                        </p>
                       </td>
-                      <td className="px-3 py-2.5 font-mono text-sm text-slate-700 dark:text-text-muted-dark whitespace-nowrap">
-                        <span className="text-slate-900 dark:text-white font-semibold">{conditionExpr(rule)}</span>
-                        <span className="text-slate-400 dark:text-text-dim-dark"> · {suffixExpr(rule, services, t)}</span>
-                      </td>
-                      <td className="px-3 py-2.5">
+                      <td className="px-4 py-3 align-top">
                         <ChannelChips rule={rule} channels={channels} />
                       </td>
-                      <td className="px-3 py-2.5 text-right whitespace-nowrap">
-                        <div className="inline-flex items-center gap-1">
+                      <td className="px-4 py-3 text-right align-top whitespace-nowrap">
+                        <div className="inline-flex items-center justify-end gap-1">
                           <button
                             onClick={() => handleToggle(rule.id)}
                             disabled={togglingIds.has(rule.id)}
@@ -393,6 +450,9 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                               <MaterialIcon name="delete" className="text-base" />
                             </button>
                           )}
+                        </div>
+                        <div className={`mt-1 text-xs font-semibold ${rule.isEnabled ? 'text-primary' : 'text-slate-400 dark:text-text-dim-dark'}`}>
+                          {rule.isEnabled ? t('common.enabled', { defaultValue: 'Enabled' }) : t('common.disabled')}
                         </div>
                       </td>
                     </tr>
@@ -428,9 +488,9 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
   );
 }
 
-function SortableTH({ label, active, dir, onClick }: { label: string; active: boolean; dir: SortDir; onClick: () => void }) {
+function SortableTH({ label, active, dir, onClick, className = '' }: { label: string; active: boolean; dir: SortDir; onClick: () => void; className?: string }) {
   return (
-    <th className="px-3 py-2 text-left text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark cursor-pointer select-none" onClick={onClick}>
+    <th className={`cursor-pointer select-none px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark ${className}`} onClick={onClick}>
       <span className={`inline-flex items-center gap-1 ${active ? 'text-slate-900 dark:text-white' : ''}`}>
         {label}
         <span className={active ? 'opacity-100' : 'opacity-30'}>{active && dir === 'desc' ? '↓' : '↑'}</span>
@@ -444,7 +504,7 @@ function ChannelChips({ rule, channels }: { rule: AlertRule; channels: Notificat
   if (!rule.channelIds || rule.channelIds.length === 0) {
     return (
       <span className="text-sm italic text-slate-400 dark:text-text-dim-dark">
-        {t('alerts.rules.allChannels', { defaultValue: 'all channels' })}
+        {t('alerts.rules.allChannelsDisplay', { defaultValue: 'all channels' })}
       </span>
     );
   }
