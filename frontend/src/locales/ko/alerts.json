@@ -238,7 +238,13 @@
             "colChannels": "채널",
             "colActions": "작업",
             "colTrigger": "발생 조건",
+            "colStatus": "상태",
             "allChannelsDisplay": "전체 채널",
+            "channelSummaryAll": "전체 {{count}}개",
+            "channelSummarySelected": "{{count}}개 선택",
+            "compactTriggerImmediate": "{{condition}} · 즉시",
+            "compactTriggerChecks": "{{condition}} · {{count}}회 연속",
+            "compactTriggerSustained": "{{condition}} · {{duration}} 지속",
             "categoryLabels": {
                 "endpoint": "헬스체크",
                 "log": "로그",

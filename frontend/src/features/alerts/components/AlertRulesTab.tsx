@@ -4,14 +4,12 @@ import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon, EmptyState, ConfirmDialog } from '../../../components/common';
-import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { api, type AlertRule, type NotificationChannel, type Service, type Host } from '../../../services/api';
-import { getChannelStyle } from '../utils/channelMeta';
 
-const SEVERITY_BADGE: Record<string, string> = {
-  critical: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',
-  warning: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400',
-  info: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400',
+const SEVERITY_DOT: Record<string, string> = {
+  critical: 'bg-red-500',
+  warning: 'bg-amber-500',
+  info: 'bg-sky-500',
 };
 
 const SEVERITY_ORDER: Record<string, number> = { critical: 0, warning: 1, info: 2 };
@@ -39,13 +37,6 @@ const OPERATOR_SYMBOLS: Record<string, string> = {
 
 type CategoryKey = 'all' | 'endpoint' | 'log' | 'resource' | 'system';
 type Translate = (key: string, options?: Record<string, unknown>) => string;
-
-const CATEGORY_TONE: Record<Exclude<CategoryKey, 'all'>, string> = {
-  endpoint: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400',
-  log: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400',
-  resource: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-400',
-  system: 'bg-slate-100 text-slate-600 dark:bg-ui-hover-dark dark:text-text-muted-dark',
-};
 
 function ruleCategory(rule: AlertRule): Exclude<CategoryKey, 'all'> {
   if (rule.isSystem) return 'system';
@@ -128,6 +119,30 @@ function evaluationSummary(rule: AlertRule, t: Translate): string {
     duration: formatMinutes(rule.duration, t),
     cooldown: formatSeconds(rule.cooldown, t),
     defaultValue: `${formatMinutes(rule.duration, t)} sustained · ${formatSeconds(rule.cooldown, t)} cooldown`,
+  });
+}
+
+function compactTrigger(rule: AlertRule, t: Translate): string {
+  if (rule.isSystem) {
+    return t('alerts.rules.eval.system', { defaultValue: 'Managed by the system' });
+  }
+  if (rule.type === 'log') {
+    return t('alerts.rules.compactTriggerImmediate', {
+      condition: conditionExpr(rule, t),
+      defaultValue: `${conditionExpr(rule, t)} · immediate`,
+    });
+  }
+  if (rule.type === 'service') {
+    return t('alerts.rules.compactTriggerChecks', {
+      condition: conditionExpr(rule, t),
+      count: rule.duration,
+      defaultValue: `${conditionExpr(rule, t)} · ${rule.duration} checks`,
+    });
+  }
+  return t('alerts.rules.compactTriggerSustained', {
+    condition: conditionExpr(rule, t),
+    duration: formatMinutes(rule.duration, t),
+    defaultValue: `${conditionExpr(rule, t)} · ${formatMinutes(rule.duration, t)}`,
   });
 }
 
@@ -350,18 +365,21 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
       {/* Table */}
       <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1080px] table-fixed text-sm">
+          <table className="w-full min-w-[1040px] table-fixed text-sm">
             <thead>
               <tr className="bg-slate-50 dark:bg-bg-surface-dark/50 border-b border-slate-200 dark:border-ui-border-dark">
-                <SortableTH className="w-[260px]" label={t('alerts.rules.colName', { defaultValue: 'Rule' })} active={sortKey === 'name'} dir={sortDir} onClick={() => onSort('name')} />
+                <SortableTH className="w-[300px]" label={t('alerts.rules.colName', { defaultValue: 'Rule' })} active={sortKey === 'name'} dir={sortDir} onClick={() => onSort('name')} />
                 <SortableTH className="w-[220px]" label={t('alerts.rules.colTarget', { defaultValue: 'Target' })} active={sortKey === 'target'} dir={sortDir} onClick={() => onSort('target')} />
-                <th className="w-[330px] px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <th className="w-[300px] px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.rules.colTrigger', { defaultValue: 'Trigger' })}
                 </th>
-                <th className="w-[210px] px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <th className="w-[140px] px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.rules.colChannels', { defaultValue: 'Channels' })}
                 </th>
-                <th className="w-[130px] px-4 py-3 text-right text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <th className="w-[80px] px-4 py-3 text-center text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                  {t('alerts.rules.colStatus', { defaultValue: 'Status' })}
+                </th>
+                <th className="w-[110px] px-4 py-3 text-right text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.rules.colActions', { defaultValue: 'Actions' })}
                 </th>
               </tr>
@@ -369,7 +387,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
             <tbody>
               {filteredRules.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-10 text-center text-sm text-slate-500 dark:text-text-muted-dark">
+                  <td colSpan={6} className="p-10 text-center text-sm text-slate-500 dark:text-text-muted-dark">
                     {t('alerts.rules.noFilterResults', { defaultValue: 'No rules match your filters' })}{' · '}
                     <button onClick={clearFilters} className="text-primary hover:underline font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded">
                       {t('common.clearFilters', { defaultValue: 'Clear filters' })}
@@ -379,51 +397,49 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
               ) : (
                 filteredRules.map(rule => {
                   const cat = ruleCategory(rule);
-                  const sevBadge = SEVERITY_BADGE[rule.severity] ?? SEVERITY_BADGE.info;
+                  const severityDot = SEVERITY_DOT[rule.severity] ?? SEVERITY_DOT.info;
                   return (
                     <tr
                       key={rule.id}
-                      className={`border-t border-slate-100 transition-colors hover:bg-slate-50 dark:border-ui-border-dark/50 dark:hover:bg-ui-hover-dark/40 ${!rule.isEnabled ? 'bg-slate-50/70 dark:bg-ui-hover-dark/20' : ''}`}
+                      className={`h-12 border-t border-slate-100 transition-colors hover:bg-slate-50 dark:border-ui-border-dark/50 dark:hover:bg-ui-hover-dark/40 ${!rule.isEnabled ? 'bg-slate-50/70 dark:bg-ui-hover-dark/20' : ''}`}
                     >
-                      <td className="px-4 py-3 align-top">
-                        <div className="min-w-0">
-                          <p className="truncate font-semibold text-slate-900 dark:text-white">{rule.name}</p>
-                          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                            <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-bold ${CATEGORY_TONE[cat]}`}>
-                              {categoryLabel(cat, t)}
-                            </span>
-                            <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-bold ${sevBadge}`}>
-                              {severityLabel(rule.severity, t)}
-                            </span>
-                            {rule.isSystem && (
-                              <span className="inline-flex items-center gap-0.5 rounded bg-slate-100 px-1.5 py-0.5 text-xs font-bold text-slate-500 dark:bg-ui-hover-dark dark:text-text-muted-dark">
-                                <MaterialIcon name="lock" className="text-xs" />
-                                {t('alerts.rules.builtIn')}
-                              </span>
-                            )}
-                          </div>
+                      <td className="px-4 py-2 align-middle">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span className={`h-2 w-2 shrink-0 rounded-full ${severityDot}`} title={severityLabel(rule.severity, t)} />
+                          <span className={`truncate font-semibold ${rule.isEnabled ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-text-muted-dark'}`}>
+                            {rule.name}
+                          </span>
+                          {rule.isSystem && (
+                            <MaterialIcon name="lock" className="shrink-0 text-sm text-slate-400" />
+                          )}
+                          <span className="shrink-0 text-xs font-semibold text-slate-400 dark:text-text-dim-dark">
+                            {categoryLabel(cat, t)}
+                          </span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 align-top text-sm text-slate-700 dark:text-text-muted-dark">
-                        <span className="block truncate font-medium text-slate-800 dark:text-text-base-dark">
+                      <td className="px-4 py-2 align-middle text-sm text-slate-700 dark:text-text-muted-dark">
+                        <span className="block truncate font-medium text-slate-800 dark:text-text-base-dark" title={targetLabel(rule, services, hosts, t)}>
                           {targetLabel(rule, services, hosts, t)}
                         </span>
-                        <span className="mt-1 block text-xs text-slate-400 dark:text-text-dim-dark">
-                          {categoryLabel(cat, t)}
+                      </td>
+                      <td className="px-4 py-2 align-middle text-sm">
+                        <p className="truncate font-semibold text-slate-900 dark:text-white" title={evaluationSummary(rule, t)}>
+                          {compactTrigger(rule, t)}
+                        </p>
+                      </td>
+                      <td className="px-4 py-2 align-middle">
+                        <ChannelSummary rule={rule} channels={channels} />
+                      </td>
+                      <td className="px-4 py-2 text-center align-middle">
+                        <span className={`inline-flex h-6 items-center justify-center rounded-full px-2 text-xs font-bold ${
+                          rule.isEnabled
+                            ? 'bg-primary/10 text-primary'
+                            : 'bg-slate-100 text-slate-500 dark:bg-ui-hover-dark dark:text-text-muted-dark'
+                        }`}>
+                          {rule.isEnabled ? t('common.enabled', { defaultValue: 'Enabled' }) : t('common.disabled')}
                         </span>
                       </td>
-                      <td className="px-4 py-3 align-top text-sm">
-                        <p className="font-semibold text-slate-900 dark:text-white">
-                          {conditionExpr(rule, t)}
-                        </p>
-                        <p className="mt-1 text-xs leading-snug text-slate-500 dark:text-text-muted-dark">
-                          {evaluationSummary(rule, t)}
-                        </p>
-                      </td>
-                      <td className="px-4 py-3 align-top">
-                        <ChannelChips rule={rule} channels={channels} />
-                      </td>
-                      <td className="px-4 py-3 text-right align-top whitespace-nowrap">
+                      <td className="px-4 py-2 text-right align-middle whitespace-nowrap">
                         <div className="inline-flex items-center justify-end gap-1">
                           <button
                             onClick={() => handleToggle(rule.id)}
@@ -450,9 +466,6 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                               <MaterialIcon name="delete" className="text-base" />
                             </button>
                           )}
-                        </div>
-                        <div className={`mt-1 text-xs font-semibold ${rule.isEnabled ? 'text-primary' : 'text-slate-400 dark:text-text-dim-dark'}`}>
-                          {rule.isEnabled ? t('common.enabled', { defaultValue: 'Enabled' }) : t('common.disabled')}
                         </div>
                       </td>
                     </tr>
@@ -499,38 +512,54 @@ function SortableTH({ label, active, dir, onClick, className = '' }: { label: st
   );
 }
 
-function ChannelChips({ rule, channels }: { rule: AlertRule; channels: NotificationChannel[] }) {
+function ChannelSummary({ rule, channels }: { rule: AlertRule; channels: NotificationChannel[] }) {
   const { t } = useTranslation('alerts');
-  if (!rule.channelIds || rule.channelIds.length === 0) {
+  const selectedCount = rule.channelIds?.length ?? 0;
+  const channelCount = selectedCount === 0 ? channels.length : selectedCount;
+
+  if (channelCount === 0) {
     return (
-      <span className="text-sm italic text-slate-400 dark:text-text-dim-dark">
-        {t('alerts.rules.allChannelsDisplay', { defaultValue: 'all channels' })}
+      <span className="inline-flex max-w-full items-center gap-1.5 text-sm font-medium text-slate-400 dark:text-text-dim-dark">
+        <MaterialIcon name="notifications_off" className="shrink-0 text-base" />
+        <span className="truncate">{t('alerts.rules.noChannels')}</span>
       </span>
     );
   }
-  const visible = rule.channelIds.slice(0, 3);
-  const remaining = rule.channelIds.length - visible.length;
-  return (
-    <div className="flex items-center gap-1 flex-wrap">
-      {visible.map(cid => {
-        const ch = channels.find(c => c.id === cid);
-        if (!ch) return null;
-        const style = getChannelStyle(ch.type);
-        return (
-          <span
-            key={cid}
-            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold ${style.bg} ${style.text} max-w-[110px]`}
-          >
-            <ChannelIcon type={ch.type} size={10} />
-            <span className="truncate">{ch.name}</span>
-          </span>
-        );
-      })}
-      {remaining > 0 && (
-        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark">
-          +{remaining}
+
+  if (!rule.channelIds || rule.channelIds.length === 0) {
+    return (
+      <span
+        className="inline-flex max-w-full items-center gap-1.5 text-sm font-medium text-slate-500 dark:text-text-muted-dark"
+        title={t('alerts.rules.allChannelsDisplay', { defaultValue: 'all channels' })}
+      >
+        <MaterialIcon name="notifications" className="shrink-0 text-base text-slate-400" />
+        <span className="truncate">
+          {t('alerts.rules.channelSummaryAll', {
+            count: channelCount,
+            defaultValue: `All ${channelCount}`,
+          })}
         </span>
-      )}
-    </div>
+      </span>
+    );
+  }
+
+  const names = rule.channelIds
+    .map(cid => channels.find(c => c.id === cid)?.name)
+    .filter(Boolean)
+    .join(', ');
+
+  return (
+    <span
+      className="inline-flex max-w-full items-center gap-1.5 text-sm font-medium text-slate-700 dark:text-text-base-dark"
+      title={names || undefined}
+    >
+      <MaterialIcon name="notifications_active" className="shrink-0 text-base text-slate-400" />
+      <span className="truncate">
+        {t('alerts.rules.channelSummarySelected', {
+          count: channelCount,
+          defaultValue: `${channelCount} selected`,
+        })}
+      </span>
+    </span>
   );
 }

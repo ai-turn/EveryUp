@@ -91,7 +91,7 @@ function getEvalPath(category: RuleCategory, metric: RuleFormValues['metric']): 
 function FormStep({ n, title, subtitle, children }: { n: number; title: string; subtitle?: string; children: ReactNode }) {
     return (
         <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
-            <div className={`flex items-center gap-3 px-5 ${subtitle ? 'py-4' : 'py-3'} border-b border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30`}>
+            <div className={`flex items-center gap-3 px-5 lg:px-6 ${subtitle ? 'py-4' : 'py-3'} border-b border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30`}>
                 <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs font-mono shrink-0">
                     {n}
                 </span>
@@ -100,7 +100,7 @@ function FormStep({ n, title, subtitle, children }: { n: number; title: string; 
                     {subtitle && <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{subtitle}</p>}
                 </div>
             </div>
-            <div className="p-5 space-y-5">{children}</div>
+            <div className="p-5 lg:p-6 space-y-5">{children}</div>
         </div>
     );
 }
@@ -166,7 +166,7 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
     };
 
     return (
-        <form id="alert-rule-form" onSubmit={handleSubmit} className="max-w-2xl mx-auto px-6 py-6 space-y-4">
+        <form id="alert-rule-form" onSubmit={handleSubmit} className="mx-auto w-full max-w-[960px] px-6 py-6 space-y-4">
             <FormStep n={1} title={t('alerts.rules.systemRule')} subtitle={t('alerts.rules.systemRuleDesc')}>
                 <div className="p-4 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-xl">
                     <h3 className="font-bold text-slate-900 dark:text-white mb-1">{rule.name}</h3>
@@ -370,12 +370,12 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                 const firstError = Object.values(validationErrors)[0];
                 toast.error(firstError?.message as string || t('alerts.rules.validationFailed', { defaultValue: 'Please check required fields' }));
             })}
-            className="px-6 py-6"
+            className="px-6 py-6 lg:px-8"
         >
-            <div className="max-w-350 mx-auto grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
+            <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] items-start">
 
                 {/* ── Left: form steps ─────────────────────────────────── */}
-                <div className="space-y-4 min-w-0">
+                <div className="space-y-5 min-w-0">
 
                     {/* Step 1: Target */}
                     <FormStep n={1} title="대상 (Target)">
@@ -681,7 +681,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                 </div>
 
                 {/* ── Right: sticky live preview (lg+) ─────────────────── */}
-                <div className="hidden lg:block">
+                <div className="hidden xl:block">
                     <div className="sticky top-6 space-y-4">
 
                         {/* Live preview card */}

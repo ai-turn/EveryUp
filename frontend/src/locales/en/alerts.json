@@ -238,7 +238,13 @@
             "colChannels": "Channels",
             "colActions": "Actions",
             "colTrigger": "Trigger",
+            "colStatus": "Status",
             "allChannelsDisplay": "All channels",
+            "channelSummaryAll": "All {{count}}",
+            "channelSummarySelected": "{{count}} selected",
+            "compactTriggerImmediate": "{{condition}} · immediate",
+            "compactTriggerChecks": "{{condition}} · {{count}} checks",
+            "compactTriggerSustained": "{{condition}} · {{duration}} sustained",
             "categoryLabels": {
                 "endpoint": "Healthcheck",
                 "log": "Log",
