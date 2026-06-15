@@ -376,9 +376,6 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                 <th className="w-[140px] px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.rules.colChannels', { defaultValue: 'Channels' })}
                 </th>
-                <th className="w-[80px] px-4 py-3 text-center text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
-                  {t('alerts.rules.colStatus', { defaultValue: 'Status' })}
-                </th>
                 <th className="w-[110px] px-4 py-3 text-right text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.rules.colActions', { defaultValue: 'Actions' })}
                 </th>
@@ -387,7 +384,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
             <tbody>
               {filteredRules.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-10 text-center text-sm text-slate-500 dark:text-text-muted-dark">
+                  <td colSpan={5} className="p-10 text-center text-sm text-slate-500 dark:text-text-muted-dark">
                     {t('alerts.rules.noFilterResults', { defaultValue: 'No rules match your filters' })}{' · '}
                     <button onClick={clearFilters} className="text-primary hover:underline font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded">
                       {t('common.clearFilters', { defaultValue: 'Clear filters' })}
@@ -429,15 +426,6 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                       </td>
                       <td className="px-4 py-2 align-middle">
                         <ChannelSummary rule={rule} channels={channels} />
-                      </td>
-                      <td className="px-4 py-2 text-center align-middle">
-                        <span className={`inline-flex h-6 items-center justify-center rounded-full px-2 text-xs font-bold ${
-                          rule.isEnabled
-                            ? 'bg-primary/10 text-primary'
-                            : 'bg-slate-100 text-slate-500 dark:bg-ui-hover-dark dark:text-text-muted-dark'
-                        }`}>
-                          {rule.isEnabled ? t('common.enabled', { defaultValue: 'Enabled' }) : t('common.disabled')}
-                        </span>
                       </td>
                       <td className="px-4 py-2 text-right align-middle whitespace-nowrap">
                         <div className="inline-flex items-center justify-end gap-1">
