@@ -469,14 +469,6 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
             </tbody>
           </table>
         </div>
-        <div className="px-3 py-2 border-t border-slate-200 dark:border-ui-border-dark flex items-center justify-between text-sm text-slate-500 dark:text-text-muted-dark">
-          <span>
-            {t('alerts.rules.shownCount', { defaultValue: '{{shown}} of {{total}}', shown: filteredRules.length, total: rules.length })}
-          </span>
-          <span>
-            {t('alerts.rules.sortedBy', { defaultValue: 'Sorted by' })} <span className="font-mono text-slate-700 dark:text-white">{sortKey}</span> {sortDir === 'asc' ? '↑' : '↓'}
-          </span>
-        </div>
       </div>
 
       <ConfirmDialog

@@ -78,7 +78,7 @@ export function Header() {
                         <Link
                             key={item.href}
                             to={item.href}
-                            className={`flex items-center px-4 py-2 text-sm transition-colors ${isActive
+                            className={`flex items-center px-4 py-2 text-base transition-colors ${isActive
                                 ? 'text-primary font-semibold'
                                 : 'font-medium text-slate-500 dark:text-text-muted-dark hover:text-slate-800 dark:hover:text-white'
                                 }`}

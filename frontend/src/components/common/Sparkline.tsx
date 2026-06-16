@@ -19,7 +19,7 @@ export function Sparkline({
   height = 28,
   color = '#3b82f6',
   className,
-  showEndpoint = true,
+  showEndpoint = false,
   showMidline = true,
   fluid = false,
 }: SparklineProps) {
