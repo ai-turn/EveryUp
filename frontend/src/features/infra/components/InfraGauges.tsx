@@ -95,12 +95,10 @@ function VitalGaugeCard({ gauge, sparkline }: { gauge: GaugeData; sparkline?: nu
       {/* 링 게이지 + 우측 정보 (모바일은 링만, sm+ 부터 우측 정보 표시) */}
       <div className="mt-4 flex items-center justify-center gap-4 sm:justify-start">
         <div
-          className="grid h-24 w-24 shrink-0 place-items-center rounded-full"
-          style={{
-            background: `conic-gradient(${gauge.color} ${pct * 3.6}deg, rgba(148, 163, 184, 0.16) 0deg)`,
-          }}
+          className="relative grid h-24 w-24 shrink-0 place-items-center rounded-full"
           aria-label={`${gauge.label} ${displayValue}${displayUnit}`}
         >
+          <GaugeRing percentage={pct} color={gauge.color} />
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-inner dark:bg-bg-surface-dark">
             <p className="inline-flex items-baseline justify-center whitespace-nowrap text-center font-semibold leading-none tabular-nums text-slate-900 dark:text-white">
               <span className={isCompactValue ? 'text-[15px]' : 'text-[18px]'}>{displayValue}</span>
@@ -139,6 +137,47 @@ function VitalGaugeCard({ gauge, sparkline }: { gauge: GaugeData; sparkline?: nu
         </div>
       </div>
     </article>
+  );
+}
+
+function GaugeRing({ percentage, color }: { percentage: number; color: string }) {
+  const radius = 42;
+  const strokeWidth = 12;
+  const circumference = 2 * Math.PI * radius;
+  const clampedPercentage = clampPercent(percentage);
+  const activeLength = (circumference * clampedPercentage) / 100;
+  const remainingLength = Math.max(circumference - activeLength, 0);
+  const strokeDasharray =
+    clampedPercentage >= 100 ? undefined : `${activeLength} ${remainingLength}`;
+
+  return (
+    <svg
+      className="absolute inset-0 h-full w-full -rotate-90"
+      viewBox="0 0 96 96"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <circle
+        cx="48"
+        cy="48"
+        r={radius}
+        fill="none"
+        stroke="rgba(148, 163, 184, 0.16)"
+        strokeWidth={strokeWidth}
+      />
+      {clampedPercentage > 0 && (
+        <circle
+          cx="48"
+          cy="48"
+          r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeDasharray={strokeDasharray}
+          strokeLinecap="butt"
+        />
+      )}
+    </svg>
   );
 }
 
