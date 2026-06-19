@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  # Backend API with hot reload
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: everyup-api-dev
+    ports:
+      - "3001:3001"
+    volumes:
+      - .:/app
+      - ./config.json:/app/config.json:ro
+      - go-mod-cache:/go/pkg/mod
+      - mt-data-dev:/app/data
+    environment:
+      - TZ=Asia/Seoul
+      - EVERYUP_SERVER_MODE=development
+    restart: unless-stopped
+
+  # Frontend dev server:
+  #   cd ../frontend
+  #   pnpm dev
+
+volumes:
+  go-mod-cache:
+  mt-data-dev:

@@ -1,0 +1,27 @@
+# Development Dockerfile - Backend only with hot reload
+FROM golang:1.24-alpine
+
+WORKDIR /app
+
+# Install air for hot reload
+RUN go install github.com/air-verse/air@latest
+
+# Copy go mod files first for better caching
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Create data directory
+RUN mkdir -p /app/data
+
+ENV MT_SERVER_HOST=0.0.0.0
+ENV MT_SERVER_PORT=3001
+ENV MT_SERVER_MODE=development
+ENV MT_DATABASE_PATH=/app/data/monitoring.db
+ENV CGO_ENABLED=0
+
+EXPOSE 3001
+
+CMD ["air", "-c", ".air.toml"]

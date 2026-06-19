@@ -17,28 +17,43 @@
 .env.*
 **/.env
 **/.env.*
-backend/config.json
-frontend/.env
-frontend/.env.*
+web/backend/config.json
+web/frontend/.env
+web/frontend/.env.*
+
+# Build and tool caches
+.gocache/
+_tmp_*
+
+# Local legacy artifacts left from the pre-monorepo layout
+backend/
+frontend/
+
+# Agent and docs are built as separate artifacts, not part of the Web image
+agent/
+docs/
+doc/
 
 # Database files
 *.db
 *.db-shm
 *.db-wal
 
-# Documentation (not needed in image)
-doc/
+# Documentation
 *.md
 LICENSE
 
-# Log agent (separate image)
-log-agent/
-
-# Node modules (re-installed in build)
-frontend/node_modules/
-
-# Build artifacts
-frontend/dist/
+# Dependencies and build artifacts
+node_modules/
+web/frontend/node_modules/
+web/frontend/dist/
+web/backend/bin/
+web/backend/data/
+web/backend/*.exe
+web/backend/server
+web/backend/mt-monitoring
+agent/everyup-agent
+agent/everyup-agent.exe
 
 # OS files
 .DS_Store
@@ -46,3 +61,4 @@ Thumbs.db
 
 # Claude / dev tools
 .claude/
+.agent/

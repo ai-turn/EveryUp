@@ -6,19 +6,21 @@ on:
     tags: ['v*']
   workflow_dispatch:
 
-concurrency:
-  group: docker-publish
-  cancel-in-progress: true
-
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    concurrency:
+      group: docker-publish-${{ matrix.image }}-${{ github.ref }}
+      cancel-in-progress: true
     strategy:
       matrix:
         include:
           - image: aiturn/everyup
             context: .
-            dockerfile: Dockerfile
+            dockerfile: web/Dockerfile
+          - image: aiturn/everyup-agent
+            context: ./agent
+            dockerfile: agent/Dockerfile
 
     steps:
       - name: Checkout

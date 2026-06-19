@@ -1,0 +1,32 @@
+services:
+  everyup-agent:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/hostfs:ro
+      - everyup-agent-data:/data
+      - everyup-generated-config:/etc/everyup/generated
+      - ./everyup-conf.d:/etc/everyup/conf.d:ro
+      - ./everyup-runbooks:/etc/everyup/runbooks:ro
+    depends_on:
+      - otel-collector
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.110.0
+    restart: unless-stopped
+    command: ["--config=/etc/everyup/generated/otel-config.yaml"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/hostfs:ro
+      - everyup-generated-config:/etc/everyup/generated:ro
+      - ./everyup-conf.d:/etc/everyup/conf.d:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+
+volumes:
+  everyup-agent-data:
+  everyup-generated-config:

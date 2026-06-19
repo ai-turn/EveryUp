@@ -4,6 +4,14 @@ doc/
 # Dependencies
 node_modules/
 
+# Build and tool caches
+.gocache/
+_tmp_*
+
+# Local legacy artifacts from the old root-level layout. Source now lives in web/.
+/backend/
+/frontend/
+
 # Claude Code
 .claude/
 CLAUDE.md
