@@ -42,7 +42,7 @@ function TabBar({ active, onChange }: { active: DetailTab; onChange: (t: DetailT
         <button
           key={tab.key}
           onClick={() => onChange(tab.key)}
-          className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wide transition-colors border-b-2 -mb-px ${
+          className={`px-4 py-2.5 text-base font-semibold transition-colors border-b-2 -mb-px ${
             active === tab.key
               ? 'border-primary text-primary'
               : 'border-transparent text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'

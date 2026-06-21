@@ -18,10 +18,10 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
               className="flex items-center gap-1 text-slate-500 dark:text-text-muted-dark hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               {index === 0 && <MaterialIcon name="arrow_back" className="text-lg" />}
-              <span className="text-base font-medium">{item.label}</span>
+              <span className="text-sm font-medium">{item.label}</span>
             </Link>
           ) : (
-            <span className="text-slate-900 dark:text-white text-base font-semibold tracking-wide">
+            <span className="text-slate-900 dark:text-white text-sm font-semibold">
               {item.label}
             </span>
           )}
