@@ -7,11 +7,23 @@ import logoDark from '../../assets/logo-dark.png';
 import { NotificationDropdown } from './NotificationDropdown';
 import { useIsMobile } from '../../hooks/useMediaQuery';
 
-const navItems: { labelKey: string; href: string }[] = [
-    { labelKey: 'nav.services', href: '/' },
-    { labelKey: 'nav.alerts', href: '/alerts' },
-    { labelKey: 'nav.settings', href: '/settings' },
-];
+function IconBell() {
+    return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+    );
+}
+
+function IconGear() {
+    return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+    );
+}
 
 function IconSun() {
     return (
@@ -39,7 +51,7 @@ function IconMoon() {
 
 export function Header() {
     const { theme, toggleTheme } = useTheme();
-    const { i18n, t } = useTranslation('common');
+    const { i18n } = useTranslation('common');
     const [notifOpen, setNotifOpen] = useState(false);
     const isMobile = useIsMobile();
     const location = useLocation();
@@ -52,6 +64,16 @@ export function Header() {
         const next = i18n.language.startsWith('ko') ? 'en' : 'ko';
         i18n.changeLanguage(next);
     };
+
+    const isAlertsActive = location.pathname.startsWith('/alerts');
+    const isSettingsActive = location.pathname.startsWith('/settings');
+
+    const iconLinkCls = (active: boolean) =>
+        `w-9 h-9 flex items-center justify-center rounded-lg transition-colors ${
+            active
+                ? 'text-primary bg-primary/10'
+                : 'text-slate-500 dark:text-text-muted-dark hover:bg-slate-100 dark:hover:bg-ui-hover-dark hover:text-slate-700 dark:hover:text-white'
+        }`;
 
     return (
         <header className="h-14 lg:h-16 border-b border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-main-dark shrink-0 transition-colors duration-200 z-30 relative">
@@ -66,29 +88,8 @@ export function Header() {
                 </div>
             </Link>
 
-            {/* Center: Primary nav (lg+) — replaces the left Sidebar */}
-            <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
-                {navItems.map((item) => {
-                    const isActive = item.href === '/'
-                        ? location.pathname === '/' || location.pathname.startsWith('/services')
-                        : location.pathname.startsWith(item.href);
-                    return (
-                        <Link
-                            key={item.href}
-                            to={item.href}
-                            className={`flex items-center px-4 py-2 text-base transition-colors ${isActive
-                                ? 'text-primary font-semibold'
-                                : 'font-medium text-slate-500 dark:text-text-muted-dark hover:text-slate-800 dark:hover:text-white'
-                                }`}
-                        >
-                            <span>{t(item.labelKey)}</span>
-                        </Link>
-                    );
-                })}
-            </nav>
-
             {/* Right: Actions */}
-            <div className="flex items-center gap-3 lg:gap-4 z-10 shrink-0">
+            <div className="flex items-center gap-2 lg:gap-3 z-10 shrink-0">
                 {/* Language Switcher */}
                 {isMobile ? (
                     <button
@@ -121,7 +122,7 @@ export function Header() {
                     </div>
                 )}
 
-                {/* Action Buttons */}
+                {/* Icon buttons */}
                 <div className="flex items-center gap-1">
                     {!isMobile && (
                         <button
@@ -137,6 +138,16 @@ export function Header() {
                         onToggle={() => setNotifOpen(v => !v)}
                         onClose={() => setNotifOpen(false)}
                     />
+                    {!isMobile && (
+                        <>
+                            <Link to="/alerts" aria-label="Alerts" className={iconLinkCls(isAlertsActive)}>
+                                <IconBell />
+                            </Link>
+                            <Link to="/settings" aria-label="Settings" className={iconLinkCls(isSettingsActive)}>
+                                <IconGear />
+                            </Link>
+                        </>
+                    )}
                 </div>
             </div>
           </div>
