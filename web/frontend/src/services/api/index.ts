@@ -29,7 +29,6 @@ export type { TimelineItem } from './dashboard';
 export { LOG_LEVELS } from './services';
 export type {
   Service,
-  CreateServiceData,
   CheckEntry,
   HealthCheckKpiSummary,
   Metric,
@@ -54,7 +53,6 @@ export type {
 } from './services';
 export type {
   Host,
-  CreateHostData,
   SystemInfo,
   SystemMetricPoint,
   SystemMetricsHistory,

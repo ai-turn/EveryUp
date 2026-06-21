@@ -98,27 +98,6 @@ export function createHostsApi(request: RequestFn) {
     getHostById: (id: string) =>
       request<Host>(`/hosts/${id}`),
 
-    createHost: (data: CreateHostData) =>
-      request<Host>('/hosts', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-
-    updateHost: (id: string, data: Partial<CreateHostData>) =>
-      request<Host>(`/hosts/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      }),
-
-    deleteHost: (id: string) =>
-      request<void>(`/hosts/${id}`, { method: 'DELETE' }),
-
-    pauseHost: (id: string) =>
-      request<void>(`/hosts/${id}/pause`, { method: 'POST' }),
-
-    resumeHost: (id: string) =>
-      request<void>(`/hosts/${id}/resume`, { method: 'POST' }),
-
     // System Resource Monitoring (host-scoped)
     getSystemInfo: (hostId: string) =>
       request<SystemInfo>(`/hosts/${hostId}/system/info`),

@@ -57,16 +57,10 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	local.Get("/auth/me", authHandler.Me)
 	local.Post("/auth/reset", authHandler.Reset)
 
-	// Service endpoints
+	// Service endpoints (read-only — write paths removed in agent-only architecture)
 	serviceHandler := handlers.NewServiceHandler(scheduler)
 	local.Get("/services", serviceHandler.GetAll)
 	local.Get("/services/:id", serviceHandler.GetByID)
-	local.Post("/services", serviceHandler.Create)
-	local.Put("/services/:id", serviceHandler.Update)
-	local.Delete("/services/:id", serviceHandler.Delete)
-	local.Post("/services/:id/pause", serviceHandler.Pause)
-	local.Post("/services/:id/resume", serviceHandler.Resume)
-	local.Post("/services/:id/regenerate-key", serviceHandler.RegenerateKey)
 	apiRequestsHandler := handlers.NewApiRequestsHandler()
 	local.Get("/services/:id/api-requests", apiRequestsHandler.List)
 	local.Get("/services/:id/api-requests/:reqId", apiRequestsHandler.GetByID)
@@ -99,16 +93,11 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	local.Get("/incidents", incidentHandler.GetAll)
 	local.Get("/incidents/active", incidentHandler.GetActive)
 
-	// Host endpoints
+	// Host endpoints (read-only — write paths removed in agent-only architecture)
 	hostHandler := handlers.NewHostHandler()
 	local.Get("/hosts/summary", hostHandler.GetSummary)
 	local.Get("/hosts", hostHandler.GetAll)
 	local.Get("/hosts/:hostId", hostHandler.GetByID)
-	local.Post("/hosts", hostHandler.Create)
-	local.Put("/hosts/:hostId", hostHandler.Update)
-	local.Delete("/hosts/:hostId", hostHandler.Delete)
-	local.Post("/hosts/:hostId/pause", hostHandler.Pause)
-	local.Post("/hosts/:hostId/resume", hostHandler.Resume)
 
 	// Host-scoped system resource monitoring
 	systemHandler := handlers.NewSystemHandler(collectorMgr)

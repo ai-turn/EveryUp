@@ -266,33 +266,6 @@ export function createServicesApi(request: RequestFn) {
     getServiceById: (id: string) =>
       request<Service>(`/services/${id}`),
 
-    createService: (data: CreateServiceData) =>
-      request<Service>('/services', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-
-    updateService: (id: string, data: Partial<CreateServiceData>) =>
-      request<Service>(`/services/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      }),
-
-    deleteService: (id: string) =>
-      request<void>(`/services/${id}`, { method: 'DELETE' }),
-
-    pauseService: (id: string) =>
-      request<Service>(`/services/${id}/pause`, { method: 'POST' }),
-
-    resumeService: (id: string) =>
-      request<Service>(`/services/${id}/resume`, { method: 'POST' }),
-
-    regenerateServiceApiKey: (id: string) =>
-      request<{ apiKey: string; apiKeyMasked: string }>(
-        `/services/${id}/regenerate-key`,
-        { method: 'POST' }
-      ),
-
     // Metrics
     getServiceMetrics: async (serviceId: string, params?: MetricsParams) => {
       const query = params ? `?${new URLSearchParams(params as Record<string, string>)}` : '';
