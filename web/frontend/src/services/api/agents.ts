@@ -74,9 +74,31 @@ export function createAgentsApi(request: RequestFn) {
       request<ServiceUptimeDay[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/uptime?days=${days}`),
     getAgentServiceKeyEvents: (agentId: string, key: string, limit = 50) =>
       request<AgentEvent[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/events?limit=${limit}`),
-    getAgentServiceLogs: (agentId: string, key: string, limit = 100) =>
-      request<{ data: LogEntry[]; total: number }>(`/agents/${agentId}/services/${encodeURIComponent(key)}/logs?limit=${limit}`),
-    getAgentServiceRequests: (agentId: string, key: string, limit = 100) =>
-      request<{ data: ApiRequest[]; total: number }>(`/agents/${agentId}/services/${encodeURIComponent(key)}/requests?limit=${limit}`),
+    getAgentServiceLogs: (
+      agentId: string, key: string,
+      params?: { level?: string; search?: string; from?: string; to?: string; limit?: number; offset?: number },
+    ) => {
+      const p = new URLSearchParams();
+      p.set('limit', String(params?.limit ?? 100));
+      if (params?.offset) p.set('offset', String(params.offset));
+      if (params?.level) p.set('level', params.level);
+      if (params?.search) p.set('search', params.search);
+      if (params?.from) p.set('from', params.from);
+      if (params?.to) p.set('to', params.to);
+      return request<{ data: LogEntry[]; total: number }>(`/agents/${agentId}/services/${encodeURIComponent(key)}/logs?${p}`);
+    },
+    getAgentServiceRequests: (
+      agentId: string, key: string,
+      params?: { search?: string; errorsOnly?: boolean; from?: string; to?: string; limit?: number; offset?: number },
+    ) => {
+      const p = new URLSearchParams();
+      p.set('limit', String(params?.limit ?? 100));
+      if (params?.offset) p.set('offset', String(params.offset));
+      if (params?.search) p.set('search', params.search);
+      if (params?.errorsOnly) p.set('errorsOnly', 'true');
+      if (params?.from) p.set('from', params.from);
+      if (params?.to) p.set('to', params.to);
+      return request<{ data: ApiRequest[]; total: number }>(`/agents/${agentId}/services/${encodeURIComponent(key)}/requests?${p}`);
+    },
   };
 }

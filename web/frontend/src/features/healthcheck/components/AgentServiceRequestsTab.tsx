@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MaterialIcon } from '../../../components/common';
 import { api, type ApiRequest } from '../../../services/api';
 import { getErrorMessage } from '../../../utils/errors';
@@ -8,6 +8,14 @@ interface Props {
   agentId: string;
   serviceKey: string;
   refreshKey: number;
+}
+
+type DatePreset = '1d' | '7d' | '30d' | '';
+
+function toISOFrom(preset: DatePreset): string | undefined {
+  if (!preset) return undefined;
+  const days = preset === '1d' ? 1 : preset === '7d' ? 7 : 30;
+  return new Date(Date.now() - days * 86_400_000).toISOString();
 }
 
 function methodClass(method: string): string {
@@ -39,59 +47,145 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey }: Pro
   const [requests, setRequests] = useState<ApiRequest[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [errorsOnly, setErrorsOnly] = useState(false);
+  const [search, setSearch] = useState('');
+  const [inputValue, setInputValue] = useState('');
+  const [datePreset, setDatePreset] = useState<DatePreset>('');
 
-  useEffect(() => {
+  const fetch = useCallback(async () => {
     setLoading(true);
-    api.getAgentServiceRequests(agentId, serviceKey)
-      .then(res => {
-        setRequests(res.data ?? []);
-        setTotal(res.total ?? 0);
-      })
-      .catch(err => toast.error(getErrorMessage(err)))
-      .finally(() => setLoading(false));
-  }, [agentId, serviceKey, refreshKey]);
+    try {
+      const res = await api.getAgentServiceRequests(agentId, serviceKey, {
+        errorsOnly,
+        search: search || undefined,
+        from: toISOFrom(datePreset),
+      });
+      setRequests(res?.data ?? []);
+      setTotal(res?.total ?? 0);
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }, [agentId, serviceKey, refreshKey, errorsOnly, search, datePreset]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (loading) {
-    return (
-      <div className="space-y-2">
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} className="h-12 rounded-xl bg-slate-100 dark:bg-ui-hover-dark animate-pulse" />
-        ))}
-      </div>
-    );
-  }
+  useEffect(() => { fetch(); }, [fetch]);
 
-  if (requests.length === 0) {
-    return (
-      <div className="py-16 text-center">
-        <MaterialIcon name="http" className="text-4xl text-slate-300 dark:text-text-dim-dark mb-2" />
-        <p className="text-sm text-slate-400 dark:text-text-muted-dark">수집된 API 요청이 없습니다</p>
-      </div>
-    );
-  }
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearch(inputValue);
+  };
+
+  // KPI summary from current result set
+  const errorCount = requests.filter(r => r.statusCode >= 400).length;
+  const avgMs = requests.length > 0
+    ? Math.round(requests.reduce((sum, r) => sum + r.durationMs, 0) / requests.length)
+    : 0;
 
   return (
-    <div>
-      <p className="text-sm text-slate-500 dark:text-text-muted-dark mb-3">
-        최근 {requests.length}건 / 전체 {total.toLocaleString()}건
-      </p>
-      <div className="divide-y divide-slate-100 dark:divide-ui-border-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
-        {requests.map(req => (
-          <div key={req.id} className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-bg-surface-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors">
-            <span className={`shrink-0 px-1.5 py-0.5 rounded text-xs font-bold uppercase ${methodClass(req.method)}`}>
-              {req.method}
-            </span>
-            <span className={`shrink-0 font-mono text-sm font-bold ${statusClass(req.statusCode)}`}>
-              {req.statusCode}
-            </span>
-            <span className="flex-1 min-w-0 text-sm text-slate-700 dark:text-text-base-dark truncate font-mono">
-              {req.path}
-            </span>
-            <span className="shrink-0 text-xs text-slate-400 dark:text-text-dim-dark">{req.durationMs}ms</span>
-            <span className="shrink-0 text-xs text-slate-400 dark:text-text-dim-dark">{formatTime(req.createdAt)}</span>
+    <div className="space-y-4">
+      {/* KPI row */}
+      {!loading && requests.length > 0 && (
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { label: '전체', value: `${total.toLocaleString()}건`, color: 'text-slate-700 dark:text-text-base-dark' },
+            { label: '에러', value: `${errorCount}건`, color: errorCount > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-text-dim-dark' },
+            { label: '평균', value: `${avgMs}ms`, color: 'text-slate-700 dark:text-text-base-dark' },
+          ].map(kpi => (
+            <div key={kpi.label} className="rounded-xl bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark px-4 py-3 text-center">
+              <p className={`text-xl font-bold ${kpi.color}`}>{kpi.value}</p>
+              <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-0.5">{kpi.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Error-only toggle */}
+        <button
+          onClick={() => setErrorsOnly(v => !v)}
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
+            errorsOnly
+              ? 'bg-red-500 text-white'
+              : 'bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-muted-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark'
+          }`}
+        >
+          <MaterialIcon name="error_outline" className="text-sm" />
+          에러만
+        </button>
+
+        {/* Date presets */}
+        <div className="flex gap-1">
+          {([['', '전체'], ['1d', '오늘'], ['7d', '7일'], ['30d', '30일']] as [DatePreset, string][]).map(([val, lbl]) => (
+            <button
+              key={val}
+              onClick={() => setDatePreset(val)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                datePreset === val
+                  ? 'bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900'
+                  : 'bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark'
+              }`}
+            >
+              {lbl}
+            </button>
+          ))}
+        </div>
+
+        {/* Path search */}
+        <form onSubmit={handleSearchSubmit} className="flex-1 min-w-48 flex gap-1.5">
+          <div className="relative flex-1">
+            <MaterialIcon name="search" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none" />
+            <input
+              type="text"
+              value={inputValue}
+              onChange={e => setInputValue(e.target.value)}
+              placeholder="경로 검색..."
+              className="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg bg-slate-100 dark:bg-ui-hover-dark border border-transparent focus:border-primary dark:text-white placeholder-slate-400 dark:placeholder-text-dim-dark outline-none transition-colors"
+            />
           </div>
-        ))}
+          {search && (
+            <button type="button" onClick={() => { setSearch(''); setInputValue(''); }}
+              className="px-2 py-1.5 rounded-lg text-xs text-slate-500 hover:text-red-500 transition-colors">
+              <MaterialIcon name="close" className="text-sm" />
+            </button>
+          )}
+        </form>
       </div>
+
+      {/* List */}
+      {loading ? (
+        <div className="space-y-2">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="h-12 rounded-xl bg-slate-100 dark:bg-ui-hover-dark animate-pulse" />
+          ))}
+        </div>
+      ) : requests.length === 0 ? (
+        <div className="py-16 text-center">
+          <MaterialIcon name="http" className="text-4xl text-slate-300 dark:text-text-dim-dark mb-2" />
+          <p className="text-sm text-slate-400 dark:text-text-muted-dark">
+            {search || errorsOnly || datePreset ? '조건에 맞는 요청이 없습니다' : '수집된 API 요청이 없습니다'}
+          </p>
+        </div>
+      ) : (
+        <div className="divide-y divide-slate-100 dark:divide-ui-border-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
+          {requests.map(req => (
+            <div key={req.id} className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-bg-surface-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors">
+              <span className={`shrink-0 px-1.5 py-0.5 rounded text-xs font-bold uppercase ${methodClass(req.method)}`}>
+                {req.method}
+              </span>
+              <span className={`shrink-0 font-mono text-sm font-bold ${statusClass(req.statusCode)}`}>
+                {req.statusCode}
+              </span>
+              <span className="flex-1 min-w-0 text-sm text-slate-700 dark:text-text-base-dark truncate font-mono">
+                {req.path}
+              </span>
+              <span className="shrink-0 text-xs text-slate-400 dark:text-text-dim-dark">{req.durationMs}ms</span>
+              <span className="shrink-0 text-xs text-slate-400 dark:text-text-dim-dark">{formatTime(req.createdAt)}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

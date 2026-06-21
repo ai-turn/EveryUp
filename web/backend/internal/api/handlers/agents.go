@@ -287,10 +287,25 @@ func (h *AgentHandler) GetServiceLogs(c *fiber.Ctx) error {
 	}
 
 	limit, _ := strconv.Atoi(c.Query("limit", "100"))
-	logs, total, err := h.logRepo.GetAll(models.LogFilter{
+	offset, _ := strconv.Atoi(c.Query("offset", "0"))
+	filter := models.LogFilter{
 		ServiceName: service.Name,
+		Level:       models.LogLevel(c.Query("level")),
+		Search:      c.Query("search"),
 		Limit:       limit,
-	})
+		Offset:      offset,
+	}
+	if from := c.Query("from"); from != "" {
+		if t, err2 := time.Parse(time.RFC3339, from); err2 == nil {
+			filter.From = t
+		}
+	}
+	if to := c.Query("to"); to != "" {
+		if t, err2 := time.Parse(time.RFC3339, to); err2 == nil {
+			filter.To = t
+		}
+	}
+	logs, total, err := h.logRepo.GetAll(filter)
 	if err != nil {
 		return internalError(c, "DATABASE_ERROR", err)
 	}
@@ -314,10 +329,29 @@ func (h *AgentHandler) GetServiceRequests(c *fiber.Ctx) error {
 	}
 
 	limit, _ := strconv.Atoi(c.Query("limit", "100"))
-	requests, total, err := h.reqRepo.List(&models.ApiRequestFilter{
+	offset, _ := strconv.Atoi(c.Query("offset", "0"))
+	minStatus, _ := strconv.Atoi(c.Query("minStatus", "0"))
+	maxStatus, _ := strconv.Atoi(c.Query("maxStatus", "0"))
+	filter := &models.ApiRequestFilter{
 		ServiceName: service.Name,
+		Search:      c.Query("search"),
+		ErrorsOnly:  c.Query("errorsOnly") == "true",
+		MinStatus:   minStatus,
+		MaxStatus:   maxStatus,
 		Limit:       limit,
-	})
+		Offset:      offset,
+	}
+	if from := c.Query("from"); from != "" {
+		if t, err2 := time.Parse(time.RFC3339, from); err2 == nil {
+			filter.From = t
+		}
+	}
+	if to := c.Query("to"); to != "" {
+		if t, err2 := time.Parse(time.RFC3339, to); err2 == nil {
+			filter.To = t
+		}
+	}
+	requests, total, err := h.reqRepo.List(filter)
 	if err != nil {
 		return internalError(c, "DATABASE_ERROR", err)
 	}
