@@ -29,7 +29,7 @@ export interface AgentHealthCheckDetailViewProps {
 type DetailTab = 'health' | 'logs' | 'requests' | 'infra';
 
 const TABS: { key: DetailTab; labelKo: string; icon: string }[] = [
-  { key: 'health',    labelKo: '헬스',   icon: 'monitor_heart' },
+  { key: 'health',    labelKo: '헬스체크', icon: 'monitor_heart' },
   { key: 'logs',      labelKo: '로그',   icon: 'article' },
   { key: 'requests',  labelKo: 'API',    icon: 'http' },
   { key: 'infra',     labelKo: '인프라', icon: 'dns' },

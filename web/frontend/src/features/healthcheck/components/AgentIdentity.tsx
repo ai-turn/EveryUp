@@ -67,11 +67,6 @@ export function AgentIdentity({ service }: { service: AgentServiceFlat }) {
         </div>
       </div>
 
-      <p className="text-slate-500 dark:text-text-muted-dark text-sm mb-3">
-        <span className="text-slate-400 dark:text-text-dim-dark mr-1">{t('엔드포인트')}:</span>
-        <code className="break-all">{service.endpoint || '-'}</code>
-      </p>
-
       <div className="flex flex-wrap gap-2">
         <InfoChip icon="language" label={t('타입')} value={service.checkType.toUpperCase()} />
         <InfoChip icon="sensors" label={t('에이전트')} value={service.agentName} />
