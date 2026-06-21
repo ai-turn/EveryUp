@@ -28,11 +28,11 @@ export interface AgentHealthCheckDetailViewProps {
 
 type DetailTab = 'health' | 'logs' | 'requests' | 'infra';
 
-const TABS: { key: DetailTab; labelKo: string; icon: string }[] = [
-  { key: 'health',    labelKo: '헬스체크', icon: 'monitor_heart' },
-  { key: 'logs',      labelKo: '로그',   icon: 'article' },
-  { key: 'requests',  labelKo: 'API',    icon: 'http' },
-  { key: 'infra',     labelKo: '인프라', icon: 'dns' },
+const TABS: { key: DetailTab; labelKo: string }[] = [
+  { key: 'health',   labelKo: '헬스체크' },
+  { key: 'logs',     labelKo: '로그' },
+  { key: 'requests', labelKo: 'API' },
+  { key: 'infra',    labelKo: '인프라' },
 ];
 
 function TabBar({ active, onChange }: { active: DetailTab; onChange: (t: DetailTab) => void }) {
@@ -42,13 +42,12 @@ function TabBar({ active, onChange }: { active: DetailTab; onChange: (t: DetailT
         <button
           key={tab.key}
           onClick={() => onChange(tab.key)}
-          className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-bold transition-colors border-b-2 -mb-px ${
+          className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wide transition-colors border-b-2 -mb-px ${
             active === tab.key
               ? 'border-primary text-primary'
               : 'border-transparent text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
           }`}
         >
-          <MaterialIcon name={tab.icon} className="text-base" />
           {tab.labelKo}
         </button>
       ))}
