@@ -95,17 +95,6 @@ func (m *CollectorManager) Unregister(hostID string) {
 	}
 }
 
-// RegisterSSHHost creates and registers an SSHCollector for the given host.
-// Returns an error if the SSH configuration is invalid (does not attempt connection).
-func (m *CollectorManager) RegisterSSHHost(host *models.Host) error {
-	sshCollector, err := NewSSHCollector(host)
-	if err != nil {
-		return err
-	}
-	m.Register(sshCollector)
-	return nil
-}
-
 // GetCollector returns the MetricCollector for the given host, or nil.
 func (m *CollectorManager) GetCollector(hostID string) MetricCollector {
 	m.mu.RLock()

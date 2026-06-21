@@ -6,7 +6,7 @@ import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
-import { api, Host, type SSHTestResult } from '../../../services/api';
+import { api, Host } from '../../../services/api';
 
 const hostSchema = z.object({
     id: z.string().min(2, 'ID is too short').regex(/^[a-z0-9-]+$/, 'Lower case letters, numbers, and hyphens only'),
@@ -50,9 +50,6 @@ export function InfraForm({ onSuccess, onCancel, host, onSubmittingChange }: Inf
     const { t } = useTranslation(['infra', 'common']);
     const isEditMode = !!host;
 
-    const [isTesting, setIsTesting] = useState(false);
-    const [testResult, setTestResult] = useState<SSHTestResult | null>(null);
-    const [testError, setTestError] = useState<string | null>(null);
     const [ppkWarning, setPpkWarning] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -62,7 +59,6 @@ export function InfraForm({ onSuccess, onCancel, host, onSubmittingChange }: Inf
         handleSubmit,
         watch,
         reset,
-        getValues,
         setValue,
         formState: { errors, isSubmitting },
     } = useForm<HostFormValues>({
@@ -132,40 +128,6 @@ export function InfraForm({ onSuccess, onCancel, host, onSubmittingChange }: Inf
         const file = e.dataTransfer.files[0];
         if (file) handleKeyFile(file);
     }, [handleKeyFile]);
-
-    const handleTestConnection = async () => {
-        const values = getValues();
-        if (!values.ip || !values.sshUser) {
-            toast.error(t('infra.modal.testRequiredFields'));
-            return;
-        }
-        if (isEditMode && values.sshAuthType === 'password' && !values.sshPassword) {
-            toast.error(t('infra.modal.editModePasswordRequired'));
-            return;
-        }
-        setIsTesting(true);
-        setTestResult(null);
-        setTestError(null);
-        try {
-            const result = await api.testSSHConnection({
-                ip: values.ip,
-                sshPort: Number(values.sshPort) || 22,
-                sshUser: values.sshUser,
-                sshAuthType: values.sshAuthType,
-                sshPassword: values.sshPassword,
-                sshKey: values.sshKey,
-                sshKeyPath: values.sshKeyPath,
-            });
-            setTestResult(result);
-            toast.success(t('infra.modal.connectionSuccess'));
-        } catch (error) {
-            const msg = getErrorMessage(error);
-            setTestError(msg);
-            toast.error(msg);
-        } finally {
-            setIsTesting(false);
-        }
-    };
 
     const onSubmit = async (data: HostFormValues) => {
         onSubmittingChange?.(true);
@@ -485,68 +447,6 @@ export function InfraForm({ onSuccess, onCancel, host, onSubmittingChange }: Inf
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
-                    <div className="flex items-center gap-2 mb-3">
-                        <MaterialIcon
-                            name={testResult ? 'check_circle' : testError ? 'error' : 'cable'}
-                            className={`text-lg ${testResult ? 'text-emerald-500' : testError ? 'text-red-500' : 'text-slate-400'}`}
-                        />
-                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                            {t('infra.modal.testConnection')}
-                        </h3>
-                    </div>
-                    <p className="text-sm text-slate-500 dark:text-text-muted-dark leading-relaxed">
-                        {selectedType === 'remote'
-                            ? t('infra.form.testHint')
-                            : t('infra.modal.localAutoManaged')}
-                    </p>
-                    {selectedType === 'remote' && (
-                        <>
-                            <button
-                                type="button"
-                                onClick={handleTestConnection}
-                                disabled={isTesting}
-                                className="mt-4 w-full py-2.5 rounded-lg border border-slate-200 dark:border-ui-border-dark text-slate-700 dark:text-text-secondary-dark font-bold text-sm hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                            >
-                                {isTesting ? (
-                                    <>
-                                        <div className="w-4 h-4 border-2 border-slate-400/30 border-t-slate-400 rounded-full animate-spin" />
-                                        {t('infra.modal.testing')}
-                                    </>
-                                ) : (
-                                    <>
-                                        <MaterialIcon name="cable" className="text-base" />
-                                        {t('infra.modal.testConnection')}
-                                    </>
-                                )}
-                            </button>
-
-                            {testResult && (
-                                <div className="mt-4 p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/15">
-                                    <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm mb-2">
-                                        <MaterialIcon name="check_circle" className="text-lg" />
-                                        {t('infra.modal.connectionSuccess')}
-                                    </div>
-                                    <div className="text-sm text-slate-600 dark:text-text-muted-dark space-y-1 font-medium">
-                                        {testResult.hostname && <p>Hostname: {testResult.hostname}</p>}
-                                        {testResult.platform && <p>OS: {testResult.platform}</p>}
-                                        <p>{t('infra.modal.latency')}: <span className="text-emerald-600 dark:text-emerald-400 font-bold">{testResult.latencyMs}ms</span></p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {testError && (
-                                <div className="mt-4 p-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30">
-                                    <div className="flex items-center gap-2 text-red-600 dark:text-red-400 font-bold text-sm mb-1">
-                                        <MaterialIcon name="error" className="text-lg" />
-                                        {t('infra.modal.connectionFailed')}
-                                    </div>
-                                    <p className="text-sm text-red-500/80 font-medium leading-relaxed">{testError}</p>
-                                </div>
-                            )}
-                        </>
-                    )}
-                </div>
             </aside>
 
         </div>

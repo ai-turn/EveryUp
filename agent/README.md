@@ -3,6 +3,70 @@
 EveryUp Agent is the standalone sidecar agent for local monitoring, alerting,
 ChatOps, and optional EveryUp Web sync.
 
+## Quick Start
+
+Two required values. Everything else has a working default.
+
+**1. Create `.env`**
+
+```bash
+cp .env.example .env
+# Set these two values:
+EVERYUP_TELEGRAM_BOT_TOKEN=123456:ABC-DEF...   # from BotFather
+EVERYUP_TELEGRAM_CHAT_IDS=123456789            # your chat ID
+```
+
+Don't have a Telegram bot yet? Follow [docs/NOTIFICATION_SETUP.ko.md](../docs/NOTIFICATION_SETUP.ko.md) (or the [English version](../docs/NOTIFICATION_SETUP.md)) to create one in under 5 minutes.
+
+**2. Add labels to the services you want monitored** (your existing `docker-compose.yml`)
+
+```yaml
+services:
+  api:
+    image: my-api:latest
+    labels:
+      everyup.enabled: "true"
+      everyup.service.name: "api"
+      everyup.health.type: "http"
+      everyup.health.url: "http://api:8080/health"
+```
+
+For a TCP-only service (postgres, redis, …):
+
+```yaml
+labels:
+  everyup.enabled: "true"
+  everyup.service.name: "postgres"
+  everyup.health.type: "tcp"
+  everyup.health.port: "5432"
+```
+
+**3. Add the agent to your compose file**
+
+```yaml
+  everyup-agent:
+    build: /path/to/agent   # or image: everyup/agent:latest once published
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/hostfs:ro
+      - everyup-agent-data:/data
+
+volumes:
+  everyup-agent-data:
+```
+
+**4. Start**
+
+```bash
+docker compose up -d everyup-agent
+```
+
+Telegram sends a startup message within seconds. The agent auto-discovers any
+container with `everyup.enabled: "true"` and starts checking it on the next
+30-second tick.
+
 It supports:
 
 - Environment-based configuration
@@ -11,7 +75,7 @@ It supports:
 - Docker label discovery for HTTP/TCP health targets
 - Basic cooldown and recovery notifications
 - Generated OTel Collector sidecar config
-- Optional EveryUp Web enrollment, service mapping sync, and audit event sync
+- Optional EveryUp Web enrollment, service mapping sync, host metrics sync, and audit event sync
 - Optional OpenAI-compatible LLM incident summaries with masking
 - Telegram ChatOps `/status`, `/services`, `/logs`, `/explain`, and `/silence`
 - Markdown Runbook suggestions for common incidents
@@ -54,13 +118,13 @@ go run ./cmd/everyup-agent
 | `EVERYUP_ALERT_COOLDOWN_SECONDS` | no | `300` | Re-alert cooldown |
 | `EVERYUP_DOCKER_DISCOVERY_ENABLED` | no | `true` | Discover Docker containers with EveryUp labels |
 | `EVERYUP_DOCKER_SOCKET_PATH` | no | `/var/run/docker.sock` | Docker Engine socket path |
-| `EVERYUP_OTEL_CONFIG_ENABLED` | no | `true` | Generate Collector config on startup |
+| `EVERYUP_OTEL_CONFIG_ENABLED` | no | `false` | Generate Collector config on startup (enable with otel-collector sidecar) |
 | `EVERYUP_OTEL_CONFIG_PATH` | no | `/etc/everyup/generated/otel-config.yaml` | Generated Collector config path |
 | `EVERYUP_OTEL_CONF_DIR` | no | `/etc/everyup/conf.d` | Reserved override directory |
 | `EVERYUP_OTEL_FILELOG_PATHS` | no | Docker container logs | Comma-separated filelog include paths |
 | `EVERYUP_WEB_OTLP_ENDPOINT` | no | | Optional EveryUp Web OTLP endpoint |
 | `EVERYUP_WEB_API_KEY` | no | | Optional EveryUp Web API key for OTLP forward |
-| `EVERYUP_WEB_SYNC_ENABLED` | no | `false` | Enable Web enrollment, service sync, and audit event sync |
+| `EVERYUP_WEB_SYNC_ENABLED` | no | `false` | Enable Web enrollment, service sync, host metrics sync, and audit event sync |
 | `EVERYUP_WEB_BASE_URL` | no | | EveryUp Web base URL |
 | `EVERYUP_WEB_ENROLLMENT_TOKEN` | no | | Bearer token for Web enrollment/sync |
 | `EVERYUP_WEB_AGENT_ID` | no | | Existing Agent ID to skip enrollment |
@@ -140,8 +204,12 @@ See [OTel Collector Sidecar](docs/otel-collector.md) for details.
 ## Web connected mode
 
 When `EVERYUP_WEB_SYNC_ENABLED=true`, the agent enrolls with EveryUp Web and
-periodically sends discovered service mappings and audit events. Local
-operation continues even when Web sync fails.
+periodically sends discovered service mappings, host metrics (CPU, memory, disk),
+and audit events. Local operation continues even when Web sync fails.
+
+Service health results appear on the Web `/healthcheck` dashboard. Host metrics
+are stored in Web's `system_metrics` table and power the infrastructure resource
+charts.
 
 See [Web Connected Mode](docs/web-connected-mode.md) for the API contract.
 

@@ -2,6 +2,6 @@
 
 package hostmetrics
 
-func diskUsagePercent(path string) (float64, error) {
-	return 0, nil
+func diskStats(path string) (pct, totalGB, usedGB float64, err error) {
+	return 0, 0, 0, nil
 }

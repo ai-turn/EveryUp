@@ -1,7 +1,6 @@
-export { HealthCheckForm } from './components/HealthCheckForm';
-export { HealthCheckKpiHero } from './components/HealthCheckKpiHero';
-export { HealthCheckIdentity } from './components/HealthCheckIdentity';
-export { RealtimeMetrics } from './components/RealtimeMetrics';
-export { ResponseTimeChart } from './components/ResponseTimeChart';
-export { CheckHistoryBar } from './components/CheckHistoryBar';
-export { FailureHistory } from './components/FailureHistory';
+export { AgentHealthCheckDetailView } from './components/AgentHealthCheckDetailView';
+export { AgentIdentity } from './components/AgentIdentity';
+export { AgentRealtimeMetrics } from './components/AgentRealtimeMetrics';
+export { AgentCheckHistoryBar } from './components/AgentCheckHistoryBar';
+export { AgentResponseTimeChart } from './components/AgentResponseTimeChart';
+export { AgentFailureHistory } from './components/AgentFailureHistory';

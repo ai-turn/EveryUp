@@ -43,6 +43,18 @@ type agentEventsRequest struct {
 	Events  []models.AgentEvent `json:"events"`
 }
 
+type agentMetricsRequest struct {
+	AgentID    string    `json:"agentId"`
+	CPUUsage   float64   `json:"cpuUsage"`
+	MemTotal   float64   `json:"memTotal"`
+	MemUsed    float64   `json:"memUsed"`
+	MemUsage   float64   `json:"memUsage"`
+	DiskTotal  float64   `json:"diskTotal"`
+	DiskUsed   float64   `json:"diskUsed"`
+	DiskUsage  float64   `json:"diskUsage"`
+	RecordedAt time.Time `json:"recordedAt"`
+}
+
 func (h *AgentHandler) Enroll(c *fiber.Ctx) error {
 	if err := requireAgentToken(c); err != nil {
 		return err
@@ -113,6 +125,38 @@ func (h *AgentHandler) SyncEvents(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
+func (h *AgentHandler) SyncMetrics(c *fiber.Ctx) error {
+	if err := requireAgentToken(c); err != nil {
+		return err
+	}
+	agentID := c.Params("agentId")
+	var req agentMetricsRequest
+	if err := c.BodyParser(&req); err != nil {
+		return agentBadRequest(c, "INVALID_REQUEST", err.Error())
+	}
+	if req.AgentID != "" && req.AgentID != agentID {
+		return agentBadRequest(c, "INVALID_REQUEST", "agentId mismatch")
+	}
+	if req.RecordedAt.IsZero() {
+		req.RecordedAt = time.Now()
+	}
+	systemMetricRepo := database.NewSystemMetricRepository()
+	if err := systemMetricRepo.Create(&models.SystemMetric{
+		HostID:    agentID,
+		CPUUsage:  req.CPUUsage,
+		MemTotal:  req.MemTotal,
+		MemUsed:   req.MemUsed,
+		MemUsage:  req.MemUsage,
+		DiskTotal: req.DiskTotal,
+		DiskUsed:  req.DiskUsed,
+		DiskUsage: req.DiskUsage,
+		CreatedAt: req.RecordedAt,
+	}); err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	return c.SendStatus(fiber.StatusNoContent)
+}
+
 func (h *AgentHandler) GetAll(c *fiber.Ctx) error {
 	agents, err := h.repo.GetAllAgents()
 	if err != nil {
@@ -132,6 +176,70 @@ func (h *AgentHandler) GetServices(c *fiber.Ctx) error {
 func (h *AgentHandler) GetEvents(c *fiber.Ctx) error {
 	limit, _ := strconv.Atoi(c.Query("limit", "100"))
 	events, err := h.repo.GetEvents(c.Params("agentId"), limit)
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	return c.JSON(fiber.Map{"success": true, "data": events})
+}
+
+// GetAllServicesFlat returns all agent services across all agents with agent name included.
+func (h *AgentHandler) GetAllServicesFlat(c *fiber.Ctx) error {
+	services, err := h.repo.GetAllServicesFlat()
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	return c.JSON(fiber.Map{"success": true, "data": services})
+}
+
+// GetServiceHistory returns time-bucketed response-time history for one agent service.
+func (h *AgentHandler) GetServiceHistory(c *fiber.Ctx) error {
+	agentID := c.Params("agentId")
+	key := c.Params("key")
+
+	var since time.Time
+	var bucketMins int
+	switch c.Query("range", "24h") {
+	case "12h":
+		since = time.Now().Add(-12 * time.Hour)
+		bucketMins = 10
+	case "6h":
+		since = time.Now().Add(-6 * time.Hour)
+		bucketMins = 5
+	default: // 24h
+		since = time.Now().Add(-24 * time.Hour)
+		bucketMins = 20
+	}
+
+	points, err := h.repo.GetServiceHistoryBuckets(agentID, key, since, bucketMins)
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	return c.JSON(fiber.Map{"success": true, "data": points})
+}
+
+// GetServiceUptime returns per-day uptime percentages for one agent service.
+func (h *AgentHandler) GetServiceUptime(c *fiber.Ctx) error {
+	agentID := c.Params("agentId")
+	key := c.Params("key")
+	days, _ := strconv.Atoi(c.Query("days", "90"))
+	if days <= 0 || days > 365 {
+		days = 90
+	}
+
+	data, err := h.repo.GetServiceUptimeByDay(agentID, key, days)
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	return c.JSON(fiber.Map{"success": true, "data": data})
+}
+
+// GetServiceKeyEvents returns agent_events filtered to a specific service key.
+func (h *AgentHandler) GetServiceKeyEvents(c *fiber.Ctx) error {
+	agentID := c.Params("agentId")
+	key := c.Params("key")
+	limit, _ := strconv.Atoi(c.Query("limit", "50"))
+
+	events, err := h.repo.GetServiceKeyEvents(agentID, key, limit)
 	if err != nil {
 		return internalError(c, "DATABASE_ERROR", err)
 	}

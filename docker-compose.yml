@@ -22,12 +22,19 @@ services:
       start_period: 10s
 
   everyup-agent:
+    # Optional: the Agent requires a Telegram bot token to start.
+    # Set EVERYUP_TELEGRAM_BOT_TOKEN and EVERYUP_TELEGRAM_CHAT_IDS in .env,
+    # then run: docker compose up -d everyup-agent
+    # Skip this service if you only need the Web dashboard.
+    # See: docs/NOTIFICATION_SETUP.ko.md for how to get a Telegram token.
     image: aiturn/everyup-agent:latest
     # To build from source instead of using the pre-built image:
     # build:
     #   context: ./agent
     #   dockerfile: agent/Dockerfile
     container_name: everyup-agent
+    profiles:
+      - agent
     depends_on:
       everyup:
         condition: service_healthy

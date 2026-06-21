@@ -2,6 +2,28 @@ package models
 
 import "time"
 
+// AgentServiceFlat joins AgentService with the parent Agent name for list views.
+type AgentServiceFlat struct {
+	AgentService
+	AgentName string `json:"agentName"`
+}
+
+// ServiceHistoryPoint is one time-bucketed data point for response-time charts.
+type ServiceHistoryPoint struct {
+	Time      string  `json:"time"`
+	LatencyMs float64 `json:"latencyMs"`
+	UptimePct float64 `json:"uptimePct"`
+	Total     int     `json:"total"`
+}
+
+// ServiceUptimeDay holds daily uptime stats for the 90-day calendar view.
+type ServiceUptimeDay struct {
+	Date          string  `json:"date"`
+	UptimePct     float64 `json:"uptimePct"`
+	HealthyChecks int     `json:"healthyChecks"`
+	TotalChecks   int     `json:"totalChecks"`
+}
+
 type Agent struct {
 	ID         string    `json:"id"`
 	Name       string    `json:"name"`

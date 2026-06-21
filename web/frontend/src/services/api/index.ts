@@ -55,7 +55,6 @@ export type {
 export type {
   Host,
   CreateHostData,
-  SSHTestResult,
   SystemInfo,
   SystemMetricPoint,
   SystemMetricsHistory,
@@ -64,7 +63,10 @@ export type {
 export type {
   ConnectedAgent,
   AgentServiceSnapshot,
+  AgentServiceFlat,
   AgentEvent,
+  ServiceHistoryPoint,
+  ServiceUptimeDay,
 } from './agents';
 export type {
   AlertRuleType,

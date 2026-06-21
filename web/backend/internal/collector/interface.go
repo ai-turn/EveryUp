@@ -3,8 +3,6 @@ package collector
 import "github.com/aiturn/everyup/internal/models"
 
 // MetricCollector is the common interface for all metric collection backends.
-// LocalCollector implements it using gopsutil, SSHCollector will implement it
-// using SSH + /proc parsing.
 type MetricCollector interface {
 	// Collect gathers a single snapshot of system metrics.
 	// Delta-based metrics (CPU %, disk I/O, network I/O) are calculated

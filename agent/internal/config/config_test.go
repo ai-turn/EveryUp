@@ -32,8 +32,8 @@ func TestLoadFromEnvParsesDefaultsAndChatIDs(t *testing.T) {
 	if cfg.DataDir != defaultDataDir {
 		t.Fatalf("DataDir = %q, want %q", cfg.DataDir, defaultDataDir)
 	}
-	if !cfg.OTelConfigEnabled {
-		t.Fatal("OTelConfigEnabled = false, want true")
+	if cfg.OTelConfigEnabled {
+		t.Fatal("OTelConfigEnabled = true, want false")
 	}
 	if cfg.OTelConfigPath != defaultOtelConfigPath {
 		t.Fatalf("OTelConfigPath = %q, want %q", cfg.OTelConfigPath, defaultOtelConfigPath)

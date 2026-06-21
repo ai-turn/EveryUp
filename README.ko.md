@@ -5,7 +5,7 @@
 <h1 align="center">EveryUp</h1>
 
 <p align="center">
-  셀프호스팅 모니터링 Web과 Docker 서비스 옆에서 동작하는 경량 AI Agent.
+  셀프호스팅 모니터링 대시보드 + Docker 서비스를 자동 감시하는 AI Agent.
 </p>
 
 <p align="center">
@@ -24,39 +24,41 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/everyup-main-ko.png" alt="EveryUp dashboard" width="100%">
+  <img src="docs/images/everyup-main-ko.png" alt="EveryUp 대시보드" width="100%">
 </p>
 
-EveryUp은 하나의 셀프호스팅 모니터링 대시보드에서 시작했지만, 이제는 두 제품 경계로 나뉩니다.
+## EveryUp이 뭔가요?
 
-- **EveryUp Web**: 중앙 대시보드, API, SQLite 저장소, 알림 설정, OTLP 수집, 프론트엔드 UI.
-- **EveryUp Agent**: Docker 서비스 옆에서 컨테이너를 자동 발견하고 health, logs, metrics, traces를 감시하며 Telegram ChatOps와 EveryUp Web 동기화를 제공하는 독립 에이전트.
+서버에서 운영 중인 서비스들을 한 곳에서 모니터링하는 셀프호스팅 도구입니다.
 
-## 저장소 구조
+- 서비스가 다운되면 **Telegram으로 즉시 알림**
+- 브라우저에서 **대시보드**로 상태/로그/알림 이력 확인
+- Docker label만 붙이면 **서비스 자동 발견** (수동 등록 불필요)
+- LLM 연동 시 장애 원인과 조치 방법을 **AI가 설명**
 
-```text
-everyup/
-  web/
-    backend/       # Go API 서버, SQLite 마이그레이션, OTLP 수집
-    frontend/      # React/Vite 대시보드
-    Dockerfile     # Web 풀스택 이미지
+Prometheus + Grafana 같은 무거운 스택 없이, Docker Compose 하나로 바로 쓸 수 있습니다.
 
-  agent/           # 독립 실행 EveryUp Agent
-    cmd/
-    internal/
-    docs/
-    compose.example.yml
+## 두 제품 구성
 
-  docs/            # 운영 문서, 변경 이력, 로드맵
-  docker-compose.yml
-  .env.example
-```
+EveryUp은 두 부분으로 나뉩니다. **둘 중 하나만 써도 됩니다.**
 
-모노레포이지만 Web과 Agent는 배포, 설치, 보안 모델이 다른 독립 실행 단위로 다룹니다.
+| | EveryUp Web | EveryUp Agent |
+|---|---|---|
+| 역할 | 브라우저 대시보드, 알림 설정, 이력 저장 | 서비스 서버 옆에서 실시간 감시 + Telegram 알림 |
+| 필요한 것 | Docker | Docker + Telegram 봇 |
+| 서비스 등록 | Web UI에서 직접 추가 | Docker label만 붙이면 자동 발견 |
+| 같이 쓰면? | Agent가 발견한 서비스를 Web 대시보드에서도 확인 가능 | |
+
+처음 시작한다면 **Web만 먼저** 올리고, Telegram 알림이 필요해지면 Agent를 추가하는 것을 권장합니다.
+
+## 사전 요구사항
+
+- Docker 24+ 및 Docker Compose v2+
+- (Agent 사용 시) Telegram 봇 토큰과 Chat ID → [Telegram 봇 만들기](docs/NOTIFICATION_SETUP.ko.md)
 
 ## 빠른 시작
 
-EveryUp Web은 Docker Compose로 시작하는 것을 권장합니다.
+### 1단계: Web 대시보드 실행
 
 ```bash
 git clone https://github.com/ai-turn/everyup.git
@@ -64,36 +66,78 @@ cd everyup
 docker compose up -d
 ```
 
-브라우저에서 `http://localhost:3001`을 열고 관리자 계정을 만듭니다.
+브라우저에서 `http://localhost:3001` 접속 → 관리자 계정 생성 → 완료.
 
-포트, 초기 관리자 계정, 타임존, Agent enrollment token을 바꾸려면 `.env.example`을 `.env`로 복사한 뒤 수정하세요.
+> 포트를 바꾸거나 초기 계정을 미리 설정하려면 `.env.example`을 `.env`로 복사한 뒤 수정하세요.
 
-소스에서 Web 이미지를 빌드하려면:
+### 2단계: Agent 추가 (선택)
 
-```bash
-docker build -f web/Dockerfile -t everyup:web-dev .
-```
+Telegram 봇 토큰이 없으면 이 단계는 건너뛰세요.
 
-## EveryUp Agent
-
-Agent는 선택 기능입니다. 내부망이나 Docker 호스트 안에서 서비스 가까이에 붙여 감시하고 싶을 때 추가합니다.
+`.env` 파일에 아래 두 줄을 추가합니다:
 
 ```bash
-cd agent
-go run ./cmd/everyup-agent
+EVERYUP_TELEGRAM_BOT_TOKEN=123456:ABC-DEF...   # BotFather에서 발급
+EVERYUP_TELEGRAM_CHAT_IDS=123456789            # 알림 받을 채팅 ID
 ```
 
-먼저 [agent/README.md](agent/README.md)를 보고, 필요한 기능별 문서를 이어서 확인하세요.
+그 다음 Agent를 실행합니다:
 
-- [Docker label 설정](agent/docs/docker-labels.md)
-- [Telegram ChatOps](agent/docs/chatops.md)
-- [Web connected mode](agent/docs/web-connected-mode.md)
-- [Runbooks](agent/docs/runbooks.md)
-- [Incident memory와 watchdog](agent/docs/incident-memory.md)
+```bash
+docker compose --profile agent up -d
+```
+
+Agent가 뜨면 Telegram으로 "Agent started" 메시지가 도착합니다.
+
+### 3단계: 서비스 모니터링 등록
+
+감시할 컨테이너의 `docker-compose.yml`에 label을 추가합니다:
+
+```yaml
+services:
+  api:
+    image: my-api:latest
+    labels:
+      everyup.enabled: "true"
+      everyup.service.name: "api"
+      everyup.health.url: "http://api:8080/health"
+
+  postgres:
+    image: postgres:16
+    labels:
+      everyup.enabled: "true"
+      everyup.service.name: "postgres"
+      everyup.health.type: "tcp"
+      everyup.health.port: "5432"
+```
+
+label만 붙이면 Agent가 30초 안에 자동 발견합니다. Web UI에서 수동으로 등록할 필요 없습니다.
+
+## 저장소 구조
+
+```text
+everyup/
+  web/
+    backend/       # Go API 서버, SQLite, OTLP 수집, 알림 엔진
+    frontend/      # React/Vite 대시보드
+    Dockerfile     # Web 풀스택 이미지
+
+  agent/           # 독립 실행 EveryUp Agent
+    cmd/           # 실행 진입점
+    internal/      # 핵심 패키지
+    docs/          # Agent 기능별 상세 문서
+    compose.example.yml
+
+  docs/            # 운영 문서, 변경 이력, 로드맵
+  docker-compose.yml
+  .env.example
+```
 
 ## 로컬 개발
 
-사전 준비: [Go 1.24+](https://go.dev/dl/), [Node.js 22+](https://nodejs.org/), [pnpm](https://pnpm.io/installation).
+소스를 직접 수정하거나 기여하려면 아래를 참고하세요.
+
+**사전 준비:** [Go 1.24+](https://go.dev/dl/), [Node.js 22+](https://nodejs.org/), [pnpm](https://pnpm.io/installation)
 
 Web 백엔드 실행:
 
@@ -102,13 +146,15 @@ cd web/backend
 go run ./cmd/server
 ```
 
-Web 프론트엔드 실행:
+Web 프론트엔드 실행 (다른 터미널):
 
 ```bash
 cd web/frontend
 pnpm install
 pnpm dev
 ```
+
+브라우저에서 `http://localhost:5173` 접속.
 
 Agent 테스트:
 
@@ -119,14 +165,13 @@ go test ./...
 
 ## 문서
 
-| 문서 | 설명 |
+| 문서 | 내용 |
 | --- | --- |
-| [web/README.md](web/README.md) | Web 백엔드, 프론트엔드, Docker, 로컬 개발 |
-| [agent/README.md](agent/README.md) | Agent 설치, Docker discovery, ChatOps, Web sync, 로컬 상태 |
-| [docs/BACKUP_RESTORE.ko.md](docs/BACKUP_RESTORE.ko.md) | 데이터 백업, 암호화 키 보관, 복원 절차 |
-| [docs/NOTIFICATION_SETUP.ko.md](docs/NOTIFICATION_SETUP.ko.md) | Telegram, Discord, Slack 알림 설정 |
-| [docs/API_REQUEST_LOGGING_GUIDE.md](docs/API_REQUEST_LOGGING_GUIDE.md) | API 요청 로그 수집과 확인 가이드 |
-| [docs/roadmaps/EveryUp_Agent_Phase_Roadmap_v3.md](docs/roadmaps/EveryUp_Agent_Phase_Roadmap_v3.md) | Agent 제품 로드맵 |
+| [agent/README.md](agent/README.md) | Agent 설치, Docker label, ChatOps, Web 연동 |
+| [docs/NOTIFICATION_SETUP.ko.md](docs/NOTIFICATION_SETUP.ko.md) | **Telegram 봇 만들기**, Discord, Slack 설정 |
+| [docs/BACKUP_RESTORE.ko.md](docs/BACKUP_RESTORE.ko.md) | 데이터 백업과 복원 |
+| [docs/API_REQUEST_LOGGING_GUIDE.md](docs/API_REQUEST_LOGGING_GUIDE.md) | API 요청 로그 수집 가이드 |
+| [web/README.md](web/README.md) | Web 백엔드/프론트엔드 상세 |
 
 ## 라이선스
 

@@ -14,7 +14,11 @@ import (
 type Snapshot struct {
 	CPUPercent    float64
 	MemoryPercent float64
+	MemTotalGB    float64
+	MemUsedGB     float64
 	DiskPercent   float64
+	DiskTotalGB   float64
+	DiskUsedGB    float64
 }
 
 type Reader struct {
@@ -49,15 +53,23 @@ func (r *Reader) Snapshot(ctx context.Context) (Snapshot, error) {
 	if err != nil {
 		return Snapshot{}, err
 	}
-	memory, err := r.memoryPercent()
+	memPct, memTotal, memUsed, err := r.memoryStats()
 	if err != nil {
 		return Snapshot{}, err
 	}
-	disk, err := diskUsagePercent(r.diskPath)
+	diskPct, diskTotal, diskUsed, err := diskStats(r.diskPath)
 	if err != nil {
 		return Snapshot{}, err
 	}
-	return Snapshot{CPUPercent: cpu, MemoryPercent: memory, DiskPercent: disk}, nil
+	return Snapshot{
+		CPUPercent:    cpu,
+		MemoryPercent: memPct,
+		MemTotalGB:    memTotal,
+		MemUsedGB:     memUsed,
+		DiskPercent:   diskPct,
+		DiskTotalGB:   diskTotal,
+		DiskUsedGB:    diskUsed,
+	}, nil
 }
 
 func (r *Reader) cpuPercent() (float64, error) {
@@ -82,15 +94,20 @@ func (r *Reader) cpuPercent() (float64, error) {
 	return (float64(totalDelta-idleDelta) / float64(totalDelta)) * 100, nil
 }
 
-func (r *Reader) memoryPercent() (float64, error) {
-	total, available, err := readMemInfo(filepath.Join(r.root, "proc", "meminfo"))
-	if err != nil {
-		return 0, err
+func (r *Reader) memoryStats() (pct, totalGB, usedGB float64, err error) {
+	total, available, e := readMemInfo(filepath.Join(r.root, "proc", "meminfo"))
+	if e != nil {
+		err = e
+		return
 	}
 	if total == 0 || available > total {
-		return 0, nil
+		return
 	}
-	return (float64(total-available) / float64(total)) * 100, nil
+	used := total - available
+	pct = (float64(used) / float64(total)) * 100
+	totalGB = float64(total) / 1e9
+	usedGB = float64(used) / 1e9
+	return
 }
 
 func readCPUSample(path string) (cpuSample, error) {

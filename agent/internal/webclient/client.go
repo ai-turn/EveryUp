@@ -95,6 +95,25 @@ func (c *Client) SendEvents(ctx context.Context, req EventRequest) error {
 	return c.post(ctx, fmt.Sprintf("/api/v1/agents/%s/events", url.PathEscape(req.AgentID)), req, nil)
 }
 
+type MetricsRequest struct {
+	AgentID   string    `json:"agentId"`
+	CPUUsage  float64   `json:"cpuUsage"`
+	MemTotal  float64   `json:"memTotal"`
+	MemUsed   float64   `json:"memUsed"`
+	MemUsage  float64   `json:"memUsage"`
+	DiskTotal float64   `json:"diskTotal"`
+	DiskUsed  float64   `json:"diskUsed"`
+	DiskUsage float64   `json:"diskUsage"`
+	RecordedAt time.Time `json:"recordedAt"`
+}
+
+func (c *Client) SendMetrics(ctx context.Context, req MetricsRequest) error {
+	if req.AgentID == "" {
+		return fmt.Errorf("agentId is required")
+	}
+	return c.post(ctx, fmt.Sprintf("/api/v1/agents/%s/metrics", url.PathEscape(req.AgentID)), req, nil)
+}
+
 func (c *Client) SendServices(ctx context.Context, req ServiceSnapshotRequest) error {
 	if req.AgentID == "" {
 		return fmt.Errorf("agentId is required")

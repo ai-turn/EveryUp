@@ -1,10 +1,8 @@
 package handlers
 
 import (
-	"log"
 	"time"
 
-	"github.com/aiturn/everyup/internal/collector"
 	"github.com/aiturn/everyup/internal/database"
 	"github.com/aiturn/everyup/internal/models"
 	"github.com/gofiber/fiber/v2"
@@ -12,17 +10,15 @@ import (
 
 // HostHandler handles host-related requests
 type HostHandler struct {
-	repo         *database.HostRepository
-	metricRepo   *database.SystemMetricRepository
-	collectorMgr *collector.CollectorManager
+	repo       *database.HostRepository
+	metricRepo *database.SystemMetricRepository
 }
 
 // NewHostHandler creates a new host handler
-func NewHostHandler(collectorMgr *collector.CollectorManager) *HostHandler {
+func NewHostHandler() *HostHandler {
 	return &HostHandler{
-		repo:         database.NewHostRepository(),
-		metricRepo:   database.NewSystemMetricRepository(),
-		collectorMgr: collectorMgr,
+		repo:       database.NewHostRepository(),
+		metricRepo: database.NewSystemMetricRepository(),
 	}
 }
 
@@ -305,13 +301,6 @@ func (h *HostHandler) Create(c *fiber.Ctx) error {
 		return internalError(c, "DATABASE_ERROR", err)
 	}
 
-	// Auto-register SSH collector for active remote hosts
-	if host.Type == models.HostTypeRemote && host.IsActive && h.collectorMgr != nil {
-		if err := h.collectorMgr.RegisterSSHHost(host); err != nil {
-			log.Printf("Warning: failed to register SSH collector for new host %s: %v", host.ID, err)
-		}
-	}
-
 	host.MaskSecrets()
 	return c.Status(201).JSON(fiber.Map{
 		"success": true,
@@ -431,11 +420,6 @@ func (h *HostHandler) Delete(c *fiber.Ctx) error {
 		})
 	}
 
-	// Unregister collector before deleting
-	if h.collectorMgr != nil {
-		h.collectorMgr.Unregister(id)
-	}
-
 	if err := h.repo.Delete(id); err != nil {
 		return internalError(c, "DATABASE_ERROR", err)
 	}
@@ -469,11 +453,6 @@ func (h *HostHandler) Pause(c *fiber.Ctx) error {
 		return internalError(c, "DATABASE_ERROR", err)
 	}
 
-	// Unregister collector when paused (for remote hosts)
-	if host.Type == models.HostTypeRemote && h.collectorMgr != nil {
-		h.collectorMgr.Unregister(id)
-	}
-
 	return c.JSON(fiber.Map{
 		"success": true,
 		"message": "Host monitoring paused",
@@ -501,17 +480,6 @@ func (h *HostHandler) Resume(c *fiber.Ctx) error {
 
 	if err := h.repo.SetActive(id, true); err != nil {
 		return internalError(c, "DATABASE_ERROR", err)
-	}
-
-	// Re-register collector when resumed (for remote hosts)
-	if host.Type == models.HostTypeRemote && h.collectorMgr != nil {
-		// Re-read host to get SSH fields
-		updated, _ := h.repo.GetByID(id)
-		if updated != nil {
-			if err := h.collectorMgr.RegisterSSHHost(updated); err != nil {
-				log.Printf("Warning: failed to re-register SSH collector for %s: %v", id, err)
-			}
-		}
 	}
 
 	return c.JSON(fiber.Map{

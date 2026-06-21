@@ -218,6 +218,9 @@ func migrate() error {
 	if err := migrateV28(); err != nil {
 		return fmt.Errorf("v28 migration failed: %w", err)
 	}
+	if err := migrateV29(); err != nil {
+		return fmt.Errorf("v29 migration failed: %w", err)
+	}
 
 	return nil
 }
@@ -977,6 +980,31 @@ func migrateV28() error {
 // isNoSuchColumnError checks if the error is a "no such column" error (DROP COLUMN on already-absent column)
 func isNoSuchColumnError(err error) bool {
 	return err != nil && strings.Contains(err.Error(), "no such column")
+}
+
+// migrateV29 adds agent_service_history for time-series health check data from Agent.
+// Added: 2026-06-21
+func migrateV29() error {
+	return Transaction(func(tx *sql.Tx) error {
+		stmts := []string{
+			`CREATE TABLE IF NOT EXISTS agent_service_history (
+				id          INTEGER PRIMARY KEY AUTOINCREMENT,
+				agent_id    TEXT    NOT NULL,
+				key         TEXT    NOT NULL,
+				healthy     INTEGER NOT NULL DEFAULT 0,
+				latency_ms  INTEGER NOT NULL DEFAULT 0,
+				recorded_at DATETIME NOT NULL,
+				FOREIGN KEY(agent_id) REFERENCES agents(id) ON DELETE CASCADE
+			)`,
+			`CREATE INDEX IF NOT EXISTS idx_ash_agent_key_time ON agent_service_history(agent_id, key, recorded_at DESC)`,
+		}
+		for _, stmt := range stmts {
+			if _, err := tx.Exec(stmt); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 // isDuplicateColumnError checks if the error is a duplicate column error (migrateV2)

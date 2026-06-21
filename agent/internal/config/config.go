@@ -99,7 +99,7 @@ func LoadFromEnv() (Config, error) {
 		DockerDiscoveryEnabled: boolEnv("EVERYUP_DOCKER_DISCOVERY_ENABLED", true),
 		DockerSocketPath:       getEnv("EVERYUP_DOCKER_SOCKET_PATH", "/var/run/docker.sock"),
 
-		OTelConfigEnabled:  boolEnv("EVERYUP_OTEL_CONFIG_ENABLED", true),
+		OTelConfigEnabled:  boolEnv("EVERYUP_OTEL_CONFIG_ENABLED", false),
 		OTelConfigPath:     getEnv("EVERYUP_OTEL_CONFIG_PATH", defaultOtelConfigPath),
 		OTelConfDir:        getEnv("EVERYUP_OTEL_CONF_DIR", defaultOtelConfDir),
 		OTelFileLogPaths:   splitCSV(os.Getenv("EVERYUP_OTEL_FILELOG_PATHS")),

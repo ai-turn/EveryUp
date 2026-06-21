@@ -21,7 +21,6 @@ const LoginPage            = lazy(() => import('./pages/auth/LoginPage').then(m 
 // Form pages (replace SidePanel-based forms in v2)
 const ChannelFormPage      = lazy(() => import('./pages/alerts/ChannelFormPage').then(m => ({ default: m.ChannelFormPage })));
 const AlertRuleFormPage    = lazy(() => import('./pages/alerts/AlertRuleFormPage').then(m => ({ default: m.AlertRuleFormPage })));
-const HealthCheckFormPage  = lazy(() => import('./pages/healthcheck/HealthCheckFormPage').then(m => ({ default: m.HealthCheckFormPage })));
 const InfraFormPage        = lazy(() => import('./pages/infra/InfraFormPage').then(m => ({ default: m.InfraFormPage })));
 const LogServiceFormPage   = lazy(() => import('./pages/logs/LogServiceFormPage').then(m => ({ default: m.LogServiceFormPage })));
 const LogServiceEditPage   = lazy(() => import('./pages/logs/LogServiceEditPage').then(m => ({ default: m.LogServiceEditPage })));
@@ -62,9 +61,7 @@ function App() {
               <Route element={<MainLayout />}>
                 <Route index element={<DashboardPage />} />
                 <Route path="/healthcheck" element={<HealthCheckPage />} />
-                <Route path="/healthcheck/new" element={<HealthCheckFormPage />} />
-                <Route path="/healthcheck/:serviceId/edit" element={<HealthCheckFormPage />} />
-                <Route path="/healthcheck/:serviceId" element={<HealthCheckDetailPage />} />
+                <Route path="/healthcheck/:agentId/:key" element={<HealthCheckDetailPage />} />
                 <Route path="/logs" element={<LogListPage />} />
                 <Route path="/logs/new" element={<LogServiceFormPage />} />
                 <Route path="/logs/:serviceId/edit" element={<LogServiceEditPage />} />

@@ -45,6 +45,7 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	api.Post("/agents/enroll", agentHandler.Enroll)
 	api.Post("/agents/:agentId/services", agentHandler.SyncServices)
 	api.Post("/agents/:agentId/events", agentHandler.SyncEvents)
+	api.Post("/agents/:agentId/metrics", agentHandler.SyncMetrics)
 
 	// JWT-protected management routes
 	local := api.Group("", middleware.JWTAuth())
@@ -97,7 +98,7 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	local.Get("/incidents/active", incidentHandler.GetActive)
 
 	// Host endpoints
-	hostHandler := handlers.NewHostHandler(collectorMgr)
+	hostHandler := handlers.NewHostHandler()
 	local.Get("/hosts/summary", hostHandler.GetSummary)
 	local.Get("/hosts", hostHandler.GetAll)
 	local.Get("/hosts/:hostId", hostHandler.GetByID)
@@ -106,10 +107,6 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	local.Delete("/hosts/:hostId", hostHandler.Delete)
 	local.Post("/hosts/:hostId/pause", hostHandler.Pause)
 	local.Post("/hosts/:hostId/resume", hostHandler.Resume)
-
-	// SSH connection test — registered after CRUD but static path takes precedence over :hostId params
-	sshTestHandler := handlers.NewSSHTestHandler()
-	local.Post("/hosts/test-connection", sshTestHandler.TestConnection)
 
 	// Host-scoped system resource monitoring
 	systemHandler := handlers.NewSystemHandler(collectorMgr)
@@ -149,8 +146,13 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 
 	// Agent connected-mode read APIs
 	local.Get("/agents", agentHandler.GetAll)
+	// /agents/services/all must be registered before /:agentId routes to avoid param shadowing
+	local.Get("/agents/services/all", agentHandler.GetAllServicesFlat)
 	local.Get("/agents/:agentId/services", agentHandler.GetServices)
 	local.Get("/agents/:agentId/events", agentHandler.GetEvents)
+	local.Get("/agents/:agentId/services/:key/history", agentHandler.GetServiceHistory)
+	local.Get("/agents/:agentId/services/:key/uptime", agentHandler.GetServiceUptime)
+	local.Get("/agents/:agentId/services/:key/events", agentHandler.GetServiceKeyEvents)
 
 	// Notification History
 	notificationHistoryHandler := handlers.NewNotificationHistoryHandler()

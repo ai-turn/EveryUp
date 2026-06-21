@@ -225,6 +225,7 @@ func (a *Agent) startWebSync(ctx context.Context) {
 				a.enrollWeb(ctx)
 				a.flushWebServices(ctx)
 				a.flushWebEvents(ctx)
+				a.flushWebMetrics(ctx)
 			}
 		}
 	}()
@@ -333,6 +334,30 @@ func (a *Agent) flushWebServices(ctx context.Context) {
 		return
 	}
 	log.Printf("synced %d services to EveryUp Web", len(services))
+}
+
+func (a *Agent) flushWebMetrics(ctx context.Context) {
+	if a.web == nil || !a.web.Enabled() || a.webAgentID == "" || a.hostMetrics == nil {
+		return
+	}
+	snapshot, err := a.hostMetrics.Snapshot(ctx)
+	if err != nil {
+		log.Printf("EveryUp Web metrics snapshot failed: %v", err)
+		return
+	}
+	if err := a.web.SendMetrics(ctx, webclient.MetricsRequest{
+		AgentID:    a.webAgentID,
+		CPUUsage:   snapshot.CPUPercent,
+		MemTotal:   snapshot.MemTotalGB,
+		MemUsed:    snapshot.MemUsedGB,
+		MemUsage:   snapshot.MemoryPercent,
+		DiskTotal:  snapshot.DiskTotalGB,
+		DiskUsed:   snapshot.DiskUsedGB,
+		DiskUsage:  snapshot.DiskPercent,
+		RecordedAt: time.Now(),
+	}); err != nil {
+		log.Printf("EveryUp Web metrics sync failed: %v", err)
+	}
 }
 
 func (a *Agent) startChatOps(ctx context.Context) {

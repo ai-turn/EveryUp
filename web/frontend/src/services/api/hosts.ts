@@ -42,14 +42,6 @@ export interface CreateHostData {
   sshPassword?: string;
 }
 
-export interface SSHTestResult {
-  connected: boolean;
-  hostname?: string;
-  os?: string;
-  platform?: string;
-  latencyMs: number;
-}
-
 export interface SystemInfo {
   hostname: string;
   os: string;
@@ -145,11 +137,5 @@ export function createHostsApi(request: RequestFn) {
       return data || [];
     },
 
-    // SSH Connection Test
-    testSSHConnection: (data: Partial<CreateHostData>) =>
-      request<SSHTestResult>('/hosts/test-connection', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
   };
 }

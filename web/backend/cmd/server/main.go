@@ -145,17 +145,6 @@ func main() {
 	localCollector := collector.NewLocalCollector(localHostID)
 	collectorMgr.Register(localCollector)
 
-	// Register active remote hosts
-	remoteHosts, _ := hostRepo.GetByType(models.HostTypeRemote)
-	for i := range remoteHosts {
-		if !remoteHosts[i].IsActive {
-			continue
-		}
-		if err := collectorMgr.RegisterSSHHost(&remoteHosts[i]); err != nil {
-			log.Printf("Warning: failed to register SSH collector for %s: %v", remoteHosts[i].ID, err)
-		}
-	}
-
 	// Wire up RuleEvaluator for resource alert rules
 	alertMgr := alerter.NewManager()
 	evaluator := alerter.NewRuleEvaluator(alertMgr, cfg.System.CollectInterval)
