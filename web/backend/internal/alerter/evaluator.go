@@ -170,6 +170,22 @@ func (e *RuleEvaluator) evaluateRule(rule models.AlertRule, hostID, hostName str
 	go e.SaveState(rule.ID, hostID)
 }
 
+// EvaluateAgent checks all enabled resource rules for an agent after a metric sync.
+// Uses GetEnabledByAgentID which matches on agent_id instead of the legacy host_id column.
+func (e *RuleEvaluator) EvaluateAgent(agentID, agentName string, metric *models.SystemMetric) {
+	if metric == nil {
+		return
+	}
+	rules, err := e.repo.GetEnabledByAgentID(agentID)
+	if err != nil {
+		log.Printf("[Evaluator] Failed to get rules for agent %s: %v", agentID, err)
+		return
+	}
+	for _, rule := range rules {
+		e.evaluateRule(rule, agentID, agentName, metric)
+	}
+}
+
 // ResetRule clears cached state for a rule (call on rule update/delete).
 func (e *RuleEvaluator) ResetRule(ruleID string) {
 	e.mu.Lock()

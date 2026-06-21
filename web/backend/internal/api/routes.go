@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 
+	"github.com/aiturn/everyup/internal/alerter"
 	"github.com/aiturn/everyup/internal/api/handlers"
 	"github.com/aiturn/everyup/internal/api/middleware"
 	apiroutes "github.com/aiturn/everyup/internal/api/routes"
@@ -13,7 +14,7 @@ import (
 )
 
 // SetupRoutes configures all API routes
-func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *collector.CollectorManager, allowOrigins string, serverMode string) {
+func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *collector.CollectorManager, ruleEvaluator *alerter.RuleEvaluator, serviceEvaluator *alerter.ServiceRuleEvaluator, allowOrigins string, serverMode string) {
 	// Apply global middleware
 	app.Use(middleware.Recovery())
 	app.Use(middleware.Logger())
@@ -42,6 +43,7 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	// Agent connected-mode sync routes use their own bearer token and stay
 	// outside the JWT browser session group.
 	agentHandler := handlers.NewAgentHandler()
+	agentHandler.SetEvaluators(ruleEvaluator, serviceEvaluator)
 	api.Post("/agents/enroll", agentHandler.Enroll)
 	api.Post("/agents/:agentId/services", agentHandler.SyncServices)
 	api.Post("/agents/:agentId/events", agentHandler.SyncEvents)

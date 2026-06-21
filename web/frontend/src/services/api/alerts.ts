@@ -11,8 +11,8 @@ export interface AlertRule {
   id: string;
   name: string;
   type: AlertRuleType;
-  hostId?: string | null;
-  serviceId?: string | null;
+  agentId?: string | null;
+  serviceKey?: string | null;
   metric: AlertMetric;
   operator: AlertOperator;
   threshold: number;
@@ -30,8 +30,8 @@ export interface AlertRule {
 export interface CreateAlertRuleData {
   name: string;
   type: AlertRuleType;
-  hostId?: string | null;
-  serviceId?: string | null;
+  agentId?: string | null;
+  serviceKey?: string | null;
   metric: AlertMetric;
   operator?: AlertOperator;
   threshold: number;
@@ -45,8 +45,8 @@ export interface CreateAlertRuleData {
 
 export interface UpdateAlertRuleData {
   name?: string;
-  hostId?: string | null;
-  serviceId?: string | null;
+  agentId?: string | null;
+  serviceKey?: string | null;
   metric?: AlertMetric;
   operator?: AlertOperator;
   threshold?: number;

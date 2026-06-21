@@ -48,22 +48,22 @@ const (
 
 // AlertRule represents a threshold-based alerting rule
 type AlertRule struct {
-	ID        string        `json:"id"`
-	Name      string        `json:"name"`
-	Type      AlertRuleType `json:"type"`
-	HostID    *string       `json:"hostId"`
-	ServiceID *string       `json:"serviceId"`
-	Metric    AlertMetric   `json:"metric"`
-	Operator  AlertOperator `json:"operator"`
-	Threshold float64       `json:"threshold"`
-	Duration  int           `json:"duration"` // minutes of consecutive breach
-	Severity  AlertSeverity `json:"severity"`
-	IsEnabled bool          `json:"isEnabled"`
-	IsSystem  bool          `json:"isSystem"` // system rules cannot be deleted
-	Cooldown  int           `json:"cooldown"` // seconds between re-alerts
-	Message   string        `json:"message"`  // optional custom alert message
-	CreatedAt time.Time     `json:"createdAt"`
-	UpdatedAt time.Time     `json:"updatedAt"`
+	ID         string        `json:"id"`
+	Name       string        `json:"name"`
+	Type       AlertRuleType `json:"type"`
+	AgentID    *string       `json:"agentId"`
+	ServiceKey *string       `json:"serviceKey"`
+	Metric     AlertMetric   `json:"metric"`
+	Operator   AlertOperator `json:"operator"`
+	Threshold  float64       `json:"threshold"`
+	Duration   int           `json:"duration"` // minutes of consecutive breach
+	Severity   AlertSeverity `json:"severity"`
+	IsEnabled  bool          `json:"isEnabled"`
+	IsSystem   bool          `json:"isSystem"` // system rules cannot be deleted
+	Cooldown   int           `json:"cooldown"` // seconds between re-alerts
+	Message    string        `json:"message"`  // optional custom alert message
+	CreatedAt  time.Time     `json:"createdAt"`
+	UpdatedAt  time.Time     `json:"updatedAt"`
 
 	// Populated by JOIN queries, not stored in alert_rules table
 	ChannelIDs []string `json:"channelIds,omitempty"`
@@ -73,8 +73,8 @@ type AlertRule struct {
 type AlertRuleCreateRequest struct {
 	Name       string        `json:"name"`
 	Type       AlertRuleType `json:"type"`
-	HostID     *string       `json:"hostId"`
-	ServiceID  *string       `json:"serviceId"`
+	AgentID    *string       `json:"agentId"`
+	ServiceKey *string       `json:"serviceKey"`
 	Metric     AlertMetric   `json:"metric"`
 	Operator   AlertOperator `json:"operator"`
 	Threshold  float64       `json:"threshold"`
@@ -109,8 +109,8 @@ func (r *AlertRuleCreateRequest) ToAlertRule(id string) *AlertRule {
 		ID:         id,
 		Name:       r.Name,
 		Type:       r.Type,
-		HostID:     r.HostID,
-		ServiceID:  r.ServiceID,
+		AgentID:    r.AgentID,
+		ServiceKey: r.ServiceKey,
 		Metric:     r.Metric,
 		Operator:   r.Operator,
 		Threshold:  r.Threshold,
@@ -128,8 +128,8 @@ func (r *AlertRuleCreateRequest) ToAlertRule(id string) *AlertRule {
 // AlertRuleUpdateRequest is the API request to update a rule (partial)
 type AlertRuleUpdateRequest struct {
 	Name       *string        `json:"name"`
-	HostID     *string        `json:"hostId"`
-	ServiceID  *string        `json:"serviceId"`
+	AgentID    *string        `json:"agentId"`
+	ServiceKey *string        `json:"serviceKey"`
 	Metric     *AlertMetric   `json:"metric"`
 	Operator   *AlertOperator `json:"operator"`
 	Threshold  *float64       `json:"threshold"`

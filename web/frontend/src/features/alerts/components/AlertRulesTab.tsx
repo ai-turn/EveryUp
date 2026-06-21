@@ -4,7 +4,7 @@ import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon, EmptyState, ConfirmDialog } from '../../../components/common';
-import { api, type AlertRule, type NotificationChannel, type Service, type Host } from '../../../services/api';
+import { api, type AlertRule, type NotificationChannel, type AgentServiceFlat, type ConnectedAgent } from '../../../services/api';
 
 const SEVERITY_DOT: Record<string, string> = {
   critical: 'bg-red-500',
@@ -45,14 +45,15 @@ function ruleCategory(rule: AlertRule): Exclude<CategoryKey, 'all'> {
   return 'resource';
 }
 
-function targetLabel(rule: AlertRule, services: Service[], hosts: Host[], t: (k: string) => string): string {
+function targetLabel(rule: AlertRule, agentServices: AgentServiceFlat[], agents: ConnectedAgent[], t: (k: string) => string): string {
   if (rule.type === 'service' || rule.type === 'log') {
-    if (rule.serviceId) {
-      return services.find(s => s.id === rule.serviceId)?.name ?? rule.serviceId;
+    if (rule.agentId && rule.serviceKey) {
+      const svc = agentServices.find(s => s.agentId === rule.agentId && s.key === rule.serviceKey);
+      return svc ? `${svc.agentName} / ${svc.name}` : rule.serviceKey;
     }
     return rule.type === 'log' ? t('alerts.rules.allLogServices') : t('alerts.rules.allHealthchecks');
   }
-  if (rule.hostId) return hosts.find(h => h.id === rule.hostId)?.name ?? rule.hostId;
+  if (rule.agentId) return agents.find(a => a.id === rule.agentId)?.name ?? rule.agentId;
   return t('alerts.rules.allHosts');
 }
 
@@ -158,8 +159,8 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
   const navigate = useNavigate();
   const [rules, setRules] = useState<AlertRule[]>([]);
   const [channels, setChannels] = useState<NotificationChannel[]>([]);
-  const [services, setServices] = useState<Service[]>([]);
-  const [hosts, setHosts] = useState<Host[]>([]);
+  const [agentServices, setAgentServices] = useState<AgentServiceFlat[]>([]);
+  const [agents, setAgents] = useState<ConnectedAgent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
@@ -177,16 +178,16 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
 
   const loadData = async () => {
     try {
-      const [rulesData, channelsData, servicesData, hostsData] = await Promise.all([
+      const [rulesData, channelsData, agentSvcs, agts] = await Promise.all([
         api.getAlertRules(),
         api.getNotificationChannels(),
-        api.getServices(),
-        api.getHosts(),
+        api.getAllAgentServicesFlat(),
+        api.getAgents(),
       ]);
       setRules(rulesData);
       setChannels(channelsData);
-      setServices(servicesData);
-      setHosts(hostsData);
+      setAgentServices(agentSvcs ?? []);
+      setAgents(agts ?? []);
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
@@ -245,7 +246,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
       if (enabledFilter !== 'all' && (enabledFilter === 'on' ? !r.isEnabled : r.isEnabled)) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
-        const target = targetLabel(r, services, hosts, t).toLowerCase();
+        const target = targetLabel(r, agentServices, agents, t).toLowerCase();
         if (!r.name.toLowerCase().includes(q) && !target.includes(q)) return false;
       }
       return true;
@@ -255,11 +256,11 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
       let v = 0;
       if (sortKey === 'severity') v = SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity];
       else if (sortKey === 'name') v = a.name.localeCompare(b.name);
-      else if (sortKey === 'target') v = targetLabel(a, services, hosts, t).localeCompare(targetLabel(b, services, hosts, t));
+      else if (sortKey === 'target') v = targetLabel(a, agentServices, agents, t).localeCompare(targetLabel(b, agentServices, agents, t));
       else if (sortKey === 'category') v = ruleCategory(a).localeCompare(ruleCategory(b));
       return sortDir === 'asc' ? v : -v;
     });
-  }, [rules, categoryFilter, severityFilter, enabledFilter, searchQuery, sortKey, sortDir, services, hosts, t]);
+  }, [rules, categoryFilter, severityFilter, enabledFilter, searchQuery, sortKey, sortDir, agentServices, agents, t]);
 
   const onSort = (key: SortKey) => {
     if (sortKey === key) setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
@@ -415,8 +416,8 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                         </div>
                       </td>
                       <td className="px-4 py-2 align-middle text-sm text-slate-700 dark:text-text-muted-dark">
-                        <span className="block truncate font-medium text-slate-800 dark:text-text-base-dark" title={targetLabel(rule, services, hosts, t)}>
-                          {targetLabel(rule, services, hosts, t)}
+                        <span className="block truncate font-medium text-slate-800 dark:text-text-base-dark" title={targetLabel(rule, agentServices, agents, t)}>
+                          {targetLabel(rule, agentServices, agents, t)}
                         </span>
                       </td>
                       <td className="px-4 py-2 align-middle text-sm">

@@ -126,6 +126,19 @@ func (e *ServiceRuleEvaluator) evaluateRule(
 	go e.saveState(rule.ID, serviceID)
 }
 
+// EvaluateAgent checks enabled service rules for an agent service after a sync.
+// Uses GetEnabledByAgentService which matches on agent_id + service_key.
+func (e *ServiceRuleEvaluator) EvaluateAgent(agentID, serviceKey, serviceName string, statusCode, responseTimeMs int) {
+	rules, err := e.repo.GetEnabledByAgentService(agentID, serviceKey)
+	if err != nil {
+		log.Printf("[ServiceEvaluator] Failed to get rules for agent service %s/%s: %v", agentID, serviceKey, err)
+		return
+	}
+	for _, rule := range rules {
+		e.evaluateRule(rule, agentID+"/"+serviceKey, serviceName, statusCode, responseTimeMs)
+	}
+}
+
 // ResetRule clears cached state for a rule (call on rule update/delete).
 func (e *ServiceRuleEvaluator) ResetRule(ruleID string) {
 	e.mu.Lock()

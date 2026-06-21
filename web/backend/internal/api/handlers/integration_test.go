@@ -67,8 +67,8 @@ func setupTestServer(t *testing.T) *testServer {
 	serviceEval := alerter.NewServiceRuleEvaluator(alertMgr)
 	sched.SetServiceEvaluator(serviceEval)
 
-	// 4. Routes ??allow all origins for tests
-	api.SetupRoutes(app, sched, collMgr, "*", "test")
+	// 4. Routes — allow all origins for tests
+	api.SetupRoutes(app, sched, collMgr, evaluator, serviceEval, "*", "test")
 
 	// 5. Start scheduler with empty config
 	if err := sched.Start([]config.ServiceConfig{}); err != nil {

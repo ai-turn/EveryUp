@@ -162,8 +162,8 @@ func main() {
 		log.Println("CollectorManager enabled")
 	}
 
-	// Setup API routes with scheduler and collector manager
-	api.SetupRoutes(app, scheduler, collectorMgr, cfg.Server.AllowOrigins, cfg.Server.Mode)
+	// Setup API routes with scheduler, collector manager, and alert evaluators
+	api.SetupRoutes(app, scheduler, collectorMgr, evaluator, serviceEvaluator, cfg.Server.AllowOrigins, cfg.Server.Mode)
 
 	// Start scheduler with config services
 	if err := scheduler.Start(cfg.Services); err != nil {

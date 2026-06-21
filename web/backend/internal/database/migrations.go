@@ -221,6 +221,9 @@ func migrate() error {
 	if err := migrateV29(); err != nil {
 		return fmt.Errorf("v29 migration failed: %w", err)
 	}
+	if err := migrateV30(); err != nil {
+		return fmt.Errorf("v30 migration failed: %w", err)
+	}
 
 	return nil
 }
@@ -1005,6 +1008,24 @@ func migrateV29() error {
 		}
 		return nil
 	})
+}
+
+// migrateV30 adds agent_id and service_key columns to alert_rules for agent-only architecture.
+func migrateV30() error {
+	stmts := []string{
+		`ALTER TABLE alert_rules ADD COLUMN agent_id TEXT`,
+		`ALTER TABLE alert_rules ADD COLUMN service_key TEXT`,
+	}
+	for _, stmt := range stmts {
+		if _, err := DB.Exec(stmt); err != nil {
+			col := extractColumnName(stmt)
+			if col != "" && strings.Contains(err.Error(), "duplicate column name: "+col) {
+				continue
+			}
+			return err
+		}
+	}
+	return nil
 }
 
 // isDuplicateColumnError checks if the error is a duplicate column error (migrateV2)

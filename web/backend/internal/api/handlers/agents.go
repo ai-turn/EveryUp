@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aiturn/everyup/internal/alerter"
 	"github.com/aiturn/everyup/internal/database"
 	"github.com/aiturn/everyup/internal/models"
 	"github.com/gofiber/fiber/v2"
@@ -14,9 +15,11 @@ import (
 )
 
 type AgentHandler struct {
-	repo    *database.AgentRepository
-	logRepo *database.LogRepository
-	reqRepo *database.ApiRequestRepository
+	repo             *database.AgentRepository
+	logRepo          *database.LogRepository
+	reqRepo          *database.ApiRequestRepository
+	ruleEvaluator    *alerter.RuleEvaluator
+	serviceEvaluator *alerter.ServiceRuleEvaluator
 }
 
 func NewAgentHandler() *AgentHandler {
@@ -25,6 +28,12 @@ func NewAgentHandler() *AgentHandler {
 		logRepo: database.NewLogRepository(),
 		reqRepo: database.NewApiRequestRepository(),
 	}
+}
+
+// SetEvaluators wires alert rule evaluators so agent syncs can trigger evaluation.
+func (h *AgentHandler) SetEvaluators(rule *alerter.RuleEvaluator, svc *alerter.ServiceRuleEvaluator) {
+	h.ruleEvaluator = rule
+	h.serviceEvaluator = svc
 }
 
 type agentEnrollRequest struct {
@@ -110,6 +119,11 @@ func (h *AgentHandler) SyncServices(c *fiber.Ctx) error {
 	if err := h.repo.UpsertServices(agentID, req.ObservedAt, req.Services); err != nil {
 		return internalError(c, "DATABASE_ERROR", err)
 	}
+	if h.serviceEvaluator != nil {
+		for _, svc := range req.Services {
+			go h.serviceEvaluator.EvaluateAgent(agentID, svc.Key, svc.Name, svc.LastStatus, 0)
+		}
+	}
 	return c.SendStatus(fiber.StatusNoContent)
 }
 
@@ -147,7 +161,7 @@ func (h *AgentHandler) SyncMetrics(c *fiber.Ctx) error {
 		req.RecordedAt = time.Now()
 	}
 	systemMetricRepo := database.NewSystemMetricRepository()
-	if err := systemMetricRepo.Create(&models.SystemMetric{
+	metric := &models.SystemMetric{
 		HostID:    agentID,
 		CPUUsage:  req.CPUUsage,
 		MemTotal:  req.MemTotal,
@@ -157,8 +171,12 @@ func (h *AgentHandler) SyncMetrics(c *fiber.Ctx) error {
 		DiskUsed:  req.DiskUsed,
 		DiskUsage: req.DiskUsage,
 		CreatedAt: req.RecordedAt,
-	}); err != nil {
+	}
+	if err := systemMetricRepo.Create(metric); err != nil {
 		return internalError(c, "DATABASE_ERROR", err)
+	}
+	if h.ruleEvaluator != nil {
+		go h.ruleEvaluator.EvaluateAgent(agentID, req.AgentID, metric)
 	}
 	return c.SendStatus(fiber.StatusNoContent)
 }
