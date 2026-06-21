@@ -9,8 +9,6 @@ import { useIsMobile } from '../../hooks/useMediaQuery';
 
 const navItems: { labelKey: string; href: string }[] = [
     { labelKey: 'nav.services', href: '/' },
-    { labelKey: 'nav.logs', href: '/logs' },
-    { labelKey: 'nav.monitoring', href: '/infra' },
     { labelKey: 'nav.alerts', href: '/alerts' },
     { labelKey: 'nav.settings', href: '/settings' },
 ];

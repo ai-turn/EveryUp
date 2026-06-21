@@ -1,10 +1,4 @@
-export { DashboardPage } from './dashboard/DashboardPage';
 export { HealthCheckDetailPage } from './healthcheck/HealthCheckDetailPage';
-export { HealthCheckPage } from './healthcheck/HealthCheckPage';
-export { LogListPage } from './logs/LogListPage';
-export { LogDetailPage } from './logs/LogDetailPage';
-export { InfraDetailPage } from './infra/InfraDetailPage';
-export { InfraPage } from './infra/InfraPage';
 export { AlertsPage } from './alerts/AlertsPage';
 export { SettingsPage } from './settings/SettingsPage';
 export { NotFoundPage } from './NotFoundPage';

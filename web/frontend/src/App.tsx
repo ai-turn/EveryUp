@@ -6,23 +6,14 @@ import { useAuth } from './contexts/AuthContext';
 import { env } from './config/env';
 import { lazyWithRetry as lazy } from './utils/lazyWithRetry';
 
-const ServiceGridPage      = lazy(() => import('./pages/services/ServiceGridPage').then(m => ({ default: m.ServiceGridPage })));
+const ServiceGridPage       = lazy(() => import('./pages/services/ServiceGridPage').then(m => ({ default: m.ServiceGridPage })));
 const HealthCheckDetailPage = lazy(() => import('./pages/healthcheck/HealthCheckDetailPage').then(m => ({ default: m.HealthCheckDetailPage })));
-const LogListPage          = lazy(() => import('./pages/logs/LogListPage').then(m => ({ default: m.LogListPage })));
-const LogDetailPage        = lazy(() => import('./pages/logs/LogDetailPage').then(m => ({ default: m.LogDetailPage })));
-const InfraPage            = lazy(() => import('./pages/infra/InfraPage').then(m => ({ default: m.InfraPage })));
-const InfraDetailPage      = lazy(() => import('./pages/infra/InfraDetailPage').then(m => ({ default: m.InfraDetailPage })));
-const AlertsPage           = lazy(() => import('./pages/alerts/AlertsPage').then(m => ({ default: m.AlertsPage })));
-const SettingsPage         = lazy(() => import('./pages/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
-const NotFoundPage         = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
-const LoginPage            = lazy(() => import('./pages/auth/LoginPage').then(m => ({ default: m.LoginPage })));
-
-// Form pages (replace SidePanel-based forms in v2)
-const ChannelFormPage      = lazy(() => import('./pages/alerts/ChannelFormPage').then(m => ({ default: m.ChannelFormPage })));
-const AlertRuleFormPage    = lazy(() => import('./pages/alerts/AlertRuleFormPage').then(m => ({ default: m.AlertRuleFormPage })));
-const InfraFormPage        = lazy(() => import('./pages/infra/InfraFormPage').then(m => ({ default: m.InfraFormPage })));
-const LogServiceFormPage   = lazy(() => import('./pages/logs/LogServiceFormPage').then(m => ({ default: m.LogServiceFormPage })));
-const LogServiceEditPage   = lazy(() => import('./pages/logs/LogServiceEditPage').then(m => ({ default: m.LogServiceEditPage })));
+const AlertsPage            = lazy(() => import('./pages/alerts/AlertsPage').then(m => ({ default: m.AlertsPage })));
+const SettingsPage          = lazy(() => import('./pages/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const NotFoundPage          = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
+const LoginPage             = lazy(() => import('./pages/auth/LoginPage').then(m => ({ default: m.LoginPage })));
+const ChannelFormPage       = lazy(() => import('./pages/alerts/ChannelFormPage').then(m => ({ default: m.ChannelFormPage })));
+const AlertRuleFormPage     = lazy(() => import('./pages/alerts/AlertRuleFormPage').then(m => ({ default: m.AlertRuleFormPage })));
 
 function PageLoader() {
   return (
@@ -61,14 +52,6 @@ function App() {
                 <Route index element={<ServiceGridPage />} />
                 <Route path="/services" element={<Navigate to="/" replace />} />
                 <Route path="/services/:agentId/:key" element={<HealthCheckDetailPage />} />
-                <Route path="/logs" element={<LogListPage />} />
-                <Route path="/logs/new" element={<LogServiceFormPage />} />
-                <Route path="/logs/:serviceId/edit" element={<LogServiceEditPage />} />
-                <Route path="/logs/:serviceId" element={<LogDetailPage />} />
-                <Route path="/infra" element={<InfraPage />} />
-                <Route path="/infra/new" element={<InfraFormPage />} />
-                <Route path="/infra/:resourceId/edit" element={<InfraFormPage />} />
-                <Route path="/infra/:resourceId" element={<InfraDetailPage />} />
                 <Route path="/alerts" element={<AlertsPage />} />
                 <Route path="/alerts/channels/new" element={<ChannelFormPage />} />
                 <Route path="/alerts/channels/:id/edit" element={<ChannelFormPage />} />

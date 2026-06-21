@@ -3,8 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { ComponentType, SVGProps } from 'react';
 import {
   IconHealthCheck,
-  IconLogs,
-  IconInfra,
   IconAlerts,
   IconSettings,
 } from '../icons/SidebarIcons';
@@ -12,11 +10,9 @@ import {
 type IconComponent = ComponentType<SVGProps<SVGSVGElement> & { size?: number }>;
 
 const navItems: { Icon: IconComponent; labelKey: string; href: string }[] = [
-  { Icon: IconHealthCheck,  labelKey: 'nav.services', href: '/' },
-  { Icon: IconLogs,         labelKey: 'nav.logs',        href: '/logs' },
-  { Icon: IconInfra,        labelKey: 'nav.monitoring',  href: '/infra' },
-  { Icon: IconAlerts,       labelKey: 'nav.alerts',      href: '/alerts' },
-  { Icon: IconSettings,     labelKey: 'nav.settings',    href: '/settings' },
+  { Icon: IconHealthCheck, labelKey: 'nav.services', href: '/' },
+  { Icon: IconAlerts,      labelKey: 'nav.alerts',   href: '/alerts' },
+  { Icon: IconSettings,    labelKey: 'nav.settings', href: '/settings' },
 ];
 
 export function BottomNavMobile() {
