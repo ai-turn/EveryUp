@@ -1,8 +1,11 @@
 package handlers
 
 import (
-	"crypto/subtle"
-	"os"
+	"crypto/rand"
+	"crypto/sha256"
+	"database/sql"
+	"encoding/hex"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -70,42 +73,72 @@ type agentMetricsRequest struct {
 	RecordedAt time.Time `json:"recordedAt"`
 }
 
+// extractBearerToken pulls the token from "Authorization: Bearer <token>".
+func extractBearerToken(c *fiber.Ctx) string {
+	parts := strings.SplitN(c.Get("Authorization"), " ", 2)
+	if len(parts) == 2 && strings.ToLower(parts[0]) == "bearer" {
+		return strings.TrimSpace(parts[1])
+	}
+	return ""
+}
+
+// requireAgentKey authenticates a sync request by matching the Bearer token hash
+// to the agent identified by :agentId in the URL path.
+func (h *AgentHandler) requireAgentKey(c *fiber.Ctx) error {
+	token := extractBearerToken(c)
+	if token == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"error":   fiber.Map{"code": "UNAUTHORIZED", "message": "missing agent API key"},
+		})
+	}
+	agent, found, err := h.repo.FindAgentByKeyHash(hashAgentKey(token))
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	if !found || agent.ID != c.Params("agentId") {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"error":   fiber.Map{"code": "UNAUTHORIZED", "message": "invalid agent API key"},
+		})
+	}
+	return nil
+}
+
 func (h *AgentHandler) Enroll(c *fiber.Ctx) error {
-	if err := requireAgentToken(c); err != nil {
-		return err
+	token := extractBearerToken(c)
+	if token == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"error":   fiber.Map{"code": "UNAUTHORIZED", "message": "missing agent API key"},
+		})
 	}
+	agent, found, err := h.repo.FindAgentByKeyHash(hashAgentKey(token))
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	if !found {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"error":   fiber.Map{"code": "UNAUTHORIZED", "message": "invalid agent API key"},
+		})
+	}
+	// Update version from request body if provided.
 	var req agentEnrollRequest
-	if err := c.BodyParser(&req); err != nil {
-		return agentBadRequest(c, "INVALID_REQUEST", err.Error())
+	if err := c.BodyParser(&req); err == nil && req.Version != "" {
+		_ = h.repo.UpsertAgent(models.Agent{
+			ID:         agent.ID,
+			Name:       agent.Name,
+			Mode:       agent.Mode,
+			Version:    req.Version,
+			LastSeenAt: time.Now(),
+		})
 	}
-	req.AgentName = strings.TrimSpace(req.AgentName)
-	if req.AgentName == "" {
-		return agentBadRequest(c, "INVALID_REQUEST", "agentName is required")
-	}
-	req.Mode = strings.TrimSpace(req.Mode)
-	if req.Mode == "" {
-		req.Mode = "standalone"
-	}
-	agentID := "agent_" + uuid.NewString()
-	if existing, found, err := h.repo.FindAgentByNameMode(req.AgentName, req.Mode); err != nil {
-		return internalError(c, "DATABASE_ERROR", err)
-	} else if found {
-		agentID = existing.ID
-	}
-	if err := h.repo.UpsertAgent(models.Agent{
-		ID:         agentID,
-		Name:       req.AgentName,
-		Mode:       req.Mode,
-		Version:    req.Version,
-		LastSeenAt: time.Now(),
-	}); err != nil {
-		return internalError(c, "DATABASE_ERROR", err)
-	}
-	return c.JSON(agentEnrollResponse{AgentID: agentID})
+	return c.JSON(agentEnrollResponse{AgentID: agent.ID})
 }
 
 func (h *AgentHandler) SyncServices(c *fiber.Ctx) error {
-	if err := requireAgentToken(c); err != nil {
+	if err := h.requireAgentKey(c); err != nil {
 		return err
 	}
 	agentID := c.Params("agentId")
@@ -128,7 +161,7 @@ func (h *AgentHandler) SyncServices(c *fiber.Ctx) error {
 }
 
 func (h *AgentHandler) SyncEvents(c *fiber.Ctx) error {
-	if err := requireAgentToken(c); err != nil {
+	if err := h.requireAgentKey(c); err != nil {
 		return err
 	}
 	agentID := c.Params("agentId")
@@ -146,7 +179,7 @@ func (h *AgentHandler) SyncEvents(c *fiber.Ctx) error {
 }
 
 func (h *AgentHandler) SyncMetrics(c *fiber.Ctx) error {
-	if err := requireAgentToken(c); err != nil {
+	if err := h.requireAgentKey(c); err != nil {
 		return err
 	}
 	agentID := c.Params("agentId")
@@ -177,6 +210,74 @@ func (h *AgentHandler) SyncMetrics(c *fiber.Ctx) error {
 	}
 	if h.ruleEvaluator != nil {
 		go h.ruleEvaluator.EvaluateAgent(agentID, req.AgentID, metric)
+	}
+	return c.SendStatus(fiber.StatusNoContent)
+}
+
+// generateAgentKey creates a random key with prefix "evup_svc_" and returns (plaintext, sha256hex).
+func generateAgentKey() (string, string, error) {
+	b := make([]byte, 24)
+	if _, err := rand.Read(b); err != nil {
+		return "", "", fmt.Errorf("rand: %w", err)
+	}
+	plain := "evup_svc_" + hex.EncodeToString(b)
+	sum := sha256.Sum256([]byte(plain))
+	return plain, hex.EncodeToString(sum[:]), nil
+}
+
+// hashAgentKey returns the SHA-256 hex digest of a plaintext key.
+func hashAgentKey(key string) string {
+	sum := sha256.Sum256([]byte(key))
+	return hex.EncodeToString(sum[:])
+}
+
+// Create pre-registers a new service (agent) from the web UI and returns its API key once.
+func (h *AgentHandler) Create(c *fiber.Ctx) error {
+	var req struct {
+		Name string `json:"name"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return agentBadRequest(c, "INVALID_REQUEST", "invalid request body")
+	}
+	req.Name = strings.TrimSpace(req.Name)
+	if req.Name == "" {
+		return agentBadRequest(c, "VALIDATION_ERROR", "name is required")
+	}
+
+	plain, hash, err := generateAgentKey()
+	if err != nil {
+		return internalError(c, "KEY_GENERATION_ERROR", err)
+	}
+
+	agent := models.Agent{
+		ID:   "agent_" + uuid.NewString(),
+		Name: req.Name,
+		Mode: "standalone",
+	}
+	if err := h.repo.CreateAgent(agent, hash); err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"success": true,
+		"data": fiber.Map{
+			"id":     agent.ID,
+			"name":   agent.Name,
+			"apiKey": plain, // returned once only
+		},
+	})
+}
+
+// Delete deactivates an agent (service), revoking its API key without deleting data.
+func (h *AgentHandler) Delete(c *fiber.Ctx) error {
+	if err := h.repo.DeactivateAgent(c.Params("agentId")); err != nil {
+		if err == sql.ErrNoRows {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"success": false,
+				"error":   fiber.Map{"code": "NOT_FOUND", "message": "agent not found"},
+			})
+		}
+		return internalError(c, "DATABASE_ERROR", err)
 	}
 	return c.SendStatus(fiber.StatusNoContent)
 }
@@ -358,34 +459,6 @@ func (h *AgentHandler) GetServiceRequests(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": requests, "total": total})
 }
 
-func requireAgentToken(c *fiber.Ctx) error {
-	expected := strings.TrimSpace(os.Getenv("EVERYUP_AGENT_ENROLLMENT_TOKEN"))
-	if expected == "" {
-		return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{
-			"success": false,
-			"error": fiber.Map{
-				"code":    "AGENT_TOKEN_NOT_CONFIGURED",
-				"message": "EVERYUP_AGENT_ENROLLMENT_TOKEN is not configured",
-			},
-		})
-	}
-	auth := c.Get("Authorization")
-	parts := strings.SplitN(auth, " ", 2)
-	provided := ""
-	if len(parts) == 2 && strings.ToLower(parts[0]) == "bearer" {
-		provided = strings.TrimSpace(parts[1])
-	}
-	if subtle.ConstantTimeCompare([]byte(provided), []byte(expected)) != 1 {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"success": false,
-			"error": fiber.Map{
-				"code":    "UNAUTHORIZED",
-				"message": "Invalid agent enrollment token",
-			},
-		})
-	}
-	return nil
-}
 
 func agentBadRequest(c *fiber.Ctx, code, message string) error {
 	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{

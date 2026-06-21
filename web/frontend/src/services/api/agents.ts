@@ -62,6 +62,13 @@ export interface ServiceUptimeDay {
 
 export function createAgentsApi(request: RequestFn) {
   return {
+    createAgent: (name: string) =>
+      request<{ id: string; name: string; apiKey: string }>('/agents', {
+        method: 'POST',
+        body: JSON.stringify({ name }),
+      }),
+    deleteAgent: (agentId: string) =>
+      request<void>(`/agents/${agentId}`, { method: 'DELETE' }),
     getAgents: () => request<ConnectedAgent[]>('/agents'),
     getAgentServices: (agentId: string) => request<AgentServiceSnapshot[]>(`/agents/${agentId}/services`),
     getAgentEvents: (agentId: string, limit = 100) =>

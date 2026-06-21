@@ -224,6 +224,9 @@ func migrate() error {
 	if err := migrateV30(); err != nil {
 		return fmt.Errorf("v30 migration failed: %w", err)
 	}
+	if err := migrateV31(); err != nil {
+		return fmt.Errorf("v31 migration failed: %w", err)
+	}
 
 	return nil
 }
@@ -1026,6 +1029,26 @@ func migrateV30() error {
 		}
 	}
 	return nil
+}
+
+// migrateV31 adds api_key_hash and status columns to agents for per-service key-based auth.
+// Added: 2026-06-21
+func migrateV31() error {
+	stmts := []string{
+		`ALTER TABLE agents ADD COLUMN api_key_hash TEXT`,
+		`ALTER TABLE agents ADD COLUMN status TEXT NOT NULL DEFAULT 'active'`,
+	}
+	for _, stmt := range stmts {
+		if _, err := DB.Exec(stmt); err != nil {
+			col := extractColumnName(stmt)
+			if col != "" && strings.Contains(err.Error(), "duplicate column name: "+col) {
+				continue
+			}
+			return err
+		}
+	}
+	_, err := DB.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_agents_api_key_hash ON agents(api_key_hash) WHERE api_key_hash IS NOT NULL`)
+	return err
 }
 
 // isDuplicateColumnError checks if the error is a duplicate column error (migrateV2)

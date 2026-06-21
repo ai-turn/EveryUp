@@ -135,7 +135,9 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	local.Get("/settings", settingsHandler.Get)
 	local.Put("/settings", settingsHandler.Update)
 
-	// Agent connected-mode read APIs
+	// Agent connected-mode read + management APIs (JWT-protected)
+	local.Post("/agents", agentHandler.Create)
+	local.Delete("/agents/:agentId", agentHandler.Delete)
 	local.Get("/agents", agentHandler.GetAll)
 	// /agents/services/all must be registered before /:agentId routes to avoid param shadowing
 	local.Get("/agents/services/all", agentHandler.GetAllServicesFlat)

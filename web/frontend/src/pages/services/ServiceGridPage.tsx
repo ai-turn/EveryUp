@@ -3,30 +3,67 @@ import { useTranslate } from '@tolgee/react';
 import { MaterialIcon } from '../../components/common';
 import { api, type AgentServiceFlat, type ConnectedAgent } from '../../services/api';
 import { AgentServiceCard } from '../../features/services/components/AgentServiceCard';
+import { AddServiceModal } from '../../features/services/components/AddServiceModal';
+import { getErrorMessage } from '../../utils/errors';
+import { toast } from 'react-hot-toast';
 
 function agentOnline(agent: ConnectedAgent): boolean {
-  const ageMs = Date.now() - new Date(agent.lastSeenAt).getTime();
-  return ageMs < 2 * 60 * 1000;
+  return Date.now() - new Date(agent.lastSeenAt).getTime() < 2 * 60 * 1000;
 }
 
-function AgentBanner({ agents }: { agents: ConnectedAgent[] }) {
+interface AgentBannerProps {
+  agents: ConnectedAgent[];
+  onDelete: (id: string) => void;
+}
+
+function AgentBanner({ agents, onDelete }: AgentBannerProps) {
+  const [expanded, setExpanded] = useState(false);
   if (agents.length === 0) return null;
   const onlineCount = agents.filter(agentOnline).length;
   const allOnline = onlineCount === agents.length;
 
   return (
-    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium w-fit ${
-      allOnline
-        ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
-        : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800'
-    }`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${allOnline ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-      에이전트 {onlineCount}/{agents.length} 온라인
+    <div className="space-y-2">
+      <button
+        onClick={() => setExpanded(v => !v)}
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium w-fit transition-colors ${
+          allOnline
+            ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+            : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800'
+        }`}
+      >
+        <span className={`h-1.5 w-1.5 rounded-full ${allOnline ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+        에이전트 {onlineCount}/{agents.length} 온라인
+        <MaterialIcon name={expanded ? 'expand_less' : 'expand_more'} className="text-sm" />
+      </button>
+
+      {expanded && (
+        <div className="border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden divide-y divide-slate-100 dark:divide-ui-border-dark">
+          {agents.map(agent => (
+            <div key={agent.id} className="flex items-center justify-between px-4 py-2.5 bg-white dark:bg-bg-surface-dark">
+              <div className="flex items-center gap-2.5">
+                <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${agentOnline(agent) ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                <span className="text-sm font-medium text-slate-800 dark:text-white">{agent.name}</span>
+                {agent.version && (
+                  <span className="text-xs text-slate-400 dark:text-text-dim-dark">v{agent.version}</span>
+                )}
+              </div>
+              <button
+                onClick={() => onDelete(agent.id)}
+                title="서비스 비활성화"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              >
+                <MaterialIcon name="delete_outline" className="text-base" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-function EmptyState() {
+function EmptyState({ onAdd }: { onAdd: () => void }) {
   const { t } = useTranslate();
   return (
     <div className="flex flex-col items-center justify-center py-32 gap-5 text-center">
@@ -35,18 +72,19 @@ function EmptyState() {
       </div>
       <div className="space-y-1.5">
         <p className="text-lg font-semibold text-slate-700 dark:text-white">
-          {t('연결된 에이전트가 없습니다')}
+          {t('연결된 서비스가 없습니다')}
         </p>
         <p className="text-sm text-slate-500 dark:text-text-muted-dark max-w-sm">
-          {t('Agent를 배포하고 Docker 라벨을 추가하면 서비스가 자동으로 감지됩니다')}
+          {t('서비스를 추가하고 API 키로 에이전트를 연결하세요')}
         </p>
       </div>
-      <div className="mt-2 p-4 rounded-xl bg-slate-50 dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark text-left max-w-sm w-full">
-        <p className="text-xs font-mono text-slate-500 dark:text-text-muted-dark leading-relaxed">
-          everyup.enabled: <span className="text-emerald-600 dark:text-emerald-400">"true"</span>{'\n'}
-          everyup.service.name: <span className="text-sky-600 dark:text-sky-400">"api"</span>
-        </p>
-      </div>
+      <button
+        onClick={onAdd}
+        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors"
+      >
+        <MaterialIcon name="add" className="text-base" />
+        서비스 추가
+      </button>
     </div>
   );
 }
@@ -58,6 +96,7 @@ export function ServiceGridPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'healthy' | 'unhealthy'>('all');
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -79,6 +118,18 @@ export function ServiceGridPage() {
     const id = setInterval(load, 30_000);
     return () => clearInterval(id);
   }, [load]);
+
+  const handleDelete = async (agentId: string) => {
+    const agent = agents.find(a => a.id === agentId);
+    if (!confirm(`'${agent?.name ?? agentId}' 서비스를 비활성화하시겠습니까?\n에이전트 연결이 차단되며 수집 데이터는 보존됩니다.`)) return;
+    try {
+      await api.deleteAgent(agentId);
+      toast.success('서비스가 비활성화됐습니다');
+      load();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  };
 
   const filtered = services.filter((s) => {
     if (filter === 'healthy' && !s.healthy) return false;
@@ -111,10 +162,19 @@ export function ServiceGridPage() {
             {t('Agent가 감지한 모니터링 서비스')}
           </p>
         </div>
-        <AgentBanner agents={agents} />
+        <div className="flex items-center gap-3 flex-wrap justify-end">
+          <AgentBanner agents={agents} onDelete={handleDelete} />
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors shrink-0"
+          >
+            <MaterialIcon name="add" className="text-base" />
+            추가하기
+          </button>
+        </div>
       </div>
 
-      {/* KPI cards — clickable filter */}
+      {/* KPI cards */}
       <div className="grid grid-cols-3 gap-3">
         {kpis.map((kpi) => (
           <button
@@ -157,7 +217,7 @@ export function ServiceGridPage() {
           ))}
         </div>
       ) : filtered.length === 0 && services.length === 0 ? (
-        <EmptyState />
+        <EmptyState onAdd={() => setShowAddModal(true)} />
       ) : filtered.length === 0 ? (
         <div className="py-16 text-center text-slate-400 dark:text-text-muted-dark text-sm">
           {t('검색 결과가 없습니다')}
@@ -168,6 +228,13 @@ export function ServiceGridPage() {
             <AgentServiceCard key={`${svc.agentId}/${svc.key}`} service={svc} />
           ))}
         </div>
+      )}
+
+      {showAddModal && (
+        <AddServiceModal
+          onClose={() => setShowAddModal(false)}
+          onCreated={load}
+        />
       )}
     </div>
   );
