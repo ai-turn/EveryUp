@@ -1,3 +1,4 @@
+import type { LogEntry, ApiRequest } from './services';
 import type { RequestFn } from './base';
 
 export interface ConnectedAgent {
@@ -73,5 +74,9 @@ export function createAgentsApi(request: RequestFn) {
       request<ServiceUptimeDay[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/uptime?days=${days}`),
     getAgentServiceKeyEvents: (agentId: string, key: string, limit = 50) =>
       request<AgentEvent[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/events?limit=${limit}`),
+    getAgentServiceLogs: (agentId: string, key: string, limit = 100) =>
+      request<{ data: LogEntry[]; total: number }>(`/agents/${agentId}/services/${encodeURIComponent(key)}/logs?limit=${limit}`),
+    getAgentServiceRequests: (agentId: string, key: string, limit = 100) =>
+      request<{ data: ApiRequest[]; total: number }>(`/agents/${agentId}/services/${encodeURIComponent(key)}/requests?limit=${limit}`),
   };
 }

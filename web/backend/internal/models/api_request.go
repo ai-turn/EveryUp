@@ -28,8 +28,9 @@ type ApiRequest struct {
 
 // ApiRequestFilter holds query parameters for listing captured requests.
 type ApiRequestFilter struct {
-	ServiceID  string
-	TraceID    string
+	ServiceID   string
+	ServiceName string
+	TraceID     string
 	MinStatus  int
 	MaxStatus  int
 	Methods    []string

@@ -203,8 +203,17 @@ func (r *ApiRequestRepository) List(f *models.ApiRequestFilter) ([]models.ApiReq
 		f = &models.ApiRequestFilter{}
 	}
 
-	where := "service_id = ?"
-	args := []interface{}{f.ServiceID}
+	where := "1=1"
+	args := []interface{}{}
+
+	if f.ServiceID != "" {
+		where += " AND service_id = ?"
+		args = append(args, f.ServiceID)
+	}
+	if f.ServiceName != "" {
+		where += " AND service_name = ?"
+		args = append(args, f.ServiceName)
+	}
 
 	if f.TraceID != "" {
 		where += " AND trace_id = ?"

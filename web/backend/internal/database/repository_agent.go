@@ -145,6 +145,26 @@ FROM agent_services WHERE agent_id = ? ORDER BY name`, agentID)
 	return services, rows.Err()
 }
 
+func (r *AgentRepository) GetServiceByKey(agentID, key string) (*models.AgentService, error) {
+	var service models.AgentService
+	var healthy, seen, silenced int
+	err := DB.QueryRow(`
+SELECT agent_id, key, name, check_type, endpoint, healthy, seen, silenced, last_error, last_status, last_latency, updated_at, observed_at
+FROM agent_services WHERE agent_id = ? AND key = ?`, agentID, key).Scan(
+		&service.AgentID, &service.Key, &service.Name, &service.CheckType, &service.Endpoint,
+		&healthy, &seen, &silenced, &service.LastError, &service.LastStatus, &service.LastLatency, &service.UpdatedAt, &service.ObservedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	service.Healthy = healthy == 1
+	service.Seen = seen == 1
+	service.Silenced = silenced == 1
+	return &service, nil
+}
+
 func (r *AgentRepository) InsertEvents(agentID string, events []models.AgentEvent) error {
 	if len(events) == 0 {
 		return nil

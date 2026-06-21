@@ -55,6 +55,11 @@ func (r *LogRepository) GetAll(filter models.LogFilter) ([]models.Log, int, erro
 		countQuery += " AND l.service_id = ?"
 		args = append(args, filter.ServiceID)
 	}
+	if filter.ServiceName != "" {
+		query += " AND l.service_name = ?"
+		countQuery += " AND l.service_name = ?"
+		args = append(args, filter.ServiceName)
+	}
 	if filter.Level != "" {
 		query += " AND l.level = ?"
 		countQuery += " AND l.level = ?"

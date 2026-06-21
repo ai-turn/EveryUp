@@ -72,12 +72,13 @@ type LogIngestEntry struct {
 
 // LogFilter represents filter options for log queries
 type LogFilter struct {
-	ServiceID string    `json:"serviceId,omitempty"`
-	Level     LogLevel  `json:"level,omitempty"`
-	Search    string    `json:"search,omitempty"`
-	TraceID   string    `json:"traceId,omitempty"`
-	From      time.Time `json:"from,omitempty"`
-	To        time.Time `json:"to,omitempty"`
-	Limit     int       `json:"limit,omitempty"`
-	Offset    int       `json:"offset,omitempty"`
+	ServiceID   string    `json:"serviceId,omitempty"`
+	ServiceName string    `json:"serviceName,omitempty"`
+	Level       LogLevel  `json:"level,omitempty"`
+	Search      string    `json:"search,omitempty"`
+	TraceID     string    `json:"traceId,omitempty"`
+	From        time.Time `json:"from,omitempty"`
+	To          time.Time `json:"to,omitempty"`
+	Limit       int       `json:"limit,omitempty"`
+	Offset      int       `json:"offset,omitempty"`
 }

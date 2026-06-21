@@ -14,11 +14,17 @@ import (
 )
 
 type AgentHandler struct {
-	repo *database.AgentRepository
+	repo    *database.AgentRepository
+	logRepo *database.LogRepository
+	reqRepo *database.ApiRequestRepository
 }
 
 func NewAgentHandler() *AgentHandler {
-	return &AgentHandler{repo: database.NewAgentRepository()}
+	return &AgentHandler{
+		repo:    database.NewAgentRepository(),
+		logRepo: database.NewLogRepository(),
+		reqRepo: database.NewApiRequestRepository(),
+	}
 }
 
 type agentEnrollRequest struct {
@@ -244,6 +250,60 @@ func (h *AgentHandler) GetServiceKeyEvents(c *fiber.Ctx) error {
 		return internalError(c, "DATABASE_ERROR", err)
 	}
 	return c.JSON(fiber.Map{"success": true, "data": events})
+}
+
+// GetServiceLogs returns logs for a service identified by agentId+key using service_name as the filter.
+func (h *AgentHandler) GetServiceLogs(c *fiber.Ctx) error {
+	agentID := c.Params("agentId")
+	key := c.Params("key")
+
+	service, err := h.repo.GetServiceByKey(agentID, key)
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	if service == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"success": false,
+			"error":   fiber.Map{"code": "NOT_FOUND", "message": "service not found"},
+		})
+	}
+
+	limit, _ := strconv.Atoi(c.Query("limit", "100"))
+	logs, total, err := h.logRepo.GetAll(models.LogFilter{
+		ServiceName: service.Name,
+		Limit:       limit,
+	})
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	return c.JSON(fiber.Map{"success": true, "data": logs, "total": total})
+}
+
+// GetServiceRequests returns API requests for a service identified by agentId+key using service_name as the filter.
+func (h *AgentHandler) GetServiceRequests(c *fiber.Ctx) error {
+	agentID := c.Params("agentId")
+	key := c.Params("key")
+
+	service, err := h.repo.GetServiceByKey(agentID, key)
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	if service == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"success": false,
+			"error":   fiber.Map{"code": "NOT_FOUND", "message": "service not found"},
+		})
+	}
+
+	limit, _ := strconv.Atoi(c.Query("limit", "100"))
+	requests, total, err := h.reqRepo.List(&models.ApiRequestFilter{
+		ServiceName: service.Name,
+		Limit:       limit,
+	})
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	return c.JSON(fiber.Map{"success": true, "data": requests, "total": total})
 }
 
 func requireAgentToken(c *fiber.Ctx) error {

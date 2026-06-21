@@ -56,7 +56,7 @@
     },
     "nav": {
         "dashboard": "Main",
-        "healthcheck": "Health Check",
+        "services": "Services",
         "logs": "Logs",
         "alerts": "Alerts",
         "monitoring": "Infrastructure",

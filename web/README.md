@@ -90,7 +90,7 @@ Default prefix: `/api/v1`.
 | Alerting | `GET /notifications/channels`, `GET /alert-rules` |
 | Agent sync | `POST /agents/enroll`, `POST /agents/:agentId/services`, `POST /agents/:agentId/events`, `POST /agents/:agentId/metrics` |
 | Agent dashboard | `GET /agents`, `GET /agents/:agentId/services`, `GET /agents/:agentId/events` |
-| Agent health history | `GET /agents/services/all`, `GET /agents/:agentId/services/:key/history`, `GET /agents/:agentId/services/:key/uptime` |
+| Agent service detail | `GET /agents/services/all`, `GET /agents/:agentId/services/:key/history`, `GET /agents/:agentId/services/:key/uptime`, `GET /agents/:agentId/services/:key/logs`, `GET /agents/:agentId/services/:key/requests` |
 
 Agent sync endpoints require
 `Authorization: Bearer <EVERYUP_AGENT_ENROLLMENT_TOKEN>`.
@@ -100,7 +100,7 @@ Agent sync endpoints require
 | Route | Purpose |
 | --- | --- |
 | `/` | Dashboard summary, services, alerts, connected Agents |
-| `/healthcheck` | Agent-reported HTTP/TCP health check results (per-service uptime, latency history) |
+| `/services` | Agent-reported services — health checks, logs, API requests, and infrastructure per service |
 | `/infra` | Infrastructure resources |
 | `/logs` | Unified logs and service log setup |
 | `/alerts` | Notification channels and alert rules |

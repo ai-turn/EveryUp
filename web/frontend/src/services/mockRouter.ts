@@ -30,6 +30,11 @@ import type {
   AppSettings,
   ApiRequest,
   TraceDetail,
+  ConnectedAgent,
+  AgentServiceFlat,
+  AgentEvent,
+  ServiceHistoryPoint,
+  ServiceUptimeDay,
 } from './api';
 
 // ?? Dashboard ????????????????????????????????????????????????????????????????
@@ -500,6 +505,89 @@ const mockTraceDetails: Record<string, TraceDetail> = {
 
 // ?? Settings ??????????????????????????????????????????????????????????????????
 
+// ?? Agents ???????????????????????????????????????????????????????????????????
+
+const mockAgents: ConnectedAgent[] = [
+  {
+    id: 'agent_demo_01', name: 'prod-server', mode: 'connected', version: '0.3.0',
+    lastSeenAt: new Date(Date.now() - 15_000).toISOString(),
+    createdAt: new Date(Date.now() - 30 * 86_400_000).toISOString(),
+    updatedAt: new Date(Date.now() - 15_000).toISOString(),
+  },
+];
+
+const mockAgentServicesFlat: AgentServiceFlat[] = [
+  {
+    agentId: 'agent_demo_01', agentName: 'prod-server',
+    key: 'api', name: 'api', checkType: 'http',
+    endpoint: 'http://api:8080/health', healthy: true, seen: true, silenced: false,
+    lastStatus: 200, lastLatency: '42ms',
+    updatedAt: new Date(Date.now() - 30_000).toISOString(),
+    observedAt: new Date(Date.now() - 30_000).toISOString(),
+  },
+  {
+    agentId: 'agent_demo_01', agentName: 'prod-server',
+    key: 'postgres', name: 'postgres', checkType: 'tcp',
+    endpoint: 'postgres:5432', healthy: true, seen: true, silenced: false,
+    lastStatus: 0, lastLatency: '5ms',
+    updatedAt: new Date(Date.now() - 30_000).toISOString(),
+    observedAt: new Date(Date.now() - 30_000).toISOString(),
+  },
+  {
+    agentId: 'agent_demo_01', agentName: 'prod-server',
+    key: 'payment-worker', name: 'payment-worker', checkType: 'http',
+    endpoint: 'http://payment-worker:8090/health', healthy: false, seen: true, silenced: false,
+    lastStatus: 503, lastLatency: '5001ms', lastError: 'payment gateway timeout',
+    updatedAt: new Date(Date.now() - 90_000).toISOString(),
+    observedAt: new Date(Date.now() - 90_000).toISOString(),
+  },
+];
+
+const nowAgent = Date.now();
+
+const mockAgentHistory: ServiceHistoryPoint[] = Array.from({ length: 24 }, (_, i) => ({
+  time: new Date(nowAgent - (23 - i) * 3_600_000).toISOString(),
+  latencyMs: 30 + Math.sin(i / 4) * 15 + Math.random() * 10,
+  uptimePct: i === 10 || i === 17 ? 0 : 100,
+  total: 12,
+}));
+
+const mockAgentUptime: ServiceUptimeDay[] = Array.from({ length: 90 }, (_, i) => ({
+  date: new Date(nowAgent - (89 - i) * 86_400_000).toISOString().slice(0, 10),
+  uptimePct: i === 42 || i === 77 ? 94 : 100,
+  healthyChecks: i === 42 || i === 77 ? 282 : 300,
+  totalChecks: 300,
+}));
+
+const mockAgentEvents: AgentEvent[] = [
+  {
+    id: 1, agentId: 'agent_demo_01', time: new Date(nowAgent - 2 * 3_600_000).toISOString(),
+    type: 'status_change', targetKey: 'payment-worker', serviceName: 'payment-worker',
+    message: 'payment-worker became unhealthy: 503 Service Unavailable',
+    createdAt: new Date(nowAgent - 2 * 3_600_000).toISOString(),
+  },
+  {
+    id: 2, agentId: 'agent_demo_01', time: new Date(nowAgent - 5 * 3_600_000).toISOString(),
+    type: 'status_change', targetKey: 'api', serviceName: 'api',
+    message: 'api recovered: 200 OK (42ms)',
+    createdAt: new Date(nowAgent - 5 * 3_600_000).toISOString(),
+  },
+];
+
+const mockAgentServiceLogs: LogEntry[] = [
+  { id: 101, serviceId: '', serviceName: 'api', level: 'error', message: 'Connection timeout to upstream: auth.internal:8080 after 5000ms', source: 'otlp', createdAt: new Date(nowAgent - 60_000).toISOString() },
+  { id: 102, serviceId: '', serviceName: 'api', level: 'warn',  message: 'Rate limit exceeded for client IP 203.0.113.42 — throttling to 10 req/s', source: 'otlp', createdAt: new Date(nowAgent - 180_000).toISOString() },
+  { id: 103, serviceId: '', serviceName: 'api', level: 'info',  message: 'Server listening on :8080', source: 'otlp', createdAt: new Date(nowAgent - 600_000).toISOString() },
+  { id: 104, serviceId: '', serviceName: 'api', level: 'error', message: 'TLS certificate validation failed for host payments.partner.io', source: 'otlp', createdAt: new Date(nowAgent - 720_000).toISOString() },
+];
+
+const mockAgentServiceRequests: ApiRequest[] = [
+  { id: 201, serviceId: '', serviceName: 'api', requestId: 'r01', method: 'POST',   path: '/api/v1/auth/login',      pathTemplate: '/api/v1/auth/login',  statusCode: 200, durationMs: 42,  isError: false, createdAt: new Date(nowAgent - 30_000).toISOString() },
+  { id: 202, serviceId: '', serviceName: 'api', requestId: 'r02', method: 'GET',    path: '/api/v1/users/42',        pathTemplate: '/api/v1/users/:id',   statusCode: 200, durationMs: 18,  isError: false, createdAt: new Date(nowAgent - 90_000).toISOString() },
+  { id: 203, serviceId: '', serviceName: 'api', requestId: 'r03', method: 'DELETE', path: '/api/v1/orders/1a2b3c4d', pathTemplate: '/api/v1/orders/:id',  statusCode: 500, durationMs: 312, isError: true,  error: 'deadlock detected', createdAt: new Date(nowAgent - 400_000).toISOString() },
+  { id: 204, serviceId: '', serviceName: 'api', requestId: 'r04', method: 'GET',    path: '/api/v1/products',        pathTemplate: '/api/v1/products',    statusCode: 200, durationMs: 67,  isError: false, createdAt: new Date(nowAgent - 600_000).toISOString() },
+];
+
 const mockAppSettings: AppSettings = {
   alerts: { consecutiveFailures: 3 },
   retention: { metrics: '30d', logs: '90d' },
@@ -563,6 +651,27 @@ export function mockRouter<T>(endpoint: string, method = 'GET'): T {
 
   if (endpoint.startsWith('/logs')) return filterLogs(endpoint) as T;
   if (endpoint.startsWith('/incidents')) return mockIncidentList as T;
+
+  // /agents/services/all — must come before /agents/:id/services
+  if (endpoint === '/agents/services/all') return mockAgentServicesFlat as T;
+  // /agents/:agentId/services/:key/logs
+  if (/^\/agents\/[^/]+\/services\/[^/]+\/logs/.test(endpoint))
+    return { data: mockAgentServiceLogs, total: mockAgentServiceLogs.length } as unknown as T;
+  // /agents/:agentId/services/:key/requests
+  if (/^\/agents\/[^/]+\/services\/[^/]+\/requests/.test(endpoint))
+    return { data: mockAgentServiceRequests, total: mockAgentServiceRequests.length } as unknown as T;
+  // /agents/:agentId/services/:key/history
+  if (/^\/agents\/[^/]+\/services\/[^/]+\/history/.test(endpoint)) return mockAgentHistory as T;
+  // /agents/:agentId/services/:key/uptime
+  if (/^\/agents\/[^/]+\/services\/[^/]+\/uptime/.test(endpoint)) return mockAgentUptime as T;
+  // /agents/:agentId/services/:key/events
+  if (/^\/agents\/[^/]+\/services\/[^/]+\/events/.test(endpoint)) return mockAgentEvents as T;
+  // /agents/:agentId/services
+  if (/^\/agents\/[^/]+\/services/.test(endpoint)) return mockAgentServicesFlat as T;
+  // /agents/:agentId/events
+  if (/^\/agents\/[^/]+\/events/.test(endpoint)) return mockAgentEvents as T;
+  // /agents
+  if (endpoint.startsWith('/agents')) return mockAgents as T;
 
   if (endpoint.startsWith('/notifications')) return mockChannels as T;
 

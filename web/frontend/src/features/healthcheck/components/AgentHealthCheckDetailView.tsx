@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslate } from '@tolgee/react';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +12,9 @@ import { AgentRealtimeMetrics } from './AgentRealtimeMetrics';
 import { AgentCheckHistoryBar } from './AgentCheckHistoryBar';
 import { AgentResponseTimeChart } from './AgentResponseTimeChart';
 import { AgentFailureHistory } from './AgentFailureHistory';
+import { AgentServiceLogsTab } from './AgentServiceLogsTab';
+import { AgentServiceRequestsTab } from './AgentServiceRequestsTab';
+import { AgentServiceInfraTab } from './AgentServiceInfraTab';
 
 export interface AgentHealthCheckDetailViewProps {
   service: AgentServiceFlat;
@@ -22,11 +26,38 @@ export interface AgentHealthCheckDetailViewProps {
   onRefresh: () => void;
 }
 
-function ServiceContent({
-  service,
-  agentId,
-  serviceKey,
-  refreshKey,
+type DetailTab = 'health' | 'logs' | 'requests' | 'infra';
+
+const TABS: { key: DetailTab; labelKo: string; icon: string }[] = [
+  { key: 'health',    labelKo: '헬스',   icon: 'monitor_heart' },
+  { key: 'logs',      labelKo: '로그',   icon: 'article' },
+  { key: 'requests',  labelKo: 'API',    icon: 'http' },
+  { key: 'infra',     labelKo: '인프라', icon: 'dns' },
+];
+
+function TabBar({ active, onChange }: { active: DetailTab; onChange: (t: DetailTab) => void }) {
+  return (
+    <div className="flex gap-1 border-b border-slate-200 dark:border-ui-border-dark mb-6">
+      {TABS.map(tab => (
+        <button
+          key={tab.key}
+          onClick={() => onChange(tab.key)}
+          className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-bold transition-colors border-b-2 -mb-px ${
+            active === tab.key
+              ? 'border-primary text-primary'
+              : 'border-transparent text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
+          }`}
+        >
+          <MaterialIcon name={tab.icon} className="text-base" />
+          {tab.labelKo}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function HealthContent({
+  service, agentId, serviceKey, refreshKey,
 }: Pick<AgentHealthCheckDetailViewProps, 'service' | 'agentId' | 'serviceKey' | 'refreshKey'>) {
   const { t } = useTranslate();
   return (
@@ -48,15 +79,25 @@ function ServiceContent({
   );
 }
 
+function TabContent({ tab, service, agentId, serviceKey, refreshKey }: {
+  tab: DetailTab;
+} & Pick<AgentHealthCheckDetailViewProps, 'service' | 'agentId' | 'serviceKey' | 'refreshKey'>) {
+  if (tab === 'logs')     return <AgentServiceLogsTab agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />;
+  if (tab === 'requests') return <AgentServiceRequestsTab agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />;
+  if (tab === 'infra')    return <AgentServiceInfraTab agentId={agentId} refreshKey={refreshKey} />;
+  return <HealthContent service={service} agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />;
+}
+
 function DesktopLayout(props: AgentHealthCheckDetailViewProps) {
   const { t: tc } = useTranslation('common');
   const { service, agentId, serviceKey, refreshKey, isLive, onLiveToggle, onRefresh } = props;
   const { spinning, trigger: handleRefresh } = useSpinAction(onRefresh);
+  const [activeTab, setActiveTab] = useState<DetailTab>('health');
 
   return (
     <>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
-        <Breadcrumbs items={[{ label: tc('common.backToList'), href: '/healthcheck' }]} />
+        <Breadcrumbs items={[{ label: tc('common.backToList'), href: '/services' }]} />
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-3 py-2">
             <Toggle checked={isLive} onChange={onLiveToggle} />
@@ -70,7 +111,8 @@ function DesktopLayout(props: AgentHealthCheckDetailViewProps) {
           </button>
         </div>
       </div>
-      <ServiceContent service={service} agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
+      <TabBar active={activeTab} onChange={setActiveTab} />
+      <TabContent tab={activeTab} service={service} agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
     </>
   );
 }
@@ -80,12 +122,13 @@ function MobileLayout(props: AgentHealthCheckDetailViewProps) {
   const navigate = useNavigate();
   const { service, agentId, serviceKey, refreshKey, isLive, onLiveToggle, onRefresh } = props;
   const { spinning, trigger: handleRefresh } = useSpinAction(onRefresh);
+  const [activeTab, setActiveTab] = useState<DetailTab>('health');
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <button
-          onClick={() => navigate('/healthcheck')}
+          onClick={() => navigate('/services')}
           className="flex items-center gap-1 text-slate-500 dark:text-text-muted-dark active:opacity-60 transition-opacity cursor-pointer"
         >
           <MaterialIcon name="arrow_back" className="text-lg" />
@@ -103,7 +146,8 @@ function MobileLayout(props: AgentHealthCheckDetailViewProps) {
           </button>
         </div>
       </div>
-      <ServiceContent service={service} agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
+      <TabBar active={activeTab} onChange={setActiveTab} />
+      <TabContent tab={activeTab} service={service} agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
     </div>
   );
 }

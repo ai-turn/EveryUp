@@ -141,7 +141,7 @@ export function HealthCheckPage() {
               {filtered.map((svc) => (
                 <tr
                   key={`${svc.agentId}/${svc.key}`}
-                  onClick={() => navigate(`/healthcheck/${svc.agentId}/${encodeURIComponent(svc.key)}`)}
+                  onClick={() => navigate(`/services/${svc.agentId}/${encodeURIComponent(svc.key)}`)}
                   className="hover:bg-slate-50 dark:hover:bg-ui-hover-dark cursor-pointer transition-colors"
                 >
                   <td className="px-5 py-3.5 font-medium text-slate-900 dark:text-white">

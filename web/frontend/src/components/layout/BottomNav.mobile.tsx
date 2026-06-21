@@ -12,7 +12,7 @@ import {
 type IconComponent = ComponentType<SVGProps<SVGSVGElement> & { size?: number }>;
 
 const navItems: { Icon: IconComponent; labelKey: string; href: string }[] = [
-  { Icon: IconHealthCheck,  labelKey: 'nav.healthcheck', href: '/healthcheck' },
+  { Icon: IconHealthCheck,  labelKey: 'nav.services', href: '/services' },
   { Icon: IconLogs,         labelKey: 'nav.logs',        href: '/logs' },
   { Icon: IconInfra,        labelKey: 'nav.monitoring',  href: '/infra' },
   { Icon: IconAlerts,       labelKey: 'nav.alerts',      href: '/alerts' },

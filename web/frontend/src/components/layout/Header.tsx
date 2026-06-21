@@ -8,7 +8,7 @@ import { NotificationDropdown } from './NotificationDropdown';
 import { useIsMobile } from '../../hooks/useMediaQuery';
 
 const navItems: { labelKey: string; href: string }[] = [
-    { labelKey: 'nav.healthcheck', href: '/healthcheck' },
+    { labelKey: 'nav.services', href: '/services' },
     { labelKey: 'nav.logs', href: '/logs' },
     { labelKey: 'nav.monitoring', href: '/infra' },
     { labelKey: 'nav.alerts', href: '/alerts' },

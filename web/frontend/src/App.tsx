@@ -60,8 +60,8 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route element={<MainLayout />}>
                 <Route index element={<DashboardPage />} />
-                <Route path="/healthcheck" element={<HealthCheckPage />} />
-                <Route path="/healthcheck/:agentId/:key" element={<HealthCheckDetailPage />} />
+                <Route path="/services" element={<HealthCheckPage />} />
+                <Route path="/services/:agentId/:key" element={<HealthCheckDetailPage />} />
                 <Route path="/logs" element={<LogListPage />} />
                 <Route path="/logs/new" element={<LogServiceFormPage />} />
                 <Route path="/logs/:serviceId/edit" element={<LogServiceEditPage />} />

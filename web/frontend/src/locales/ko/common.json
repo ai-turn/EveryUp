@@ -56,7 +56,7 @@
     },
     "nav": {
         "dashboard": "메인",
-        "healthcheck": "헬스체크",
+        "services": "서비스",
         "logs": "로그",
         "alerts": "알림",
         "monitoring": "인프라",
