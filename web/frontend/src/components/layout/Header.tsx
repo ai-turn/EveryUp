@@ -1,10 +1,8 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Link, useLocation } from 'react-router-dom';
 import logo from '../../assets/logo.png';
 import logoDark from '../../assets/logo-dark.png';
-import { NotificationDropdown } from './NotificationDropdown';
 import { useIsMobile } from '../../hooks/useMediaQuery';
 
 function IconBell() {
@@ -52,7 +50,6 @@ function IconMoon() {
 export function Header() {
     const { theme, toggleTheme } = useTheme();
     const { i18n } = useTranslation('common');
-    const [notifOpen, setNotifOpen] = useState(false);
     const isMobile = useIsMobile();
     const location = useLocation();
 
@@ -133,11 +130,6 @@ export function Header() {
                             {theme === 'light' ? <IconMoon /> : <IconSun />}
                         </button>
                     )}
-                    <NotificationDropdown
-                        open={notifOpen}
-                        onToggle={() => setNotifOpen(v => !v)}
-                        onClose={() => setNotifOpen(false)}
-                    />
                     {!isMobile && (
                         <>
                             <Link to="/alerts" aria-label="Alerts" className={iconLinkCls(isAlertsActive)}>
