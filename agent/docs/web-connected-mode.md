@@ -1,60 +1,74 @@
 # Web Connected Mode
 
-EveryUp Agent can run standalone, but Phase 8 introduces a connection contract
-for EveryUp Web.
+EveryUp Agent can run standalone (Telegram alerts only), but enabling Web sync
+lets the Web dashboard display real-time service health, logs, API requests, and
+infrastructure metrics from the agent.
 
-This is intentionally optional. If Web sync fails, local checks, Telegram
-alerts, ChatOps, and local audit logs continue to work.
+Web sync is optional. If it fails or is disabled, local checks, Telegram alerts,
+ChatOps, and local audit logs continue to work normally.
 
-## Configuration
+## Setup
+
+### Step 1 — Create a service in the Web UI
+
+1. Open the EveryUp Web dashboard
+2. Click **추가하기** (Add) in the top-right of the Services page
+3. Enter a name for this agent (e.g. `prod-server`)
+4. Copy the generated API key — it looks like `evup_svc_a1b2c3...`
+
+> The key is shown only once. Save it now; there is no way to retrieve it later.
+
+### Step 2 — Configure the agent
+
+Add these three variables to your agent's `.env`:
 
 ```bash
-EVERYUP_WEB_SYNC_ENABLED=false
-EVERYUP_WEB_BASE_URL=https://everyup.example.com
-EVERYUP_WEB_ENROLLMENT_TOKEN=everyup_enroll_...
-EVERYUP_WEB_AGENT_ID=
-EVERYUP_WEB_SYNC_INTERVAL_SECONDS=30
+EVERYUP_WEB_SYNC_ENABLED=true
+EVERYUP_WEB_BASE_URL=http://your-everyup-web:3001   # URL of your Web instance
+EVERYUP_AGENT_API_KEY=evup_svc_a1b2c3...            # key from Step 1
 ```
+
+### Step 3 — Restart the agent
+
+```bash
+docker compose restart everyup-agent
+```
+
+The agent enrolls automatically on startup. Within 30 seconds, the service
+appears as "online" in the Web dashboard.
+
+## Configuration reference
 
 | Variable | Default | Description |
 |---|---|---|
-| `EVERYUP_WEB_SYNC_ENABLED` | `false` | Enables enrollment, service sync, and audit event sync |
-| `EVERYUP_WEB_BASE_URL` | empty | EveryUp Web base URL |
-| `EVERYUP_WEB_ENROLLMENT_TOKEN` | empty | Bearer token used for enrollment and event sync |
-| `EVERYUP_WEB_AGENT_ID` | empty | Optional existing agent ID to skip enrollment |
-| `EVERYUP_WEB_SYNC_INTERVAL_SECONDS` | `30` | Service and audit sync interval |
+| `EVERYUP_WEB_SYNC_ENABLED` | `false` | Enable Web enrollment and sync |
+| `EVERYUP_WEB_BASE_URL` | — | URL of your EveryUp Web instance |
+| `EVERYUP_AGENT_API_KEY` | — | API key generated from the Web UI |
+| `EVERYUP_WEB_SYNC_INTERVAL_SECONDS` | `30` | How often to push service state and events |
 
 ## API contract
 
-On EveryUp Web, set the same token as:
-
-```bash
-EVERYUP_AGENT_ENROLLMENT_TOKEN=everyup_enroll_...
-```
-
-Enrollment:
+Enrollment — called automatically on agent startup:
 
 ```http
 POST /api/v1/agents/enroll
-Authorization: Bearer <token>
+Authorization: Bearer <EVERYUP_AGENT_API_KEY>
 Content-Type: application/json
-```
 
-```json
 {
-  "agentName": "everyup-agent",
-  "mode": "standalone",
-  "version": "dev"
+  "version": "1.0.0"
 }
 ```
 
-Expected response:
+Response:
 
 ```json
-{
-  "agentId": "agent_123"
-}
+{ "agentId": "agent_abc123" }
 ```
+
+The agent stores `agentId` in memory and uses it for all subsequent sync calls.
+The API key authenticates every request; the agent does not need to store it
+between restarts because it re-enrolls on each startup.
 
 Audit event sync:
 

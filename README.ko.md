@@ -81,13 +81,25 @@ EVERYUP_TELEGRAM_BOT_TOKEN=123456:ABC-DEF...   # BotFather에서 발급
 EVERYUP_TELEGRAM_CHAT_IDS=123456789            # 알림 받을 채팅 ID
 ```
 
-그 다음 Agent를 실행합니다:
+Agent를 Web 대시보드와 연동하려면 (브라우저에서 서비스 상태 확인 가능):
+
+1. `http://localhost:3001` → 서비스 페이지 → **추가하기** 클릭
+2. 이름 입력 (예: `my-server`) 후 발급된 API 키 복사 (`evup_svc_...`)
+3. `.env`에 아래 항목 추가:
+
+```bash
+EVERYUP_WEB_SYNC_ENABLED=true
+EVERYUP_WEB_BASE_URL=http://localhost:3001
+EVERYUP_AGENT_API_KEY=evup_svc_...            # 2번에서 복사한 키
+```
+
+Agent를 실행합니다:
 
 ```bash
 docker compose --profile agent up -d
 ```
 
-Agent가 뜨면 Telegram으로 "Agent started" 메시지가 도착합니다.
+Agent가 뜨면 Telegram으로 시작 메시지가 도착합니다. Web 연동을 활성화한 경우 30초 안에 대시보드에 서비스가 온라인으로 표시됩니다.
 
 ### 3단계: 서비스 모니터링 등록
 

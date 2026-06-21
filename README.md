@@ -81,13 +81,26 @@ EVERYUP_TELEGRAM_BOT_TOKEN=123456:ABC-DEF...   # from BotFather
 EVERYUP_TELEGRAM_CHAT_IDS=123456789            # chat ID to receive alerts
 ```
 
+To also connect the Agent to the Web dashboard (so service health appears in the browser):
+
+1. Open `http://localhost:3001` → Services page → click **추가하기** (Add)
+2. Enter a name (e.g. `my-server`) and copy the generated API key (`evup_svc_...`)
+3. Add these to `.env`:
+
+```bash
+EVERYUP_WEB_SYNC_ENABLED=true
+EVERYUP_WEB_BASE_URL=http://localhost:3001
+EVERYUP_AGENT_API_KEY=evup_svc_...            # key from step 2
+```
+
 Then start the Agent:
 
 ```bash
 docker compose --profile agent up -d
 ```
 
-The Agent sends a "started" message to Telegram within seconds.
+The Agent sends a "started" message to Telegram within seconds. If Web sync is
+enabled, the service appears online in the dashboard within 30 seconds.
 
 ### Step 3: Monitor your services
 

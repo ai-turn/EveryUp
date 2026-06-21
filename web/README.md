@@ -73,7 +73,7 @@ Use the root `.env.example` for Docker Compose overrides. Common Web variables:
 | `EVERYUP_ENCRYPTION_KEY` | Production-managed encryption key |
 | `EVERYUP_ADMIN_USERNAME` | Optional admin account seed/reset username |
 | `EVERYUP_ADMIN_PASSWORD` | Optional admin account seed/reset password |
-| `EVERYUP_AGENT_ENROLLMENT_TOKEN` | Bearer token for EveryUp Agent connected mode |
+| ~~`EVERYUP_AGENT_ENROLLMENT_TOKEN`~~ | Removed — agents now use per-service API keys generated from the Web UI |
 | `VITE_API_BASE_URL` | Frontend API base path, usually `/api/v1` |
 | `VITE_API_TARGET` | Backend target for Vite dev proxy |
 | `VITE_USE_MOCK` | Enable mock data for frontend-only development |
@@ -92,8 +92,9 @@ Default prefix: `/api/v1`.
 | Agent dashboard | `GET /agents`, `GET /agents/:agentId/services`, `GET /agents/:agentId/events` |
 | Agent service detail | `GET /agents/services/all`, `GET /agents/:agentId/services/:key/history`, `GET /agents/:agentId/services/:key/uptime`, `GET /agents/:agentId/services/:key/logs`, `GET /agents/:agentId/services/:key/requests` |
 
-Agent sync endpoints require
-`Authorization: Bearer <EVERYUP_AGENT_ENROLLMENT_TOKEN>`.
+Agent sync endpoints (`/agents/enroll`, `/agents/:id/services`, etc.) require
+`Authorization: Bearer <EVERYUP_AGENT_API_KEY>` — the per-service key generated
+from the Web UI (Services → 추가하기).
 
 ## Main Views
 

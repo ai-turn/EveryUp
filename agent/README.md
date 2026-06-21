@@ -126,8 +126,7 @@ go run ./cmd/everyup-agent
 | `EVERYUP_WEB_API_KEY` | no | | Optional EveryUp Web API key for OTLP forward |
 | `EVERYUP_WEB_SYNC_ENABLED` | no | `false` | Enable Web enrollment, service sync, host metrics sync, and audit event sync |
 | `EVERYUP_WEB_BASE_URL` | no | | EveryUp Web base URL |
-| `EVERYUP_WEB_ENROLLMENT_TOKEN` | no | | Bearer token for Web enrollment/sync |
-| `EVERYUP_WEB_AGENT_ID` | no | | Existing Agent ID to skip enrollment |
+| `EVERYUP_AGENT_API_KEY` | no | | API key generated from the Web UI (Services → 추가하기) |
 | `EVERYUP_WEB_SYNC_INTERVAL_SECONDS` | no | `30` | Web service and audit sync interval |
 | `EVERYUP_LLM_BASE_URL` | no | | OpenAI-compatible API base URL |
 | `EVERYUP_LLM_API_KEY` | no | | LLM API key |
@@ -203,15 +202,28 @@ See [OTel Collector Sidecar](docs/otel-collector.md) for details.
 
 ## Web connected mode
 
-When `EVERYUP_WEB_SYNC_ENABLED=true`, the agent enrolls with EveryUp Web and
-periodically sends discovered service mappings, host metrics (CPU, memory, disk),
-and audit events. Local operation continues even when Web sync fails.
+Connect the agent to your EveryUp Web instance so the browser dashboard shows
+real-time service health, logs, and infrastructure metrics alongside Telegram
+alerts.
 
-Service health results appear on the Web `/healthcheck` dashboard. Host metrics
-are stored in Web's `system_metrics` table and power the infrastructure resource
-charts.
+**Setup:**
 
-See [Web Connected Mode](docs/web-connected-mode.md) for the API contract.
+1. In the Web dashboard, go to the Services page and click **추가하기** (Add)
+2. Enter a name for this agent and copy the generated API key (`evup_svc_...`)
+3. Add three lines to your agent `.env`:
+
+```bash
+EVERYUP_WEB_SYNC_ENABLED=true
+EVERYUP_WEB_BASE_URL=http://your-everyup-web:3001
+EVERYUP_AGENT_API_KEY=evup_svc_...
+```
+
+4. Restart the agent — it connects automatically and appears online within 30 seconds.
+
+Local Telegram alerts, ChatOps, and audit logs continue to work even if the Web
+connection is unavailable.
+
+See [Web Connected Mode](docs/web-connected-mode.md) for the full API contract.
 
 ## LLM incident summaries
 
