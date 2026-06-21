@@ -8,7 +8,7 @@ import { NotificationDropdown } from './NotificationDropdown';
 import { useIsMobile } from '../../hooks/useMediaQuery';
 
 const navItems: { labelKey: string; href: string }[] = [
-    { labelKey: 'nav.services', href: '/services' },
+    { labelKey: 'nav.services', href: '/' },
     { labelKey: 'nav.logs', href: '/logs' },
     { labelKey: 'nav.monitoring', href: '/infra' },
     { labelKey: 'nav.alerts', href: '/alerts' },
@@ -72,7 +72,7 @@ export function Header() {
             <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center">
                 {navItems.map((item) => {
                     const isActive = item.href === '/'
-                        ? location.pathname === '/'
+                        ? location.pathname === '/' || location.pathname.startsWith('/services')
                         : location.pathname.startsWith(item.href);
                     return (
                         <Link

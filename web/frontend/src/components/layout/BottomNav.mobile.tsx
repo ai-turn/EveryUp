@@ -12,7 +12,7 @@ import {
 type IconComponent = ComponentType<SVGProps<SVGSVGElement> & { size?: number }>;
 
 const navItems: { Icon: IconComponent; labelKey: string; href: string }[] = [
-  { Icon: IconHealthCheck,  labelKey: 'nav.services', href: '/services' },
+  { Icon: IconHealthCheck,  labelKey: 'nav.services', href: '/' },
   { Icon: IconLogs,         labelKey: 'nav.logs',        href: '/logs' },
   { Icon: IconInfra,        labelKey: 'nav.monitoring',  href: '/infra' },
   { Icon: IconAlerts,       labelKey: 'nav.alerts',      href: '/alerts' },
@@ -25,7 +25,7 @@ export function BottomNavMobile() {
 
   function isActive(href: string) {
     return href === '/'
-      ? location.pathname === '/'
+      ? location.pathname === '/' || location.pathname.startsWith('/services')
       : location.pathname.startsWith(href);
   }
 

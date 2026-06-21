@@ -57,7 +57,7 @@ export function HealthCheckDetailPage() {
           {t('서비스를 찾을 수 없습니다')}
         </p>
         <button
-          onClick={() => navigate('/services')}
+          onClick={() => navigate('/')}
           className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium"
         >
           {t('목록으로')}

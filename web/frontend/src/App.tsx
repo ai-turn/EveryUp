@@ -6,8 +6,7 @@ import { useAuth } from './contexts/AuthContext';
 import { env } from './config/env';
 import { lazyWithRetry as lazy } from './utils/lazyWithRetry';
 
-const DashboardPage        = lazy(() => import('./pages/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage })));
-const HealthCheckPage      = lazy(() => import('./pages/healthcheck/HealthCheckPage').then(m => ({ default: m.HealthCheckPage })));
+const ServiceGridPage      = lazy(() => import('./pages/services/ServiceGridPage').then(m => ({ default: m.ServiceGridPage })));
 const HealthCheckDetailPage = lazy(() => import('./pages/healthcheck/HealthCheckDetailPage').then(m => ({ default: m.HealthCheckDetailPage })));
 const LogListPage          = lazy(() => import('./pages/logs/LogListPage').then(m => ({ default: m.LogListPage })));
 const LogDetailPage        = lazy(() => import('./pages/logs/LogDetailPage').then(m => ({ default: m.LogDetailPage })));
@@ -59,8 +58,8 @@ function App() {
             <Route path="/login" element={env.isDemoMode ? <Navigate to="/" replace /> : <LoginPage />} />
             <Route element={<ProtectedRoute />}>
               <Route element={<MainLayout />}>
-                <Route index element={<DashboardPage />} />
-                <Route path="/services" element={<HealthCheckPage />} />
+                <Route index element={<ServiceGridPage />} />
+                <Route path="/services" element={<Navigate to="/" replace />} />
                 <Route path="/services/:agentId/:key" element={<HealthCheckDetailPage />} />
                 <Route path="/logs" element={<LogListPage />} />
                 <Route path="/logs/new" element={<LogServiceFormPage />} />

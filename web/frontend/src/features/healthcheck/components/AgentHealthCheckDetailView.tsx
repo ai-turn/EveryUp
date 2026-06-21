@@ -97,7 +97,7 @@ function DesktopLayout(props: AgentHealthCheckDetailViewProps) {
   return (
     <>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
-        <Breadcrumbs items={[{ label: tc('common.backToList'), href: '/services' }]} />
+        <Breadcrumbs items={[{ label: tc('common.backToList'), href: '/' }]} />
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-3 py-2">
             <Toggle checked={isLive} onChange={onLiveToggle} />
@@ -128,7 +128,7 @@ function MobileLayout(props: AgentHealthCheckDetailViewProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <button
-          onClick={() => navigate('/services')}
+          onClick={() => navigate('/')}
           className="flex items-center gap-1 text-slate-500 dark:text-text-muted-dark active:opacity-60 transition-opacity cursor-pointer"
         >
           <MaterialIcon name="arrow_back" className="text-lg" />
