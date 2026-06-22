@@ -63,18 +63,34 @@ Pre-built images are published to Docker Hub, so **you don't need to clone the r
 
 ### 1. Run the Web dashboard
 
+Create a `docker-compose.yml`:
+
+```yaml
+services:
+  everyup:
+    image: aiturn/everyup:latest
+    container_name: everyup
+    ports:
+      - "${EVERYUP_SERVER_PORT:-3001}:3001"
+    volumes:
+      - everyup-data:/app/data
+    env_file:
+      - path: .env
+        required: false
+    restart: unless-stopped
+
+volumes:
+  everyup-data:
+    driver: local
+```
+
 ```bash
-mkdir everyup && cd everyup
-curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/web/docker-compose.yml
 docker compose up -d
 ```
 
 Open `http://localhost:3001` → create an admin account → done.
 
-> To change the port or pre-seed an admin account, grab the env template and edit it before starting:
-> ```bash
-> curl -o .env https://raw.githubusercontent.com/ai-turn/everyup/main/web/.env.example
-> ```
+> To change the port or pre-seed an admin account, create a `.env` alongside the compose file (see [Configuration](#configuration)).
 
 ### 2. Run the Agent — Telegram alerts (optional)
 
@@ -149,17 +165,51 @@ The Agent auto-discovers labeled containers within the next 30-second check. No 
 
 ### Both on one host (single Compose file)
 
-To run Web + Agent together on one machine, use the combined file — they share a Docker network, so the Agent reaches the dashboard at `http://everyup:3001` automatically (no IP needed):
+To run Web + Agent together on one machine, create a single `docker-compose.yml` — they share a Docker network, so the Agent reaches the dashboard at `http://everyup:3001` automatically (no IP needed):
+
+```yaml
+services:
+  everyup:
+    image: aiturn/everyup:latest
+    container_name: everyup
+    ports:
+      - "${EVERYUP_SERVER_PORT:-3001}:3001"
+    volumes:
+      - everyup-data:/app/data
+    env_file:
+      - path: .env
+        required: false
+    restart: unless-stopped
+
+  everyup-agent:
+    image: aiturn/everyup-agent:latest
+    container_name: everyup-agent
+    profiles:
+      - agent
+    depends_on:
+      - everyup
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      EVERYUP_WEB_BASE_URL: "http://everyup:3001"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/hostfs:ro
+      - everyup-agent-data:/data
+    restart: unless-stopped
+
+volumes:
+  everyup-data:
+    driver: local
+  everyup-agent-data:
+    driver: local
+```
 
 ```bash
-mkdir everyup && cd everyup
-curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/docker-compose.yml
-curl -o .env https://raw.githubusercontent.com/ai-turn/everyup/main/.env.example   # set the Telegram token for the agent
 docker compose up -d                    # web only
 docker compose --profile agent up -d    # web + agent
 ```
-
-> Prefer to build from source? `git clone` the repo and run the same `docker compose` commands from the repo root.
 
 ## Configuration
 

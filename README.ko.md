@@ -63,18 +63,34 @@ EveryUp은 두 부분으로 나뉩니다. **둘 중 하나만 써도 됩니다.*
 
 ### 1. Web 대시보드 실행
 
+`docker-compose.yml`을 만듭니다:
+
+```yaml
+services:
+  everyup:
+    image: aiturn/everyup:latest
+    container_name: everyup
+    ports:
+      - "${EVERYUP_SERVER_PORT:-3001}:3001"
+    volumes:
+      - everyup-data:/app/data
+    env_file:
+      - path: .env
+        required: false
+    restart: unless-stopped
+
+volumes:
+  everyup-data:
+    driver: local
+```
+
 ```bash
-mkdir everyup && cd everyup
-curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/web/docker-compose.yml
 docker compose up -d
 ```
 
 브라우저에서 `http://localhost:3001` 접속 → 관리자 계정 생성 → 완료.
 
-> 포트를 바꾸거나 초기 계정을 미리 설정하려면 env 템플릿을 받아 실행 전에 수정하세요:
-> ```bash
-> curl -o .env https://raw.githubusercontent.com/ai-turn/everyup/main/web/.env.example
-> ```
+> 포트 변경이나 초기 계정 설정은 compose 파일과 같은 위치에 `.env`를 만드세요 ([환경 변수 설정](#환경-변수-설정) 참고).
 
 ### 2. Agent 실행 — Telegram 알림 (선택)
 
@@ -149,17 +165,51 @@ label만 붙이면 Agent가 30초 안에 자동 발견합니다. Web UI에서 �
 
 ### 한 서버에 둘 다 (통합 Compose 파일)
 
-Web + Agent를 한 머신에서 함께 돌리려면 통합 파일을 쓰세요. 같은 Docker 네트워크를 공유하므로 Agent가 `http://everyup:3001`로 대시보드에 자동 접근합니다 (IP 불필요):
+Web + Agent를 한 머신에서 함께 돌리려면 `docker-compose.yml` 하나로 구성합니다. 같은 Docker 네트워크를 공유하므로 Agent가 `http://everyup:3001`로 대시보드에 자동 접근합니다 (IP 불필요):
+
+```yaml
+services:
+  everyup:
+    image: aiturn/everyup:latest
+    container_name: everyup
+    ports:
+      - "${EVERYUP_SERVER_PORT:-3001}:3001"
+    volumes:
+      - everyup-data:/app/data
+    env_file:
+      - path: .env
+        required: false
+    restart: unless-stopped
+
+  everyup-agent:
+    image: aiturn/everyup-agent:latest
+    container_name: everyup-agent
+    profiles:
+      - agent
+    depends_on:
+      - everyup
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      EVERYUP_WEB_BASE_URL: "http://everyup:3001"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/hostfs:ro
+      - everyup-agent-data:/data
+    restart: unless-stopped
+
+volumes:
+  everyup-data:
+    driver: local
+  everyup-agent-data:
+    driver: local
+```
 
 ```bash
-mkdir everyup && cd everyup
-curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/docker-compose.yml
-curl -o .env https://raw.githubusercontent.com/ai-turn/everyup/main/.env.example   # agent용 Telegram 토큰 설정
 docker compose up -d                    # web만
 docker compose --profile agent up -d    # web + agent
 ```
-
-> 소스에서 직접 빌드하려면 저장소를 `git clone`한 뒤 루트에서 동일한 `docker compose` 명령을 실행하세요.
 
 ## 환경 변수 설정
 
