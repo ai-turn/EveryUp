@@ -3,7 +3,9 @@ import { useTranslate } from '@tolgee/react';
 import { MaterialIcon } from '../../components/common';
 import { api, type AgentServiceFlat, type ConnectedAgent } from '../../services/api';
 import { AgentServiceCard } from '../../features/services/components/AgentServiceCard';
+import { PendingServiceCard } from '../../features/services/components/PendingServiceCard';
 import { AddServiceModal } from '../../features/services/components/AddServiceModal';
+import { ApiKeyModal } from '../../features/services/components/ApiKeyModal';
 import { getErrorMessage } from '../../utils/errors';
 import { toast } from 'react-hot-toast';
 
@@ -14,9 +16,10 @@ function agentOnline(agent: ConnectedAgent): boolean {
 interface AgentBannerProps {
   agents: ConnectedAgent[];
   onDelete: (id: string) => void;
+  onViewKey: (agent: ConnectedAgent) => void;
 }
 
-function AgentBanner({ agents, onDelete }: AgentBannerProps) {
+function AgentBanner({ agents, onDelete, onViewKey }: AgentBannerProps) {
   const [expanded, setExpanded] = useState(false);
   if (agents.length === 0) return null;
   const onlineCount = agents.filter(agentOnline).length;
@@ -33,7 +36,7 @@ function AgentBanner({ agents, onDelete }: AgentBannerProps) {
         }`}
       >
         <span className={`h-1.5 w-1.5 rounded-full ${allOnline ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-        에이전트 {onlineCount}/{agents.length} 온라인
+        프로젝트 {onlineCount}/{agents.length} 온라인
         <MaterialIcon name={expanded ? 'expand_less' : 'expand_more'} className="text-sm" />
       </button>
 
@@ -48,13 +51,22 @@ function AgentBanner({ agents, onDelete }: AgentBannerProps) {
                   <span className="text-xs text-slate-400 dark:text-text-dim-dark">v{agent.version}</span>
                 )}
               </div>
-              <button
-                onClick={() => onDelete(agent.id)}
-                title="서비스 비활성화"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-              >
-                <MaterialIcon name="delete_outline" className="text-base" />
-              </button>
+              <div className="flex items-center gap-0.5">
+                <button
+                  onClick={() => onViewKey(agent)}
+                  title="API 키 보기"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
+                >
+                  <MaterialIcon name="key" className="text-base" />
+                </button>
+                <button
+                  onClick={() => onDelete(agent.id)}
+                  title="프로젝트 비활성화"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                >
+                  <MaterialIcon name="delete_outline" className="text-base" />
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -72,10 +84,10 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
       </div>
       <div className="space-y-1.5">
         <p className="text-lg font-semibold text-slate-700 dark:text-white">
-          {t('연결된 서비스가 없습니다')}
+          {t('아직 프로젝트가 없습니다')}
         </p>
         <p className="text-sm text-slate-500 dark:text-text-muted-dark max-w-sm">
-          {t('서비스를 추가하고 API 키로 에이전트를 연결하세요')}
+          {t('프로젝트를 추가하고 API 키로 에이전트를 연결하세요')}
         </p>
       </div>
       <button
@@ -83,7 +95,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
         className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors"
       >
         <MaterialIcon name="add" className="text-base" />
-        서비스 추가
+        프로젝트 추가
       </button>
     </div>
   );
@@ -97,6 +109,7 @@ export function ServiceGridPage() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'healthy' | 'unhealthy'>('all');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [keyModalAgent, setKeyModalAgent] = useState<{ id: string; name: string } | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -121,15 +134,21 @@ export function ServiceGridPage() {
 
   const handleDelete = async (agentId: string) => {
     const agent = agents.find(a => a.id === agentId);
-    if (!confirm(`'${agent?.name ?? agentId}' 서비스를 비활성화하시겠습니까?\n에이전트 연결이 차단되며 수집 데이터는 보존됩니다.`)) return;
+    if (!confirm(`'${agent?.name ?? agentId}' 프로젝트를 비활성화하시겠습니까?\n에이전트 연결이 차단되며 수집 데이터는 보존됩니다.`)) return;
     try {
       await api.deleteAgent(agentId);
-      toast.success('서비스가 비활성화됐습니다');
+      toast.success('프로젝트가 비활성화됐습니다');
       load();
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
   };
+
+  const reportingAgentIds = new Set(services.map((s) => s.agentId));
+  // Agents that exist but haven't reported any service yet — show them as
+  // "pending" cards in the main grid so a fresh creation feels like it landed.
+  const pendingAgents = agents.filter((a) => !reportingAgentIds.has(a.id));
+  const connectedAgents = agents.filter((a) => reportingAgentIds.has(a.id));
 
   const filtered = services.filter((s) => {
     if (filter === 'healthy' && !s.healthy) return false;
@@ -142,6 +161,11 @@ export function ServiceGridPage() {
       s.endpoint.toLowerCase().includes(q)
     );
   });
+
+  // Pending cards have no health, so only show them under the "all" filter.
+  const visiblePending = filter === 'all'
+    ? pendingAgents.filter((a) => !search || a.name.toLowerCase().includes(search.toLowerCase()))
+    : [];
 
   const healthyCount = services.filter((s) => s.healthy).length;
   const unhealthyCount = services.filter((s) => !s.healthy).length;
@@ -163,13 +187,17 @@ export function ServiceGridPage() {
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap justify-end">
-          <AgentBanner agents={agents} onDelete={handleDelete} />
+          <AgentBanner
+            agents={connectedAgents}
+            onDelete={handleDelete}
+            onViewKey={(a) => setKeyModalAgent({ id: a.id, name: a.name })}
+          />
           <button
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors shrink-0"
           >
             <MaterialIcon name="add" className="text-base" />
-            추가하기
+            프로젝트 추가
           </button>
         </div>
       </div>
@@ -204,7 +232,7 @@ export function ServiceGridPage() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder={t('서비스 또는 에이전트 이름으로 검색')}
+          placeholder={t('서비스 또는 프로젝트 이름으로 검색')}
           className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-text-dim-dark focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow"
         />
       </div>
@@ -216,14 +244,22 @@ export function ServiceGridPage() {
             <div key={i} className="h-44 rounded-xl bg-slate-100 dark:bg-ui-hover-dark animate-pulse" />
           ))}
         </div>
-      ) : filtered.length === 0 && services.length === 0 ? (
+      ) : services.length === 0 && agents.length === 0 ? (
         <EmptyState onAdd={() => setShowAddModal(true)} />
-      ) : filtered.length === 0 ? (
+      ) : filtered.length === 0 && visiblePending.length === 0 ? (
         <div className="py-16 text-center text-slate-400 dark:text-text-muted-dark text-sm">
           {t('검색 결과가 없습니다')}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {visiblePending.map((agent) => (
+            <PendingServiceCard
+              key={agent.id}
+              agent={agent}
+              onDelete={handleDelete}
+              onViewKey={() => setKeyModalAgent({ id: agent.id, name: agent.name })}
+            />
+          ))}
           {filtered.map((svc) => (
             <AgentServiceCard key={`${svc.agentId}/${svc.key}`} service={svc} />
           ))}
@@ -234,6 +270,15 @@ export function ServiceGridPage() {
         <AddServiceModal
           onClose={() => setShowAddModal(false)}
           onCreated={load}
+        />
+      )}
+
+      {keyModalAgent && (
+        <ApiKeyModal
+          agentId={keyModalAgent.id}
+          agentName={keyModalAgent.name}
+          onClose={() => setKeyModalAgent(null)}
+          onRotated={load}
         />
       )}
     </div>

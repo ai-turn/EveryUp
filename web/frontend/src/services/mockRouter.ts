@@ -515,6 +515,13 @@ const mockAgents: ConnectedAgent[] = [
     createdAt: new Date(Date.now() - 30 * 86_400_000).toISOString(),
     updatedAt: new Date(Date.now() - 15_000).toISOString(),
   },
+  {
+    // Created but never connected — renders as a pending card in the main grid.
+    id: 'agent_demo_02', name: 'staging-api', mode: 'standalone',
+    lastSeenAt: new Date(Date.now() - 90_000).toISOString(),
+    createdAt: new Date(Date.now() - 90_000).toISOString(),
+    updatedAt: new Date(Date.now() - 90_000).toISOString(),
+  },
 ];
 
 const mockAgentServicesFlat: AgentServiceFlat[] = [
@@ -596,9 +603,40 @@ const mockAppSettings: AppSettings = {
 
 // ?? Router ????????????????????????????????????????????????????????????????????
 
-export function mockRouter<T>(endpoint: string, method = 'GET'): T {
-  // Mutations in mock mode: return success silently
-  if (method !== 'GET') return null as T;
+function randomHex(bytes: number): string {
+  let s = '';
+  for (let i = 0; i < bytes; i++) s += Math.floor(Math.random() * 256).toString(16).padStart(2, '0');
+  return s;
+}
+
+export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit | null): T {
+  // Mutations in mock mode: mutate the in-memory fixtures so flows feel real.
+  if (method !== 'GET') {
+    // POST /agents — create a pending agent (no services yet → pending card)
+    if (method === 'POST' && endpoint === '/agents') {
+      let name = 'new-service';
+      try {
+        const parsed = JSON.parse(typeof body === 'string' ? body : '{}');
+        if (parsed?.name) name = String(parsed.name);
+      } catch { /* keep default */ }
+      const id = `agent_mock_${Date.now()}`;
+      const now = new Date().toISOString();
+      mockAgents.push({ id, name, mode: 'standalone', lastSeenAt: now, createdAt: now, updatedAt: now });
+      return { id, name, apiKey: `evup_svc_${randomHex(24)}` } as T;
+    }
+    // POST /agents/:id/rotate-key — issue a fresh key
+    if (method === 'POST' && /^\/agents\/[^/]+\/rotate-key$/.test(endpoint)) {
+      return { apiKey: `evup_svc_${randomHex(24)}` } as T;
+    }
+    // DELETE /agents/:id — remove the agent so its card disappears
+    const delMatch = endpoint.match(/^\/agents\/([^/]+)$/);
+    if (method === 'DELETE' && delMatch) {
+      const idx = mockAgents.findIndex(a => a.id === delMatch[1]);
+      if (idx !== -1) mockAgents.splice(idx, 1);
+      return null as T;
+    }
+    return null as T;
+  }
 
   if (endpoint === '/dashboard/timeline') return mockTimeline as T;
 
@@ -655,6 +693,9 @@ export function mockRouter<T>(endpoint: string, method = 'GET'): T {
 
   // /agents/services/all — must come before /agents/:id/services
   if (endpoint === '/agents/services/all') return mockAgentServicesFlat as T;
+  // /agents/:agentId/key
+  if (/^\/agents\/[^/]+\/key$/.test(endpoint))
+    return { apiKey: 'evup_svc_3f9c4a1b8e3d6f0a5c7b9d2e4f6a8c0b1d3e5f7a9c2b4d6e', available: true } as T;
   // /agents/:agentId/services/:key/logs
   if (/^\/agents\/[^/]+\/services\/[^/]+\/logs/.test(endpoint))
     return { data: mockAgentServiceLogs, total: mockAgentServiceLogs.length } as unknown as T;

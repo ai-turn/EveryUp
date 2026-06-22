@@ -17,7 +17,7 @@ export function createRequestFn(): RequestFn {
   const baseUrl = env.apiBaseUrl;
 
   return async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    if (env.useMock) return mockRouter<T>(endpoint, options?.method);
+    if (env.useMock) return mockRouter<T>(endpoint, options?.method, options?.body);
 
     const response = await fetch(`${baseUrl}${endpoint}`, {
       credentials: 'include',

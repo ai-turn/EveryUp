@@ -69,7 +69,7 @@ export function AgentIdentity({ service }: { service: AgentServiceFlat }) {
 
       <div className="flex flex-wrap gap-2">
         <InfoChip icon="language" label={t('타입')} value={service.checkType.toUpperCase()} />
-        <InfoChip icon="sensors" label={t('에이전트')} value={service.agentName} />
+        <InfoChip icon="sensors" label={t('프로젝트')} value={service.agentName} />
         {service.lastLatency && (
           <InfoChip icon="speed" label={t('지연시간')} value={service.lastLatency} />
         )}

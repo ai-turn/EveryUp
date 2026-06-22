@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MaterialIcon } from '../../../components/common';
 import { api } from '../../../services/api';
+import { copyTextToClipboard } from '../../../hooks/useClipboardCopy';
 import { getErrorMessage } from '../../../utils/errors';
 import { toast } from 'react-hot-toast';
 
@@ -36,9 +37,15 @@ export function AddServiceModal({ onClose, onCreated }: Props) {
   };
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(apiKey);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    // copyTextToClipboard falls back to a textarea + execCommand on plain HTTP,
+    // where navigator.clipboard is unavailable (non-secure context).
+    try {
+      await copyTextToClipboard(apiKey);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('복사에 실패했습니다. 키를 직접 선택해 복사하세요.');
+    }
   };
 
   return (
@@ -47,7 +54,7 @@ export function AddServiceModal({ onClose, onCreated }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-ui-border-dark">
           <h2 className="text-base font-semibold text-slate-900 dark:text-white">
-            {step === 'form' ? '서비스 추가' : 'API 키 발급 완료'}
+            {step === 'form' ? '프로젝트 추가' : 'API 키 발급 완료'}
           </h2>
           <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
             <MaterialIcon name="close" className="text-xl" />
@@ -58,7 +65,7 @@ export function AddServiceModal({ onClose, onCreated }: Props) {
           <form onSubmit={handleCreate} className="p-6 space-y-5">
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-slate-700 dark:text-text-secondary-dark">
-                서비스 이름
+                프로젝트 이름
               </label>
               <input
                 type="text"

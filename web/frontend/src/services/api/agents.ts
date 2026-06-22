@@ -69,6 +69,11 @@ export function createAgentsApi(request: RequestFn) {
       }),
     deleteAgent: (agentId: string) =>
       request<void>(`/agents/${agentId}`, { method: 'DELETE' }),
+    // Reveal the full API key. available=false for projects created before key storage existed.
+    getAgentKey: (agentId: string) =>
+      request<{ apiKey: string; available: boolean }>(`/agents/${agentId}/key`),
+    rotateAgentKey: (agentId: string) =>
+      request<{ apiKey: string }>(`/agents/${agentId}/rotate-key`, { method: 'POST' }),
     getAgents: () => request<ConnectedAgent[]>('/agents'),
     getAgentServices: (agentId: string) => request<AgentServiceSnapshot[]>(`/agents/${agentId}/services`),
     getAgentEvents: (agentId: string, limit = 100) =>
