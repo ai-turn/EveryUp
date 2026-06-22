@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/aiturn/everyup/internal/alerter"
+	"github.com/aiturn/everyup/internal/crypto"
 	"github.com/aiturn/everyup/internal/database"
 	"github.com/aiturn/everyup/internal/models"
 	"github.com/gofiber/fiber/v2"
@@ -248,13 +249,17 @@ func (h *AgentHandler) Create(c *fiber.Ctx) error {
 	if err != nil {
 		return internalError(c, "KEY_GENERATION_ERROR", err)
 	}
+	keyEnc, err := crypto.Encrypt(plain)
+	if err != nil {
+		return internalError(c, ErrCodeSecret, err)
+	}
 
 	agent := models.Agent{
 		ID:   "agent_" + uuid.NewString(),
 		Name: req.Name,
 		Mode: "standalone",
 	}
-	if err := h.repo.CreateAgent(agent, hash); err != nil {
+	if err := h.repo.CreateAgent(agent, hash, keyEnc); err != nil {
 		return internalError(c, "DATABASE_ERROR", err)
 	}
 
@@ -288,6 +293,52 @@ func (h *AgentHandler) GetAll(c *fiber.Ctx) error {
 		return internalError(c, "DATABASE_ERROR", err)
 	}
 	return c.JSON(fiber.Map{"success": true, "data": agents})
+}
+
+// GetKey returns the agent's full API key (decrypted) for display in the UI.
+// available is false for agents created before key storage existed — those have
+// only the hash and must be rotated to obtain a viewable key.
+func (h *AgentHandler) GetKey(c *fiber.Ctx) error {
+	enc, found, err := h.repo.GetAgentKeyEnc(c.Params("agentId"))
+	if err != nil {
+		return internalError(c, ErrCodeDatabase, err)
+	}
+	if !found {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"success": false,
+			"error":   fiber.Map{"code": ErrCodeNotFound, "message": "agent not found"},
+		})
+	}
+	if enc == "" {
+		return c.JSON(fiber.Map{"success": true, "data": fiber.Map{"apiKey": "", "available": false}})
+	}
+	plain, err := crypto.Decrypt(enc)
+	if err != nil {
+		return internalError(c, ErrCodeSecret, err)
+	}
+	return c.JSON(fiber.Map{"success": true, "data": fiber.Map{"apiKey": plain, "available": true}})
+}
+
+// RotateKey issues a new API key for an agent, invalidating the previous one.
+func (h *AgentHandler) RotateKey(c *fiber.Ctx) error {
+	plain, hash, err := generateAgentKey()
+	if err != nil {
+		return internalError(c, "KEY_GENERATION_ERROR", err)
+	}
+	keyEnc, err := crypto.Encrypt(plain)
+	if err != nil {
+		return internalError(c, ErrCodeSecret, err)
+	}
+	if err := h.repo.UpdateAgentKey(c.Params("agentId"), hash, keyEnc); err != nil {
+		if err == sql.ErrNoRows {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"success": false,
+				"error":   fiber.Map{"code": ErrCodeNotFound, "message": "agent not found"},
+			})
+		}
+		return internalError(c, ErrCodeDatabase, err)
+	}
+	return c.JSON(fiber.Map{"success": true, "data": fiber.Map{"apiKey": plain}})
 }
 
 func (h *AgentHandler) GetServices(c *fiber.Ctx) error {

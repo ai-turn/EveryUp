@@ -141,6 +141,8 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	local.Get("/agents", agentHandler.GetAll)
 	// /agents/services/all must be registered before /:agentId routes to avoid param shadowing
 	local.Get("/agents/services/all", agentHandler.GetAllServicesFlat)
+	local.Get("/agents/:agentId/key", agentHandler.GetKey)
+	local.Post("/agents/:agentId/rotate-key", agentHandler.RotateKey)
 	local.Get("/agents/:agentId/services", agentHandler.GetServices)
 	local.Get("/agents/:agentId/events", agentHandler.GetEvents)
 	local.Get("/agents/:agentId/services/:key/history", agentHandler.GetServiceHistory)

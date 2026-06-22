@@ -106,7 +106,39 @@ func TestLoadFromEnvValidatesWebSyncConfig(t *testing.T) {
 	t.Setenv("EVERYUP_WEB_BASE_URL", "https://everyup.example.com")
 	_, err = LoadFromEnv()
 	if err == nil {
-		t.Fatal("expected missing web enrollment token to fail")
+		t.Fatal("expected missing agent API key to fail")
+	}
+}
+
+func TestLoadFromEnvWebSyncAcceptsAgentAPIKey(t *testing.T) {
+	t.Setenv("EVERYUP_TELEGRAM_BOT_TOKEN", "token")
+	t.Setenv("EVERYUP_TELEGRAM_CHAT_IDS", "123")
+	t.Setenv("EVERYUP_WEB_SYNC_ENABLED", "true")
+	t.Setenv("EVERYUP_WEB_BASE_URL", "https://everyup.example.com")
+	t.Setenv("EVERYUP_AGENT_API_KEY", "evup_svc_abc123")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv returned error: %v", err)
+	}
+	if cfg.AgentAPIKey != "evup_svc_abc123" {
+		t.Fatalf("AgentAPIKey = %q, want %q", cfg.AgentAPIKey, "evup_svc_abc123")
+	}
+}
+
+func TestLoadFromEnvWebSyncAcceptsDeprecatedEnrollmentToken(t *testing.T) {
+	t.Setenv("EVERYUP_TELEGRAM_BOT_TOKEN", "token")
+	t.Setenv("EVERYUP_TELEGRAM_CHAT_IDS", "123")
+	t.Setenv("EVERYUP_WEB_SYNC_ENABLED", "true")
+	t.Setenv("EVERYUP_WEB_BASE_URL", "https://everyup.example.com")
+	t.Setenv("EVERYUP_WEB_ENROLLMENT_TOKEN", "evup_svc_legacy")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv returned error: %v", err)
+	}
+	if cfg.AgentAPIKey != "evup_svc_legacy" {
+		t.Fatalf("AgentAPIKey fallback = %q, want %q", cfg.AgentAPIKey, "evup_svc_legacy")
 	}
 }
 

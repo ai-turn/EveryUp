@@ -39,17 +39,17 @@ type Config struct {
 	DockerDiscoveryEnabled bool
 	DockerSocketPath       string
 
-	OTelConfigEnabled  bool
-	OTelConfigPath     string
-	OTelConfDir        string
-	OTelFileLogPaths   []string
-	WebOTLPEndpoint    string
-	WebAPIKey          string
-	WebBaseURL         string
-	WebEnrollmentToken string
-	WebAgentID         string
-	WebSyncEnabled     bool
-	WebSyncInterval    time.Duration
+	OTelConfigEnabled bool
+	OTelConfigPath    string
+	OTelConfDir       string
+	OTelFileLogPaths  []string
+	WebOTLPEndpoint   string
+	WebAPIKey         string
+	WebBaseURL        string
+	AgentAPIKey       string
+	WebAgentID        string
+	WebSyncEnabled    bool
+	WebSyncInterval   time.Duration
 
 	LLMBaseURL   string
 	LLMAPIKey    string
@@ -99,17 +99,18 @@ func LoadFromEnv() (Config, error) {
 		DockerDiscoveryEnabled: boolEnv("EVERYUP_DOCKER_DISCOVERY_ENABLED", true),
 		DockerSocketPath:       getEnv("EVERYUP_DOCKER_SOCKET_PATH", "/var/run/docker.sock"),
 
-		OTelConfigEnabled:  boolEnv("EVERYUP_OTEL_CONFIG_ENABLED", false),
-		OTelConfigPath:     getEnv("EVERYUP_OTEL_CONFIG_PATH", defaultOtelConfigPath),
-		OTelConfDir:        getEnv("EVERYUP_OTEL_CONF_DIR", defaultOtelConfDir),
-		OTelFileLogPaths:   splitCSV(os.Getenv("EVERYUP_OTEL_FILELOG_PATHS")),
-		WebOTLPEndpoint:    strings.TrimSpace(os.Getenv("EVERYUP_WEB_OTLP_ENDPOINT")),
-		WebAPIKey:          strings.TrimSpace(os.Getenv("EVERYUP_WEB_API_KEY")),
-		WebBaseURL:         strings.TrimRight(strings.TrimSpace(os.Getenv("EVERYUP_WEB_BASE_URL")), "/"),
-		WebEnrollmentToken: strings.TrimSpace(os.Getenv("EVERYUP_WEB_ENROLLMENT_TOKEN")),
-		WebAgentID:         strings.TrimSpace(os.Getenv("EVERYUP_WEB_AGENT_ID")),
-		WebSyncEnabled:     boolEnv("EVERYUP_WEB_SYNC_ENABLED", false),
-		WebSyncInterval:    durationSeconds("EVERYUP_WEB_SYNC_INTERVAL_SECONDS", 30*time.Second),
+		OTelConfigEnabled: boolEnv("EVERYUP_OTEL_CONFIG_ENABLED", false),
+		OTelConfigPath:    getEnv("EVERYUP_OTEL_CONFIG_PATH", defaultOtelConfigPath),
+		OTelConfDir:       getEnv("EVERYUP_OTEL_CONF_DIR", defaultOtelConfDir),
+		OTelFileLogPaths:  splitCSV(os.Getenv("EVERYUP_OTEL_FILELOG_PATHS")),
+		WebOTLPEndpoint:   strings.TrimSpace(os.Getenv("EVERYUP_WEB_OTLP_ENDPOINT")),
+		WebAPIKey:         strings.TrimSpace(os.Getenv("EVERYUP_WEB_API_KEY")),
+		WebBaseURL:        strings.TrimRight(strings.TrimSpace(os.Getenv("EVERYUP_WEB_BASE_URL")), "/"),
+		// EVERYUP_WEB_ENROLLMENT_TOKEN is the deprecated name for the connected-mode key.
+		AgentAPIKey:     envWithFallback("EVERYUP_AGENT_API_KEY", "EVERYUP_WEB_ENROLLMENT_TOKEN"),
+		WebAgentID:      strings.TrimSpace(os.Getenv("EVERYUP_WEB_AGENT_ID")),
+		WebSyncEnabled:  boolEnv("EVERYUP_WEB_SYNC_ENABLED", false),
+		WebSyncInterval: durationSeconds("EVERYUP_WEB_SYNC_INTERVAL_SECONDS", 30*time.Second),
 
 		LLMBaseURL:   strings.TrimRight(strings.TrimSpace(os.Getenv("EVERYUP_LLM_BASE_URL")), "/"),
 		LLMAPIKey:    strings.TrimSpace(os.Getenv("EVERYUP_LLM_API_KEY")),
@@ -186,8 +187,8 @@ func LoadFromEnv() (Config, error) {
 		if cfg.WebBaseURL == "" {
 			return Config{}, errors.New("EVERYUP_WEB_BASE_URL is required when web sync is enabled")
 		}
-		if cfg.WebEnrollmentToken == "" {
-			return Config{}, errors.New("EVERYUP_WEB_ENROLLMENT_TOKEN is required when web sync is enabled")
+		if cfg.AgentAPIKey == "" {
+			return Config{}, errors.New("EVERYUP_AGENT_API_KEY is required when web sync is enabled")
 		}
 	}
 	if cfg.WebSyncInterval <= 0 {
@@ -242,6 +243,14 @@ func getEnv(key, fallback string) string {
 		return fallback
 	}
 	return value
+}
+
+// envWithFallback reads primary, falling back to a deprecated env key when unset.
+func envWithFallback(primary, deprecated string) string {
+	if v := strings.TrimSpace(os.Getenv(primary)); v != "" {
+		return v
+	}
+	return strings.TrimSpace(os.Getenv(deprecated))
 }
 
 func durationSeconds(key string, fallback time.Duration) time.Duration {

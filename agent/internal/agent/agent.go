@@ -103,7 +103,7 @@ func New(cfg config.Config) (*Agent, error) {
 	}
 	var web *webclient.Client
 	if cfg.WebSyncEnabled || cfg.WebBaseURL != "" {
-		web = webclient.New(cfg.WebBaseURL, cfg.WebEnrollmentToken, cfg.HTTPTimeout, nil)
+		web = webclient.New(cfg.WebBaseURL, cfg.AgentAPIKey, cfg.HTTPTimeout, nil)
 	}
 	var runbooks *runbook.Library
 	if cfg.RunbookEnabled {

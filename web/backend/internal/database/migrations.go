@@ -227,6 +227,9 @@ func migrate() error {
 	if err := migrateV31(); err != nil {
 		return fmt.Errorf("v31 migration failed: %w", err)
 	}
+	if err := migrateV32(); err != nil {
+		return fmt.Errorf("v32 migration failed: %w", err)
+	}
 
 	return nil
 }
@@ -1049,6 +1052,17 @@ func migrateV31() error {
 	}
 	_, err := DB.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_agents_api_key_hash ON agents(api_key_hash) WHERE api_key_hash IS NOT NULL`)
 	return err
+}
+
+// migrateV32 adds api_key_enc to agents so the full API key can be revealed later.
+// The key is stored AES-256-GCM encrypted at rest; api_key_hash stays for auth.
+// Added: 2026-06-22
+func migrateV32() error {
+	_, err := DB.Exec(`ALTER TABLE agents ADD COLUMN api_key_enc TEXT`)
+	if err != nil && !strings.Contains(err.Error(), "duplicate column name: api_key_enc") {
+		return err
+	}
+	return nil
 }
 
 // isDuplicateColumnError checks if the error is a duplicate column error (migrateV2)

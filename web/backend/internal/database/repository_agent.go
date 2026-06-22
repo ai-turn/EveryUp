@@ -78,14 +78,44 @@ LIMIT 1`, hash).Scan(&agent.ID, &agent.Name, &agent.Mode, &agent.Version, &agent
 	return agent, true, nil
 }
 
-// CreateAgent inserts a new pre-registered agent with a hashed API key.
-func (r *AgentRepository) CreateAgent(agent models.Agent, keyHash string) error {
+// CreateAgent inserts a new pre-registered agent with a hashed API key (for auth)
+// and the AES-encrypted key (so it can be revealed later in the UI).
+func (r *AgentRepository) CreateAgent(agent models.Agent, keyHash, keyEnc string) error {
 	now := time.Now()
 	_, err := DB.Exec(`
-INSERT INTO agents(id, name, mode, version, api_key_hash, status, last_seen_at, created_at, updated_at)
-VALUES (?, ?, ?, '', ?, 'active', ?, ?, ?)`,
-		agent.ID, agent.Name, agent.Mode, keyHash, now, now, now)
+INSERT INTO agents(id, name, mode, version, api_key_hash, api_key_enc, status, last_seen_at, created_at, updated_at)
+VALUES (?, ?, ?, '', ?, ?, 'active', ?, ?, ?)`,
+		agent.ID, agent.Name, agent.Mode, keyHash, keyEnc, now, now, now)
 	return err
+}
+
+// GetAgentKeyEnc returns the stored encrypted API key for an agent. found is
+// false when no agent row exists; enc is "" for agents created before key
+// storage was added (only the hash exists, so the key cannot be revealed).
+func (r *AgentRepository) GetAgentKeyEnc(id string) (enc string, found bool, err error) {
+	var keyEnc sql.NullString
+	err = DB.QueryRow(`SELECT api_key_enc FROM agents WHERE id = ?`, id).Scan(&keyEnc)
+	if err == sql.ErrNoRows {
+		return "", false, nil
+	}
+	if err != nil {
+		return "", false, err
+	}
+	return keyEnc.String, true, nil
+}
+
+// UpdateAgentKey rotates an agent's API key (hash for auth, enc for reveal).
+func (r *AgentRepository) UpdateAgentKey(id, keyHash, keyEnc string) error {
+	res, err := DB.Exec(`UPDATE agents SET api_key_hash = ?, api_key_enc = ?, updated_at = ? WHERE id = ?`,
+		keyHash, keyEnc, time.Now(), id)
+	if err != nil {
+		return err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
 }
 
 // DeactivateAgent sets an agent's status to 'inactive', preventing further enrollments.
@@ -102,7 +132,7 @@ func (r *AgentRepository) DeactivateAgent(id string) error {
 }
 
 func (r *AgentRepository) GetAllAgents() ([]models.Agent, error) {
-	rows, err := DB.Query(`SELECT id, name, mode, version, COALESCE(status,'active'), last_seen_at, created_at, updated_at FROM agents ORDER BY last_seen_at DESC`)
+	rows, err := DB.Query(`SELECT id, name, mode, version, COALESCE(status,'active'), last_seen_at, created_at, updated_at FROM agents WHERE COALESCE(status,'active') = 'active' ORDER BY last_seen_at DESC`)
 	if err != nil {
 		return nil, err
 	}
@@ -266,6 +296,7 @@ SELECT s.agent_id, s.key, s.name, s.check_type, s.endpoint, s.healthy, s.seen, s
        s.last_error, s.last_status, s.last_latency, s.updated_at, s.observed_at, a.name
 FROM agent_services s
 JOIN agents a ON a.id = s.agent_id
+WHERE COALESCE(a.status,'active') = 'active'
 ORDER BY a.name, s.name`)
 	if err != nil {
 		return nil, err

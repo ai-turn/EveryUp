@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/aiturn/everyup/internal/alerter"
 	"github.com/aiturn/everyup/internal/api"
@@ -16,6 +17,7 @@ import (
 	"github.com/aiturn/everyup/internal/config"
 	"github.com/aiturn/everyup/internal/crypto"
 	"github.com/aiturn/everyup/internal/database"
+	"github.com/aiturn/everyup/internal/models"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -716,4 +718,164 @@ func TestAlertRule_CRUD(t *testing.T) {
 	if !deleteResult.Success {
 		t.Fatalf("delete failed: %v", deleteResult.Error)
 	}
+}
+
+// ─── Agent (Project) API Key Tests ──────────────────────────────────
+
+// TestAgentApiKey_RevealAndRotate verifies a project's API key can be revealed
+// after creation and rotated to a new key (unlimited re-issue).
+func TestAgentApiKey_RevealAndRotate(t *testing.T) {
+	ts := setupTestServer(t)
+	token := ts.setupAdmin(t, "admin", "testpass123")
+	auth := authHeader(token)
+
+	// Create a project — the API key is returned once here.
+	_, createResult := ts.doRequest(t, "POST", "/api/v1/agents", map[string]string{"name": "payments"}, auth...)
+	if !createResult.Success {
+		t.Fatalf("create failed: %v", createResult.Error)
+	}
+	var created struct {
+		ID     string `json:"id"`
+		APIKey string `json:"apiKey"`
+	}
+	json.Unmarshal(createResult.Data, &created)
+	if created.ID == "" || created.APIKey == "" {
+		t.Fatalf("expected id and apiKey, got %+v", created)
+	}
+
+	// Reveal — must return the SAME key, marked available.
+	_, keyResult := ts.doRequest(t, "GET", "/api/v1/agents/"+created.ID+"/key", nil, auth...)
+	if !keyResult.Success {
+		t.Fatalf("get key failed: %v", keyResult.Error)
+	}
+	var revealed struct {
+		APIKey    string `json:"apiKey"`
+		Available bool   `json:"available"`
+	}
+	json.Unmarshal(keyResult.Data, &revealed)
+	if !revealed.Available {
+		t.Error("expected available=true for a freshly created project")
+	}
+	if revealed.APIKey != created.APIKey {
+		t.Errorf("revealed key = %q, want %q (must match created key)", revealed.APIKey, created.APIKey)
+	}
+
+	// Rotate — returns a new, different key.
+	_, rotateResult := ts.doRequest(t, "POST", "/api/v1/agents/"+created.ID+"/rotate-key", nil, auth...)
+	if !rotateResult.Success {
+		t.Fatalf("rotate failed: %v", rotateResult.Error)
+	}
+	var rotated struct {
+		APIKey string `json:"apiKey"`
+	}
+	json.Unmarshal(rotateResult.Data, &rotated)
+	if rotated.APIKey == "" || rotated.APIKey == created.APIKey {
+		t.Errorf("rotated key = %q, want a new key different from %q", rotated.APIKey, created.APIKey)
+	}
+
+	// Reveal again — now returns the rotated key (rotation persisted).
+	_, keyResult2 := ts.doRequest(t, "GET", "/api/v1/agents/"+created.ID+"/key", nil, auth...)
+	var revealed2 struct {
+		APIKey string `json:"apiKey"`
+	}
+	json.Unmarshal(keyResult2.Data, &revealed2)
+	if revealed2.APIKey != rotated.APIKey {
+		t.Errorf("after rotation revealed = %q, want %q", revealed2.APIKey, rotated.APIKey)
+	}
+
+	// Unknown project → 404.
+	resp, _ := ts.doRequest(t, "GET", "/api/v1/agents/agent_does_not_exist/key", nil, auth...)
+	if resp.StatusCode != 404 {
+		t.Errorf("status = %d, want 404 for unknown project", resp.StatusCode)
+	}
+}
+
+// ─── Agent (Project) Deletion Tests ─────────────────────────────────
+
+// TestAgentDelete_RemovesProjectFromListings verifies a deleted (deactivated)
+// project — and its reported services — disappear from the list endpoints.
+// Regression test: deactivation set status='inactive' but the listing queries
+// did not filter on status, so deleted projects/cards lingered in the UI.
+func TestAgentDelete_RemovesProjectFromListings(t *testing.T) {
+	ts := setupTestServer(t)
+	token := ts.setupAdmin(t, "admin", "testpass123")
+	auth := authHeader(token)
+
+	// Create a project.
+	_, createResult := ts.doRequest(t, "POST", "/api/v1/agents", map[string]string{"name": "to-delete"}, auth...)
+	if !createResult.Success {
+		t.Fatalf("create failed: %v", createResult.Error)
+	}
+	var created struct {
+		ID string `json:"id"`
+	}
+	json.Unmarshal(createResult.Data, &created)
+
+	// Seed a reported service so it shows up in the services listing.
+	repo := database.NewAgentRepository()
+	if err := repo.UpsertServices(created.ID, time.Now(), []models.AgentService{{
+		AgentID: created.ID, Key: "api", Name: "api", CheckType: "http",
+		Endpoint: "http://api/health", Healthy: true, Seen: true, ObservedAt: time.Now(),
+	}}); err != nil {
+		t.Fatalf("seed services: %v", err)
+	}
+
+	// Sanity: project + service are listed before deletion.
+	if !listHasAgent(t, ts, auth, created.ID) {
+		t.Fatal("project should be listed before deletion")
+	}
+	if !servicesHaveAgent(t, ts, auth, created.ID) {
+		t.Fatal("service should be listed before deletion")
+	}
+
+	// Delete (soft-delete / deactivate) — returns 204 No Content (empty body),
+	// so bypass doRequest's JSON decode and check the status directly.
+	req := httptest.NewRequest("DELETE", "/api/v1/agents/"+created.ID, nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	delResp, err := ts.App.Test(req, -1)
+	if err != nil {
+		t.Fatalf("delete request: %v", err)
+	}
+	delResp.Body.Close()
+	if delResp.StatusCode != 204 {
+		t.Fatalf("delete status = %d, want 204", delResp.StatusCode)
+	}
+
+	// The deleted project must disappear from both listings.
+	if listHasAgent(t, ts, auth, created.ID) {
+		t.Error("deleted project still appears in GET /agents")
+	}
+	if servicesHaveAgent(t, ts, auth, created.ID) {
+		t.Error("deleted project's service still appears in GET /agents/services/all")
+	}
+}
+
+func listHasAgent(t *testing.T, ts *testServer, auth []string, id string) bool {
+	t.Helper()
+	_, result := ts.doRequest(t, "GET", "/api/v1/agents", nil, auth...)
+	var agents []struct {
+		ID string `json:"id"`
+	}
+	json.Unmarshal(result.Data, &agents)
+	for _, a := range agents {
+		if a.ID == id {
+			return true
+		}
+	}
+	return false
+}
+
+func servicesHaveAgent(t *testing.T, ts *testServer, auth []string, id string) bool {
+	t.Helper()
+	_, result := ts.doRequest(t, "GET", "/api/v1/agents/services/all", nil, auth...)
+	var svcs []struct {
+		AgentID string `json:"agentId"`
+	}
+	json.Unmarshal(result.Data, &svcs)
+	for _, s := range svcs {
+		if s.AgentID == id {
+			return true
+		}
+	}
+	return false
 }
