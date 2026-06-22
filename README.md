@@ -12,6 +12,7 @@
   <a href="README.ko.md">한국어</a> ·
   <a href="https://ai-turn.github.io/everyup/">Live Demo</a> ·
   <a href="#quick-start">Quick Start</a> ·
+  <a href="#configuration">Configuration</a> ·
   <a href="#repository-layout">Repository Layout</a>
 </p>
 
@@ -58,53 +59,62 @@ Start with **Web only**, then add the Agent when you need Telegram alerts.
 
 ## Quick Start
 
-### Step 1: Run the Web dashboard
+Pre-built images are published to Docker Hub, so **you don't need to clone the repo** — only Docker is required. Web and Agent each have their own Compose file; pull just the one you need.
+
+### 1. Run the Web dashboard
 
 ```bash
-git clone https://github.com/ai-turn/everyup.git
-cd everyup
+mkdir everyup && cd everyup
+curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/web/docker-compose.yml
 docker compose up -d
 ```
 
 Open `http://localhost:3001` → create an admin account → done.
 
-> To change the port or pre-seed an admin account, copy `.env.example` to `.env` and edit it before running Compose.
+> To change the port or pre-seed an admin account, grab the env template and edit it before starting:
+> ```bash
+> curl -o .env https://raw.githubusercontent.com/ai-turn/everyup/main/web/.env.example
+> ```
 
-### Step 2: Add the Agent (optional)
+### 2. Run the Agent — Telegram alerts (optional)
 
-Skip this step if you do not have a Telegram bot token yet.
+The Agent runs on the server you want to monitor — not the Web dashboard server. It needs a Telegram bot token → [How to create one](docs/NOTIFICATION_SETUP.md). On **that** server:
 
-Add these two lines to your `.env` file:
+```bash
+mkdir everyup-agent && cd everyup-agent
+curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/agent/docker-compose.yml
+curl -o .env https://raw.githubusercontent.com/ai-turn/everyup/main/agent/.env.example
+```
+
+Edit `.env` and set at least the Telegram values:
 
 ```bash
 EVERYUP_TELEGRAM_BOT_TOKEN=123456:ABC-DEF...   # from BotFather
 EVERYUP_TELEGRAM_CHAT_IDS=123456789            # chat ID to receive alerts
 ```
 
-To also connect the Agent to the Web dashboard (so service health appears in the browser):
+(Optional) To show agent-discovered services in the Web dashboard:
 
-1. Open `http://localhost:3001` → Services page → click **추가하기** (Add)
-2. Enter a name (e.g. `my-server`) and copy the generated API key (`evup_svc_...`)
-3. Add these to `.env`:
+1. Web dashboard → **Services** → click **추가하기 (Add)** → name it → copy the API key (`evup_svc_...`)
+2. Add these to the same `.env`:
 
 ```bash
 EVERYUP_WEB_SYNC_ENABLED=true
-EVERYUP_WEB_BASE_URL=http://localhost:3001
-EVERYUP_AGENT_API_KEY=evup_svc_...            # key from step 2
+EVERYUP_WEB_BASE_URL=http://WEB_SERVER_IP:3001    # URL of the Web dashboard, reachable from this server
+EVERYUP_AGENT_API_KEY=evup_svc_...                # key from step 1
 ```
 
-Then start the Agent:
+Then start it:
 
 ```bash
-docker compose --profile agent up -d
+docker compose up -d
 ```
 
-The Agent sends a "started" message to Telegram within seconds. If Web sync is
-enabled, the service appears online in the dashboard within 30 seconds.
+The Agent sends a "started" message to Telegram within seconds. With Web sync on, the service shows online in the dashboard within 30 seconds.
 
-### Step 3: Monitor your services
+### 3. Tell the Agent what to watch
 
-Add labels to the containers you want watched (in your own `docker-compose.yml`):
+Add labels to the containers you want monitored (in your own `docker-compose.yml`):
 
 ```yaml
 services:
@@ -124,25 +134,93 @@ services:
       everyup.health.port: "5432"
 ```
 
-The Agent discovers labeled containers automatically within the next 30-second check. No Web UI registration needed.
+The Agent auto-discovers labeled containers within the next 30-second check. No Web UI registration needed.
+
+### Both on one host (single Compose file)
+
+To run Web + Agent together on one machine, use the combined file — they share a Docker network, so the Agent reaches the dashboard at `http://everyup:3001` automatically (no IP needed):
+
+```bash
+mkdir everyup && cd everyup
+curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/docker-compose.yml
+curl -o .env https://raw.githubusercontent.com/ai-turn/everyup/main/.env.example   # set the Telegram token for the agent
+docker compose up -d                    # web only
+docker compose --profile agent up -d    # web + agent
+```
+
+> Prefer to build from source? `git clone` the repo and run the same `docker compose` commands from the repo root.
+
+## Configuration
+
+Web and Agent are configured independently — they run on different servers in the typical setup. Each has its own `.env.example`.
+
+### EveryUp Web
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `EVERYUP_SERVER_PORT` | `3001` | Port the dashboard listens on |
+| `EVERYUP_SERVER_ALLOWORIGINS` | _(empty)_ | CORS allowed origins — only needed if you call the API from a different domain |
+| `EVERYUP_ADMIN_USERNAME` | _(unset)_ | Pre-seed admin account on startup; leave blank to create via browser on first visit |
+| `EVERYUP_ADMIN_PASSWORD` | _(unset)_ | Pre-seed admin password (min 8 chars) |
+| `EVERYUP_DATABASE_PATH` | `./data/monitoring.db` | SQLite database path (inside the container) |
+| `EVERYUP_ENCRYPTION_KEY` | _(auto-generated)_ | 64-char hex AES-256-GCM key; auto-generated and stored on first run if unset |
+| `TZ` | `Asia/Seoul` | Container timezone |
+
+Full template: [`web/.env.example`](web/.env.example)
+
+### EveryUp Agent
+
+**Required:**
+
+| Variable | Description |
+| --- | --- |
+| `EVERYUP_TELEGRAM_BOT_TOKEN` | Telegram bot token from BotFather |
+| `EVERYUP_TELEGRAM_CHAT_IDS` | Comma-separated chat IDs to receive alerts |
+
+**Web sync** — connecting the Agent (monitored server) to the Web dashboard (separate server):
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `EVERYUP_WEB_SYNC_ENABLED` | `false` | Enable syncing with the EveryUp Web dashboard |
+| `EVERYUP_WEB_BASE_URL` | _(empty)_ | Dashboard URL reachable from **this** server, e.g. `http://192.168.1.10:3001` |
+| `EVERYUP_AGENT_API_KEY` | _(empty)_ | API key from Web UI → Services → Add (`evup_svc_...`) |
+
+**Commonly used:**
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `EVERYUP_AGENT_NAME` | `everyup-agent` | Agent display name |
+| `EVERYUP_SERVICE_NAME` | `local-service` | Service name shown in Telegram alerts |
+| `EVERYUP_HOST_CPU_PERCENT` | _(disabled)_ | Host CPU alert threshold (0–100) |
+| `EVERYUP_HOST_MEMORY_PERCENT` | _(disabled)_ | Host memory alert threshold (0–100) |
+| `EVERYUP_HOST_DISK_PERCENT` | _(disabled)_ | Host disk alert threshold (0–100) |
+| `EVERYUP_LLM_BASE_URL` | _(empty)_ | OpenAI-compatible API base URL for AI alert summaries |
+| `EVERYUP_LLM_API_KEY` | _(empty)_ | LLM API key |
+| `EVERYUP_LLM_MODEL` | _(empty)_ | LLM model name |
+
+Full template (50+ variables): [`agent/.env.example`](agent/.env.example)
 
 ## Repository Layout
 
 ```text
 everyup/
   web/
-    backend/       # Go API server, SQLite, OTLP ingestion, alert engine
-    frontend/      # React/Vite dashboard
-    Dockerfile     # Full-stack Web image
+    backend/             # Go API server, SQLite, OTLP ingestion, alert engine
+    frontend/            # React/Vite dashboard
+    Dockerfile           # Full-stack Web image
+    docker-compose.yml   # Web only (pre-built image)
+    .env.example         # Web config template
 
-  agent/           # Standalone EveryUp Agent
-    cmd/           # Entry point
-    internal/      # Core packages
-    docs/          # Per-feature Agent docs
-    compose.example.yml
+  agent/                 # Standalone EveryUp Agent
+    cmd/                 # Entry point
+    internal/            # Core packages
+    docs/                # Per-feature Agent docs
+    docker-compose.yml   # Agent only (pre-built image)
+    .env.example         # Agent config template
+    compose.example.yml  # Build-from-source / OTLP collector template
 
-  docs/            # Operator docs, changelog, roadmaps
-  docker-compose.yml
+  docs/                  # Operator docs, changelog, roadmaps
+  docker-compose.yml     # Web + Agent combined (single host)
   .env.example
 ```
 
