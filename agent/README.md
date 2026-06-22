@@ -7,11 +7,17 @@ ChatOps, and optional EveryUp Web sync.
 
 Two required values. Everything else has a working default.
 
-**1. Create `.env`**
+**1. Get the Compose file and create `.env`**
 
 ```bash
-cp .env.example .env
-# Set these two values:
+mkdir everyup-agent && cd everyup-agent
+curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/agent/docker-compose.yml
+curl -o .env https://raw.githubusercontent.com/ai-turn/everyup/main/agent/.env.example
+```
+
+Edit `.env` and set at least:
+
+```bash
 EVERYUP_TELEGRAM_BOT_TOKEN=123456:ABC-DEF...   # from BotFather
 EVERYUP_TELEGRAM_CHAT_IDS=123456789            # your chat ID
 ```
@@ -43,14 +49,11 @@ labels:
 
 **3. Run the agent**
 
-Use the ready-made Compose file (pre-built image — no clone needed):
-
 ```bash
-curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/agent/docker-compose.yml
 docker compose up -d
 ```
 
-Or add the service to your existing compose file:
+Or add the agent service directly to your existing compose file instead:
 
 ```yaml
   everyup-agent:

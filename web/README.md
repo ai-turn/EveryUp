@@ -122,4 +122,3 @@ This is the **supported** key path.
 - Local runtime files such as `web/backend/config.json`, `web/backend/data/`,
   `web/frontend/.env`, `web/frontend/node_modules/`, and `web/frontend/dist/`
   are ignored.
-- The root `docker-compose.yml` remains the recommended local Docker entrypoint.
