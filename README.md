@@ -78,15 +78,28 @@ Open `http://localhost:3001` → create an admin account → done.
 
 ### 2. Run the Agent — Telegram alerts (optional)
 
-The Agent runs on the server you want to monitor — not the Web dashboard server. It needs a Telegram bot token → [How to create one](docs/NOTIFICATION_SETUP.md). On **that** server:
+The Agent runs on the server you want to monitor — not the Web dashboard server. It needs a Telegram bot token → [How to create one](docs/NOTIFICATION_SETUP.md). On **that** server, create a `docker-compose.yml`:
 
-```bash
-mkdir everyup-agent && cd everyup-agent
-curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/agent/docker-compose.yml
-curl -o .env https://raw.githubusercontent.com/ai-turn/everyup/main/agent/.env.example
+```yaml
+services:
+  everyup-agent:
+    image: aiturn/everyup-agent:latest
+    container_name: everyup-agent
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/hostfs:ro
+      - everyup-agent-data:/data
+    restart: unless-stopped
+
+volumes:
+  everyup-agent-data:
+    driver: local
 ```
 
-Edit `.env` and set at least the Telegram values:
+Then create a `.env` and set at least:
 
 ```bash
 EVERYUP_TELEGRAM_BOT_TOKEN=123456:ABC-DEF...   # from BotFather
@@ -103,8 +116,6 @@ EVERYUP_WEB_SYNC_ENABLED=true
 EVERYUP_WEB_BASE_URL=http://WEB_SERVER_IP:3001    # URL of the Web dashboard, reachable from this server
 EVERYUP_AGENT_API_KEY=evup_svc_...                # key from step 1
 ```
-
-Then start it:
 
 ```bash
 docker compose up -d

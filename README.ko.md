@@ -78,15 +78,28 @@ docker compose up -d
 
 ### 2. Agent 실행 — Telegram 알림 (선택)
 
-Agent는 모니터링할 서버에서 실행합니다 — Web 대시보드 서버와 **다른 서버**입니다. Telegram 봇 토큰이 필요합니다 → [봇 만들기](docs/NOTIFICATION_SETUP.ko.md). 해당 서버에서:
+Agent는 모니터링할 서버에서 실행합니다 — Web 대시보드 서버와 **다른 서버**입니다. Telegram 봇 토큰이 필요합니다 → [봇 만들기](docs/NOTIFICATION_SETUP.ko.md). 해당 서버에서 `docker-compose.yml`을 만듭니다:
 
-```bash
-mkdir everyup-agent && cd everyup-agent
-curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/agent/docker-compose.yml
-curl -o .env https://raw.githubusercontent.com/ai-turn/everyup/main/agent/.env.example
+```yaml
+services:
+  everyup-agent:
+    image: aiturn/everyup-agent:latest
+    container_name: everyup-agent
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/hostfs:ro
+      - everyup-agent-data:/data
+    restart: unless-stopped
+
+volumes:
+  everyup-agent-data:
+    driver: local
 ```
 
-`.env`를 열어 최소한 Telegram 값을 설정합니다:
+`.env`를 만들어 최소한 Telegram 값을 설정합니다:
 
 ```bash
 EVERYUP_TELEGRAM_BOT_TOKEN=123456:ABC-DEF...   # BotFather에서 발급
@@ -103,8 +116,6 @@ EVERYUP_WEB_SYNC_ENABLED=true
 EVERYUP_WEB_BASE_URL=http://WEB_서버_IP:3001   # Web 서버 IP 또는 호스트명 (이 서버에서 접근 가능해야 함)
 EVERYUP_AGENT_API_KEY=evup_svc_...             # 1번에서 복사한 키
 ```
-
-실행:
 
 ```bash
 docker compose up -d

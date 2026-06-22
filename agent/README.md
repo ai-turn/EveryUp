@@ -7,15 +7,28 @@ ChatOps, and optional EveryUp Web sync.
 
 Two required values. Everything else has a working default.
 
-**1. Get the Compose file and create `.env`**
+**1. Create `docker-compose.yml`**
 
-```bash
-mkdir everyup-agent && cd everyup-agent
-curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/agent/docker-compose.yml
-curl -o .env https://raw.githubusercontent.com/ai-turn/everyup/main/agent/.env.example
+```yaml
+services:
+  everyup-agent:
+    image: aiturn/everyup-agent:latest
+    container_name: everyup-agent
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/hostfs:ro
+      - everyup-agent-data:/data
+    restart: unless-stopped
+
+volumes:
+  everyup-agent-data:
+    driver: local
 ```
 
-Edit `.env` and set at least:
+**2. Create `.env`** and set at least:
 
 ```bash
 EVERYUP_TELEGRAM_BOT_TOKEN=123456:ABC-DEF...   # from BotFather
@@ -24,7 +37,7 @@ EVERYUP_TELEGRAM_CHAT_IDS=123456789            # your chat ID
 
 Don't have a Telegram bot yet? Follow [docs/NOTIFICATION_SETUP.ko.md](../docs/NOTIFICATION_SETUP.ko.md) (or the [English version](../docs/NOTIFICATION_SETUP.md)) to create one in under 5 minutes.
 
-**2. Add labels to the services you want monitored** (your existing `docker-compose.yml`)
+**3. Add labels to the services you want monitored** (your existing `docker-compose.yml`)
 
 ```yaml
 services:
@@ -47,7 +60,7 @@ labels:
   everyup.health.port: "5432"
 ```
 
-**3. Run the agent**
+**4. Run**
 
 ```bash
 docker compose up -d
