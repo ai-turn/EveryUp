@@ -41,11 +41,20 @@ labels:
   everyup.health.port: "5432"
 ```
 
-**3. Add the agent to your compose file**
+**3. Run the agent**
+
+Use the ready-made Compose file (pre-built image — no clone needed):
+
+```bash
+curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/agent/docker-compose.yml
+docker compose up -d
+```
+
+Or add the service to your existing compose file:
 
 ```yaml
   everyup-agent:
-    build: /path/to/agent   # or image: everyup/agent:latest once published
+    image: aiturn/everyup-agent:latest   # or `build: ./agent` to build from source
     restart: unless-stopped
     env_file: .env
     volumes:
@@ -55,12 +64,6 @@ labels:
 
 volumes:
   everyup-agent-data:
-```
-
-**4. Start**
-
-```bash
-docker compose up -d everyup-agent
 ```
 
 Telegram sends a startup message within seconds. The agent auto-discovers any
@@ -153,6 +156,31 @@ go run ./cmd/everyup-agent
 | `EVERYUP_ACTION_ALLOWLIST` | no | | Comma-separated actions allowed, such as `restart` |
 | `EVERYUP_ACTION_CONFIRM_TTL_SECONDS` | no | `300` | Confirmation token lifetime |
 
+## API key (connected mode)
+
+`EVERYUP_AGENT_API_KEY` is the only key you need. Generate it in the Web UI
+(**Services → 추가하기**; it looks like `evup_svc_...`) and enable web sync:
+
+```bash
+EVERYUP_WEB_SYNC_ENABLED=true
+EVERYUP_WEB_BASE_URL=http://your-everyup-web:3001
+EVERYUP_AGENT_API_KEY=evup_svc_...
+```
+
+The agent sends it as `Authorization: Bearer` on the connected-mode sync endpoints
+(`/agents/enroll`, `/agents/:id/services|events|metrics`); the backend validates it
+against the `agents` table.
+
+> `EVERYUP_WEB_ENROLLMENT_TOKEN` is the deprecated name for `EVERYUP_AGENT_API_KEY`
+> and is still accepted as a fallback.
+
+### Legacy: OTLP forward (`EVERYUP_WEB_API_KEY`)
+
+`EVERYUP_WEB_API_KEY` + `EVERYUP_WEB_OTLP_ENDPOINT` are leftovers from a previous
+architecture. OTLP log/trace ingest authenticates against a separate **log-service**
+API key, and the current build has **no UI or API route to create one** — so these
+variables are not usable as-is. Use connected mode (above) instead.
+
 ## Docker discovery
 
 Mount the Docker socket read-only and add labels to services that should be
@@ -193,6 +221,11 @@ See [Docker Label Discovery](docs/docker-labels.md) for the full label spec.
 For production hardening, see [Docker Socket Proxy](docs/docker-socket-proxy.md).
 
 ## OTel Collector sidecar
+
+> **Legacy.** This forwards telemetry to EveryUp Web's OTLP endpoint, which needs
+> the `EVERYUP_WEB_API_KEY` log-service key — not provisionable in the current
+> build (see [API key](#api-key-connected-mode)). Kept for reference / external
+> OTLP backends.
 
 The agent generates a Collector config at `EVERYUP_OTEL_CONFIG_PATH`. Use
 [compose.example.yml](compose.example.yml) to run the agent with an

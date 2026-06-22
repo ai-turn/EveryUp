@@ -49,13 +49,17 @@ pnpm build
 
 ## Docker
 
-From the repository root:
+Run the dashboard without cloning (pre-built image):
 
 ```bash
+curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/web/docker-compose.yml
 docker compose up -d
 ```
 
-Build the full Web image:
+`web/docker-compose.yml` runs Web only, `agent/docker-compose.yml` runs the Agent,
+and the root `docker-compose.yml` runs both together on one host.
+
+Build the full Web image from source:
 
 ```bash
 docker build -f web/Dockerfile -t everyup:web-dev .
@@ -93,8 +97,14 @@ Default prefix: `/api/v1`.
 | Agent service detail | `GET /agents/services/all`, `GET /agents/:agentId/services/:key/history`, `GET /agents/:agentId/services/:key/uptime`, `GET /agents/:agentId/services/:key/logs`, `GET /agents/:agentId/services/:key/requests` |
 
 Agent sync endpoints (`/agents/enroll`, `/agents/:id/services`, etc.) require
-`Authorization: Bearer <EVERYUP_AGENT_API_KEY>` — the per-service key generated
-from the Web UI (Services → 추가하기).
+`Authorization: Bearer <EVERYUP_AGENT_API_KEY>` — the per-agent key generated
+from the Web UI (Services → 추가하기), validated against the `agents` table.
+This is the **supported** key path.
+
+> **Legacy:** the OTLP ingest endpoints (`POST /otlp/v1/logs`, `/otlp/v1/traces`)
+> authenticate against a log-type `services` row (`EVERYUP_WEB_API_KEY` on the
+> agent). Service write paths were removed in the agent-only architecture, so the
+> current build has no UI/route to create that key — OTLP ingest is dormant.
 
 ## Main Views
 

@@ -49,7 +49,7 @@ services:
       # Pre-wired to the everyup web service on the same compose network.
       # Web sync is OFF by default. To enable, set in .env:
       #   EVERYUP_WEB_SYNC_ENABLED=true
-      #   EVERYUP_WEB_ENROLLMENT_TOKEN=<same value as EVERYUP_AGENT_ENROLLMENT_TOKEN>
+      #   EVERYUP_AGENT_API_KEY=evup_svc_...   # from Web UI → Services → Add
       EVERYUP_WEB_BASE_URL: "http://everyup:3001"
     restart: unless-stopped
 

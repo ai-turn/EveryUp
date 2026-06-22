@@ -1,0 +1,36 @@
+# =============================================================================
+# EveryUp Agent — watches your Docker services and sends Telegram alerts.
+#
+# Run without cloning the repo (only Docker required):
+#   mkdir everyup-agent && cd everyup-agent
+#   curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/agent/docker-compose.yml
+#   curl -o .env https://raw.githubusercontent.com/ai-turn/everyup/main/agent/.env.example
+#   # edit .env: set EVERYUP_TELEGRAM_BOT_TOKEN and EVERYUP_TELEGRAM_CHAT_IDS
+#   docker compose up -d
+#
+# A Telegram bot token is required for the Agent to start.
+# See docs/NOTIFICATION_SETUP.md for how to create one.
+#
+# Advanced templates (OTLP collector, conf.d, runbooks): see compose.example.yml.
+# =============================================================================
+
+services:
+  everyup-agent:
+    image: aiturn/everyup-agent:latest
+    # Build from source instead of the pre-built image:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    container_name: everyup-agent
+    env_file:
+      - path: .env
+        required: false  # copy agent/.env.example to .env first
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # Docker label auto-discovery
+      - /:/hostfs:ro                                   # host CPU/memory/disk metrics
+      - everyup-agent-data:/data
+    restart: unless-stopped
+
+volumes:
+  everyup-agent-data:
+    driver: local
