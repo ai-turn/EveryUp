@@ -3,6 +3,8 @@ package database
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aiturn/everyup/internal/models"
@@ -187,8 +189,30 @@ VALUES (?, ?, ?, ?, ?)`,
 				return err
 			}
 		}
+		// Remove services that are no longer in the agent's current list.
+		if len(services) > 0 {
+			placeholders := make([]string, len(services))
+			args := make([]interface{}, 0, 1+len(services))
+			args = append(args, agentID)
+			for i, s := range services {
+				placeholders[i] = "?"
+				args = append(args, s.Key)
+			}
+			q := fmt.Sprintf(
+				"DELETE FROM agent_services WHERE agent_id = ? AND key NOT IN (%s)",
+				strings.Join(placeholders, ", "),
+			)
+			if _, err := tx.Exec(q, args...); err != nil {
+				return err
+			}
+		}
 		return nil
 	})
+}
+
+func (r *AgentRepository) DeleteService(agentID, key string) error {
+	_, err := DB.Exec(`DELETE FROM agent_services WHERE agent_id = ? AND key = ?`, agentID, key)
+	return err
 }
 
 func (r *AgentRepository) GetServices(agentID string) ([]models.AgentService, error) {

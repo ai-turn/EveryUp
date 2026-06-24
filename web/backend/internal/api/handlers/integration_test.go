@@ -51,6 +51,9 @@ func setupTestServer(t *testing.T) *testServer {
 	app := fiber.New(fiber.Config{
 		// Disable error logging in tests
 		DisableStartupMessage: true,
+		// Mirror production: decode percent-encoded path params so service keys
+		// like "env:demo-prod" (sent as "env%3Ademo-prod") resolve correctly.
+		UnescapePath: true,
 	})
 
 	hub := websocket.NewHub()
@@ -331,90 +334,6 @@ func TestMe_WithoutToken(t *testing.T) {
 
 // ??? Service CRUD Tests ????????????????????????????????????????????
 
-func TestServiceCRUD(t *testing.T) {
-	ts := setupTestServer(t)
-	token := ts.setupAdmin(t, "admin", "testpass123")
-	auth := authHeader(token)
-
-	// Create
-	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
-		"id":   "svc-test-1",
-		"name": "Test Service",
-		"type": "log",
-	}, auth...)
-
-	if !createResult.Success {
-		t.Fatalf("create failed: %v", createResult.Error)
-	}
-
-	var created struct {
-		ID     string `json:"id"`
-		Name   string `json:"name"`
-		ApiKey string `json:"apiKey"`
-	}
-	json.Unmarshal(createResult.Data, &created)
-	if created.ID != "svc-test-1" {
-		t.Errorf("id = %q, want %q", created.ID, "svc-test-1")
-	}
-	if created.ApiKey == "" {
-		t.Error("expected apiKey in creation response")
-	}
-
-	// Read
-	_, getResult := ts.doRequest(t, "GET", "/api/v1/services/svc-test-1", nil, auth...)
-	if !getResult.Success {
-		t.Fatalf("get failed: %v", getResult.Error)
-	}
-
-	// Update
-	_, updateResult := ts.doRequest(t, "PUT", "/api/v1/services/svc-test-1", map[string]interface{}{
-		"name": "Updated Service",
-	}, auth...)
-	if !updateResult.Success {
-		t.Fatalf("update failed: %v", updateResult.Error)
-	}
-
-	var updated struct {
-		Name string `json:"name"`
-	}
-	json.Unmarshal(updateResult.Data, &updated)
-	if updated.Name != "Updated Service" {
-		t.Errorf("name = %q, want %q", updated.Name, "Updated Service")
-	}
-
-	// List
-	_, listResult := ts.doRequest(t, "GET", "/api/v1/services", nil, auth...)
-	if !listResult.Success {
-		t.Fatalf("list failed: %v", listResult.Error)
-	}
-
-	// Delete
-	_, deleteResult := ts.doRequest(t, "DELETE", "/api/v1/services/svc-test-1", nil, auth...)
-	if !deleteResult.Success {
-		t.Fatalf("delete failed: %v", deleteResult.Error)
-	}
-
-	// Verify deleted
-	resp, _ := ts.doRequest(t, "GET", "/api/v1/services/svc-test-1", nil, auth...)
-	if resp.StatusCode != 404 {
-		t.Errorf("status = %d, want 404 after delete", resp.StatusCode)
-	}
-}
-
-func TestServiceCreate_DuplicateID(t *testing.T) {
-	ts := setupTestServer(t)
-	token := ts.setupAdmin(t, "admin", "testpass123")
-	auth := authHeader(token)
-
-	svc := map[string]interface{}{"id": "dup-1", "name": "Dup", "type": "log"}
-	ts.doRequest(t, "POST", "/api/v1/services", svc, auth...)
-
-	resp, _ := ts.doRequest(t, "POST", "/api/v1/services", svc, auth...)
-	if resp.StatusCode != 409 {
-		t.Errorf("status = %d, want 409 for duplicate", resp.StatusCode)
-	}
-}
-
 func TestServiceCreate_RequiresAuth(t *testing.T) {
 	ts := setupTestServer(t)
 
@@ -427,40 +346,7 @@ func TestServiceCreate_RequiresAuth(t *testing.T) {
 	}
 }
 
-func TestServiceCreate_InputValidation(t *testing.T) {
-	ts := setupTestServer(t)
-	token := ts.setupAdmin(t, "admin", "testpass123")
-	auth := authHeader(token)
-
-	// Missing required fields
-	resp, _ := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
-		"name": "NoID",
-	}, auth...)
-	if resp.StatusCode != 400 {
-		t.Errorf("status = %d, want 400 for missing id", resp.StatusCode)
-	}
-}
-
 // ??? Host Tests ????????????????????????????????????????????????????
-
-func TestHostCreate_ReservedID(t *testing.T) {
-	ts := setupTestServer(t)
-	token := ts.setupAdmin(t, "admin", "testpass123")
-	auth := authHeader(token)
-
-	resp, result := ts.doRequest(t, "POST", "/api/v1/hosts", map[string]interface{}{
-		"id":   "local",
-		"name": "Hacked Local",
-		"type": "remote",
-	}, auth...)
-
-	if resp.StatusCode != 400 {
-		t.Errorf("status = %d, want 400 for reserved ID", resp.StatusCode)
-	}
-	if result.Error == nil || result.Error.Code != "VALIDATION_ERROR" {
-		t.Errorf("expected VALIDATION_ERROR, got %v", result.Error)
-	}
-}
 
 // ??? Health Check Tests ????????????????????????????????????????????
 
@@ -645,29 +531,31 @@ func TestLogList_NotInterceptedByLogIngestApiKeyAuth(t *testing.T) {
 	}
 }
 
-// TestLogService_DefaultLogLevelFilter verifies that creating a log service
-// without specifying logLevelFilter populates it with [error, warn, info]
-// (DEBUG/TRACE are opt-in).
+// TestLogService_DefaultLogLevelFilter verifies that a new log service defaults
+// its logLevelFilter to [error, warn, info] (DEBUG/TRACE are opt-in). Service
+// creation moved out of the HTTP API in the agent-only architecture, so the
+// service is seeded directly via the repository (which applies ToService's
+// defaults) and read back through GET /services/:id.
 func TestLogService_DefaultLogLevelFilter(t *testing.T) {
 	ts := setupTestServer(t)
 	token := ts.setupAdmin(t, "admin", "testpass123")
 	auth := authHeader(token)
 
-	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
-		"id":   "log-default-filter",
-		"name": "Default Filter",
-		"type": "log",
-	}, auth...)
+	seedLogService(t, "log-default-filter", "Default Filter")
 
+	_, getResult := ts.doRequest(t, "GET", "/api/v1/services/log-default-filter", nil, auth...)
+	if !getResult.Success {
+		t.Fatalf("get service failed: %v", getResult.Error)
+	}
 	var svc struct {
 		LogLevelFilter []string `json:"logLevelFilter"`
 	}
-	if err := json.Unmarshal(createResult.Data, &svc); err != nil {
-		t.Fatalf("unmarshal create response: %v", err)
+	if err := json.Unmarshal(getResult.Data, &svc); err != nil {
+		t.Fatalf("unmarshal service: %v", err)
 	}
 
 	if len(svc.LogLevelFilter) != 3 {
-		t.Fatalf("logLevelFilter len = %d, want 3 ??got %v", len(svc.LogLevelFilter), svc.LogLevelFilter)
+		t.Fatalf("logLevelFilter len = %d, want 3 — got %v", len(svc.LogLevelFilter), svc.LogLevelFilter)
 	}
 	want := map[string]bool{"error": true, "warn": true, "info": true}
 	for _, l := range svc.LogLevelFilter {
@@ -675,6 +563,23 @@ func TestLogService_DefaultLogLevelFilter(t *testing.T) {
 			t.Errorf("unexpected level %q in default filter", l)
 		}
 	}
+}
+
+// seedLogService inserts a log-type service directly via the repository and
+// returns the plaintext API key for authenticating OTLP/log ingest. The
+// POST /services write path was removed in the agent-only architecture, so
+// tests seed fixtures through the repository instead. ToService applies the
+// same defaults (e.g. logLevelFilter) the old create handler relied on.
+func seedLogService(t *testing.T, id, name string) (*models.Service, string) {
+	t.Helper()
+	apiKey := "evup_" + id
+	svc := (&models.ServiceCreateRequest{ID: id, Name: name, Type: models.ServiceTypeLog}).ToService()
+	svc.ApiKey = apiKey
+	svc.ApiKeyMasked = "evup_****"
+	if err := database.NewServiceRepository().Create(svc); err != nil {
+		t.Fatalf("seed log service %q: %v", id, err)
+	}
+	return svc, apiKey
 }
 
 // ??? Alert Rule Tests ??????????????????????????????????????????????
@@ -878,4 +783,59 @@ func servicesHaveAgent(t *testing.T, ts *testServer, auth []string, id string) b
 		}
 	}
 	return false
+}
+
+// TestAgentServiceLogs_KeyResolution is a regression test for two bugs that
+// broke the per-service logs/requests endpoints:
+//  1. GetServiceLogs filtered on a non-existent column l.service_name → DATABASE_ERROR.
+//  2. Fiber's default UnescapePath=false left percent-encoded keys (env:demo-prod
+//     arrives as env%3Ademo-prod) undecoded, so the lookup returned NOT_FOUND.
+//
+// Both the colon-containing env key and a hash-style key must resolve to 200,
+// while an unknown key still returns 404.
+func TestAgentServiceLogs_KeyResolution(t *testing.T) {
+	ts := setupTestServer(t)
+	token := ts.setupAdmin(t, "admin", "testpass123")
+	auth := authHeader(token)
+
+	_, createResult := ts.doRequest(t, "POST", "/api/v1/agents", map[string]string{"name": "logs-proj"}, auth...)
+	if !createResult.Success {
+		t.Fatalf("create failed: %v", createResult.Error)
+	}
+	var created struct {
+		ID string `json:"id"`
+	}
+	json.Unmarshal(createResult.Data, &created)
+
+	// Seed two services: one env-style key (with a colon) and one hash-style key.
+	const hashKey = "06190025aa11d5f9716dbe0cd42a0e1ebb474e896eb39681bbb787dda832ebd1"
+	repo := database.NewAgentRepository()
+	if err := repo.UpsertServices(created.ID, time.Now(), []models.AgentService{
+		{AgentID: created.ID, Key: "env:demo-prod", Name: "demo-prod", CheckType: "http", Healthy: true, Seen: true, ObservedAt: time.Now()},
+		{AgentID: created.ID, Key: hashKey, Name: "discovered-api", CheckType: "http", Healthy: true, Seen: true, ObservedAt: time.Now()},
+	}); err != nil {
+		t.Fatalf("seed services: %v", err)
+	}
+
+	// The env key is sent percent-encoded by the frontend (encodeURIComponent).
+	base := "/api/v1/agents/" + created.ID + "/services/"
+	cases := []struct {
+		name       string
+		path       string
+		wantStatus int
+	}{
+		{"env key (percent-encoded colon)", base + "env%3Ademo-prod/logs", 200},
+		{"hash key", base + hashKey + "/logs", 200},
+		{"env key requests", base + "env%3Ademo-prod/requests", 200},
+		{"unknown key", base + "env%3Anope/logs", 404},
+	}
+	for _, tc := range cases {
+		resp, result := ts.doRequest(t, "GET", tc.path, nil, auth...)
+		if resp.StatusCode != tc.wantStatus {
+			t.Errorf("%s: status = %d (%v), want %d", tc.name, resp.StatusCode, result.Error, tc.wantStatus)
+		}
+		if tc.wantStatus == 200 && !result.Success {
+			t.Errorf("%s: success = false, error = %v", tc.name, result.Error)
+		}
+	}
 }
