@@ -144,6 +144,7 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	local.Get("/agents/:agentId/key", agentHandler.GetKey)
 	local.Post("/agents/:agentId/rotate-key", agentHandler.RotateKey)
 	local.Get("/agents/:agentId/services", agentHandler.GetServices)
+	local.Delete("/agents/:agentId/services/:key", agentHandler.DeleteService)
 	local.Get("/agents/:agentId/events", agentHandler.GetEvents)
 	local.Get("/agents/:agentId/services/:key/history", agentHandler.GetServiceHistory)
 	local.Get("/agents/:agentId/services/:key/uptime", agentHandler.GetServiceUptime)

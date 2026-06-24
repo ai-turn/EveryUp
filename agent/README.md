@@ -45,7 +45,7 @@ services:
     image: my-api:latest
     labels:
       everyup.enabled: "true"
-      everyup.service.name: "api"
+      everyup.service.name: "api"          # ← required: display name in alerts and dashboard
       everyup.health.type: "http"
       everyup.health.url: "http://api:8080/health"
 ```
@@ -55,10 +55,12 @@ For a TCP-only service (postgres, redis, …):
 ```yaml
 labels:
   everyup.enabled: "true"
-  everyup.service.name: "postgres"
+  everyup.service.name: "postgres"         # ← required: without this, raw container ID is shown
   everyup.health.type: "tcp"
   everyup.health.port: "5432"
 ```
+
+> **`everyup.service.name` is required.** Omitting it causes the agent to fall back to the container's short ID (e.g. `a3b4c5d6e7f8`) as the service name.
 
 **4. Run**
 
@@ -129,9 +131,9 @@ go run ./cmd/everyup-agent
 | `EVERYUP_TELEGRAM_BOT_TOKEN` | yes | | Telegram bot token |
 | `EVERYUP_TELEGRAM_CHAT_IDS` | yes | | Comma-separated Telegram chat IDs |
 | `EVERYUP_AGENT_NAME` | no | `everyup-agent` | Agent instance name |
-| `EVERYUP_SERVICE_NAME` | no | `local-service` | Name shown in alerts |
+| `EVERYUP_SERVICE_NAME` | no | `local-service` | Name for the `EVERYUP_HEALTH_URL` target. Has no effect when using Docker label discovery only. |
 | `EVERYUP_DATA_DIR` | no | `/data` | Local state and audit directory |
-| `EVERYUP_HEALTH_URL` | no | | HTTP URL to check |
+| `EVERYUP_HEALTH_URL` | no | | Single HTTP URL to monitor directly — **leave empty when using Docker label discovery.** Setting this creates an additional service card in the dashboard named after `EVERYUP_SERVICE_NAME`. |
 | `EVERYUP_CHECK_INTERVAL_SECONDS` | no | `30` | Health-check interval |
 | `EVERYUP_HTTP_TIMEOUT_SECONDS` | no | `5` | HTTP request timeout |
 | `EVERYUP_ALERT_COOLDOWN_SECONDS` | no | `300` | Re-alert cooldown |
