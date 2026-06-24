@@ -149,19 +149,21 @@ services:
     image: my-api:latest
     labels:
       everyup.enabled: "true"
-      everyup.service.name: "api"
+      everyup.service.name: "api"          # ← required: sets the display name in the dashboard
       everyup.health.url: "http://api:8080/health"
 
   postgres:
     image: postgres:16
     labels:
       everyup.enabled: "true"
-      everyup.service.name: "postgres"
+      everyup.service.name: "postgres"     # ← required: without this, container ID is shown
       everyup.health.type: "tcp"
       everyup.health.port: "5432"
 ```
 
 The Agent auto-discovers labeled containers within the next 30-second check. No Web UI registration needed.
+
+> **`everyup.service.name` is required.** Without it, the dashboard shows the raw container ID (e.g. `a3b4c5d6e7f8`) as the service name.
 
 ### Both on one host (single Compose file)
 
@@ -180,6 +182,12 @@ services:
       - path: .env
         required: false
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   everyup-agent:
     image: aiturn/everyup-agent:latest
@@ -187,7 +195,8 @@ services:
     profiles:
       - agent
     depends_on:
-      - everyup
+      everyup:
+        condition: service_healthy
     env_file:
       - path: .env
         required: false
@@ -251,7 +260,8 @@ Full template: [`web/.env.example`](web/.env.example)
 | Variable | Default | Description |
 | --- | --- | --- |
 | `EVERYUP_AGENT_NAME` | `everyup-agent` | Agent display name |
-| `EVERYUP_SERVICE_NAME` | `local-service` | Service name shown in Telegram alerts |
+| `EVERYUP_SERVICE_NAME` | `local-service` | Used only together with `EVERYUP_HEALTH_URL` — the name for that single URL target. Has no effect when using Docker label discovery only. |
+| `EVERYUP_HEALTH_URL` | _(empty)_ | Single HTTP URL to monitor directly (no Docker labels needed). **Leave empty when using Docker label discovery.** Setting this creates an extra service card named after `EVERYUP_SERVICE_NAME`. |
 | `EVERYUP_HOST_CPU_PERCENT` | _(disabled)_ | Host CPU alert threshold (0–100) |
 | `EVERYUP_HOST_MEMORY_PERCENT` | _(disabled)_ | Host memory alert threshold (0–100) |
 | `EVERYUP_HOST_DISK_PERCENT` | _(disabled)_ | Host disk alert threshold (0–100) |

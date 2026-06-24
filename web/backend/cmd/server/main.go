@@ -79,6 +79,10 @@ func main() {
 		AppName:               "EveryUp API",
 		DisableStartupMessage: cfg.Server.Mode == "production",
 		BodyLimit:             4 * 1024 * 1024, // 4 MB
+		// Decode percent-encoded path params (e.g. agent service keys like
+		// "env:demo-prod" arrive as "env%3Ademo-prod"). Without this the colon
+		// stays encoded and service lookups by key return NOT_FOUND.
+		UnescapePath: true,
 	})
 
 	// Setup WebSocket hub

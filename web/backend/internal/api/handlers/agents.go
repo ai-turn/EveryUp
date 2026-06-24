@@ -349,6 +349,15 @@ func (h *AgentHandler) GetServices(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": services})
 }
 
+func (h *AgentHandler) DeleteService(c *fiber.Ctx) error {
+	agentID := c.Params("agentId")
+	key := c.Params("key")
+	if err := h.repo.DeleteService(agentID, key); err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	return c.SendStatus(fiber.StatusNoContent)
+}
+
 func (h *AgentHandler) GetEvents(c *fiber.Ctx) error {
 	limit, _ := strconv.Atoi(c.Query("limit", "100"))
 	events, err := h.repo.GetEvents(c.Params("agentId"), limit)
