@@ -32,10 +32,9 @@
 
 A self-hosted tool for monitoring the services you run on your servers.
 
-- **Instant Telegram alerts** when a service goes down
+- **Instant Telegram/Discord/Slack alerts** when a service goes down — configured in the Web UI
 - **Browser dashboard** for status, logs, and alert history
 - **Auto-discovery** via Docker labels — no manual registration needed
-- **AI explanations** when connected to an LLM — tells you what broke and why
 
 No Prometheus, no Grafana, no heavy stack. One Docker Compose command and you're running.
 
@@ -45,17 +44,19 @@ EveryUp has two parts. **You only need one to get started.**
 
 | | EveryUp Web | EveryUp Agent |
 |---|---|---|
-| What it does | Browser dashboard, alert config, history storage | Watches services in real time, sends Telegram alerts |
-| Requires | Docker | Docker + a Telegram bot |
+| What it does | Browser dashboard, alert rules, notification channels, history storage | Watches services in real time and syncs their health/metrics to Web |
+| Requires | Docker | Docker + an EveryUp Web API key |
 | Service registration | Add manually in the Web UI | Docker labels only — auto-discovered |
+| Notifications | Sends Telegram/Discord/Slack from configured channels | Collects only — Web does the sending |
 | Together? | Agent-discovered services show up in the Web dashboard | |
 
-Start with **Web only**, then add the Agent when you need Telegram alerts.
+Start with **Web only**, then add the Agent when you want auto-discovery and server monitoring. All notification setup happens in the Web UI → 알림 menu.
 
 ## Prerequisites
 
 - Docker 24+ and Docker Compose v2+
-- (Agent only) A Telegram bot token and chat ID → [How to create a Telegram bot](docs/NOTIFICATION_SETUP.md)
+- (Agent only) An EveryUp Web API key from the Web UI (Services → 추가하기)
+- (Notifications) A Telegram bot, Discord webhook, or Slack webhook → [Notification setup](docs/NOTIFICATION_SETUP.md)
 
 ## Quick Start
 
@@ -92,9 +93,9 @@ Open `http://localhost:3001` → create an admin account → done.
 
 > To change the port or pre-seed an admin account, create a `.env` alongside the compose file (see [Configuration](#configuration)).
 
-### 2. Run the Agent — Telegram alerts (optional)
+### 2. Run the Agent — auto-discovery + server monitoring (optional)
 
-The Agent runs on the server you want to monitor — not the Web dashboard server. It needs a Telegram bot token → [How to create one](docs/NOTIFICATION_SETUP.md). On **that** server, create a `docker-compose.yml`:
+The Agent runs on the server you want to monitor — not the Web dashboard server. It connects to Web with an API key and syncs the health, events, and host metrics it collects; Web sends any notifications. On **that** server, create a `docker-compose.yml`:
 
 ```yaml
 services:
@@ -115,17 +116,10 @@ volumes:
     driver: local
 ```
 
-Then create a `.env` and set at least:
-
-```bash
-EVERYUP_TELEGRAM_BOT_TOKEN=123456:ABC-DEF...   # from BotFather
-EVERYUP_TELEGRAM_CHAT_IDS=123456789            # chat ID to receive alerts
-```
-
-(Optional) To show agent-discovered services in the Web dashboard:
+Then connect it to the Web dashboard:
 
 1. Web dashboard → **Services** → click **추가하기 (Add)** → name it → copy the API key (`evup_svc_...`)
-2. Add these to the same `.env`:
+2. Create a `.env` next to the compose file:
 
 ```bash
 EVERYUP_WEB_SYNC_ENABLED=true
@@ -137,7 +131,7 @@ EVERYUP_AGENT_API_KEY=evup_svc_...                # key from step 1
 docker compose up -d
 ```
 
-The Agent sends a "started" message to Telegram within seconds. With Web sync on, the service shows online in the dashboard within 30 seconds.
+The service shows online in the dashboard within 30 seconds. Configure who gets notified — and on which channel — in the Web UI → 알림 menu.
 
 ### 3. Tell the Agent what to watch
 
@@ -231,14 +225,7 @@ Full template: [`web/.env.example`](web/.env.example)
 
 ### EveryUp Agent
 
-**Required:**
-
-| Variable | Description |
-| --- | --- |
-| `EVERYUP_TELEGRAM_BOT_TOKEN` | Telegram bot token from BotFather |
-| `EVERYUP_TELEGRAM_CHAT_IDS` | Comma-separated chat IDs to receive alerts |
-
-**Web sync** — connecting the Agent (monitored server) to the Web dashboard (separate server):
+**Web sync (required)** — connecting the Agent (monitored server) to the Web dashboard (separate server):
 
 | Variable | Default | Description |
 | --- | --- | --- |
@@ -251,15 +238,14 @@ Full template: [`web/.env.example`](web/.env.example)
 | Variable | Default | Description |
 | --- | --- | --- |
 | `EVERYUP_AGENT_NAME` | `everyup-agent` | Agent display name |
-| `EVERYUP_SERVICE_NAME` | `local-service` | Service name shown in Telegram alerts |
+| `EVERYUP_SERVICE_NAME` | `local-service` | Service name shown for the env health target |
 | `EVERYUP_HOST_CPU_PERCENT` | _(disabled)_ | Host CPU alert threshold (0–100) |
 | `EVERYUP_HOST_MEMORY_PERCENT` | _(disabled)_ | Host memory alert threshold (0–100) |
 | `EVERYUP_HOST_DISK_PERCENT` | _(disabled)_ | Host disk alert threshold (0–100) |
-| `EVERYUP_LLM_BASE_URL` | _(empty)_ | OpenAI-compatible API base URL for AI alert summaries |
-| `EVERYUP_LLM_API_KEY` | _(empty)_ | LLM API key |
-| `EVERYUP_LLM_MODEL` | _(empty)_ | LLM model name |
 
-Full template (50+ variables): [`agent/.env.example`](agent/.env.example)
+> Notifications (Telegram/Discord/Slack) are configured in the Web UI → 알림 menu, not on the agent.
+
+Full template: [`agent/.env.example`](agent/.env.example)
 
 ## Repository Layout
 
@@ -319,7 +305,7 @@ go test ./...
 
 | Document | Contents |
 | --- | --- |
-| [agent/README.md](agent/README.md) | Agent setup, Docker labels, ChatOps, Web sync |
+| [agent/README.md](agent/README.md) | Agent setup, Docker labels, Web sync |
 | [docs/NOTIFICATION_SETUP.md](docs/NOTIFICATION_SETUP.md) | **How to create a Telegram bot**, Discord, Slack |
 | [docs/BACKUP_RESTORE.md](docs/BACKUP_RESTORE.md) | Data backup and restore |
 | [docs/API_REQUEST_LOGGING_GUIDE.md](docs/API_REQUEST_LOGGING_GUIDE.md) | API request logging guide |

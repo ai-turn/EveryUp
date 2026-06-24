@@ -35,12 +35,8 @@ services:
 | Feature | Docker API |
 |---|---|
 | Discovery | `GET /containers/json` |
-| ChatOps logs and log keyword alerts | `GET /containers/{id}/logs` |
+| Log keyword detection | `GET /containers/{id}/logs` |
 | Container resource thresholds | `GET /containers/{id}/stats?stream=false` |
-| Approved restart action | `POST /containers/{id}/restart` |
 
-Keep `EVERYUP_ACTIONS_ENABLED=false` unless the proxy allows the restart API and
-your deployment policy accepts that risk.
-
-For approved restart actions, the proxy must also allow the relevant POST route;
-keep dry-run enabled until that path is explicitly tested.
+The agent only reads from the Docker socket — a read-only proxy that exposes the
+container list, logs, and stats endpoints is sufficient.

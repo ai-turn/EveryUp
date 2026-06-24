@@ -1,11 +1,12 @@
 # Web Connected Mode
 
-EveryUp Agent can run standalone (Telegram alerts only), but enabling Web sync
-lets the Web dashboard display real-time service health, logs, API requests, and
-infrastructure metrics from the agent.
+EveryUp Agent collects service health and host metrics; enabling Web sync lets
+the Web dashboard display them in real time and send notifications based on its
+alert rules. Web sync is the agent's primary purpose — without it the agent only
+records checks to a local audit log.
 
-Web sync is optional. If it fails or is disabled, local checks, Telegram alerts,
-ChatOps, and local audit logs continue to work normally.
+If the Web connection fails temporarily, local checks and audit logging continue
+and queued events are flushed once it recovers.
 
 ## Setup
 

@@ -15,14 +15,9 @@ const (
 	defaultCheckInterval   = 30 * time.Second
 	defaultHTTPTimeout     = 5 * time.Second
 	defaultAlertCooldown   = 5 * time.Minute
-	defaultTelegramAPIBase = "https://api.telegram.org"
 	defaultDataDir         = "/data"
 	defaultOtelConfigPath  = "/etc/everyup/generated/otel-config.yaml"
 	defaultOtelConfDir     = "/etc/everyup/conf.d"
-	defaultLLMTimeout      = 8 * time.Second
-	defaultLLMMaxTokens    = 500
-	defaultRunbookDir      = "/etc/everyup/runbooks"
-	defaultMemoryPath      = "/data/incident-memory.db"
 	defaultHostMetricsRoot = "/hostfs"
 )
 
@@ -51,27 +46,9 @@ type Config struct {
 	WebSyncEnabled    bool
 	WebSyncInterval   time.Duration
 
-	LLMBaseURL   string
-	LLMAPIKey    string
-	LLMModel     string
-	LLMTimeout   time.Duration
-	LLMMaxTokens int
-
-	TelegramBotToken string
-	TelegramChatIDs  []string
-	TelegramAPIBase  string
-
-	ChatOpsEnabled bool
-
-	RunbookEnabled bool
-	RunbookDir     string
-
 	HeartbeatURL      string
 	HeartbeatToken    string
 	HeartbeatInterval time.Duration
-
-	MemoryEnabled bool
-	MemoryPath    string
 
 	HostMetricsEnabled bool
 	HostMetricsRoot    string
@@ -79,11 +56,6 @@ type Config struct {
 	HostCPUPercent     float64
 	HostMemoryPercent  float64
 	HostDiskPercent    float64
-
-	ActionsEnabled   bool
-	ActionDryRun     bool
-	ActionAllowlist  []string
-	ActionConfirmTTL time.Duration
 }
 
 func LoadFromEnv() (Config, error) {
@@ -112,27 +84,9 @@ func LoadFromEnv() (Config, error) {
 		WebSyncEnabled:  boolEnv("EVERYUP_WEB_SYNC_ENABLED", false),
 		WebSyncInterval: durationSeconds("EVERYUP_WEB_SYNC_INTERVAL_SECONDS", 30*time.Second),
 
-		LLMBaseURL:   strings.TrimRight(strings.TrimSpace(os.Getenv("EVERYUP_LLM_BASE_URL")), "/"),
-		LLMAPIKey:    strings.TrimSpace(os.Getenv("EVERYUP_LLM_API_KEY")),
-		LLMModel:     strings.TrimSpace(os.Getenv("EVERYUP_LLM_MODEL")),
-		LLMTimeout:   durationSeconds("EVERYUP_LLM_TIMEOUT_SECONDS", defaultLLMTimeout),
-		LLMMaxTokens: intEnv("EVERYUP_LLM_MAX_TOKENS", defaultLLMMaxTokens),
-
-		TelegramBotToken: strings.TrimSpace(os.Getenv("EVERYUP_TELEGRAM_BOT_TOKEN")),
-		TelegramChatIDs:  splitCSV(os.Getenv("EVERYUP_TELEGRAM_CHAT_IDS")),
-		TelegramAPIBase:  strings.TrimRight(getEnv("EVERYUP_TELEGRAM_API_BASE", defaultTelegramAPIBase), "/"),
-
-		ChatOpsEnabled: boolEnv("EVERYUP_CHATOPS_ENABLED", true),
-
-		RunbookEnabled: boolEnv("EVERYUP_RUNBOOK_ENABLED", true),
-		RunbookDir:     getEnv("EVERYUP_RUNBOOK_DIR", defaultRunbookDir),
-
 		HeartbeatURL:      strings.TrimSpace(os.Getenv("EVERYUP_HEARTBEAT_URL")),
 		HeartbeatToken:    strings.TrimSpace(os.Getenv("EVERYUP_HEARTBEAT_TOKEN")),
 		HeartbeatInterval: durationSeconds("EVERYUP_HEARTBEAT_INTERVAL_SECONDS", time.Minute),
-
-		MemoryEnabled: boolEnv("EVERYUP_MEMORY_ENABLED", true),
-		MemoryPath:    getEnv("EVERYUP_MEMORY_PATH", defaultMemoryPath),
 
 		HostMetricsEnabled: boolEnv("EVERYUP_HOST_METRICS_ENABLED", true),
 		HostMetricsRoot:    getEnv("EVERYUP_HOST_METRICS_ROOT", defaultHostMetricsRoot),
@@ -140,19 +94,8 @@ func LoadFromEnv() (Config, error) {
 		HostCPUPercent:     percentEnv("EVERYUP_HOST_CPU_PERCENT", 0),
 		HostMemoryPercent:  percentEnv("EVERYUP_HOST_MEMORY_PERCENT", 0),
 		HostDiskPercent:    percentEnv("EVERYUP_HOST_DISK_PERCENT", 0),
-
-		ActionsEnabled:   boolEnv("EVERYUP_ACTIONS_ENABLED", false),
-		ActionDryRun:     boolEnv("EVERYUP_ACTION_DRY_RUN", true),
-		ActionAllowlist:  splitCSV(os.Getenv("EVERYUP_ACTION_ALLOWLIST")),
-		ActionConfirmTTL: durationSeconds("EVERYUP_ACTION_CONFIRM_TTL_SECONDS", 5*time.Minute),
 	}
 
-	if cfg.TelegramBotToken == "" {
-		return Config{}, errors.New("EVERYUP_TELEGRAM_BOT_TOKEN is required")
-	}
-	if len(cfg.TelegramChatIDs) == 0 {
-		return Config{}, errors.New("EVERYUP_TELEGRAM_CHAT_IDS is required")
-	}
 	if cfg.HealthURL != "" {
 		parsed, err := url.ParseRequestURI(cfg.HealthURL)
 		if err != nil || parsed.Scheme == "" || parsed.Host == "" {
@@ -194,24 +137,6 @@ func LoadFromEnv() (Config, error) {
 	if cfg.WebSyncInterval <= 0 {
 		return Config{}, errors.New("EVERYUP_WEB_SYNC_INTERVAL_SECONDS must be greater than 0")
 	}
-	if cfg.LLMBaseURL != "" {
-		parsed, err := url.ParseRequestURI(cfg.LLMBaseURL)
-		if err != nil || parsed.Scheme == "" || parsed.Host == "" {
-			return Config{}, errors.New("EVERYUP_LLM_BASE_URL must be an absolute URL")
-		}
-		if cfg.LLMModel == "" {
-			return Config{}, errors.New("EVERYUP_LLM_MODEL is required when EVERYUP_LLM_BASE_URL is set")
-		}
-	}
-	if cfg.LLMTimeout <= 0 {
-		return Config{}, errors.New("EVERYUP_LLM_TIMEOUT_SECONDS must be greater than 0")
-	}
-	if cfg.LLMMaxTokens <= 0 {
-		return Config{}, errors.New("EVERYUP_LLM_MAX_TOKENS must be greater than 0")
-	}
-	if cfg.ActionConfirmTTL <= 0 {
-		return Config{}, errors.New("EVERYUP_ACTION_CONFIRM_TTL_SECONDS must be greater than 0")
-	}
 	if cfg.HeartbeatURL != "" {
 		parsed, err := url.ParseRequestURI(cfg.HeartbeatURL)
 		if err != nil || parsed.Scheme == "" || parsed.Host == "" {
@@ -220,9 +145,6 @@ func LoadFromEnv() (Config, error) {
 	}
 	if cfg.HeartbeatInterval <= 0 {
 		return Config{}, errors.New("EVERYUP_HEARTBEAT_INTERVAL_SECONDS must be greater than 0")
-	}
-	if cfg.MemoryEnabled && cfg.MemoryPath == "" {
-		return Config{}, errors.New("EVERYUP_MEMORY_PATH is required when memory is enabled")
 	}
 	for key, value := range map[string]float64{
 		"EVERYUP_HOST_CPU_PERCENT":    cfg.HostCPUPercent,
@@ -290,18 +212,6 @@ func boolEnv(key string, fallback bool) bool {
 	default:
 		return fallback
 	}
-}
-
-func intEnv(key string, fallback int) int {
-	value := strings.TrimSpace(os.Getenv(key))
-	if value == "" {
-		return fallback
-	}
-	parsed, err := strconv.Atoi(value)
-	if err != nil {
-		return fallback
-	}
-	return parsed
 }
 
 func percentEnv(key string, fallback float64) float64 {

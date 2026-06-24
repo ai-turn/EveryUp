@@ -11,7 +11,6 @@ services:
       # optional: uncomment if using the otel-collector profile below
       # - everyup-generated-config:/etc/everyup/generated
       - ./everyup-conf.d:/etc/everyup/conf.d:ro
-      - ./everyup-runbooks:/etc/everyup/runbooks:ro
 
   # optional: add EVERYUP_OTEL_CONFIG_ENABLED=true to .env and uncomment this block
   # otel-collector:
