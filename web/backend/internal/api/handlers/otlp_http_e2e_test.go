@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/aiturn/everyup/internal/database"
-	"github.com/aiturn/everyup/internal/models"
 	collectorlogspb "go.opentelemetry.io/proto/otlp/collector/logs/v1"
 	collectortracepb "go.opentelemetry.io/proto/otlp/collector/trace/v1"
 	commonpb "go.opentelemetry.io/proto/otlp/common/v1"
@@ -23,24 +22,9 @@ import (
 
 func TestOTLPHTTPIngest_E2EStoresCorrelatedLogsSpansAndRequests(t *testing.T) {
 	ts := setupTestServer(t)
-	token := ts.setupAdmin(t, "admin", "testpass123")
+	ts.setupAdmin(t, "admin", "testpass123")
 
-	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
-		"id":   "otel-e2e",
-		"name": "OTel E2E",
-		"type": "log",
-	}, authHeader(token)...)
-	if !createResult.Success {
-		t.Fatalf("service create failed: %+v", createResult.Error)
-	}
-
-	var service models.Service
-	if err := json.Unmarshal(createResult.Data, &service); err != nil {
-		t.Fatalf("decode created service: %v", err)
-	}
-	if service.ApiKey == "" {
-		t.Fatal("created log service should return a plaintext API key")
-	}
+	_, apiKey := seedLogService(t, "otel-e2e", "OTel E2E")
 
 	traceID := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
 	spanID := []byte{16, 17, 18, 19, 20, 21, 22, 23}
@@ -93,8 +77,8 @@ func TestOTLPHTTPIngest_E2EStoresCorrelatedLogsSpansAndRequests(t *testing.T) {
 		}},
 	}
 
-	postOTLP(t, ts, "/api/v1/otlp/v1/logs", service.ApiKey, logReq)
-	postOTLP(t, ts, "/api/v1/otlp/v1/traces", service.ApiKey, traceReq)
+	postOTLP(t, ts, "/api/v1/otlp/v1/logs", apiKey, logReq)
+	postOTLP(t, ts, "/api/v1/otlp/v1/traces", apiKey, traceReq)
 
 	const traceHex = "000102030405060708090a0b0c0d0e0f"
 	const spanHex = "1011121314151617"
@@ -146,18 +130,7 @@ func TestTraces_GetByTraceIDReturnsCorrelatedSpansLogsAndApiRequests(t *testing.
 	ts := setupTestServer(t)
 	token := ts.setupAdmin(t, "admin", "testpass123")
 
-	_, createResult := ts.doRequest(t, "POST", "/api/v1/services", map[string]interface{}{
-		"id":   "trace-corr",
-		"name": "Trace correlation",
-		"type": "log",
-	}, authHeader(token)...)
-	if !createResult.Success {
-		t.Fatalf("service create failed: %+v", createResult.Error)
-	}
-	var service models.Service
-	if err := json.Unmarshal(createResult.Data, &service); err != nil {
-		t.Fatalf("decode service: %v", err)
-	}
+	_, apiKey := seedLogService(t, "trace-corr", "Trace correlation")
 
 	traceID := []byte{0xca, 0xfe, 0xca, 0xfe, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c}
 	spanID := []byte{0xab, 0xcd, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06}
@@ -202,8 +175,8 @@ func TestTraces_GetByTraceIDReturnsCorrelatedSpansLogsAndApiRequests(t *testing.
 		}},
 	}
 
-	postOTLP(t, ts, "/api/v1/otlp/v1/logs", service.ApiKey, logReq)
-	postOTLP(t, ts, "/api/v1/otlp/v1/traces", service.ApiKey, traceReq)
+	postOTLP(t, ts, "/api/v1/otlp/v1/logs", apiKey, logReq)
+	postOTLP(t, ts, "/api/v1/otlp/v1/traces", apiKey, traceReq)
 
 	const traceHex = "cafecafe0102030405060708090a0b0c"
 	resp, result := ts.doRequest(t, "GET", "/api/v1/traces/"+traceHex, nil, authHeader(token)...)
