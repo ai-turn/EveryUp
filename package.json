@@ -5,10 +5,5 @@
     "web:dev": "pnpm --dir web/frontend dev",
     "web:build": "pnpm --dir web/frontend build",
     "web:demo": "pnpm --dir web/frontend build:demo"
-  },
-  "devDependencies": {
-    "tailwindcss": "^4.1.18",
-    "postcss": "^8.5.6",
-    "autoprefixer": "^10.4.23"
   }
 }

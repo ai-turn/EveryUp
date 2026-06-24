@@ -57,7 +57,9 @@ Authorization: Bearer <EVERYUP_AGENT_API_KEY>
 Content-Type: application/json
 
 {
-  "version": "1.0.0"
+  "agentName": "everyup-agent",
+  "mode": "standalone",
+  "version": "dev"
 }
 ```
 
@@ -92,9 +94,34 @@ Content-Type: application/json
 }
 ```
 
+Host metrics sync — pushed periodically when `EVERYUP_HOST_METRICS_ENABLED` is on:
+
+```http
+POST /api/v1/agents/{agentId}/metrics
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+```json
+{
+  "agentId": "agent_123",
+  "cpuUsage": 12.5,
+  "memTotal": 16.0,
+  "memUsed": 6.4,
+  "memUsage": 40.0,
+  "diskTotal": 512.0,
+  "diskUsed": 210.0,
+  "diskUsage": 41.0,
+  "recordedAt": "2026-06-18T00:00:00Z"
+}
+```
+
+These feed the per-agent infrastructure view in the dashboard.
+
 ## Service mapping
 
-Service mapping is label-driven locally and periodically synced to Web:
+Service mapping is discovery-driven locally (Docker labels, plus the optional
+`EVERYUP_HEALTH_URL` target) and periodically synced to Web:
 
 ```http
 POST /api/v1/agents/{agentId}/services

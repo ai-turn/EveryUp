@@ -49,7 +49,7 @@ services:
     image: my-api:latest
     labels:
       everyup.enabled: "true"
-      everyup.service.name: "api"          # ← required: display name in alerts and dashboard
+      everyup.service.name: "api"          # ← display name (defaults to the container name if omitted)
       everyup.health.type: "http"
       everyup.health.url: "http://api:8080/health"
 ```
@@ -59,12 +59,12 @@ For a TCP-only service (postgres, redis, …):
 ```yaml
 labels:
   everyup.enabled: "true"
-  everyup.service.name: "postgres"         # ← required: without this, raw container ID is shown
+  everyup.service.name: "postgres"         # ← display name (defaults to the container name if omitted)
   everyup.health.type: "tcp"
   everyup.health.port: "5432"
 ```
 
-> **`everyup.service.name` is required.** Omitting it causes the agent to fall back to the container's short ID (e.g. `a3b4c5d6e7f8`) as the service name.
+> **`everyup.service.name` is optional but recommended.** When omitted the card is named after the container (only a 12-char short ID if the container has no name). Set it for a stable, readable name. A container is discovered only when it also resolves to a valid health endpoint (`everyup.health.url`, or `everyup.health.port` to build one).
 
 **5. Run**
 
@@ -73,7 +73,11 @@ docker compose up -d
 ```
 
 The agent auto-discovers any container with `everyup.enabled: "true"`, checks it
-on the next 30-second tick, and appears online in Web within 30 seconds.
+on the next 30-second tick, and appears online in Web within 30 seconds. **Each
+discovered container is its own service card** (plus one for `EVERYUP_HEALTH_URL`
+if set) — one agent commonly reports several services. When a container is
+removed (or recreated with a new ID by `docker compose up`), the agent stops
+reporting it and Web drops its card on the next sync.
 Notifications are sent by EveryUp Web based on the alert rules and channels you
 configure there (Web UI → 알림).
 

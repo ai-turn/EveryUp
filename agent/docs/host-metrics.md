@@ -35,3 +35,8 @@ services:
 CPU usage is calculated from consecutive `/proc/stat` samples, so the first
 check establishes a baseline and later checks can alert. Memory uses
 `MemAvailable`, and disk usage uses the configured disk path.
+
+When Web sync is enabled (`EVERYUP_WEB_SYNC_ENABLED=true`), the same host
+snapshot is also pushed to EveryUp Web (`POST /agents/{agentId}/metrics`) and
+powers the per-agent infrastructure view — independent of the threshold alerts
+above, which fire only when a threshold is set and exceeded.

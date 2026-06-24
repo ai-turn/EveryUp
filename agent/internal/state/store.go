@@ -11,6 +11,9 @@ import (
 )
 
 type TargetState struct {
+	ServiceName         string    `json:"serviceName,omitempty"`
+	CheckType           string    `json:"checkType,omitempty"`
+	Endpoint            string    `json:"endpoint,omitempty"`
 	LastAlertAt         time.Time `json:"lastAlertAt,omitempty"`
 	LastLogAlertAt      time.Time `json:"lastLogAlertAt,omitempty"`
 	LastResourceAlertAt time.Time `json:"lastResourceAlertAt,omitempty"`

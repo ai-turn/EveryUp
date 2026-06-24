@@ -7,7 +7,7 @@ survives container restarts.
 
 | File | Format | Purpose |
 |---|---|---|
-| `agent-state.json` | JSON | Target health state and last alert timestamps |
+| `agent-state.json` | JSON | Per-target identity (name/type/endpoint), health state, and last alert timestamps |
 | `audit.jsonl` | JSON Lines | Startup, alert, and recovery events |
 
 ## `agent-state.json`
@@ -23,6 +23,9 @@ Example:
   "version": 1,
   "targets": {
     "env:api": {
+      "serviceName": "api",
+      "checkType": "http",
+      "endpoint": "http://api:8080/health",
       "lastAlertAt": "2026-06-18T00:00:00Z",
       "wasHealthy": false,
       "seenResult": true,
@@ -31,6 +34,12 @@ Example:
   }
 }
 ```
+
+`serviceName`/`checkType`/`endpoint` are persisted so display names survive a
+restart. The map key is the target's local key (`env:<EVERYUP_SERVICE_NAME>` for
+the `EVERYUP_HEALTH_URL` target, or the Docker container ID for discovered ones).
+On each check cycle the agent prunes entries for targets it no longer discovers,
+so stale containers don't linger as zombie service cards in Web.
 
 ## `audit.jsonl`
 

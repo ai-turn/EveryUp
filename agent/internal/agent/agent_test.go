@@ -43,6 +43,27 @@ func TestResourceThresholdsParsePercentLabels(t *testing.T) {
 	}
 }
 
+func TestPruneStaleStatesDropsVanishedTargets(t *testing.T) {
+	a := &Agent{states: map[string]*targetState{
+		"env:demo-prod":  {serviceName: "demo-prod"},
+		"a52304deadbeef": {serviceName: ""}, // stale container ID, no longer discovered
+		"host:metrics":   {serviceName: "host"},
+	}}
+	live := []discovery.Target{{ID: "env:demo-prod", ServiceName: "demo-prod"}}
+
+	a.pruneStaleStates(live)
+
+	if _, ok := a.states["a52304deadbeef"]; ok {
+		t.Fatal("stale container target should be pruned")
+	}
+	if _, ok := a.states["env:demo-prod"]; !ok {
+		t.Fatal("live target should be retained")
+	}
+	if _, ok := a.states["host:metrics"]; !ok {
+		t.Fatal("host:metrics is internal state and must be retained")
+	}
+}
+
 func TestHostResourceViolations(t *testing.T) {
 	violations := hostResourceViolations(hostmetrics.Snapshot{
 		CPUPercent:    91,

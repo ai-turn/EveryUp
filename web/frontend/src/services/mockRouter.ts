@@ -635,6 +635,14 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
       if (idx !== -1) mockAgents.splice(idx, 1);
       return null as T;
     }
+    // DELETE /agents/:id/services/:key — remove one service card
+    const svcDelMatch = endpoint.match(/^\/agents\/([^/]+)\/services\/([^/]+)$/);
+    if (method === 'DELETE' && svcDelMatch) {
+      const key = decodeURIComponent(svcDelMatch[2]);
+      const idx = mockAgentServicesFlat.findIndex(s => s.agentId === svcDelMatch[1] && s.key === key);
+      if (idx !== -1) mockAgentServicesFlat.splice(idx, 1);
+      return null as T;
+    }
     return null as T;
   }
 

@@ -2,9 +2,11 @@ import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslate } from '@tolgee/react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-hot-toast';
 import { MaterialIcon } from '../../components/common';
 import { useAutoRefresh } from '../../hooks/useAutoRefresh';
 import { api, type AgentServiceFlat } from '../../services/api';
+import { getErrorMessage } from '../../utils/errors';
 import { AgentHealthCheckDetailView } from '../../features/healthcheck/components/AgentHealthCheckDetailView';
 
 export function HealthCheckDetailPage() {
@@ -39,6 +41,18 @@ export function HealthCheckDetailPage() {
   }, [fetchService]);
 
   const { refresh } = useAutoRefresh(handleRefresh, 30_000, isLive);
+
+  const handleDelete = useCallback(async () => {
+    if (!agentId || !key || !service) return;
+    if (!confirm(`'${service.name}' 서비스를 삭제하시겠습니까?\n에이전트가 이 대상을 계속 수집 중이면 다음 동기화 때 다시 나타날 수 있습니다.`)) return;
+    try {
+      await api.deleteAgentService(agentId, decodeURIComponent(key));
+      toast.success('서비스가 삭제됐습니다');
+      navigate('/');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  }, [agentId, key, service, navigate]);
 
   if (loading) {
     return (
@@ -75,6 +89,7 @@ export function HealthCheckDetailPage() {
       isLive={isLive}
       onLiveToggle={setIsLive}
       onRefresh={refresh}
+      onDelete={handleDelete}
     />
   );
 }

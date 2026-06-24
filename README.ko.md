@@ -32,10 +32,9 @@
 
 서버에서 운영 중인 서비스들을 한 곳에서 모니터링하는 셀프호스팅 도구입니다.
 
-- 서비스가 다운되면 **Telegram으로 즉시 알림**
+- 서비스가 다운되면 **Telegram/Discord/Slack 즉시 알림** — Web UI에서 설정
 - 브라우저에서 **대시보드**로 상태/로그/알림 이력 확인
 - Docker label만 붙이면 **서비스 자동 발견** (수동 등록 불필요)
-- LLM 연동 시 장애 원인과 조치 방법을 **AI가 설명**
 
 Prometheus + Grafana 같은 무거운 스택 없이, Docker Compose 하나로 바로 쓸 수 있습니다.
 
@@ -45,17 +44,19 @@ EveryUp은 두 부분으로 나뉩니다. **둘 중 하나만 써도 됩니다.*
 
 | | EveryUp Web | EveryUp Agent |
 |---|---|---|
-| 역할 | 브라우저 대시보드, 알림 설정, 이력 저장 | 서비스 서버 옆에서 실시간 감시 + Telegram 알림 |
-| 필요한 것 | Docker | Docker + Telegram 봇 |
+| 역할 | 브라우저 대시보드, 알림 규칙, 알림 채널, 이력 저장 | 서비스를 실시간 감시하고 health/메트릭을 Web으로 동기화 |
+| 필요한 것 | Docker | Docker + EveryUp Web API 키 |
 | 서비스 등록 | Web UI에서 직접 추가 | Docker label만 붙이면 자동 발견 |
+| 알림 | 설정된 채널로 Telegram/Discord/Slack 발송 | 수집만 — 발송은 Web이 담당 |
 | 같이 쓰면? | Agent가 발견한 서비스를 Web 대시보드에서도 확인 가능 | |
 
-처음 시작한다면 **Web만 먼저** 올리고, Telegram 알림이 필요해지면 Agent를 추가하는 것을 권장합니다.
+처음 시작한다면 **Web만 먼저** 올리고, 자동 발견과 서버 모니터링이 필요해지면 Agent를 추가하세요. 모든 알림 설정은 Web UI → 알림 메뉴에서 합니다.
 
 ## 사전 요구사항
 
 - Docker 24+ 및 Docker Compose v2+
-- (Agent 사용 시) Telegram 봇 토큰과 Chat ID → [Telegram 봇 만들기](docs/NOTIFICATION_SETUP.ko.md)
+- (Agent 사용 시) Web UI에서 발급한 EveryUp Web API 키 (서비스 → 추가하기)
+- (알림) Telegram 봇, Discord 웹훅, 또는 Slack 웹훅 → [알림 설정](docs/NOTIFICATION_SETUP.ko.md)
 
 ## 빠른 시작
 
@@ -92,9 +93,9 @@ docker compose up -d
 
 > 포트 변경이나 초기 계정 설정은 compose 파일과 같은 위치에 `.env`를 만드세요 ([환경 변수 설정](#환경-변수-설정) 참고).
 
-### 2. Agent 실행 — Telegram 알림 (선택)
+### 2. Agent 실행 — 자동 발견 + 서버 모니터링 (선택)
 
-Agent는 모니터링할 서버에서 실행합니다 — Web 대시보드 서버와 **다른 서버**입니다. Telegram 봇 토큰이 필요합니다 → [봇 만들기](docs/NOTIFICATION_SETUP.ko.md). 해당 서버에서 `docker-compose.yml`을 만듭니다:
+Agent는 모니터링할 서버에서 실행합니다 — Web 대시보드 서버와 **다른 서버**입니다. API 키로 Web에 연결해, 수집한 health·이벤트·호스트 메트릭을 동기화하며 알림은 Web이 보냅니다. **해당** 서버에서 `docker-compose.yml`을 만듭니다:
 
 ```yaml
 services:
@@ -115,21 +116,14 @@ volumes:
     driver: local
 ```
 
-`.env`를 만들어 최소한 Telegram 값을 설정합니다:
-
-```bash
-EVERYUP_TELEGRAM_BOT_TOKEN=123456:ABC-DEF...   # BotFather에서 발급
-EVERYUP_TELEGRAM_CHAT_IDS=123456789            # 알림 받을 채팅 ID
-```
-
-(선택) Agent가 발견한 서비스를 Web 대시보드에도 표시하려면:
+Web 대시보드에 연결합니다:
 
 1. Web 대시보드 → **서비스** → **추가하기** 클릭 → 이름 입력 → API 키 복사 (`evup_svc_...`)
-2. 같은 `.env`에 추가:
+2. compose 파일 옆에 `.env`를 만듭니다:
 
 ```bash
 EVERYUP_WEB_SYNC_ENABLED=true
-EVERYUP_WEB_BASE_URL=http://WEB_서버_IP:3001   # Web 서버 IP 또는 호스트명 (이 서버에서 접근 가능해야 함)
+EVERYUP_WEB_BASE_URL=http://WEB_서버_IP:3001   # 이 서버에서 접근 가능한 Web 대시보드 URL
 EVERYUP_AGENT_API_KEY=evup_svc_...             # 1번에서 복사한 키
 ```
 
@@ -137,7 +131,7 @@ EVERYUP_AGENT_API_KEY=evup_svc_...             # 1번에서 복사한 키
 docker compose up -d
 ```
 
-Agent가 뜨면 몇 초 안에 Telegram으로 시작 메시지가 도착합니다. Web 연동을 켰다면 30초 안에 대시보드에 서비스가 온라인으로 표시됩니다.
+서비스가 30초 안에 대시보드에 온라인으로 표시됩니다. 누구에게 어떤 채널로 알릴지는 Web UI → 알림 메뉴에서 설정합니다.
 
 ### 3. 감시할 서비스 지정
 
@@ -161,7 +155,9 @@ services:
       everyup.health.port: "5432"
 ```
 
-label만 붙이면 Agent가 30초 안에 자동 발견합니다. Web UI에서 수동으로 등록할 필요 없습니다.
+label만 붙이면 Agent가 30초 안에 자동 발견합니다. Web UI에서 수동으로 등록할 필요 없습니다. **label이 붙은 컨테이너는 각각 하나의 서비스 카드가 됩니다** (`EVERYUP_HEALTH_URL`을 설정하면 그 카드도 추가) — Agent 하나가 여러 서비스를 보고할 수 있습니다.
+
+> **`everyup.service.name`은 선택이지만 권장합니다.** 생략하면 컨테이너 이름이 카드 이름으로 쓰입니다(컨테이너에 이름이 없을 때만 12자 짧은 ID). 안정적인 이름을 위해 지정하세요. 컨테이너는 유효한 health 엔드포인트(`everyup.health.url`, 또는 빌드용 `everyup.health.port`)가 있을 때만 발견됩니다.
 
 ### 한 서버에 둘 다 (통합 Compose 파일)
 
@@ -180,6 +176,12 @@ services:
       - path: .env
         required: false
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   everyup-agent:
     image: aiturn/everyup-agent:latest
@@ -187,7 +189,8 @@ services:
     profiles:
       - agent
     depends_on:
-      - everyup
+      everyup:
+        condition: service_healthy
     env_file:
       - path: .env
         required: false
@@ -231,14 +234,7 @@ Web과 Agent는 각각 독립된 `.env.example`을 사용합니다. 일반적으
 
 ### EveryUp Agent
 
-**필수:**
-
-| 변수 | 설명 |
-| --- | --- |
-| `EVERYUP_TELEGRAM_BOT_TOKEN` | BotFather에서 발급한 Telegram 봇 토큰 |
-| `EVERYUP_TELEGRAM_CHAT_IDS` | 알림 받을 Telegram 채팅 ID (쉼표로 여러 개 지정 가능) |
-
-**Web 연동** — Agent(모니터링 서버)와 Web 대시보드(별도 서버)를 연결할 때:
+**Web 연동 (필수)** — Agent(모니터링 서버)와 Web 대시보드(별도 서버)를 연결할 때:
 
 | 변수 | 기본값 | 설명 |
 | --- | --- | --- |
@@ -251,15 +247,15 @@ Web과 Agent는 각각 독립된 `.env.example`을 사용합니다. 일반적으
 | 변수 | 기본값 | 설명 |
 | --- | --- | --- |
 | `EVERYUP_AGENT_NAME` | `everyup-agent` | Agent 표시 이름 |
-| `EVERYUP_SERVICE_NAME` | `local-service` | Telegram 알림에 표시되는 서비스 이름 |
+| `EVERYUP_SERVICE_NAME` | `local-service` | `EVERYUP_HEALTH_URL` 타깃의 이름. Docker label 디스커버리만 쓸 땐 영향 없음 |
+| `EVERYUP_HEALTH_URL` | _(비어 있음)_ | 직접 감시할 단일 HTTP URL (Docker label 불필요). **label 디스커버리를 쓸 땐 비워 두세요.** 설정하면 `EVERYUP_SERVICE_NAME` 이름의 서비스 카드가 하나 더 생깁니다. |
 | `EVERYUP_HOST_CPU_PERCENT` | _(비활성)_ | CPU 알림 임계값 (0–100) |
 | `EVERYUP_HOST_MEMORY_PERCENT` | _(비활성)_ | 메모리 알림 임계값 (0–100) |
 | `EVERYUP_HOST_DISK_PERCENT` | _(비활성)_ | 디스크 알림 임계값 (0–100) |
-| `EVERYUP_LLM_BASE_URL` | _(비어 있음)_ | AI 장애 요약을 위한 OpenAI 호환 API 주소 |
-| `EVERYUP_LLM_API_KEY` | _(비어 있음)_ | LLM API 키 |
-| `EVERYUP_LLM_MODEL` | _(비어 있음)_ | 사용할 LLM 모델명 |
 
-전체 템플릿 (50개 이상 변수): [`agent/.env.example`](agent/.env.example)
+> 알림(Telegram/Discord/Slack)은 Agent가 아니라 Web UI → 알림 메뉴에서 설정합니다.
+
+전체 템플릿: [`agent/.env.example`](agent/.env.example)
 
 ## 저장소 구조
 
@@ -319,7 +315,7 @@ go test ./...
 
 | 문서 | 내용 |
 | --- | --- |
-| [agent/README.md](agent/README.md) | Agent 설치, Docker label, ChatOps, Web 연동 |
+| [agent/README.md](agent/README.md) | Agent 설치, Docker label, Web 연동 |
 | [docs/NOTIFICATION_SETUP.ko.md](docs/NOTIFICATION_SETUP.ko.md) | **Telegram 봇 만들기**, Discord, Slack 설정 |
 | [docs/BACKUP_RESTORE.ko.md](docs/BACKUP_RESTORE.ko.md) | 데이터 백업과 복원 |
 | [docs/API_REQUEST_LOGGING_GUIDE.md](docs/API_REQUEST_LOGGING_GUIDE.md) | API 요청 로그 수집 가이드 |

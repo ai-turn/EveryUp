@@ -14,11 +14,6 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss()
     ],
-    css: {
-      postcss: {
-        plugins: [],
-      },
-    },
     server: {
       port: 5174,
       proxy: {

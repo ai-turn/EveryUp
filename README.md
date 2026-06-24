@@ -143,21 +143,21 @@ services:
     image: my-api:latest
     labels:
       everyup.enabled: "true"
-      everyup.service.name: "api"          # ← required: sets the display name in the dashboard
+      everyup.service.name: "api"          # ← display name (defaults to the container name if omitted)
       everyup.health.url: "http://api:8080/health"
 
   postgres:
     image: postgres:16
     labels:
       everyup.enabled: "true"
-      everyup.service.name: "postgres"     # ← required: without this, container ID is shown
+      everyup.service.name: "postgres"     # ← display name (defaults to the container name if omitted)
       everyup.health.type: "tcp"
       everyup.health.port: "5432"
 ```
 
-The Agent auto-discovers labeled containers within the next 30-second check. No Web UI registration needed.
+The Agent auto-discovers labeled containers within the next 30-second check. No Web UI registration needed. **Each labeled container becomes its own service card** (plus one card for `EVERYUP_HEALTH_URL` if set), so a single Agent can report many services.
 
-> **`everyup.service.name` is required.** Without it, the dashboard shows the raw container ID (e.g. `a3b4c5d6e7f8`) as the service name.
+> **`everyup.service.name` is optional but recommended.** Omitting it makes the card use the container's name (only a 12-char short ID if the container has no name) — set it for a stable, readable name. A container is only discovered when it also has a valid health endpoint (`everyup.health.url`, or `everyup.health.port` to build one).
 
 ### Both on one host (single Compose file)
 

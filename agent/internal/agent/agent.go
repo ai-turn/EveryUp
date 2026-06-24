@@ -349,6 +349,7 @@ func (a *Agent) writeOTelConfig() {
 
 func (a *Agent) runChecks(ctx context.Context) {
 	targets := a.targets(ctx)
+	a.pruneStaleStates(targets)
 	if len(targets) == 0 {
 		log.Printf("no health check targets found; set EVERYUP_HEALTH_URL or add Docker labels")
 		a.runHostResourceCheck(ctx)
@@ -397,6 +398,27 @@ func (a *Agent) targets(ctx context.Context) []discovery.Target {
 		targets = append(targets, target)
 	}
 	return targets
+}
+
+// pruneStaleStates drops in-memory state for targets no longer discovered, so
+// the agent stops reporting (and Web stops showing) vanished targets — e.g. a
+// container recreated with a new ID by `docker compose up`, leaving its old
+// 64-char ID behind as a zombie service card. host:metrics is internal host
+// state, not a discovery target, so it is always retained.
+// ponytail: a transient Docker-discovery failure briefly prunes live containers
+// for one tick; they re-register on the next cycle and history is preserved.
+func (a *Agent) pruneStaleStates(targets []discovery.Target) {
+	live := map[string]bool{"host:metrics": true}
+	for _, target := range targets {
+		live[targetKey(target)] = true
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for key := range a.states {
+		if !live[key] {
+			delete(a.states, key)
+		}
+	}
 }
 
 func (a *Agent) runCheck(ctx context.Context, target discovery.Target) {
@@ -514,6 +536,9 @@ func (a *Agent) loadState() error {
 	}
 	for key, persisted := range snapshot.Targets {
 		a.states[key] = &targetState{
+			serviceName:         persisted.ServiceName,
+			checkType:           persisted.CheckType,
+			endpoint:            persisted.Endpoint,
 			lastAlertAt:         persisted.LastAlertAt,
 			lastLogAlertAt:      persisted.LastLogAlertAt,
 			lastResourceAlertAt: persisted.LastResourceAlertAt,
@@ -536,6 +561,9 @@ func (a *Agent) saveState() {
 	}
 	for key, current := range a.states {
 		snapshot.Targets[key] = state.TargetState{
+			ServiceName:         current.serviceName,
+			CheckType:           current.checkType,
+			Endpoint:            current.endpoint,
 			LastAlertAt:         current.lastAlertAt,
 			LastLogAlertAt:      current.lastLogAlertAt,
 			LastResourceAlertAt: current.lastResourceAlertAt,

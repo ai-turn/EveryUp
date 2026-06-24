@@ -144,6 +144,17 @@ export function ServiceGridPage() {
     }
   };
 
+  const handleDeleteService = async (svc: AgentServiceFlat) => {
+    if (!confirm(`'${svc.name}' 서비스를 목록에서 삭제하시겠습니까?\n에이전트가 이 대상을 계속 수집 중이면 다음 동기화 때 다시 나타날 수 있습니다.`)) return;
+    try {
+      await api.deleteAgentService(svc.agentId, svc.key);
+      toast.success('서비스가 삭제됐습니다');
+      load();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  };
+
   const reportingAgentIds = new Set(services.map((s) => s.agentId));
   // Agents that exist but haven't reported any service yet — show them as
   // "pending" cards in the main grid so a fresh creation feels like it landed.
@@ -261,7 +272,7 @@ export function ServiceGridPage() {
             />
           ))}
           {filtered.map((svc) => (
-            <AgentServiceCard key={`${svc.agentId}/${svc.key}`} service={svc} />
+            <AgentServiceCard key={`${svc.agentId}/${svc.key}`} service={svc} onDelete={handleDeleteService} />
           ))}
         </div>
       )}

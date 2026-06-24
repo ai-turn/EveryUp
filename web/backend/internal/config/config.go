@@ -14,7 +14,6 @@ type Config struct {
 	Database  DatabaseConfig  `mapstructure:"database"`
 	Services  []ServiceConfig `mapstructure:"services"`
 	System    SystemConfig    `mapstructure:"system"`
-	Auth      AuthConfig      `mapstructure:"auth"`
 	Alerts    AlertsConfig    `mapstructure:"alerts"`
 	Retention RetentionConfig `mapstructure:"retention"`
 }
@@ -24,7 +23,6 @@ type SystemConfig struct {
 	Enabled         bool          `mapstructure:"enabled"`
 	CollectInterval int           `mapstructure:"collectInterval"` // seconds
 	StoreInterval   int           `mapstructure:"storeInterval"`   // seconds
-	SSH             SSHConfig     `mapstructure:"ssh"`
 	Logging         LoggingConfig `mapstructure:"logging"`
 }
 
@@ -32,17 +30,6 @@ type SystemConfig struct {
 type LoggingConfig struct {
 	AllowedLevels []string `mapstructure:"allowedLevels"` // e.g. ["error", "warn"]
 }
-
-// SSHConfig holds SSH-specific configuration
-type SSHConfig struct {
-	ConnectionTimeout int `mapstructure:"connectionTimeout"` // seconds
-	CommandTimeout    int `mapstructure:"commandTimeout"`    // seconds
-	MaxReconnects     int `mapstructure:"maxReconnectAttempts"`
-	KeepAliveInterval int `mapstructure:"keepAliveInterval"` // seconds
-}
-
-// AuthConfig is reserved for future authentication configuration extensions.
-type AuthConfig struct{}
 
 // ServerConfig holds server configuration
 type ServerConfig struct {
@@ -138,10 +125,6 @@ func Load(configPath string) (*Config, error) {
 	v.SetDefault("system.enabled", true)
 	v.SetDefault("system.collectInterval", 5)
 	v.SetDefault("system.storeInterval", 60)
-	v.SetDefault("system.ssh.connectionTimeout", 10)
-	v.SetDefault("system.ssh.commandTimeout", 5)
-	v.SetDefault("system.ssh.maxReconnectAttempts", 10)
-	v.SetDefault("system.ssh.keepAliveInterval", 30)
 	v.SetDefault("system.logging.allowedLevels", []string{"error", "warn"})
 	v.SetDefault("retention.metrics", "7d")
 	v.SetDefault("retention.logs", "3d")

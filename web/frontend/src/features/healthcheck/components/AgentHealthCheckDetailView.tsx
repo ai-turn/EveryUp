@@ -24,6 +24,7 @@ export interface AgentHealthCheckDetailViewProps {
   isLive: boolean;
   onLiveToggle: (live: boolean) => void;
   onRefresh: () => void;
+  onDelete: () => void;
 }
 
 type DetailTab = 'health' | 'logs' | 'requests' | 'infra';
@@ -89,7 +90,7 @@ function TabContent({ tab, service, agentId, serviceKey, refreshKey }: {
 
 function DesktopLayout(props: AgentHealthCheckDetailViewProps) {
   const { t: tc } = useTranslation('common');
-  const { service, agentId, serviceKey, refreshKey, isLive, onLiveToggle, onRefresh } = props;
+  const { service, agentId, serviceKey, refreshKey, isLive, onLiveToggle, onRefresh, onDelete } = props;
   const { spinning, trigger: handleRefresh } = useSpinAction(onRefresh);
   const [activeTab, setActiveTab] = useState<DetailTab>('health');
 
@@ -108,6 +109,13 @@ function DesktopLayout(props: AgentHealthCheckDetailViewProps) {
             <MaterialIcon name="refresh" className={`text-base ${spinning ? 'animate-spin' : ''}`} />
             {tc('common.refresh')}
           </button>
+          <button
+            onClick={onDelete}
+            title="서비스 삭제"
+            className="inline-flex items-center justify-center rounded-lg bg-slate-100 dark:bg-ui-hover-dark px-3 py-2 text-slate-500 dark:text-text-secondary-dark transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20"
+          >
+            <MaterialIcon name="delete_outline" className="text-base" />
+          </button>
         </div>
       </div>
       <TabBar active={activeTab} onChange={setActiveTab} />
@@ -119,7 +127,7 @@ function DesktopLayout(props: AgentHealthCheckDetailViewProps) {
 function MobileLayout(props: AgentHealthCheckDetailViewProps) {
   const { t: tc } = useTranslation('common');
   const navigate = useNavigate();
-  const { service, agentId, serviceKey, refreshKey, isLive, onLiveToggle, onRefresh } = props;
+  const { service, agentId, serviceKey, refreshKey, isLive, onLiveToggle, onRefresh, onDelete } = props;
   const { spinning, trigger: handleRefresh } = useSpinAction(onRefresh);
   const [activeTab, setActiveTab] = useState<DetailTab>('health');
 
@@ -142,6 +150,13 @@ function MobileLayout(props: AgentHealthCheckDetailViewProps) {
             className="p-2.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-secondary-dark active:scale-95 transition-transform"
           >
             <MaterialIcon name="refresh" className={`text-lg ${spinning ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={onDelete}
+            title="서비스 삭제"
+            className="p-2.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-secondary-dark active:scale-95 transition-transform hover:text-red-500"
+          >
+            <MaterialIcon name="delete_outline" className="text-lg" />
           </button>
         </div>
       </div>

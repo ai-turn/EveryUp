@@ -4,6 +4,7 @@ import type { AgentServiceFlat } from '../../../services/api';
 
 interface Props {
   service: AgentServiceFlat;
+  onDelete?: (service: AgentServiceFlat) => void;
 }
 
 function relativeTime(iso: string): string {
@@ -24,7 +25,7 @@ function CheckTypeBadge({ type }: { type: string }) {
   );
 }
 
-export function AgentServiceCard({ service }: Props) {
+export function AgentServiceCard({ service, onDelete }: Props) {
   const navigate = useNavigate();
 
   return (
@@ -45,7 +46,18 @@ export function AgentServiceCard({ service }: Props) {
             {service.name}
           </h3>
         </div>
-        <CheckTypeBadge type={service.checkType} />
+        <div className="flex items-center gap-1 shrink-0">
+          <CheckTypeBadge type={service.checkType} />
+          {onDelete && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(service); }}
+              title="서비스 삭제"
+              className="p-1 rounded-lg text-slate-300 dark:text-text-dim-dark hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              <MaterialIcon name="delete_outline" className="text-base" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Endpoint */}
