@@ -75,9 +75,9 @@ services:
       everyup.alert.logs.lines: "200"
 ```
 
-When a keyword is found in recent Docker logs, the agent sends a Telegram alert,
-records an `alert_sent` audit event with `source=log_keyword`, and stores the
-incident in SQLite memory when enabled. Repeated matches use the normal
+When a keyword is found in recent Docker logs, the agent records an `alert_sent`
+audit event with `source=log_keyword` and syncs it to EveryUp Web, which decides
+whether to notify. Repeated matches use the normal
 `EVERYUP_ALERT_COOLDOWN_SECONDS` cooldown.
 
 ## Resource threshold example
@@ -103,8 +103,6 @@ share the normal alert cooldown and are recorded with `source=resource_threshold
 Mounting `/var/run/docker.sock` gives broad visibility into Docker. The MVP
 uses a read-only socket mount, and the next hardening step is a
 docker-socket-proxy compose example that exposes only the container list API.
-The `/logs` ChatOps command and log keyword alerts use Docker's container logs
-API, so deployments that enable them must allow that endpoint too.
-Resource threshold alerts use Docker's container stats API.
-The approved `/restart` action uses Docker's container restart API, and should
-only be enabled through a tightly scoped socket proxy in production.
+Log keyword detection uses Docker's container logs API, so deployments that use
+it must allow that endpoint too. Resource threshold detection uses Docker's
+container stats API.

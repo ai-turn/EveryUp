@@ -37,24 +37,6 @@ func TestStoreSaveAndLoadRoundTrip(t *testing.T) {
 				UpdatedAt:   now,
 			},
 		},
-		Silences: map[string]Silence{
-			"target-1": {
-				Until:     now.Add(time.Hour),
-				Reason:    "maintenance",
-				CreatedAt: now,
-			},
-		},
-		Actions: map[string]Action{
-			"abc123": {
-				Token:       "abc123",
-				Type:        "restart",
-				ServiceKey:  "target-1",
-				ServiceName: "api",
-				Status:      "pending",
-				CreatedAt:   now,
-				ExpiresAt:   now.Add(time.Minute),
-			},
-		},
 	})
 	if err != nil {
 		t.Fatalf("Save returned error: %v", err)
@@ -73,12 +55,6 @@ func TestStoreSaveAndLoadRoundTrip(t *testing.T) {
 	}
 	if !state.SeenResult {
 		t.Fatal("SeenResult = false, want true")
-	}
-	if loaded.Silences["target-1"].Reason != "maintenance" {
-		t.Fatalf("silence reason = %q, want maintenance", loaded.Silences["target-1"].Reason)
-	}
-	if loaded.Actions["abc123"].Type != "restart" {
-		t.Fatalf("action type = %q, want restart", loaded.Actions["abc123"].Type)
 	}
 }
 

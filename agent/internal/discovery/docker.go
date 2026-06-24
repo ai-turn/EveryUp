@@ -104,32 +104,6 @@ func (c *DockerClient) ContainerStats(ctx context.Context, containerID string) (
 	return statsFromDocker(payload), nil
 }
 
-func (c *DockerClient) RestartContainer(ctx context.Context, containerID string, timeoutSeconds int) error {
-	containerID = strings.TrimSpace(containerID)
-	if containerID == "" {
-		return fmt.Errorf("container ID is required")
-	}
-	if timeoutSeconds < 0 {
-		timeoutSeconds = 10
-	}
-
-	endpoint := fmt.Sprintf("http://docker/containers/%s/restart?t=%d", url.PathEscape(containerID), timeoutSeconds)
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, nil)
-	if err != nil {
-		return fmt.Errorf("create docker restart request: %w", err)
-	}
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return fmt.Errorf("query docker restart: %w", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
-		return fmt.Errorf("docker restart returned %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
-	}
-	return nil
-}
-
 type DockerClient struct {
 	socketPath string
 	client     *http.Client

@@ -2,26 +2,18 @@ package agent
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"log"
 	"path/filepath"
-	"sort"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/aiturn/everyup/agent/internal/chatops"
 	"github.com/aiturn/everyup/agent/internal/checks"
 	"github.com/aiturn/everyup/agent/internal/config"
 	"github.com/aiturn/everyup/agent/internal/discovery"
 	"github.com/aiturn/everyup/agent/internal/hostmetrics"
-	"github.com/aiturn/everyup/agent/internal/llm"
-	"github.com/aiturn/everyup/agent/internal/memory"
-	"github.com/aiturn/everyup/agent/internal/notifier"
 	"github.com/aiturn/everyup/agent/internal/otelconfig"
-	"github.com/aiturn/everyup/agent/internal/runbook"
 	"github.com/aiturn/everyup/agent/internal/state"
 	"github.com/aiturn/everyup/agent/internal/watchdog"
 	"github.com/aiturn/everyup/agent/internal/webclient"
@@ -29,27 +21,20 @@ import (
 
 type Agent struct {
 	cfg            config.Config
-	notifier       notifier.Notifier
 	httpCheck      *checks.HTTPChecker
 	tcpCheck       *checks.TCPChecker
 	discoverer     targetDiscoverer
 	logReader      serviceLogReader
-	actionRunner   serviceActionRunner
 	resourceReader serviceResourceReader
-	summarizer     llm.Provider
 	store          *state.Store
 	audit          *state.AuditLogger
 	web            *webclient.Client
 	webAgentID     string
-	runbooks       *runbook.Library
 	heartbeat      *watchdog.Heartbeat
-	memory         *memory.Store
 	hostMetrics    *hostmetrics.Reader
 
 	mu        sync.RWMutex
 	states    map[string]*targetState
-	silences  map[string]state.Silence
-	actions   map[string]state.Action
 	webEvents []state.AuditEvent
 }
 
@@ -59,10 +44,6 @@ type targetDiscoverer interface {
 
 type serviceLogReader interface {
 	TailLogs(ctx context.Context, containerID string, lines int) ([]string, error)
-}
-
-type serviceActionRunner interface {
-	RestartContainer(ctx context.Context, containerID string, timeoutSeconds int) error
 }
 
 type serviceResourceReader interface {
@@ -85,38 +66,41 @@ type targetState struct {
 	lastLatency         string
 }
 
+// serviceStatus is a point-in-time view of one monitored target, synced to
+// EveryUp Web where alerting and notification dispatch happen.
+type serviceStatus struct {
+	Key         string
+	Name        string
+	CheckType   string
+	Endpoint    string
+	Healthy     bool
+	Seen        bool
+	Silenced    bool
+	LastError   string
+	LastStatus  int
+	LastLatency string
+	UpdatedAt   time.Time
+}
+
+type agentSnapshot struct {
+	AgentName string
+	Now       time.Time
+	Services  []serviceStatus
+}
+
 func New(cfg config.Config) (*Agent, error) {
 	var discoverer targetDiscoverer
 	var logReader serviceLogReader
-	var actionRunner serviceActionRunner
 	var resourceReader serviceResourceReader
 	if cfg.DockerDiscoveryEnabled {
 		docker := discovery.NewDockerClient(cfg.DockerSocketPath, cfg.HTTPTimeout)
 		discoverer = docker
 		logReader = docker
-		actionRunner = docker
 		resourceReader = docker
-	}
-	var summarizer llm.Provider
-	if cfg.LLMBaseURL != "" {
-		summarizer = llm.NewOpenAICompatible(cfg.LLMBaseURL, cfg.LLMAPIKey, cfg.LLMModel, cfg.LLMTimeout, cfg.LLMMaxTokens, nil)
 	}
 	var web *webclient.Client
 	if cfg.WebSyncEnabled || cfg.WebBaseURL != "" {
 		web = webclient.New(cfg.WebBaseURL, cfg.AgentAPIKey, cfg.HTTPTimeout, nil)
-	}
-	var runbooks *runbook.Library
-	if cfg.RunbookEnabled {
-		library, err := runbook.LoadDefaultLibrary()
-		if err != nil {
-			log.Printf("failed to load default runbooks: %v", err)
-		} else {
-			if err := library.LoadDir(cfg.RunbookDir); err != nil {
-				log.Printf("failed to load custom runbooks from %s: %v", cfg.RunbookDir, err)
-			}
-			runbooks = library
-			log.Printf("loaded %d runbooks", len(library.Books()))
-		}
 	}
 	var heartbeat *watchdog.Heartbeat
 	if cfg.HeartbeatURL != "" {
@@ -126,38 +110,21 @@ func New(cfg config.Config) (*Agent, error) {
 	if cfg.HostMetricsEnabled {
 		hostReader = hostmetrics.New(cfg.HostMetricsRoot, cfg.HostDiskPath)
 	}
-	var incidentMemory *memory.Store
-	if cfg.MemoryEnabled {
-		store, err := memory.Open(cfg.MemoryPath)
-		if err != nil {
-			log.Printf("failed to open incident memory at %s: %v", cfg.MemoryPath, err)
-		} else {
-			incidentMemory = store
-			log.Printf("incident memory enabled at %s", cfg.MemoryPath)
-		}
-	}
 
 	agent := &Agent{
 		cfg:            cfg,
-		notifier:       notifier.NewTelegram(cfg.TelegramAPIBase, cfg.TelegramBotToken, cfg.TelegramChatIDs, nil),
 		httpCheck:      checks.NewHTTPChecker(cfg.HTTPTimeout),
 		tcpCheck:       checks.NewTCPChecker(cfg.HTTPTimeout),
 		discoverer:     discoverer,
 		logReader:      logReader,
-		actionRunner:   actionRunner,
 		resourceReader: resourceReader,
-		summarizer:     summarizer,
 		store:          state.NewStore(filepath.Join(cfg.DataDir, "agent-state.json")),
 		audit:          state.NewAuditLogger(filepath.Join(cfg.DataDir, "audit.jsonl")),
 		web:            web,
 		webAgentID:     cfg.WebAgentID,
-		runbooks:       runbooks,
 		heartbeat:      heartbeat,
-		memory:         incidentMemory,
 		hostMetrics:    hostReader,
 		states:         make(map[string]*targetState),
-		silences:       make(map[string]state.Silence),
-		actions:        make(map[string]state.Action),
 		webEvents:      make([]state.AuditEvent, 0),
 	}
 
@@ -171,19 +138,7 @@ func (a *Agent) Run(ctx context.Context) error {
 	}
 	a.writeOTelConfig()
 
-	if err := a.notifier.Send(ctx, notifier.Message{
-		AlertType:   notifier.AlertTypeSystem,
-		Severity:    notifier.SeverityInfo,
-		ServiceName: a.cfg.ServiceName,
-		Title:       "Agent started",
-		Body:        fmt.Sprintf("Agent %s is running.", a.cfg.AgentName),
-		Time:        time.Now(),
-	}); err != nil {
-		log.Printf("failed to send startup notification: %v", err)
-	} else {
-		a.auditEvent("agent_started", a.cfg.ServiceName, "", fmt.Sprintf("Agent %s is running.", a.cfg.AgentName), nil)
-	}
-	a.startChatOps(ctx)
+	a.auditEvent("agent_started", a.cfg.ServiceName, "", fmt.Sprintf("Agent %s is running.", a.cfg.AgentName), nil)
 	a.startWebSync(ctx)
 	a.startHeartbeat(ctx)
 
@@ -302,7 +257,7 @@ func (a *Agent) flushWebServices(ctx context.Context) {
 		return
 	}
 
-	snapshot := a.ChatOpsSnapshot(ctx)
+	snapshot := a.snapshot(ctx)
 	services := make([]webclient.ServiceSnapshot, 0, len(snapshot.Services))
 	for _, service := range snapshot.Services {
 		services = append(services, webclient.ServiceSnapshot{
@@ -358,21 +313,6 @@ func (a *Agent) flushWebMetrics(ctx context.Context) {
 	}); err != nil {
 		log.Printf("EveryUp Web metrics sync failed: %v", err)
 	}
-}
-
-func (a *Agent) startChatOps(ctx context.Context) {
-	if !a.cfg.ChatOpsEnabled {
-		log.Printf("Telegram ChatOps disabled")
-		return
-	}
-	handler := chatops.NewHandler(a, a)
-	bot := chatops.NewTelegramBot(a.cfg.TelegramAPIBase, a.cfg.TelegramBotToken, a.cfg.TelegramChatIDs, handler, nil)
-	go func() {
-		if err := bot.Run(ctx); err != nil {
-			log.Printf("Telegram ChatOps stopped: %v", err)
-		}
-	}()
-	log.Printf("Telegram ChatOps enabled for %d allowed chats", len(a.cfg.TelegramChatIDs))
 }
 
 func (a *Agent) writeOTelConfig() {
@@ -473,24 +413,10 @@ func (a *Agent) runCheck(ctx context.Context, target discovery.Target) {
 	state := a.observeTarget(target, result.Healthy, result.StatusCode, result.Latency, result.Error)
 	if result.Healthy {
 		if state.seenResult && !state.wasHealthy {
-			err := a.send(ctx, notifier.Message{
-				AlertType:   notifier.AlertTypeHealthCheck,
-				Severity:    notifier.SeverityInfo,
-				ServiceName: target.ServiceName,
-				Title:       "Service recovered",
-				Body:        fmt.Sprintf("%s recovered in %s.", target.HealthURL, result.Latency.Round(time.Millisecond)),
-				Time:        now,
+			a.auditEvent("recovery_sent", target.ServiceName, targetKey(target), "service recovered", map[string]interface{}{
+				"url":     target.HealthURL,
+				"latency": result.Latency.String(),
 			})
-			if err != nil {
-				a.auditEvent("recovery_send_failed", target.ServiceName, targetKey(target), err.Error(), map[string]interface{}{
-					"url": target.HealthURL,
-				})
-			} else {
-				a.auditEvent("recovery_sent", target.ServiceName, targetKey(target), "service recovered", map[string]interface{}{
-					"url":     target.HealthURL,
-					"latency": result.Latency.String(),
-				})
-			}
 		}
 		a.setTargetResult(target, state.lastAlertAt, true, true, now)
 		a.saveState()
@@ -499,37 +425,14 @@ func (a *Agent) runCheck(ctx context.Context, target discovery.Target) {
 
 	shouldAlert := !state.seenResult || state.wasHealthy || now.Sub(state.lastAlertAt) >= a.cfg.AlertCooldown
 	lastAlertAt := state.lastAlertAt
-	if shouldAlert && a.isSilenced(target, now) {
-		lastAlertAt = now
-		a.auditEvent("alert_suppressed", target.ServiceName, targetKey(target), "target is silenced", map[string]interface{}{
-			"url": target.HealthURL,
-		})
-	} else if shouldAlert {
+	if shouldAlert {
 		body := failureBody(result)
-		body = a.enrichAlertBody(ctx, target, body, map[string]string{
-			"statusCode": fmt.Sprintf("%d", result.StatusCode),
+		a.auditEvent("alert_sent", target.ServiceName, targetKey(target), body, map[string]interface{}{
+			"url":        target.HealthURL,
+			"statusCode": result.StatusCode,
 			"latency":    result.Latency.String(),
 		})
-		err := a.send(ctx, notifier.Message{
-			AlertType:   notifier.AlertTypeHealthCheck,
-			Severity:    notifier.SeverityCritical,
-			ServiceName: target.ServiceName,
-			Title:       "Service unhealthy",
-			Body:        body,
-			Time:        now,
-		})
 		lastAlertAt = now
-		if err != nil {
-			a.auditEvent("alert_send_failed", target.ServiceName, targetKey(target), err.Error(), map[string]interface{}{
-				"url": target.HealthURL,
-			})
-		} else {
-			a.auditEvent("alert_sent", target.ServiceName, targetKey(target), body, map[string]interface{}{
-				"url":        target.HealthURL,
-				"statusCode": result.StatusCode,
-				"latency":    result.Latency.String(),
-			})
-		}
 	}
 	a.setTargetResult(target, lastAlertAt, false, true, now)
 	a.saveState()
@@ -544,24 +447,10 @@ func (a *Agent) runTCPCheck(ctx context.Context, target discovery.Target) {
 	state := a.observeTarget(target, result.Healthy, 0, result.Latency, result.Error)
 	if result.Healthy {
 		if state.seenResult && !state.wasHealthy {
-			err := a.send(ctx, notifier.Message{
-				AlertType:   notifier.AlertTypeHealthCheck,
-				Severity:    notifier.SeverityInfo,
-				ServiceName: target.ServiceName,
-				Title:       "Service recovered",
-				Body:        fmt.Sprintf("%s recovered in %s.", target.HealthURL, result.Latency.Round(time.Millisecond)),
-				Time:        now,
+			a.auditEvent("recovery_sent", target.ServiceName, targetKey(target), "service recovered", map[string]interface{}{
+				"address": target.HealthURL,
+				"latency": result.Latency.String(),
 			})
-			if err != nil {
-				a.auditEvent("recovery_send_failed", target.ServiceName, targetKey(target), err.Error(), map[string]interface{}{
-					"address": target.HealthURL,
-				})
-			} else {
-				a.auditEvent("recovery_sent", target.ServiceName, targetKey(target), "service recovered", map[string]interface{}{
-					"address": target.HealthURL,
-					"latency": result.Latency.String(),
-				})
-			}
 		}
 		a.setTargetResult(target, state.lastAlertAt, true, true, now)
 		a.saveState()
@@ -570,35 +459,13 @@ func (a *Agent) runTCPCheck(ctx context.Context, target discovery.Target) {
 
 	shouldAlert := !state.seenResult || state.wasHealthy || now.Sub(state.lastAlertAt) >= a.cfg.AlertCooldown
 	lastAlertAt := state.lastAlertAt
-	if shouldAlert && a.isSilenced(target, now) {
-		lastAlertAt = now
-		a.auditEvent("alert_suppressed", target.ServiceName, targetKey(target), "target is silenced", map[string]interface{}{
-			"address": target.HealthURL,
-		})
-	} else if shouldAlert {
+	if shouldAlert {
 		body := fmt.Sprintf("%s failed: %s", result.Address, result.Error)
-		body = a.enrichAlertBody(ctx, target, body, map[string]string{
+		a.auditEvent("alert_sent", target.ServiceName, targetKey(target), body, map[string]interface{}{
+			"address": result.Address,
 			"latency": result.Latency.String(),
 		})
-		err := a.send(ctx, notifier.Message{
-			AlertType:   notifier.AlertTypeHealthCheck,
-			Severity:    notifier.SeverityCritical,
-			ServiceName: target.ServiceName,
-			Title:       "Service unhealthy",
-			Body:        body,
-			Time:        now,
-		})
 		lastAlertAt = now
-		if err != nil {
-			a.auditEvent("alert_send_failed", target.ServiceName, targetKey(target), err.Error(), map[string]interface{}{
-				"address": result.Address,
-			})
-		} else {
-			a.auditEvent("alert_sent", target.ServiceName, targetKey(target), body, map[string]interface{}{
-				"address": result.Address,
-				"latency": result.Latency.String(),
-			})
-		}
 	}
 	a.setTargetResult(target, lastAlertAt, false, true, now)
 	a.saveState()
@@ -656,9 +523,7 @@ func (a *Agent) loadState() error {
 			updatedAt:           persisted.UpdatedAt,
 		}
 	}
-	a.silences = snapshot.Silences
-	a.actions = snapshot.Actions
-	log.Printf("loaded %d persisted target states, %d silences, and %d actions", len(a.states), len(a.silences), len(a.actions))
+	log.Printf("loaded %d persisted target states", len(a.states))
 	return nil
 }
 
@@ -666,10 +531,8 @@ func (a *Agent) saveState() {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	snapshot := state.Snapshot{
-		Version:  1,
-		Targets:  make(map[string]state.TargetState, len(a.states)),
-		Silences: make(map[string]state.Silence, len(a.silences)),
-		Actions:  make(map[string]state.Action, len(a.actions)),
+		Version: 1,
+		Targets: make(map[string]state.TargetState, len(a.states)),
 	}
 	for key, current := range a.states {
 		snapshot.Targets[key] = state.TargetState{
@@ -681,12 +544,6 @@ func (a *Agent) saveState() {
 			SeenResult:          current.seenResult,
 			UpdatedAt:           current.updatedAt,
 		}
-	}
-	for key, silence := range a.silences {
-		snapshot.Silences[key] = silence
-	}
-	for key, action := range a.actions {
-		snapshot.Actions[key] = action
 	}
 	if err := a.store.Save(snapshot); err != nil {
 		log.Printf("failed to save local state: %v", err)
@@ -717,34 +574,12 @@ func (a *Agent) runLogKeywordCheck(ctx context.Context, target discovery.Target)
 	now := time.Now()
 	state := a.targetState(target)
 	if state.lastLogAlertAt.IsZero() || now.Sub(state.lastLogAlertAt) >= a.cfg.AlertCooldown {
-		if a.isSilenced(target, now) {
-			a.setLogAlertAt(target, now)
-			a.auditEvent("alert_suppressed", target.ServiceName, targetKey(target), "log keyword target is silenced", map[string]interface{}{
-				"keyword": keyword,
-			})
-			a.saveState()
-			return
-		}
 		body := fmt.Sprintf("Log keyword %q matched for %s:\n%s", keyword, target.ServiceName, trimText(line, 700))
-		if err := a.send(ctx, notifier.Message{
-			AlertType:   notifier.AlertTypeHealthCheck,
-			Severity:    notifier.SeverityCritical,
-			ServiceName: target.ServiceName,
-			Title:       "Log keyword matched",
-			Body:        body,
-			Time:        now,
-		}); err != nil {
-			a.auditEvent("alert_send_failed", target.ServiceName, targetKey(target), err.Error(), map[string]interface{}{
-				"source":  "log_keyword",
-				"keyword": keyword,
-			})
-		} else {
-			a.auditEvent("alert_sent", target.ServiceName, targetKey(target), body, map[string]interface{}{
-				"source":  "log_keyword",
-				"keyword": keyword,
-				"line":    trimText(line, 700),
-			})
-		}
+		a.auditEvent("alert_sent", target.ServiceName, targetKey(target), body, map[string]interface{}{
+			"source":  "log_keyword",
+			"keyword": keyword,
+			"line":    trimText(line, 700),
+		})
 		a.setLogAlertAt(target, now)
 		a.saveState()
 	}
@@ -779,36 +614,14 @@ func (a *Agent) runResourceThresholdCheck(ctx context.Context, target discovery.
 	if !state.lastResourceAlertAt.IsZero() && now.Sub(state.lastResourceAlertAt) < a.cfg.AlertCooldown {
 		return
 	}
-	if a.isSilenced(target, now) {
-		a.setResourceAlertAt(target, now)
-		a.auditEvent("alert_suppressed", target.ServiceName, targetKey(target), "resource threshold target is silenced", map[string]interface{}{
-			"violations": violations,
-		})
-		a.saveState()
-		return
-	}
 
 	body := fmt.Sprintf("Resource threshold exceeded for %s:\n%s", target.ServiceName, strings.Join(violations, "\n"))
-	if err := a.send(ctx, notifier.Message{
-		AlertType:   notifier.AlertTypeHealthCheck,
-		Severity:    notifier.SeverityCritical,
-		ServiceName: target.ServiceName,
-		Title:       "Resource threshold exceeded",
-		Body:        body,
-		Time:        now,
-	}); err != nil {
-		a.auditEvent("alert_send_failed", target.ServiceName, targetKey(target), err.Error(), map[string]interface{}{
-			"source":     "resource_threshold",
-			"violations": violations,
-		})
-	} else {
-		a.auditEvent("alert_sent", target.ServiceName, targetKey(target), body, map[string]interface{}{
-			"source":        "resource_threshold",
-			"violations":    violations,
-			"cpuPercent":    stats.CPUPercent,
-			"memoryPercent": stats.MemoryPercent,
-		})
-	}
+	a.auditEvent("alert_sent", target.ServiceName, targetKey(target), body, map[string]interface{}{
+		"source":        "resource_threshold",
+		"violations":    violations,
+		"cpuPercent":    stats.CPUPercent,
+		"memoryPercent": stats.MemoryPercent,
+	})
 	a.setResourceAlertAt(target, now)
 	a.saveState()
 }
@@ -838,27 +651,13 @@ func (a *Agent) runHostResourceCheck(ctx context.Context) {
 		return
 	}
 	body := fmt.Sprintf("Host resource threshold exceeded:\n%s", strings.Join(violations, "\n"))
-	if err := a.send(ctx, notifier.Message{
-		AlertType:   notifier.AlertTypeHealthCheck,
-		Severity:    notifier.SeverityCritical,
-		ServiceName: "host",
-		Title:       "Host resource threshold exceeded",
-		Body:        body,
-		Time:        now,
-	}); err != nil {
-		a.auditEvent("alert_send_failed", "host", "host:metrics", err.Error(), map[string]interface{}{
-			"source":     "host_resource_threshold",
-			"violations": violations,
-		})
-	} else {
-		a.auditEvent("alert_sent", "host", "host:metrics", body, map[string]interface{}{
-			"source":        "host_resource_threshold",
-			"violations":    violations,
-			"cpuPercent":    snapshot.CPUPercent,
-			"memoryPercent": snapshot.MemoryPercent,
-			"diskPercent":   snapshot.DiskPercent,
-		})
-	}
+	a.auditEvent("alert_sent", "host", "host:metrics", body, map[string]interface{}{
+		"source":        "host_resource_threshold",
+		"violations":    violations,
+		"cpuPercent":    snapshot.CPUPercent,
+		"memoryPercent": snapshot.MemoryPercent,
+		"diskPercent":   snapshot.DiskPercent,
+	})
 	a.setHostAlertAt(now)
 	a.saveState()
 }
@@ -932,42 +731,22 @@ func (a *Agent) setResourceAlertAt(target discovery.Target, at time.Time) {
 	state.lastResourceAlertAt = at
 }
 
-func (a *Agent) isSilenced(target discovery.Target, now time.Time) bool {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	silence, ok := a.silences[targetKey(target)]
-	if !ok {
-		return false
-	}
-	if silence.Until.IsZero() {
-		return true
-	}
-	if now.Before(silence.Until) {
-		return true
-	}
-	delete(a.silences, targetKey(target))
-	return false
-}
-
-func (a *Agent) ChatOpsSnapshot(ctx context.Context) chatops.Snapshot {
+// snapshot returns the current per-target status list for syncing to EveryUp Web.
+func (a *Agent) snapshot(ctx context.Context) agentSnapshot {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 
-	services := make([]chatops.ServiceStatus, 0, len(a.states))
+	services := make([]serviceStatus, 0, len(a.states))
 	now := time.Now()
 	for key, current := range a.states {
-		silenced := false
-		if silence, ok := a.silences[key]; ok {
-			silenced = silence.Until.IsZero() || now.Before(silence.Until)
-		}
-		services = append(services, chatops.ServiceStatus{
+		services = append(services, serviceStatus{
 			Key:         key,
 			Name:        valueOrDefault(current.serviceName, key),
 			CheckType:   current.checkType,
 			Endpoint:    current.endpoint,
 			Healthy:     current.wasHealthy,
 			Seen:        current.seenResult,
-			Silenced:    silenced,
+			Silenced:    false,
 			LastError:   current.lastError,
 			LastStatus:  current.lastStatus,
 			LastLatency: current.lastLatency,
@@ -975,464 +754,11 @@ func (a *Agent) ChatOpsSnapshot(ctx context.Context) chatops.Snapshot {
 		})
 	}
 
-	return chatops.Snapshot{
+	return agentSnapshot{
 		AgentName: a.cfg.AgentName,
 		Now:       now,
 		Services:  services,
 	}
-}
-
-func (a *Agent) ExplainService(ctx context.Context, serviceRef string) string {
-	service, ok := a.findServiceStatus(serviceRef)
-	if !ok {
-		return fmt.Sprintf("Service %q was not found.", serviceRef)
-	}
-
-	raw := serviceExplanation(service)
-	raw += a.runbookAdviceForService(service, raw)
-	if a.summarizer == nil {
-		return raw
-	}
-
-	summary, err := a.summarizer.Summarize(ctx, llm.IncidentContext{
-		ServiceName: service.Name,
-		TargetKey:   service.Key,
-		CheckType:   service.CheckType,
-		Endpoint:    service.Endpoint,
-		Severity:    severityForService(service),
-		Message:     raw,
-		ObservedAt:  time.Now(),
-		Attributes: map[string]string{
-			"lastError":   service.LastError,
-			"lastStatus":  fmt.Sprintf("%d", service.LastStatus),
-			"lastLatency": service.LastLatency,
-			"silenced":    fmt.Sprintf("%t", service.Silenced),
-		},
-	})
-	if err != nil {
-		a.auditEvent("chatops_explain_degraded", service.Name, service.Key, err.Error(), nil)
-		return raw + "\n\nAI explanation unavailable; showing latest local state."
-	}
-	a.auditEvent("chatops_explain_generated", service.Name, service.Key, summary.Title, map[string]interface{}{
-		"risk":       summary.Risk,
-		"confidence": summary.Confidence,
-	})
-	return raw + llm.FormatSummary(summary)
-}
-
-func (a *Agent) SilenceService(ctx context.Context, serviceRef string, duration time.Duration, reason string) string {
-	service, ok := a.findServiceStatus(serviceRef)
-	if !ok {
-		return fmt.Sprintf("Service %q was not found.", serviceRef)
-	}
-
-	now := time.Now()
-	silence := state.Silence{
-		Until:     now.Add(duration),
-		Reason:    reason,
-		CreatedAt: now,
-	}
-
-	a.mu.Lock()
-	a.silences[service.Key] = silence
-	a.mu.Unlock()
-	a.saveState()
-
-	message := fmt.Sprintf("Silenced %s until %s", service.Name, silence.Until.Format(time.RFC3339))
-	if reason != "" {
-		message += "\nReason: " + reason
-	}
-	a.auditEvent("silence_created", service.Name, service.Key, message, map[string]interface{}{
-		"duration": duration.String(),
-		"reason":   reason,
-	})
-	return message
-}
-
-func (a *Agent) ServiceLogs(ctx context.Context, serviceRef string, lines int) string {
-	service, ok := a.findServiceStatus(serviceRef)
-	if !ok {
-		return fmt.Sprintf("Service %q was not found.", serviceRef)
-	}
-	if a.logReader == nil {
-		return "Docker logs are not available. Enable Docker discovery and mount the Docker socket."
-	}
-	if service.Key == "" || strings.HasPrefix(service.Key, "env:") {
-		return fmt.Sprintf("Service %s is not backed by a discovered Docker container.", service.Name)
-	}
-
-	logLines, err := a.logReader.TailLogs(ctx, service.Key, lines)
-	if err != nil {
-		a.auditEvent("chatops_logs_failed", service.Name, service.Key, err.Error(), map[string]interface{}{
-			"lines": lines,
-		})
-		return fmt.Sprintf("Failed to read logs for %s: %v", service.Name, err)
-	}
-	if len(logLines) == 0 {
-		return fmt.Sprintf("No recent logs for %s.", service.Name)
-	}
-
-	a.auditEvent("chatops_logs_read", service.Name, service.Key, "read docker logs", map[string]interface{}{
-		"lines": lines,
-	})
-	return formatLogs(service.Name, logLines)
-}
-
-func (a *Agent) RequestRestart(ctx context.Context, chatID, serviceRef string) string {
-	if !a.cfg.ActionsEnabled {
-		return "Actions are disabled. Set EVERYUP_ACTIONS_ENABLED=true to enable approved actions."
-	}
-	if !a.actionAllowed("restart") {
-		return "Restart action is not allowed. Add restart to EVERYUP_ACTION_ALLOWLIST."
-	}
-	service, ok := a.findServiceStatus(serviceRef)
-	if !ok {
-		return fmt.Sprintf("Service %q was not found.", serviceRef)
-	}
-	if service.Key == "" || strings.HasPrefix(service.Key, "env:") {
-		return fmt.Sprintf("Service %s is not backed by a discovered Docker container.", service.Name)
-	}
-
-	token, err := newActionToken()
-	if err != nil {
-		a.auditEvent("action_request_failed", service.Name, service.Key, err.Error(), nil)
-		return "Failed to create action token."
-	}
-	now := time.Now()
-	action := state.Action{
-		Token:       token,
-		Type:        "restart",
-		ServiceKey:  service.Key,
-		ServiceName: service.Name,
-		Status:      "pending",
-		DryRun:      a.cfg.ActionDryRun,
-		RequestedBy: chatID,
-		CreatedAt:   now,
-		ExpiresAt:   now.Add(a.cfg.ActionConfirmTTL),
-	}
-
-	a.mu.Lock()
-	a.actions[token] = action
-	a.mu.Unlock()
-	a.saveState()
-
-	a.auditEvent("action_requested", service.Name, service.Key, "restart requested", map[string]interface{}{
-		"token":       token,
-		"requestedBy": chatID,
-		"dryRun":      action.DryRun,
-	})
-	mode := "will restart"
-	if action.DryRun {
-		mode = "dry-run only"
-	}
-	return fmt.Sprintf("Restart requested for %s (%s).\nToken: %s\nExpires: %s\nConfirm with: /confirm %s", service.Name, mode, token, action.ExpiresAt.Format(time.RFC3339), token)
-}
-
-func (a *Agent) ConfirmAction(ctx context.Context, chatID, token string) string {
-	token = strings.TrimSpace(token)
-	now := time.Now()
-
-	a.mu.Lock()
-	action, ok := a.actions[token]
-	if !ok {
-		a.mu.Unlock()
-		return "No pending action found for that token."
-	}
-	if action.Status != "pending" {
-		a.mu.Unlock()
-		return fmt.Sprintf("Action %s is already %s.", token, action.Status)
-	}
-	if !action.ExpiresAt.IsZero() && now.After(action.ExpiresAt) {
-		action.Status = "expired"
-		action.Message = "confirmation token expired"
-		a.actions[token] = action
-		a.mu.Unlock()
-		a.saveState()
-		return "Action token expired."
-	}
-	action.ConfirmedAt = now
-	a.actions[token] = action
-	a.mu.Unlock()
-
-	var message string
-	if action.DryRun {
-		message = fmt.Sprintf("Dry-run confirmed for %s. No container was restarted.", action.ServiceName)
-		action.Status = "dry_run"
-		action.Message = message
-	} else if a.actionRunner == nil {
-		message = "Docker actions are not available. Mount the Docker socket and enable Docker discovery."
-		action.Status = "failed"
-		action.Message = message
-	} else {
-		err := a.actionRunner.RestartContainer(ctx, action.ServiceKey, 10)
-		if err != nil {
-			message = fmt.Sprintf("Restart failed for %s: %v", action.ServiceName, err)
-			action.Status = "failed"
-			action.Message = err.Error()
-		} else {
-			message = fmt.Sprintf("Restarted %s.", action.ServiceName)
-			action.Status = "completed"
-			action.Message = message
-		}
-	}
-
-	a.mu.Lock()
-	a.actions[token] = action
-	a.mu.Unlock()
-	a.saveState()
-	a.auditEvent("action_confirmed", action.ServiceName, action.ServiceKey, message, map[string]interface{}{
-		"token":       token,
-		"confirmedBy": chatID,
-		"status":      action.Status,
-		"dryRun":      action.DryRun,
-	})
-	return message
-}
-
-func (a *Agent) PendingActions(ctx context.Context) string {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-
-	now := time.Now()
-	pending := make([]state.Action, 0)
-	for _, action := range a.actions {
-		if action.Status == "pending" && (action.ExpiresAt.IsZero() || now.Before(action.ExpiresAt)) {
-			pending = append(pending, action)
-		}
-	}
-	if len(pending) == 0 {
-		return "No pending actions."
-	}
-	sort.Slice(pending, func(i, j int) bool {
-		return pending[i].CreatedAt.Before(pending[j].CreatedAt)
-	})
-
-	var b strings.Builder
-	b.WriteString("Pending actions")
-	for _, action := range pending {
-		b.WriteString("\n- ")
-		b.WriteString(action.Type)
-		b.WriteString(" ")
-		b.WriteString(action.ServiceName)
-		b.WriteString(" token=")
-		b.WriteString(action.Token)
-		b.WriteString(" expires=")
-		b.WriteString(action.ExpiresAt.Format(time.RFC3339))
-		if action.DryRun {
-			b.WriteString(" dry-run")
-		}
-	}
-	return b.String()
-}
-
-func (a *Agent) SimilarIncidents(ctx context.Context, serviceRef string) string {
-	if a.memory == nil {
-		return "Incident memory is disabled."
-	}
-	service, ok := a.findServiceStatus(serviceRef)
-	if !ok {
-		return fmt.Sprintf("Service %q was not found.", serviceRef)
-	}
-	matches, err := a.memory.Similar(ctx, memory.Incident{
-		ServiceName: service.Name,
-		TargetKey:   service.Key,
-		Message:     serviceExplanation(service),
-	}, 5)
-	if err != nil {
-		return fmt.Sprintf("Failed to search incident memory: %v", err)
-	}
-	return memory.FormatSimilar(matches)
-}
-
-func (a *Agent) PostmortemDraft(ctx context.Context, serviceRef string) string {
-	if a.memory == nil {
-		return "Incident memory is disabled."
-	}
-	service, ok := a.findServiceStatus(serviceRef)
-	if !ok {
-		return fmt.Sprintf("Service %q was not found.", serviceRef)
-	}
-	latest, found, err := a.memory.LatestForService(ctx, service.Name, service.Key)
-	if err != nil {
-		return fmt.Sprintf("Failed to read incident memory: %v", err)
-	}
-	if !found {
-		return "No incident history found for that service."
-	}
-	matches, err := a.memory.Similar(ctx, latest, 5)
-	if err != nil {
-		return fmt.Sprintf("Failed to search similar incidents: %v", err)
-	}
-	filtered := make([]memory.SimilarIncident, 0, len(matches))
-	for _, match := range matches {
-		if match.Incident.ID != latest.ID {
-			filtered = append(filtered, match)
-		}
-	}
-	return memory.DraftPostmortem(latest, filtered)
-}
-
-func (a *Agent) AuditChatOps(eventType, chatID, command, message string) {
-	a.auditEvent(eventType, "", "", message, map[string]interface{}{
-		"chatID":  chatID,
-		"command": command,
-	})
-}
-
-func (a *Agent) actionAllowed(action string) bool {
-	if len(a.cfg.ActionAllowlist) == 0 {
-		return false
-	}
-	for _, item := range a.cfg.ActionAllowlist {
-		item = strings.ToLower(strings.TrimSpace(item))
-		if item == "*" || item == strings.ToLower(action) {
-			return true
-		}
-	}
-	return false
-}
-
-func (a *Agent) findServiceStatus(serviceRef string) (chatops.ServiceStatus, bool) {
-	ref := strings.ToLower(strings.TrimSpace(serviceRef))
-	if ref == "" {
-		return chatops.ServiceStatus{}, false
-	}
-	snapshot := a.ChatOpsSnapshot(context.Background())
-	for _, service := range snapshot.Services {
-		if strings.ToLower(service.Name) == ref || strings.ToLower(service.Key) == ref {
-			return service, true
-		}
-	}
-	for _, service := range snapshot.Services {
-		if strings.Contains(strings.ToLower(service.Name), ref) {
-			return service, true
-		}
-	}
-	return chatops.ServiceStatus{}, false
-}
-
-func serviceExplanation(service chatops.ServiceStatus) string {
-	state := "unknown"
-	if service.Seen && service.Healthy {
-		state = "healthy"
-	}
-	if service.Seen && !service.Healthy {
-		state = "unhealthy"
-	}
-	if service.Silenced {
-		state += " (silenced)"
-	}
-
-	var b strings.Builder
-	b.WriteString("Service: ")
-	b.WriteString(service.Name)
-	b.WriteString("\nState: ")
-	b.WriteString(state)
-	b.WriteString("\nCheck: ")
-	b.WriteString(service.CheckType)
-	b.WriteString(" ")
-	b.WriteString(service.Endpoint)
-	if service.LastStatus != 0 {
-		b.WriteString("\nLast status: ")
-		b.WriteString(fmt.Sprintf("%d", service.LastStatus))
-	}
-	if service.LastLatency != "" {
-		b.WriteString("\nLast latency: ")
-		b.WriteString(service.LastLatency)
-	}
-	if service.LastError != "" {
-		b.WriteString("\nLast error: ")
-		b.WriteString(service.LastError)
-	}
-	if !service.UpdatedAt.IsZero() {
-		b.WriteString("\nUpdated: ")
-		b.WriteString(service.UpdatedAt.Format(time.RFC3339))
-	}
-	return b.String()
-}
-
-func severityForService(service chatops.ServiceStatus) string {
-	if service.Seen && !service.Healthy {
-		return notifier.SeverityCritical
-	}
-	return notifier.SeverityInfo
-}
-
-func formatLogs(serviceName string, lines []string) string {
-	var b strings.Builder
-	b.WriteString("Logs for ")
-	b.WriteString(serviceName)
-	for _, line := range lines {
-		b.WriteString("\n")
-		if len(line) > 500 {
-			line = line[:500] + "..."
-		}
-		b.WriteString(line)
-	}
-	return b.String()
-}
-
-func (a *Agent) enrichAlertBody(ctx context.Context, target discovery.Target, rawBody string, attrs map[string]string) string {
-	advice := a.runbookAdviceForTarget(target, rawBody, attrs)
-	if a.summarizer == nil {
-		return rawBody + advice
-	}
-
-	incident := llm.IncidentContext{
-		ServiceName: target.ServiceName,
-		TargetKey:   targetKey(target),
-		CheckType:   target.HealthType,
-		Endpoint:    target.HealthURL,
-		Severity:    notifier.SeverityCritical,
-		Message:     rawBody,
-		ObservedAt:  time.Now(),
-		Attributes:  attrs,
-	}
-	summary, err := a.summarizer.Summarize(ctx, incident)
-	if err != nil {
-		log.Printf("LLM summary failed: %v", err)
-		a.auditEvent("llm_summary_failed", target.ServiceName, targetKey(target), err.Error(), nil)
-		return rawBody + advice
-	}
-	a.auditEvent("llm_summary_generated", target.ServiceName, targetKey(target), summary.Title, map[string]interface{}{
-		"risk":       summary.Risk,
-		"confidence": summary.Confidence,
-	})
-	return rawBody + llm.FormatSummary(summary) + advice
-}
-
-func (a *Agent) runbookAdviceForTarget(target discovery.Target, message string, attrs map[string]string) string {
-	if a.runbooks == nil {
-		return ""
-	}
-	status := 0
-	if value := attrs["statusCode"]; value != "" {
-		_, _ = fmt.Sscanf(value, "%d", &status)
-	}
-	recommendations := a.runbooks.Match(runbook.Incident{
-		ServiceName: target.ServiceName,
-		CheckType:   target.HealthType,
-		Endpoint:    target.HealthURL,
-		Message:     message,
-		LastError:   attrs["error"],
-		LastStatus:  status,
-	}, 2)
-	return runbook.FormatRecommendations(recommendations)
-}
-
-func (a *Agent) runbookAdviceForService(service chatops.ServiceStatus, message string) string {
-	if a.runbooks == nil {
-		return ""
-	}
-	recommendations := a.runbooks.Match(runbook.Incident{
-		ServiceName: service.Name,
-		CheckType:   service.CheckType,
-		Endpoint:    service.Endpoint,
-		Message:     message,
-		LastError:   service.LastError,
-		LastStatus:  service.LastStatus,
-	}, 2)
-	return runbook.FormatRecommendations(recommendations)
 }
 
 func (a *Agent) auditEvent(eventType, serviceName, key, message string, metadata map[string]interface{}) {
@@ -1447,42 +773,7 @@ func (a *Agent) auditEvent(eventType, serviceName, key, message string, metadata
 	if err := a.audit.Append(event); err != nil {
 		log.Printf("failed to append audit event: %v", err)
 	}
-	a.recordMemoryEvent(event)
 	a.enqueueWebEvent(event)
-}
-
-func (a *Agent) recordMemoryEvent(event state.AuditEvent) {
-	if a.memory == nil {
-		return
-	}
-	ctx := context.Background()
-	switch event.Type {
-	case "alert_sent":
-		if err := a.memory.RecordAlert(ctx, memory.Incident{
-			StartedAt:   event.Time,
-			ServiceName: event.ServiceName,
-			TargetKey:   event.TargetKey,
-			Severity:    "critical",
-			Message:     event.Message,
-			Fingerprint: memory.Fingerprint(event.ServiceName, event.TargetKey, event.Message),
-			Metadata:    event.Metadata,
-		}); err != nil {
-			log.Printf("failed to record incident memory: %v", err)
-		}
-	case "recovery_sent":
-		if err := a.memory.ResolveLatest(ctx, event.ServiceName, event.TargetKey, event.Time); err != nil {
-			log.Printf("failed to resolve incident memory: %v", err)
-		}
-	case "chatops_command":
-		if err := a.memory.RecordCommand(ctx, memory.Command{
-			Time:    event.Time,
-			ChatID:  metadataString(event.Metadata, "chatID"),
-			Command: metadataString(event.Metadata, "command"),
-			Message: event.Message,
-		}); err != nil {
-			log.Printf("failed to record command memory: %v", err)
-		}
-	}
 }
 
 func (a *Agent) enqueueWebEvent(event state.AuditEvent) {
@@ -1502,14 +793,6 @@ func targetKey(target discovery.Target) string {
 		return target.ID
 	}
 	return target.ServiceName + "|" + target.HealthURL
-}
-
-func (a *Agent) send(ctx context.Context, msg notifier.Message) error {
-	if err := a.notifier.Send(ctx, msg); err != nil {
-		log.Printf("failed to send notification: %v", err)
-		return err
-	}
-	return nil
 }
 
 func failureBody(result checks.HTTPResult) string {
@@ -1610,28 +893,4 @@ func valueOrDefault(value, fallback string) string {
 		return fallback
 	}
 	return value
-}
-
-func metadataString(metadata map[string]interface{}, key string) string {
-	if metadata == nil {
-		return ""
-	}
-	value, ok := metadata[key]
-	if !ok {
-		return ""
-	}
-	switch typed := value.(type) {
-	case string:
-		return typed
-	default:
-		return fmt.Sprint(typed)
-	}
-}
-
-func newActionToken() (string, error) {
-	var bytes [4]byte
-	if _, err := rand.Read(bytes[:]); err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(bytes[:]), nil
 }

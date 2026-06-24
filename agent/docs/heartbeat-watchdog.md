@@ -34,5 +34,5 @@ audit log.
 
 ## Failure Behavior
 
-Heartbeat failures do not stop local monitoring, Telegram alerts, ChatOps, Web
-sync, or OTel forwarding. They are logged as `heartbeat_failed` audit events.
+Heartbeat failures do not stop local monitoring, Web sync, or OTel forwarding.
+They are logged as `heartbeat_failed` audit events.

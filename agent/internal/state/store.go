@@ -21,30 +21,8 @@ type TargetState struct {
 }
 
 type Snapshot struct {
-	Version  int                    `json:"version"`
-	Targets  map[string]TargetState `json:"targets"`
-	Silences map[string]Silence     `json:"silences,omitempty"`
-	Actions  map[string]Action      `json:"actions,omitempty"`
-}
-
-type Silence struct {
-	Until     time.Time `json:"until"`
-	Reason    string    `json:"reason,omitempty"`
-	CreatedAt time.Time `json:"createdAt"`
-}
-
-type Action struct {
-	Token       string    `json:"token"`
-	Type        string    `json:"type"`
-	ServiceKey  string    `json:"serviceKey"`
-	ServiceName string    `json:"serviceName"`
-	Status      string    `json:"status"`
-	DryRun      bool      `json:"dryRun"`
-	RequestedBy string    `json:"requestedBy,omitempty"`
-	CreatedAt   time.Time `json:"createdAt"`
-	ExpiresAt   time.Time `json:"expiresAt"`
-	ConfirmedAt time.Time `json:"confirmedAt,omitempty"`
-	Message     string    `json:"message,omitempty"`
+	Version int                    `json:"version"`
+	Targets map[string]TargetState `json:"targets"`
 }
 
 type Store struct {
@@ -82,12 +60,6 @@ func (s *Store) Load() (Snapshot, error) {
 	if snapshot.Targets == nil {
 		snapshot.Targets = make(map[string]TargetState)
 	}
-	if snapshot.Silences == nil {
-		snapshot.Silences = make(map[string]Silence)
-	}
-	if snapshot.Actions == nil {
-		snapshot.Actions = make(map[string]Action)
-	}
 	if snapshot.Version == 0 {
 		snapshot.Version = 1
 	}
@@ -107,12 +79,6 @@ func (s *Store) Save(snapshot Snapshot) error {
 	}
 	if snapshot.Targets == nil {
 		snapshot.Targets = make(map[string]TargetState)
-	}
-	if snapshot.Silences == nil {
-		snapshot.Silences = make(map[string]Silence)
-	}
-	if snapshot.Actions == nil {
-		snapshot.Actions = make(map[string]Action)
 	}
 
 	if err := os.MkdirAll(filepath.Dir(s.path), 0o755); err != nil {
@@ -151,9 +117,7 @@ func (s *Store) Save(snapshot Snapshot) error {
 
 func emptySnapshot() Snapshot {
 	return Snapshot{
-		Version:  1,
-		Targets:  make(map[string]TargetState),
-		Silences: make(map[string]Silence),
-		Actions:  make(map[string]Action),
+		Version: 1,
+		Targets: make(map[string]TargetState),
 	}
 }
