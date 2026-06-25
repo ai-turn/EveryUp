@@ -14,12 +14,6 @@ export interface Host {
   isActive: boolean;
   status: 'online' | 'offline' | 'unknown' | 'error';
   description?: string;
-  sshUser?: string;
-  sshPort?: number;
-  sshAuthType?: 'password' | 'key' | 'key_file';
-  sshKeyPath?: string;
-  sshKey?: string;
-  sshPassword?: string;
   lastError?: string;
   createdAt: string;
   updatedAt: string;
@@ -34,12 +28,6 @@ export interface CreateHostData {
   port?: number;
   group?: string;
   description?: string;
-  sshUser?: string;
-  sshPort?: number;
-  sshAuthType?: 'password' | 'key' | 'key_file';
-  sshKeyPath?: string;
-  sshKey?: string;
-  sshPassword?: string;
 }
 
 export interface SystemInfo {

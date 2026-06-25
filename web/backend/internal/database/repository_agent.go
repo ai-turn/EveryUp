@@ -259,6 +259,61 @@ FROM agent_services WHERE agent_id = ? AND key = ?`, agentID, key).Scan(
 	return &service, nil
 }
 
+// LogLevelFilterByName returns the per-service ingest log-level filter for the
+// agent service whose name matches the OTLP service.name. Stored as CSV on
+// agent_services; empty/missing = accept all levels. UpsertServices never writes
+// this column, so a user-set filter survives agent re-syncs.
+func (r *AgentRepository) LogLevelFilterByName(agentID, name string) []models.LogLevel {
+	var csv string
+	err := DB.QueryRow(
+		`SELECT log_level_filter FROM agent_services WHERE agent_id = ? AND name = ? LIMIT 1`,
+		agentID, name,
+	).Scan(&csv)
+	if err != nil || strings.TrimSpace(csv) == "" {
+		return nil
+	}
+	parts := strings.Split(csv, ",")
+	levels := make([]models.LogLevel, 0, len(parts))
+	for _, p := range parts {
+		if p = strings.TrimSpace(p); p != "" {
+			levels = append(levels, models.LogLevel(p))
+		}
+	}
+	return levels
+}
+
+// GetLogLevelFilterByKey returns the per-service ingest filter as a level list,
+// addressed by (agent_id, key) — the unit the UI edits. Empty = accept all.
+func (r *AgentRepository) GetLogLevelFilterByKey(agentID, key string) ([]string, error) {
+	var csv string
+	err := DB.QueryRow(
+		`SELECT log_level_filter FROM agent_services WHERE agent_id = ? AND key = ?`,
+		agentID, key,
+	).Scan(&csv)
+	if err == sql.ErrNoRows {
+		return []string{}, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	out := make([]string, 0)
+	for _, p := range strings.Split(csv, ",") {
+		if p = strings.TrimSpace(p); p != "" {
+			out = append(out, p)
+		}
+	}
+	return out, nil
+}
+
+// SetLogLevelFilter persists the per-service ingest filter (CSV; empty = accept all).
+func (r *AgentRepository) SetLogLevelFilter(agentID, key, csv string) error {
+	_, err := DB.Exec(
+		`UPDATE agent_services SET log_level_filter = ? WHERE agent_id = ? AND key = ?`,
+		csv, agentID, key,
+	)
+	return err
+}
+
 func (r *AgentRepository) InsertEvents(agentID string, events []models.AgentEvent) error {
 	if len(events) == 0 {
 		return nil

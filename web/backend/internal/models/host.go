@@ -29,15 +29,6 @@ const (
 	HostStatusError   HostStatus = "error"
 )
 
-// SSHAuthType represents the SSH authentication method
-type SSHAuthType string
-
-const (
-	SSHAuthPassword SSHAuthType = "password"
-	SSHAuthKey      SSHAuthType = "key"      // PEM key content directly
-	SSHAuthKeyFile  SSHAuthType = "key_file" // Server-side file path
-)
-
 // Host represents a monitored server/host
 type Host struct {
 	ID               string               `json:"id"`
@@ -51,14 +42,6 @@ type Host struct {
 	Description      string               `json:"description,omitempty"`
 	CreatedAt        time.Time            `json:"createdAt"`
 	UpdatedAt        time.Time            `json:"updatedAt"`
-
-	// SSH Authentication (remote hosts only)
-	SSHUser     string      `json:"sshUser,omitempty"`
-	SSHPort     int         `json:"sshPort,omitempty"`
-	SSHAuthType SSHAuthType `json:"sshAuthType,omitempty"`
-	SSHKeyPath  string      `json:"sshKeyPath,omitempty"`
-	SSHKey      string      `json:"sshKey,omitempty"`      // encrypted at rest, masked in API response
-	SSHPassword string      `json:"sshPassword,omitempty"` // encrypted at rest, masked in API response
 
 	// Computed fields (not stored in DB directly)
 	Status    HostStatus `json:"status,omitempty"`
@@ -86,14 +69,6 @@ const (
 	InfraSeverityCritical InfraSeverity = "critical"
 )
 
-// SSHSummary exposes connection health fields needed by the remote hosts view.
-type SSHSummary struct {
-	Port             int        `json:"port,omitempty"`
-	User             string     `json:"user,omitempty"`
-	ConnectionStatus string     `json:"connectionStatus"`
-	LastTestedAt     *time.Time `json:"lastTestedAt,omitempty"`
-}
-
 // InfraResourceSummary is the production list DTO for infrastructure pages.
 type InfraResourceSummary struct {
 	ID              string               `json:"id"`
@@ -107,7 +82,6 @@ type InfraResourceSummary struct {
 	IP              string               `json:"ip"`
 	IsActive        bool                 `json:"isActive"`
 	IsRemote        bool                 `json:"isRemote"`
-	SSHPort         int                  `json:"sshPort,omitempty"`
 	LastSeenAt      *time.Time           `json:"lastSeenAt,omitempty"`
 	LastCollectedAt *time.Time           `json:"lastCollectedAt,omitempty"`
 	IncidentSince   *time.Time           `json:"incidentSince,omitempty"`
@@ -116,7 +90,6 @@ type InfraResourceSummary struct {
 	MemoryUsage     *float64             `json:"memoryUsage,omitempty"`
 	DiskUsage       *float64             `json:"diskUsage,omitempty"`
 	NetTrend        []float64            `json:"netTrend,omitempty"`
-	SSH             *SSHSummary          `json:"ssh,omitempty"`
 	CreatedAt       time.Time            `json:"createdAt"`
 	UpdatedAt       time.Time            `json:"updatedAt"`
 }
@@ -132,12 +105,6 @@ type HostCreateRequest struct {
 	Group            string               `json:"group,omitempty"`
 	IsActive         *bool                `json:"isActive,omitempty"`
 	Description      string               `json:"description,omitempty"`
-	SSHUser          string               `json:"sshUser,omitempty"`
-	SSHPort          int                  `json:"sshPort,omitempty"`
-	SSHAuthType      SSHAuthType          `json:"sshAuthType,omitempty"`
-	SSHKeyPath       string               `json:"sshKeyPath,omitempty"`
-	SSHKey           string               `json:"sshKey,omitempty"`
-	SSHPassword      string               `json:"sshPassword,omitempty"`
 }
 
 // ToHost converts request to Host model
@@ -157,11 +124,6 @@ func (r *HostCreateRequest) ToHost() *Host {
 		hostType = HostTypeRemote
 	}
 
-	sshPort := r.SSHPort
-	if sshPort == 0 && hostType == HostTypeRemote {
-		sshPort = 22
-	}
-
 	resourceCategory := r.ResourceCategory
 	if resourceCategory == "" {
 		resourceCategory = HostResourceServer
@@ -178,24 +140,8 @@ func (r *HostCreateRequest) ToHost() *Host {
 		Group:            group,
 		IsActive:         isActive,
 		Description:      r.Description,
-		SSHUser:          r.SSHUser,
-		SSHPort:          sshPort,
-		SSHAuthType:      r.SSHAuthType,
-		SSHKeyPath:       r.SSHKeyPath,
-		SSHKey:           r.SSHKey,
-		SSHPassword:      r.SSHPassword,
 		CreatedAt:        now,
 		UpdatedAt:        now,
 		Status:           HostStatusUnknown,
-	}
-}
-
-// MaskSecrets replaces sensitive SSH fields with "***" for API responses.
-func (h *Host) MaskSecrets() {
-	if h.SSHPassword != "" {
-		h.SSHPassword = "***"
-	}
-	if h.SSHKey != "" {
-		h.SSHKey = "***"
 	}
 }

@@ -40,15 +40,6 @@ func TestLoadFromEnvParsesDefaults(t *testing.T) {
 	}
 }
 
-func TestLoadFromEnvValidatesWebOTLPConfig(t *testing.T) {
-	t.Setenv("EVERYUP_WEB_API_KEY", "secret")
-
-	_, err := LoadFromEnv()
-	if err == nil {
-		t.Fatal("expected missing web OTLP endpoint to fail")
-	}
-}
-
 func TestLoadFromEnvValidatesWebSyncConfig(t *testing.T) {
 	t.Setenv("EVERYUP_WEB_SYNC_ENABLED", "true")
 

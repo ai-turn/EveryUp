@@ -268,6 +268,25 @@ func postOTLP(t *testing.T, ts *testServer, path, apiKey string, msg proto.Messa
 	}
 }
 
+// postOTLPStatus posts an OTLP payload and returns the HTTP status without
+// asserting success — used to verify auth rejection paths.
+func postOTLPStatus(t *testing.T, ts *testServer, path, apiKey string, msg proto.Message) int {
+	t.Helper()
+	payload, err := proto.Marshal(msg)
+	if err != nil {
+		t.Fatalf("marshal OTLP payload: %v", err)
+	}
+	req := httptest.NewRequest("POST", path, bytes.NewReader(payload))
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Content-Type", "application/x-protobuf")
+	resp, err := ts.App.Test(req, -1)
+	if err != nil {
+		t.Fatalf("POST %s: %v", path, err)
+	}
+	defer resp.Body.Close()
+	return resp.StatusCode
+}
+
 func stringValue(value string) *commonpb.AnyValue {
 	return &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: value}}
 }

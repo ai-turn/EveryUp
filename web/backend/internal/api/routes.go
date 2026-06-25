@@ -91,7 +91,6 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	// Incidents
 	incidentHandler := handlers.NewIncidentHandler()
 	local.Get("/incidents", incidentHandler.GetAll)
-	local.Get("/incidents/active", incidentHandler.GetActive)
 
 	// Host endpoints (read-only — write paths removed in agent-only architecture)
 	hostHandler := handlers.NewHostHandler()
@@ -104,11 +103,6 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	local.Get("/hosts/:hostId/system/info", systemHandler.GetInfo)
 	local.Get("/hosts/:hostId/system/metrics", systemHandler.GetMetricsHistory)
 	local.Get("/hosts/:hostId/system/processes", systemHandler.GetProcesses)
-
-	// Legacy system endpoints (backward compatibility)
-	local.Get("/system/info", systemHandler.GetInfo)
-	local.Get("/system/metrics/history", systemHandler.GetMetricsHistory)
-	local.Get("/system/processes", systemHandler.GetProcesses)
 
 	// Notifications
 	notificationHandler := handlers.NewNotificationHandler()
@@ -150,6 +144,8 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	local.Get("/agents/:agentId/services/:key/uptime", agentHandler.GetServiceUptime)
 	local.Get("/agents/:agentId/services/:key/events", agentHandler.GetServiceKeyEvents)
 	local.Get("/agents/:agentId/services/:key/logs", agentHandler.GetServiceLogs)
+	local.Get("/agents/:agentId/services/:key/log-filter", agentHandler.GetServiceLogFilter)
+	local.Put("/agents/:agentId/services/:key/log-filter", agentHandler.SetServiceLogFilter)
 	local.Get("/agents/:agentId/services/:key/requests", agentHandler.GetServiceRequests)
 
 	// Notification History

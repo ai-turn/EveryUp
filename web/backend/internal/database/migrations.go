@@ -99,12 +99,6 @@ func migrate() error {
 			"group"       TEXT NOT NULL DEFAULT '',
 			is_active     INTEGER DEFAULT 1,
 			description   TEXT DEFAULT '',
-			ssh_user      TEXT DEFAULT '',
-			ssh_port      INTEGER DEFAULT 22,
-			ssh_auth_type TEXT DEFAULT '',
-			ssh_key_path  TEXT DEFAULT '',
-			ssh_key       TEXT DEFAULT '',
-			ssh_password  TEXT DEFAULT '',
 			last_error    TEXT DEFAULT '',
 			created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -230,6 +224,12 @@ func migrate() error {
 	if err := migrateV32(); err != nil {
 		return fmt.Errorf("v32 migration failed: %w", err)
 	}
+	if err := migrateV33(); err != nil {
+		return fmt.Errorf("v33 migration failed: %w", err)
+	}
+	if err := migrateV34(); err != nil {
+		return fmt.Errorf("v34 migration failed: %w", err)
+	}
 
 	return nil
 }
@@ -350,16 +350,10 @@ func migrateV3() error {
 	return nil
 }
 
-// migrateV4 adds SSH fields and last_error to hosts table.
-// Added: 2024-02 — SSH remote monitoring support.
+// migrateV4 adds last_error to hosts table.
+// Added: 2024-02. (SSH columns it once added were dropped in migrateV33.)
 func migrateV4() error {
 	alterStatements := []string{
-		"ALTER TABLE hosts ADD COLUMN ssh_user TEXT DEFAULT ''",
-		"ALTER TABLE hosts ADD COLUMN ssh_port INTEGER DEFAULT 22",
-		"ALTER TABLE hosts ADD COLUMN ssh_auth_type TEXT DEFAULT ''",
-		"ALTER TABLE hosts ADD COLUMN ssh_key_path TEXT DEFAULT ''",
-		"ALTER TABLE hosts ADD COLUMN ssh_key TEXT DEFAULT ''",
-		"ALTER TABLE hosts ADD COLUMN ssh_password TEXT DEFAULT ''",
 		"ALTER TABLE hosts ADD COLUMN last_error TEXT DEFAULT ''",
 	}
 
@@ -1063,6 +1057,72 @@ func migrateV32() error {
 		return err
 	}
 	return nil
+}
+
+// migrateV33 drops the legacy SSH credential columns from the hosts table.
+// SSH-based remote collection was replaced by OpenTelemetry push ingestion, so
+// these columns are no longer read or written. Idempotent — only drops columns
+// that still exist on the table.
+// Added: 2026-06-25
+func migrateV33() error {
+	rows, err := DB.Query("PRAGMA table_info(hosts)")
+	if err != nil {
+		return err
+	}
+	existing := map[string]bool{}
+	for rows.Next() {
+		var cid, notnull, pk int
+		var name, ctype string
+		var dflt sql.NullString
+		if err := rows.Scan(&cid, &name, &ctype, &notnull, &dflt, &pk); err != nil {
+			rows.Close()
+			return err
+		}
+		existing[name] = true
+	}
+	rows.Close()
+
+	for _, col := range []string{"ssh_user", "ssh_port", "ssh_auth_type", "ssh_key_path", "ssh_key", "ssh_password"} {
+		if existing[col] {
+			if _, err := DB.Exec(`ALTER TABLE hosts DROP COLUMN ` + col); err != nil {
+				return fmt.Errorf("drop column %s: %w", col, err)
+			}
+		}
+	}
+	return nil
+}
+
+// migrateV34 unifies OTLP telemetry onto the connected-agent (project) key.
+// Logs/spans/api_requests gain agent_id + service_name so they can be tied to an
+// agent service by (agent_id, service_name) instead of routing through the legacy
+// services table. agent_services gains an optional per-service log_level_filter
+// (CSV; empty = accept all) that survives sync because UpsertServices never writes it.
+// Added: 2026-06-25
+func migrateV34() error {
+	return Transaction(func(tx *sql.Tx) error {
+		alters := []string{
+			`ALTER TABLE logs ADD COLUMN agent_id TEXT NOT NULL DEFAULT ''`,
+			`ALTER TABLE logs ADD COLUMN service_name TEXT NOT NULL DEFAULT ''`,
+			`ALTER TABLE api_requests ADD COLUMN agent_id TEXT NOT NULL DEFAULT ''`,
+			`ALTER TABLE spans ADD COLUMN agent_id TEXT NOT NULL DEFAULT ''`,
+			`ALTER TABLE agent_services ADD COLUMN log_level_filter TEXT NOT NULL DEFAULT ''`,
+		}
+		for _, stmt := range alters {
+			if _, err := tx.Exec(stmt); err != nil && !strings.Contains(err.Error(), "duplicate column") {
+				return err
+			}
+		}
+		indexes := []string{
+			`CREATE INDEX IF NOT EXISTS idx_logs_agent_service ON logs(agent_id, service_name, created_at DESC)`,
+			`CREATE INDEX IF NOT EXISTS idx_api_requests_agent_service ON api_requests(agent_id, service_name, created_at DESC)`,
+		}
+		for _, stmt := range indexes {
+			if _, err := tx.Exec(stmt); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 // isDuplicateColumnError checks if the error is a duplicate column error (migrateV2)

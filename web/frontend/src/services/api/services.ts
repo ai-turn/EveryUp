@@ -324,11 +324,6 @@ export function createServicesApi(request: RequestFn) {
       return data || [];
     },
 
-    getActiveIncidents: async () => {
-      const data = await request<Incident[]>('/incidents/active');
-      return data || [];
-    },
-
     // Health
     getHealth: () => request<HealthStatus>('/health'),
 

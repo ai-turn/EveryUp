@@ -29,8 +29,3 @@ func (h *IncidentHandler) GetAll(c *fiber.Ctx) error {
 		"data":    incidents,
 	})
 }
-
-// GetActive returns active incidents
-func (h *IncidentHandler) GetActive(c *fiber.Ctx) error {
-	return h.GetAll(c)
-}

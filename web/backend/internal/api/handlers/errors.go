@@ -30,16 +30,6 @@ const (
 	// Settings errors
 	ErrCodeConfigUnavailable = "CONFIG_UNAVAILABLE"
 	ErrCodeUpdateFailed      = "UPDATE_FAILED"
-
-	// SSH connection errors
-	ErrCodeSSHConnectionRefused = "SSH_CONNECTION_REFUSED"
-	ErrCodeSSHHostNotFound      = "SSH_HOST_NOT_FOUND"
-	ErrCodeSSHTimeout           = "SSH_TIMEOUT"
-	ErrCodeSSHAuthFailed        = "SSH_AUTH_FAILED"
-	ErrCodeSSHHandshakeFailed   = "SSH_HANDSHAKE_FAILED"
-	ErrCodeSSHHostKeyFailed     = "SSH_HOST_KEY_FAILED"
-	ErrCodeSSHPermissionDenied  = "SSH_PERMISSION_DENIED"
-	ErrCodeSSHFailed            = "SSH_CONNECTION_FAILED"
 )
 
 // internalError logs the full error server-side and returns a generic message to the client.
@@ -94,22 +84,6 @@ func genericMessage(code string) string {
 		return "Server configuration unavailable"
 	case ErrCodeUpdateFailed:
 		return "Failed to save settings"
-	case ErrCodeSSHConnectionRefused:
-		return "SSH connection refused"
-	case ErrCodeSSHHostNotFound:
-		return "SSH host not found"
-	case ErrCodeSSHTimeout:
-		return "SSH connection timed out"
-	case ErrCodeSSHAuthFailed:
-		return "SSH authentication failed"
-	case ErrCodeSSHHandshakeFailed:
-		return "SSH handshake failed"
-	case ErrCodeSSHHostKeyFailed:
-		return "SSH host key verification failed"
-	case ErrCodeSSHPermissionDenied:
-		return "SSH permission denied"
-	case ErrCodeSSHFailed:
-		return "SSH connection failed"
 	default:
 		return "An internal error occurred"
 	}

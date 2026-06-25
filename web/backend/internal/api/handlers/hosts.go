@@ -79,7 +79,6 @@ func (h *HostHandler) GetAll(c *fiber.Ctx) error {
 				hosts[i].Status = models.HostStatusUnknown
 			}
 		}
-		hosts[i].MaskSecrets()
 	}
 
 	return c.JSON(fiber.Map{
@@ -89,7 +88,7 @@ func (h *HostHandler) GetAll(c *fiber.Ctx) error {
 }
 
 func buildInfraResourceSummary(host *models.Host, latest models.SystemMetric, netTrend []float64, cutoff time.Time) models.InfraResourceSummary {
-	isRemote := host.Type == models.HostTypeRemote || host.SSHUser != ""
+	isRemote := host.Type == models.HostTypeRemote
 	status := models.InfraStatusUnknown
 	severity := models.InfraSeverityWarning
 	reason := "metric_stale"
@@ -166,7 +165,6 @@ func buildInfraResourceSummary(host *models.Host, latest models.SystemMetric, ne
 		IP:              host.IP,
 		IsActive:        host.IsActive,
 		IsRemote:        isRemote,
-		SSHPort:         host.SSHPort,
 		LastSeenAt:      lastSeenAt,
 		LastCollectedAt: lastCollectedAt,
 		IncidentSince:   incidentSince,
@@ -177,21 +175,6 @@ func buildInfraResourceSummary(host *models.Host, latest models.SystemMetric, ne
 		NetTrend:        netTrend,
 		CreatedAt:       host.CreatedAt,
 		UpdatedAt:       host.UpdatedAt,
-	}
-
-	if isRemote {
-		connectionStatus := "unknown"
-		if status == models.InfraStatusHealthy || status == models.InfraStatusWarning || status == models.InfraStatusCritical {
-			connectionStatus = "connected"
-		} else if status == models.InfraStatusError {
-			connectionStatus = "failed"
-		}
-		summary.SSH = &models.SSHSummary{
-			Port:             host.SSHPort,
-			User:             host.SSHUser,
-			ConnectionStatus: connectionStatus,
-			LastTestedAt:     lastSeenAt,
-		}
 	}
 
 	return summary
@@ -230,8 +213,6 @@ func (h *HostHandler) GetByID(c *fiber.Ctx) error {
 			host.Status = models.HostStatusUnknown
 		}
 	}
-	host.MaskSecrets()
-
 	return c.JSON(fiber.Map{
 		"success": true,
 		"data":    host,
@@ -301,7 +282,6 @@ func (h *HostHandler) Create(c *fiber.Ctx) error {
 		return internalError(c, "DATABASE_ERROR", err)
 	}
 
-	host.MaskSecrets()
 	return c.Status(201).JSON(fiber.Map{
 		"success": true,
 		"data":    host,
@@ -359,31 +339,11 @@ func (h *HostHandler) Update(c *fiber.Ctx) error {
 	if req.Description != "" {
 		host.Description = req.Description
 	}
-	// SSH fields
-	if req.SSHUser != "" {
-		host.SSHUser = req.SSHUser
-	}
-	if req.SSHPort != 0 {
-		host.SSHPort = req.SSHPort
-	}
-	if req.SSHAuthType != "" {
-		host.SSHAuthType = req.SSHAuthType
-	}
-	if req.SSHKeyPath != "" {
-		host.SSHKeyPath = req.SSHKeyPath
-	}
-	if req.SSHKey != "" {
-		host.SSHKey = req.SSHKey
-	}
-	if req.SSHPassword != "" {
-		host.SSHPassword = req.SSHPassword
-	}
 
 	if err := h.repo.Update(host); err != nil {
 		return internalError(c, "DATABASE_ERROR", err)
 	}
 
-	host.MaskSecrets()
 	return c.JSON(fiber.Map{
 		"success": true,
 		"data":    host,

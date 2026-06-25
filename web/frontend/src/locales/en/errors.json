@@ -27,14 +27,5 @@
   "SSRF_BLOCKED": "Address not allowed for security reasons.",
   "NO_COLLECTOR": "Collector not registered.",
   "COLLECT_FAILED": "Failed to collect system information.",
-  "AUTH_CONFIG_ERROR": "Invalid SSH authentication configuration.",
-  "SSH_CONNECTION_REFUSED": "Connection refused. Check if the host is running and the SSH port is correct.",
-  "SSH_HOST_NOT_FOUND": "Host not found. Check the IP address.",
-  "SSH_TIMEOUT": "Connection timed out. Check firewall settings or IP/port.",
-  "SSH_AUTH_FAILED": "Authentication failed. Check username, password, or SSH key.",
-  "SSH_HANDSHAKE_FAILED": "SSH handshake failed. Check auth method or key.",
-  "SSH_HOST_KEY_FAILED": "Host key verification failed. The server's host key may have changed.",
-  "SSH_PERMISSION_DENIED": "Permission denied. Check username and credentials.",
-  "SSH_CONNECTION_FAILED": "SSH connection failed.",
   "UNKNOWN_ERROR": "An unknown error occurred."
 }

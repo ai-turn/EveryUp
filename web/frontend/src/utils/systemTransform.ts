@@ -17,8 +17,7 @@ export function hostToResource(host: Host): Resource {
     cluster: host.group,
     ip: host.ip,
     isActive: host.isActive,
-    isRemote: !!host.sshUser,
-    sshPort: host.sshPort,
+    isRemote: host.type === 'remote',
   };
 }
 

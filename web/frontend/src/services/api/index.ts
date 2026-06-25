@@ -12,7 +12,7 @@ const request = createRequestFn();
  * 도메인별 구현은 각 파일을 참조:
  *   - dashboard.ts  : getDashboardTimeline
  *   - services.ts   : services CRUD, metrics, logs, incidents, health
- *   - hosts.ts      : hosts CRUD, system info, SSH
+ *   - hosts.ts      : hosts CRUD, system info
  *   - alerts.ts     : alert rules, notification channels, history, settings
  */
 export const api = {

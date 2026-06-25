@@ -27,6 +27,9 @@ const LEVEL_STYLE: Record<string, string> = {
   trace: 'bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark',
 };
 
+// Levels selectable for the OTLP ingest filter (what gets stored), in severity order.
+const INGEST_LEVELS: LogLevel[] = ['error', 'warn', 'info', 'debug', 'trace'];
+
 type DatePreset = '1d' | '7d' | '30d' | '';
 
 function toISOFrom(preset: DatePreset): string | undefined {
@@ -83,6 +86,33 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey }: Props) 
   const [search, setSearch] = useState('');
   const [inputValue, setInputValue] = useState('');
   const [datePreset, setDatePreset] = useState<DatePreset>('');
+
+  // Ingest filter: which levels are stored at OTLP ingest ([] = accept all).
+  const [showSettings, setShowSettings] = useState(false);
+  const [ingestLevels, setIngestLevels] = useState<string[]>([]);
+  const [savingFilter, setSavingFilter] = useState(false);
+
+  useEffect(() => {
+    api.getAgentServiceLogFilter(agentId, serviceKey)
+      .then(r => setIngestLevels(r?.levels ?? []))
+      .catch(() => {});
+  }, [agentId, serviceKey]);
+
+  const toggleIngestLevel = (l: string) =>
+    setIngestLevels(cur => (cur.includes(l) ? cur.filter(x => x !== l) : [...cur, l]));
+
+  const saveIngestFilter = async () => {
+    setSavingFilter(true);
+    try {
+      const r = await api.setAgentServiceLogFilter(agentId, serviceKey, ingestLevels);
+      setIngestLevels(r?.levels ?? []);
+      toast.success('수집 설정을 저장했습니다');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setSavingFilter(false);
+    }
+  };
 
   const fetch = useCallback(async () => {
     setLoading(true);
@@ -165,7 +195,67 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey }: Props) 
             </button>
           )}
         </form>
+
+        {/* Ingest filter settings toggle */}
+        <button
+          type="button"
+          onClick={() => setShowSettings(v => !v)}
+          title="수집 설정"
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+            showSettings
+              ? 'bg-primary/10 text-primary'
+              : 'bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark'
+          }`}
+        >
+          <MaterialIcon name="tune" className="text-sm" />
+          수집 설정
+        </button>
       </div>
+
+      {/* Ingest filter panel — controls which levels are STORED (vs. the view filter above) */}
+      {showSettings && (
+        <div className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark p-4 space-y-3">
+          <div>
+            <p className="text-sm font-semibold text-slate-800 dark:text-text-base-dark">수집할 로그 레벨</p>
+            <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-0.5">
+              선택한 레벨만 저장됩니다. 모두 해제하면 전체 저장. (앞으로 들어오는 로그에만 적용)
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {INGEST_LEVELS.map(l => {
+              const on = ingestLevels.includes(l);
+              return (
+                <button
+                  key={l}
+                  type="button"
+                  onClick={() => toggleIngestLevel(l)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold uppercase transition-colors ${
+                    on
+                      ? LEVEL_STYLE[l]
+                      : 'bg-white dark:bg-bg-surface-dark text-slate-400 dark:text-text-dim-dark border border-slate-200 dark:border-ui-border-dark opacity-60'
+                  }`}
+                >
+                  {l}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={saveIngestFilter}
+              disabled={savingFilter}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              <MaterialIcon name="save" className="text-sm" />
+              {savingFilter ? '저장 중...' : '저장'}
+            </button>
+            <span className="text-xs text-slate-400 dark:text-text-dim-dark">
+              {ingestLevels.length === 0 ? '전체 수집' : `${ingestLevels.length}개 레벨 수집`}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Count */}
       {!loading && (

@@ -9,9 +9,6 @@ export const mockHost: Host = {
   group: 'EU-West-1',
   isActive: true,
   status: 'online',
-  sshUser: 'ubuntu',
-  sshPort: 22,
-  sshAuthType: 'key',
   createdAt: '2025-01-01T00:00:00Z',
   updatedAt: '2025-01-01T00:00:00Z',
 };

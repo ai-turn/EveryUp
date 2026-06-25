@@ -17,9 +17,6 @@ import (
 	"github.com/aiturn/everyup/internal/models"
 )
 
-// Compile-time check that LocalCollector implements MetricCollector.
-var _ MetricCollector = (*LocalCollector)(nil)
-
 // LocalCollector collects metrics from the local host using gopsutil.
 type LocalCollector struct {
 	hostID string

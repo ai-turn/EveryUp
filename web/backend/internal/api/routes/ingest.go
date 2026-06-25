@@ -10,7 +10,7 @@ import (
 func RegisterIngestRoutes(api fiber.Router) {
 	logIngestMiddleware := []fiber.Handler{
 		middleware.IngestRateLimiter(),
-		middleware.ApiKeyAuth(),
+		middleware.OTLPAuth(),
 	}
 	otlpIngestHandler := handlers.NewOTLPIngestHandler()
 

@@ -32,8 +32,10 @@ const (
 type Target struct {
 	ID          string
 	ServiceName string
-	HealthType  string
+	HealthType  string // "http" | "tcp" | "docker" (container-state liveness)
 	HealthURL   string
+	State       string // Docker container state ("running", "exited", …) — docker liveness only
+	StatusText  string // Docker status line ("Up 2 hours", "Exited (137) 2m ago")
 	Labels      map[string]string
 }
 
@@ -113,6 +115,8 @@ type dockerContainer struct {
 	ID     string            `json:"Id"`
 	Names  []string          `json:"Names"`
 	Labels map[string]string `json:"Labels"`
+	State  string            `json:"State"`  // "running", "exited", "dead", "created", …
+	Status string            `json:"Status"` // human-readable, e.g. "Up 2 hours", "Exited (0) 3 minutes ago"
 }
 
 type dockerStatsResponse struct {
@@ -168,7 +172,9 @@ func NewDockerClient(socketPath string, timeout time.Duration) *DockerClient {
 }
 
 func (c *DockerClient) ListTargets(ctx context.Context) ([]Target, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://docker/containers/json", nil)
+	// all=true so stopped/exited containers still appear — a docker-liveness
+	// target needs to report "down" rather than silently vanishing.
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://docker/containers/json?all=true", nil)
 	if err != nil {
 		return nil, fmt.Errorf("create docker request: %w", err)
 	}
@@ -191,34 +197,20 @@ func (c *DockerClient) ListTargets(ctx context.Context) ([]Target, error) {
 	targets := make([]Target, 0, len(containers))
 	for _, container := range containers {
 		target, ok := TargetFromLabels(container.ID, containerName(container), container.Labels)
-		if ok {
-			targets = append(targets, target)
+		if !ok {
+			continue
 		}
+		if target.HealthType == "docker" {
+			target.State = container.State
+			target.StatusText = container.Status
+		}
+		targets = append(targets, target)
 	}
 	return targets, nil
 }
 
 func TargetFromLabels(containerID, fallbackName string, labels map[string]string) (Target, bool) {
 	if !truthy(labels[LabelEnabled]) {
-		return Target{}, false
-	}
-
-	healthType := strings.ToLower(strings.TrimSpace(labels[LabelHealthType]))
-	if healthType == "" {
-		healthType = "http"
-	}
-	if healthType != "http" && healthType != "tcp" {
-		return Target{}, false
-	}
-
-	healthURL := strings.TrimSpace(labels[LabelHealthURL])
-	if healthType == "http" && healthURL == "" {
-		healthURL = buildHealthURL(fallbackName, labels)
-	}
-	if healthType == "tcp" && healthURL == "" {
-		healthURL = buildTCPAddress(fallbackName, labels)
-	}
-	if !validHealthEndpoint(healthType, healthURL) {
 		return Target{}, false
 	}
 
@@ -230,11 +222,32 @@ func TargetFromLabels(containerID, fallbackName string, labels map[string]string
 		serviceName = shortID(containerID)
 	}
 
+	// An explicit HTTP/TCP endpoint enables active probing. Without a usable
+	// endpoint we fall back to Docker container liveness (running vs not) —
+	// no health endpoint to expose, just everyup.enabled=true.
+	switch strings.ToLower(strings.TrimSpace(labels[LabelHealthType])) {
+	case "tcp":
+		addr := strings.TrimSpace(labels[LabelHealthURL])
+		if addr == "" {
+			addr = buildTCPAddress(fallbackName, labels)
+		}
+		if validHealthEndpoint("tcp", addr) {
+			return Target{ID: containerID, ServiceName: serviceName, HealthType: "tcp", HealthURL: addr, Labels: copyLabels(labels)}, true
+		}
+	case "http", "":
+		healthURL := strings.TrimSpace(labels[LabelHealthURL])
+		if healthURL == "" {
+			healthURL = buildHealthURL(fallbackName, labels)
+		}
+		if validHealthEndpoint("http", healthURL) {
+			return Target{ID: containerID, ServiceName: serviceName, HealthType: "http", HealthURL: healthURL, Labels: copyLabels(labels)}, true
+		}
+	}
+
 	return Target{
 		ID:          containerID,
 		ServiceName: serviceName,
-		HealthType:  healthType,
-		HealthURL:   healthURL,
+		HealthType:  "docker",
 		Labels:      copyLabels(labels),
 	}, true
 }

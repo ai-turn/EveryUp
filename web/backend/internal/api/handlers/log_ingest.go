@@ -35,8 +35,11 @@ func NewLogIngestHandler() *LogIngestHandler {
 	}
 }
 
-// processEntry validates and converts a single log entry
-func (h *LogIngestHandler) processEntry(service *models.Service, entry *models.LogIngestEntry, source string) (*models.Log, error) {
+// processEntry validates a log entry and applies the ingest-time level filter.
+// Identity (service/agent/name) is assigned by the caller after this returns.
+// fingerprintSeed scopes alert dedup to the sending service (legacy service id,
+// or agentID:serviceName for connected agents). Empty filter = accept all levels.
+func (h *LogIngestHandler) processEntry(entry *models.LogIngestEntry, filter []models.LogLevel, fingerprintSeed, source string) (*models.Log, error) {
 	if entry.Message == "" {
 		return nil, fmt.Errorf("message is required")
 	}
@@ -51,10 +54,9 @@ func (h *LogIngestHandler) processEntry(service *models.Service, entry *models.L
 		entry.Level = models.LogLevelInfo
 	}
 
-	// Apply per-service log level filter. Empty filter = accept all levels.
-	if len(service.LogLevelFilter) > 0 {
-		allowed := make(map[models.LogLevel]bool, len(service.LogLevelFilter))
-		for _, l := range service.LogLevelFilter {
+	if len(filter) > 0 {
+		allowed := make(map[models.LogLevel]bool, len(filter))
+		for _, l := range filter {
 			allowed[l] = true
 		}
 		if !allowed[entry.Level] {
@@ -63,7 +65,7 @@ func (h *LogIngestHandler) processEntry(service *models.Service, entry *models.L
 	}
 
 	// Generate fingerprint
-	fingerprint := alerter.GenerateFingerprint(service.ID, string(entry.Level), entry.Message)
+	fingerprint := alerter.GenerateFingerprint(fingerprintSeed, string(entry.Level), entry.Message)
 
 	// Marshal metadata
 	var metadataJSON json.RawMessage
@@ -79,7 +81,6 @@ func (h *LogIngestHandler) processEntry(service *models.Service, entry *models.L
 	}
 
 	return &models.Log{
-		ServiceID:   service.ID,
 		Level:       entry.Level,
 		Message:     entry.Message,
 		Metadata:    metadataJSON,
@@ -89,22 +90,23 @@ func (h *LogIngestHandler) processEntry(service *models.Service, entry *models.L
 	}, nil
 }
 
-// triggerAlertIfNeeded dispatches alert for error/warn level logs
-func (h *LogIngestHandler) triggerAlertIfNeeded(service *models.Service, logEntry *models.Log, metadata map[string]interface{}) {
+// triggerAlertIfNeeded dispatches alert for error/warn level logs. alertServiceID
+// is the dedup/identity seed (legacy service id, or agentID:serviceName for agents).
+func (h *LogIngestHandler) triggerAlertIfNeeded(alertServiceID, serviceName string, logEntry *models.Log, metadata map[string]interface{}) {
 	if logEntry.Level != models.LogLevelError && logEntry.Level != models.LogLevelWarn {
 		return
 	}
 
-	rules, err := h.ruleRepo.GetEnabledLogRulesByServiceID(service.ID)
+	rules, err := h.ruleRepo.GetEnabledLogRulesByServiceID(alertServiceID)
 	if err != nil {
-		log.Printf("Failed to get log alert rules for service %s: %v", service.ID, err)
+		log.Printf("Failed to get log alert rules for %s: %v", serviceName, err)
 		return
 	}
 
 	if len(rules) == 0 {
 		go h.alertManager.DispatchLogAlert(
-			service.ID,
-			service.Name,
+			alertServiceID,
+			serviceName,
 			string(logEntry.Level),
 			logEntry.Message,
 			metadata,
@@ -116,8 +118,8 @@ func (h *LogIngestHandler) triggerAlertIfNeeded(service *models.Service, logEntr
 		if logRuleMatches(rule, logEntry.Level) {
 			go h.alertManager.DispatchLogAlertForRule(
 				rule,
-				service.ID,
-				service.Name,
+				alertServiceID,
+				serviceName,
 				string(logEntry.Level),
 				logEntry.Message,
 				metadata,

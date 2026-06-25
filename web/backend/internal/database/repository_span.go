@@ -24,11 +24,11 @@ func (r *SpanRepository) CreateBatch(spans []models.Span) (int, error) {
 	err := Transaction(func(tx *sql.Tx) error {
 		stmt, err := tx.Prepare(`
 			INSERT OR IGNORE INTO spans (
-				service_id, service_name, trace_id, span_id, parent_span_id,
+				service_id, agent_id, service_name, trace_id, span_id, parent_span_id,
 				name, kind, start_unix_nano, end_unix_nano, duration_ms,
 				status_code, status_message, attributes, events, links, resource, created_at
 			)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`)
 		if err != nil {
 			return err
@@ -37,7 +37,7 @@ func (r *SpanRepository) CreateBatch(spans []models.Span) (int, error) {
 
 		for _, span := range spans {
 			result, err := stmt.Exec(
-				span.ServiceID, span.ServiceName, span.TraceID, span.SpanID, span.ParentSpanID,
+				span.ServiceID, span.AgentID, span.ServiceName, span.TraceID, span.SpanID, span.ParentSpanID,
 				span.Name, span.Kind, span.StartUnixNano, span.EndUnixNano, span.DurationMs,
 				span.StatusCode, span.StatusMessage, span.Attributes, span.Events, span.Links, span.Resource, span.CreatedAt,
 			)
@@ -60,7 +60,7 @@ func (r *SpanRepository) GetByTraceID(traceID string) ([]models.Span, error) {
 		return nil, nil
 	}
 	rows, err := DB.Query(`
-		SELECT id, service_id, service_name, trace_id, span_id, parent_span_id,
+		SELECT id, service_id, agent_id, service_name, trace_id, span_id, parent_span_id,
 			name, kind, start_unix_nano, end_unix_nano, duration_ms,
 			status_code, status_message, attributes, events, links, resource, created_at
 		FROM spans WHERE trace_id = ?
@@ -76,7 +76,7 @@ func (r *SpanRepository) GetByTraceID(traceID string) ([]models.Span, error) {
 		var s models.Span
 		var attributes, events, links, resource sql.NullString
 		if err := rows.Scan(
-			&s.ID, &s.ServiceID, &s.ServiceName, &s.TraceID, &s.SpanID, &s.ParentSpanID,
+			&s.ID, &s.ServiceID, &s.AgentID, &s.ServiceName, &s.TraceID, &s.SpanID, &s.ParentSpanID,
 			&s.Name, &s.Kind, &s.StartUnixNano, &s.EndUnixNano, &s.DurationMs,
 			&s.StatusCode, &s.StatusMessage, &attributes, &events, &links, &resource, &s.CreatedAt,
 		); err != nil {

@@ -1,10 +1,13 @@
 package agent
 
 import (
+	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/aiturn/everyup/agent/internal/discovery"
 	"github.com/aiturn/everyup/agent/internal/hostmetrics"
+	"github.com/aiturn/everyup/agent/internal/state"
 )
 
 func TestMatchLogKeywordUsesNewestMatchingLine(t *testing.T) {
@@ -61,6 +64,30 @@ func TestPruneStaleStatesDropsVanishedTargets(t *testing.T) {
 	}
 	if _, ok := a.states["host:metrics"]; !ok {
 		t.Fatal("host:metrics is internal state and must be retained")
+	}
+}
+
+func TestRunDockerLivenessCheck(t *testing.T) {
+	dir := t.TempDir()
+	a := &Agent{
+		states: map[string]*targetState{},
+		store:  state.NewStore(filepath.Join(dir, "state.json")),
+		audit:  state.NewAuditLogger(filepath.Join(dir, "audit.jsonl")),
+	}
+	a.cfg.AlertCooldown = time.Minute
+
+	a.runDockerLivenessCheck(discovery.Target{ID: "c1", ServiceName: "api", HealthType: "docker", State: "running"})
+	if st := a.states["c1"]; st == nil || !st.wasHealthy {
+		t.Fatalf("running container should be healthy: %+v", st)
+	}
+
+	a.runDockerLivenessCheck(discovery.Target{ID: "c2", ServiceName: "db", HealthType: "docker", State: "exited", StatusText: "Exited (137) 2m ago"})
+	st := a.states["c2"]
+	if st == nil || st.wasHealthy {
+		t.Fatalf("exited container should be down: %+v", st)
+	}
+	if st.lastError != "Exited (137) 2m ago" {
+		t.Fatalf("lastError = %q, want the docker status line", st.lastError)
 	}
 }
 

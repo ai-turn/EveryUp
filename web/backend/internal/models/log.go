@@ -39,6 +39,7 @@ type LinkedRequest struct {
 type Log struct {
 	ID             int64           `json:"id"`
 	ServiceID      string          `json:"serviceId,omitempty"`
+	AgentID        string          `json:"agentId,omitempty"`
 	ServiceName    string          `json:"serviceName,omitempty"`
 	Level          LogLevel        `json:"level"`
 	SeverityNumber int             `json:"severityNumber,omitempty"`
@@ -73,6 +74,7 @@ type LogIngestEntry struct {
 // LogFilter represents filter options for log queries
 type LogFilter struct {
 	ServiceID   string    `json:"serviceId,omitempty"`
+	AgentID     string    `json:"agentId,omitempty"`
 	ServiceName string    `json:"serviceName,omitempty"`
 	Level       LogLevel  `json:"level,omitempty"`
 	Search      string    `json:"search,omitempty"`

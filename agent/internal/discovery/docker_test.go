@@ -51,22 +51,48 @@ func TestTargetFromLabelsBuildsTCPAddressFromParts(t *testing.T) {
 	}
 }
 
-func TestTargetFromLabelsSkipsDisabledOrInvalidTargets(t *testing.T) {
+func TestTargetFromLabelsSkipsUnlessEnabled(t *testing.T) {
 	tests := []struct {
 		name   string
 		labels map[string]string
 	}{
 		{name: "disabled", labels: map[string]string{LabelEnabled: "false", LabelHealthURL: "http://api:8080/health"}},
-		{name: "missing-url", labels: map[string]string{LabelEnabled: "true"}},
-		{name: "unsupported-type", labels: map[string]string{LabelEnabled: "true", LabelHealthType: "udp", LabelHealthURL: "http://api:8080/health"}},
-		{name: "relative-url", labels: map[string]string{LabelEnabled: "true", LabelHealthURL: "/health"}},
-		{name: "bad-tcp-port", labels: map[string]string{LabelEnabled: "true", LabelHealthType: "tcp", LabelHealthPort: "abc"}},
+		{name: "missing-enabled", labels: map[string]string{LabelHealthURL: "http://api:8080/health"}},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if _, ok := TargetFromLabels("id", "api", tt.labels); ok {
 				t.Fatal("expected target to be skipped")
+			}
+		})
+	}
+}
+
+// Without a usable HTTP/TCP endpoint, an enabled container becomes a
+// docker-liveness target instead of being skipped.
+func TestTargetFromLabelsFallsBackToDockerLiveness(t *testing.T) {
+	tests := []struct {
+		name   string
+		labels map[string]string
+	}{
+		{name: "enabled-only", labels: map[string]string{LabelEnabled: "true"}},
+		{name: "unsupported-type", labels: map[string]string{LabelEnabled: "true", LabelHealthType: "udp"}},
+		{name: "relative-url", labels: map[string]string{LabelEnabled: "true", LabelHealthURL: "/health"}},
+		{name: "bad-tcp-port", labels: map[string]string{LabelEnabled: "true", LabelHealthType: "tcp", LabelHealthPort: "abc"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			target, ok := TargetFromLabels("abcdef1234567890", "api", tt.labels)
+			if !ok {
+				t.Fatal("expected docker-liveness target")
+			}
+			if target.HealthType != "docker" {
+				t.Fatalf("HealthType = %q, want docker", target.HealthType)
+			}
+			if target.HealthURL != "" {
+				t.Fatalf("HealthURL = %q, want empty for liveness", target.HealthURL)
 			}
 		})
 	}

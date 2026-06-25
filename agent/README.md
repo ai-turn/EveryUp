@@ -45,13 +45,17 @@ EVERYUP_AGENT_API_KEY=evup_svc_...   # from step 1
 
 ```yaml
 services:
+  worker:
+    image: my-worker:latest
+    labels:
+      everyup.enabled: "true"              # ← that's it: up/down from the container's running state
+
   api:
     image: my-api:latest
     labels:
       everyup.enabled: "true"
       everyup.service.name: "api"          # ← display name (defaults to the container name if omitted)
-      everyup.health.type: "http"
-      everyup.health.url: "http://api:8080/health"
+      everyup.health.url: "http://api:8080/health"   # ← optional: active HTTP probe
 ```
 
 For a TCP-only service (postgres, redis, …):
@@ -59,12 +63,11 @@ For a TCP-only service (postgres, redis, …):
 ```yaml
 labels:
   everyup.enabled: "true"
-  everyup.service.name: "postgres"         # ← display name (defaults to the container name if omitted)
   everyup.health.type: "tcp"
   everyup.health.port: "5432"
 ```
 
-> **`everyup.service.name` is optional but recommended.** When omitted the card is named after the container (only a 12-char short ID if the container has no name). Set it for a stable, readable name. A container is discovered only when it also resolves to a valid health endpoint (`everyup.health.url`, or `everyup.health.port` to build one).
+> **Only `everyup.enabled: "true"` is required.** With just that, the agent reports liveness (container running vs stopped) from Docker — no health endpoint needed. Add `everyup.health.url` (or `everyup.health.port`) to upgrade to active HTTP/TCP probing with response time and status codes. `everyup.service.name` is optional — defaults to the container name (a 12-char short ID if the container has no name).
 
 **5. Run**
 

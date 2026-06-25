@@ -171,7 +171,7 @@ func TestSpanToAPIRequestOnlyProjectsHTTPServerSpans(t *testing.T) {
 		},
 	}
 
-	req, ok := spanToAPIRequest(service, "checkout-api", serverSpan)
+	req, ok := spanToAPIRequest(service.ID, "", "checkout-api", service.ApiExcludePaths,serverSpan)
 	if !ok {
 		t.Fatal("expected HTTP SERVER span to project to api_requests")
 	}
@@ -187,7 +187,7 @@ func TestSpanToAPIRequestOnlyProjectsHTTPServerSpans(t *testing.T) {
 
 	clientSpan := *serverSpan
 	clientSpan.Kind = tracepb.Span_SPAN_KIND_CLIENT
-	if _, ok := spanToAPIRequest(service, "checkout-api", &clientSpan); ok {
+	if _, ok := spanToAPIRequest(service.ID, "", "checkout-api", service.ApiExcludePaths,&clientSpan); ok {
 		t.Fatal("client span should not project to api_requests")
 	}
 }
@@ -242,13 +242,13 @@ func TestSpanToAPIRequestRespectsExcludePaths(t *testing.T) {
 		}
 	}
 
-	if _, ok := spanToAPIRequest(service, "checkout-api", build("/")); ok {
+	if _, ok := spanToAPIRequest(service.ID, "", "checkout-api", service.ApiExcludePaths,build("/")); ok {
 		t.Fatal("root path should be excluded")
 	}
-	if _, ok := spanToAPIRequest(service, "checkout-api", build("/actuator/health")); ok {
+	if _, ok := spanToAPIRequest(service.ID, "", "checkout-api", service.ApiExcludePaths,build("/actuator/health")); ok {
 		t.Fatal("actuator path should be excluded")
 	}
-	if _, ok := spanToAPIRequest(service, "checkout-api", build("/orders/42")); !ok {
+	if _, ok := spanToAPIRequest(service.ID, "", "checkout-api", service.ApiExcludePaths,build("/orders/42")); !ok {
 		t.Fatal("non-excluded path should still project")
 	}
 }

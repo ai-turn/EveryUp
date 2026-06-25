@@ -450,6 +450,7 @@ func (h *AgentHandler) GetServiceLogs(c *fiber.Ctx) error {
 	limit, _ := strconv.Atoi(c.Query("limit", "100"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
 	filter := models.LogFilter{
+		AgentID:     agentID,
 		ServiceName: service.Name,
 		Level:       models.LogLevel(c.Query("level")),
 		Search:      c.Query("search"),
@@ -494,6 +495,7 @@ func (h *AgentHandler) GetServiceRequests(c *fiber.Ctx) error {
 	minStatus, _ := strconv.Atoi(c.Query("minStatus", "0"))
 	maxStatus, _ := strconv.Atoi(c.Query("maxStatus", "0"))
 	filter := &models.ApiRequestFilter{
+		AgentID:     agentID,
 		ServiceName: service.Name,
 		Search:      c.Query("search"),
 		ErrorsOnly:  c.Query("errorsOnly") == "true",
@@ -519,6 +521,45 @@ func (h *AgentHandler) GetServiceRequests(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": requests, "total": total})
 }
 
+
+// GetServiceLogFilter returns the per-service ingest log-level filter (empty = accept all).
+func (h *AgentHandler) GetServiceLogFilter(c *fiber.Ctx) error {
+	levels, err := h.repo.GetLogLevelFilterByKey(c.Params("agentId"), c.Params("key"))
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	return c.JSON(fiber.Map{"success": true, "data": fiber.Map{"levels": levels}})
+}
+
+// SetServiceLogFilter sets which log levels are stored at OTLP ingest for a service.
+// An empty list means accept all levels. The filter survives agent re-syncs.
+func (h *AgentHandler) SetServiceLogFilter(c *fiber.Ctx) error {
+	var req struct {
+		Levels []string `json:"levels"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return agentBadRequest(c, "INVALID_REQUEST", "invalid request body")
+	}
+	clean := make([]string, 0, len(req.Levels))
+	for _, l := range req.Levels {
+		if !validLogLevel(l) {
+			return agentBadRequest(c, "VALIDATION_ERROR", "invalid log level: "+l)
+		}
+		clean = append(clean, l)
+	}
+	if err := h.repo.SetLogLevelFilter(c.Params("agentId"), c.Params("key"), strings.Join(clean, ",")); err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	return c.JSON(fiber.Map{"success": true, "data": fiber.Map{"levels": clean}})
+}
+
+func validLogLevel(l string) bool {
+	switch models.LogLevel(l) {
+	case models.LogLevelError, models.LogLevelWarn, models.LogLevelInfo, models.LogLevelDebug, models.LogLevelTrace:
+		return true
+	}
+	return false
+}
 
 func agentBadRequest(c *fiber.Ctx, code, message string) error {
 	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{

@@ -18,7 +18,7 @@ func NewApiRequestRepository() *ApiRequestRepository {
 
 func scanApiRequest(
 	id *int64,
-	serviceID, requestID, method, path, pathTemplate *string,
+	serviceID, agentID, requestID, method, path, pathTemplate *string,
 	statusCode, durationMs *int,
 	serviceName, traceID, spanID, route, clientIP, errStr *sql.NullString,
 	isError *int,
@@ -27,6 +27,7 @@ func scanApiRequest(
 	req := models.ApiRequest{
 		ID:           *id,
 		ServiceID:    *serviceID,
+		AgentID:      *agentID,
 		RequestID:    *requestID,
 		Method:       *method,
 		Path:         *path,
@@ -61,12 +62,12 @@ func scanApiRequest(
 func (r *ApiRequestRepository) Create(req *models.ApiRequest) error {
 	result, err := DB.Exec(`
 		INSERT INTO api_requests
-			(service_id, request_id, method, path, path_template,
+			(service_id, agent_id, request_id, method, path, path_template,
 			 status_code, duration_ms, client_ip,
 			 error, is_error, created_at, trace_id, span_id, route, service_name)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`,
-		req.ServiceID, req.RequestID, req.Method, req.Path, req.PathTemplate,
+		req.ServiceID, req.AgentID, req.RequestID, req.Method, req.Path, req.PathTemplate,
 		req.StatusCode, req.DurationMs, req.ClientIP,
 		req.Error, boolToInt(req.IsError), req.CreatedAt,
 		req.TraceID, req.SpanID, req.Route, req.ServiceName,
@@ -90,10 +91,10 @@ func (r *ApiRequestRepository) CreateBatch(reqs []models.ApiRequest) (int, error
 	err := Transaction(func(tx *sql.Tx) error {
 		stmt, err := tx.Prepare(`
 			INSERT INTO api_requests
-				(service_id, request_id, method, path, path_template,
+				(service_id, agent_id, request_id, method, path, path_template,
 				 status_code, duration_ms, client_ip,
 				 error, is_error, created_at, trace_id, span_id, route, service_name)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`)
 		if err != nil {
 			return err
@@ -102,7 +103,7 @@ func (r *ApiRequestRepository) CreateBatch(reqs []models.ApiRequest) (int, error
 
 		for _, req := range reqs {
 			_, err := stmt.Exec(
-				req.ServiceID, req.RequestID, req.Method, req.Path, req.PathTemplate,
+				req.ServiceID, req.AgentID, req.RequestID, req.Method, req.Path, req.PathTemplate,
 				req.StatusCode, req.DurationMs, req.ClientIP,
 				req.Error, boolToInt(req.IsError), req.CreatedAt,
 				req.TraceID, req.SpanID, req.Route, req.ServiceName,
@@ -121,21 +122,21 @@ func (r *ApiRequestRepository) CreateBatch(reqs []models.ApiRequest) (int, error
 // Returns nil, nil if not found.
 func (r *ApiRequestRepository) GetByID(id int64) (*models.ApiRequest, error) {
 	var (
-		statusCode, durationMs                                int
-		isError                                               int
-		rid64                                                 int64
-		serviceID, requestID, method, path, pathTemplate      string
-		serviceName, traceID, spanID, route, clientIP, errStr sql.NullString
-		createdAt                                             time.Time
+		statusCode, durationMs                                    int
+		isError                                                   int
+		rid64                                                     int64
+		serviceID, agentID, requestID, method, path, pathTemplate string
+		serviceName, traceID, spanID, route, clientIP, errStr     sql.NullString
+		createdAt                                                 time.Time
 	)
 
 	err := DB.QueryRow(`
-		SELECT id, service_id, request_id, method, path, path_template,
+		SELECT id, service_id, agent_id, request_id, method, path, path_template,
 		       status_code, duration_ms, client_ip,
 		       error, is_error, created_at, trace_id, span_id, route, service_name
 		FROM api_requests WHERE id = ?
 	`, id).Scan(
-		&rid64, &serviceID, &requestID, &method, &path, &pathTemplate,
+		&rid64, &serviceID, &agentID, &requestID, &method, &path, &pathTemplate,
 		&statusCode, &durationMs, &clientIP,
 		&errStr, &isError, &createdAt, &traceID, &spanID, &route, &serviceName,
 	)
@@ -147,7 +148,7 @@ func (r *ApiRequestRepository) GetByID(id int64) (*models.ApiRequest, error) {
 	}
 
 	req := scanApiRequest(
-		&rid64, &serviceID, &requestID, &method, &path, &pathTemplate,
+		&rid64, &serviceID, &agentID, &requestID, &method, &path, &pathTemplate,
 		&statusCode, &durationMs, &serviceName, &traceID, &spanID, &route, &clientIP, &errStr, &isError, &createdAt,
 	)
 	return &req, nil
@@ -160,7 +161,7 @@ func (r *ApiRequestRepository) GetByTraceID(traceID string) ([]models.ApiRequest
 		return nil, nil
 	}
 	rows, err := DB.Query(`
-		SELECT id, service_id, request_id, method, path, path_template,
+		SELECT id, service_id, agent_id, request_id, method, path, path_template,
 		       status_code, duration_ms, client_ip,
 		       error, is_error, created_at, trace_id, span_id, route, service_name
 		FROM api_requests WHERE trace_id = ?
@@ -174,22 +175,22 @@ func (r *ApiRequestRepository) GetByTraceID(traceID string) ([]models.ApiRequest
 	var out []models.ApiRequest
 	for rows.Next() {
 		var (
-			statusCode, durationMs                                int
-			isError                                               int
-			rid64                                                 int64
-			serviceID, requestID, method, path, pathTemplate      string
-			serviceName, traceCol, spanID, route, clientIP, errStr sql.NullString
-			createdAt                                             time.Time
+			statusCode, durationMs                                    int
+			isError                                                   int
+			rid64                                                     int64
+			serviceID, agentID, requestID, method, path, pathTemplate string
+			serviceName, traceCol, spanID, route, clientIP, errStr    sql.NullString
+			createdAt                                                 time.Time
 		)
 		if err := rows.Scan(
-			&rid64, &serviceID, &requestID, &method, &path, &pathTemplate,
+			&rid64, &serviceID, &agentID, &requestID, &method, &path, &pathTemplate,
 			&statusCode, &durationMs, &clientIP,
 			&errStr, &isError, &createdAt, &traceCol, &spanID, &route, &serviceName,
 		); err != nil {
 			return nil, err
 		}
 		out = append(out, scanApiRequest(
-			&rid64, &serviceID, &requestID, &method, &path, &pathTemplate,
+			&rid64, &serviceID, &agentID, &requestID, &method, &path, &pathTemplate,
 			&statusCode, &durationMs, &serviceName, &traceCol, &spanID, &route, &clientIP, &errStr, &isError, &createdAt,
 		))
 	}
@@ -209,6 +210,10 @@ func (r *ApiRequestRepository) List(f *models.ApiRequestFilter) ([]models.ApiReq
 	if f.ServiceID != "" {
 		where += " AND service_id = ?"
 		args = append(args, f.ServiceID)
+	}
+	if f.AgentID != "" {
+		where += " AND agent_id = ?"
+		args = append(args, f.AgentID)
 	}
 	if f.ServiceName != "" {
 		where += " AND service_name = ?"
@@ -266,7 +271,7 @@ func (r *ApiRequestRepository) List(f *models.ApiRequestFilter) ([]models.ApiReq
 	if limit <= 0 {
 		limit = 200
 	}
-	dataQuery := "SELECT id, service_id, request_id, method, path, path_template," +
+	dataQuery := "SELECT id, service_id, agent_id, request_id, method, path, path_template," +
 		" status_code, duration_ms, client_ip," +
 		" error, is_error, created_at, trace_id, span_id, route, service_name" +
 		" FROM api_requests WHERE " + where +
@@ -286,22 +291,22 @@ func (r *ApiRequestRepository) List(f *models.ApiRequestFilter) ([]models.ApiReq
 	var items []models.ApiRequest
 	for rows.Next() {
 		var (
-			statusCode, durationMs                                int
-			id64                                                  int64
-			isError                                               int
-			serviceID, requestID, method, path, pathTemplate      string
-			serviceName, traceID, spanID, route, clientIP, errStr sql.NullString
-			createdAt                                             time.Time
+			statusCode, durationMs                                    int
+			id64                                                      int64
+			isError                                                   int
+			serviceID, agentID, requestID, method, path, pathTemplate string
+			serviceName, traceID, spanID, route, clientIP, errStr     sql.NullString
+			createdAt                                                 time.Time
 		)
 		if err := rows.Scan(
-			&id64, &serviceID, &requestID, &method, &path, &pathTemplate,
+			&id64, &serviceID, &agentID, &requestID, &method, &path, &pathTemplate,
 			&statusCode, &durationMs, &clientIP,
 			&errStr, &isError, &createdAt, &traceID, &spanID, &route, &serviceName,
 		); err != nil {
 			return nil, 0, err
 		}
 		items = append(items, scanApiRequest(
-			&id64, &serviceID, &requestID, &method, &path, &pathTemplate,
+			&id64, &serviceID, &agentID, &requestID, &method, &path, &pathTemplate,
 			&statusCode, &durationMs, &serviceName, &traceID, &spanID, &route, &clientIP, &errStr, &isError, &createdAt,
 		))
 	}

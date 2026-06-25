@@ -25,11 +25,11 @@ func (r *LogRepository) Create(l *models.Log) error {
 
 	result, err := DB.Exec(`
 		INSERT INTO logs (
-			service_id, level, message, metadata, source, fingerprint, created_at,
+			service_id, agent_id, service_name, level, message, metadata, source, fingerprint, created_at,
 			trace_id, span_id, severity_number, observed_at, resource, attributes
 		)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-	`, l.ServiceID, l.Level, l.Message, l.Metadata, l.Source, l.Fingerprint, l.CreatedAt,
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`, l.ServiceID, l.AgentID, l.ServiceName, l.Level, l.Message, l.Metadata, l.Source, l.Fingerprint, l.CreatedAt,
 		l.TraceID, l.SpanID, l.SeverityNumber, l.ObservedAt, l.Resource, l.Attributes)
 	if err != nil {
 		return err
@@ -42,9 +42,10 @@ func (r *LogRepository) Create(l *models.Log) error {
 
 // GetAll returns logs with optional filters
 func (r *LogRepository) GetAll(filter models.LogFilter) ([]models.Log, int, error) {
-	// Build query — JOIN services to include service name
+	// Build query — JOIN services to include the legacy service name. Agent-ingested
+	// logs carry their own service_name column; legacy ones resolve it via the join.
 	baseWhere := " FROM logs l LEFT JOIN services s ON s.id = l.service_id WHERE 1=1"
-	query := `SELECT l.id, l.service_id, COALESCE(s.name, l.service_id, ''), l.level,
+	query := `SELECT l.id, l.service_id, l.agent_id, COALESCE(NULLIF(l.service_name, ''), s.name, l.service_id, ''), l.level,
 		l.message, l.metadata, l.source, l.fingerprint, l.trace_id, l.span_id,
 		l.severity_number, l.observed_at, l.resource, l.attributes, l.created_at` + baseWhere
 	countQuery := "SELECT COUNT(*)" + baseWhere
@@ -55,9 +56,14 @@ func (r *LogRepository) GetAll(filter models.LogFilter) ([]models.Log, int, erro
 		countQuery += " AND l.service_id = ?"
 		args = append(args, filter.ServiceID)
 	}
+	if filter.AgentID != "" {
+		query += " AND l.agent_id = ?"
+		countQuery += " AND l.agent_id = ?"
+		args = append(args, filter.AgentID)
+	}
 	if filter.ServiceName != "" {
-		query += " AND s.name = ?"
-		countQuery += " AND s.name = ?"
+		query += " AND COALESCE(NULLIF(l.service_name, ''), s.name) = ?"
+		countQuery += " AND COALESCE(NULLIF(l.service_name, ''), s.name) = ?"
 		args = append(args, filter.ServiceName)
 	}
 	if filter.Level != "" {
@@ -112,10 +118,10 @@ func (r *LogRepository) GetAll(filter models.LogFilter) ([]models.Log, int, erro
 	var logs []models.Log
 	for rows.Next() {
 		var l models.Log
-		var serviceID, serviceName, metadata, source, fingerprint, traceID, spanID, resource, attributes sql.NullString
+		var serviceID, agentID, serviceName, metadata, source, fingerprint, traceID, spanID, resource, attributes sql.NullString
 		var observedAt sql.NullTime
 		if err := rows.Scan(
-			&l.ID, &serviceID, &serviceName, &l.Level, &l.Message, &metadata,
+			&l.ID, &serviceID, &agentID, &serviceName, &l.Level, &l.Message, &metadata,
 			&source, &fingerprint, &traceID, &spanID, &l.SeverityNumber,
 			&observedAt, &resource, &attributes, &l.CreatedAt,
 		); err != nil {
@@ -123,6 +129,9 @@ func (r *LogRepository) GetAll(filter models.LogFilter) ([]models.Log, int, erro
 		}
 		if serviceID.Valid {
 			l.ServiceID = serviceID.String
+		}
+		if agentID.Valid {
+			l.AgentID = agentID.String
 		}
 		if serviceName.Valid {
 			l.ServiceName = serviceName.String
@@ -168,15 +177,23 @@ func attachLinkedRequests(logs []models.Log) error {
 		return nil
 	}
 
-	// Collect distinct (service_id, trace_id) pairs from logs that have a trace.
-	type key struct{ service, trace string }
+	// Collect distinct (scope, trace_id) pairs from logs that have a trace. The
+	// scope is the legacy service_id, or the agent_id for agent-ingested logs.
+	type key struct{ scope, trace string }
+	logScope := func(l models.Log) string {
+		if l.ServiceID != "" {
+			return l.ServiceID
+		}
+		return l.AgentID
+	}
 	keys := map[key]struct{}{}
 	traceIDs := map[string]struct{}{}
 	for _, l := range logs {
-		if l.TraceID == "" || l.ServiceID == "" {
+		scope := logScope(l)
+		if l.TraceID == "" || scope == "" {
 			continue
 		}
-		keys[key{l.ServiceID, l.TraceID}] = struct{}{}
+		keys[key{scope, l.TraceID}] = struct{}{}
 		traceIDs[l.TraceID] = struct{}{}
 	}
 	if len(traceIDs) == 0 {
@@ -190,14 +207,15 @@ func attachLinkedRequests(logs []models.Log) error {
 		args = append(args, id)
 	}
 
-	// Earliest row per (service_id, trace_id). SQLite's "MIN aggregate companion"
-	// trick returns the row matching MIN(created_at) in the same GROUP BY.
+	// Earliest row per (scope, trace_id), where scope = service_id or agent_id.
+	// SQLite's "MIN aggregate companion" trick returns the row matching
+	// MIN(created_at) in the same GROUP BY.
 	q := `
-		SELECT service_id, trace_id, id, method, path, status_code, is_error
+		SELECT service_id, agent_id, trace_id, id, method, path, status_code, is_error
 		FROM (
-			SELECT service_id, trace_id, id, method, path, status_code, is_error,
+			SELECT service_id, agent_id, trace_id, id, method, path, status_code, is_error,
 			       created_at,
-			       MIN(created_at) OVER (PARTITION BY service_id, trace_id) AS first_at
+			       MIN(created_at) OVER (PARTITION BY service_id, agent_id, trace_id) AS first_at
 			FROM api_requests
 			WHERE trace_id IN (` + strings.Join(placeholders, ",") + `)
 		)
@@ -218,14 +236,18 @@ func attachLinkedRequests(logs []models.Log) error {
 	byKey := map[key]row{}
 	for rows.Next() {
 		var (
-			service, trace, method, path string
-			id                           int64
-			status, isErr                int
+			service, agent, trace, method, path string
+			id                                  int64
+			status, isErr                       int
 		)
-		if err := rows.Scan(&service, &trace, &id, &method, &path, &status, &isErr); err != nil {
+		if err := rows.Scan(&service, &agent, &trace, &id, &method, &path, &status, &isErr); err != nil {
 			return err
 		}
-		k := key{service, trace}
+		scope := service
+		if scope == "" {
+			scope = agent
+		}
+		k := key{scope, trace}
 		if _, ok := keys[k]; !ok {
 			continue
 		}
@@ -236,7 +258,7 @@ func attachLinkedRequests(logs []models.Log) error {
 	}
 
 	for i := range logs {
-		k := key{logs[i].ServiceID, logs[i].TraceID}
+		k := key{logScope(logs[i]), logs[i].TraceID}
 		if r, ok := byKey[k]; ok {
 			logs[i].LinkedRequest = &models.LinkedRequest{
 				ID:         r.id,
@@ -257,7 +279,7 @@ func (r *LogRepository) GetByTraceID(traceID string) ([]models.Log, error) {
 		return nil, nil
 	}
 	rows, err := DB.Query(`
-		SELECT l.id, l.service_id, COALESCE(s.name, l.service_id, ''), l.level,
+		SELECT l.id, l.service_id, COALESCE(NULLIF(l.service_name, ''), s.name, l.service_id, ''), l.level,
 			l.message, l.metadata, l.source, l.fingerprint, l.trace_id, l.span_id,
 			l.severity_number, l.observed_at, l.resource, l.attributes, l.created_at
 		FROM logs l LEFT JOIN services s ON s.id = l.service_id

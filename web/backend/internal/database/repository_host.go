@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/aiturn/everyup/internal/crypto"
 	"github.com/aiturn/everyup/internal/models"
 )
 
@@ -18,8 +17,7 @@ func NewHostRepository() *HostRepository {
 
 // hostSelectColumns is the column list for host queries.
 const hostSelectColumns = `id, name, type, resource_category, ip, port, "group", is_active, description,
-	ssh_user, ssh_port, ssh_auth_type, ssh_key_path, ssh_key, ssh_password, last_error,
-	created_at, updated_at`
+	last_error, created_at, updated_at`
 
 // GetAll returns all hosts
 func (r *HostRepository) GetAll() ([]models.Host, error) {
@@ -114,23 +112,12 @@ func (r *HostRepository) Create(h *models.Host) error {
 		isActive = 1
 	}
 
-	encKey, err := crypto.Encrypt(h.SSHKey)
-	if err != nil {
-		return err
-	}
-	encPassword, err := crypto.Encrypt(h.SSHPassword)
-	if err != nil {
-		return err
-	}
-
-	_, err = DB.Exec(`
+	_, err := DB.Exec(`
 		INSERT INTO hosts (id, name, type, resource_category, ip, port, "group", is_active, description,
-		                    ssh_user, ssh_port, ssh_auth_type, ssh_key_path, ssh_key, ssh_password, last_error,
-		                    created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		                    last_error, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`, h.ID, h.Name, h.Type, h.ResourceCategory, h.IP, h.Port, h.Group, isActive, h.Description,
-		h.SSHUser, h.SSHPort, h.SSHAuthType, h.SSHKeyPath, encKey, encPassword, h.LastError,
-		h.CreatedAt, h.UpdatedAt)
+		h.LastError, h.CreatedAt, h.UpdatedAt)
 	return err
 }
 
@@ -141,26 +128,13 @@ func (r *HostRepository) Update(h *models.Host) error {
 		isActive = 1
 	}
 
-	encKey, err := crypto.Encrypt(h.SSHKey)
-	if err != nil {
-		return err
-	}
-	encPassword, err := crypto.Encrypt(h.SSHPassword)
-	if err != nil {
-		return err
-	}
-
 	h.UpdatedAt = time.Now()
-	_, err = DB.Exec(`
+	_, err := DB.Exec(`
 		UPDATE hosts SET name = ?, type = ?, resource_category = ?, ip = ?, port = ?, "group" = ?,
 		                 is_active = ?, description = ?,
-		                 ssh_user = ?, ssh_port = ?, ssh_auth_type = ?,
-		                 ssh_key_path = ?, ssh_key = ?, ssh_password = ?,
 		                 last_error = ?, updated_at = ?
 		WHERE id = ?
 	`, h.Name, h.Type, h.ResourceCategory, h.IP, h.Port, h.Group, isActive, h.Description,
-		h.SSHUser, h.SSHPort, h.SSHAuthType,
-		h.SSHKeyPath, encKey, encPassword,
 		h.LastError, h.UpdatedAt, h.ID)
 	return err
 }
@@ -197,14 +171,13 @@ func (r *HostRepository) SetActive(id string, isActive bool) error {
 func scanHostFields(scan func(dest ...interface{}) error) (models.Host, error) {
 	var h models.Host
 	var isActive int
-	var port, sshPort sql.NullInt64
+	var port sql.NullInt64
 	var resourceCategory sql.NullString
-	var description, sshUser, sshAuthType, sshKeyPath, sshKey, sshPassword, lastError sql.NullString
+	var description, lastError sql.NullString
 
 	err := scan(
 		&h.ID, &h.Name, &h.Type, &resourceCategory, &h.IP, &port, &h.Group, &isActive, &description,
-		&sshUser, &sshPort, &sshAuthType, &sshKeyPath, &sshKey, &sshPassword, &lastError,
-		&h.CreatedAt, &h.UpdatedAt,
+		&lastError, &h.CreatedAt, &h.UpdatedAt,
 	)
 	if err != nil {
 		return h, err
@@ -221,34 +194,6 @@ func scanHostFields(scan func(dest ...interface{}) error) (models.Host, error) {
 	}
 	if description.Valid {
 		h.Description = description.String
-	}
-	if sshUser.Valid {
-		h.SSHUser = sshUser.String
-	}
-	if sshPort.Valid {
-		h.SSHPort = int(sshPort.Int64)
-	}
-	if sshAuthType.Valid {
-		h.SSHAuthType = models.SSHAuthType(sshAuthType.String)
-	}
-	if sshKeyPath.Valid {
-		h.SSHKeyPath = sshKeyPath.String
-	}
-	if sshKey.Valid {
-		decKey, err := crypto.Decrypt(sshKey.String)
-		if err == nil {
-			h.SSHKey = decKey
-		} else {
-			h.SSHKey = sshKey.String
-		}
-	}
-	if sshPassword.Valid {
-		decPassword, err := crypto.Decrypt(sshPassword.String)
-		if err == nil {
-			h.SSHPassword = decPassword
-		} else {
-			h.SSHPassword = sshPassword.String
-		}
 	}
 	if lastError.Valid {
 		h.LastError = lastError.String

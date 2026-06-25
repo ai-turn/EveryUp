@@ -116,5 +116,13 @@ export function createAgentsApi(request: RequestFn) {
       if (params?.to) p.set('to', params.to);
       return request<{ data: ApiRequest[]; total: number }>(`/agents/${agentId}/services/${encodeURIComponent(key)}/requests?${p}`);
     },
+    // Per-service OTLP ingest filter: which log levels are stored. [] = accept all.
+    getAgentServiceLogFilter: (agentId: string, key: string) =>
+      request<{ levels: string[] }>(`/agents/${agentId}/services/${encodeURIComponent(key)}/log-filter`),
+    setAgentServiceLogFilter: (agentId: string, key: string, levels: string[]) =>
+      request<{ levels: string[] }>(`/agents/${agentId}/services/${encodeURIComponent(key)}/log-filter`, {
+        method: 'PUT',
+        body: JSON.stringify({ levels }),
+      }),
   };
 }

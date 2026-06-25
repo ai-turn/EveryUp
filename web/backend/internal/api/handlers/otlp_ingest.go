@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aiturn/everyup/internal/api/middleware"
 	"github.com/aiturn/everyup/internal/database"
 	"github.com/aiturn/everyup/internal/models"
 	"github.com/gofiber/fiber/v2"
@@ -31,6 +32,7 @@ type OTLPIngestHandler struct {
 	apiRequestHandler *ApiRequestsHandler
 	spanRepo          *database.SpanRepository
 	reqRepo           *database.ApiRequestRepository
+	agentRepo         *database.AgentRepository
 }
 
 // NewOTLPIngestHandler creates an OTLP ingest handler.
@@ -40,13 +42,14 @@ func NewOTLPIngestHandler() *OTLPIngestHandler {
 		apiRequestHandler: NewApiRequestsHandler(),
 		spanRepo:          database.NewSpanRepository(),
 		reqRepo:           database.NewApiRequestRepository(),
+		agentRepo:         database.NewAgentRepository(),
 	}
 }
 
 // IngestLogs handles POST /api/v1/otlp/v1/logs.
 func (h *OTLPIngestHandler) IngestLogs(c *fiber.Ctx) error {
-	service, ok := c.Locals("service").(*models.Service)
-	if !ok || service == nil {
+	principal, ok := c.Locals("ingestPrincipal").(*middleware.IngestPrincipal)
+	if !ok || principal == nil {
 		return unauthorizedOTLP(c)
 	}
 
@@ -81,23 +84,35 @@ func (h *OTLPIngestHandler) IngestLogs(c *fiber.Ctx) error {
 		resourceJSON := mustJSON(resourceMap)
 		serviceName := firstString(resourceMap, "service.name")
 		if serviceName == "" {
-			serviceName = service.Name
+			serviceName = principal.Name
+		}
+
+		// Resolve the ingest-time level filter and a stable seed for alert dedup.
+		// Agents filter per-service (agent_services.log_level_filter) and key dedup
+		// on agentID:serviceName; legacy services carry their own filter + id.
+		filter := principal.LogLevelFilter
+		alertSeed := principal.ServiceID
+		if principal.AgentID != "" {
+			filter = h.agentRepo.LogLevelFilterByName(principal.AgentID, serviceName)
+			alertSeed = principal.AgentID + ":" + serviceName
 		}
 
 		for _, scopeLogs := range resourceLogs.ScopeLogs {
 			for _, record := range scopeLogs.LogRecords {
 				entry, otel := logRecordToEntry(record, resourceMap)
-				logEntry, err := h.logHandler.processEntry(service, &entry, models.LogSourceOTLP)
+				logEntry, err := h.logHandler.processEntry(&entry, filter, alertSeed, models.LogSourceOTLP)
 				if errors.Is(err, errLogFiltered) {
 					filtered++
 					continue
 				}
 				if err != nil {
-					log.Printf("[OTLP] log validation failed for service %s: %v", service.ID, err)
+					log.Printf("[OTLP] log validation failed for service %s: %v", serviceName, err)
 					failed++
 					continue
 				}
 
+				logEntry.ServiceID = principal.ServiceID
+				logEntry.AgentID = principal.AgentID
 				logEntry.ServiceName = serviceName
 				logEntry.TraceID = otel.traceID
 				logEntry.SpanID = otel.spanID
@@ -110,11 +125,11 @@ func (h *OTLPIngestHandler) IngestLogs(c *fiber.Ctx) error {
 				}
 
 				if err := h.logHandler.logRepo.Create(logEntry); err != nil {
-					log.Printf("[OTLP] failed to store log for service %s: %v", service.ID, err)
+					log.Printf("[OTLP] failed to store log for service %s: %v", serviceName, err)
 					failed++
 					continue
 				}
-				h.logHandler.triggerAlertIfNeeded(service, logEntry, entry.Metadata)
+				h.logHandler.triggerAlertIfNeeded(alertSeed, serviceName, logEntry, entry.Metadata)
 				processed++
 			}
 		}
@@ -133,8 +148,8 @@ func (h *OTLPIngestHandler) IngestLogs(c *fiber.Ctx) error {
 
 // IngestTraces handles POST /api/v1/otlp/v1/traces.
 func (h *OTLPIngestHandler) IngestTraces(c *fiber.Ctx) error {
-	service, ok := c.Locals("service").(*models.Service)
-	if !ok || service == nil {
+	principal, ok := c.Locals("ingestPrincipal").(*middleware.IngestPrincipal)
+	if !ok || principal == nil {
 		return unauthorizedOTLP(c)
 	}
 
@@ -168,15 +183,15 @@ func (h *OTLPIngestHandler) IngestTraces(c *fiber.Ctx) error {
 		resourceJSON := mustJSON(resourceMap)
 		serviceName := firstString(resourceMap, "service.name")
 		if serviceName == "" {
-			serviceName = service.Name
+			serviceName = principal.Name
 		}
 
 		for _, scopeSpans := range resourceSpans.ScopeSpans {
 			for _, span := range scopeSpans.Spans {
-				modelSpan := spanToModel(service, serviceName, resourceJSON, span)
+				modelSpan := spanToModel(principal.ServiceID, principal.AgentID, serviceName, resourceJSON, span)
 				spans = append(spans, modelSpan)
 
-				if apiReq, ok := spanToAPIRequest(service, serviceName, span); ok {
+				if apiReq, ok := spanToAPIRequest(principal.ServiceID, principal.AgentID, serviceName, principal.ApiExcludePaths, span); ok {
 					requests = append(requests, apiReq)
 				}
 			}
@@ -185,17 +200,21 @@ func (h *OTLPIngestHandler) IngestTraces(c *fiber.Ctx) error {
 
 	insertedSpans, err := h.spanRepo.CreateBatch(spans)
 	if err != nil {
-		log.Printf("[OTLP] failed to store spans for service %s: %v", service.ID, err)
+		log.Printf("[OTLP] failed to store spans for %s: %v", principal.Name, err)
 		return internalError(c, ErrCodeDatabase, err)
 	}
 
 	insertedRequests, err := h.reqRepo.CreateBatch(requests)
 	if err != nil {
-		log.Printf("[OTLP] failed to store API request projections for service %s: %v", service.ID, err)
+		log.Printf("[OTLP] failed to store API request projections for %s: %v", principal.Name, err)
 		return internalError(c, ErrCodeDatabase, err)
 	}
 	if insertedRequests > 0 {
-		h.apiRequestHandler.evaluateApiRequestAlerts(service, requests)
+		alertSeed := principal.ServiceID
+		if principal.AgentID != "" {
+			alertSeed = principal.AgentID
+		}
+		h.apiRequestHandler.evaluateApiRequestAlerts(alertSeed, requests)
 	}
 
 	respBody, err := proto.Marshal(&collectortracepb.ExportTraceServiceResponse{})
@@ -273,7 +292,7 @@ func severityNumberToLevel(severityNumber int) models.LogLevel {
 	}
 }
 
-func spanToModel(service *models.Service, serviceName string, resource json.RawMessage, span *tracepb.Span) models.Span {
+func spanToModel(serviceID, agentID, serviceName string, resource json.RawMessage, span *tracepb.Span) models.Span {
 	attrs := attrsToMap(span.GetAttributes())
 	start := span.GetStartTimeUnixNano()
 	end := span.GetEndTimeUnixNano()
@@ -283,7 +302,8 @@ func spanToModel(service *models.Service, serviceName string, resource json.RawM
 	}
 
 	return models.Span{
-		ServiceID:     service.ID,
+		ServiceID:     serviceID,
+		AgentID:       agentID,
 		ServiceName:   serviceName,
 		TraceID:       bytesToHex(span.GetTraceId()),
 		SpanID:        bytesToHex(span.GetSpanId()),
@@ -326,7 +346,7 @@ func pathExcluded(path string, rules []string) bool {
 	return false
 }
 
-func spanToAPIRequest(service *models.Service, serviceName string, span *tracepb.Span) (models.ApiRequest, bool) {
+func spanToAPIRequest(serviceID, agentID, serviceName string, apiExcludePaths []string, span *tracepb.Span) (models.ApiRequest, bool) {
 	if span.GetKind() != tracepb.Span_SPAN_KIND_SERVER {
 		return models.ApiRequest{}, false
 	}
@@ -342,7 +362,7 @@ func spanToAPIRequest(service *models.Service, serviceName string, span *tracepb
 	if path == "" {
 		path = span.GetName()
 	}
-	if pathExcluded(path, service.ApiExcludePaths) {
+	if pathExcluded(path, apiExcludePaths) {
 		return models.ApiRequest{}, false
 	}
 	route := firstString(attrs, "http.route")
@@ -362,7 +382,8 @@ func spanToAPIRequest(service *models.Service, serviceName string, span *tracepb
 	isError := statusCode >= 500 || span.GetStatus().GetCode() == tracepb.Status_STATUS_CODE_ERROR
 
 	return models.ApiRequest{
-		ServiceID:    service.ID,
+		ServiceID:    serviceID,
+		AgentID:      agentID,
 		ServiceName:  serviceName,
 		RequestID:    bytesToHex(span.GetSpanId()),
 		TraceID:      bytesToHex(span.GetTraceId()),

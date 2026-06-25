@@ -28,10 +28,13 @@ func NewApiRequestsHandler() *ApiRequestsHandler {
 	}
 }
 
-func (h *ApiRequestsHandler) evaluateApiRequestAlerts(service *models.Service, batch []models.ApiRequest) {
-	rules, err := h.ruleRepo.GetEnabledApiRequestRulesByServiceID(service.ID)
+// evaluateApiRequestAlerts dispatches API-status alerts. alertServiceID is the
+// dedup/identity seed (legacy service id, or agent id for connected agents); the
+// per-request ServiceName carries the display name.
+func (h *ApiRequestsHandler) evaluateApiRequestAlerts(alertServiceID string, batch []models.ApiRequest) {
+	rules, err := h.ruleRepo.GetEnabledApiRequestRulesByServiceID(alertServiceID)
 	if err != nil {
-		log.Printf("[ApiRequestIngest] Failed to load API request rules for service %s: %v", service.ID, err)
+		log.Printf("[ApiRequestIngest] Failed to load API request rules for %s: %v", alertServiceID, err)
 		return
 	}
 	if len(rules) == 0 {
@@ -45,8 +48,8 @@ func (h *ApiRequestsHandler) evaluateApiRequestAlerts(service *models.Service, b
 			}
 			go h.alertManager.DispatchApiRequestAlertForRule(
 				rule,
-				service.ID,
-				service.Name,
+				alertServiceID,
+				entry.ServiceName,
 				entry.Method,
 				entry.Path,
 				entry.StatusCode,

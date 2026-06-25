@@ -39,7 +39,6 @@ type Config struct {
 	OTelConfDir       string
 	OTelFileLogPaths  []string
 	WebOTLPEndpoint   string
-	WebAPIKey         string
 	WebBaseURL        string
 	AgentAPIKey       string
 	WebAgentID        string
@@ -76,7 +75,6 @@ func LoadFromEnv() (Config, error) {
 		OTelConfDir:       getEnv("EVERYUP_OTEL_CONF_DIR", defaultOtelConfDir),
 		OTelFileLogPaths:  splitCSV(os.Getenv("EVERYUP_OTEL_FILELOG_PATHS")),
 		WebOTLPEndpoint:   strings.TrimSpace(os.Getenv("EVERYUP_WEB_OTLP_ENDPOINT")),
-		WebAPIKey:         strings.TrimSpace(os.Getenv("EVERYUP_WEB_API_KEY")),
 		WebBaseURL:        strings.TrimRight(strings.TrimSpace(os.Getenv("EVERYUP_WEB_BASE_URL")), "/"),
 		// EVERYUP_WEB_ENROLLMENT_TOKEN is the deprecated name for the connected-mode key.
 		AgentAPIKey:     envWithFallback("EVERYUP_AGENT_API_KEY", "EVERYUP_WEB_ENROLLMENT_TOKEN"),
@@ -110,9 +108,6 @@ func LoadFromEnv() (Config, error) {
 	}
 	if cfg.AlertCooldown <= 0 {
 		return Config{}, errors.New("EVERYUP_ALERT_COOLDOWN_SECONDS must be greater than 0")
-	}
-	if cfg.WebAPIKey != "" && cfg.WebOTLPEndpoint == "" {
-		return Config{}, errors.New("EVERYUP_WEB_OTLP_ENDPOINT is required when EVERYUP_WEB_API_KEY is set")
 	}
 	if cfg.WebOTLPEndpoint != "" {
 		parsed, err := url.ParseRequestURI(cfg.WebOTLPEndpoint)

@@ -23,9 +23,7 @@ type Agent struct {
 	cfg            config.Config
 	httpCheck      *checks.HTTPChecker
 	tcpCheck       *checks.TCPChecker
-	discoverer     targetDiscoverer
-	logReader      serviceLogReader
-	resourceReader serviceResourceReader
+	docker         *discovery.DockerClient
 	store          *state.Store
 	audit          *state.AuditLogger
 	web            *webclient.Client
@@ -36,18 +34,6 @@ type Agent struct {
 	mu        sync.RWMutex
 	states    map[string]*targetState
 	webEvents []state.AuditEvent
-}
-
-type targetDiscoverer interface {
-	ListTargets(ctx context.Context) ([]discovery.Target, error)
-}
-
-type serviceLogReader interface {
-	TailLogs(ctx context.Context, containerID string, lines int) ([]string, error)
-}
-
-type serviceResourceReader interface {
-	ContainerStats(ctx context.Context, containerID string) (discovery.ContainerStats, error)
 }
 
 type targetState struct {
@@ -89,14 +75,9 @@ type agentSnapshot struct {
 }
 
 func New(cfg config.Config) (*Agent, error) {
-	var discoverer targetDiscoverer
-	var logReader serviceLogReader
-	var resourceReader serviceResourceReader
+	var docker *discovery.DockerClient
 	if cfg.DockerDiscoveryEnabled {
-		docker := discovery.NewDockerClient(cfg.DockerSocketPath, cfg.HTTPTimeout)
-		discoverer = docker
-		logReader = docker
-		resourceReader = docker
+		docker = discovery.NewDockerClient(cfg.DockerSocketPath, cfg.HTTPTimeout)
 	}
 	var web *webclient.Client
 	if cfg.WebSyncEnabled || cfg.WebBaseURL != "" {
@@ -115,9 +96,7 @@ func New(cfg config.Config) (*Agent, error) {
 		cfg:            cfg,
 		httpCheck:      checks.NewHTTPChecker(cfg.HTTPTimeout),
 		tcpCheck:       checks.NewTCPChecker(cfg.HTTPTimeout),
-		discoverer:     discoverer,
-		logReader:      logReader,
-		resourceReader: resourceReader,
+		docker:         docker,
 		store:          state.NewStore(filepath.Join(cfg.DataDir, "agent-state.json")),
 		audit:          state.NewAuditLogger(filepath.Join(cfg.DataDir, "audit.jsonl")),
 		web:            web,
@@ -327,7 +306,9 @@ func (a *Agent) writeOTelConfig() {
 		ConfDir:             a.cfg.OTelConfDir,
 		FileLogInclude:      a.cfg.OTelFileLogPaths,
 		WebOTLPEndpoint:     a.cfg.WebOTLPEndpoint,
-		WebAPIKey:           a.cfg.WebAPIKey,
+		// One project key: the same evup_svc_ key used for web sync also
+		// authenticates the generated collector's OTLP push.
+		WebAPIKey:           a.cfg.AgentAPIKey,
 		HostMetricsEnabled:  true,
 		DockerStatsEnabled:  true,
 		FileLogEnabled:      true,
@@ -375,11 +356,11 @@ func (a *Agent) targets(ctx context.Context) []discovery.Target {
 		})
 	}
 
-	if a.discoverer == nil {
+	if a.docker == nil {
 		return targets
 	}
 
-	discovered, err := a.discoverer.ListTargets(ctx)
+	discovered, err := a.docker.ListTargets(ctx)
 	if err != nil {
 		log.Printf("docker discovery failed: %v", err)
 		return targets
@@ -422,6 +403,10 @@ func (a *Agent) pruneStaleStates(targets []discovery.Target) {
 }
 
 func (a *Agent) runCheck(ctx context.Context, target discovery.Target) {
+	if target.HealthType == "docker" {
+		a.runDockerLivenessCheck(target)
+		return
+	}
 	if target.HealthType == "tcp" {
 		a.runTCPCheck(ctx, target)
 		return
@@ -486,6 +471,48 @@ func (a *Agent) runTCPCheck(ctx context.Context, target discovery.Target) {
 		a.auditEvent("alert_sent", target.ServiceName, targetKey(target), body, map[string]interface{}{
 			"address": result.Address,
 			"latency": result.Latency.String(),
+		})
+		lastAlertAt = now
+	}
+	a.setTargetResult(target, lastAlertAt, false, true, now)
+	a.saveState()
+}
+
+// runDockerLivenessCheck reports up/down straight from the container state
+// captured during discovery — no health endpoint required. running = alive;
+// anything else (exited, dead, created, …) = down, with the Docker status line
+// as the reason.
+func (a *Agent) runDockerLivenessCheck(target discovery.Target) {
+	healthy := target.State == "running"
+	log.Printf("docker liveness: service=%s state=%s healthy=%t", target.ServiceName, target.State, healthy)
+
+	now := time.Now()
+	errText := ""
+	if !healthy {
+		errText = strings.TrimSpace(target.StatusText)
+		if errText == "" {
+			errText = "container state: " + target.State
+		}
+	}
+	state := a.observeTarget(target, healthy, 0, 0, errText)
+	if healthy {
+		if state.seenResult && !state.wasHealthy {
+			a.auditEvent("recovery_sent", target.ServiceName, targetKey(target), "service recovered", map[string]interface{}{
+				"state": target.State,
+			})
+		}
+		a.setTargetResult(target, state.lastAlertAt, true, true, now)
+		a.saveState()
+		return
+	}
+
+	shouldAlert := !state.seenResult || state.wasHealthy || now.Sub(state.lastAlertAt) >= a.cfg.AlertCooldown
+	lastAlertAt := state.lastAlertAt
+	if shouldAlert {
+		body := fmt.Sprintf("%s is not running (%s)", target.ServiceName, errText)
+		a.auditEvent("alert_sent", target.ServiceName, targetKey(target), body, map[string]interface{}{
+			"state":  target.State,
+			"status": target.StatusText,
 		})
 		lastAlertAt = now
 	}
@@ -579,7 +606,7 @@ func (a *Agent) saveState() {
 }
 
 func (a *Agent) runLogKeywordCheck(ctx context.Context, target discovery.Target) {
-	if a.logReader == nil || target.ID == "" || strings.HasPrefix(target.ID, "env:") {
+	if a.docker == nil || target.ID == "" || strings.HasPrefix(target.ID, "env:") {
 		return
 	}
 	keywords := logKeywords(target.Labels)
@@ -587,7 +614,7 @@ func (a *Agent) runLogKeywordCheck(ctx context.Context, target discovery.Target)
 		return
 	}
 	lines := logLineLimit(target.Labels)
-	logLines, err := a.logReader.TailLogs(ctx, target.ID, lines)
+	logLines, err := a.docker.TailLogs(ctx, target.ID, lines)
 	if err != nil {
 		a.auditEvent("log_keyword_scan_failed", target.ServiceName, targetKey(target), err.Error(), map[string]interface{}{
 			"lines": lines,
@@ -614,14 +641,14 @@ func (a *Agent) runLogKeywordCheck(ctx context.Context, target discovery.Target)
 }
 
 func (a *Agent) runResourceThresholdCheck(ctx context.Context, target discovery.Target) {
-	if a.resourceReader == nil || target.ID == "" || strings.HasPrefix(target.ID, "env:") {
+	if a.docker == nil || target.ID == "" || strings.HasPrefix(target.ID, "env:") {
 		return
 	}
 	cpuThreshold, memoryThreshold := resourceThresholds(target.Labels)
 	if cpuThreshold == 0 && memoryThreshold == 0 {
 		return
 	}
-	stats, err := a.resourceReader.ContainerStats(ctx, target.ID)
+	stats, err := a.docker.ContainerStats(ctx, target.ID)
 	if err != nil {
 		a.auditEvent("resource_threshold_scan_failed", target.ServiceName, targetKey(target), err.Error(), nil)
 		return

@@ -135,10 +135,16 @@ The service shows online in the dashboard within 30 seconds. Configure who gets 
 
 ### 3. Tell the Agent what to watch
 
-Add labels to the containers you want monitored (in your own `docker-compose.yml`):
+Add `everyup.enabled: "true"` to any container you want monitored (in your own `docker-compose.yml`):
 
 ```yaml
 services:
+  worker:
+    image: my-worker:latest
+    labels:
+      everyup.enabled: "true"              # ← that's it: up/down from the container's running state
+
+  # Optional: add a health endpoint to upgrade to active HTTP/TCP probing
   api:
     image: my-api:latest
     labels:
@@ -150,14 +156,13 @@ services:
     image: postgres:16
     labels:
       everyup.enabled: "true"
-      everyup.service.name: "postgres"     # ← display name (defaults to the container name if omitted)
       everyup.health.type: "tcp"
       everyup.health.port: "5432"
 ```
 
 The Agent auto-discovers labeled containers within the next 30-second check. No Web UI registration needed. **Each labeled container becomes its own service card** (plus one card for `EVERYUP_HEALTH_URL` if set), so a single Agent can report many services.
 
-> **`everyup.service.name` is optional but recommended.** Omitting it makes the card use the container's name (only a 12-char short ID if the container has no name) — set it for a stable, readable name. A container is only discovered when it also has a valid health endpoint (`everyup.health.url`, or `everyup.health.port` to build one).
+> **Only `everyup.enabled: "true"` is required.** With just that, the Agent tracks liveness (container running vs stopped) from Docker — no health endpoint needed. Add `everyup.health.url` (or `everyup.health.port`) to upgrade a service to active HTTP/TCP probing with response time and status codes. `everyup.service.name` is optional — it defaults to the container name (a 12-char short ID if the container has no name).
 
 ### Both on one host (single Compose file)
 

@@ -139,6 +139,12 @@ docker compose up -d
 
 ```yaml
 services:
+  worker:
+    image: my-worker:latest
+    labels:
+      everyup.enabled: "true"              # ← 이것만으로 충분: 컨테이너 실행 상태로 up/down 판정
+
+  # 선택: health 엔드포인트를 주면 액티브 HTTP/TCP 프로브로 업그레이드
   api:
     image: my-api:latest
     labels:
@@ -150,14 +156,13 @@ services:
     image: postgres:16
     labels:
       everyup.enabled: "true"
-      everyup.service.name: "postgres"
       everyup.health.type: "tcp"
       everyup.health.port: "5432"
 ```
 
 label만 붙이면 Agent가 30초 안에 자동 발견합니다. Web UI에서 수동으로 등록할 필요 없습니다. **label이 붙은 컨테이너는 각각 하나의 서비스 카드가 됩니다** (`EVERYUP_HEALTH_URL`을 설정하면 그 카드도 추가) — Agent 하나가 여러 서비스를 보고할 수 있습니다.
 
-> **`everyup.service.name`은 선택이지만 권장합니다.** 생략하면 컨테이너 이름이 카드 이름으로 쓰입니다(컨테이너에 이름이 없을 때만 12자 짧은 ID). 안정적인 이름을 위해 지정하세요. 컨테이너는 유효한 health 엔드포인트(`everyup.health.url`, 또는 빌드용 `everyup.health.port`)가 있을 때만 발견됩니다.
+> **`everyup.enabled: "true"` 하나만 필수입니다.** 이것만 있으면 Agent가 Docker 컨테이너 상태(실행 중 vs 중지)로 liveness를 보고합니다 — health 엔드포인트 불필요. `everyup.health.url`(또는 `everyup.health.port`)을 추가하면 응답시간·상태코드까지 보는 액티브 HTTP/TCP 프로브로 업그레이드됩니다. `everyup.service.name`은 선택 — 생략하면 컨테이너 이름(이름이 없으면 12자 짧은 ID)이 쓰입니다.
 
 ### 한 서버에 둘 다 (통합 Compose 파일)
 

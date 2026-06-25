@@ -11,6 +11,7 @@ import (
 type Span struct {
 	ID            int64           `json:"id"`
 	ServiceID     string          `json:"serviceId,omitempty"`
+	AgentID       string          `json:"agentId,omitempty"`
 	ServiceName   string          `json:"serviceName,omitempty"`
 	TraceID       string          `json:"traceId"`
 	SpanID        string          `json:"spanId"`

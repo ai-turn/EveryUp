@@ -193,7 +193,6 @@ const mockHostSummaries = mockResources.map((r, index) => {
     connectionType: isRemote ? 'remote' : 'local',
     isActive: r.status !== 'critical',
     isRemote,
-    sshPort: isRemote ? 22 : undefined,
     severity: r.status === 'critical' || r.status === 'error' ? 'critical' : r.status === 'warning' ? 'warning' : 'none',
     statusReason: isProblem ? 'threshold_exceeded' : 'healthy',
     lastSeenAt,
@@ -203,12 +202,6 @@ const mockHostSummaries = mockResources.map((r, index) => {
     cpuUsage: r.status === 'critical' ? 91 : 42 + index * 7,
     memoryUsage: r.status === 'warning' ? 83 : 51 + index * 6,
     diskUsage: 38 + index * 5,
-    ssh: isRemote ? {
-      port: 22,
-      user: 'monitor',
-      connectionStatus: r.status === 'critical' ? 'failed' : 'connected',
-      lastTestedAt: lastSeenAt,
-    } : undefined,
     createdAt: new Date(Date.now() - 60 * 86_400_000).toISOString(),
     updatedAt: new Date(Date.now() - 86_400_000).toISOString(),
   };
@@ -643,6 +636,15 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
       if (idx !== -1) mockAgentServicesFlat.splice(idx, 1);
       return null as T;
     }
+    // PUT /agents/:id/services/:key/log-filter — echo the saved levels
+    if (method === 'PUT' && /^\/agents\/[^/]+\/services\/[^/]+\/log-filter$/.test(endpoint)) {
+      let levels: string[] = [];
+      try {
+        const parsed = JSON.parse(typeof body === 'string' ? body : '{}');
+        if (Array.isArray(parsed?.levels)) levels = parsed.levels.map(String);
+      } catch { /* keep empty */ }
+      return { levels } as T;
+    }
     return null as T;
   }
 
@@ -704,6 +706,9 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   // /agents/:agentId/key
   if (/^\/agents\/[^/]+\/key$/.test(endpoint))
     return { apiKey: 'evup_svc_3f9c4a1b8e3d6f0a5c7b9d2e4f6a8c0b1d3e5f7a9c2b4d6e', available: true } as T;
+  // /agents/:agentId/services/:key/log-filter
+  if (/^\/agents\/[^/]+\/services\/[^/]+\/log-filter$/.test(endpoint))
+    return { levels: ['error', 'warn', 'info'] } as T;
   // /agents/:agentId/services/:key/logs
   if (/^\/agents\/[^/]+\/services\/[^/]+\/logs/.test(endpoint))
     return { data: mockAgentServiceLogs, total: mockAgentServiceLogs.length } as unknown as T;

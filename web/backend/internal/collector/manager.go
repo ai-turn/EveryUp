@@ -10,16 +10,16 @@ import (
 	"github.com/aiturn/everyup/internal/models"
 )
 
-// managedCollector wraps a MetricCollector with its in-memory snapshot buffer
+// managedCollector wraps a LocalCollector with its in-memory snapshot buffer
 // and cached system info.
 type managedCollector struct {
-	collector MetricCollector
+	collector *LocalCollector
 	snapshots []models.SystemMetric
 	latest    *models.SystemInfo
 }
 
-// CollectorManager manages multiple MetricCollectors and schedules periodic
-// collection and storage.
+// CollectorManager manages metric collectors keyed by host ID and schedules
+// periodic collection and storage.
 type CollectorManager struct {
 	collectors         map[string]*managedCollector // hostID → managed collector
 	broadcast          func(interface{})
@@ -63,9 +63,9 @@ func (m *CollectorManager) SetOnMetricCollected(fn func(hostID, hostName string,
 	m.onMetricCollected = fn
 }
 
-// Register adds a MetricCollector to be managed. If a collector for the same
+// Register adds a collector to be managed. If a collector for the same
 // host ID already exists, it is replaced (the old one is closed).
-func (m *CollectorManager) Register(c MetricCollector) {
+func (m *CollectorManager) Register(c *LocalCollector) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -95,8 +95,8 @@ func (m *CollectorManager) Unregister(hostID string) {
 	}
 }
 
-// GetCollector returns the MetricCollector for the given host, or nil.
-func (m *CollectorManager) GetCollector(hostID string) MetricCollector {
+// GetCollector returns the collector for the given host, or nil.
+func (m *CollectorManager) GetCollector(hostID string) *LocalCollector {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 

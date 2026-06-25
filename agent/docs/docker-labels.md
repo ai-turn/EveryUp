@@ -20,6 +20,29 @@ and the Docker socket is mounted read-only.
 | `everyup.alert.cpu.percent` | no | Container CPU percentage threshold |
 | `everyup.alert.memory.percent` | no | Container memory percentage threshold |
 
+**Only `everyup.enabled` is required.** With nothing else, the agent reports
+liveness straight from the Docker container state (running = up, exited/dead =
+down) — no health endpoint to expose. Adding `everyup.health.url` (or
+`everyup.health.port`) upgrades a service to active HTTP/TCP probing, which also
+captures response time and status codes.
+
+## Liveness (no health endpoint)
+
+The simplest setup — the agent watches whether the container is running:
+
+```yaml
+services:
+  worker:
+    image: my-worker:latest
+    labels:
+      everyup.enabled: "true"
+```
+
+`State == running` reports healthy; `exited`/`dead`/`created` report down with the
+Docker status line (e.g. `Exited (137) 2m ago`) as the reason. A removed
+container (`docker compose down`) drops off the dashboard rather than showing as
+down.
+
 ## HTTP examples
 
 Use an explicit URL when the service already has a stable internal endpoint.

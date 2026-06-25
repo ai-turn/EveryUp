@@ -10,6 +10,7 @@ import (
 type ApiRequest struct {
 	ID           int64     `json:"id"`
 	ServiceID    string    `json:"serviceId"`
+	AgentID      string    `json:"agentId,omitempty"`
 	ServiceName  string    `json:"serviceName,omitempty"`
 	RequestID    string    `json:"requestId"`
 	TraceID      string    `json:"traceId,omitempty"`
@@ -29,6 +30,7 @@ type ApiRequest struct {
 // ApiRequestFilter holds query parameters for listing captured requests.
 type ApiRequestFilter struct {
 	ServiceID   string
+	AgentID     string
 	ServiceName string
 	TraceID     string
 	MinStatus  int

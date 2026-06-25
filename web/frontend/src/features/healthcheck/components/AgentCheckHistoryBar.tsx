@@ -30,7 +30,9 @@ export function AgentCheckHistoryBar({ agentId, serviceKey, refreshKey }: AgentC
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     days.forEach((d) => {
-      const diff = Math.floor((today.getTime() - new Date(d.date).getTime()) / 86_400_000);
+      // d.date is a date-only string ("YYYY-MM-DD"); append time so it parses as
+      // LOCAL midnight, not UTC — otherwise today's bucket lands at idx=90 (dropped) in KST.
+      const diff = Math.floor((today.getTime() - new Date(`${d.date}T00:00:00`).getTime()) / 86_400_000);
       const idx = DAYS - 1 - diff;
       if (idx >= 0 && idx < DAYS) result[idx] = d;
     });

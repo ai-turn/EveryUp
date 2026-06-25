@@ -12,7 +12,6 @@ export interface Resource {
   connectionType?: 'local' | 'remote';
   isActive?: boolean;
   isRemote?: boolean;
-  sshPort?: number;
   lastSeenAt?: string;
   lastCollectedAt?: string;
   incidentSince?: string;
@@ -21,13 +20,6 @@ export interface Resource {
   memoryUsage?: number;
   diskUsage?: number;
   netTrend?: number[];
-  ssh?: {
-    port?: number;
-    user?: string;
-    connectionStatus: 'connected' | 'failed' | 'unknown';
-    latencyMs?: number;
-    lastTestedAt?: string;
-  };
   createdAt?: string;
   updatedAt?: string;
 }
