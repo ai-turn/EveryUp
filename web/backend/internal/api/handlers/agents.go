@@ -524,7 +524,21 @@ func (h *AgentHandler) GetServiceRequests(c *fiber.Ctx) error {
 
 // GetServiceLogFilter returns the per-service ingest log-level filter (empty = accept all).
 func (h *AgentHandler) GetServiceLogFilter(c *fiber.Ctx) error {
-	levels, err := h.repo.GetLogLevelFilterByKey(c.Params("agentId"), c.Params("key"))
+	agentID := c.Params("agentId")
+	key := c.Params("key")
+
+	service, err := h.repo.GetServiceByKey(agentID, key)
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	if service == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"success": false,
+			"error":   fiber.Map{"code": "NOT_FOUND", "message": "service not found"},
+		})
+	}
+
+	levels, err := h.repo.GetLogLevelFilterByKey(agentID, key)
 	if err != nil {
 		return internalError(c, "DATABASE_ERROR", err)
 	}
@@ -534,6 +548,9 @@ func (h *AgentHandler) GetServiceLogFilter(c *fiber.Ctx) error {
 // SetServiceLogFilter sets which log levels are stored at OTLP ingest for a service.
 // An empty list means accept all levels. The filter survives agent re-syncs.
 func (h *AgentHandler) SetServiceLogFilter(c *fiber.Ctx) error {
+	agentID := c.Params("agentId")
+	key := c.Params("key")
+
 	var req struct {
 		Levels []string `json:"levels"`
 	}
@@ -547,7 +564,19 @@ func (h *AgentHandler) SetServiceLogFilter(c *fiber.Ctx) error {
 		}
 		clean = append(clean, l)
 	}
-	if err := h.repo.SetLogLevelFilter(c.Params("agentId"), c.Params("key"), strings.Join(clean, ",")); err != nil {
+
+	service, err := h.repo.GetServiceByKey(agentID, key)
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	if service == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"success": false,
+			"error":   fiber.Map{"code": "NOT_FOUND", "message": "service not found"},
+		})
+	}
+
+	if err := h.repo.SetLogLevelFilter(agentID, key, strings.Join(clean, ",")); err != nil {
 		return internalError(c, "DATABASE_ERROR", err)
 	}
 	return c.JSON(fiber.Map{"success": true, "data": fiber.Map{"levels": clean}})

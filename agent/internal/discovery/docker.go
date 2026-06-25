@@ -30,7 +30,8 @@ const (
 )
 
 type Target struct {
-	ID          string
+	ID          string // Docker container ID — the API handle for logs/stats; changes on recreation
+	Key         string // stable service identity, survives container recreation (see stableServiceKey)
 	ServiceName string
 	HealthType  string // "http" | "tcp" | "docker" (container-state liveness)
 	HealthURL   string
@@ -222,6 +223,8 @@ func TargetFromLabels(containerID, fallbackName string, labels map[string]string
 		serviceName = shortID(containerID)
 	}
 
+	key := stableServiceKey(containerID, fallbackName, labels)
+
 	// An explicit HTTP/TCP endpoint enables active probing. Without a usable
 	// endpoint we fall back to Docker container liveness (running vs not) —
 	// no health endpoint to expose, just everyup.enabled=true.
@@ -232,7 +235,7 @@ func TargetFromLabels(containerID, fallbackName string, labels map[string]string
 			addr = buildTCPAddress(fallbackName, labels)
 		}
 		if validHealthEndpoint("tcp", addr) {
-			return Target{ID: containerID, ServiceName: serviceName, HealthType: "tcp", HealthURL: addr, Labels: copyLabels(labels)}, true
+			return Target{ID: containerID, Key: key, ServiceName: serviceName, HealthType: "tcp", HealthURL: addr, Labels: copyLabels(labels)}, true
 		}
 	case "http", "":
 		healthURL := strings.TrimSpace(labels[LabelHealthURL])
@@ -240,16 +243,39 @@ func TargetFromLabels(containerID, fallbackName string, labels map[string]string
 			healthURL = buildHealthURL(fallbackName, labels)
 		}
 		if validHealthEndpoint("http", healthURL) {
-			return Target{ID: containerID, ServiceName: serviceName, HealthType: "http", HealthURL: healthURL, Labels: copyLabels(labels)}, true
+			return Target{ID: containerID, Key: key, ServiceName: serviceName, HealthType: "http", HealthURL: healthURL, Labels: copyLabels(labels)}, true
 		}
 	}
 
 	return Target{
 		ID:          containerID,
+		Key:         key,
 		ServiceName: serviceName,
 		HealthType:  "docker",
 		Labels:      copyLabels(labels),
 	}, true
+}
+
+// stableServiceKey returns a service identity that survives container
+// recreation — `docker compose up` hands out a fresh container ID each time, so
+// keying on the ID orphans the card and splits its history on every redeploy.
+// Precedence: explicit everyup.service.name → compose project:service →
+// container name (compose keeps this stable) → container ID (last resort).
+// ':' is used as the compose separator because it is path-segment-safe (like the
+// existing env: keys); '/' would break the :key route param.
+func stableServiceKey(containerID, fallbackName string, labels map[string]string) string {
+	if name := strings.TrimSpace(labels[LabelServiceName]); name != "" {
+		return name
+	}
+	project := strings.TrimSpace(labels["com.docker.compose.project"])
+	service := strings.TrimSpace(labels["com.docker.compose.service"])
+	if project != "" && service != "" {
+		return project + ":" + service
+	}
+	if fallbackName != "" {
+		return fallbackName
+	}
+	return containerID
 }
 
 func buildTCPAddress(fallbackHost string, labels map[string]string) string {

@@ -828,6 +828,9 @@ func TestAgentServiceLogs_KeyResolution(t *testing.T) {
 		{"hash key", base + hashKey + "/logs", 200},
 		{"env key requests", base + "env%3Ademo-prod/requests", 200},
 		{"unknown key", base + "env%3Anope/logs", 404},
+		// log-filter must agree with logs/requests on existence (was always 200).
+		{"log-filter known key", base + hashKey + "/log-filter", 200},
+		{"log-filter unknown key", base + "env%3Anope/log-filter", 404},
 	}
 	for _, tc := range cases {
 		resp, result := ts.doRequest(t, "GET", tc.path, nil, auth...)

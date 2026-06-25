@@ -79,8 +79,9 @@ The agent auto-discovers any container with `everyup.enabled: "true"`, checks it
 on the next 30-second tick, and appears online in Web within 30 seconds. **Each
 discovered container is its own service card** (plus one for `EVERYUP_HEALTH_URL`
 if set) — one agent commonly reports several services. When a container is
-removed (or recreated with a new ID by `docker compose up`), the agent stops
-reporting it and Web drops its card on the next sync.
+removed or relabeled, the agent stops reporting it and Web drops its card on the
+next sync. Recreating a container (`docker compose up`) keeps the same card —
+identity is a stable key (service name / compose service), not the container ID.
 Notifications are sent by EveryUp Web based on the alert rules and channels you
 configure there (Web UI → 알림).
 
@@ -133,8 +134,7 @@ go run ./cmd/everyup-agent
 | `EVERYUP_OTEL_CONFIG_PATH` | no | `/etc/everyup/generated/otel-config.yaml` | Generated Collector config path |
 | `EVERYUP_OTEL_CONF_DIR` | no | `/etc/everyup/conf.d` | Reserved override directory |
 | `EVERYUP_OTEL_FILELOG_PATHS` | no | Docker container logs | Comma-separated filelog include paths |
-| `EVERYUP_WEB_OTLP_ENDPOINT` | no | | Optional EveryUp Web OTLP endpoint (legacy) |
-| `EVERYUP_WEB_API_KEY` | no | | Optional EveryUp Web API key for OTLP forward (legacy) |
+| `EVERYUP_WEB_OTLP_ENDPOINT` | no | | EveryUp Web OTLP endpoint for the generated collector to push logs/traces (authenticated with `EVERYUP_AGENT_API_KEY`) |
 | `EVERYUP_WEB_SYNC_ENABLED` | no | `false` | Enable Web enrollment, service sync, host metrics sync, and event sync |
 | `EVERYUP_WEB_BASE_URL` | no | | EveryUp Web base URL |
 | `EVERYUP_AGENT_API_KEY` | no | | API key generated from the Web UI (Services → 추가하기) |
@@ -167,12 +167,13 @@ against the `agents` table.
 > `EVERYUP_WEB_ENROLLMENT_TOKEN` is the deprecated name for `EVERYUP_AGENT_API_KEY`
 > and is still accepted as a fallback.
 
-### Legacy: OTLP forward (`EVERYUP_WEB_API_KEY`)
+### OTLP logs & traces (same key)
 
-`EVERYUP_WEB_API_KEY` + `EVERYUP_WEB_OTLP_ENDPOINT` are leftovers from a previous
-architecture. OTLP log/trace ingest authenticates against a separate **log-service**
-API key, and the current build has **no UI or API route to create one** — so these
-variables are not usable as-is. Use connected mode (above) instead.
+OTLP log/trace ingest uses the **same** `EVERYUP_AGENT_API_KEY` — there is no
+separate key. Point your app's OTLP exporter (or the generated collector, below)
+at `<EVERYUP_WEB_BASE_URL>/api/v1/otlp` with `Authorization: Bearer <EVERYUP_AGENT_API_KEY>`,
+and set the OTLP `service.name` to match an agent service's name so its
+logs/requests line up under that card.
 
 ## Docker discovery
 
@@ -240,10 +241,10 @@ See [Web Connected Mode](docs/web-connected-mode.md) for the full API contract.
 
 ## OTel Collector sidecar
 
-> **Legacy.** This forwards telemetry to EveryUp Web's OTLP endpoint, which needs
-> the `EVERYUP_WEB_API_KEY` log-service key — not provisionable in the current
-> build (see [API key](#api-key-connected-mode)). Kept for reference / external
-> OTLP backends.
+> Forwards logs/traces to EveryUp Web's OTLP endpoint. Set
+> `EVERYUP_WEB_OTLP_ENDPOINT`; the generated config authenticates with your
+> `EVERYUP_AGENT_API_KEY` automatically (no separate key). Also usable with
+> external OTLP backends.
 
 The agent generates a Collector config at `EVERYUP_OTEL_CONFIG_PATH`. Use
 [compose.example.yml](compose.example.yml) to run the agent with an

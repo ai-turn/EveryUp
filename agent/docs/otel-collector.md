@@ -29,11 +29,11 @@ EveryUp Web deployment.
 
 ```bash
 EVERYUP_WEB_OTLP_ENDPOINT=https://everyup.example.com/api/v1/otlp
-EVERYUP_WEB_API_KEY=everyup_your_service_api_key
+EVERYUP_AGENT_API_KEY=evup_svc_...   # same project key, also used for connected-mode sync
 ```
 
-The agent writes an `Authorization: Bearer ...` header into the generated
-collector config. Keep the generated config volume private.
+The agent writes an `Authorization: Bearer <EVERYUP_AGENT_API_KEY>` header into the
+generated collector config. Keep the generated config volume private.
 
 ## Compose
 

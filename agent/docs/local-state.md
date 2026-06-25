@@ -37,9 +37,10 @@ Example:
 
 `serviceName`/`checkType`/`endpoint` are persisted so display names survive a
 restart. The map key is the target's local key (`env:<EVERYUP_SERVICE_NAME>` for
-the `EVERYUP_HEALTH_URL` target, or the Docker container ID for discovered ones).
-On each check cycle the agent prunes entries for targets it no longer discovers,
-so stale containers don't linger as zombie service cards in Web.
+the `EVERYUP_HEALTH_URL` target, or a stable key for discovered ones — service
+name / compose `project:service`, not the container ID, so the entry survives
+container recreation). On each check cycle the agent prunes entries for targets it
+no longer discovers, so removed services don't linger in Web.
 
 ## `audit.jsonl`
 

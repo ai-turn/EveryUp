@@ -98,6 +98,39 @@ func TestTargetFromLabelsFallsBackToDockerLiveness(t *testing.T) {
 	}
 }
 
+// The service key must be stable across container recreation, so it never
+// falls back to the (ephemeral) container ID when a stable source exists.
+func TestTargetFromLabelsUsesStableKey(t *testing.T) {
+	const containerID = "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+	tests := []struct {
+		name    string
+		labels  map[string]string
+		wantKey string
+	}{
+		{"explicit service name", map[string]string{LabelEnabled: "true", LabelServiceName: "public-api"}, "public-api"},
+		{"compose project+service", map[string]string{LabelEnabled: "true", "com.docker.compose.project": "shop", "com.docker.compose.service": "web"}, "shop:web"},
+		{"container name fallback", map[string]string{LabelEnabled: "true"}, "shop-web-1"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			target, ok := TargetFromLabels(containerID, "shop-web-1", tt.labels)
+			if !ok {
+				t.Fatal("expected target")
+			}
+			if target.Key != tt.wantKey {
+				t.Fatalf("Key = %q, want %q", target.Key, tt.wantKey)
+			}
+			if target.Key == containerID {
+				t.Fatal("key fell back to the ephemeral container ID")
+			}
+			if target.ID != containerID {
+				t.Fatalf("ID = %q, want the container ID for Docker API calls", target.ID)
+			}
+		})
+	}
+}
+
 func TestSplitDockerLogLinesPlainText(t *testing.T) {
 	lines := splitDockerLogLines([]byte("one\n\ntwo\r\n"))
 	if len(lines) != 2 || lines[0] != "one" || lines[1] != "two" {

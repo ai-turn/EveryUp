@@ -153,8 +153,10 @@ Content-Type: application/json
 
 Mapping rules:
 
-- `everyup.service.name` is the primary human-readable service key.
-- Docker container ID is used as the local target key.
+- `everyup.service.name` is the primary human-readable service name.
+- The local target key is a stable identity (`everyup.service.name` → compose
+  `project:service` → container name → container ID), so it survives container
+  recreation; the container ID is only the Docker API handle for logs/stats.
 - Web can map services to Agent targets by `name`, `key`, or future explicit
   labels.
 

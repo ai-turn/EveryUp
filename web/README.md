@@ -101,10 +101,11 @@ Agent sync endpoints (`/agents/enroll`, `/agents/:id/services`, etc.) require
 from the Web UI (Services → 추가하기), validated against the `agents` table.
 This is the **supported** key path.
 
-> **Legacy:** the OTLP ingest endpoints (`POST /otlp/v1/logs`, `/otlp/v1/traces`)
-> authenticate against a log-type `services` row (`EVERYUP_WEB_API_KEY` on the
-> agent). Service write paths were removed in the agent-only architecture, so the
-> current build has no UI/route to create that key — OTLP ingest is dormant.
+OTLP ingest endpoints (`POST /otlp/v1/logs`, `/otlp/v1/traces`) authenticate with
+the **same** per-agent key (`EVERYUP_AGENT_API_KEY`, validated against the `agents`
+table) — no separate key. Logs/traces are tied to a service by
+`(agent_id, service.name)`. A legacy log-type `services` key is still accepted as a
+fallback but is no longer provisionable in the UI.
 
 ## Main Views
 

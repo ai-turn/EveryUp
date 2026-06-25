@@ -382,11 +382,12 @@ func (a *Agent) targets(ctx context.Context) []discovery.Target {
 }
 
 // pruneStaleStates drops in-memory state for targets no longer discovered, so
-// the agent stops reporting (and Web stops showing) vanished targets — e.g. a
-// container recreated with a new ID by `docker compose up`, leaving its old
-// 64-char ID behind as a zombie service card. host:metrics is internal host
-// state, not a discovery target, so it is always retained.
-// ponytail: a transient Docker-discovery failure briefly prunes live containers
+// the agent stops reporting (and Web stops showing) genuinely removed services.
+// Keys are stable (see discovery.stableServiceKey), so a container recreated by
+// `docker compose up` keeps the same key and is NOT pruned — only a removed or
+// relabeled service drops out. host:metrics is internal host state, not a
+// discovery target, so it is always retained.
+// ponytail: a transient Docker-discovery failure briefly prunes live services
 // for one tick; they re-register on the next cycle and history is preserved.
 func (a *Agent) pruneStaleStates(targets []discovery.Target) {
 	live := map[string]bool{"host:metrics": true}
@@ -844,6 +845,9 @@ func (a *Agent) enqueueWebEvent(event state.AuditEvent) {
 }
 
 func targetKey(target discovery.Target) string {
+	if target.Key != "" {
+		return target.Key
+	}
 	if target.ID != "" {
 		return target.ID
 	}
