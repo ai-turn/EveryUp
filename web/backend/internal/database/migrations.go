@@ -230,6 +230,9 @@ func migrate() error {
 	if err := migrateV34(); err != nil {
 		return fmt.Errorf("v34 migration failed: %w", err)
 	}
+	if err := migrateV35(); err != nil {
+		return fmt.Errorf("v35 migration failed: %w", err)
+	}
 
 	return nil
 }
@@ -1123,6 +1126,105 @@ func migrateV34() error {
 		}
 		return nil
 	})
+}
+
+// migrateV35 removes the legacy api_requests -> services foreign key.
+// Agent-ingested API requests are owned by (agent_id, service_name), so
+// service_id may be empty when the request did not come from a legacy service.
+// Added: 2026-06-26
+func migrateV35() error {
+	rows, err := DB.Query(`PRAGMA foreign_key_list(api_requests)`)
+	if err != nil {
+		return err
+	}
+	hasServiceFK := false
+	for rows.Next() {
+		var id, seq int
+		var table, from, to, onUpdate, onDelete, match string
+		if err := rows.Scan(&id, &seq, &table, &from, &to, &onUpdate, &onDelete, &match); err != nil {
+			rows.Close()
+			return err
+		}
+		if table == "services" && from == "service_id" {
+			hasServiceFK = true
+		}
+	}
+	if err := rows.Close(); err != nil {
+		return err
+	}
+	if !hasServiceFK {
+		return ensureAPIRequestIndexes()
+	}
+
+	if _, err := DB.Exec(`PRAGMA foreign_keys = OFF`); err != nil {
+		return err
+	}
+	defer DB.Exec(`PRAGMA foreign_keys = ON`)
+
+	return Transaction(func(tx *sql.Tx) error {
+		stmts := []string{
+			`DROP TABLE IF EXISTS api_requests_new`,
+			`CREATE TABLE api_requests_new (
+				id             INTEGER PRIMARY KEY AUTOINCREMENT,
+				service_id     TEXT NOT NULL DEFAULT '',
+				agent_id       TEXT NOT NULL DEFAULT '',
+				request_id     TEXT NOT NULL,
+				method         TEXT NOT NULL,
+				path           TEXT NOT NULL,
+				path_template  TEXT NOT NULL,
+				status_code    INTEGER NOT NULL,
+				duration_ms    INTEGER NOT NULL,
+				client_ip      TEXT,
+				error          TEXT,
+				is_error       INTEGER NOT NULL DEFAULT 0,
+				created_at     DATETIME NOT NULL,
+				trace_id       TEXT DEFAULT '',
+				span_id        TEXT DEFAULT '',
+				route          TEXT DEFAULT '',
+				service_name   TEXT DEFAULT ''
+			)`,
+			`INSERT INTO api_requests_new
+				(id, service_id, agent_id, request_id, method, path, path_template,
+				 status_code, duration_ms, client_ip, error, is_error, created_at,
+				 trace_id, span_id, route, service_name)
+			 SELECT id, service_id, agent_id, request_id, method, path, path_template,
+				 status_code, duration_ms, client_ip, error, is_error, created_at,
+				 trace_id, span_id, route, service_name
+			   FROM api_requests`,
+			`DROP TABLE api_requests`,
+			`ALTER TABLE api_requests_new RENAME TO api_requests`,
+		}
+		for _, stmt := range stmts {
+			if _, err := tx.Exec(stmt); err != nil {
+				return err
+			}
+		}
+		return ensureAPIRequestIndexesTx(tx)
+	})
+}
+
+func ensureAPIRequestIndexes() error {
+	return Transaction(func(tx *sql.Tx) error {
+		return ensureAPIRequestIndexesTx(tx)
+	})
+}
+
+func ensureAPIRequestIndexesTx(tx *sql.Tx) error {
+	indexes := []string{
+		`CREATE INDEX IF NOT EXISTS idx_api_requests_service_time   ON api_requests(service_id, created_at DESC)`,
+		`CREATE INDEX IF NOT EXISTS idx_api_requests_service_status ON api_requests(service_id, status_code)`,
+		`CREATE INDEX IF NOT EXISTS idx_api_requests_service_error  ON api_requests(service_id, is_error, created_at DESC)`,
+		`CREATE INDEX IF NOT EXISTS idx_api_requests_request_id     ON api_requests(request_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_api_requests_trace          ON api_requests(trace_id, created_at DESC)`,
+		`CREATE INDEX IF NOT EXISTS idx_api_requests_span           ON api_requests(span_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_api_requests_agent_service  ON api_requests(agent_id, service_name, created_at DESC)`,
+	}
+	for _, stmt := range indexes {
+		if _, err := tx.Exec(stmt); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // isDuplicateColumnError checks if the error is a duplicate column error (migrateV2)

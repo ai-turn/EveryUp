@@ -474,3 +474,38 @@ func TestApiRequestRepo_ListFilterExtended(t *testing.T) {
 		_ = items2
 	})
 }
+
+func TestApiRequestRepo_CreateAgentRequestWithoutLegacyService(t *testing.T) {
+	openTestDB(t)
+
+	repo := database.NewApiRequestRepository()
+	now := time.Now().Truncate(time.Second)
+	req := models.ApiRequest{
+		ServiceID:    "",
+		AgentID:      "agent-1",
+		ServiceName:  "demo",
+		RequestID:    "agent-req-1",
+		Method:       "GET",
+		Path:         "/api/users",
+		PathTemplate: "/api/users",
+		StatusCode:   200,
+		DurationMs:   12,
+		ClientIP:     "127.0.0.1",
+		CreatedAt:    now,
+	}
+
+	if err := repo.Create(&req); err != nil {
+		t.Fatalf("Create agent request without legacy service failed: %v", err)
+	}
+
+	got, err := repo.GetByID(req.ID)
+	if err != nil {
+		t.Fatalf("GetByID failed: %v", err)
+	}
+	if got == nil {
+		t.Fatal("GetByID returned nil")
+	}
+	if got.AgentID != req.AgentID || got.ServiceName != req.ServiceName || got.ServiceID != "" {
+		t.Fatalf("unexpected ownership fields: got serviceID=%q agentID=%q serviceName=%q", got.ServiceID, got.AgentID, got.ServiceName)
+	}
+}
