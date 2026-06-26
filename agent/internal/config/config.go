@@ -47,6 +47,9 @@ type Config struct {
 	WebSyncEnabled    bool
 	WebSyncInterval   time.Duration
 
+	TelemetryGatewayEnabled    bool
+	TelemetryGatewayListenAddr string
+
 	HeartbeatURL      string
 	HeartbeatToken    string
 	HeartbeatInterval time.Duration
@@ -85,6 +88,9 @@ func LoadFromEnv() (Config, error) {
 		WebAgentID:      strings.TrimSpace(os.Getenv("EVERYUP_WEB_AGENT_ID")),
 		WebSyncEnabled:  boolEnv("EVERYUP_WEB_SYNC_ENABLED", false),
 		WebSyncInterval: durationSeconds("EVERYUP_WEB_SYNC_INTERVAL_SECONDS", 30*time.Second),
+
+		TelemetryGatewayEnabled:    boolEnv("EVERYUP_TELEMETRY_GATEWAY_ENABLED", true),
+		TelemetryGatewayListenAddr: getEnv("EVERYUP_TELEMETRY_GATEWAY_LISTEN_ADDR", ":4318"),
 
 		HeartbeatURL:      strings.TrimSpace(os.Getenv("EVERYUP_HEARTBEAT_URL")),
 		HeartbeatToken:    strings.TrimSpace(os.Getenv("EVERYUP_HEARTBEAT_TOKEN")),
@@ -141,6 +147,9 @@ func LoadFromEnv() (Config, error) {
 	}
 	if cfg.WebSyncInterval <= 0 {
 		return Config{}, errors.New("EVERYUP_WEB_SYNC_INTERVAL_SECONDS must be greater than 0")
+	}
+	if cfg.TelemetryGatewayEnabled && strings.TrimSpace(cfg.TelemetryGatewayListenAddr) == "" {
+		return Config{}, errors.New("EVERYUP_TELEMETRY_GATEWAY_LISTEN_ADDR is required when telemetry gateway is enabled")
 	}
 	if cfg.HeartbeatURL != "" {
 		parsed, err := url.ParseRequestURI(cfg.HeartbeatURL)

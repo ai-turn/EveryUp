@@ -1,13 +1,11 @@
 # =============================================================================
-# EveryUp Agent — watches your Docker services and syncs their health, events,
-# and host metrics to EveryUp Web. Notifications (Telegram, etc.) are configured
-# in the Web UI → 알림 menu, not on the agent.
+# EveryUp Agent watches your Docker services and syncs their health, logs,
+# events, and host metrics to EveryUp Web. Notifications are configured in Web.
 #
 # Run without cloning the repo (only Docker required):
 #   mkdir everyup-agent && cd everyup-agent
 #   curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/agent/docker-compose.yml
-#   curl -o .env https://raw.githubusercontent.com/ai-turn/everyup/main/agent/.env.example
-#   # edit .env: set EVERYUP_WEB_BASE_URL and EVERYUP_AGENT_API_KEY (from Web UI)
+#   # edit this compose file: set EVERYUP_WEB_BASE_URL and EVERYUP_AGENT_API_KEY
 #   docker compose up -d
 #
 # Advanced templates (OTLP collector, conf.d): see compose.example.yml.
@@ -21,11 +19,18 @@ services:
     #   context: .
     #   dockerfile: Dockerfile
     container_name: everyup-agent
-    env_file:
-      - path: .env
-        required: false  # copy agent/.env.example to .env first
+    environment:
+      EVERYUP_WEB_SYNC_ENABLED: "true"
+      EVERYUP_WEB_BASE_URL: "http://your-everyup-web:3001"
+      EVERYUP_AGENT_API_KEY: "evup_svc_replace_me"
+      EVERYUP_TELEMETRY_GATEWAY_ENABLED: "true"
+    # The OTLP gateway is available to services in the same compose network as
+    # http://everyup-agent:4318. Publish this as a host port only when external
+    # apps need to send OTLP to the agent.
+    expose:
+      - "4318"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro  # Docker label auto-discovery
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # Docker auto-discovery/logs
       - /:/hostfs:ro                                   # host CPU/memory/disk metrics
       - everyup-agent-data:/data
     restart: unless-stopped

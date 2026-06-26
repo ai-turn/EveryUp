@@ -38,6 +38,12 @@ func TestLoadFromEnvParsesDefaults(t *testing.T) {
 	if cfg.DockerLogTailLines != 100 {
 		t.Fatalf("DockerLogTailLines = %d, want 100", cfg.DockerLogTailLines)
 	}
+	if !cfg.TelemetryGatewayEnabled {
+		t.Fatal("TelemetryGatewayEnabled = false, want true")
+	}
+	if cfg.TelemetryGatewayListenAddr != ":4318" {
+		t.Fatalf("TelemetryGatewayListenAddr = %q, want :4318", cfg.TelemetryGatewayListenAddr)
+	}
 	if !cfg.HostMetricsEnabled {
 		t.Fatal("HostMetricsEnabled = false, want true")
 	}

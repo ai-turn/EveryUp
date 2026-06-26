@@ -141,6 +141,23 @@ func (c *Client) SendServices(ctx context.Context, req ServiceSnapshotRequest) e
 	return c.post(ctx, fmt.Sprintf("/api/v1/agents/%s/services", url.PathEscape(req.AgentID)), req, nil)
 }
 
+func (c *Client) ForwardOTLPProtobuf(ctx context.Context, signal string, data []byte) ([]byte, error) {
+	path := ""
+	switch signal {
+	case "logs":
+		path = "/api/v1/otlp/v1/logs"
+	case "traces":
+		path = "/api/v1/otlp/v1/traces"
+	default:
+		return nil, fmt.Errorf("unsupported OTLP signal %q", signal)
+	}
+	return c.postProtobufResponse(ctx, path, data)
+}
+
+func (c *Client) SendOTLPProtobuf(ctx context.Context, signal string, data []byte) error {
+	_, err := c.ForwardOTLPProtobuf(ctx, signal, data)
+	return err
+}
 func (c *Client) SendOTLPLogs(ctx context.Context, batches []OTLPLogBatch) error {
 	if len(batches) == 0 {
 		return nil
@@ -207,33 +224,38 @@ func (c *Client) SendOTLPLogs(ctx context.Context, batches []OTLPLogBatch) error
 	if err != nil {
 		return fmt.Errorf("encode OTLP logs: %w", err)
 	}
-	return c.postProtobuf(ctx, "/api/v1/otlp/v1/logs", data)
+	return c.SendOTLPProtobuf(ctx, "logs", data)
 }
 
 func (c *Client) postProtobuf(ctx context.Context, path string, data []byte) error {
+	_, err := c.postProtobufResponse(ctx, path, data)
+	return err
+}
+
+func (c *Client) postProtobufResponse(ctx context.Context, path string, data []byte) ([]byte, error) {
 	if !c.Enabled() {
-		return fmt.Errorf("web client is not configured")
+		return nil, fmt.Errorf("web client is not configured")
 	}
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+path, bytes.NewReader(data))
 	if err != nil {
-		return fmt.Errorf("create web request: %w", err)
+		return nil, fmt.Errorf("create web request: %w", err)
 	}
 	httpReq.Header.Set("Content-Type", "application/x-protobuf")
 	httpReq.Header.Set("Authorization", "Bearer "+c.token)
 
 	resp, err := c.client.Do(httpReq)
 	if err != nil {
-		return fmt.Errorf("send web request: %w", err)
+		return nil, fmt.Errorf("send web request: %w", err)
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
-		return fmt.Errorf("read web response: %w", err)
+		return nil, fmt.Errorf("read web response: %w", err)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("web returned %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
+		return nil, fmt.Errorf("web returned %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
 	}
-	return nil
+	return body, nil
 }
 
 func stringValue(value string) *commonpb.AnyValue {

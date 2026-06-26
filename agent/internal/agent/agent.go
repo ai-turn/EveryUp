@@ -15,6 +15,7 @@ import (
 	"github.com/aiturn/everyup/agent/internal/hostmetrics"
 	"github.com/aiturn/everyup/agent/internal/otelconfig"
 	"github.com/aiturn/everyup/agent/internal/state"
+	"github.com/aiturn/everyup/agent/internal/telemetrygateway"
 	"github.com/aiturn/everyup/agent/internal/watchdog"
 	"github.com/aiturn/everyup/agent/internal/webclient"
 )
@@ -30,6 +31,7 @@ type Agent struct {
 	webAgentID  string
 	heartbeat   *watchdog.Heartbeat
 	hostMetrics *hostmetrics.Reader
+	gateway     *telemetrygateway.Server
 
 	mu        sync.RWMutex
 	states    map[string]*targetState
@@ -92,6 +94,10 @@ func New(cfg config.Config) (*Agent, error) {
 	if cfg.HostMetricsEnabled {
 		hostReader = hostmetrics.New(cfg.HostMetricsRoot, cfg.HostDiskPath)
 	}
+	var gateway *telemetrygateway.Server
+	if cfg.TelemetryGatewayEnabled && web != nil && web.Enabled() {
+		gateway = telemetrygateway.New(cfg.TelemetryGatewayListenAddr, web)
+	}
 
 	agent := &Agent{
 		cfg:         cfg,
@@ -104,6 +110,7 @@ func New(cfg config.Config) (*Agent, error) {
 		webAgentID:  cfg.WebAgentID,
 		heartbeat:   heartbeat,
 		hostMetrics: hostReader,
+		gateway:     gateway,
 		states:      make(map[string]*targetState),
 		webEvents:   make([]state.AuditEvent, 0),
 	}
@@ -120,6 +127,7 @@ func (a *Agent) Run(ctx context.Context) error {
 
 	a.auditEvent("agent_started", a.cfg.ServiceName, "", fmt.Sprintf("Agent %s is running.", a.cfg.AgentName), nil)
 	a.startWebSync(ctx)
+	a.startTelemetryGateway(ctx)
 	a.startHeartbeat(ctx)
 
 	a.runChecks(ctx)
@@ -167,6 +175,19 @@ func (a *Agent) startWebSync(ctx context.Context) {
 	log.Printf("EveryUp Web sync enabled")
 }
 
+func (a *Agent) startTelemetryGateway(ctx context.Context) {
+	if a.gateway == nil || !a.gateway.Enabled() {
+		log.Printf("Telemetry gateway disabled")
+		return
+	}
+	go func() {
+		if err := a.gateway.Run(ctx); err != nil {
+			log.Printf("telemetry gateway stopped with error: %v", err)
+			a.auditEvent("telemetry_gateway_failed", "", "", err.Error(), nil)
+		}
+	}()
+	log.Printf("Telemetry gateway enabled: listen=%s", a.cfg.TelemetryGatewayListenAddr)
+}
 func (a *Agent) startHeartbeat(ctx context.Context) {
 	if a.heartbeat == nil || !a.heartbeat.Enabled() {
 		log.Printf("Heartbeat watchdog disabled")

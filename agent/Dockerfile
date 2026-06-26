@@ -17,4 +17,6 @@ COPY --from=build /out/everyup-agent /usr/local/bin/everyup-agent
 
 USER everyup
 
+EXPOSE 4318
+
 ENTRYPOINT ["everyup-agent"]

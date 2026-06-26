@@ -1,14 +1,11 @@
 # =============================================================================
-# EveryUp Web — browser dashboard, alert config, history storage.
+# EveryUp Web: browser dashboard, alert config, and history storage.
 #
 # Run without cloning the repo (only Docker required):
 #   mkdir everyup && cd everyup
 #   curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/web/docker-compose.yml
 #   docker compose up -d
 # Then open http://localhost:3001 and create an admin account.
-#
-# Optional overrides: grab the env template and edit before `up`:
-#   curl -o .env https://raw.githubusercontent.com/ai-turn/everyup/main/web/.env.example
 # =============================================================================
 
 services:
@@ -21,12 +18,9 @@ services:
     #   dockerfile: web/Dockerfile
     container_name: everyup
     ports:
-      - "${EVERYUP_SERVER_PORT:-3001}:3001"
+      - "3001:3001"
     volumes:
       - everyup-data:/app/data
-    env_file:
-      - path: .env
-        required: false  # copy web/.env.example to .env to customize
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/api/v1/health"]

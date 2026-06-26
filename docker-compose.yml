@@ -7,12 +7,9 @@ services:
     #   dockerfile: web/Dockerfile
     container_name: everyup
     ports:
-      - "${EVERYUP_SERVER_PORT:-3001}:3001"
+      - "3001:3001"
     volumes:
       - everyup-data:/app/data
-    env_file:
-      - path: .env
-        required: false  # copy .env.example to .env to customize
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/api/v1/health"]
@@ -21,41 +18,6 @@ services:
       retries: 3
       start_period: 10s
 
-  everyup-agent:
-    # Optional: the Agent collects Docker service health + host metrics and syncs
-    # them to Web. Set EVERYUP_WEB_SYNC_ENABLED, EVERYUP_WEB_BASE_URL and
-    # EVERYUP_AGENT_API_KEY (from Web UI → Services → Add) in .env,
-    # then run: docker compose up -d everyup-agent
-    # Skip this service if you only need the Web dashboard.
-    # Notifications are configured in the Web UI → 알림 menu.
-    image: aiturn/everyup-agent:latest
-    # To build from source instead of using the pre-built image:
-    # build:
-    #   context: ./agent
-    #   dockerfile: agent/Dockerfile
-    container_name: everyup-agent
-    profiles:
-      - agent
-    depends_on:
-      everyup:
-        condition: service_healthy
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /:/hostfs:ro
-      - everyup-agent-data:/data
-    env_file:
-      - path: .env
-        required: false
-    environment:
-      # Pre-wired to the everyup web service on the same compose network.
-      # Web sync is OFF by default. To enable, set in .env:
-      #   EVERYUP_WEB_SYNC_ENABLED=true
-      #   EVERYUP_AGENT_API_KEY=evup_svc_...   # from Web UI → Services → Add
-      EVERYUP_WEB_BASE_URL: "http://everyup:3001"
-    restart: unless-stopped
-
 volumes:
   everyup-data:
-    driver: local
-  everyup-agent-data:
     driver: local

@@ -1,42 +1,41 @@
 # Docker Socket Proxy
 
-Mounting `/var/run/docker.sock` gives broad Docker control. For production, put
-a socket proxy in front of Docker and expose only the API surfaces EveryUp Agent
-needs.
-
-The exact environment flags depend on the proxy image. This example uses
-`tecnativa/docker-socket-proxy`.
+For stricter production deployments, put a Docker socket proxy between the Agent
+and the Docker Engine. The Agent only needs read access for container discovery,
+container logs, events, and stats.
 
 ```yaml
 services:
   docker-socket-proxy:
-    image: tecnativa/docker-socket-proxy:0.3.0
-    restart: unless-stopped
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: docker-socket-proxy
     environment:
-      CONTAINERS: 1
-      INFO: 1
-      POST: 0
+      CONTAINERS: "1"
+      EVENTS: "1"
+      INFO: "1"
+      VERSION: "1"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
 
   everyup-agent:
-    build: .
-    restart: unless-stopped
-    env_file:
-      - .env
+    image: aiturn/everyup-agent:latest
+    container_name: everyup-agent
     environment:
-      EVERYUP_DOCKER_SOCKET_PATH: tcp://docker-socket-proxy:2375
+      EVERYUP_WEB_SYNC_ENABLED: "true"
+      EVERYUP_WEB_BASE_URL: "http://your-everyup-web:3001"
+      EVERYUP_AGENT_API_KEY: "evup_svc_replace_me"
+      EVERYUP_DOCKER_SOCKET_PATH: "http://docker-socket-proxy:2375"
     depends_on:
       - docker-socket-proxy
+    volumes:
+      - /:/hostfs:ro
+      - everyup-agent-data:/data
+    restart: unless-stopped
+
+volumes:
+  everyup-agent-data:
 ```
 
-## Required APIs
-
-| Feature | Docker API |
-|---|---|
-| Discovery | `GET /containers/json` |
-| Log keyword detection | `GET /containers/{id}/logs` |
-| Container resource thresholds | `GET /containers/{id}/stats?stream=false` |
-
-The agent only reads from the Docker socket — a read-only proxy that exposes the
-container list, logs, and stats endpoints is sufficient.
+Use this pattern when you do not want the Agent container to mount the Docker
+socket directly.

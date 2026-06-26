@@ -1,195 +1,84 @@
 # Web Connected Mode
 
-EveryUp Agent collects service health and host metrics; enabling Web sync lets
-the Web dashboard display them in real time and send notifications based on its
-alert rules. Web sync is the agent's primary purpose — without it the agent only
-records checks to a local audit log.
+Web connected mode lets the Agent sync discovered services, events, host metrics,
+Docker logs, and OTLP telemetry to EveryUp Web.
 
-If the Web connection fails temporarily, local checks and audit logging continue
-and queued events are flushed once it recovers.
+## Compose Setup
 
-## Setup
+Set the Web connection values directly on the `everyup-agent` service in
+`docker-compose.yml`:
 
-### Step 1 — Create a service in the Web UI
+```yaml
+services:
+  everyup-agent:
+    image: aiturn/everyup-agent:latest
+    container_name: everyup-agent
+    environment:
+      EVERYUP_WEB_SYNC_ENABLED: "true"
+      EVERYUP_WEB_BASE_URL: "http://your-everyup-web:3001"
+      EVERYUP_AGENT_API_KEY: "evup_svc_replace_me"
+      EVERYUP_TELEMETRY_GATEWAY_ENABLED: "true"
+    expose:
+      - "4318"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/hostfs:ro
+      - everyup-agent-data:/data
+    restart: unless-stopped
 
-1. Open the EveryUp Web dashboard
-2. Click **추가하기** (Add) in the top-right of the Services page
-3. Enter a name for this agent (e.g. `prod-server`)
-4. Copy the generated API key — it looks like `evup_svc_a1b2c3...`
-
-> The key is shown only once. Save it now; there is no way to retrieve it later.
-
-### Step 2 — Configure the agent
-
-Add these three variables to your agent's `.env`:
-
-```bash
-EVERYUP_WEB_SYNC_ENABLED=true
-EVERYUP_WEB_BASE_URL=http://your-everyup-web:3001   # URL of your Web instance
-EVERYUP_AGENT_API_KEY=evup_svc_a1b2c3...            # key from Step 1
+volumes:
+  everyup-agent-data:
 ```
 
-### Step 3 — Restart the agent
+Create the key in Web from **Services -> Add**, replace
+`EVERYUP_AGENT_API_KEY`, then restart the Agent. It enrolls automatically and
+appears online within about 30 seconds.
 
-```bash
-docker compose restart everyup-agent
-```
-
-The agent enrolls automatically on startup. Within 30 seconds, the service
-appears as "online" in the Web dashboard.
-
-## Configuration reference
+## Required Values
 
 | Variable | Default | Description |
-|---|---|---|
+| --- | --- | --- |
 | `EVERYUP_WEB_SYNC_ENABLED` | `false` | Enable Web enrollment and sync |
-| `EVERYUP_WEB_BASE_URL` | — | URL of your EveryUp Web instance |
-| `EVERYUP_AGENT_API_KEY` | — | API key generated from the Web UI |
-| `EVERYUP_WEB_SYNC_INTERVAL_SECONDS` | `30` | How often to push service state and events |
+| `EVERYUP_WEB_BASE_URL` | | EveryUp Web base URL reachable from the Agent host |
+| `EVERYUP_AGENT_API_KEY` | | API key generated in Web from Services -> Add |
+| `EVERYUP_WEB_SYNC_INTERVAL_SECONDS` | `30` | Service/event/metric sync interval |
 
-## API contract
+`EVERYUP_WEB_ENROLLMENT_TOKEN` is the deprecated name for
+`EVERYUP_AGENT_API_KEY` and is still accepted as a fallback.
 
-Enrollment — called automatically on agent startup:
+## Logs And OTLP
 
-```http
-POST /api/v1/agents/enroll
-Authorization: Bearer <EVERYUP_AGENT_API_KEY>
-Content-Type: application/json
+Docker stdout/stderr logs are forwarded automatically for labeled containers
+when Docker log forwarding is enabled.
 
-{
-  "agentName": "everyup-agent",
-  "mode": "standalone",
-  "version": "dev"
-}
+Applications that already emit OTLP can send telemetry to the Agent gateway:
+
+```text
+Endpoint: http://everyup-agent:4318
+Protocol: http/protobuf
+Paths: /v1/logs and /v1/traces
 ```
 
-Response:
+The Agent forwards telemetry to Web using its own `EVERYUP_AGENT_API_KEY`, so
+applications do not need the EveryUp Web URL or key.
 
-```json
-{ "agentId": "agent_abc123" }
-```
+## API Contract
 
-The agent stores `agentId` in memory and uses it for all subsequent sync calls.
-The API key authenticates every request; the agent does not need to store it
-between restarts because it re-enrolls on each startup.
+The Agent syncs to these Web endpoints:
 
-Audit event sync:
+| Endpoint | Purpose |
+| --- | --- |
+| `POST /api/v1/agents/enroll` | Register or refresh an Agent |
+| `POST /api/v1/agents/:agentId/services` | Upsert discovered service health |
+| `POST /api/v1/agents/:agentId/events` | Flush local Agent events |
+| `POST /api/v1/agents/:agentId/metrics` | Send host metrics |
+| `POST /api/v1/otlp/v1/logs` | Forward OTLP logs |
+| `POST /api/v1/otlp/v1/traces` | Forward OTLP traces |
 
-```http
-POST /api/v1/agents/{agentId}/events
-Authorization: Bearer <token>
-Content-Type: application/json
-```
+Authentication uses `Authorization: Bearer <EVERYUP_AGENT_API_KEY>`.
 
-```json
-{
-  "agentId": "agent_123",
-  "events": [
-    {
-      "time": "2026-06-18T00:00:00Z",
-      "type": "agent_started",
-      "message": "Agent everyup-agent is running."
-    }
-  ]
-}
-```
+## Identity
 
-Host metrics sync — pushed periodically when `EVERYUP_HOST_METRICS_ENABLED` is on:
-
-```http
-POST /api/v1/agents/{agentId}/metrics
-Authorization: Bearer <token>
-Content-Type: application/json
-```
-
-```json
-{
-  "agentId": "agent_123",
-  "cpuUsage": 12.5,
-  "memTotal": 16.0,
-  "memUsed": 6.4,
-  "memUsage": 40.0,
-  "diskTotal": 512.0,
-  "diskUsed": 210.0,
-  "diskUsage": 41.0,
-  "recordedAt": "2026-06-18T00:00:00Z"
-}
-```
-
-These feed the per-agent infrastructure view in the dashboard.
-
-## Service mapping
-
-Service mapping is discovery-driven locally (Docker labels, plus the optional
-`EVERYUP_HEALTH_URL` target) and periodically synced to Web:
-
-```http
-POST /api/v1/agents/{agentId}/services
-Authorization: Bearer <token>
-Content-Type: application/json
-```
-
-```json
-{
-  "agentId": "agent_123",
-  "agentName": "everyup-agent",
-  "observedAt": "2026-06-18T00:00:00Z",
-  "services": [
-    {
-      "key": "container_abc",
-      "name": "api",
-      "checkType": "http",
-      "endpoint": "http://api:8080/health",
-      "healthy": true,
-      "seen": true,
-      "silenced": false,
-      "lastStatus": 200,
-      "lastLatency": "12ms",
-      "updatedAt": "2026-06-18T00:00:00Z"
-    }
-  ]
-}
-```
-
-Mapping rules:
-
-- `everyup.service.name` is the primary human-readable service name.
-- The local target key is a stable identity (`everyup.service.name` → compose
-  `project:service` → container name → container ID), so it survives container
-  recreation; the container ID is only the Docker API handle for logs/stats.
-- Web can map services to Agent targets by `name`, `key`, or future explicit
-  labels.
-
-## Logs & API requests (OTLP)
-
-Docker stdout/stderr logs for labeled containers are collected by the agent automatically and forwarded with the same project key. API-request trace data is produced by your application and sent over OTLP.
-
-Point your app's OTLP/HTTP exporter at the Web instance:
-
-~~~text
-<EVERYUP_WEB_BASE_URL>/api/v1/otlp/v1/logs     # SDK-emitted logs
-<EVERYUP_WEB_BASE_URL>/api/v1/otlp/v1/traces   # spans become API requests
-Authorization: Bearer <EVERYUP_AGENT_API_KEY>
-~~~
-
-For logs/requests to appear under a service on the dashboard, set the OTLP `service.name` resource attribute to **exactly** match that agent service's name (e.g. `OTEL_SERVICE_NAME=kdns-mini`). Docker logs use the discovered service name automatically. Telemetry whose `service.name` matches no agent service is still stored, but is not shown under a card until a service with that name exists. Data is tied to the project by `(agent_id, service.name)`.
-
-> Optionally, the agent can generate an OpenTelemetry Collector config that does
-> this for you — set `EVERYUP_OTEL_CONFIG_ENABLED=true` plus
-> `EVERYUP_WEB_OTLP_ENDPOINT` and run the generated collector.
-
-## Failure behavior
-
-The agent keeps a bounded in-memory event queue. Failed sync attempts are retried
-on the next interval. Local `audit.jsonl` remains the source of truth while Web
-is unavailable.
-
-## Web read APIs
-
-EveryUp Web exposes JWT-protected read APIs for the dashboard:
-
-```http
-GET /api/v1/agents
-GET /api/v1/agents/{agentId}/services
-GET /api/v1/agents/{agentId}/events?limit=100
-```
+Docker-discovered services use a stable identity based on labels and Compose
+metadata, not the container ID. Recreating a container keeps the same service card
+when the service name stays the same.
