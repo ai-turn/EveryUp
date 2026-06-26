@@ -35,6 +35,7 @@ type Config struct {
 	DockerSocketPath       string
 	DockerLogsEnabled      bool
 	DockerLogTailLines     int
+	ExcludeNames           []string
 
 	OTelConfigEnabled bool
 	OTelConfigPath    string
@@ -76,6 +77,7 @@ func LoadFromEnv() (Config, error) {
 		DockerSocketPath:       getEnv("EVERYUP_DOCKER_SOCKET_PATH", "/var/run/docker.sock"),
 		DockerLogsEnabled:      boolEnv("EVERYUP_DOCKER_LOGS_ENABLED", true),
 		DockerLogTailLines:     intEnv("EVERYUP_DOCKER_LOGS_TAIL_LINES", 100),
+		ExcludeNames:           splitCSV(os.Getenv("EVERYUP_EXCLUDE")),
 
 		OTelConfigEnabled: boolEnv("EVERYUP_OTEL_CONFIG_ENABLED", false),
 		OTelConfigPath:    getEnv("EVERYUP_OTEL_CONFIG_PATH", defaultOtelConfigPath),

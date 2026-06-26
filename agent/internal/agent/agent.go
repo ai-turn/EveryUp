@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -394,15 +396,36 @@ func (a *Agent) targets(ctx context.Context) []discovery.Target {
 	for _, target := range targets {
 		seen[targetKey(target)] = true
 	}
+	selfHost, _ := os.Hostname()
 	for _, target := range discovered {
 		key := targetKey(target)
 		if seen[key] {
+			continue
+		}
+		if excludedTarget(target, a.cfg.ExcludeNames, selfHost) {
 			continue
 		}
 		seen[key] = true
 		targets = append(targets, target)
 	}
 	return targets
+}
+
+// excludedTarget reports whether a discovered container should be skipped:
+// the agent's own container (in Docker, the hostname defaults to the short
+// container ID, so it prefixes the full ID) or any container whose service
+// name contains an EVERYUP_EXCLUDE pattern (case-insensitive).
+func excludedTarget(target discovery.Target, patterns []string, selfHost string) bool {
+	if len(selfHost) >= 12 && strings.HasPrefix(target.ID, selfHost) {
+		return true
+	}
+	name := strings.ToLower(target.ServiceName)
+	for _, p := range patterns {
+		if p = strings.ToLower(strings.TrimSpace(p)); p != "" && strings.Contains(name, p) {
+			return true
+		}
+	}
+	return false
 }
 
 // pruneStaleStates drops in-memory state for targets no longer discovered, so
@@ -1046,16 +1069,27 @@ func matchLogKeyword(lines []string, keywords []string) (string, string, bool) {
 	return "", "", false
 }
 
+// levelTokenRe matches a standalone log-level word. Word boundaries keep
+// substrings like "ERROR_MESSAGE" inside a SQL statement from being mistaken
+// for a real level (\bERROR\b does not match within ERROR_MESSAGE).
+var levelTokenRe = regexp.MustCompile(`(?i)\b(panic|fatal|exception|error|warning|warn|debug|trace|info)\b`)
+
 func inferLogSeverity(message string) (string, int) {
-	lowered := strings.ToLower(message)
-	switch {
-	case strings.Contains(lowered, "panic"), strings.Contains(lowered, "fatal"), strings.Contains(lowered, "error"), strings.Contains(lowered, "exception"):
+	// The level lives in the log prefix, not buried in the payload. Scan only
+	// the head so an "error" mentioned in a message body or a column name like
+	// ERROR_MESSAGE is ignored, and the actual leading level token wins.
+	head := message
+	if len(head) > 80 {
+		head = head[:80]
+	}
+	switch strings.ToLower(levelTokenRe.FindString(head)) {
+	case "panic", "fatal", "exception", "error":
 		return "ERROR", 17
-	case strings.Contains(lowered, "warn"):
+	case "warning", "warn":
 		return "WARN", 13
-	case strings.Contains(lowered, "debug"):
+	case "debug":
 		return "DEBUG", 5
-	case strings.Contains(lowered, "trace"):
+	case "trace":
 		return "TRACE", 1
 	default:
 		return "INFO", 9

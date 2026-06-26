@@ -10,6 +10,50 @@ import (
 	"github.com/aiturn/everyup/agent/internal/state"
 )
 
+func TestExcludedTarget(t *testing.T) {
+	const selfHost = "abc123def456" // 12-char short container id (docker hostname)
+	cases := []struct {
+		name     string
+		target   discovery.Target
+		patterns []string
+		want     bool
+	}{
+		{"self by hostname prefix", discovery.Target{ID: "abc123def456789ff", ServiceName: "everyup-agent"}, nil, true},
+		{"excluded by pattern substring", discovery.Target{ID: "ff00", ServiceName: "my-nginx-1"}, []string{"nginx"}, true},
+		{"excluded case-insensitive", discovery.Target{ID: "ff01", ServiceName: "Redis"}, []string{"redis"}, true},
+		{"kept normal service", discovery.Target{ID: "ff02", ServiceName: "my-app"}, []string{"nginx"}, false},
+		{"empty patterns keep", discovery.Target{ID: "ff03", ServiceName: "demo"}, nil, false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := excludedTarget(tc.target, tc.patterns, selfHost); got != tc.want {
+				t.Fatalf("excludedTarget(%+v) = %v, want %v", tc.target, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestInferLogSeverity(t *testing.T) {
+	cases := []struct {
+		name string
+		line string
+		want string
+	}{
+		{"debug line with ERROR_MESSAGE column", "2026-06-26 10:00:00.123 DEBUG 1 --- [exec-8] o.s.jdbc.core.JdbcTemplate : Executing SQL [UPDATE t SET ERROR_MESSAGE = ?]", "DEBUG"},
+		{"real error", "2026-06-26 10:00:00 ERROR 1 --- failed to connect", "ERROR"},
+		{"warn", "2026-06-26 WARN slow query detected", "WARN"},
+		{"plain text", "just a normal informational line", "INFO"},
+		{"error word buried in body stays info", "INFO 1 --- request completed with no error", "INFO"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got, _ := inferLogSeverity(tc.line); got != tc.want {
+				t.Fatalf("inferLogSeverity(%q) = %q, want %q", tc.line, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestMatchLogKeywordUsesNewestMatchingLine(t *testing.T) {
 	keyword, line, ok := matchLogKeyword([]string{
 		"2026-06-19T00:00:00Z ERROR old failure",

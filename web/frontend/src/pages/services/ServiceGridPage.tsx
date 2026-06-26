@@ -13,65 +13,60 @@ function agentOnline(agent: ConnectedAgent): boolean {
   return Date.now() - new Date(agent.lastSeenAt).getTime() < 2 * 60 * 1000;
 }
 
-interface AgentBannerProps {
-  agents: ConnectedAgent[];
-  onDelete: (id: string) => void;
+interface ProjectSectionProps {
+  agent?: ConnectedAgent;
+  agentName: string;
+  services: AgentServiceFlat[];
+  onDeleteService: (service: AgentServiceFlat) => void;
+  onDeleteAgent: (id: string) => void;
   onViewKey: (agent: ConnectedAgent) => void;
 }
 
-function AgentBanner({ agents, onDelete, onViewKey }: AgentBannerProps) {
-  const [expanded, setExpanded] = useState(false);
-  if (agents.length === 0) return null;
-  const onlineCount = agents.filter(agentOnline).length;
-  const allOnline = onlineCount === agents.length;
+// One project (= one agent) rendered as a section: a header with project-level
+// status and controls, then its discovered services as cards beneath.
+function ProjectSection({ agent, agentName, services, onDeleteService, onDeleteAgent, onViewKey }: ProjectSectionProps) {
+  const online = agent ? agentOnline(agent) : true;
+  const healthy = services.filter(s => s.healthy).length;
+  const allHealthy = healthy === services.length;
 
   return (
-    <div className="space-y-2">
-      <button
-        onClick={() => setExpanded(v => !v)}
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium w-fit transition-colors ${
-          allOnline
-            ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
-            : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800'
-        }`}
-      >
-        <span className={`h-1.5 w-1.5 rounded-full ${allOnline ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-        프로젝트 {onlineCount}/{agents.length} 온라인
-        <MaterialIcon name={expanded ? 'expand_less' : 'expand_more'} className="text-sm" />
-      </button>
-
-      {expanded && (
-        <div className="border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden divide-y divide-slate-100 dark:divide-ui-border-dark">
-          {agents.map(agent => (
-            <div key={agent.id} className="flex items-center justify-between px-4 py-2.5 bg-white dark:bg-bg-surface-dark">
-              <div className="flex items-center gap-2.5">
-                <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${agentOnline(agent) ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-                <span className="text-sm font-medium text-slate-800 dark:text-white">{agent.name}</span>
-                {agent.version && (
-                  <span className="text-xs text-slate-400 dark:text-text-dim-dark">v{agent.version}</span>
-                )}
-              </div>
-              <div className="flex items-center gap-0.5">
-                <button
-                  onClick={() => onViewKey(agent)}
-                  title="API 키 보기"
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
-                >
-                  <MaterialIcon name="key" className="text-base" />
-                </button>
-                <button
-                  onClick={() => onDelete(agent.id)}
-                  title="프로젝트 비활성화"
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                >
-                  <MaterialIcon name="delete_outline" className="text-base" />
-                </button>
-              </div>
-            </div>
-          ))}
+    <section className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className={`h-2 w-2 rounded-full shrink-0 ${online ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white truncate">{agentName}</h2>
+          {agent?.version && (
+            <span className="text-xs text-slate-400 dark:text-text-dim-dark shrink-0">v{agent.version}</span>
+          )}
+          <span className={`text-xs font-medium shrink-0 ${allHealthy ? 'text-slate-400 dark:text-text-dim-dark' : 'text-red-500'}`}>
+            {healthy}/{services.length} 정상
+          </span>
         </div>
-      )}
-    </div>
+        {agent && (
+          <div className="flex items-center gap-0.5 shrink-0">
+            <button
+              onClick={() => onViewKey(agent)}
+              title="API 키 보기"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
+            >
+              <MaterialIcon name="key" className="text-base" />
+            </button>
+            <button
+              onClick={() => onDeleteAgent(agent.id)}
+              title="프로젝트 비활성화"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              <MaterialIcon name="delete_outline" className="text-base" />
+            </button>
+          </div>
+        )}
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {services.map((svc) => (
+          <AgentServiceCard key={`${svc.agentId}/${svc.key}`} service={svc} onDelete={onDeleteService} />
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -178,6 +173,27 @@ export function ServiceGridPage() {
     ? pendingAgents.filter((a) => !search || a.name.toLowerCase().includes(search.toLowerCase()))
     : [];
 
+  // Group the visible services by project (agent) so each project renders as one
+  // section. Orphan services whose agent row is missing fall back to a synthetic group.
+  const byAgent = new Map<string, AgentServiceFlat[]>();
+  for (const s of filtered) {
+    const arr = byAgent.get(s.agentId);
+    if (arr) arr.push(s);
+    else byAgent.set(s.agentId, [s]);
+  }
+  const projectGroups = connectedAgents
+    .map((agent) => ({ agent, agentName: agent.name, services: byAgent.get(agent.id) ?? [] }))
+    .filter((g) => {
+      if (g.services.length > 0) byAgent.delete(g.agent.id);
+      return g.services.length > 0;
+    });
+  const orphanGroups = Array.from(byAgent.entries()).map(([agentId, services]) => ({
+    agent: undefined as ConnectedAgent | undefined,
+    agentName: services[0]?.agentName ?? agentId,
+    services,
+  }));
+  const groups = [...projectGroups, ...orphanGroups];
+
   const healthyCount = services.filter((s) => s.healthy).length;
   const unhealthyCount = services.filter((s) => !s.healthy).length;
 
@@ -197,20 +213,13 @@ export function ServiceGridPage() {
             {t('Agent가 감지한 모니터링 서비스')}
           </p>
         </div>
-        <div className="flex items-center gap-3 flex-wrap justify-end">
-          <AgentBanner
-            agents={connectedAgents}
-            onDelete={handleDelete}
-            onViewKey={(a) => setKeyModalAgent({ id: a.id, name: a.name })}
-          />
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors shrink-0"
-          >
-            <MaterialIcon name="add" className="text-base" />
-            프로젝트 추가
-          </button>
-        </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors shrink-0"
+        >
+          <MaterialIcon name="add" className="text-base" />
+          프로젝트 추가
+        </button>
       </div>
 
       {/* KPI cards */}
@@ -262,18 +271,30 @@ export function ServiceGridPage() {
           {t('검색 결과가 없습니다')}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {visiblePending.map((agent) => (
-            <PendingServiceCard
-              key={agent.id}
-              agent={agent}
-              onDelete={handleDelete}
-              onViewKey={() => setKeyModalAgent({ id: agent.id, name: agent.name })}
+        <div className="space-y-8">
+          {groups.map((g) => (
+            <ProjectSection
+              key={g.agent?.id ?? g.agentName}
+              agent={g.agent}
+              agentName={g.agentName}
+              services={g.services}
+              onDeleteService={handleDeleteService}
+              onDeleteAgent={handleDelete}
+              onViewKey={(a) => setKeyModalAgent({ id: a.id, name: a.name })}
             />
           ))}
-          {filtered.map((svc) => (
-            <AgentServiceCard key={`${svc.agentId}/${svc.key}`} service={svc} onDelete={handleDeleteService} />
-          ))}
+          {visiblePending.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {visiblePending.map((agent) => (
+                <PendingServiceCard
+                  key={agent.id}
+                  agent={agent}
+                  onDelete={handleDelete}
+                  onViewKey={() => setKeyModalAgent({ id: agent.id, name: agent.name })}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 

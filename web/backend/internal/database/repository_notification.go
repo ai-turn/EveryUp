@@ -147,13 +147,19 @@ func (r *NotificationRepository) GetHealth(days int) (map[string]*models.Notific
 		return h
 	}
 
+	// last_sent uses a bare-column subquery rather than MAX(sent_at): the
+	// modernc driver only maps a result to time.Time when it traces back to a
+	// column's declared DATETIME type. An aggregate strips that, returning a
+	// string that sql.NullTime cannot scan.
 	rows, err := DB.Query(`
-		SELECT channel_id,
+		SELECT nh.channel_id,
 		       SUM(CASE WHEN status = 'sent'   AND created_at >= ? THEN 1 ELSE 0 END) AS sent_count,
 		       SUM(CASE WHEN status = 'failed' AND created_at >= ? THEN 1 ELSE 0 END) AS failed_count,
-		       MAX(sent_at) AS last_sent
-		FROM notification_history
-		GROUP BY channel_id
+		       (SELECT s.sent_at FROM notification_history s
+		        WHERE s.channel_id = nh.channel_id AND s.sent_at IS NOT NULL
+		        ORDER BY s.sent_at DESC LIMIT 1) AS last_sent
+		FROM notification_history nh
+		GROUP BY nh.channel_id
 	`, cutoff, cutoff)
 	if err != nil {
 		return nil, err
