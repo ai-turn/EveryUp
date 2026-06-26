@@ -7,6 +7,7 @@ import { env } from './config/env';
 import { lazyWithRetry as lazy } from './utils/lazyWithRetry';
 
 const ServiceGridPage       = lazy(() => import('./pages/services/ServiceGridPage').then(m => ({ default: m.ServiceGridPage })));
+const ProjectDetailPage     = lazy(() => import('./pages/services/ProjectDetailPage').then(m => ({ default: m.ProjectDetailPage })));
 const HealthCheckDetailPage = lazy(() => import('./pages/healthcheck/HealthCheckDetailPage').then(m => ({ default: m.HealthCheckDetailPage })));
 const AlertsPage            = lazy(() => import('./pages/alerts/AlertsPage').then(m => ({ default: m.AlertsPage })));
 const SettingsPage          = lazy(() => import('./pages/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
@@ -51,6 +52,7 @@ function App() {
               <Route element={<MainLayout />}>
                 <Route index element={<ServiceGridPage />} />
                 <Route path="/services" element={<Navigate to="/" replace />} />
+                <Route path="/projects/:agentId" element={<ProjectDetailPage />} />
                 <Route path="/services/:agentId/:key" element={<HealthCheckDetailPage />} />
                 <Route path="/alerts" element={<AlertsPage />} />
                 <Route path="/alerts/channels/new" element={<ChannelFormPage />} />

@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslate } from '@tolgee/react';
 import { MaterialIcon } from '../../components/common';
 import { api, type AgentServiceFlat, type ConnectedAgent } from '../../services/api';
-import { AgentServiceCard } from '../../features/services/components/AgentServiceCard';
 import { PendingServiceCard } from '../../features/services/components/PendingServiceCard';
 import { AddServiceModal } from '../../features/services/components/AddServiceModal';
 import { ApiKeyModal } from '../../features/services/components/ApiKeyModal';
@@ -13,46 +13,52 @@ function agentOnline(agent: ConnectedAgent): boolean {
   return Date.now() - new Date(agent.lastSeenAt).getTime() < 2 * 60 * 1000;
 }
 
-interface ProjectSectionProps {
+interface ProjectCardProps {
+  agentId: string;
   agent?: ConnectedAgent;
   agentName: string;
   services: AgentServiceFlat[];
-  onDeleteService: (service: AgentServiceFlat) => void;
   onDeleteAgent: (id: string) => void;
   onViewKey: (agent: ConnectedAgent) => void;
 }
 
-// One project (= one agent) rendered as a section: a header with project-level
-// status and controls, then its discovered services as cards beneath.
-function ProjectSection({ agent, agentName, services, onDeleteService, onDeleteAgent, onViewKey }: ProjectSectionProps) {
+// One project (= one agent = one docker-compose host) rendered as a single card.
+// Clicking drills into the project detail page that lists its internal services.
+function ProjectCard({ agentId, agent, agentName, services, onDeleteAgent, onViewKey }: ProjectCardProps) {
+  const navigate = useNavigate();
   const online = agent ? agentOnline(agent) : true;
+  const total = services.length;
   const healthy = services.filter(s => s.healthy).length;
-  const allHealthy = healthy === services.length;
+  const down = services.filter(s => !s.healthy);
+  const allHealthy = down.length === 0;
 
   return (
-    <section className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
+    <div
+      onClick={() => navigate(`/projects/${agentId}`)}
+      className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-4 cursor-pointer hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 active:translate-y-0 flex flex-col gap-3"
+    >
+      {/* Header: status + project name + controls */}
+      <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
-          <span className={`h-2 w-2 rounded-full shrink-0 ${online ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-          <h2 className="text-base font-semibold text-slate-900 dark:text-white truncate">{agentName}</h2>
-          {agent?.version && (
-            <span className="text-xs text-slate-400 dark:text-text-dim-dark shrink-0">v{agent.version}</span>
-          )}
-          <span className={`text-xs font-medium shrink-0 ${allHealthy ? 'text-slate-400 dark:text-text-dim-dark' : 'text-red-500'}`}>
-            {healthy}/{services.length} 정상
-          </span>
+          <span className={`h-2.5 w-2.5 rounded-full shrink-0 mt-0.5 ${online ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+          <div className="min-w-0">
+            <h3 className="font-semibold text-base text-slate-900 dark:text-white truncate leading-tight">{agentName}</h3>
+            {agent?.version && (
+              <span className="text-xs text-slate-400 dark:text-text-dim-dark">v{agent.version}</span>
+            )}
+          </div>
         </div>
         {agent && (
           <div className="flex items-center gap-0.5 shrink-0">
             <button
-              onClick={() => onViewKey(agent)}
+              onClick={(e) => { e.stopPropagation(); onViewKey(agent); }}
               title="API 키 보기"
               className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
             >
               <MaterialIcon name="key" className="text-base" />
             </button>
             <button
-              onClick={() => onDeleteAgent(agent.id)}
+              onClick={(e) => { e.stopPropagation(); onDeleteAgent(agent.id); }}
               title="프로젝트 비활성화"
               className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
             >
@@ -61,12 +67,35 @@ function ProjectSection({ agent, agentName, services, onDeleteService, onDeleteA
           </div>
         )}
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {services.map((svc) => (
-          <AgentServiceCard key={`${svc.agentId}/${svc.key}`} service={svc} onDelete={onDeleteService} />
-        ))}
+
+      {/* Summary: service count + health */}
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm text-slate-500 dark:text-text-muted-dark">서비스 {total}개</span>
+        <span className={`flex items-center gap-1 text-sm font-semibold ${allHealthy ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
+          <MaterialIcon name={allHealthy ? 'check_circle' : 'cancel'} className="text-sm" />
+          {healthy}/{total} 정상
+        </span>
       </div>
-    </section>
+
+      {/* Failing services preview */}
+      {down.length > 0 && (
+        <p className="text-xs text-red-500 dark:text-red-400 truncate -mt-1">
+          장애: {down.map(s => s.name).join(', ')}
+        </p>
+      )}
+
+      {/* Divider */}
+      <div className="border-t border-slate-100 dark:border-ui-border-dark" />
+
+      {/* Footer: online state + drill-in hint */}
+      <div className="flex items-center justify-between gap-2 text-xs text-slate-400 dark:text-text-dim-dark">
+        <span>{online ? '온라인' : '오프라인'}</span>
+        <span className="flex items-center gap-0.5">
+          서비스 보기
+          <MaterialIcon name="chevron_right" className="text-sm" />
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -139,32 +168,41 @@ export function ServiceGridPage() {
     }
   };
 
-  const handleDeleteService = async (svc: AgentServiceFlat) => {
-    if (!confirm(`'${svc.name}' 서비스를 목록에서 삭제하시겠습니까?\n에이전트가 이 대상을 계속 수집 중이면 다음 동기화 때 다시 나타날 수 있습니다.`)) return;
-    try {
-      await api.deleteAgentService(svc.agentId, svc.key);
-      toast.success('서비스가 삭제됐습니다');
-      load();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
-  };
-
   const reportingAgentIds = new Set(services.map((s) => s.agentId));
   // Agents that exist but haven't reported any service yet — show them as
   // "pending" cards in the main grid so a fresh creation feels like it landed.
   const pendingAgents = agents.filter((a) => !reportingAgentIds.has(a.id));
   const connectedAgents = agents.filter((a) => reportingAgentIds.has(a.id));
 
-  const filtered = services.filter((s) => {
-    if (filter === 'healthy' && !s.healthy) return false;
-    if (filter === 'unhealthy' && s.healthy) return false;
+  // Group ALL services by project (agent) — one project = one card. Orphan
+  // services whose agent row is missing fall back to a synthetic group.
+  type ProjectGroup = { agentId: string; agent?: ConnectedAgent; agentName: string; services: AgentServiceFlat[] };
+  const byAgent = new Map<string, AgentServiceFlat[]>();
+  for (const s of services) {
+    const arr = byAgent.get(s.agentId);
+    if (arr) arr.push(s);
+    else byAgent.set(s.agentId, [s]);
+  }
+  const allGroups: ProjectGroup[] = [];
+  for (const agent of connectedAgents) {
+    allGroups.push({ agentId: agent.id, agent, agentName: agent.name, services: byAgent.get(agent.id) ?? [] });
+    byAgent.delete(agent.id);
+  }
+  for (const [agentId, svcs] of byAgent) {
+    allGroups.push({ agentId, agentName: svcs[0]?.agentName ?? agentId, services: svcs });
+  }
+
+  // Project-level filter + search: a project matches search if its name or any of
+  // its services match; health filter looks at whether any service is down.
+  const groups = allGroups.filter((g) => {
+    const anyDown = g.services.some((s) => !s.healthy);
+    if (filter === 'healthy' && anyDown) return false;
+    if (filter === 'unhealthy' && !anyDown) return false;
     if (!search) return true;
     const q = search.toLowerCase();
     return (
-      s.name.toLowerCase().includes(q) ||
-      s.agentName.toLowerCase().includes(q) ||
-      s.endpoint.toLowerCase().includes(q)
+      g.agentName.toLowerCase().includes(q) ||
+      g.services.some((s) => s.name.toLowerCase().includes(q) || s.endpoint.toLowerCase().includes(q))
     );
   });
 
@@ -173,34 +211,13 @@ export function ServiceGridPage() {
     ? pendingAgents.filter((a) => !search || a.name.toLowerCase().includes(search.toLowerCase()))
     : [];
 
-  // Group the visible services by project (agent) so each project renders as one
-  // section. Orphan services whose agent row is missing fall back to a synthetic group.
-  const byAgent = new Map<string, AgentServiceFlat[]>();
-  for (const s of filtered) {
-    const arr = byAgent.get(s.agentId);
-    if (arr) arr.push(s);
-    else byAgent.set(s.agentId, [s]);
-  }
-  const projectGroups = connectedAgents
-    .map((agent) => ({ agent, agentName: agent.name, services: byAgent.get(agent.id) ?? [] }))
-    .filter((g) => {
-      if (g.services.length > 0) byAgent.delete(g.agent.id);
-      return g.services.length > 0;
-    });
-  const orphanGroups = Array.from(byAgent.entries()).map(([agentId, services]) => ({
-    agent: undefined as ConnectedAgent | undefined,
-    agentName: services[0]?.agentName ?? agentId,
-    services,
-  }));
-  const groups = [...projectGroups, ...orphanGroups];
-
-  const healthyCount = services.filter((s) => s.healthy).length;
-  const unhealthyCount = services.filter((s) => !s.healthy).length;
+  const healthyProjects = allGroups.filter((g) => g.services.every((s) => s.healthy)).length;
+  const unhealthyProjects = allGroups.filter((g) => g.services.some((s) => !s.healthy)).length;
 
   const kpis = [
-    { label: t('전체'), value: services.length, color: 'text-slate-900 dark:text-white', filterVal: 'all' as const },
-    { label: t('정상'), value: healthyCount, color: 'text-emerald-600 dark:text-emerald-400', filterVal: 'healthy' as const },
-    { label: t('장애'), value: unhealthyCount, color: unhealthyCount > 0 ? 'text-red-500' : 'text-slate-400 dark:text-text-dim-dark', filterVal: 'unhealthy' as const },
+    { label: t('프로젝트'), value: allGroups.length, color: 'text-slate-900 dark:text-white', filterVal: 'all' as const },
+    { label: t('정상'), value: healthyProjects, color: 'text-emerald-600 dark:text-emerald-400', filterVal: 'healthy' as const },
+    { label: t('장애'), value: unhealthyProjects, color: unhealthyProjects > 0 ? 'text-red-500' : 'text-slate-400 dark:text-text-dim-dark', filterVal: 'unhealthy' as const },
   ];
 
   return (
@@ -266,35 +283,31 @@ export function ServiceGridPage() {
         </div>
       ) : services.length === 0 && agents.length === 0 ? (
         <EmptyState onAdd={() => setShowAddModal(true)} />
-      ) : filtered.length === 0 && visiblePending.length === 0 ? (
+      ) : groups.length === 0 && visiblePending.length === 0 ? (
         <div className="py-16 text-center text-slate-400 dark:text-text-muted-dark text-sm">
           {t('검색 결과가 없습니다')}
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {groups.map((g) => (
-            <ProjectSection
-              key={g.agent?.id ?? g.agentName}
+            <ProjectCard
+              key={g.agentId}
+              agentId={g.agentId}
               agent={g.agent}
               agentName={g.agentName}
               services={g.services}
-              onDeleteService={handleDeleteService}
               onDeleteAgent={handleDelete}
               onViewKey={(a) => setKeyModalAgent({ id: a.id, name: a.name })}
             />
           ))}
-          {visiblePending.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {visiblePending.map((agent) => (
-                <PendingServiceCard
-                  key={agent.id}
-                  agent={agent}
-                  onDelete={handleDelete}
-                  onViewKey={() => setKeyModalAgent({ id: agent.id, name: agent.name })}
-                />
-              ))}
-            </div>
-          )}
+          {visiblePending.map((agent) => (
+            <PendingServiceCard
+              key={agent.id}
+              agent={agent}
+              onDelete={handleDelete}
+              onViewKey={() => setKeyModalAgent({ id: agent.id, name: agent.name })}
+            />
+          ))}
         </div>
       )}
 
