@@ -9,6 +9,7 @@
 </p>
 
 <p align="center">
+  <a href="README.ko.md">한국어</a> -
   <a href="https://ai-turn.github.io/everyup/">Live Demo</a> -
   <a href="#quick-start">Quick Start</a> -
   <a href="#compose-files">Compose Files</a> -
