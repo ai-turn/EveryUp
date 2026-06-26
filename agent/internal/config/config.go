@@ -33,6 +33,8 @@ type Config struct {
 
 	DockerDiscoveryEnabled bool
 	DockerSocketPath       string
+	DockerLogsEnabled      bool
+	DockerLogTailLines     int
 
 	OTelConfigEnabled bool
 	OTelConfigPath    string
@@ -69,6 +71,8 @@ func LoadFromEnv() (Config, error) {
 
 		DockerDiscoveryEnabled: boolEnv("EVERYUP_DOCKER_DISCOVERY_ENABLED", true),
 		DockerSocketPath:       getEnv("EVERYUP_DOCKER_SOCKET_PATH", "/var/run/docker.sock"),
+		DockerLogsEnabled:      boolEnv("EVERYUP_DOCKER_LOGS_ENABLED", true),
+		DockerLogTailLines:     intEnv("EVERYUP_DOCKER_LOGS_TAIL_LINES", 100),
 
 		OTelConfigEnabled: boolEnv("EVERYUP_OTEL_CONFIG_ENABLED", false),
 		OTelConfigPath:    getEnv("EVERYUP_OTEL_CONFIG_PATH", defaultOtelConfigPath),
@@ -108,6 +112,12 @@ func LoadFromEnv() (Config, error) {
 	}
 	if cfg.AlertCooldown <= 0 {
 		return Config{}, errors.New("EVERYUP_ALERT_COOLDOWN_SECONDS must be greater than 0")
+	}
+	if cfg.DockerLogTailLines <= 0 {
+		return Config{}, errors.New("EVERYUP_DOCKER_LOGS_TAIL_LINES must be greater than 0")
+	}
+	if cfg.DockerLogTailLines > 1000 {
+		cfg.DockerLogTailLines = 1000
 	}
 	if cfg.WebOTLPEndpoint != "" {
 		parsed, err := url.ParseRequestURI(cfg.WebOTLPEndpoint)
@@ -180,6 +190,18 @@ func durationSeconds(key string, fallback time.Duration) time.Duration {
 		return fallback
 	}
 	return time.Duration(seconds) * time.Second
+}
+
+func intEnv(key string, fallback int) int {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.Atoi(value)
+	if err != nil {
+		return fallback
+	}
+	return parsed
 }
 
 func splitCSV(value string) []string {

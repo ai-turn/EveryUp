@@ -18,6 +18,7 @@ type TargetState struct {
 	LastLogAlertAt      time.Time `json:"lastLogAlertAt,omitempty"`
 	LastResourceAlertAt time.Time `json:"lastResourceAlertAt,omitempty"`
 	LastHostAlertAt     time.Time `json:"lastHostAlertAt,omitempty"`
+	LastDockerLogAt     time.Time `json:"lastDockerLogAt,omitempty"`
 	WasHealthy          bool      `json:"wasHealthy"`
 	SeenResult          bool      `json:"seenResult"`
 	UpdatedAt           time.Time `json:"updatedAt"`

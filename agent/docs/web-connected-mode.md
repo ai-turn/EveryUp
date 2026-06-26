@@ -162,24 +162,17 @@ Mapping rules:
 
 ## Logs & API requests (OTLP)
 
-Logs and API-request (trace) data are **not** collected by the agent — your
-application sends them over OTLP. They authenticate with the **same project key**
-(`EVERYUP_AGENT_API_KEY`, `evup_svc_…`); there is no separate "log key".
+Docker stdout/stderr logs for labeled containers are collected by the agent automatically and forwarded with the same project key. API-request trace data is produced by your application and sent over OTLP.
 
-Point your app's OTLP/HTTP exporter (or an OpenTelemetry Collector) at the Web
-instance:
+Point your app's OTLP/HTTP exporter at the Web instance:
 
-```
-<EVERYUP_WEB_BASE_URL>/api/v1/otlp/v1/logs     # logs
-<EVERYUP_WEB_BASE_URL>/api/v1/otlp/v1/traces   # spans → API requests
+~~~text
+<EVERYUP_WEB_BASE_URL>/api/v1/otlp/v1/logs     # SDK-emitted logs
+<EVERYUP_WEB_BASE_URL>/api/v1/otlp/v1/traces   # spans become API requests
 Authorization: Bearer <EVERYUP_AGENT_API_KEY>
-```
+~~~
 
-For logs/requests to appear under a service on the dashboard, set the OTLP
-`service.name` resource attribute to **exactly** match that agent service's name
-(e.g. `OTEL_SERVICE_NAME=kdns-mini`). Telemetry whose `service.name` matches no
-agent service is still stored, but is not shown under a card until a service with
-that name exists. Data is tied to the project by `(agent_id, service.name)`.
+For logs/requests to appear under a service on the dashboard, set the OTLP `service.name` resource attribute to **exactly** match that agent service's name (e.g. `OTEL_SERVICE_NAME=kdns-mini`). Docker logs use the discovered service name automatically. Telemetry whose `service.name` matches no agent service is still stored, but is not shown under a card until a service with that name exists. Data is tied to the project by `(agent_id, service.name)`.
 
 > Optionally, the agent can generate an OpenTelemetry Collector config that does
 > this for you — set `EVERYUP_OTEL_CONFIG_ENABLED=true` plus

@@ -180,3 +180,15 @@ func TestNewDockerClientAcceptsTCPProxyPath(t *testing.T) {
 		t.Fatalf("socketPath = %q", client.socketPath)
 	}
 }
+func TestParseDockerLogLinesWithTimestamp(t *testing.T) {
+	lines := parseDockerLogLines([]byte("2026-06-26T01:02:03.000000004Z hello world\nplain line\n"))
+	if len(lines) != 2 {
+		t.Fatalf("lines = %#v", lines)
+	}
+	if lines[0].Time.IsZero() || lines[0].Message != "hello world" {
+		t.Fatalf("first line = %#v", lines[0])
+	}
+	if !lines[1].Time.IsZero() || lines[1].Message != "plain line" {
+		t.Fatalf("second line = %#v", lines[1])
+	}
+}

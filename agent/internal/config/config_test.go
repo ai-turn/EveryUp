@@ -32,6 +32,12 @@ func TestLoadFromEnvParsesDefaults(t *testing.T) {
 	if !cfg.DockerDiscoveryEnabled {
 		t.Fatal("DockerDiscoveryEnabled = false, want true")
 	}
+	if !cfg.DockerLogsEnabled {
+		t.Fatal("DockerLogsEnabled = false, want true")
+	}
+	if cfg.DockerLogTailLines != 100 {
+		t.Fatalf("DockerLogTailLines = %d, want 100", cfg.DockerLogTailLines)
+	}
 	if !cfg.HostMetricsEnabled {
 		t.Fatal("HostMetricsEnabled = false, want true")
 	}
@@ -89,5 +95,17 @@ func TestLoadFromEnvValidatesHeartbeatConfig(t *testing.T) {
 	_, err := LoadFromEnv()
 	if err == nil {
 		t.Fatal("expected invalid heartbeat URL to fail")
+	}
+}
+
+func TestLoadFromEnvClampsDockerLogTailLines(t *testing.T) {
+	t.Setenv("EVERYUP_DOCKER_LOGS_TAIL_LINES", "5000")
+
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv returned error: %v", err)
+	}
+	if cfg.DockerLogTailLines != 1000 {
+		t.Fatalf("DockerLogTailLines = %d, want 1000", cfg.DockerLogTailLines)
 	}
 }

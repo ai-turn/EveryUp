@@ -30,12 +30,12 @@ const (
 )
 
 type Target struct {
-	ID          string // Docker container ID — the API handle for logs/stats; changes on recreation
+	ID          string // Docker container ID; the API handle for logs/stats; changes on recreation
 	Key         string // stable service identity, survives container recreation (see stableServiceKey)
 	ServiceName string
 	HealthType  string // "http" | "tcp" | "docker" (container-state liveness)
 	HealthURL   string
-	State       string // Docker container state ("running", "exited", …) — docker liveness only
+	State       string // Docker container state ("running", "exited", etc.); docker liveness only
 	StatusText  string // Docker status line ("Up 2 hours", "Exited (137) 2m ago")
 	Labels      map[string]string
 }
@@ -45,6 +45,12 @@ type ContainerStats struct {
 	MemoryUsageBytes uint64
 	MemoryLimitBytes uint64
 	MemoryPercent    float64
+}
+
+type DockerLogLine struct {
+	Time    time.Time
+	Message string
+	Raw     string
 }
 
 func (c *DockerClient) TailLogs(ctx context.Context, containerID string, lines int) ([]string, error) {
@@ -81,6 +87,50 @@ func (c *DockerClient) TailLogs(ctx context.Context, containerID string, lines i
 	return splitDockerLogLines(data), nil
 }
 
+func (c *DockerClient) LogsSince(ctx context.Context, containerID string, since time.Time, tail int) ([]DockerLogLine, error) {
+	containerID = strings.TrimSpace(containerID)
+	if containerID == "" {
+		return nil, fmt.Errorf("container ID is required")
+	}
+	if tail <= 0 {
+		tail = 100
+	}
+	if tail > 1000 {
+		tail = 1000
+	}
+
+	values := url.Values{}
+	values.Set("stdout", "1")
+	values.Set("stderr", "1")
+	values.Set("timestamps", "1")
+	values.Set("tail", strconv.Itoa(tail))
+	if !since.IsZero() {
+		// Docker's since filter is second-granular in common deployments. Query a
+		// one-second overlap and let the caller drop records already persisted.
+		values.Set("since", strconv.FormatInt(since.Add(-time.Second).Unix(), 10))
+	}
+
+	endpoint := fmt.Sprintf("http://docker/containers/%s/logs?%s", url.PathEscape(containerID), values.Encode())
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create docker logs request: %w", err)
+	}
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("query docker logs: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
+		return nil, fmt.Errorf("docker logs returned %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
+	}
+
+	data, err := io.ReadAll(io.LimitReader(resp.Body, 4<<20))
+	if err != nil {
+		return nil, fmt.Errorf("read docker logs: %w", err)
+	}
+	return parseDockerLogLines(data), nil
+}
 func (c *DockerClient) ContainerStats(ctx context.Context, containerID string) (ContainerStats, error) {
 	containerID = strings.TrimSpace(containerID)
 	if containerID == "" {
@@ -116,7 +166,7 @@ type dockerContainer struct {
 	ID     string            `json:"Id"`
 	Names  []string          `json:"Names"`
 	Labels map[string]string `json:"Labels"`
-	State  string            `json:"State"`  // "running", "exited", "dead", "created", …
+	State  string            `json:"State"`  // "running", "exited", "dead", "created", etc.
 	Status string            `json:"Status"` // human-readable, e.g. "Up 2 hours", "Exited (0) 3 minutes ago"
 }
 
@@ -173,7 +223,7 @@ func NewDockerClient(socketPath string, timeout time.Duration) *DockerClient {
 }
 
 func (c *DockerClient) ListTargets(ctx context.Context) ([]Target, error) {
-	// all=true so stopped/exited containers still appear — a docker-liveness
+	// all=true so stopped/exited containers still appear; a docker-liveness
 	// target needs to report "down" rather than silently vanishing.
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://docker/containers/json?all=true", nil)
 	if err != nil {
@@ -226,7 +276,7 @@ func TargetFromLabels(containerID, fallbackName string, labels map[string]string
 	key := stableServiceKey(containerID, fallbackName, labels)
 
 	// An explicit HTTP/TCP endpoint enables active probing. Without a usable
-	// endpoint we fall back to Docker container liveness (running vs not) —
+	// endpoint we fall back to Docker container liveness (running vs not);
 	// no health endpoint to expose, just everyup.enabled=true.
 	switch strings.ToLower(strings.TrimSpace(labels[LabelHealthType])) {
 	case "tcp":
@@ -257,10 +307,10 @@ func TargetFromLabels(containerID, fallbackName string, labels map[string]string
 }
 
 // stableServiceKey returns a service identity that survives container
-// recreation — `docker compose up` hands out a fresh container ID each time, so
+// recreation; `docker compose up` hands out a fresh container ID each time, so
 // keying on the ID orphans the card and splits its history on every redeploy.
-// Precedence: explicit everyup.service.name → compose project:service →
-// container name (compose keeps this stable) → container ID (last resort).
+// Precedence: explicit everyup.service.name, compose project:service,
+// container name (compose keeps this stable), then container ID (last resort).
 // ':' is used as the compose separator because it is path-segment-safe (like the
 // existing env: keys); '/' would break the :key route param.
 func stableServiceKey(containerID, fallbackName string, labels map[string]string) string {
@@ -388,6 +438,27 @@ func splitDockerLogLines(data []byte) []string {
 	return lines
 }
 
+func parseDockerLogLines(data []byte) []DockerLogLine {
+	lines := splitDockerLogLines(data)
+	parsed := make([]DockerLogLine, 0, len(lines))
+	for _, line := range lines {
+		entry := DockerLogLine{Raw: line, Message: line}
+		stamp, rest, ok := strings.Cut(line, " ")
+		if ok {
+			if ts, err := time.Parse(time.RFC3339Nano, stamp); err == nil {
+				entry.Time = ts
+				entry.Message = strings.TrimSpace(rest)
+			}
+		}
+		if entry.Message == "" {
+			entry.Message = entry.Raw
+		}
+		if entry.Message != "" {
+			parsed = append(parsed, entry)
+		}
+	}
+	return parsed
+}
 func stripDockerStreamHeaders(data []byte) []byte {
 	var output bytes.Buffer
 	for len(data) >= 8 {

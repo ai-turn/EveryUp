@@ -1,7 +1,7 @@
 # EveryUp Agent
 
 EveryUp Agent is the standalone sidecar that watches your Docker services and
-host, then syncs their health, events, and metrics to **EveryUp Web**. The agent
+host, then syncs their health, Docker stdout/stderr logs, events, and metrics to **EveryUp Web**. The agent
 is a pure collector — all configuration that isn't about *collecting* (alert
 rules, notification channels like Telegram, etc.) lives in the Web UI.
 
@@ -90,6 +90,7 @@ It supports:
 - Environment-based configuration
 - HTTP and TCP health checks
 - Docker label discovery for HTTP/TCP health targets
+- Automatic Docker stdout/stderr log forwarding to EveryUp Web
 - Container log-keyword and resource-threshold detection
 - Host CPU, memory, and disk threshold detection
 - Cooldown and recovery state tracking
@@ -130,6 +131,8 @@ go run ./cmd/everyup-agent
 | `EVERYUP_ALERT_COOLDOWN_SECONDS` | no | `300` | Re-record cooldown for repeated failures |
 | `EVERYUP_DOCKER_DISCOVERY_ENABLED` | no | `true` | Discover Docker containers with EveryUp labels |
 | `EVERYUP_DOCKER_SOCKET_PATH` | no | `/var/run/docker.sock` | Docker Engine socket path |
+| `EVERYUP_DOCKER_LOGS_ENABLED` | no | `true` | Forward labeled containers' stdout/stderr logs to EveryUp Web through OTLP |
+| `EVERYUP_DOCKER_LOGS_TAIL_LINES` | no | `100` | Max Docker log lines read per service on each check tick; capped at 1000 |
 | `EVERYUP_OTEL_CONFIG_ENABLED` | no | `false` | Generate Collector config on startup (enable with otel-collector sidecar) |
 | `EVERYUP_OTEL_CONFIG_PATH` | no | `/etc/everyup/generated/otel-config.yaml` | Generated Collector config path |
 | `EVERYUP_OTEL_CONF_DIR` | no | `/etc/everyup/conf.d` | Reserved override directory |
@@ -167,13 +170,11 @@ against the `agents` table.
 > `EVERYUP_WEB_ENROLLMENT_TOKEN` is the deprecated name for `EVERYUP_AGENT_API_KEY`
 > and is still accepted as a fallback.
 
-### OTLP logs & traces (same key)
+### Logs and OTLP traces (same key)
 
-OTLP log/trace ingest uses the **same** `EVERYUP_AGENT_API_KEY` — there is no
-separate key. Point your app's OTLP exporter (or the generated collector, below)
-at `<EVERYUP_WEB_BASE_URL>/api/v1/otlp` with `Authorization: Bearer <EVERYUP_AGENT_API_KEY>`,
-and set the OTLP `service.name` to match an agent service's name so its
-logs/requests line up under that card.
+Docker stdout/stderr logs are forwarded by the agent automatically for labeled containers when `EVERYUP_DOCKER_LOGS_ENABLED=true`.
+
+For application traces and SDK-emitted logs, OTLP ingest uses the **same** `EVERYUP_AGENT_API_KEY`; there is no separate key. Point your app's OTLP exporter at `<EVERYUP_WEB_BASE_URL>/api/v1/otlp` with `Authorization: Bearer <EVERYUP_AGENT_API_KEY>`, and set the OTLP `service.name` to match an agent service's name so logs/requests line up under that card.
 
 ## Docker discovery
 

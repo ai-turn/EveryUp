@@ -2,12 +2,15 @@ package webclient
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/aiturn/everyup/agent/internal/state"
+	collectorlogspb "go.opentelemetry.io/proto/otlp/collector/logs/v1"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestClientEnrollAndSendEvents(t *testing.T) {
@@ -77,5 +80,60 @@ func TestClientRequiresConfig(t *testing.T) {
 	client := New("", "", time.Second, nil)
 	if client.Enabled() {
 		t.Fatal("client should be disabled")
+	}
+}
+func TestClientSendOTLPLogs(t *testing.T) {
+	var sawOTLP bool
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v1/otlp/v1/logs" {
+			t.Fatalf("unexpected path: %s", r.URL.Path)
+		}
+		if r.Header.Get("Authorization") != "Bearer token" {
+			t.Fatalf("Authorization = %q", r.Header.Get("Authorization"))
+		}
+		if r.Header.Get("Content-Type") != "application/x-protobuf" {
+			t.Fatalf("Content-Type = %q", r.Header.Get("Content-Type"))
+		}
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			t.Fatalf("read body: %v", err)
+		}
+		var req collectorlogspb.ExportLogsServiceRequest
+		if err := proto.Unmarshal(body, &req); err != nil {
+			t.Fatalf("unmarshal OTLP logs: %v", err)
+		}
+		if len(req.ResourceLogs) != 1 || len(req.ResourceLogs[0].ScopeLogs) != 1 {
+			t.Fatalf("unexpected resource logs: %+v", req.ResourceLogs)
+		}
+		resource := req.ResourceLogs[0].Resource.GetAttributes()
+		if len(resource) == 0 || resource[0].GetKey() != "service.name" || resource[0].GetValue().GetStringValue() != "api" {
+			t.Fatalf("unexpected resource attrs: %+v", resource)
+		}
+		records := req.ResourceLogs[0].ScopeLogs[0].LogRecords
+		if len(records) != 1 || records[0].GetBody().GetStringValue() != "hello from docker" || records[0].GetSeverityNumber() != 9 {
+			t.Fatalf("unexpected log records: %+v", records)
+		}
+		sawOTLP = true
+		w.Header().Set("Content-Type", "application/x-protobuf")
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	client := New(server.URL, "token", time.Second, server.Client())
+	err := client.SendOTLPLogs(t.Context(), []OTLPLogBatch{{
+		ServiceName: "api",
+		ContainerID: "container-1",
+		Entries: []OTLPLogEntry{{
+			Timestamp:      time.Date(2026, 6, 26, 1, 2, 3, 0, time.UTC),
+			Body:           "hello from docker",
+			SeverityText:   "INFO",
+			SeverityNumber: 9,
+		}},
+	}})
+	if err != nil {
+		t.Fatalf("SendOTLPLogs returned error: %v", err)
+	}
+	if !sawOTLP {
+		t.Fatal("server did not receive OTLP logs")
 	}
 }

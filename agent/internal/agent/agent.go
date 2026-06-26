@@ -20,16 +20,16 @@ import (
 )
 
 type Agent struct {
-	cfg            config.Config
-	httpCheck      *checks.HTTPChecker
-	tcpCheck       *checks.TCPChecker
-	docker         *discovery.DockerClient
-	store          *state.Store
-	audit          *state.AuditLogger
-	web            *webclient.Client
-	webAgentID     string
-	heartbeat      *watchdog.Heartbeat
-	hostMetrics    *hostmetrics.Reader
+	cfg         config.Config
+	httpCheck   *checks.HTTPChecker
+	tcpCheck    *checks.TCPChecker
+	docker      *discovery.DockerClient
+	store       *state.Store
+	audit       *state.AuditLogger
+	web         *webclient.Client
+	webAgentID  string
+	heartbeat   *watchdog.Heartbeat
+	hostMetrics *hostmetrics.Reader
 
 	mu        sync.RWMutex
 	states    map[string]*targetState
@@ -41,6 +41,7 @@ type targetState struct {
 	lastLogAlertAt      time.Time
 	lastResourceAlertAt time.Time
 	lastHostAlertAt     time.Time
+	lastDockerLogAt     time.Time
 	wasHealthy          bool
 	seenResult          bool
 	updatedAt           time.Time
@@ -93,18 +94,18 @@ func New(cfg config.Config) (*Agent, error) {
 	}
 
 	agent := &Agent{
-		cfg:            cfg,
-		httpCheck:      checks.NewHTTPChecker(cfg.HTTPTimeout),
-		tcpCheck:       checks.NewTCPChecker(cfg.HTTPTimeout),
-		docker:         docker,
-		store:          state.NewStore(filepath.Join(cfg.DataDir, "agent-state.json")),
-		audit:          state.NewAuditLogger(filepath.Join(cfg.DataDir, "audit.jsonl")),
-		web:            web,
-		webAgentID:     cfg.WebAgentID,
-		heartbeat:      heartbeat,
-		hostMetrics:    hostReader,
-		states:         make(map[string]*targetState),
-		webEvents:      make([]state.AuditEvent, 0),
+		cfg:         cfg,
+		httpCheck:   checks.NewHTTPChecker(cfg.HTTPTimeout),
+		tcpCheck:    checks.NewTCPChecker(cfg.HTTPTimeout),
+		docker:      docker,
+		store:       state.NewStore(filepath.Join(cfg.DataDir, "agent-state.json")),
+		audit:       state.NewAuditLogger(filepath.Join(cfg.DataDir, "audit.jsonl")),
+		web:         web,
+		webAgentID:  cfg.WebAgentID,
+		heartbeat:   heartbeat,
+		hostMetrics: hostReader,
+		states:      make(map[string]*targetState),
+		webEvents:   make([]state.AuditEvent, 0),
 	}
 
 	return agent, nil
@@ -301,11 +302,11 @@ func (a *Agent) writeOTelConfig() {
 	}
 
 	err := otelconfig.WriteFile(otelconfig.Options{
-		ServiceName:         a.cfg.ServiceName,
-		OutputPath:          a.cfg.OTelConfigPath,
-		ConfDir:             a.cfg.OTelConfDir,
-		FileLogInclude:      a.cfg.OTelFileLogPaths,
-		WebOTLPEndpoint:     a.cfg.WebOTLPEndpoint,
+		ServiceName:     a.cfg.ServiceName,
+		OutputPath:      a.cfg.OTelConfigPath,
+		ConfDir:         a.cfg.OTelConfDir,
+		FileLogInclude:  a.cfg.OTelFileLogPaths,
+		WebOTLPEndpoint: a.cfg.WebOTLPEndpoint,
 		// One project key: the same evup_svc_ key used for web sync also
 		// authenticates the generated collector's OTLP push.
 		WebAPIKey:           a.cfg.AgentAPIKey,
@@ -342,6 +343,7 @@ func (a *Agent) runChecks(ctx context.Context) {
 		a.runLogKeywordCheck(ctx, target)
 		a.runResourceThresholdCheck(ctx, target)
 	}
+	a.forwardDockerLogs(ctx, targets)
 	a.runHostResourceCheck(ctx)
 }
 
@@ -384,7 +386,7 @@ func (a *Agent) targets(ctx context.Context) []discovery.Target {
 // pruneStaleStates drops in-memory state for targets no longer discovered, so
 // the agent stops reporting (and Web stops showing) genuinely removed services.
 // Keys are stable (see discovery.stableServiceKey), so a container recreated by
-// `docker compose up` keeps the same key and is NOT pruned — only a removed or
+// `docker compose up` keeps the same key and is NOT pruned; only a removed or
 // relabeled service drops out. host:metrics is internal host state, not a
 // discovery target, so it is always retained.
 // ponytail: a transient Docker-discovery failure briefly prunes live services
@@ -480,8 +482,8 @@ func (a *Agent) runTCPCheck(ctx context.Context, target discovery.Target) {
 }
 
 // runDockerLivenessCheck reports up/down straight from the container state
-// captured during discovery — no health endpoint required. running = alive;
-// anything else (exited, dead, created, …) = down, with the Docker status line
+// captured during discovery; no health endpoint required. running = alive;
+// anything else (exited, dead, created, etc.) = down, with the Docker status line
 // as the reason.
 func (a *Agent) runDockerLivenessCheck(target discovery.Target) {
 	healthy := target.State == "running"
@@ -571,6 +573,7 @@ func (a *Agent) loadState() error {
 			lastLogAlertAt:      persisted.LastLogAlertAt,
 			lastResourceAlertAt: persisted.LastResourceAlertAt,
 			lastHostAlertAt:     persisted.LastHostAlertAt,
+			lastDockerLogAt:     persisted.LastDockerLogAt,
 			wasHealthy:          persisted.WasHealthy,
 			seenResult:          persisted.SeenResult,
 			updatedAt:           persisted.UpdatedAt,
@@ -596,6 +599,7 @@ func (a *Agent) saveState() {
 			LastLogAlertAt:      current.lastLogAlertAt,
 			LastResourceAlertAt: current.lastResourceAlertAt,
 			LastHostAlertAt:     current.lastHostAlertAt,
+			LastDockerLogAt:     current.lastDockerLogAt,
 			WasHealthy:          current.wasHealthy,
 			SeenResult:          current.seenResult,
 			UpdatedAt:           current.updatedAt,
@@ -641,6 +645,80 @@ func (a *Agent) runLogKeywordCheck(ctx context.Context, target discovery.Target)
 	}
 }
 
+func (a *Agent) forwardDockerLogs(ctx context.Context, targets []discovery.Target) {
+	if !a.cfg.DockerLogsEnabled || a.docker == nil || a.web == nil || !a.web.Enabled() {
+		return
+	}
+
+	type cursor struct {
+		target discovery.Target
+		at     time.Time
+	}
+
+	batches := make([]webclient.OTLPLogBatch, 0)
+	cursors := make([]cursor, 0)
+	now := time.Now()
+	for _, target := range targets {
+		if target.ID == "" || strings.HasPrefix(target.ID, "env:") {
+			continue
+		}
+		lastSent := a.targetState(target).lastDockerLogAt
+		lines, err := a.docker.LogsSince(ctx, target.ID, lastSent, a.cfg.DockerLogTailLines)
+		if err != nil {
+			log.Printf("docker log collection failed: service=%s err=%v", target.ServiceName, err)
+			continue
+		}
+
+		entries := make([]webclient.OTLPLogEntry, 0, len(lines))
+		maxSeen := lastSent
+		for _, line := range lines {
+			stamp := line.Time
+			if stamp.IsZero() {
+				stamp = now
+			}
+			if !lastSent.IsZero() && !stamp.After(lastSent) {
+				continue
+			}
+			body := trimText(line.Message, 8192)
+			severityText, severityNumber := inferLogSeverity(body)
+			entries = append(entries, webclient.OTLPLogEntry{
+				Timestamp:      stamp,
+				Body:           body,
+				SeverityText:   severityText,
+				SeverityNumber: severityNumber,
+				Attributes: map[string]string{
+					"everyup.target.key": targetKey(target),
+				},
+			})
+			if stamp.After(maxSeen) {
+				maxSeen = stamp
+			}
+		}
+		if len(entries) == 0 {
+			continue
+		}
+		batches = append(batches, webclient.OTLPLogBatch{
+			ServiceName:   target.ServiceName,
+			ContainerID:   target.ID,
+			ContainerName: targetKey(target),
+			Entries:       entries,
+		})
+		cursors = append(cursors, cursor{target: target, at: maxSeen})
+	}
+
+	if len(batches) == 0 {
+		return
+	}
+	if err := a.web.SendOTLPLogs(ctx, batches); err != nil {
+		log.Printf("EveryUp Web docker log sync failed: %v", err)
+		return
+	}
+	for _, cursor := range cursors {
+		a.setDockerLogAt(cursor.target, cursor.at)
+	}
+	a.saveState()
+	log.Printf("synced docker logs to EveryUp Web: services=%d", len(batches))
+}
 func (a *Agent) runResourceThresholdCheck(ctx context.Context, target discovery.Target) {
 	if a.docker == nil || target.ID == "" || strings.HasPrefix(target.ID, "env:") {
 		return
@@ -775,6 +853,17 @@ func (a *Agent) setLogAlertAt(target discovery.Target, at time.Time) {
 	state.lastLogAlertAt = at
 }
 
+func (a *Agent) setDockerLogAt(target discovery.Target, at time.Time) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	key := targetKey(target)
+	state, ok := a.states[key]
+	if !ok {
+		state = &targetState{serviceName: target.ServiceName, checkType: target.HealthType, endpoint: target.HealthURL}
+		a.states[key] = state
+	}
+	state.lastDockerLogAt = at
+}
 func (a *Agent) setResourceAlertAt(target discovery.Target, at time.Time) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -939,6 +1028,21 @@ func matchLogKeyword(lines []string, keywords []string) (string, string, bool) {
 	return "", "", false
 }
 
+func inferLogSeverity(message string) (string, int) {
+	lowered := strings.ToLower(message)
+	switch {
+	case strings.Contains(lowered, "panic"), strings.Contains(lowered, "fatal"), strings.Contains(lowered, "error"), strings.Contains(lowered, "exception"):
+		return "ERROR", 17
+	case strings.Contains(lowered, "warn"):
+		return "WARN", 13
+	case strings.Contains(lowered, "debug"):
+		return "DEBUG", 5
+	case strings.Contains(lowered, "trace"):
+		return "TRACE", 1
+	default:
+		return "INFO", 9
+	}
+}
 func trimText(value string, limit int) string {
 	value = strings.TrimSpace(value)
 	if limit <= 0 || len(value) <= limit {
