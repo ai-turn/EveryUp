@@ -36,6 +36,13 @@ type Config struct {
 	DockerLogsEnabled      bool
 	DockerLogTailLines     int
 	ExcludeNames           []string
+	// APICaptureMode controls where API request data comes from:
+	//   "accesslog" (default) — parse stdout access logs into request spans
+	//   "otlp"                 — the app sends requests via OpenTelemetry (to the
+	//                            telemetry gateway); the agent skips access-log
+	//                            parsing to avoid double-counting
+	//   "off"                  — no request capture from the agent
+	APICaptureMode string
 
 	OTelConfigEnabled bool
 	OTelConfigPath    string
@@ -78,6 +85,7 @@ func LoadFromEnv() (Config, error) {
 		DockerLogsEnabled:      boolEnv("EVERYUP_DOCKER_LOGS_ENABLED", true),
 		DockerLogTailLines:     intEnv("EVERYUP_DOCKER_LOGS_TAIL_LINES", 100),
 		ExcludeNames:           splitCSV(os.Getenv("EVERYUP_EXCLUDE")),
+		APICaptureMode:         strings.ToLower(getEnv("EVERYUP_API_CAPTURE_MODE", "accesslog")),
 
 		OTelConfigEnabled: boolEnv("EVERYUP_OTEL_CONFIG_ENABLED", false),
 		OTelConfigPath:    getEnv("EVERYUP_OTEL_CONFIG_PATH", defaultOtelConfigPath),
@@ -126,6 +134,11 @@ func LoadFromEnv() (Config, error) {
 	}
 	if cfg.DockerLogTailLines > 1000 {
 		cfg.DockerLogTailLines = 1000
+	}
+	switch cfg.APICaptureMode {
+	case "accesslog", "otlp", "off":
+	default:
+		return Config{}, errors.New("EVERYUP_API_CAPTURE_MODE must be one of: accesslog, otlp, off")
 	}
 	if cfg.WebOTLPEndpoint != "" {
 		parsed, err := url.ParseRequestURI(cfg.WebOTLPEndpoint)

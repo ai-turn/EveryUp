@@ -52,6 +52,33 @@ func TestLoadFromEnvParsesDefaults(t *testing.T) {
 	}
 }
 
+func TestLoadFromEnvAPICaptureMode(t *testing.T) {
+	// Default is accesslog (preserves existing behavior).
+	cfg, err := LoadFromEnv()
+	if err != nil {
+		t.Fatalf("LoadFromEnv returned error: %v", err)
+	}
+	if cfg.APICaptureMode != "accesslog" {
+		t.Fatalf("default APICaptureMode = %q, want accesslog", cfg.APICaptureMode)
+	}
+
+	// otlp is accepted (and case-insensitive).
+	t.Setenv("EVERYUP_API_CAPTURE_MODE", "OTLP")
+	cfg, err = LoadFromEnv()
+	if err != nil {
+		t.Fatalf("otlp mode rejected: %v", err)
+	}
+	if cfg.APICaptureMode != "otlp" {
+		t.Fatalf("APICaptureMode = %q, want otlp", cfg.APICaptureMode)
+	}
+
+	// Unknown mode is rejected.
+	t.Setenv("EVERYUP_API_CAPTURE_MODE", "bogus")
+	if _, err := LoadFromEnv(); err == nil {
+		t.Fatal("expected error for invalid EVERYUP_API_CAPTURE_MODE, got nil")
+	}
+}
+
 func TestLoadFromEnvValidatesWebSyncConfig(t *testing.T) {
 	t.Setenv("EVERYUP_WEB_SYNC_ENABLED", "true")
 

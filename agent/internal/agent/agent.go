@@ -700,6 +700,11 @@ func (a *Agent) forwardDockerLogs(ctx context.Context, targets []discovery.Targe
 		at     time.Time
 	}
 
+	// Only derive API requests from stdout access logs in accesslog mode. In otlp
+	// mode the app's OpenTelemetry instrumentation emits the request spans, so
+	// parsing here too would double-count the same requests.
+	accessLogRequests := a.cfg.APICaptureMode == "accesslog"
+
 	batches := make([]webclient.OTLPLogBatch, 0)
 	requestBatches := make([]webclient.OTLPAccessRequestBatch, 0)
 	cursors := make([]cursor, 0)
@@ -737,15 +742,17 @@ func (a *Agent) forwardDockerLogs(ctx context.Context, targets []discovery.Targe
 					"everyup.target.key": targetKey(target),
 				},
 			})
-			if req, ok := accesslog.Parse(body, stamp); ok {
-				requests = append(requests, webclient.OTLPAccessRequest{
-					Timestamp:  req.Timestamp,
-					Method:     req.Method,
-					Path:       req.Path,
-					StatusCode: req.StatusCode,
-					Duration:   req.Duration,
-					ClientIP:   req.ClientIP,
-				})
+			if accessLogRequests {
+				if req, ok := accesslog.Parse(body, stamp); ok {
+					requests = append(requests, webclient.OTLPAccessRequest{
+						Timestamp:  req.Timestamp,
+						Method:     req.Method,
+						Path:       req.Path,
+						StatusCode: req.StatusCode,
+						Duration:   req.Duration,
+						ClientIP:   req.ClientIP,
+					})
+				}
 			}
 			if stamp.After(maxSeen) {
 				maxSeen = stamp

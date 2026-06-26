@@ -142,6 +142,82 @@ The Agent should appear online in Web within about 30 seconds. It automatically
 finds Docker containers on the same Docker host. You do not need to add EveryUp
 settings to each application service.
 
+### 4. (Optional) Enable API request monitoring
+
+Container health, logs, and host metrics work with steps 1–3 alone. To also see
+per-request API data (method, path, status, duration), add **OpenTelemetry
+auto-instrumentation** to the app you want to monitor and point it at the Agent's
+telemetry gateway (`:4318`). Works on Linux/macOS/Windows, needs no API key in the
+app (the Agent attaches its own), and captures metadata only — no bodies.
+
+Add these environment variables to **your app service** (every language uses the same set):
+
+```yaml
+environment:
+  OTEL_SERVICE_NAME: demo                              # must match the service name shown in EveryUp
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://everyup-agent:4318
+  OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+  OTEL_TRACES_EXPORTER: otlp
+  OTEL_METRICS_EXPORTER: none
+  OTEL_LOGS_EXPORTER: none
+```
+
+Then enable auto-instrumentation per language (no application code):
+
+#### Java — Spring Boot, Quarkus, Micronaut, …
+
+1. Download the agent jar:
+   ```bash
+   curl -LO https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar
+   ```
+2. Mount it and set the flag on the app service:
+   ```yaml
+   services:
+     demo:
+       environment:
+         JAVA_TOOL_OPTIONS: "-javaagent:/otel/opentelemetry-javaagent.jar"
+         # + the common env above
+       volumes:
+         - ./opentelemetry-javaagent.jar:/otel/opentelemetry-javaagent.jar:ro
+   ```
+
+#### Python — FastAPI, Django, Flask, …
+
+1. Add to your image (Dockerfile / requirements):
+   ```bash
+   pip install opentelemetry-distro opentelemetry-exporter-otlp
+   opentelemetry-bootstrap -a install
+   ```
+2. Start the app through the wrapper:
+   ```yaml
+   services:
+     demo:
+       command: ["opentelemetry-instrument", "python", "app.py"]   # or: opentelemetry-instrument uvicorn main:app --host 0.0.0.0
+       environment:
+         # the common env above
+   ```
+
+#### Node.js — Express, NestJS, Koa, Fastify, …
+
+1. Add to your image:
+   ```bash
+   npm install @opentelemetry/api @opentelemetry/auto-instrumentations-node
+   ```
+2. Preload the register hook on the app service:
+   ```yaml
+   services:
+     demo:
+       environment:
+         NODE_OPTIONS: "--require @opentelemetry/auto-instrumentations-node/register"
+         # + the common env above
+   ```
+
+Finally, set `EVERYUP_API_CAPTURE_MODE=otlp` on the **Agent** so it stops parsing
+stdout access logs into requests (otherwise the same request is counted twice).
+
+More languages (Ruby, .NET, PHP, Go) and troubleshooting:
+[docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md).
+
 ### Optional: download the compose templates
 
 The same compose files are available in the repository if you prefer to download
@@ -191,6 +267,9 @@ method=GET path=/api/users status=200 duration=17ms
 If a service writes logs only to a file inside the container, Docker cannot show
 those lines and EveryUp cannot collect them through the compose-only setup. Write
 application logs or reverse-proxy access logs to stdout.
+
+For per-request API data (method, path, status, duration), instrument the app with
+OpenTelemetry — see [step 4 of the Quick Start](#4-optional-enable-api-request-monitoring).
 
 ## Networking Notes
 

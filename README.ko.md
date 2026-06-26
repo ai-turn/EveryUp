@@ -143,6 +143,82 @@ docker compose up -d everyup-agent
 host의 컨테이너를 자동으로 발견합니다. 각 애플리케이션 서비스에 EveryUp
 설정을 추가하지 않아도 됩니다.
 
+### 4. (선택) API 요청 모니터링 켜기
+
+컨테이너 health·로그·호스트 메트릭은 1~3단계만으로 동작합니다. 요청별 API
+데이터(method/path/status/duration)까지 보려면, 모니터링할 앱에 **OpenTelemetry
+자동 계측**을 붙여 Agent의 텔레메트리 게이트웨이(`:4318`)로 보내면 됩니다.
+Linux/macOS/Windows 어디서나 동작하고, 앱에 API 키가 필요 없으며(Agent가 자기 키를
+붙임), 본문 없이 메타데이터만 수집합니다.
+
+아래 환경변수를 **앱 서비스**에 추가합니다 (언어 무관, 동일 세트):
+
+```yaml
+environment:
+  OTEL_SERVICE_NAME: demo                              # EveryUp에 보이는 서비스명과 일치시킬 것
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://everyup-agent:4318
+  OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+  OTEL_TRACES_EXPORTER: otlp
+  OTEL_METRICS_EXPORTER: none
+  OTEL_LOGS_EXPORTER: none
+```
+
+그다음 언어별로 자동 계측을 켭니다 (애플리케이션 코드 0줄):
+
+#### Java — Spring Boot, Quarkus, Micronaut 등
+
+1. 에이전트 jar 다운로드:
+   ```bash
+   curl -LO https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar
+   ```
+2. 앱 서비스에 마운트 + 플래그 설정:
+   ```yaml
+   services:
+     demo:
+       environment:
+         JAVA_TOOL_OPTIONS: "-javaagent:/otel/opentelemetry-javaagent.jar"
+         # + 위 공통 환경변수
+       volumes:
+         - ./opentelemetry-javaagent.jar:/otel/opentelemetry-javaagent.jar:ro
+   ```
+
+#### Python — FastAPI, Django, Flask 등
+
+1. 이미지에 추가 (Dockerfile / requirements):
+   ```bash
+   pip install opentelemetry-distro opentelemetry-exporter-otlp
+   opentelemetry-bootstrap -a install
+   ```
+2. 래퍼로 앱 실행:
+   ```yaml
+   services:
+     demo:
+       command: ["opentelemetry-instrument", "python", "app.py"]   # 또는: opentelemetry-instrument uvicorn main:app --host 0.0.0.0
+       environment:
+         # 위 공통 환경변수
+   ```
+
+#### Node.js — Express, NestJS, Koa, Fastify 등
+
+1. 이미지에 추가:
+   ```bash
+   npm install @opentelemetry/api @opentelemetry/auto-instrumentations-node
+   ```
+2. 앱 서비스에 register 훅 프리로드:
+   ```yaml
+   services:
+     demo:
+       environment:
+         NODE_OPTIONS: "--require @opentelemetry/auto-instrumentations-node/register"
+         # + 위 공통 환경변수
+   ```
+
+마지막으로 **Agent**에 `EVERYUP_API_CAPTURE_MODE=otlp`를 설정해 stdout 액세스로그를
+요청으로 중복 파싱하지 않게 하세요 (안 그러면 같은 요청이 2번 집계됩니다).
+
+그 외 언어(Ruby, .NET, PHP, Go)와 문제 해결:
+[docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md).
+
 ### 선택 사항: compose 템플릿 다운로드
 
 직접 작성하는 대신 저장소의 compose 파일을 내려받아 사용할 수도 있습니다.
@@ -190,6 +266,9 @@ method=GET path=/api/users status=200 duration=17ms
 서비스가 로그를 컨테이너 내부 파일에만 쓰면 Docker가 그 로그를 보여줄 수
 없고, compose-only 방식으로는 EveryUp도 수집할 수 없습니다. 애플리케이션이나
 reverse proxy가 로그를 stdout으로 출력하도록 설정하세요.
+
+요청별 API 데이터(method/path/status/duration)는 앱에 OpenTelemetry 자동 계측을
+붙여서 수집합니다 — **빠른 시작의 4단계**를 참고하세요.
 
 ## Compose 파일
 
