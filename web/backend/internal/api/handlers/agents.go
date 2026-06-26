@@ -471,7 +471,9 @@ func (h *AgentHandler) GetServiceLogs(c *fiber.Ctx) error {
 	if err != nil {
 		return internalError(c, "DATABASE_ERROR", err)
 	}
-	return c.JSON(fiber.Map{"success": true, "data": logs, "total": total})
+	// Nest under data so the frontend's request() unwrap (returns json.data) yields
+	// { data, total } — total is otherwise dropped as an envelope sibling.
+	return c.JSON(fiber.Map{"success": true, "data": fiber.Map{"data": logs, "total": total}})
 }
 
 // GetServiceRequests returns API requests for a service identified by agentId+key using service_name as the filter.
@@ -518,7 +520,9 @@ func (h *AgentHandler) GetServiceRequests(c *fiber.Ctx) error {
 	if err != nil {
 		return internalError(c, "DATABASE_ERROR", err)
 	}
-	return c.JSON(fiber.Map{"success": true, "data": requests, "total": total})
+	// Nest under data so the frontend's request() unwrap (returns json.data) yields
+	// { data, total } — total is otherwise dropped as an envelope sibling.
+	return c.JSON(fiber.Map{"success": true, "data": fiber.Map{"data": requests, "total": total}})
 }
 
 

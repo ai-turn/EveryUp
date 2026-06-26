@@ -70,10 +70,14 @@ func TestOTLPIngest_AgentKeyUnifiesLogsUnderService(t *testing.T) {
 	if !logs.Success {
 		t.Fatalf("get service logs failed: %v", logs.Error)
 	}
-	var entries []models.Log
-	if err := json.Unmarshal(logs.Data, &entries); err != nil {
+	var logPayload struct {
+		Data  []models.Log `json:"data"`
+		Total int          `json:"total"`
+	}
+	if err := json.Unmarshal(logs.Data, &logPayload); err != nil {
 		t.Fatalf("decode logs: %v", err)
 	}
+	entries := logPayload.Data
 	if len(entries) != 1 {
 		t.Fatalf("want 1 log under the agent service, got %d: %+v", len(entries), entries)
 	}
@@ -135,10 +139,14 @@ func TestOTLPIngest_PerServiceLogFilter(t *testing.T) {
 
 	_, logs := ts.doRequest(t, "GET",
 		"/api/v1/agents/"+agent.ID+"/services/"+svcKey+"/logs", nil, auth...)
-	var entries []models.Log
-	if err := json.Unmarshal(logs.Data, &entries); err != nil {
+	var logPayload struct {
+		Data  []models.Log `json:"data"`
+		Total int          `json:"total"`
+	}
+	if err := json.Unmarshal(logs.Data, &logPayload); err != nil {
 		t.Fatalf("decode logs: %v", err)
 	}
+	entries := logPayload.Data
 	if len(entries) != 1 || entries[0].Message != "error kept" {
 		t.Fatalf("filter not applied: want only [error kept], got %+v", entries)
 	}
