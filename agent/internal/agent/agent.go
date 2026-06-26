@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/aiturn/everyup/agent/internal/accesslog"
 	"github.com/aiturn/everyup/agent/internal/checks"
 	"github.com/aiturn/everyup/agent/internal/config"
 	"github.com/aiturn/everyup/agent/internal/discovery"
@@ -354,7 +355,7 @@ func (a *Agent) runChecks(ctx context.Context) {
 	targets := a.targets(ctx)
 	a.pruneStaleStates(targets)
 	if len(targets) == 0 {
-		log.Printf("no health check targets found; set EVERYUP_HEALTH_URL or add Docker labels")
+		log.Printf("no Docker containers found; check the Docker socket mount or EVERYUP_HEALTH_URL")
 		a.runHostResourceCheck(ctx)
 		return
 	}
@@ -677,6 +678,7 @@ func (a *Agent) forwardDockerLogs(ctx context.Context, targets []discovery.Targe
 	}
 
 	batches := make([]webclient.OTLPLogBatch, 0)
+	requestBatches := make([]webclient.OTLPAccessRequestBatch, 0)
 	cursors := make([]cursor, 0)
 	now := time.Now()
 	for _, target := range targets {
@@ -691,6 +693,7 @@ func (a *Agent) forwardDockerLogs(ctx context.Context, targets []discovery.Targe
 		}
 
 		entries := make([]webclient.OTLPLogEntry, 0, len(lines))
+		requests := make([]webclient.OTLPAccessRequest, 0)
 		maxSeen := lastSent
 		for _, line := range lines {
 			stamp := line.Time
@@ -711,6 +714,16 @@ func (a *Agent) forwardDockerLogs(ctx context.Context, targets []discovery.Targe
 					"everyup.target.key": targetKey(target),
 				},
 			})
+			if req, ok := accesslog.Parse(body, stamp); ok {
+				requests = append(requests, webclient.OTLPAccessRequest{
+					Timestamp:  req.Timestamp,
+					Method:     req.Method,
+					Path:       req.Path,
+					StatusCode: req.StatusCode,
+					Duration:   req.Duration,
+					ClientIP:   req.ClientIP,
+				})
+			}
 			if stamp.After(maxSeen) {
 				maxSeen = stamp
 			}
@@ -724,6 +737,14 @@ func (a *Agent) forwardDockerLogs(ctx context.Context, targets []discovery.Targe
 			ContainerName: targetKey(target),
 			Entries:       entries,
 		})
+		if len(requests) > 0 {
+			requestBatches = append(requestBatches, webclient.OTLPAccessRequestBatch{
+				ServiceName:   target.ServiceName,
+				ContainerID:   target.ID,
+				ContainerName: targetKey(target),
+				Requests:      requests,
+			})
+		}
 		cursors = append(cursors, cursor{target: target, at: maxSeen})
 	}
 
@@ -734,11 +755,15 @@ func (a *Agent) forwardDockerLogs(ctx context.Context, targets []discovery.Targe
 		log.Printf("EveryUp Web docker log sync failed: %v", err)
 		return
 	}
+	if err := a.web.SendOTLPAccessRequests(ctx, requestBatches); err != nil {
+		log.Printf("EveryUp Web access log request sync failed: %v", err)
+		return
+	}
 	for _, cursor := range cursors {
 		a.setDockerLogAt(cursor.target, cursor.at)
 	}
 	a.saveState()
-	log.Printf("synced docker logs to EveryUp Web: services=%d", len(batches))
+	log.Printf("synced docker logs to EveryUp Web: services=%d access_request_batches=%d", len(batches), len(requestBatches))
 }
 func (a *Agent) runResourceThresholdCheck(ctx context.Context, target discovery.Target) {
 	if a.docker == nil || target.ID == "" || strings.HasPrefix(target.ID, "env:") {
@@ -972,43 +997,15 @@ func failureBody(result checks.HTTPResult) string {
 }
 
 func logKeywords(labels map[string]string) []string {
-	if labels == nil {
-		return nil
-	}
-	parts := strings.Split(labels[discovery.LabelLogKeywords], ",")
-	keywords := make([]string, 0, len(parts))
-	for _, part := range parts {
-		keyword := strings.TrimSpace(part)
-		if keyword != "" {
-			keywords = append(keywords, keyword)
-		}
-	}
-	return keywords
+	return nil
 }
 
 func logLineLimit(labels map[string]string) int {
-	const fallback = 100
-	if labels == nil {
-		return fallback
-	}
-	var lines int
-	if _, err := fmt.Sscanf(strings.TrimSpace(labels[discovery.LabelLogLines]), "%d", &lines); err != nil {
-		return fallback
-	}
-	if lines <= 0 {
-		return fallback
-	}
-	if lines > 500 {
-		return 500
-	}
-	return lines
+	return 100
 }
 
 func resourceThresholds(labels map[string]string) (float64, float64) {
-	if labels == nil {
-		return 0, 0
-	}
-	return percentLabel(labels[discovery.LabelCPUPercent]), percentLabel(labels[discovery.LabelMemoryPercent])
+	return 0, 0
 }
 
 func percentLabel(value string) float64 {

@@ -1,7 +1,7 @@
 # Host Metrics
 
 EveryUp Agent can alert on host CPU, memory, and disk thresholds. This is
-separate from container thresholds configured with Docker labels.
+separate from container state collected through Docker.
 
 ## Configuration
 

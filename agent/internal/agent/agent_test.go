@@ -24,25 +24,16 @@ func TestMatchLogKeywordUsesNewestMatchingLine(t *testing.T) {
 	}
 }
 
-func TestLogLineLimitBoundsValue(t *testing.T) {
-	if got := logLineLimit(map[string]string{discovery.LabelLogLines: "1000"}); got != 500 {
-		t.Fatalf("logLineLimit = %d, want 500", got)
-	}
-	if got := logLineLimit(map[string]string{discovery.LabelLogLines: "bad"}); got != 100 {
+func TestLogLineLimitUsesDefault(t *testing.T) {
+	if got := logLineLimit(nil); got != 100 {
 		t.Fatalf("logLineLimit = %d, want 100", got)
 	}
 }
 
-func TestResourceThresholdsParsePercentLabels(t *testing.T) {
-	cpu, memory := resourceThresholds(map[string]string{
-		discovery.LabelCPUPercent:    "85%",
-		discovery.LabelMemoryPercent: "101",
-	})
-	if cpu != 85 {
-		t.Fatalf("cpu threshold = %f, want 85", cpu)
-	}
-	if memory != 100 {
-		t.Fatalf("memory threshold = %f, want 100", memory)
+func TestResourceThresholdsDisabledByDefault(t *testing.T) {
+	cpu, memory := resourceThresholds(nil)
+	if cpu != 0 || memory != 0 {
+		t.Fatalf("thresholds = %f/%f, want disabled", cpu, memory)
 	}
 }
 

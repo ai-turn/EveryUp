@@ -2,132 +2,42 @@ package discovery
 
 import "testing"
 
-func TestTargetFromLabelsUsesExplicitHealthURL(t *testing.T) {
-	target, ok := TargetFromLabels("abcdef1234567890", "api", map[string]string{
-		LabelEnabled:     "true",
-		LabelServiceName: "public-api",
-		LabelHealthType:  "http",
-		LabelHealthURL:   "http://api:8080/ready",
+func TestTargetFromContainerUsesComposeServiceName(t *testing.T) {
+	target := TargetFromContainer("abcdef1234567890", "shop-api-1", map[string]string{
+		ComposeProjectLabel: "shop",
+		ComposeServiceLabel: "api",
 	})
-	if !ok {
-		t.Fatal("expected target to be discovered")
+	if target.ServiceName != "api" {
+		t.Fatalf("ServiceName = %q, want api", target.ServiceName)
 	}
-	if target.ServiceName != "public-api" {
-		t.Fatalf("ServiceName = %q, want public-api", target.ServiceName)
+	if target.Key != "shop:api" {
+		t.Fatalf("Key = %q, want shop:api", target.Key)
 	}
-	if target.HealthURL != "http://api:8080/ready" {
-		t.Fatalf("HealthURL = %q", target.HealthURL)
-	}
-}
-
-func TestTargetFromLabelsBuildsHealthURLFromParts(t *testing.T) {
-	target, ok := TargetFromLabels("abcdef1234567890", "api", map[string]string{
-		LabelEnabled:    "1",
-		LabelHealthPort: "8080",
-		LabelHealthPath: "healthz",
-	})
-	if !ok {
-		t.Fatal("expected target to be discovered")
-	}
-	if target.HealthURL != "http://api:8080/healthz" {
-		t.Fatalf("HealthURL = %q", target.HealthURL)
+	if target.HealthType != "docker" {
+		t.Fatalf("HealthType = %q, want docker", target.HealthType)
 	}
 }
 
-func TestTargetFromLabelsBuildsTCPAddressFromParts(t *testing.T) {
-	target, ok := TargetFromLabels("abcdef1234567890", "postgres", map[string]string{
-		LabelEnabled:    "true",
-		LabelHealthType: "tcp",
-		LabelHealthPort: "5432",
-	})
-	if !ok {
-		t.Fatal("expected target to be discovered")
+func TestTargetFromContainerUsesContainerNameWithoutLabels(t *testing.T) {
+	target := TargetFromContainer("abcdef1234567890", "demo-prod", nil)
+	if target.ServiceName != "demo-prod" {
+		t.Fatalf("ServiceName = %q, want demo-prod", target.ServiceName)
 	}
-	if target.HealthType != "tcp" {
-		t.Fatalf("HealthType = %q, want tcp", target.HealthType)
+	if target.Key != "demo-prod" {
+		t.Fatalf("Key = %q, want demo-prod", target.Key)
 	}
-	if target.HealthURL != "postgres:5432" {
-		t.Fatalf("HealthURL = %q", target.HealthURL)
+	if target.ID != "abcdef1234567890" {
+		t.Fatalf("ID = %q", target.ID)
 	}
 }
 
-func TestTargetFromLabelsSkipsUnlessEnabled(t *testing.T) {
-	tests := []struct {
-		name   string
-		labels map[string]string
-	}{
-		{name: "disabled", labels: map[string]string{LabelEnabled: "false", LabelHealthURL: "http://api:8080/health"}},
-		{name: "missing-enabled", labels: map[string]string{LabelHealthURL: "http://api:8080/health"}},
+func TestTargetFromContainerFallsBackToShortID(t *testing.T) {
+	target := TargetFromContainer("abcdef1234567890", "", nil)
+	if target.ServiceName != "abcdef123456" {
+		t.Fatalf("ServiceName = %q, want short ID", target.ServiceName)
 	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if _, ok := TargetFromLabels("id", "api", tt.labels); ok {
-				t.Fatal("expected target to be skipped")
-			}
-		})
-	}
-}
-
-// Without a usable HTTP/TCP endpoint, an enabled container becomes a
-// docker-liveness target instead of being skipped.
-func TestTargetFromLabelsFallsBackToDockerLiveness(t *testing.T) {
-	tests := []struct {
-		name   string
-		labels map[string]string
-	}{
-		{name: "enabled-only", labels: map[string]string{LabelEnabled: "true"}},
-		{name: "unsupported-type", labels: map[string]string{LabelEnabled: "true", LabelHealthType: "udp"}},
-		{name: "relative-url", labels: map[string]string{LabelEnabled: "true", LabelHealthURL: "/health"}},
-		{name: "bad-tcp-port", labels: map[string]string{LabelEnabled: "true", LabelHealthType: "tcp", LabelHealthPort: "abc"}},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			target, ok := TargetFromLabels("abcdef1234567890", "api", tt.labels)
-			if !ok {
-				t.Fatal("expected docker-liveness target")
-			}
-			if target.HealthType != "docker" {
-				t.Fatalf("HealthType = %q, want docker", target.HealthType)
-			}
-			if target.HealthURL != "" {
-				t.Fatalf("HealthURL = %q, want empty for liveness", target.HealthURL)
-			}
-		})
-	}
-}
-
-// The service key must be stable across container recreation, so it never
-// falls back to the (ephemeral) container ID when a stable source exists.
-func TestTargetFromLabelsUsesStableKey(t *testing.T) {
-	const containerID = "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
-	tests := []struct {
-		name    string
-		labels  map[string]string
-		wantKey string
-	}{
-		{"explicit service name", map[string]string{LabelEnabled: "true", LabelServiceName: "public-api"}, "public-api"},
-		{"compose project+service", map[string]string{LabelEnabled: "true", "com.docker.compose.project": "shop", "com.docker.compose.service": "web"}, "shop:web"},
-		{"container name fallback", map[string]string{LabelEnabled: "true"}, "shop-web-1"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			target, ok := TargetFromLabels(containerID, "shop-web-1", tt.labels)
-			if !ok {
-				t.Fatal("expected target")
-			}
-			if target.Key != tt.wantKey {
-				t.Fatalf("Key = %q, want %q", target.Key, tt.wantKey)
-			}
-			if target.Key == containerID {
-				t.Fatal("key fell back to the ephemeral container ID")
-			}
-			if target.ID != containerID {
-				t.Fatalf("ID = %q, want the container ID for Docker API calls", target.ID)
-			}
-		})
+	if target.Key != "abcdef1234567890" {
+		t.Fatalf("Key = %q, want full ID fallback", target.Key)
 	}
 }
 
@@ -167,10 +77,10 @@ func TestStatsFromDockerCalculatesCPUAndMemory(t *testing.T) {
 		t.Fatalf("CPUPercent = %f, want 40", stats.CPUPercent)
 	}
 	if stats.MemoryUsageBytes != 800 {
-		t.Fatalf("MemoryUsageBytes = %d, want 800", stats.MemoryUsageBytes)
+		t.Fatalf("MemoryUsageBytes = %d", stats.MemoryUsageBytes)
 	}
 	if stats.MemoryPercent != 80 {
-		t.Fatalf("MemoryPercent = %f, want 80", stats.MemoryPercent)
+		t.Fatalf("MemoryPercent = %f", stats.MemoryPercent)
 	}
 }
 
@@ -180,6 +90,7 @@ func TestNewDockerClientAcceptsTCPProxyPath(t *testing.T) {
 		t.Fatalf("socketPath = %q", client.socketPath)
 	}
 }
+
 func TestParseDockerLogLinesWithTimestamp(t *testing.T) {
 	lines := parseDockerLogLines([]byte("2026-06-26T01:02:03.000000004Z hello world\nplain line\n"))
 	if len(lines) != 2 {

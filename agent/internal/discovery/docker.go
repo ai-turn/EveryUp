@@ -15,18 +15,8 @@ import (
 )
 
 const (
-	LabelEnabled       = "everyup.enabled"
-	LabelServiceName   = "everyup.service.name"
-	LabelHealthType    = "everyup.health.type"
-	LabelHealthURL     = "everyup.health.url"
-	LabelHealthHost    = "everyup.health.host"
-	LabelHealthScheme  = "everyup.health.scheme"
-	LabelHealthPort    = "everyup.health.port"
-	LabelHealthPath    = "everyup.health.path"
-	LabelLogKeywords   = "everyup.alert.logs.keywords"
-	LabelLogLines      = "everyup.alert.logs.lines"
-	LabelCPUPercent    = "everyup.alert.cpu.percent"
-	LabelMemoryPercent = "everyup.alert.memory.percent"
+	ComposeProjectLabel = "com.docker.compose.project"
+	ComposeServiceLabel = "com.docker.compose.service"
 )
 
 type Target struct {
@@ -247,78 +237,34 @@ func (c *DockerClient) ListTargets(ctx context.Context) ([]Target, error) {
 
 	targets := make([]Target, 0, len(containers))
 	for _, container := range containers {
-		target, ok := TargetFromLabels(container.ID, containerName(container), container.Labels)
-		if !ok {
-			continue
-		}
-		if target.HealthType == "docker" {
-			target.State = container.State
-			target.StatusText = container.Status
-		}
+		target := TargetFromContainer(container.ID, containerName(container), container.Labels)
+		target.State = container.State
+		target.StatusText = container.Status
 		targets = append(targets, target)
 	}
 	return targets, nil
 }
 
-func TargetFromLabels(containerID, fallbackName string, labels map[string]string) (Target, bool) {
-	if !truthy(labels[LabelEnabled]) {
-		return Target{}, false
-	}
-
-	serviceName := strings.TrimSpace(labels[LabelServiceName])
-	if serviceName == "" {
-		serviceName = fallbackName
-	}
-	if serviceName == "" {
-		serviceName = shortID(containerID)
-	}
-
-	key := stableServiceKey(containerID, fallbackName, labels)
-
-	// An explicit HTTP/TCP endpoint enables active probing. Without a usable
-	// endpoint we fall back to Docker container liveness (running vs not);
-	// no health endpoint to expose, just everyup.enabled=true.
-	switch strings.ToLower(strings.TrimSpace(labels[LabelHealthType])) {
-	case "tcp":
-		addr := strings.TrimSpace(labels[LabelHealthURL])
-		if addr == "" {
-			addr = buildTCPAddress(fallbackName, labels)
-		}
-		if validHealthEndpoint("tcp", addr) {
-			return Target{ID: containerID, Key: key, ServiceName: serviceName, HealthType: "tcp", HealthURL: addr, Labels: copyLabels(labels)}, true
-		}
-	case "http", "":
-		healthURL := strings.TrimSpace(labels[LabelHealthURL])
-		if healthURL == "" {
-			healthURL = buildHealthURL(fallbackName, labels)
-		}
-		if validHealthEndpoint("http", healthURL) {
-			return Target{ID: containerID, Key: key, ServiceName: serviceName, HealthType: "http", HealthURL: healthURL, Labels: copyLabels(labels)}, true
-		}
-	}
-
+func TargetFromContainer(containerID, fallbackName string, labels map[string]string) Target {
+	serviceName := serviceNameFromDocker(containerID, fallbackName, labels)
 	return Target{
 		ID:          containerID,
-		Key:         key,
+		Key:         stableServiceKey(containerID, fallbackName, labels),
 		ServiceName: serviceName,
 		HealthType:  "docker",
 		Labels:      copyLabels(labels),
-	}, true
+	}
 }
 
 // stableServiceKey returns a service identity that survives container
 // recreation; `docker compose up` hands out a fresh container ID each time, so
 // keying on the ID orphans the card and splits its history on every redeploy.
-// Precedence: explicit everyup.service.name, compose project:service,
-// container name (compose keeps this stable), then container ID (last resort).
-// ':' is used as the compose separator because it is path-segment-safe (like the
-// existing env: keys); '/' would break the :key route param.
+// Precedence: compose project:service, container name, then container ID.
+// ':' is used as the compose separator because it is path-segment-safe; '/'
+// would break the :key route param.
 func stableServiceKey(containerID, fallbackName string, labels map[string]string) string {
-	if name := strings.TrimSpace(labels[LabelServiceName]); name != "" {
-		return name
-	}
-	project := strings.TrimSpace(labels["com.docker.compose.project"])
-	service := strings.TrimSpace(labels["com.docker.compose.service"])
+	project := strings.TrimSpace(labels[ComposeProjectLabel])
+	service := strings.TrimSpace(labels[ComposeServiceLabel])
 	if project != "" && service != "" {
 		return project + ":" + service
 	}
@@ -328,72 +274,14 @@ func stableServiceKey(containerID, fallbackName string, labels map[string]string
 	return containerID
 }
 
-func buildTCPAddress(fallbackHost string, labels map[string]string) string {
-	host := strings.TrimSpace(labels[LabelHealthHost])
-	if host == "" {
-		host = fallbackHost
+func serviceNameFromDocker(containerID, fallbackName string, labels map[string]string) string {
+	if service := strings.TrimSpace(labels[ComposeServiceLabel]); service != "" {
+		return service
 	}
-	port := strings.TrimSpace(labels[LabelHealthPort])
-	if host == "" || port == "" {
-		return ""
+	if fallbackName != "" {
+		return fallbackName
 	}
-	if _, err := strconv.Atoi(port); err != nil {
-		return ""
-	}
-	return net.JoinHostPort(host, port)
-}
-
-func buildHealthURL(host string, labels map[string]string) string {
-	if host == "" {
-		return ""
-	}
-	scheme := strings.TrimSpace(labels[LabelHealthScheme])
-	if scheme == "" {
-		scheme = "http"
-	}
-	port := strings.TrimSpace(labels[LabelHealthPort])
-	if port == "" {
-		return ""
-	}
-	if _, err := strconv.Atoi(port); err != nil {
-		return ""
-	}
-	path := strings.TrimSpace(labels[LabelHealthPath])
-	if path == "" {
-		path = "/health"
-	}
-	if !strings.HasPrefix(path, "/") {
-		path = "/" + path
-	}
-	return fmt.Sprintf("%s://%s:%s%s", scheme, host, port, path)
-}
-
-func truthy(value string) bool {
-	switch strings.ToLower(strings.TrimSpace(value)) {
-	case "1", "true", "yes", "on":
-		return true
-	default:
-		return false
-	}
-}
-
-func validAbsoluteURL(value string) bool {
-	parsed, err := url.ParseRequestURI(value)
-	return err == nil && parsed.Scheme != "" && parsed.Host != ""
-}
-
-func validHealthEndpoint(healthType, value string) bool {
-	if value == "" {
-		return false
-	}
-	if healthType == "http" {
-		return validAbsoluteURL(value)
-	}
-	host, port, err := net.SplitHostPort(value)
-	if err != nil {
-		return false
-	}
-	return strings.TrimSpace(host) != "" && strings.TrimSpace(port) != ""
+	return shortID(containerID)
 }
 
 func containerName(container dockerContainer) string {

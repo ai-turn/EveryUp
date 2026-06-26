@@ -1,7 +1,7 @@
 # Web Connected Mode
 
-Web connected mode lets the Agent sync discovered services, events, host metrics,
-Docker logs, and OTLP telemetry to EveryUp Web.
+Web connected mode lets the Agent sync discovered containers, Docker logs, API
+access-log summaries, events, and host metrics to EveryUp Web.
 
 ## Compose Setup
 
@@ -13,13 +13,11 @@ services:
   everyup-agent:
     image: aiturn/everyup-agent:latest
     container_name: everyup-agent
+    user: "0:0"
     environment:
       EVERYUP_WEB_SYNC_ENABLED: "true"
       EVERYUP_WEB_BASE_URL: "http://your-everyup-web:3001"
       EVERYUP_AGENT_API_KEY: "evup_svc_replace_me"
-      EVERYUP_TELEMETRY_GATEWAY_ENABLED: "true"
-    expose:
-      - "4318"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /:/hostfs:ro
@@ -46,21 +44,22 @@ appears online within about 30 seconds.
 `EVERYUP_WEB_ENROLLMENT_TOKEN` is the deprecated name for
 `EVERYUP_AGENT_API_KEY` and is still accepted as a fallback.
 
-## Logs And OTLP
+## Logs And API Requests
 
-Docker stdout/stderr logs are forwarded automatically for labeled containers
-when Docker log forwarding is enabled.
+Docker stdout/stderr logs are forwarded automatically for containers on the same
+Docker host.
 
-Applications that already emit OTLP can send telemetry to the Agent gateway:
+API requests are created from access-log lines found in Docker stdout. The Agent
+recognizes common formats such as:
 
 ```text
-Endpoint: http://everyup-agent:4318
-Protocol: http/protobuf
-Paths: /v1/logs and /v1/traces
+10.0.0.1 - - "GET /api/users HTTP/1.1" 200 17ms
+method=GET path=/api/users status=200 duration=17ms
+{"method":"GET","path":"/api/users","status":200,"duration_ms":17}
 ```
 
-The Agent forwards telemetry to Web using its own `EVERYUP_AGENT_API_KEY`, so
-applications do not need the EveryUp Web URL or key.
+If the access log is written only to a file inside the container, configure the
+application or reverse proxy to also write it to stdout.
 
 ## API Contract
 
@@ -69,16 +68,17 @@ The Agent syncs to these Web endpoints:
 | Endpoint | Purpose |
 | --- | --- |
 | `POST /api/v1/agents/enroll` | Register or refresh an Agent |
-| `POST /api/v1/agents/:agentId/services` | Upsert discovered service health |
+| `POST /api/v1/agents/:agentId/services` | Upsert discovered container state |
 | `POST /api/v1/agents/:agentId/events` | Flush local Agent events |
 | `POST /api/v1/agents/:agentId/metrics` | Send host metrics |
-| `POST /api/v1/otlp/v1/logs` | Forward OTLP logs |
-| `POST /api/v1/otlp/v1/traces` | Forward OTLP traces |
+| `POST /api/v1/otlp/v1/logs` | Forward Docker logs encoded by the Agent |
+| `POST /api/v1/otlp/v1/traces` | Forward API request records encoded by the Agent |
 
 Authentication uses `Authorization: Bearer <EVERYUP_AGENT_API_KEY>`.
 
 ## Identity
 
-Docker-discovered services use a stable identity based on labels and Compose
-metadata, not the container ID. Recreating a container keeps the same service card
-when the service name stays the same.
+Docker-discovered services use a stable identity based on Docker Compose metadata
+when available, then container name, then container ID. Recreating a Compose
+service keeps the same service card when the Compose project and service names
+stay the same.

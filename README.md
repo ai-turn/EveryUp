@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="README.ko.md">한국어</a> -
+  <a href="README.ko.md">Korean</a> -
   <a href="https://ai-turn.github.io/everyup/">Live Demo</a> -
   <a href="#quick-start">Quick Start</a> -
   <a href="#compose-files">Compose Files</a> -
@@ -30,20 +30,20 @@
 
 ## What is EveryUp?
 
-EveryUp helps you monitor the services running on your own servers without
-setting up a large observability stack.
+EveryUp helps you monitor Docker services on your own servers without setting up
+a large observability stack.
 
 It gives you:
 
-- A Web dashboard for health, logs, API requests, infrastructure, and alerts
-- A lightweight Agent that discovers Docker containers automatically
-- Docker stdout/stderr log collection without changing your application code
+- A Web dashboard for service health, logs, API requests, infrastructure, and alerts
+- Automatic Docker container discovery from the Agent
+- Docker stdout/stderr log collection without changing application code
+- API request summaries parsed from stdout access logs
 - Host CPU, memory, and disk monitoring
 - Telegram, Discord, and Slack notifications configured in the Web UI
-- A local OTLP/HTTP gateway for applications that already emit OpenTelemetry
 
-The default setup is intentionally simple: use Docker Compose, run Web, then run
-an Agent on each server you want to monitor.
+The default setup is intentionally simple: run Web, then add one Agent service to
+the Docker Compose project on each server you want to monitor.
 
 ## Quick Start
 
@@ -52,25 +52,47 @@ EveryUp has two parts:
 | Part | What it does | Where it runs |
 | --- | --- | --- |
 | Web | Dashboard, users, alert rules, notification channels, history | Your dashboard server |
-| Agent | Docker discovery, health checks, logs, host metrics, OTLP forwarding | Each server you monitor |
+| Agent | Docker discovery, container state, logs, API access-log parsing, host metrics | Each server you monitor |
 
-You can start with Web first, then add the Agent when you are ready to collect
-real server data.
+Start Web first. After Web is running, create an Agent key in the dashboard and
+add the Agent service to the Compose stack on the server you want to monitor.
 
-### 1. Start Web
+### 1. Create the Web compose file
+
+On the dashboard server, create `docker-compose.yml`:
+
+```yaml
+services:
+  everyup:
+    image: aiturn/everyup:latest
+    container_name: everyup
+    ports:
+      - "3001:3001"
+    volumes:
+      - everyup-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  everyup-data:
+    driver: local
+```
+
+Start Web:
 
 ```bash
-mkdir everyup && cd everyup
-curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/web/docker-compose.yml
 docker compose up -d
 ```
 
-Open `http://localhost:3001` and create the first admin account.
+Open `http://localhost:3001` and create the first admin account. If Web is on a
+remote server, open `http://WEB_SERVER_IP:3001` instead.
 
-If Web is running on a remote server, open `http://WEB_SERVER_IP:3001` instead.
-Make sure that address is reachable from the server where the Agent will run.
-
-### 2. Create an Agent key
+### 2. Create an Agent key in Web
 
 In the Web dashboard, open **Services -> Add** and create an Agent entry. Copy the
 API key shown after creation. It looks like this:
@@ -81,96 +103,104 @@ evup_svc_...
 
 This key belongs to the Agent. Your backend and frontend services do not need it.
 
-### 3. Start the Agent
+### 3. Add the Agent service to the monitored server
 
-Run this on the server you want to monitor:
+On the server you want to monitor, add `everyup-agent` to that server's
+`docker-compose.yml`. If the server already has an application Compose file, add
+this service next to the existing services.
+
+```yaml
+services:
+  everyup-agent:
+    image: aiturn/everyup-agent:latest
+    container_name: everyup-agent
+    user: "0:0"
+    environment:
+      EVERYUP_WEB_SYNC_ENABLED: "true"
+      EVERYUP_WEB_BASE_URL: "http://WEB_SERVER_IP:3001"
+      EVERYUP_AGENT_API_KEY: "evup_svc_replace_me"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/hostfs:ro
+      - everyup-agent-data:/data
+    restart: unless-stopped
+
+volumes:
+  everyup-agent-data:
+```
+
+Replace `EVERYUP_WEB_BASE_URL` with the Web URL reachable from this server, and
+replace `EVERYUP_AGENT_API_KEY` with the key from step 2.
+
+Start the Agent:
 
 ```bash
-mkdir everyup-agent && cd everyup-agent
+docker compose up -d everyup-agent
+```
+
+The Agent should appear online in Web within about 30 seconds. It automatically
+finds Docker containers on the same Docker host. You do not need to add EveryUp
+settings to each application service.
+
+### Optional: download the compose templates
+
+The same compose files are available in the repository if you prefer to download
+instead of writing them manually:
+
+```bash
+curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/web/docker-compose.yml
 curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/agent/docker-compose.yml
 ```
 
-Open `docker-compose.yml` and replace only these values:
+## What You Get From Compose Only
 
-```yaml
-environment:
-  EVERYUP_WEB_SYNC_ENABLED: "true"
-  EVERYUP_WEB_BASE_URL: "http://WEB_SERVER_IP:3001"
-  EVERYUP_AGENT_API_KEY: "evup_svc_replace_me"
-  EVERYUP_TELEMETRY_GATEWAY_ENABLED: "true"
-```
+With only the Agent service added, EveryUp can collect:
 
-Then start the Agent:
+| Data | How it is collected |
+| --- | --- |
+| Container up/down | Docker socket |
+| Container name, image, and state | Docker socket |
+| Docker events | Docker socket |
+| stdout/stderr logs | `docker logs` |
+| API request summaries | Access-log lines found in stdout |
+| Host CPU, memory, and disk | `/hostfs` mount |
+
+This mode does not inspect application internals. It cannot see DB queries,
+function names, or full trace trees unless the application is instrumented later.
+
+## Logs And API Requests
+
+Logs and API requests are collected from Docker stdout/stderr. Check what the
+Agent can see with:
 
 ```bash
-docker compose up -d
+docker logs <container-name> --tail 100
 ```
 
-The Agent should appear online in Web within about 30 seconds.
+Normal application logs shown there are stored as logs in Web.
 
-With just the Agent running, EveryUp can collect Docker container state, Docker
-events, stdout/stderr logs, and host metrics through the read-only Docker socket.
-No EveryUp environment settings are required in your existing application
-containers.
+API requests are created when stdout contains access-log lines with method, path,
+status, and optionally duration. Supported examples:
 
-### 4. Add labels to services you want to monitor
-
-Add Docker labels to the containers that should become services in EveryUp.
-
-For basic liveness and logs:
-
-```yaml
-services:
-  worker:
-    image: my-worker:latest
-    labels:
-      everyup.enabled: "true"
-      everyup.service.name: "worker"
+```text
+10.0.0.1 - - "GET /api/users HTTP/1.1" 200 17ms
+method=GET path=/api/users status=200 duration=17ms
+{"method":"GET","path":"/api/users","status":200,"duration_ms":17}
 ```
 
-For an HTTP health check:
-
-```yaml
-services:
-  api:
-    image: my-api:latest
-    labels:
-      everyup.enabled: "true"
-      everyup.service.name: "api"
-      everyup.health.url: "http://api:8080/health"
-```
-
-For a TCP health check:
-
-```yaml
-services:
-  postgres:
-    image: postgres:16
-    labels:
-      everyup.enabled: "true"
-      everyup.service.name: "postgres"
-      everyup.health.type: "tcp"
-      everyup.health.port: "5432"
-```
-
-Only `everyup.enabled: "true"` is required. Add `everyup.health.url` or
-`everyup.health.port` when you want active checks with response time and status
-codes.
+If a service writes logs only to a file inside the container, Docker cannot show
+those lines and EveryUp cannot collect them through the compose-only setup. Write
+application logs or reverse-proxy access logs to stdout.
 
 ## Networking Notes
 
-The Agent can discover containers, read logs, and track basic liveness through
-the Docker socket even when it runs from its own Compose file.
+The Agent can discover containers and read logs through the Docker socket even
+when it runs from its own Compose file.
 
-Active HTTP checks need network access from the Agent to the target service. For
-example, `http://api:8080/health` works only when the Agent can resolve `api` on
-the same Docker network.
-
-Common options:
-
-- Put the `everyup-agent` service in the same Compose file as your application
-- Attach the Agent to the same external Docker network as your application
-- Use a reachable host or IP address in `everyup.health.url`
+For the cleanest setup, put the `everyup-agent` service in the same Compose file
+as the application stack on that server. If you keep it in a separate Compose
+project, it can still collect Docker state and logs from the mounted Docker
+socket.
 
 ## Compose Files
 
@@ -209,13 +239,11 @@ services:
   everyup-agent:
     image: aiturn/everyup-agent:latest
     container_name: everyup-agent
+    user: "0:0"
     environment:
       EVERYUP_WEB_SYNC_ENABLED: "true"
       EVERYUP_WEB_BASE_URL: "http://your-everyup-web:3001"
       EVERYUP_AGENT_API_KEY: "evup_svc_replace_me"
-      EVERYUP_TELEMETRY_GATEWAY_ENABLED: "true"
-    expose:
-      - "4318"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /:/hostfs:ro
@@ -227,17 +255,13 @@ volumes:
     driver: local
 ```
 
-The Agent OTLP gateway is available inside the same Compose network at
-`http://everyup-agent:4318`. Publish port `4318` only when applications outside
-that network need to send OTLP to the Agent.
-
 ## Repository Layout
 
 ```text
 .
   web/
     docker-compose.yml     # Web-only Compose file
-    backend/               # Go API server, SQLite storage, OTLP ingestion
+    backend/               # Go API server, SQLite storage, telemetry ingest
     frontend/              # React dashboard
   agent/
     docker-compose.yml     # Agent-only Compose file
