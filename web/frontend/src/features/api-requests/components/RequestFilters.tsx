@@ -237,9 +237,7 @@ function SearchCombobox({ value, onChange, suggestions, placeholder, clearLabel,
   return (
     <div ref={wrapperRef} className="relative w-full">
       <div className="relative flex items-center">
-        <span className="absolute left-3 material-symbols-outlined text-slate-400 dark:text-text-dim-dark text-sm select-none pointer-events-none">
-          search
-        </span>
+        <MaterialIcon name="search" className="absolute left-3 text-slate-400 dark:text-text-dim-dark text-sm select-none pointer-events-none" />
         <input
           type="text"
           value={value}

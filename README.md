@@ -12,8 +12,8 @@
   <a href="README.ko.md">Korean</a> -
   <a href="https://ai-turn.github.io/everyup/">Live Demo</a> -
   <a href="#quick-start">Quick Start</a> -
-  <a href="#compose-files">Compose Files</a> -
-  <a href="#repository-layout">Repository Layout</a>
+  <a href="#api-request-monitoring-optional">API Monitoring</a> -
+  <a href="#what-gets-collected">What's Collected</a>
 </p>
 
 <p align="center">
@@ -30,34 +30,30 @@
 
 ## What is EveryUp?
 
-EveryUp helps you monitor Docker services on your own servers without setting up
-a large observability stack.
+Monitor Docker services on your own servers without standing up a large
+observability stack. You get a Web dashboard for **service health, logs, API
+requests, infrastructure, and alerts** — fed by one lightweight Agent per server.
 
-It gives you:
-
-- A Web dashboard for service health, logs, API requests, infrastructure, and alerts
-- Automatic Docker container discovery from the Agent
-- Docker stdout/stderr log collection without changing application code
-- API request summaries parsed from stdout access logs
-- Host CPU, memory, and disk monitoring
-- Telegram, Discord, and Slack notifications configured in the Web UI
-
-The default setup is intentionally simple: run Web, then add one Agent service to
-the Docker Compose project on each server you want to monitor.
-
-## Quick Start
+- Automatic Docker container discovery — no per-service config
+- stdout/stderr log collection without changing application code
+- API request data (method, path, status, duration)
+- Host CPU, memory, and disk metrics
+- Telegram, Discord, and Slack notifications
 
 EveryUp has two parts:
 
 | Part | What it does | Where it runs |
 | --- | --- | --- |
-| Web | Dashboard, users, alert rules, notification channels, history | Your dashboard server |
-| Agent | Docker discovery, container state, logs, API access-log parsing, host metrics | Each server you monitor |
+| **Web** | Dashboard, users, alert rules, notification channels, history | Your dashboard server |
+| **Agent** | Docker discovery, container state, logs, host metrics | Each server you monitor |
 
-Start Web first. After Web is running, create an Agent key in the dashboard and
-add the Agent service to the Compose stack on the server you want to monitor.
+## Quick Start
 
-### 1. Create the Web compose file
+> Run **Web** once, then drop the **Agent** into the Compose stack on each server
+> you want to monitor. Compose templates also live in [`web/`](web/docker-compose.yml)
+> and [`agent/`](agent/docker-compose.yml).
+
+### 1. Start Web
 
 On the dashboard server, create `docker-compose.yml`:
 
@@ -83,31 +79,21 @@ volumes:
     driver: local
 ```
 
-Start Web:
-
 ```bash
 docker compose up -d
 ```
 
-Open `http://localhost:3001` and create the first admin account. If Web is on a
-remote server, open `http://WEB_SERVER_IP:3001` instead.
+Open `http://WEB_SERVER_IP:3001` and create the first admin account.
 
-### 2. Create an Agent key in Web
+### 2. Create an Agent key
 
-In the Web dashboard, open **Services -> Add** and create an Agent entry. Copy the
-API key shown after creation. It looks like this:
+In the dashboard, open **Services → Add** and create an Agent entry. Copy the API
+key (`evup_svc_…`) shown after creation — it belongs to the Agent only.
 
-```text
-evup_svc_...
-```
+### 3. Add the Agent to the monitored server
 
-This key belongs to the Agent. Your backend and frontend services do not need it.
-
-### 3. Add the Agent service to the monitored server
-
-On the server you want to monitor, add `everyup-agent` to that server's
-`docker-compose.yml`. If the server already has an application Compose file, add
-this service next to the existing services.
+Add `everyup-agent` to that server's `docker-compose.yml` (next to your app
+services if it already has a Compose file):
 
 ```yaml
 services:
@@ -117,8 +103,8 @@ services:
     user: "0:0"
     environment:
       EVERYUP_WEB_SYNC_ENABLED: "true"
-      EVERYUP_WEB_BASE_URL: "http://WEB_SERVER_IP:3001"
-      EVERYUP_AGENT_API_KEY: "evup_svc_replace_me"
+      EVERYUP_WEB_BASE_URL: "http://WEB_SERVER_IP:3001"   # reachable from this server
+      EVERYUP_AGENT_API_KEY: "evup_svc_replace_me"        # key from step 2
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /:/hostfs:ro
@@ -129,32 +115,26 @@ volumes:
   everyup-agent-data:
 ```
 
-Replace `EVERYUP_WEB_BASE_URL` with the Web URL reachable from this server, and
-replace `EVERYUP_AGENT_API_KEY` with the key from step 2.
-
-Start the Agent:
-
 ```bash
 docker compose up -d everyup-agent
 ```
 
-The Agent should appear online in Web within about 30 seconds. It automatically
-finds Docker containers on the same Docker host. You do not need to add EveryUp
-settings to each application service.
+The Agent appears online within ~30s and automatically finds the other containers
+on that host. **Container health, logs, and host metrics now flow with no
+per-service configuration.** For per-request API data, see the next section.
 
-### 4. (Optional) Enable API request monitoring
+## API Request Monitoring (optional)
 
-Container health, logs, and host metrics work with steps 1–3 alone. To also see
-per-request API data (method, path, status, duration), add **OpenTelemetry
-auto-instrumentation** to the app you want to monitor and point it at the Agent's
-telemetry gateway (`:4318`). Works on Linux/macOS/Windows, needs no API key in the
-app (the Agent attaches its own), and captures metadata only — no bodies.
+Per-request data (method, path, status, duration) comes from **OpenTelemetry
+auto-instrumentation** in your app, exported to the Agent's telemetry gateway
+(`:4318`). It works on Linux/macOS/Windows, needs no API key in the app (the Agent
+attaches its own), and captures **metadata only — no request/response bodies**.
 
-Add these environment variables to **your app service** (every language uses the same set):
+**1. Add these env vars to your app service** (same for every language):
 
 ```yaml
 environment:
-  OTEL_SERVICE_NAME: demo                              # must match the service name shown in EveryUp
+  OTEL_SERVICE_NAME: demo                              # MUST match the service name shown in EveryUp
   OTEL_EXPORTER_OTLP_ENDPOINT: http://everyup-agent:4318
   OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
   OTEL_TRACES_EXPORTER: otlp
@@ -162,101 +142,40 @@ environment:
   OTEL_LOGS_EXPORTER: none
 ```
 
-Then enable auto-instrumentation per language (no application code):
+**2. Enable auto-instrumentation** (no application code):
 
-#### Java — Spring Boot, Quarkus, Micronaut, …
+| Language | How |
+| --- | --- |
+| **Java** (Spring Boot, Quarkus, …) | Mount `opentelemetry-javaagent.jar`, set `JAVA_TOOL_OPTIONS=-javaagent:/otel/opentelemetry-javaagent.jar` |
+| **Python** (FastAPI, Django, Flask) | `pip install opentelemetry-distro opentelemetry-exporter-otlp` → run via `opentelemetry-instrument python app.py` |
+| **Node.js** (Express, NestJS, …) | `npm i @opentelemetry/auto-instrumentations-node` → set `NODE_OPTIONS=--require @opentelemetry/auto-instrumentations-node/register` |
 
-1. Download the agent jar:
-   ```bash
-   curl -LO https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar
-   ```
-2. Mount it and set the flag on the app service:
-   ```yaml
-   services:
-     demo:
-       environment:
-         JAVA_TOOL_OPTIONS: "-javaagent:/otel/opentelemetry-javaagent.jar"
-         # + the common env above
-       volumes:
-         - ./opentelemetry-javaagent.jar:/otel/opentelemetry-javaagent.jar:ro
-   ```
-
-#### Python — FastAPI, Django, Flask, …
-
-1. Add to your image (Dockerfile / requirements):
-   ```bash
-   pip install opentelemetry-distro opentelemetry-exporter-otlp
-   opentelemetry-bootstrap -a install
-   ```
-2. Start the app through the wrapper:
-   ```yaml
-   services:
-     demo:
-       command: ["opentelemetry-instrument", "python", "app.py"]   # or: opentelemetry-instrument uvicorn main:app --host 0.0.0.0
-       environment:
-         # the common env above
-   ```
-
-#### Node.js — Express, NestJS, Koa, Fastify, …
-
-1. Add to your image:
-   ```bash
-   npm install @opentelemetry/api @opentelemetry/auto-instrumentations-node
-   ```
-2. Preload the register hook on the app service:
-   ```yaml
-   services:
-     demo:
-       environment:
-         NODE_OPTIONS: "--require @opentelemetry/auto-instrumentations-node/register"
-         # + the common env above
-   ```
-
-Finally, set `EVERYUP_API_CAPTURE_MODE=otlp` on the **Agent** so it stops parsing
-stdout access logs into requests (otherwise the same request is counted twice).
-
-More languages (Ruby, .NET, PHP, Go) and troubleshooting:
+Full compose snippets and more languages (Ruby, .NET, PHP, Go):
 [docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md).
 
-### Optional: download the compose templates
+**3. On the Agent**, set `EVERYUP_API_CAPTURE_MODE: "otlp"` so it stops parsing
+stdout access logs into requests (otherwise the same request is counted twice).
 
-The same compose files are available in the repository if you prefer to download
-instead of writing them manually:
+> **Link logs to a request.** Print the trace id in your logs so EveryUp's "View
+> logs" button on a request finds them. For Spring Boot, add
+> `LOGGING_PATTERN_LEVEL=%5p [%X{trace_id}/%X{span_id}]` — the OTel agent fills the
+> MDC automatically.
 
-```bash
-curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/web/docker-compose.yml
-curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/agent/docker-compose.yml
-```
+## What Gets Collected
 
-## What You Get From Compose Only
+With just the Agent (steps 1–3), from the Docker socket and `/hostfs`:
 
-With only the Agent service added, EveryUp can collect:
-
-| Data | How it is collected |
+| Data | Source |
 | --- | --- |
-| Container up/down | Docker socket |
-| Container name, image, and state | Docker socket |
-| Docker events | Docker socket |
+| Container up/down, name, image, state, events | Docker socket |
 | stdout/stderr logs | `docker logs` |
-| API request summaries | Access-log lines found in stdout |
-| Host CPU, memory, and disk | `/hostfs` mount |
+| Host CPU, memory, disk | `/hostfs` mount |
+| API requests | Access-log lines in stdout, **or** OpenTelemetry (above) |
 
-This mode does not inspect application internals. It cannot see DB queries,
-function names, or full trace trees unless the application is instrumented later.
-
-## Logs And API Requests
-
-Logs and API requests are collected from Docker stdout/stderr. Check what the
-Agent can see with:
-
-```bash
-docker logs <container-name> --tail 100
-```
-
-Normal application logs shown there are stored as logs in Web.
-
-API requests are created when stdout contains access-log lines with method, path,
-status, and optionally duration. Supported examples:
+Logs and access-log requests are read from **stdout/stderr** — a service that
+writes only to a file inside the container can't be seen this way. Write app logs
+(or reverse-proxy access logs) to stdout. Access-log lines are recognized in these
+shapes:
 
 ```text
 10.0.0.1 - - "GET /api/users HTTP/1.1" 200 17ms
@@ -264,109 +183,29 @@ method=GET path=/api/users status=200 duration=17ms
 {"method":"GET","path":"/api/users","status":200,"duration_ms":17}
 ```
 
-If a service writes logs only to a file inside the container, Docker cannot show
-those lines and EveryUp cannot collect them through the compose-only setup. Write
-application logs or reverse-proxy access logs to stdout.
+This mode does not inspect application internals (DB queries, function names, full
+traces) unless the app is instrumented with OpenTelemetry.
 
-For per-request API data (method, path, status, duration), instrument the app with
-OpenTelemetry — see [step 4 of the Quick Start](#4-optional-enable-api-request-monitoring).
+## Reference
 
-## Networking Notes
+**Networking** — The Agent reaches containers and logs through the mounted Docker
+socket, so it works even from its own Compose project. For the cleanest setup, put
+`everyup-agent` in the same Compose file as the app stack on that server.
 
-The Agent can discover containers and read logs through the Docker socket even
-when it runs from its own Compose file.
-
-For the cleanest setup, put the `everyup-agent` service in the same Compose file
-as the application stack on that server. If you keep it in a separate Compose
-project, it can still collect Docker state and logs from the mounted Docker
-socket.
-
-## Compose Files
-
-### Web only
-
-Use this on the dashboard server:
-
-```yaml
-services:
-  everyup:
-    image: aiturn/everyup:latest
-    container_name: everyup
-    ports:
-      - "3001:3001"
-    volumes:
-      - everyup-data:/app/data
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/api/v1/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-
-volumes:
-  everyup-data:
-    driver: local
-```
-
-### Agent only
-
-Use this on each monitored server:
-
-```yaml
-services:
-  everyup-agent:
-    image: aiturn/everyup-agent:latest
-    container_name: everyup-agent
-    user: "0:0"
-    environment:
-      EVERYUP_WEB_SYNC_ENABLED: "true"
-      EVERYUP_WEB_BASE_URL: "http://your-everyup-web:3001"
-      EVERYUP_AGENT_API_KEY: "evup_svc_replace_me"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /:/hostfs:ro
-      - everyup-agent-data:/data
-    restart: unless-stopped
-
-volumes:
-  everyup-agent-data:
-    driver: local
-```
-
-## Repository Layout
+**Repository layout**
 
 ```text
-.
-  web/
-    docker-compose.yml     # Web-only Compose file
-    backend/               # Go API server, SQLite storage, telemetry ingest
-    frontend/              # React dashboard
-  agent/
-    docker-compose.yml     # Agent-only Compose file
-    internal/              # Agent implementation
-  docker-compose.yml       # Web-only root convenience Compose file
+web/                       # Web — Go API + SQLite + React dashboard
+  docker-compose.yml
+agent/                     # Agent — Docker discovery, logs, host metrics
+  docker-compose.yml
+docker-compose.yml         # root convenience (Web only)
 ```
 
-## Development
-
-Backend tests:
+**Development**
 
 ```bash
-cd web/backend
-go test ./...
-```
-
-Frontend build:
-
-```bash
-cd web/frontend
-pnpm build
-```
-
-Agent tests:
-
-```bash
-cd agent
-go test ./...
+cd web/backend && go test ./...     # backend tests
+cd web/frontend && pnpm build       # frontend build
+cd agent && go test ./...           # agent tests
 ```

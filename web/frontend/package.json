@@ -13,8 +13,11 @@
     "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
-    "@fontsource-variable/material-symbols-outlined": "^5.2.38",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@hookform/resolvers": "^5.2.2",
+    "@mui/icons-material": "^9.1.1",
+    "@mui/material": "^9.1.2",
     "@tolgee/react": "^7.0.0",
     "@tolgee/web": "^7.0.0",
     "date-fns": "^4.1.0",
