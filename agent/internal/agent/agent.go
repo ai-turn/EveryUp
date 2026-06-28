@@ -581,7 +581,7 @@ func (a *Agent) observeTarget(target discovery.Target, healthy bool, statusCode 
 	state.checkType = target.HealthType
 	state.endpoint = target.HealthURL
 	state.lastStatus = statusCode
-	state.lastLatency = latency.Round(time.Millisecond).String()
+	state.lastLatency = latency.Round(time.Microsecond).String()
 	state.lastError = errText
 	if healthy {
 		state.lastError = ""

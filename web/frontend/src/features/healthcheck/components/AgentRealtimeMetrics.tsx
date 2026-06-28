@@ -12,6 +12,11 @@ interface AgentRealtimeMetricsProps {
 // "정상 범위" baseline for average latency, used only for the card's hint line.
 const LATENCY_NORMAL_MAX_MS = 200;
 
+// Keep one decimal under 10ms so sub-millisecond latencies (e.g. 0.4ms) don't read as 0ms.
+function formatLatency(ms: number): string {
+  return ms < 10 ? String(Number(ms.toFixed(1))) : String(Math.round(ms));
+}
+
 // Trend of the recent half of the window vs the older half (not vs a previous day).
 // Returns null when there isn't enough signal to be meaningful.
 function halfSplitTrendPct(values: number[]): number | null {
@@ -53,7 +58,7 @@ export function AgentRealtimeMetrics({ agentId, serviceKey, refreshKey }: AgentR
   const totalChecks = points.reduce((s, p) => s + p.total, 0);
   const hasData = totalChecks > 0;
   const avgLatency = points.length > 0
-    ? Math.round(points.reduce((s, p) => s + p.latencyMs, 0) / points.length)
+    ? points.reduce((s, p) => s + p.latencyMs, 0) / points.length
     : 0;
   const uptimePct = points.length > 0
     ? points.reduce((s, p) => s + p.uptimePct, 0) / points.length
@@ -85,7 +90,7 @@ export function AgentRealtimeMetrics({ agentId, serviceKey, refreshKey }: AgentR
           )}
         </div>
         <p className="text-slate-900 dark:text-white tracking-tight text-3xl font-bold tabular-nums mt-2">
-          {hasData ? `${avgLatency}ms` : '-'}
+          {hasData ? `${formatLatency(avgLatency)}ms` : '-'}
         </p>
         <p className="text-slate-400 dark:text-text-chart-dim text-xs mt-1">
           {t('정상 범위')} {`< ${LATENCY_NORMAL_MAX_MS}ms`}

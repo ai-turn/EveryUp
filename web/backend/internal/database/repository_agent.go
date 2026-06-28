@@ -10,8 +10,10 @@ import (
 	"github.com/aiturn/everyup/internal/models"
 )
 
-// parseLatencyMs converts a Go duration string (e.g. "123ms", "1.5s") to milliseconds.
-func parseLatencyMs(s string) int {
+// parseLatencyMs converts a Go duration string (e.g. "123ms", "1.5s", "400µs") to milliseconds.
+// Returns float so sub-millisecond latencies (e.g. "400µs" → 0.4) survive instead of truncating to 0.
+// ponytail: latency_ms column is INTEGER-affinity, but SQLite stores non-integer values as REAL — no migration needed.
+func parseLatencyMs(s string) float64 {
 	if s == "" {
 		return 0
 	}
@@ -19,7 +21,7 @@ func parseLatencyMs(s string) int {
 	if err != nil {
 		return 0
 	}
-	return int(d.Milliseconds())
+	return float64(d) / float64(time.Millisecond)
 }
 
 type AgentRepository struct{}
@@ -417,7 +419,7 @@ ORDER BY recorded_at`,
 
 	type raw struct {
 		healthy    int
-		latencyMs  int
+		latencyMs  float64
 		recordedAt time.Time
 	}
 	var records []raw
@@ -454,7 +456,7 @@ ORDER BY recorded_at`,
 		b := buckets[t]
 		b.total++
 		b.healthy += rec.healthy
-		b.sumLatency += float64(rec.latencyMs)
+		b.sumLatency += rec.latencyMs
 	}
 
 	points := make([]models.ServiceHistoryPoint, 0, len(ordered))
@@ -479,33 +481,59 @@ ORDER BY recorded_at`,
 }
 
 // GetServiceUptimeByDay returns per-day uptime percentages for up to `days` days.
+// Day grouping is done in Go, not SQL: recorded_at is stored as an RFC3339 string
+// with a timezone offset, which SQLite's date() can't parse (returns NULL, so a
+// SQL date() filter drops every row). Scanning time.Time and bucketing by local
+// calendar date here matches how the bar chart reads days.
 func (r *AgentRepository) GetServiceUptimeByDay(agentID, key string, days int) ([]models.ServiceUptimeDay, error) {
-	since := time.Now().AddDate(0, 0, -days).Format("2006-01-02")
+	since := time.Now().AddDate(0, 0, -days)
 	rows, err := DB.Query(`
-SELECT date(recorded_at) as day,
-       SUM(healthy)         as healthy_count,
-       COUNT(*)             as total_count
+SELECT healthy, recorded_at
 FROM agent_service_history
-WHERE agent_id = ? AND key = ? AND date(recorded_at) >= ?
-GROUP BY day
-ORDER BY day`,
+WHERE agent_id = ? AND key = ? AND recorded_at >= ?
+ORDER BY recorded_at`,
 		agentID, key, since)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	out := make([]models.ServiceUptimeDay, 0)
+
+	type acc struct {
+		healthy int
+		total   int
+	}
+	byDay := make(map[string]*acc)
+	order := make([]string, 0)
 	for rows.Next() {
-		var d models.ServiceUptimeDay
-		if err := rows.Scan(&d.Date, &d.HealthyChecks, &d.TotalChecks); err != nil {
+		var healthy int
+		var recordedAt time.Time
+		if err := rows.Scan(&healthy, &recordedAt); err != nil {
 			return nil, err
 		}
-		if d.TotalChecks > 0 {
-			d.UptimePct = float64(d.HealthyChecks) * 100.0 / float64(d.TotalChecks)
+		day := recordedAt.Format("2006-01-02")
+		a, ok := byDay[day]
+		if !ok {
+			a = &acc{}
+			byDay[day] = a
+			order = append(order, day)
+		}
+		a.total++
+		a.healthy += healthy
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	out := make([]models.ServiceUptimeDay, 0, len(order))
+	for _, day := range order {
+		a := byDay[day]
+		d := models.ServiceUptimeDay{Date: day, HealthyChecks: a.healthy, TotalChecks: a.total}
+		if a.total > 0 {
+			d.UptimePct = float64(a.healthy) * 100.0 / float64(a.total)
 		}
 		out = append(out, d)
 	}
-	return out, rows.Err()
+	return out, nil
 }
 
 // GetServiceKeyEvents returns agent_events filtered to a specific service key.
