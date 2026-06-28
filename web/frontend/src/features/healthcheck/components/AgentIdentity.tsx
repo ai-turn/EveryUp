@@ -22,7 +22,9 @@ function InfoChip({ icon, label, value }: InfoChipProps) {
   );
 }
 
-export function AgentIdentity({ service }: { service: AgentServiceFlat }) {
+// showName=false hides the service name + status badge — used where the surrounding
+// layout (e.g. the project sidebar/rail) already shows them, to avoid duplication.
+export function AgentIdentity({ service, showName = true }: { service: AgentServiceFlat; showName?: boolean }) {
   const { t } = useTranslate();
   const { t: tc, i18n } = useTranslation('common');
 
@@ -52,24 +54,26 @@ export function AgentIdentity({ service }: { service: AgentServiceFlat }) {
 
   return (
     <div className="mb-8">
-      <div className="flex items-center gap-3 mb-2">
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{service.name}</h1>
-        <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${cfg.bg} border ${cfg.border}`}>
-          <span className="relative flex h-2 w-2">
-            {service.healthy && (
-              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${cfg.ping} opacity-75`} />
-            )}
-            <span className={`relative inline-flex rounded-full h-2 w-2 ${cfg.dot}`} />
-          </span>
-          <span className={`${cfg.text} text-sm font-bold uppercase tracking-wider`}>
-            {tc(cfg.labelKey)}
-          </span>
+      {showName && (
+        <div className="flex items-center gap-3 mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{service.name}</h1>
+          <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${cfg.bg} border ${cfg.border}`}>
+            <span className="relative flex h-2 w-2">
+              {service.healthy && (
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${cfg.ping} opacity-75`} />
+              )}
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${cfg.dot}`} />
+            </span>
+            <span className={`${cfg.text} text-sm font-bold uppercase tracking-wider`}>
+              {tc(cfg.labelKey)}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="flex flex-wrap gap-2">
         <InfoChip icon="language" label={t('타입')} value={service.checkType.toUpperCase()} />
-        <InfoChip icon="sensors" label={t('프로젝트')} value={service.agentName} />
+        {showName && <InfoChip icon="sensors" label={t('프로젝트')} value={service.agentName} />}
         {service.lastLatency && (
           <InfoChip icon="speed" label={t('지연시간')} value={service.lastLatency} />
         )}

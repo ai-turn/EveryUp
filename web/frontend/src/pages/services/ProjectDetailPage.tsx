@@ -227,7 +227,7 @@ export function ProjectDetailPage() {
               <ServiceItem key={s.key} service={s} active={s.key === selected.key} onSelect={() => selectService(s.key)} mobile />
             ))}
           </div>
-          <AgentServiceTabs key={selected.key} service={selected} agentId={agentId!} serviceKey={selected.key} refreshKey={refreshKey} />
+          <AgentServiceTabs key={selected.key} service={selected} agentId={agentId!} serviceKey={selected.key} refreshKey={refreshKey} showServiceName={false} />
         </div>
       ) : (
         /* Desktop: sidebar (project header + services) + detail */
@@ -265,7 +265,7 @@ export function ProjectDetailPage() {
             </div>
           </aside>
           <div className="flex-1 min-w-0">
-            <AgentServiceTabs key={selected.key} service={selected} agentId={agentId!} serviceKey={selected.key} refreshKey={refreshKey} />
+            <AgentServiceTabs key={selected.key} service={selected} agentId={agentId!} serviceKey={selected.key} refreshKey={refreshKey} showServiceName={false} />
           </div>
         </div>
       )}

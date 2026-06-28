@@ -17,6 +17,8 @@ export interface ServiceTabsProps {
   agentId: string;
   serviceKey: string;
   refreshKey: number;
+  /** Hide the service name + status badge in the health tab (e.g. when a sidebar already shows them). */
+  showServiceName?: boolean;
 }
 
 type DetailTab = 'health' | 'logs' | 'requests' | 'infra';
@@ -48,11 +50,11 @@ function TabBar({ active, onChange }: { active: DetailTab; onChange: (t: DetailT
   );
 }
 
-function HealthContent({ service, agentId, serviceKey, refreshKey }: ServiceTabsProps) {
+function HealthContent({ service, agentId, serviceKey, refreshKey, showServiceName = true }: ServiceTabsProps) {
   const { t } = useTranslate();
   return (
     <>
-      <AgentIdentity service={service} />
+      <AgentIdentity service={service} showName={showServiceName} />
       <AgentRealtimeMetrics agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
       <AgentCheckHistoryBar agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
       <AgentResponseTimeChart agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
@@ -69,11 +71,11 @@ function HealthContent({ service, agentId, serviceKey, refreshKey }: ServiceTabs
   );
 }
 
-function TabContent({ tab, service, agentId, serviceKey, refreshKey }: { tab: DetailTab } & ServiceTabsProps) {
+function TabContent({ tab, service, agentId, serviceKey, refreshKey, showServiceName }: { tab: DetailTab } & ServiceTabsProps) {
   if (tab === 'logs')     return <AgentServiceLogsTab agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />;
   if (tab === 'requests') return <AgentServiceRequestsTab agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />;
   if (tab === 'infra')    return <AgentServiceInfraTab agentId={agentId} refreshKey={refreshKey} />;
-  return <HealthContent service={service} agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />;
+  return <HealthContent service={service} agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} showServiceName={showServiceName} />;
 }
 
 // Tab bar + content for a single agent service. Reused by the full-page service
