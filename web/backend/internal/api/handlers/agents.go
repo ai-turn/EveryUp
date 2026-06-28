@@ -71,6 +71,8 @@ type agentMetricsRequest struct {
 	DiskTotal  float64   `json:"diskTotal"`
 	DiskUsed   float64   `json:"diskUsed"`
 	DiskUsage  float64   `json:"diskUsage"`
+	NetIn      float64   `json:"netIn"`
+	NetOut     float64   `json:"netOut"`
 	RecordedAt time.Time `json:"recordedAt"`
 }
 
@@ -204,6 +206,8 @@ func (h *AgentHandler) SyncMetrics(c *fiber.Ctx) error {
 		DiskTotal: req.DiskTotal,
 		DiskUsed:  req.DiskUsed,
 		DiskUsage: req.DiskUsage,
+		NetIn:     req.NetIn,
+		NetOut:    req.NetOut,
 		CreatedAt: req.RecordedAt,
 	}
 	if err := systemMetricRepo.Create(metric); err != nil {

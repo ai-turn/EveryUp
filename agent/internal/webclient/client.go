@@ -143,6 +143,8 @@ type MetricsRequest struct {
 	DiskTotal  float64   `json:"diskTotal"`
 	DiskUsed   float64   `json:"diskUsed"`
 	DiskUsage  float64   `json:"diskUsage"`
+	NetIn      float64   `json:"netIn"`
+	NetOut     float64   `json:"netOut"`
 	RecordedAt time.Time `json:"recordedAt"`
 }
 

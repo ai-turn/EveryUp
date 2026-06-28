@@ -50,6 +50,31 @@ volumes:
 This Compose file runs Web only. Run `agent/docker-compose.yml` on each server
 you want to monitor.
 
+## Environment Variables
+
+Web runs with working defaults and needs no env vars for a basic setup. The ones
+below matter for production, networking, and automation.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `EVERYUP_SERVER_PORT` | `3001` | Dashboard/API port |
+| `EVERYUP_SERVER_MODE` | `production` | `development` enables verbose errors and stack traces |
+| `EVERYUP_SERVER_ALLOWORIGINS` | | CORS allowed origins; set when the frontend is served from another domain (e.g. `https://app.example.com`) |
+| `EVERYUP_DATABASE_PATH` | `./data/monitoring.db` | SQLite file path (the Docker image persists `/app/data`) |
+| `EVERYUP_ENCRYPTION_KEY` | auto-generated | 64-char hex (32 bytes) AES key for secrets (Agent API keys, notification channels). **Set this in production** so secrets survive a DB restore; otherwise a key is generated and stored in the DB |
+| `EVERYUP_ADMIN_USERNAME` | | Create the first admin on startup without the setup UI (headless provisioning) |
+| `EVERYUP_ADMIN_PASSWORD` | | Required with `EVERYUP_ADMIN_USERNAME`; minimum 8 characters |
+| `EVERYUP_RETENTION_METRICS` | `7d` | Health-check metric retention |
+| `EVERYUP_RETENTION_LOGS` | `3d` | Log retention |
+| `EVERYUP_RETENTION_SYSTEMMETRICS` | `7d` | Host metric retention |
+| `EVERYUP_RETENTION_APIREQUESTSDAYS` | `14` | API request retention (days) |
+| `EVERYUP_ALERTS_CONSECUTIVEFAILURES` | `3` | Consecutive failures before a service is marked down |
+
+Any `config.json` key can also be overridden by an env var: uppercase it and
+replace dots with underscores, prefixed with `EVERYUP_`. For example
+`system.storeInterval` → `EVERYUP_SYSTEM_STOREINTERVAL`,
+`server.host` → `EVERYUP_SERVER_HOST`.
+
 ## Run Locally
 
 Start the backend:

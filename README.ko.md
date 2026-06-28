@@ -37,7 +37,7 @@ Agent 하나만 띄우면 됩니다.
 - Docker 컨테이너 자동 디스커버리 — 서비스별 설정 불필요
 - 애플리케이션 코드 수정 없이 stdout/stderr 로그 수집
 - API 요청 데이터(method, path, status, duration)
-- 호스트 CPU·메모리·디스크 메트릭
+- 호스트 CPU·메모리·디스크·네트워크 메트릭
 - Telegram, Discord, Slack 알림
 
 EveryUp은 두 부분으로 구성됩니다:
@@ -168,7 +168,7 @@ Agent만으로(1~3단계), Docker 소켓과 `/hostfs`에서:
 | --- | --- |
 | 컨테이너 up/down·이름·이미지·상태·이벤트 | Docker 소켓 |
 | stdout/stderr 로그 | `docker logs` |
-| 호스트 CPU·메모리·디스크 | `/hostfs` 마운트 |
+| 호스트 CPU·메모리·디스크·네트워크 | `/hostfs` 마운트 |
 | API 요청 | stdout의 액세스로그 줄, **또는** OpenTelemetry(위) |
 
 로그와 액세스로그 요청은 **stdout/stderr**에서 읽습니다 — 컨테이너 내부 파일에만
@@ -183,6 +183,19 @@ method=GET path=/api/users status=200 duration=17ms
 
 이 모드는 애플리케이션 내부(DB 쿼리, 함수명, 전체 트레이스)는 보지 못합니다 —
 OpenTelemetry로 계측해야 가능합니다.
+
+## 문서
+
+| 문서 | 내용 |
+| --- | --- |
+| [web/README.md](web/README.md) | Web 설정, 환경변수, API 영역, 로컬 개발 |
+| [agent/README.md](agent/README.md) | Agent 설정, 전체 환경변수 레퍼런스, Compose 설정 |
+| [docs/NOTIFICATION_SETUP.ko.md](docs/NOTIFICATION_SETUP.ko.md) | Telegram / Discord / Slack 채널 자격증명·설정 |
+| [docs/BACKUP_RESTORE.ko.md](docs/BACKUP_RESTORE.ko.md) | `/app/data` 디렉토리 백업·복원 |
+| [docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md) | OpenTelemetry 자동 계측으로 요청별 API 수집(언어별) |
+| [docs/API_REQUEST_LOGGING_GUIDE.md](docs/API_REQUEST_LOGGING_GUIDE.md) | `request_id` / trace id로 로그-요청 연결 |
+| [docs/OTEL_ONLY_MIGRATION.md](docs/OTEL_ONLY_MIGRATION.md) | 로그·트레이스는 OpenTelemetry OTLP/HTTP로만 수집 |
+| [docs/CHANGELOG.md](docs/CHANGELOG.md) | 기능·리팩토링·버그픽스 이력 |
 
 ## 레퍼런스
 

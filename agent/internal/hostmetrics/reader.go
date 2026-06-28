@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Snapshot struct {
@@ -19,20 +20,30 @@ type Snapshot struct {
 	DiskPercent   float64
 	DiskTotalGB   float64
 	DiskUsedGB    float64
+	NetInMBps     float64
+	NetOutMBps    float64
 }
 
 type Reader struct {
 	root string
 
-	mu       sync.Mutex
-	lastCPU  cpuSample
-	seenCPU  bool
-	diskPath string
+	mu        sync.Mutex
+	lastCPU   cpuSample
+	seenCPU   bool
+	lastNet   netSample
+	lastNetAt time.Time
+	seenNet   bool
+	diskPath  string
 }
 
 type cpuSample struct {
 	idle  uint64
 	total uint64
+}
+
+type netSample struct {
+	rxBytes uint64
+	txBytes uint64
 }
 
 func New(root, diskPath string) *Reader {
@@ -61,6 +72,8 @@ func (r *Reader) Snapshot(ctx context.Context) (Snapshot, error) {
 	if err != nil {
 		return Snapshot{}, err
 	}
+	// ponytail: net is non-fatal — a /proc/net/dev read failure shouldn't drop cpu/mem/disk.
+	netIn, netOut, _ := r.netThroughput()
 	return Snapshot{
 		CPUPercent:    cpu,
 		MemoryPercent: memPct,
@@ -69,7 +82,40 @@ func (r *Reader) Snapshot(ctx context.Context) (Snapshot, error) {
 		DiskPercent:   diskPct,
 		DiskTotalGB:   diskTotal,
 		DiskUsedGB:    diskUsed,
+		NetInMBps:     netIn,
+		NetOutMBps:    netOut,
 	}, nil
+}
+
+// netThroughput returns receive/transmit rates in MB/s, measured as the byte
+// delta over wall-clock elapsed since the previous call. First call returns 0
+// (no baseline yet), mirroring cpuPercent.
+func (r *Reader) netThroughput() (inMBps, outMBps float64, err error) {
+	current, err := readNetSample(filepath.Join(r.root, "proc", "net", "dev"))
+	if err != nil {
+		return 0, 0, err
+	}
+	now := time.Now()
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if !r.seenNet {
+		r.lastNet = current
+		r.lastNetAt = now
+		r.seenNet = true
+		return 0, 0, nil
+	}
+	elapsed := now.Sub(r.lastNetAt).Seconds()
+	prev := r.lastNet
+	r.lastNet = current
+	r.lastNetAt = now
+	// Skip on no elapsed time or a counter reset (reboot / iface flap).
+	if elapsed <= 0 || current.rxBytes < prev.rxBytes || current.txBytes < prev.txBytes {
+		return 0, 0, nil
+	}
+	const bytesPerMB = 1024 * 1024
+	inMBps = float64(current.rxBytes-prev.rxBytes) / elapsed / bytesPerMB
+	outMBps = float64(current.txBytes-prev.txBytes) / elapsed / bytesPerMB
+	return inMBps, outMBps, nil
 }
 
 func (r *Reader) cpuPercent() (float64, error) {
@@ -142,6 +188,45 @@ func readCPUSample(path string) (cpuSample, error) {
 		idle += values[4]
 	}
 	return cpuSample{idle: idle, total: total}, nil
+}
+
+// readNetSample sums receive/transmit bytes across all interfaces except
+// loopback from /proc/net/dev. Each data line is "iface: rxBytes ... txBytes ...",
+// with rx in field 0 and tx in field 8 after the colon.
+func readNetSample(path string) (netSample, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return netSample{}, fmt.Errorf("read net dev: %w", err)
+	}
+	defer file.Close()
+
+	var sum netSample
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		colon := strings.IndexByte(line, ':')
+		if colon < 0 {
+			continue // header rows have no "iface:" prefix
+		}
+		if strings.TrimSpace(line[:colon]) == "lo" {
+			continue
+		}
+		fields := strings.Fields(line[colon+1:])
+		if len(fields) < 16 {
+			continue
+		}
+		rx, err1 := strconv.ParseUint(fields[0], 10, 64)
+		tx, err2 := strconv.ParseUint(fields[8], 10, 64)
+		if err1 != nil || err2 != nil {
+			continue
+		}
+		sum.rxBytes += rx
+		sum.txBytes += tx
+	}
+	if err := scanner.Err(); err != nil {
+		return netSample{}, err
+	}
+	return sum, nil
 }
 
 func readMemInfo(path string) (uint64, uint64, error) {

@@ -51,6 +51,7 @@
   "체크 기록": "Check History",
   "최근 {count}회 체크 결과": "Last {count} check results",
   "{count}회 전": "{count} checks ago",
+  "{count}일 장애": "{count} days down",
   "현재": "Latest",
   "최근 장애 기록": "Recent Failures",
   "최근 실패한 체크 상세 내역": "Details of recent failed checks",

@@ -34,7 +34,10 @@ type Agent struct {
 	webAgentID  string
 	heartbeat   *watchdog.Heartbeat
 	hostMetrics *hostmetrics.Reader
-	gateway     *telemetrygateway.Server
+	// hostAlertReader is a separate Reader for the resource-threshold check so its
+	// CPU/net delta baseline isn't shared with hostMetrics (different sample cadences).
+	hostAlertReader *hostmetrics.Reader
+	gateway         *telemetrygateway.Server
 
 	mu        sync.RWMutex
 	states    map[string]*targetState
@@ -93,9 +96,10 @@ func New(cfg config.Config) (*Agent, error) {
 	if cfg.HeartbeatURL != "" {
 		heartbeat = watchdog.NewHeartbeat(cfg.HeartbeatURL, cfg.HeartbeatToken, cfg.HTTPTimeout, nil)
 	}
-	var hostReader *hostmetrics.Reader
+	var hostReader, hostAlertReader *hostmetrics.Reader
 	if cfg.HostMetricsEnabled {
 		hostReader = hostmetrics.New(cfg.HostMetricsRoot, cfg.HostDiskPath)
+		hostAlertReader = hostmetrics.New(cfg.HostMetricsRoot, cfg.HostDiskPath)
 	}
 	var gateway *telemetrygateway.Server
 	if cfg.TelemetryGatewayEnabled && web != nil && web.Enabled() {
@@ -111,9 +115,10 @@ func New(cfg config.Config) (*Agent, error) {
 		audit:       state.NewAuditLogger(filepath.Join(cfg.DataDir, "audit.jsonl")),
 		web:         web,
 		webAgentID:  cfg.WebAgentID,
-		heartbeat:   heartbeat,
-		hostMetrics: hostReader,
-		gateway:     gateway,
+		heartbeat:       heartbeat,
+		hostMetrics:     hostReader,
+		hostAlertReader: hostAlertReader,
+		gateway:         gateway,
 		states:      make(map[string]*targetState),
 		webEvents:   make([]state.AuditEvent, 0),
 	}
@@ -313,6 +318,8 @@ func (a *Agent) flushWebMetrics(ctx context.Context) {
 		DiskTotal:  snapshot.DiskTotalGB,
 		DiskUsed:   snapshot.DiskUsedGB,
 		DiskUsage:  snapshot.DiskPercent,
+		NetIn:      snapshot.NetInMBps,
+		NetOut:     snapshot.NetOutMBps,
 		RecordedAt: time.Now(),
 	}); err != nil {
 		log.Printf("EveryUp Web metrics sync failed: %v", err)
@@ -837,7 +844,7 @@ func (a *Agent) runResourceThresholdCheck(ctx context.Context, target discovery.
 }
 
 func (a *Agent) runHostResourceCheck(ctx context.Context) {
-	if a.hostMetrics == nil {
+	if a.hostAlertReader == nil {
 		return
 	}
 	cpuThreshold := a.cfg.HostCPUPercent
@@ -846,7 +853,7 @@ func (a *Agent) runHostResourceCheck(ctx context.Context) {
 	if cpuThreshold == 0 && memoryThreshold == 0 && diskThreshold == 0 {
 		return
 	}
-	snapshot, err := a.hostMetrics.Snapshot(ctx)
+	snapshot, err := a.hostAlertReader.Snapshot(ctx)
 	if err != nil {
 		a.auditEvent("host_resource_scan_failed", a.cfg.ServiceName, "host:metrics", err.Error(), nil)
 		return
