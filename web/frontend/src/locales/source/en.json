@@ -169,5 +169,18 @@
   "변경사항 저장": "Save changes",
   "{rate}% 샘플링": "{rate}% sampled",
   "본문 {size} 제한": "{size} body cap",
-  "{count}개 마스킹": "{count} masked"
+  "{count}개 마스킹": "{count} masked",
+  "진행 중인 장애": "Active incident",
+  "서비스가 응답하지 않습니다": "Service is not responding",
+  "마지막 응답": "Last response",
+  "로그 확인": "View logs",
+  "평균 응답": "Avg response",
+  "업타임": "Uptime",
+  "체크 횟수": "Checks",
+  "정상 범위": "Normal range",
+  "목표": "Target",
+  "정상": "Healthy",
+  "주의": "Warning",
+  "위험": "Critical",
+  "장애": "Down"
 }

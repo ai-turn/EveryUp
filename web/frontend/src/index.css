@@ -51,6 +51,8 @@
   --color-text-chart-dim: #6b7c8d;  /* chart dim 텍스트 */
 
   /* 7. Font sizes: xs(12px) 미만 초소형 등급. 배지/메타/타임라인 라벨 전용 */
+  --text-2xs: 0.6875rem;            /* 11px — text-2xs 유틸리티 생성 */
+  --text-2xs--line-height: 1rem;    /* 16px */
 }
 
 /* Variable Scoping: 다크모드 대응을 위한 변수 재할당

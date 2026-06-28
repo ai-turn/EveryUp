@@ -15,28 +15,61 @@ function agentOnline(agent: ConnectedAgent): boolean {
 }
 
 // One row in the service sidebar / mobile chip rail.
-function ServiceItem({ service, active, onSelect, mobile }: {
+// Desktop rows reveal a delete action on hover (onDelete); the mobile chip omits it.
+function ServiceItem({ service, active, onSelect, onDelete, mobile }: {
   service: AgentServiceFlat;
   active: boolean;
   onSelect: () => void;
+  onDelete?: () => void;
   mobile?: boolean;
 }) {
+  const { t } = useTranslate();
+
+  const dot = <span className={`h-2 w-2 rounded-full shrink-0 ${service.healthy ? 'bg-emerald-500' : 'bg-red-500 animate-pulse'}`} />;
+  const downBadge = !service.healthy && (
+    <span className="shrink-0 text-2xs font-bold text-red-600 bg-red-500/10 px-1.5 py-0.5 rounded">{t('장애')}</span>
+  );
+
+  if (mobile) {
+    return (
+      <button
+        onClick={onSelect}
+        className={`shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${active
+          ? 'bg-primary/10 border-primary/40 text-primary'
+          : 'bg-white dark:bg-bg-surface-dark border-slate-200 dark:border-ui-border-dark text-slate-600 dark:text-text-muted-dark'}`}
+      >
+        {dot}
+        <span className="truncate">{service.name}</span>
+        {downBadge}
+      </button>
+    );
+  }
+
   return (
-    <button
-      onClick={onSelect}
-      className={`flex items-center gap-2 transition-colors ${
-        mobile
-          ? `shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium border ${active
-              ? 'bg-primary/10 border-primary/40 text-primary'
-              : 'bg-white dark:bg-bg-surface-dark border-slate-200 dark:border-ui-border-dark text-slate-600 dark:text-text-muted-dark'}`
-          : `w-full px-3 py-2 rounded-lg text-left ${active
-              ? 'bg-primary/10 text-primary font-semibold'
-              : 'text-slate-600 dark:text-text-muted-dark hover:bg-slate-100 dark:hover:bg-ui-hover-dark'}`
-      }`}
+    <div className={`group flex items-center gap-1 rounded-lg transition-colors ${active
+      ? 'bg-primary/10'
+      : 'hover:bg-slate-100 dark:hover:bg-ui-hover-dark'}`}
     >
-      <span className={`h-2 w-2 rounded-full shrink-0 ${service.healthy ? 'bg-emerald-500' : 'bg-red-500'}`} />
-      <span className="truncate">{service.name}</span>
-    </button>
+      <button
+        onClick={onSelect}
+        className={`flex items-center gap-2 flex-1 min-w-0 px-3 py-2 text-left ${active
+          ? 'text-primary font-semibold'
+          : 'text-slate-600 dark:text-text-muted-dark'}`}
+      >
+        {dot}
+        <span className="truncate flex-1">{service.name}</span>
+        {downBadge}
+      </button>
+      {onDelete && (
+        <button
+          onClick={onDelete}
+          title="서비스 삭제"
+          className="shrink-0 mr-1 p-1.5 rounded-md text-slate-300 dark:text-text-dim-dark opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+        >
+          <MaterialIcon name="delete_outline" className="text-lg" />
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -114,6 +147,37 @@ export function ProjectDetailPage() {
   const selected = services.find((s) => s.key === selectedKey) ?? services[0];
   const selectService = (key: string) => setSearchParams({ service: key }, { replace: true });
 
+  // Project-level actions, reused in the desktop sidebar header and the mobile/empty top header.
+  const actionButtons = (
+    <div className="flex items-center gap-1 shrink-0">
+      <button
+        onClick={handleRefresh}
+        title="새로고침"
+        className="p-2 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-ui-hover-dark transition-colors"
+      >
+        <MaterialIcon name="refresh" className={`text-xl ${spinning ? 'animate-spin' : ''}`} />
+      </button>
+      {agent && (
+        <>
+          <button
+            onClick={() => setShowKey(true)}
+            title="API 키 보기"
+            className="p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
+          >
+            <MaterialIcon name="key" className="text-xl" />
+          </button>
+          <button
+            onClick={handleDeleteAgent}
+            title="프로젝트 비활성화"
+            className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          >
+            <MaterialIcon name="delete_outline" className="text-xl" />
+          </button>
+        </>
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-5">
       {/* Back */}
@@ -125,46 +189,30 @@ export function ProjectDetailPage() {
         {t('프로젝트 목록')}
       </button>
 
-      {/* Project header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1 min-w-0">
-          <div className="flex items-center gap-2.5">
-            <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${online ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white truncate">{agentName}</h1>
-            {agent?.version && <span className="text-xs text-slate-400 dark:text-text-dim-dark">v{agent.version}</span>}
+      {/* Project header — full width on mobile / empty state; desktop renders it inside the sidebar */}
+      {(isMobile || services.length === 0 || !selected) && (
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1 min-w-0">
+            <div className="flex items-center gap-2.5">
+              <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${online ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white truncate">{agentName}</h1>
+              {agent?.version && <span className="text-xs text-slate-400 dark:text-text-dim-dark">v{agent.version}</span>}
+            </div>
+            <p className="text-sm text-slate-500 dark:text-text-muted-dark flex items-center gap-1.5">
+              <span>서비스 {services.length}개</span>
+              <span className="text-slate-300 dark:text-text-dim-dark">·</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-medium">{healthy} {t('정상')}</span>
+              {!allHealthy && (
+                <>
+                  <span className="text-slate-300 dark:text-text-dim-dark">·</span>
+                  <span className="text-red-500 font-medium">{services.length - healthy} {t('장애')}</span>
+                </>
+              )}
+            </p>
           </div>
-          <p className="text-sm text-slate-500 dark:text-text-muted-dark">
-            서비스 {services.length}개 · <span className={allHealthy ? '' : 'text-red-500 font-medium'}>{healthy}/{services.length} 정상</span>
-          </p>
+          {actionButtons}
         </div>
-        <div className="flex items-center gap-0.5 shrink-0">
-          <button
-            onClick={handleRefresh}
-            title="새로고침"
-            className="p-2 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-ui-hover-dark transition-colors"
-          >
-            <MaterialIcon name="refresh" className={`text-base ${spinning ? 'animate-spin' : ''}`} />
-          </button>
-          {agent && (
-            <>
-              <button
-                onClick={() => setShowKey(true)}
-                title="API 키 보기"
-                className="p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
-              >
-                <MaterialIcon name="key" className="text-base" />
-              </button>
-              <button
-                onClick={handleDeleteAgent}
-                title="프로젝트 비활성화"
-                className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-              >
-                <MaterialIcon name="delete_outline" className="text-base" />
-              </button>
-            </>
-          )}
-        </div>
-      </div>
+      )}
 
       {services.length === 0 || !selected ? (
         <div className="py-16 text-center">
@@ -182,25 +230,41 @@ export function ProjectDetailPage() {
           <AgentServiceTabs key={selected.key} service={selected} agentId={agentId!} serviceKey={selected.key} refreshKey={refreshKey} />
         </div>
       ) : (
-        /* Desktop: sidebar + detail */
+        /* Desktop: sidebar (project header + services) + detail */
         <div className="flex gap-6">
-          <aside className="w-56 shrink-0 space-y-1">
+          <aside className="w-64 shrink-0">
+            {/* Project identity + actions */}
+            <div className="px-1 pb-3 mb-3 border-b border-slate-200 dark:border-ui-border-dark">
+              <div className="flex items-center justify-between gap-1">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${online ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                  <h1 className="text-base font-bold text-slate-900 dark:text-white truncate">{agentName}</h1>
+                </div>
+                {actionButtons}
+              </div>
+              <p className="mt-1.5 px-0.5 text-xs text-slate-500 dark:text-text-muted-dark flex items-center gap-1 flex-wrap">
+                {agent?.version && <span className="text-slate-400 dark:text-text-dim-dark">v{agent.version}</span>}
+                {agent?.version && <span className="text-slate-300 dark:text-text-dim-dark">·</span>}
+                <span>서비스 {services.length}개</span>
+                <span className="text-slate-300 dark:text-text-dim-dark">·</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-medium">{healthy} {t('정상')}</span>
+                {!allHealthy && (
+                  <>
+                    <span className="text-slate-300 dark:text-text-dim-dark">·</span>
+                    <span className="text-red-500 font-medium">{services.length - healthy} {t('장애')}</span>
+                  </>
+                )}
+              </p>
+            </div>
+            {/* Services */}
             <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-text-dim-dark">{t('서비스')}</p>
-            {services.map((s) => (
-              <ServiceItem key={s.key} service={s} active={s.key === selected.key} onSelect={() => selectService(s.key)} />
-            ))}
+            <div className="space-y-1">
+              {services.map((s) => (
+                <ServiceItem key={s.key} service={s} active={s.key === selected.key} onSelect={() => selectService(s.key)} onDelete={() => handleDeleteService(s)} />
+              ))}
+            </div>
           </aside>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2 mb-4">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white truncate">{selected.name}</h2>
-              <button
-                onClick={() => handleDeleteService(selected)}
-                title="서비스 삭제"
-                className="p-1.5 rounded-lg text-slate-300 dark:text-text-dim-dark hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-              >
-                <MaterialIcon name="delete_outline" className="text-base" />
-              </button>
-            </div>
             <AgentServiceTabs key={selected.key} service={selected} agentId={agentId!} serviceKey={selected.key} refreshKey={refreshKey} />
           </div>
         </div>

@@ -10,6 +10,7 @@ import { AgentFailureHistory } from './AgentFailureHistory';
 import { AgentServiceLogsTab } from './AgentServiceLogsTab';
 import { AgentServiceRequestsTab } from './AgentServiceRequestsTab';
 import { AgentServiceInfraTab } from './AgentServiceInfraTab';
+import { ServiceIncidentBanner } from './ServiceIncidentBanner';
 
 export interface ServiceTabsProps {
   service: AgentServiceFlat;
@@ -82,6 +83,7 @@ export function AgentServiceTabs(props: ServiceTabsProps) {
   const [activeTab, setActiveTab] = useState<DetailTab>('health');
   return (
     <>
+      <ServiceIncidentBanner service={props.service} onInvestigate={() => setActiveTab('logs')} />
       <TabBar active={activeTab} onChange={setActiveTab} />
       <TabContent tab={activeTab} {...props} />
     </>
