@@ -416,6 +416,18 @@ const mockTraceDetails: Record<string, TraceDetail> = {
           'url.path': '/api/v1/auth/login',
           'http.response.status_code': 200,
         },
+        events: [
+          {
+            name: 'request_body_masked',
+            timeUnixNano: ns(30),
+            attributes: { body: '{"username":"alice@example.com","password":"***"}', body_size: 49, body_truncated: false, mask_applied: true },
+          },
+          {
+            name: 'response_body_masked',
+            timeUnixNano: ns(30, 42),
+            attributes: { body: '{"token":"***","expiresIn":3600,"role":"admin"}', body_size: 47, body_truncated: false, mask_applied: true },
+          },
+        ],
         resource: { 'service.name': 'api-gateway', 'deployment.environment': 'demo' },
         createdAt: s(30),
       },
@@ -466,6 +478,18 @@ const mockTraceDetails: Record<string, TraceDetail> = {
           'url.path': '/api/v1/payments',
           'http.response.status_code': 503,
         },
+        events: [
+          {
+            name: 'request_body_masked',
+            timeUnixNano: ns(900),
+            attributes: { body: '{"orderId":"ord_1a2b3c","amount":48000,"currency":"KRW","card":"***"}', body_size: 69, body_truncated: false, mask_applied: true },
+          },
+          {
+            name: 'response_body_masked',
+            timeUnixNano: ns(900, 5001),
+            attributes: { body: '{"error":"upstream_timeout","gateway":"payments.partner.io"}', body_size: 60, body_truncated: false, mask_applied: true },
+          },
+        ],
         resource: { 'service.name': 'payment-worker', 'deployment.environment': 'demo' },
         createdAt: s(900),
       },
@@ -576,16 +600,16 @@ const mockAgentEvents: AgentEvent[] = [
 ];
 
 const mockAgentServiceLogs: LogEntry[] = [
-  { id: 101, serviceId: '', serviceName: 'api', level: 'error', message: 'Connection timeout to upstream: auth.internal:8080 after 5000ms', source: 'otlp', createdAt: new Date(nowAgent - 60_000).toISOString() },
+  { id: 101, serviceId: '', serviceName: 'api', level: 'error', message: 'Connection timeout to upstream: auth.internal:8080 after 5000ms', source: 'otlp', traceId: mockTraceIds.apiGatewayAuth, createdAt: new Date(nowAgent - 60_000).toISOString() },
   { id: 102, serviceId: '', serviceName: 'api', level: 'warn',  message: 'Rate limit exceeded for client IP 203.0.113.42 — throttling to 10 req/s', source: 'otlp', createdAt: new Date(nowAgent - 180_000).toISOString() },
   { id: 103, serviceId: '', serviceName: 'api', level: 'info',  message: 'Server listening on :8080', source: 'otlp', createdAt: new Date(nowAgent - 600_000).toISOString() },
-  { id: 104, serviceId: '', serviceName: 'api', level: 'error', message: 'TLS certificate validation failed for host payments.partner.io', source: 'otlp', createdAt: new Date(nowAgent - 720_000).toISOString() },
+  { id: 104, serviceId: '', serviceName: 'api', level: 'error', message: 'Payment gateway timeout after 5000ms', source: 'otlp', traceId: mockTraceIds.paymentWebhook, createdAt: new Date(nowAgent - 720_000).toISOString() },
 ];
 
 const mockAgentServiceRequests: ApiRequest[] = [
-  { id: 201, serviceId: '', serviceName: 'api', requestId: 'r01', method: 'POST',   path: '/api/v1/auth/login',      pathTemplate: '/api/v1/auth/login',  statusCode: 200, durationMs: 42,  isError: false, createdAt: new Date(nowAgent - 30_000).toISOString() },
+  { id: 201, serviceId: '', serviceName: 'api', requestId: 'r01', method: 'POST',   path: '/api/v1/auth/login',      pathTemplate: '/api/v1/auth/login',  statusCode: 200, durationMs: 42,  isError: false, traceId: mockTraceIds.apiGatewayAuth, createdAt: new Date(nowAgent - 30_000).toISOString() },
   { id: 202, serviceId: '', serviceName: 'api', requestId: 'r02', method: 'GET',    path: '/api/v1/users/42',        pathTemplate: '/api/v1/users/:id',   statusCode: 200, durationMs: 18,  isError: false, createdAt: new Date(nowAgent - 90_000).toISOString() },
-  { id: 203, serviceId: '', serviceName: 'api', requestId: 'r03', method: 'DELETE', path: '/api/v1/orders/1a2b3c4d', pathTemplate: '/api/v1/orders/:id',  statusCode: 500, durationMs: 312, isError: true,  error: 'deadlock detected', createdAt: new Date(nowAgent - 400_000).toISOString() },
+  { id: 203, serviceId: '', serviceName: 'api', requestId: 'r03', method: 'POST',   path: '/api/v1/payments',        pathTemplate: '/api/v1/payments',    statusCode: 503, durationMs: 5001, isError: true,  error: 'payment gateway timeout', traceId: mockTraceIds.paymentWebhook, createdAt: new Date(nowAgent - 400_000).toISOString() },
   { id: 204, serviceId: '', serviceName: 'api', requestId: 'r04', method: 'GET',    path: '/api/v1/products',        pathTemplate: '/api/v1/products',    statusCode: 200, durationMs: 67,  isError: false, createdAt: new Date(nowAgent - 600_000).toISOString() },
 ];
 

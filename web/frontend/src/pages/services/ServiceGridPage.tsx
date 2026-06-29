@@ -131,7 +131,6 @@ export function ServiceGridPage() {
   const [agents, setAgents] = useState<ConnectedAgent[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'all' | 'healthy' | 'unhealthy'>('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [keyModalAgent, setKeyModalAgent] = useState<{ id: string; name: string } | null>(null);
 
@@ -192,12 +191,8 @@ export function ServiceGridPage() {
     allGroups.push({ agentId, agentName: svcs[0]?.agentName ?? agentId, services: svcs });
   }
 
-  // Project-level filter + search: a project matches search if its name or any of
-  // its services match; health filter looks at whether any service is down.
+  // Project search: a project matches if its name or any of its services match.
   const groups = allGroups.filter((g) => {
-    const anyDown = g.services.some((s) => !s.healthy);
-    if (filter === 'healthy' && anyDown) return false;
-    if (filter === 'unhealthy' && !anyDown) return false;
     if (!search) return true;
     const q = search.toLowerCase();
     return (
@@ -206,19 +201,7 @@ export function ServiceGridPage() {
     );
   });
 
-  // Pending cards have no health, so only show them under the "all" filter.
-  const visiblePending = filter === 'all'
-    ? pendingAgents.filter((a) => !search || a.name.toLowerCase().includes(search.toLowerCase()))
-    : [];
-
-  const healthyProjects = allGroups.filter((g) => g.services.every((s) => s.healthy)).length;
-  const unhealthyProjects = allGroups.filter((g) => g.services.some((s) => !s.healthy)).length;
-
-  const kpis = [
-    { label: t('프로젝트'), value: allGroups.length, color: 'text-slate-900 dark:text-white', filterVal: 'all' as const },
-    { label: t('정상'), value: healthyProjects, color: 'text-emerald-600 dark:text-emerald-400', filterVal: 'healthy' as const },
-    { label: t('장애'), value: unhealthyProjects, color: unhealthyProjects > 0 ? 'text-red-500' : 'text-slate-400 dark:text-text-dim-dark', filterVal: 'unhealthy' as const },
-  ];
+  const visiblePending = pendingAgents.filter((a) => !search || a.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="space-y-6">
@@ -237,26 +220,6 @@ export function ServiceGridPage() {
           <MaterialIcon name="add" className="text-base" />
           프로젝트 추가
         </button>
-      </div>
-
-      {/* KPI cards */}
-      <div className="grid grid-cols-3 gap-3">
-        {kpis.map((kpi) => (
-          <button
-            key={kpi.label}
-            onClick={() => setFilter(f => f === kpi.filterVal ? 'all' : kpi.filterVal)}
-            className={`rounded-xl px-4 py-3.5 text-left transition-all border ${
-              filter === kpi.filterVal
-                ? 'bg-primary/5 border-primary/30 dark:border-primary/40'
-                : 'bg-white dark:bg-bg-surface-dark border-slate-200 dark:border-ui-border-dark hover:border-slate-300 dark:hover:border-ui-active-dark'
-            }`}
-          >
-            <p className="text-xs text-slate-500 dark:text-text-muted-dark uppercase tracking-wider mb-1">
-              {kpi.label}
-            </p>
-            <p className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</p>
-          </button>
-        ))}
       </div>
 
       {/* Search */}

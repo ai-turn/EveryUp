@@ -3,6 +3,7 @@ import { MaterialIcon } from '../../../components/common';
 import { api, type LogEntry, type LogLevel } from '../../../services/api';
 import { getErrorMessage } from '../../../utils/errors';
 import { toast } from 'react-hot-toast';
+import { TracePanel } from '../../traces/components/TracePanel';
 
 interface Props {
   agentId: string;
@@ -45,7 +46,7 @@ function formatTime(ts: string) {
   });
 }
 
-function LogRow({ log }: { log: LogEntry }) {
+function LogRow({ log, onOpenTrace }: { log: LogEntry; onOpenTrace: (traceId: string) => void }) {
   const [expanded, setExpanded] = useState(false);
   const hasMeta = log.metadata && Object.keys(log.metadata).length > 0;
 
@@ -62,6 +63,17 @@ function LogRow({ log }: { log: LogEntry }) {
           <p className="text-sm text-slate-800 dark:text-text-base-dark wrap-break-word">{log.message}</p>
           <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-0.5">{formatTime(log.createdAt)}</p>
         </div>
+        {log.traceId && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onOpenTrace(log.traceId!); }}
+            className="shrink-0 inline-flex items-center gap-1 rounded-lg border border-primary/20 bg-primary/5 px-2 py-1 text-xs font-bold text-primary hover:bg-primary/10 cursor-pointer"
+            title="트레이스 보기"
+          >
+            <MaterialIcon name="timeline" className="text-sm" />
+            트레이스
+          </button>
+        )}
         {hasMeta && (
           <MaterialIcon
             name={expanded ? 'expand_less' : 'expand_more'}
@@ -80,6 +92,7 @@ function LogRow({ log }: { log: LogEntry }) {
 
 export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey }: Props) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [activeTraceId, setActiveTraceId] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [level, setLevel] = useState<LogLevel | ''>('');
@@ -280,8 +293,11 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey }: Props) 
         </div>
       ) : (
         <div className="divide-y divide-slate-100 dark:divide-ui-border-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
-          {logs.map(log => <LogRow key={log.id} log={log} />)}
+          {logs.map(log => <LogRow key={log.id} log={log} onOpenTrace={setActiveTraceId} />)}
         </div>
+      )}
+      {activeTraceId && (
+        <TracePanel traceId={activeTraceId} onClose={() => setActiveTraceId(null)} />
       )}
     </div>
   );

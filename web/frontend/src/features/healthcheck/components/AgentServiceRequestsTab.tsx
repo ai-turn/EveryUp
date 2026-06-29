@@ -3,6 +3,7 @@ import { MaterialIcon } from '../../../components/common';
 import { api, type ApiRequest } from '../../../services/api';
 import { getErrorMessage } from '../../../utils/errors';
 import { toast } from 'react-hot-toast';
+import { TracePanel } from '../../traces/components/TracePanel';
 
 interface Props {
   agentId: string;
@@ -47,6 +48,7 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey }: Pro
   const [requests, setRequests] = useState<ApiRequest[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [activeTraceId, setActiveTraceId] = useState<string | null>(null);
   const [errorsOnly, setErrorsOnly] = useState(false);
   const [search, setSearch] = useState('');
   const [inputValue, setInputValue] = useState('');
@@ -169,22 +171,35 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey }: Pro
         </div>
       ) : (
         <div className="divide-y divide-slate-100 dark:divide-ui-border-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
-          {requests.map(req => (
-            <div key={req.id} className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-bg-surface-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors">
-              <span className={`shrink-0 px-1.5 py-0.5 rounded text-xs font-bold uppercase ${methodClass(req.method)}`}>
-                {req.method}
-              </span>
-              <span className={`shrink-0 font-mono text-sm font-bold ${statusClass(req.statusCode)}`}>
-                {req.statusCode}
-              </span>
-              <span className="flex-1 min-w-0 text-sm text-slate-700 dark:text-text-base-dark truncate font-mono">
-                {req.path}
-              </span>
-              <span className="shrink-0 text-xs text-slate-400 dark:text-text-dim-dark">{req.durationMs}ms</span>
-              <span className="shrink-0 text-xs text-slate-400 dark:text-text-dim-dark">{formatTime(req.createdAt)}</span>
-            </div>
-          ))}
+          {requests.map(req => {
+            const clickable = !!req.traceId;
+            return (
+              <div
+                key={req.id}
+                onClick={() => req.traceId && setActiveTraceId(req.traceId)}
+                className={`flex items-center gap-3 px-4 py-3 bg-white dark:bg-bg-surface-dark transition-colors ${clickable ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-ui-hover-dark' : ''}`}
+              >
+                <span className={`shrink-0 px-1.5 py-0.5 rounded text-xs font-bold uppercase ${methodClass(req.method)}`}>
+                  {req.method}
+                </span>
+                <span className={`shrink-0 font-mono text-sm font-bold ${statusClass(req.statusCode)}`}>
+                  {req.statusCode}
+                </span>
+                <span className="flex-1 min-w-0 text-sm text-slate-700 dark:text-text-base-dark truncate font-mono">
+                  {req.path}
+                </span>
+                <span className="shrink-0 text-xs text-slate-400 dark:text-text-dim-dark">{req.durationMs}ms</span>
+                <span className="shrink-0 text-xs text-slate-400 dark:text-text-dim-dark">{formatTime(req.createdAt)}</span>
+                {clickable && (
+                  <MaterialIcon name="timeline" className="shrink-0 text-base text-slate-300 dark:text-text-dim-dark" />
+                )}
+              </div>
+            );
+          })}
         </div>
+      )}
+      {activeTraceId && (
+        <TracePanel traceId={activeTraceId} onClose={() => setActiveTraceId(null)} />
       )}
     </div>
   );
