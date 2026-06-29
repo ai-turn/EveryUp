@@ -102,6 +102,7 @@ type RetentionConfig struct {
 	Logs            string `mapstructure:"logs"`
 	SystemMetrics   string `mapstructure:"systemMetrics"`
 	ApiRequestsDays int    `mapstructure:"apiRequestsDays"`
+	BodyCaptureDays int    `mapstructure:"bodyCaptureDays"`
 }
 
 // Global config instance
@@ -130,6 +131,7 @@ func Load(configPath string) (*Config, error) {
 	v.SetDefault("retention.logs", "3d")
 	v.SetDefault("retention.systemMetrics", "7d")
 	v.SetDefault("retention.apiRequestsDays", 14)
+	v.SetDefault("retention.bodyCaptureDays", 7)
 
 	// Read config file
 	if configPath != "" {

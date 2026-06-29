@@ -130,4 +130,25 @@ func (s *Scheduler) cleanup() {
 	} else {
 		log.Printf("Failed to clean up api_requests: %v", err)
 	}
+
+	// Delete captured body span events (default: 7 days).
+	bodyDays := cfg.Retention.BodyCaptureDays
+	if bodyDays <= 0 {
+		bodyDays = 7
+	}
+	bodyCutoff := time.Now().Add(-time.Duration(bodyDays) * 24 * time.Hour)
+	spanRepo := database.NewSpanRepository()
+	if deleted, err := spanRepo.DeleteOlderThan(bodyCutoff); err == nil {
+		log.Printf("Cleaned up %d old spans/body captures (cutoff: %d days)", deleted, bodyDays)
+	} else {
+		log.Printf("Failed to clean up spans/body captures: %v", err)
+	}
+
+	// Delete old audit events (shares the body-capture retention window).
+	auditRepo := database.NewAuditRepository()
+	if deleted, err := auditRepo.DeleteOlderThan(bodyCutoff); err == nil {
+		log.Printf("Cleaned up %d old audit events (cutoff: %d days)", deleted, bodyDays)
+	} else {
+		log.Printf("Failed to clean up audit events: %v", err)
+	}
 }

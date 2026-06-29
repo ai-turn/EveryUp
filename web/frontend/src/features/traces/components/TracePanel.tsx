@@ -103,6 +103,63 @@ function formatLogCopy(log: LogEntry): string {
   ].filter(Boolean).join(' ');
 }
 
+interface CapturedBody {
+  id: string;
+  label: string;
+  body: string;
+  spanName: string;
+  serviceName?: string;
+  size?: number;
+  truncated?: boolean;
+}
+
+function attrString(attrs: Record<string, unknown> | undefined, key: string): string {
+  const value = attrs?.[key];
+  return typeof value === 'string' ? value : '';
+}
+
+function attrNumber(attrs: Record<string, unknown> | undefined, key: string): number | undefined {
+  const value = attrs?.[key];
+  return typeof value === 'number' ? value : undefined;
+}
+
+function attrBool(attrs: Record<string, unknown> | undefined, key: string): boolean {
+  return attrs?.[key] === true;
+}
+
+function capturedBodyLabel(eventName: string): string {
+  if (eventName === 'request_body_masked') return 'Request';
+  if (eventName === 'response_body_masked') return 'Response';
+  return 'Body';
+}
+
+function extractCapturedBodies(spans: TraceSpan[]): CapturedBody[] {
+  return spans.flatMap((span) =>
+    (span.events ?? [])
+      .filter((event) => event.name === 'request_body_masked' || event.name === 'response_body_masked')
+      .map((event) => ({
+        id: `${span.traceId}-${span.spanId}-${event.name}-${event.timeUnixNano ?? 0}`,
+        label: capturedBodyLabel(event.name),
+        body: attrString(event.attributes, 'body'),
+        spanName: span.name || '(unnamed)',
+        serviceName: span.serviceName,
+        size: attrNumber(event.attributes, 'body_size'),
+        truncated: attrBool(event.attributes, 'body_truncated'),
+      }))
+      .filter((item) => item.body !== ''),
+  );
+}
+
+function formatCapturedBodyCopy(item: CapturedBody): string {
+  return [
+    `${item.label.toLowerCase()} body`,
+    item.serviceName ? `service=${item.serviceName}` : null,
+    `span=${item.spanName}`,
+    item.truncated ? 'truncated=true' : null,
+    item.body,
+  ].filter(Boolean).join('\n');
+}
+
 export function TracePanel({ traceId, onClose }: TracePanelProps) {
   const { copy } = useClipboardCopy();
   const { t } = useTranslation('logs');
@@ -141,6 +198,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
   const spans = data?.spans ?? [];
   const logs = data?.logs ?? [];
   const apiRequests = data?.apiRequests ?? [];
+  const capturedBodies = extractCapturedBodies(spans);
   const isEmpty = !loading && !error && spans.length === 0 && logs.length === 0 && apiRequests.length === 0;
 
   return (
@@ -230,6 +288,9 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
           {!loading && !error && spans.length > 0 && (
             <SpanList spans={spans} onCopy={copy} />
           )}
+          {!loading && !error && capturedBodies.length > 0 && (
+            <CapturedBodyList items={capturedBodies} onCopy={copy} />
+          )}
           {!loading && !error && apiRequests.length > 0 && (
             <ApiRequestList items={apiRequests} onCopy={copy} />
           )}
@@ -284,6 +345,48 @@ function SpanList({ spans, onCopy }: { spans: TraceSpan[]; onCopy: CopyFn }) {
               {formatDuration(span.durationMs)}
             </span>
             {copyButton(() => onCopy(formatSpanCopy(span)), 'Copy span row')}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function CapturedBodyList({ items, onCopy }: { items: CapturedBody[]; onCopy: CopyFn }) {
+  return (
+    <section>
+      <SectionHeader icon="data_object" title="Captured bodies" count={items.length} />
+      <ul className="space-y-2">
+        {items.map((item) => (
+          <li
+            key={item.id}
+            className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm dark:border-ui-border-dark dark:bg-ui-hover-dark"
+          >
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center rounded bg-primary/10 px-1.5 py-0.5 text-xs font-bold text-primary">
+                {item.label}
+              </span>
+              {item.serviceName && (
+                <span className="text-slate-500 dark:text-text-muted-dark">
+                  {item.serviceName}
+                </span>
+              )}
+              <span className="min-w-0 flex-1 truncate font-mono text-slate-500 dark:text-text-muted-dark" title={item.spanName}>
+                {item.spanName}
+              </span>
+              {typeof item.size === 'number' && (
+                <span className="font-mono text-xs text-slate-400 dark:text-text-dim-dark">
+                  {item.size}B
+                </span>
+              )}
+              {item.truncated && (
+                <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-xs font-bold text-amber-600 dark:text-amber-400">
+                  truncated
+                </span>
+              )}
+              {copyButton(() => onCopy(formatCapturedBodyCopy(item)), 'Copy captured body')}
+            </div>
+            <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-all rounded border border-slate-200 bg-white p-2 font-mono text-xs text-slate-700 dark:border-ui-border-dark dark:bg-bg-surface-dark dark:text-text-base-dark">{item.body}</pre>
           </li>
         ))}
       </ul>

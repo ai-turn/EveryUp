@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/aiturn/everyup/internal/models"
 )
@@ -97,4 +98,14 @@ func (r *SpanRepository) GetByTraceID(traceID string) ([]models.Span, error) {
 		spans = append(spans, s)
 	}
 	return spans, nil
+}
+
+// DeleteOlderThan removes spans older than the cutoff. Captured request and
+// response body events live on spans, so this is the body-capture retention path.
+func (r *SpanRepository) DeleteOlderThan(cutoff time.Time) (int64, error) {
+	result, err := DB.Exec(`DELETE FROM spans WHERE created_at < ?`, cutoff)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }

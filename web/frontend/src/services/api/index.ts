@@ -49,7 +49,9 @@ export type {
   ApiRequestListParams,
   ApiRequestListResponse,
   TraceSpan,
+  TraceSpanEvent,
   TraceDetail,
+  AuditEvent,
 } from './services';
 export type {
   Host,

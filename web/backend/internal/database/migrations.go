@@ -233,6 +233,9 @@ func migrate() error {
 	if err := migrateV35(); err != nil {
 		return fmt.Errorf("v35 migration failed: %w", err)
 	}
+	if err := migrateV36(); err != nil {
+		return fmt.Errorf("v36 migration failed: %w", err)
+	}
 
 	return nil
 }
@@ -1201,6 +1204,31 @@ func migrateV35() error {
 		}
 		return ensureAPIRequestIndexesTx(tx)
 	})
+}
+
+// migrateV36 creates a small audit trail for sensitive trace body access.
+// Added: 2026-06-29
+func migrateV36() error {
+	stmts := []string{
+		`CREATE TABLE IF NOT EXISTS audit_events (
+			id         INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id    INTEGER NOT NULL DEFAULT 0,
+			username   TEXT NOT NULL DEFAULT '',
+			action     TEXT NOT NULL,
+			trace_id   TEXT NOT NULL DEFAULT '',
+			metadata   TEXT NOT NULL DEFAULT '',
+			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_audit_events_action_time ON audit_events(action, created_at DESC)`,
+		`CREATE INDEX IF NOT EXISTS idx_audit_events_trace_time ON audit_events(trace_id, created_at DESC)`,
+		`CREATE INDEX IF NOT EXISTS idx_audit_events_user_time ON audit_events(user_id, created_at DESC)`,
+	}
+	for _, stmt := range stmts {
+		if _, err := DB.Exec(stmt); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func ensureAPIRequestIndexes() error {

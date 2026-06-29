@@ -207,6 +207,12 @@ export interface ApiRequest {
   createdAt: string;
 }
 
+export interface TraceSpanEvent {
+  name: string;
+  timeUnixNano?: number;
+  attributes?: Record<string, unknown>;
+}
+
 export interface TraceSpan {
   id: number;
   serviceId?: string;
@@ -222,6 +228,7 @@ export interface TraceSpan {
   statusCode?: string;
   statusMessage?: string;
   attributes?: Record<string, unknown>;
+  events?: TraceSpanEvent[];
   resource?: Record<string, unknown>;
   createdAt: string;
 }
@@ -231,6 +238,16 @@ export interface TraceDetail {
   spans: TraceSpan[];
   logs: LogEntry[];
   apiRequests: ApiRequest[];
+}
+
+export interface AuditEvent {
+  id: number;
+  userId: number;
+  username: string;
+  action: string;
+  traceId?: string;
+  metadata?: string;
+  createdAt: string;
 }
 
 export interface ApiRequestListParams {
@@ -355,5 +372,13 @@ export function createServicesApi(request: RequestFn) {
 
     getTrace: (traceId: string) =>
       request<TraceDetail>(`/traces/${traceId}`),
+
+    getAuditEvents: (params?: { action?: string; limit?: number }) => {
+      const query = new URLSearchParams();
+      if (params?.action) query.set('action', params.action);
+      if (params?.limit) query.set('limit', String(params.limit));
+      const qs = query.toString();
+      return request<AuditEvent[]>(`/audit${qs ? `?${qs}` : ''}`);
+    },
   };
 }

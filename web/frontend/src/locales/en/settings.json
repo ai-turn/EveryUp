@@ -121,6 +121,13 @@
             "logs": "Logs Retention",
             "logsDesc": "How long to keep error log data"
         },
+        "audit": {
+            "title": "Body Access Audit Log",
+            "subtitle": "Records of admins viewing captured request/response bodies",
+            "empty": "No access records yet",
+            "viewedTrace": "Viewed bodies in trace {{trace}}",
+            "bodyCount": "{{count}} bodies"
+        },
         "accountReset": {
             "title": "Account Reset",
             "subtitle": "Delete the admin account and return to first-run setup",

@@ -121,6 +121,13 @@
             "logs": "로그 보존 기간",
             "logsDesc": "에러 로그 데이터 보존 기간"
         },
+        "audit": {
+            "title": "바디 열람 감사 로그",
+            "subtitle": "관리자가 캡처된 요청/응답 본문을 열람한 기록",
+            "empty": "열람 기록이 없습니다",
+            "viewedTrace": "Trace {{trace}} 본문 열람",
+            "bodyCount": "본문 {{count}}건"
+        },
         "accountReset": {
             "title": "계정 초기화",
             "subtitle": "관리자 계정을 삭제하고 최초 설정 상태로 초기화합니다",

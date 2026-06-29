@@ -84,6 +84,10 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	tracesHandler := handlers.NewTracesHandler()
 	local.Get("/traces/:traceId", tracesHandler.GetByTraceID)
 
+	// Audit trail (admin-only — captured-body access log)
+	auditHandler := handlers.NewAuditHandler()
+	local.Get("/audit", auditHandler.GetAll)
+
 	// Dashboard endpoints
 	dashboardHandler := handlers.NewDashboardHandler()
 	local.Get("/dashboard/timeline", dashboardHandler.GetTimeline)

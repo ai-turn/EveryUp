@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from '../../../components/common';
 import { SectionCard } from './SectionCard';
 import { SettingRow } from './SettingRow';
+import { AuditLogSection } from './AuditLogSection';
 import { env } from '../../../config/env';
 
 const METRICS_RETENTION_OPTIONS = ['7d', '30d', '90d', '1y'];
@@ -168,6 +169,9 @@ export function SettingsDesktopView({
             </>
           )}
         </SectionCard>
+
+        {/* Body access audit log (admin-only) */}
+        <AuditLogSection />
 
         {/* Account Reset */}
         <SectionCard icon="person_off" title={t('settings.accountReset.title')} subtitle={t('settings.accountReset.subtitle')}>
