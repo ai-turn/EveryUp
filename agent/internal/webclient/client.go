@@ -3,7 +3,6 @@ package webclient
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,11 +13,9 @@ import (
 
 	"github.com/aiturn/everyup/agent/internal/state"
 	collectorlogspb "go.opentelemetry.io/proto/otlp/collector/logs/v1"
-	collectortracepb "go.opentelemetry.io/proto/otlp/collector/trace/v1"
 	commonpb "go.opentelemetry.io/proto/otlp/common/v1"
 	logspb "go.opentelemetry.io/proto/otlp/logs/v1"
 	resourcepb "go.opentelemetry.io/proto/otlp/resource/v1"
-	tracepb "go.opentelemetry.io/proto/otlp/trace/v1"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -69,22 +66,6 @@ type OTLPLogBatch struct {
 	ContainerID   string
 	ContainerName string
 	Entries       []OTLPLogEntry
-}
-
-type OTLPAccessRequestBatch struct {
-	ServiceName   string
-	ContainerID   string
-	ContainerName string
-	Requests      []OTLPAccessRequest
-}
-
-type OTLPAccessRequest struct {
-	Timestamp  time.Time
-	Method     string
-	Path       string
-	StatusCode int
-	Duration   time.Duration
-	ClientIP   string
 }
 
 type OTLPLogEntry struct {
@@ -248,84 +229,6 @@ func (c *Client) SendOTLPLogs(ctx context.Context, batches []OTLPLogBatch) error
 	return c.SendOTLPProtobuf(ctx, "logs", data)
 }
 
-func (c *Client) SendOTLPAccessRequests(ctx context.Context, batches []OTLPAccessRequestBatch) error {
-	if len(batches) == 0 {
-		return nil
-	}
-	if !c.Enabled() {
-		return fmt.Errorf("web client is not configured")
-	}
-
-	req := &collectortracepb.ExportTraceServiceRequest{}
-	for _, batch := range batches {
-		if batch.ServiceName == "" || len(batch.Requests) == 0 {
-			continue
-		}
-		resourceAttrs := []*commonpb.KeyValue{{Key: "service.name", Value: stringValue(batch.ServiceName)}}
-		if batch.ContainerID != "" {
-			resourceAttrs = append(resourceAttrs, &commonpb.KeyValue{Key: "container.id", Value: stringValue(batch.ContainerID)})
-		}
-		if batch.ContainerName != "" {
-			resourceAttrs = append(resourceAttrs, &commonpb.KeyValue{Key: "container.name", Value: stringValue(batch.ContainerName)})
-		}
-
-		spans := make([]*tracepb.Span, 0, len(batch.Requests))
-		for _, accessReq := range batch.Requests {
-			if accessReq.Method == "" || accessReq.Path == "" || accessReq.StatusCode == 0 {
-				continue
-			}
-			start := accessReq.Timestamp
-			if start.IsZero() {
-				start = time.Now()
-			}
-			end := start.Add(accessReq.Duration)
-			if accessReq.Duration <= 0 {
-				end = start
-			}
-			traceID, spanID := syntheticIDs(batch.ServiceName, accessReq)
-			attrs := []*commonpb.KeyValue{
-				{Key: "http.request.method", Value: stringValue(strings.ToUpper(accessReq.Method))},
-				{Key: "url.path", Value: stringValue(accessReq.Path)},
-				{Key: "http.response.status_code", Value: intValue(int64(accessReq.StatusCode))},
-				{Key: "everyup.source", Value: stringValue("docker_access_log")},
-			}
-			if accessReq.ClientIP != "" {
-				attrs = append(attrs, &commonpb.KeyValue{Key: "client.address", Value: stringValue(accessReq.ClientIP)})
-			}
-			status := &tracepb.Status{}
-			if accessReq.StatusCode >= 500 {
-				status.Code = tracepb.Status_STATUS_CODE_ERROR
-			}
-			spans = append(spans, &tracepb.Span{
-				TraceId:           traceID,
-				SpanId:            spanID,
-				Name:              strings.ToUpper(accessReq.Method) + " " + accessReq.Path,
-				Kind:              tracepb.Span_SPAN_KIND_SERVER,
-				StartTimeUnixNano: uint64(start.UnixNano()),
-				EndTimeUnixNano:   uint64(end.UnixNano()),
-				Attributes:        attrs,
-				Status:            status,
-			})
-		}
-		if len(spans) == 0 {
-			continue
-		}
-		req.ResourceSpans = append(req.ResourceSpans, &tracepb.ResourceSpans{
-			Resource: &resourcepb.Resource{Attributes: resourceAttrs},
-			ScopeSpans: []*tracepb.ScopeSpans{{
-				Spans: spans,
-			}},
-		})
-	}
-	if len(req.ResourceSpans) == 0 {
-		return nil
-	}
-	data, err := proto.Marshal(req)
-	if err != nil {
-		return fmt.Errorf("encode OTLP traces: %w", err)
-	}
-	return c.SendOTLPProtobuf(ctx, "traces", data)
-}
 func (c *Client) postProtobuf(ctx context.Context, path string, data []byte) error {
 	_, err := c.postProtobufResponse(ctx, path, data)
 	return err
@@ -357,21 +260,6 @@ func (c *Client) postProtobufResponse(ctx context.Context, path string, data []b
 	return body, nil
 }
 
-func intValue(value int64) *commonpb.AnyValue {
-	return &commonpb.AnyValue{Value: &commonpb.AnyValue_IntValue{IntValue: value}}
-}
-
-func syntheticIDs(serviceName string, req OTLPAccessRequest) ([]byte, []byte) {
-	seed := fmt.Sprintf("%s|%s|%s|%d|%d|%s", serviceName, req.Method, req.Path, req.StatusCode, req.Timestamp.UnixNano(), req.ClientIP)
-	first := sha256Sum(seed)
-	second := sha256Sum(seed + "|span")
-	return first[:16], second[:8]
-}
-
-func sha256Sum(value string) []byte {
-	sum := sha256.Sum256([]byte(value))
-	return sum[:]
-}
 func stringValue(value string) *commonpb.AnyValue {
 	return &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: value}}
 }

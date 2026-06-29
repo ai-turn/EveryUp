@@ -22,6 +22,7 @@ const (
 )
 
 type Config struct {
+	Mode      string
 	AgentName string
 
 	HealthURL     string
@@ -36,24 +37,16 @@ type Config struct {
 	DockerLogsEnabled      bool
 	DockerLogTailLines     int
 	ExcludeNames           []string
-	// APICaptureMode controls where API request data comes from:
-	//   "accesslog" (default) — parse stdout access logs into request spans
-	//   "otlp"                 — the app sends requests via OpenTelemetry (to the
-	//                            telemetry gateway); the agent skips access-log
-	//                            parsing to avoid double-counting
-	//   "off"                  — no request capture from the agent
-	APICaptureMode string
-
-	OTelConfigEnabled bool
-	OTelConfigPath    string
-	OTelConfDir       string
-	OTelFileLogPaths  []string
-	WebOTLPEndpoint   string
-	WebBaseURL        string
-	AgentAPIKey       string
-	WebAgentID        string
-	WebSyncEnabled    bool
-	WebSyncInterval   time.Duration
+	OTelConfigEnabled      bool
+	OTelConfigPath         string
+	OTelConfDir            string
+	OTelFileLogPaths       []string
+	WebOTLPEndpoint        string
+	WebBaseURL             string
+	AgentAPIKey            string
+	WebAgentID             string
+	WebSyncEnabled         bool
+	WebSyncInterval        time.Duration
 
 	TelemetryGatewayEnabled    bool
 	TelemetryGatewayListenAddr string
@@ -68,10 +61,24 @@ type Config struct {
 	HostCPUPercent     float64
 	HostMemoryPercent  float64
 	HostDiskPercent    float64
+
+	ProxyListenAddr      string
+	ProxyUpstreamURL     string
+	ProxyServiceName     string
+	ProxyOTLPEndpoint    string
+	CaptureEnabled       bool
+	CaptureRoutes        []string
+	CaptureExcludeRoutes []string
+	CaptureMaxBodyBytes  int
+	CaptureOnStatus      string
+	CaptureOnSlow        time.Duration
+	CaptureMaskKeys      []string
+	CaptureRegexPresets  []string
 }
 
 func LoadFromEnv() (Config, error) {
 	cfg := Config{
+		Mode:          strings.ToLower(getEnv("EVERYUP_AGENT_MODE", "agent")),
 		AgentName:     getEnv("EVERYUP_AGENT_NAME", defaultAgentName),
 		HealthURL:     strings.TrimSpace(os.Getenv("EVERYUP_HEALTH_URL")),
 		ServiceName:   getEnv("EVERYUP_SERVICE_NAME", defaultServiceName),
@@ -85,7 +92,6 @@ func LoadFromEnv() (Config, error) {
 		DockerLogsEnabled:      boolEnv("EVERYUP_DOCKER_LOGS_ENABLED", true),
 		DockerLogTailLines:     intEnv("EVERYUP_DOCKER_LOGS_TAIL_LINES", 100),
 		ExcludeNames:           splitCSV(os.Getenv("EVERYUP_EXCLUDE")),
-		APICaptureMode:         strings.ToLower(getEnv("EVERYUP_API_CAPTURE_MODE", "accesslog")),
 
 		OTelConfigEnabled: boolEnv("EVERYUP_OTEL_CONFIG_ENABLED", false),
 		OTelConfigPath:    getEnv("EVERYUP_OTEL_CONFIG_PATH", defaultOtelConfigPath),
@@ -112,6 +118,44 @@ func LoadFromEnv() (Config, error) {
 		HostCPUPercent:     percentEnv("EVERYUP_HOST_CPU_PERCENT", 0),
 		HostMemoryPercent:  percentEnv("EVERYUP_HOST_MEMORY_PERCENT", 0),
 		HostDiskPercent:    percentEnv("EVERYUP_HOST_DISK_PERCENT", 0),
+
+		ProxyListenAddr:      getEnv("EVERYUP_PROXY_LISTEN_ADDR", ":8080"),
+		ProxyUpstreamURL:     strings.TrimRight(strings.TrimSpace(os.Getenv("EVERYUP_PROXY_UPSTREAM_URL")), "/"),
+		ProxyServiceName:     getEnv("EVERYUP_PROXY_SERVICE_NAME", getEnv("EVERYUP_SERVICE_NAME", defaultServiceName)),
+		ProxyOTLPEndpoint:    getEnv("EVERYUP_PROXY_OTLP_ENDPOINT", "http://everyup-agent:4318"),
+		CaptureEnabled:       boolEnv("EVERYUP_CAPTURE_ENABLED", false),
+		CaptureRoutes:        splitCSV(os.Getenv("EVERYUP_CAPTURE_ROUTES")),
+		CaptureExcludeRoutes: splitCSV(getEnv("EVERYUP_CAPTURE_EXCLUDE_ROUTES", "/login,/auth,/payment,/upload")),
+		CaptureMaxBodyBytes:  intEnv("EVERYUP_CAPTURE_MAX_BODY_BYTES", 8192),
+		CaptureOnStatus:      getEnv("EVERYUP_CAPTURE_ON_STATUS", "400-599"),
+		CaptureOnSlow:        durationMillis("EVERYUP_CAPTURE_ON_SLOW_MS", 3*time.Second),
+		CaptureMaskKeys:      splitCSV(getEnv("EVERYUP_CAPTURE_MASK_KEYS", "password,token,secret,authorization,cookie,set-cookie")),
+		CaptureRegexPresets:  splitCSV(getEnv("EVERYUP_CAPTURE_REGEX_PRESET", "rrn,phone,email,card")),
+	}
+
+	switch cfg.Mode {
+	case "agent", "proxy":
+	default:
+		return Config{}, errors.New("EVERYUP_AGENT_MODE must be one of: agent, proxy")
+	}
+	if cfg.Mode == "proxy" {
+		if strings.TrimSpace(cfg.ProxyListenAddr) == "" {
+			return Config{}, errors.New("EVERYUP_PROXY_LISTEN_ADDR is required in proxy mode")
+		}
+		if cfg.ProxyUpstreamURL == "" {
+			return Config{}, errors.New("EVERYUP_PROXY_UPSTREAM_URL is required in proxy mode")
+		}
+		parsed, err := url.ParseRequestURI(cfg.ProxyUpstreamURL)
+		if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+			return Config{}, errors.New("EVERYUP_PROXY_UPSTREAM_URL must be an absolute URL")
+		}
+		parsed, err = url.ParseRequestURI(cfg.ProxyOTLPEndpoint)
+		if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+			return Config{}, errors.New("EVERYUP_PROXY_OTLP_ENDPOINT must be an absolute URL")
+		}
+		if cfg.CaptureMaxBodyBytes <= 0 {
+			return Config{}, errors.New("EVERYUP_CAPTURE_MAX_BODY_BYTES must be greater than 0")
+		}
 	}
 
 	if cfg.HealthURL != "" {
@@ -134,11 +178,6 @@ func LoadFromEnv() (Config, error) {
 	}
 	if cfg.DockerLogTailLines > 1000 {
 		cfg.DockerLogTailLines = 1000
-	}
-	switch cfg.APICaptureMode {
-	case "accesslog", "otlp", "off":
-	default:
-		return Config{}, errors.New("EVERYUP_API_CAPTURE_MODE must be one of: accesslog, otlp, off")
 	}
 	if cfg.WebOTLPEndpoint != "" {
 		parsed, err := url.ParseRequestURI(cfg.WebOTLPEndpoint)
@@ -214,6 +253,18 @@ func durationSeconds(key string, fallback time.Duration) time.Duration {
 		return fallback
 	}
 	return time.Duration(seconds) * time.Second
+}
+
+func durationMillis(key string, fallback time.Duration) time.Duration {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return fallback
+	}
+	millis, err := strconv.Atoi(value)
+	if err != nil {
+		return fallback
+	}
+	return time.Duration(millis) * time.Millisecond
 }
 
 func intEnv(key string, fallback int) int {

@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aiturn/everyup/agent/internal/accesslog"
 	"github.com/aiturn/everyup/agent/internal/checks"
 	"github.com/aiturn/everyup/agent/internal/config"
 	"github.com/aiturn/everyup/agent/internal/discovery"
@@ -107,20 +106,20 @@ func New(cfg config.Config) (*Agent, error) {
 	}
 
 	agent := &Agent{
-		cfg:         cfg,
-		httpCheck:   checks.NewHTTPChecker(cfg.HTTPTimeout),
-		tcpCheck:    checks.NewTCPChecker(cfg.HTTPTimeout),
-		docker:      docker,
-		store:       state.NewStore(filepath.Join(cfg.DataDir, "agent-state.json")),
-		audit:       state.NewAuditLogger(filepath.Join(cfg.DataDir, "audit.jsonl")),
-		web:         web,
-		webAgentID:  cfg.WebAgentID,
+		cfg:             cfg,
+		httpCheck:       checks.NewHTTPChecker(cfg.HTTPTimeout),
+		tcpCheck:        checks.NewTCPChecker(cfg.HTTPTimeout),
+		docker:          docker,
+		store:           state.NewStore(filepath.Join(cfg.DataDir, "agent-state.json")),
+		audit:           state.NewAuditLogger(filepath.Join(cfg.DataDir, "audit.jsonl")),
+		web:             web,
+		webAgentID:      cfg.WebAgentID,
 		heartbeat:       heartbeat,
 		hostMetrics:     hostReader,
 		hostAlertReader: hostAlertReader,
 		gateway:         gateway,
-		states:      make(map[string]*targetState),
-		webEvents:   make([]state.AuditEvent, 0),
+		states:          make(map[string]*targetState),
+		webEvents:       make([]state.AuditEvent, 0),
 	}
 
 	return agent, nil
@@ -707,13 +706,10 @@ func (a *Agent) forwardDockerLogs(ctx context.Context, targets []discovery.Targe
 		at     time.Time
 	}
 
-	// Only derive API requests from stdout access logs in accesslog mode. In otlp
-	// mode the app's OpenTelemetry instrumentation emits the request spans, so
-	// parsing here too would double-count the same requests.
-	accessLogRequests := a.cfg.APICaptureMode == "accesslog"
-
+	// Docker stdout/stderr is forwarded as logs only. API request collection is
+	// intentionally reserved for the proxy path so request/response capture has
+	// one source of truth.
 	batches := make([]webclient.OTLPLogBatch, 0)
-	requestBatches := make([]webclient.OTLPAccessRequestBatch, 0)
 	cursors := make([]cursor, 0)
 	now := time.Now()
 	for _, target := range targets {
@@ -728,7 +724,6 @@ func (a *Agent) forwardDockerLogs(ctx context.Context, targets []discovery.Targe
 		}
 
 		entries := make([]webclient.OTLPLogEntry, 0, len(lines))
-		requests := make([]webclient.OTLPAccessRequest, 0)
 		maxSeen := lastSent
 		for _, line := range lines {
 			stamp := line.Time
@@ -749,18 +744,6 @@ func (a *Agent) forwardDockerLogs(ctx context.Context, targets []discovery.Targe
 					"everyup.target.key": targetKey(target),
 				},
 			})
-			if accessLogRequests {
-				if req, ok := accesslog.Parse(body, stamp); ok {
-					requests = append(requests, webclient.OTLPAccessRequest{
-						Timestamp:  req.Timestamp,
-						Method:     req.Method,
-						Path:       req.Path,
-						StatusCode: req.StatusCode,
-						Duration:   req.Duration,
-						ClientIP:   req.ClientIP,
-					})
-				}
-			}
 			if stamp.After(maxSeen) {
 				maxSeen = stamp
 			}
@@ -774,14 +757,6 @@ func (a *Agent) forwardDockerLogs(ctx context.Context, targets []discovery.Targe
 			ContainerName: targetKey(target),
 			Entries:       entries,
 		})
-		if len(requests) > 0 {
-			requestBatches = append(requestBatches, webclient.OTLPAccessRequestBatch{
-				ServiceName:   target.ServiceName,
-				ContainerID:   target.ID,
-				ContainerName: targetKey(target),
-				Requests:      requests,
-			})
-		}
 		cursors = append(cursors, cursor{target: target, at: maxSeen})
 	}
 
@@ -792,15 +767,11 @@ func (a *Agent) forwardDockerLogs(ctx context.Context, targets []discovery.Targe
 		log.Printf("EveryUp Web docker log sync failed: %v", err)
 		return
 	}
-	if err := a.web.SendOTLPAccessRequests(ctx, requestBatches); err != nil {
-		log.Printf("EveryUp Web access log request sync failed: %v", err)
-		return
-	}
 	for _, cursor := range cursors {
 		a.setDockerLogAt(cursor.target, cursor.at)
 	}
 	a.saveState()
-	log.Printf("synced docker logs to EveryUp Web: services=%d access_request_batches=%d", len(batches), len(requestBatches))
+	log.Printf("synced docker logs to EveryUp Web: services=%d", len(batches))
 }
 func (a *Agent) runResourceThresholdCheck(ctx context.Context, target discovery.Target) {
 	if a.docker == nil || target.ID == "" || strings.HasPrefix(target.ID, "env:") {

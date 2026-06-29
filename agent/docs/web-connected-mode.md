@@ -1,7 +1,8 @@
 # Web Connected Mode
 
-Web connected mode lets the Agent sync discovered containers, Docker logs, API
-access-log summaries, events, and host metrics to EveryUp Web.
+Web connected mode lets the Agent sync discovered containers, Docker logs,
+events, and host metrics to EveryUp Web. API request capture is handled by the
+Agent image running in proxy mode.
 
 ## Compose Setup
 
@@ -47,19 +48,9 @@ appears online within about 30 seconds.
 ## Logs And API Requests
 
 Docker stdout/stderr logs are forwarded automatically for containers on the same
-Docker host.
-
-API requests are created from access-log lines found in Docker stdout. The Agent
-recognizes common formats such as:
-
-```text
-10.0.0.1 - - "GET /api/users HTTP/1.1" 200 17ms
-method=GET path=/api/users status=200 duration=17ms
-{"method":"GET","path":"/api/users","status":200,"duration_ms":17}
-```
-
-If the access log is written only to a file inside the container, configure the
-application or reverse proxy to also write it to stdout.
+Docker host. API requests are not created from Docker stdout access-log lines.
+Run a separate `everyup-agent` container with `EVERYUP_AGENT_MODE=proxy` in front
+of the application when API request capture is needed.
 
 ## API Contract
 
@@ -72,7 +63,7 @@ The Agent syncs to these Web endpoints:
 | `POST /api/v1/agents/:agentId/events` | Flush local Agent events |
 | `POST /api/v1/agents/:agentId/metrics` | Send host metrics |
 | `POST /api/v1/otlp/v1/logs` | Forward Docker logs encoded by the Agent |
-| `POST /api/v1/otlp/v1/traces` | Forward API request records encoded by the Agent |
+| `POST /api/v1/otlp/v1/traces` | Forward proxy-generated or app-generated trace spans |
 
 Authentication uses `Authorization: Bearer <EVERYUP_AGENT_API_KEY>`.
 

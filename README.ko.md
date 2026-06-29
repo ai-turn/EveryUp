@@ -124,65 +124,58 @@ docker compose up -d everyup-agent
 
 ## API 요청 수집 (선택)
 
-요청별 데이터(method/path/status/duration)는 앱의 **OpenTelemetry 자동 계측**을
-Agent의 텔레메트리 게이트웨이(`:4318`)로 보내 수집합니다. Linux/macOS/Windows
-어디서나 동작하고, 앱에 API 키가 필요 없으며(Agent가 자기 키를 붙임),
-**본문 없이 메타데이터만** 수집합니다.
-
-**1. 앱 서비스에 아래 env 추가** (언어 무관, 동일):
+요청별 API 데이터는 EveryUp Agent 이미지를 `proxy` 모드로 실행해 수집합니다.
+애플리케이션 서비스 앞단에 두고 클라이언트 트래픽을 프록시로 통과시키세요.
+이것이 request/response 수집을 위한 지원 경로이며, stdout 액세스 로그 파싱과
+앱 측 API 수집 모드는 더 이상 지원하지 않습니다.
 
 ```yaml
-environment:
-  OTEL_SERVICE_NAME: demo                              # ★ EveryUp에 보이는 서비스명과 반드시 일치
-  OTEL_EXPORTER_OTLP_ENDPOINT: http://everyup-agent:4318
-  OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
-  OTEL_TRACES_EXPORTER: otlp
-  OTEL_METRICS_EXPORTER: none
-  OTEL_LOGS_EXPORTER: none
+services:
+  app:
+    image: your-app:latest
+
+  everyup-proxy:
+    image: aiturn/everyup-agent:latest
+    environment:
+      EVERYUP_AGENT_MODE: "proxy"
+      EVERYUP_PROXY_LISTEN_ADDR: ":8080"
+      EVERYUP_PROXY_UPSTREAM_URL: "http://app:8080"
+      EVERYUP_PROXY_OTLP_ENDPOINT: "http://everyup-agent:4318"
+      EVERYUP_CAPTURE_ENABLED: "false"
+      EVERYUP_CAPTURE_ROUTES: "/api/..."
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
 ```
 
-**2. 자동 계측 켜기** (애플리케이션 코드 0줄):
+프록시는 트래픽을 변형 없이 전달하고 `/health`를 노출합니다. 바디 캡처는
+프록시 경로에서 설정하므로 route/status/latency 조건과 마스킹 정책이 한 곳에서
+관리됩니다. 캡처된 바디 이벤트는 trace API에서 admin이 아닌 사용자에게는
+숨겨지며, admin의 바디 열람은 `audit_events`에 기록되고, 바디를 포함한 span은
+기본 7일간 보존됩니다(`EVERYUP_RETENTION_BODYCAPTUREDAYS`).
 
-| 언어 | 방법 |
-| --- | --- |
-| **Java** (Spring Boot, Quarkus, …) | `opentelemetry-javaagent.jar` 마운트 + `JAVA_TOOL_OPTIONS=-javaagent:/otel/opentelemetry-javaagent.jar` |
-| **Python** (FastAPI, Django, Flask) | `pip install opentelemetry-distro opentelemetry-exporter-otlp` → `opentelemetry-instrument python app.py`로 실행 |
-| **Node.js** (Express, NestJS, …) | `npm i @opentelemetry/auto-instrumentations-node` → `NODE_OPTIONS=--require @opentelemetry/auto-instrumentations-node/register` |
-
-전체 compose 예제와 그 외 언어(Ruby, .NET, PHP, Go):
-[docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md).
-
-**3. Agent에** `EVERYUP_API_CAPTURE_MODE: "otlp"`를 설정합니다 — stdout 액세스로그를
-요청으로 중복 파싱하지 않게 (안 그러면 같은 요청이 2번 집계).
-
-> **로그를 요청에 연결하기.** 로그에 trace id를 찍어두면 요청의 "로그에서 보기"
-> 버튼이 해당 로그를 찾아줍니다. Spring Boot라면
-> `LOGGING_PATTERN_LEVEL=%5p [%X{trace_id}/%X{span_id}]`를 추가하세요 — OTel
-> 에이전트가 MDC를 자동으로 채웁니다.
+> **로그를 요청에 연결.** 로그에 trace id 또는 request id를 출력하면 EveryUp이
+> 프록시로 캡처한 요청과 애플리케이션 로그를 상관시킬 수 있습니다.
 
 ## 수집되는 데이터
 
-Agent만으로(1~3단계), Docker 소켓과 `/hostfs`에서:
+기본 Agent는 Docker 소켓과 `/hostfs`에서 다음을 수집합니다.
 
-| 데이터 | 출처 |
+| 데이터 | 소스 |
 | --- | --- |
-| 컨테이너 up/down·이름·이미지·상태·이벤트 | Docker 소켓 |
+| 컨테이너 up/down, 이름, 이미지, 상태, 이벤트 | Docker 소켓 |
 | stdout/stderr 로그 | `docker logs` |
-| 호스트 CPU·메모리·디스크·네트워크 | `/hostfs` 마운트 |
-| API 요청 | stdout의 액세스로그 줄, **또는** OpenTelemetry(위) |
+| 호스트 CPU, 메모리, 디스크, 네트워크 | `/hostfs` 마운트 |
 
-로그와 액세스로그 요청은 **stdout/stderr**에서 읽습니다 — 컨테이너 내부 파일에만
-쓰는 서비스는 이 방식으로 볼 수 없습니다. 앱 로그(또는 리버스 프록시 액세스로그)를
-stdout으로 출력하세요. 인식되는 액세스로그 형식:
+proxy 모드 Agent를 앱 앞단에 두면 다음을 수집합니다.
 
-```text
-10.0.0.1 - - "GET /api/users HTTP/1.1" 200 17ms
-method=GET path=/api/users status=200 duration=17ms
-{"method":"GET","path":"/api/users","status":200,"duration_ms":17}
-```
+| 데이터 | 소스 |
+| --- | --- |
+| API 요청 | 인라인 HTTP 프록시 |
+| 요청/응답 바디 | 프록시 캡처 정책, 기본 OFF |
 
-이 모드는 애플리케이션 내부(DB 쿼리, 함수명, 전체 트레이스)는 보지 못합니다 —
-OpenTelemetry로 계측해야 가능합니다.
+컨테이너 안의 파일에만 로그를 쓰는 서비스는 기본 Agent가 볼 수 없습니다.
+로그 수집을 위해 앱 로그를 stdout으로 출력하세요.
 
 ## 문서
 

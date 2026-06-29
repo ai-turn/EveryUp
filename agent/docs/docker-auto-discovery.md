@@ -32,19 +32,10 @@ Compose project/service metadata when available, otherwise the container name.
 - Container running/stopped state
 - Docker events
 - stdout/stderr logs
-- API request summaries parsed from stdout access logs
 - Host CPU, memory, and disk metrics
 
-## API Request Detection
+## API Request Capture
 
-EveryUp creates API request records from access-log lines in `docker logs`.
-Supported examples:
-
-```text
-10.0.0.1 - - "GET /api/users HTTP/1.1" 200 17ms
-method=GET path=/api/users status=200 duration=17ms
-{"method":"GET","path":"/api/users","status":200,"duration_ms":17}
-```
-
-If `docker logs <container>` does not show the line, EveryUp cannot collect it in
-compose-only mode.
+Docker auto-discovery does not create API request records from stdout access
+logs. Use the Agent image in `proxy` mode in front of the application when API
+request or body capture is needed.

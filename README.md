@@ -125,66 +125,58 @@ per-service configuration.** For per-request API data, see the next section.
 
 ## API Request Monitoring (optional)
 
-Per-request data (method, path, status, duration) comes from **OpenTelemetry
-auto-instrumentation** in your app, exported to the Agent's telemetry gateway
-(`:4318`). It works on Linux/macOS/Windows, needs no API key in the app (the Agent
-attaches its own), and captures **metadata only — no request/response bodies**.
-
-**1. Add these env vars to your app service** (same for every language):
+Per-request API data is collected through the EveryUp Agent image running in
+`proxy` mode. Put it in front of the application service and route client traffic
+through the proxy. This is the supported path for request/response capture;
+stdout access-log parsing and app-side API capture modes are no longer supported.
 
 ```yaml
-environment:
-  OTEL_SERVICE_NAME: demo                              # MUST match the service name shown in EveryUp
-  OTEL_EXPORTER_OTLP_ENDPOINT: http://everyup-agent:4318
-  OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
-  OTEL_TRACES_EXPORTER: otlp
-  OTEL_METRICS_EXPORTER: none
-  OTEL_LOGS_EXPORTER: none
+services:
+  app:
+    image: your-app:latest
+
+  everyup-proxy:
+    image: aiturn/everyup-agent:latest
+    environment:
+      EVERYUP_AGENT_MODE: "proxy"
+      EVERYUP_PROXY_LISTEN_ADDR: ":8080"
+      EVERYUP_PROXY_UPSTREAM_URL: "http://app:8080"
+      EVERYUP_PROXY_OTLP_ENDPOINT: "http://everyup-agent:4318"
+      EVERYUP_CAPTURE_ENABLED: "false"
+      EVERYUP_CAPTURE_ROUTES: "/api/..."
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
 ```
 
-**2. Enable auto-instrumentation** (no application code):
+The proxy forwards traffic unchanged and exposes `/health`. Body capture is
+configured on the proxy path so route, status, latency, and masking policies have
+one source of truth. Captured body events are hidden from non-admin users in the
+trace API, admin body views are recorded in `audit_events`, and body-bearing
+spans are retained for 7 days by default (`EVERYUP_RETENTION_BODYCAPTUREDAYS`).
 
-| Language | How |
-| --- | --- |
-| **Java** (Spring Boot, Quarkus, …) | Mount `opentelemetry-javaagent.jar`, set `JAVA_TOOL_OPTIONS=-javaagent:/otel/opentelemetry-javaagent.jar` |
-| **Python** (FastAPI, Django, Flask) | `pip install opentelemetry-distro opentelemetry-exporter-otlp` → run via `opentelemetry-instrument python app.py` |
-| **Node.js** (Express, NestJS, …) | `npm i @opentelemetry/auto-instrumentations-node` → set `NODE_OPTIONS=--require @opentelemetry/auto-instrumentations-node/register` |
-
-Full compose snippets and more languages (Ruby, .NET, PHP, Go):
-[docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md).
-
-**3. On the Agent**, set `EVERYUP_API_CAPTURE_MODE: "otlp"` so it stops parsing
-stdout access logs into requests (otherwise the same request is counted twice).
-
-> **Link logs to a request.** Print the trace id in your logs so EveryUp's "View
-> logs" button on a request finds them. For Spring Boot, add
-> `LOGGING_PATTERN_LEVEL=%5p [%X{trace_id}/%X{span_id}]` — the OTel agent fills the
-> MDC automatically.
+> **Link logs to a request.** Print the trace id or request id in your logs so
+> EveryUp can correlate proxy-captured requests with application logs.
 
 ## What Gets Collected
 
-With just the Agent (steps 1–3), from the Docker socket and `/hostfs`:
+With the standard Agent, from the Docker socket and `/hostfs`:
 
 | Data | Source |
 | --- | --- |
 | Container up/down, name, image, state, events | Docker socket |
 | stdout/stderr logs | `docker logs` |
 | Host CPU, memory, disk, network | `/hostfs` mount |
-| API requests | Access-log lines in stdout, **or** OpenTelemetry (above) |
 
-Logs and access-log requests are read from **stdout/stderr** — a service that
-writes only to a file inside the container can't be seen this way. Write app logs
-(or reverse-proxy access logs) to stdout. Access-log lines are recognized in these
-shapes:
+With the proxy-mode Agent in front of an app:
 
-```text
-10.0.0.1 - - "GET /api/users HTTP/1.1" 200 17ms
-method=GET path=/api/users status=200 duration=17ms
-{"method":"GET","path":"/api/users","status":200,"duration_ms":17}
-```
+| Data | Source |
+| --- | --- |
+| API requests | Inline HTTP proxy |
+| Request/response bodies | Proxy capture policy, off by default |
 
-This mode does not inspect application internals (DB queries, function names, full
-traces) unless the app is instrumented with OpenTelemetry.
+A service that writes logs only to a file inside the container cannot be seen by
+the standard Agent. Write app logs to stdout for log collection.
 
 ## Documentation
 

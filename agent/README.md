@@ -2,8 +2,9 @@
 
 EveryUp Agent is the lightweight collector that runs on a server you want to
 monitor. It discovers Docker containers automatically, reads stdout/stderr logs,
-parses access-log lines into API request summaries, collects host metrics, and
-syncs everything to EveryUp Web.
+collects host metrics, and syncs everything to EveryUp Web. API request
+collection is handled by the Agent image running in proxy mode, not by stdout
+access-log parsing.
 
 Alert rules, notification channels, and dashboard behavior are configured in Web.
 The Agent only collects and forwards data.
@@ -50,28 +51,37 @@ With only the Agent service running, EveryUp can collect:
 - Container running/stopped state
 - Docker events
 - Docker stdout/stderr logs
-- API request summaries parsed from stdout access logs
 - Host CPU, memory, disk, and network metrics
 
 Your application containers do not need the EveryUp Web URL or Agent API key.
 
 ## Logs And API Requests
 
-The Agent reads Docker stdout/stderr. Check what it can see with:
+The Agent reads Docker stdout/stderr and stores those lines as logs in Web. Check
+what it can see with:
 
 ```bash
 docker logs <container-name> --tail 100
 ```
 
-Normal application logs shown there are stored as logs in Web.
+API request records are not derived from stdout access logs anymore. Put the
+EveryUp Agent image in `proxy` mode in front of the app when you want request
+metadata, and enable body capture there when the route/status/latency policy
+allows it.
 
-API request records are created when stdout contains access-log lines with method,
-path, status, and optionally duration:
-
-```text
-10.0.0.1 - - "GET /api/users HTTP/1.1" 200 17ms
-method=GET path=/api/users status=200 duration=17ms
-{"method":"GET","path":"/api/users","status":200,"duration_ms":17}
+```yaml
+services:
+  everyup-proxy:
+    image: aiturn/everyup-agent:latest
+    environment:
+      EVERYUP_AGENT_MODE: "proxy"
+      EVERYUP_PROXY_LISTEN_ADDR: ":8080"
+      EVERYUP_PROXY_UPSTREAM_URL: "http://app:8080"
+      EVERYUP_PROXY_OTLP_ENDPOINT: "http://everyup-agent:4318"
+      EVERYUP_CAPTURE_ENABLED: "false"
+      EVERYUP_CAPTURE_ROUTES: "/api/..."
+    ports:
+      - "8080:8080"
 ```
 
 If logs are written only to files inside the container, Docker cannot show them
@@ -103,6 +113,7 @@ Only the three `yes` rows are required; everything else has a working default.
 
 | Variable | Required | Default | Description |
 | --- | ---: | --- | --- |
+| `EVERYUP_AGENT_MODE` | no | `agent` | Runtime mode: `agent` for host/container telemetry, `proxy` for inline API collection |
 | `EVERYUP_AGENT_NAME` | no | `everyup-agent` | Agent instance name |
 | `EVERYUP_SERVICE_NAME` | no | `local-service` | Default service name for the agent's own checks |
 | `EVERYUP_DATA_DIR` | no | `/data` | Where agent state (`agent-state.json`, `audit.jsonl`) is stored |
@@ -110,6 +121,28 @@ Only the three `yes` rows are required; everything else has a working default.
 | `EVERYUP_HTTP_TIMEOUT_SECONDS` | no | `5` | HTTP request timeout |
 | `EVERYUP_ALERT_COOLDOWN_SECONDS` | no | `300` | Minimum seconds between repeat alerts for the same target |
 | `EVERYUP_HEALTH_URL` | no | | Absolute URL to health-check (single-target mode; usually Docker discovery is used instead) |
+
+**Proxy mode**
+
+| Variable | Required | Default | Description |
+| --- | ---: | --- | --- |
+| `EVERYUP_AGENT_MODE` | yes | `agent` | Set to `proxy` to run the inline API proxy |
+| `EVERYUP_PROXY_LISTEN_ADDR` | no | `:8080` | Address the proxy listens on |
+| `EVERYUP_PROXY_UPSTREAM_URL` | yes | | Absolute backend URL that receives proxied traffic |
+| `EVERYUP_PROXY_SERVICE_NAME` | no | `EVERYUP_SERVICE_NAME` | Service name used on proxy-generated spans |
+| `EVERYUP_PROXY_OTLP_ENDPOINT` | no | `http://everyup-agent:4318` | OTLP/HTTP endpoint that receives proxy spans |
+| `EVERYUP_CAPTURE_ENABLED` | no | `false` | Enables request/response body events; API metadata spans are still sent |
+| `EVERYUP_CAPTURE_ROUTES` | yes for body capture | | Comma-separated route allowlist such as `/api/...`; empty captures no bodies |
+| `EVERYUP_CAPTURE_EXCLUDE_ROUTES` | no | `/login,/auth,/payment,/upload` | Routes excluded from body capture |
+| `EVERYUP_CAPTURE_MAX_BODY_BYTES` | no | `8192` | Max bytes copied from each request/response body |
+| `EVERYUP_CAPTURE_ON_STATUS` | no | `400-599` | Status codes that keep captured body events |
+| `EVERYUP_CAPTURE_ON_SLOW_MS` | no | `3000` | Latency threshold that keeps captured body events |
+| `EVERYUP_CAPTURE_MASK_KEYS` | no | `password,token,secret,authorization,cookie,set-cookie` | JSON keys masked before export |
+| `EVERYUP_CAPTURE_REGEX_PRESET` | no | `rrn,phone,email,card` | Regex masking presets applied to copied body text |
+
+Captured body events are exported as masked span events. The Web backend hides
+those event bodies from non-admin users, audits admin views, and removes
+body-bearing spans after `EVERYUP_RETENTION_BODYCAPTUREDAYS` days (default 7).
 
 **Docker discovery & logs**
 
@@ -120,7 +153,6 @@ Only the three `yes` rows are required; everything else has a working default.
 | `EVERYUP_DOCKER_LOGS_ENABLED` | no | `true` | Forward containers' stdout/stderr logs to Web |
 | `EVERYUP_DOCKER_LOGS_TAIL_LINES` | no | `100` | Max Docker log lines read per service on each check tick |
 | `EVERYUP_EXCLUDE` | no | | Comma-separated container names to exclude from discovery |
-| `EVERYUP_API_CAPTURE_MODE` | no | `accesslog` | API request source: `accesslog` (parse stdout), `otlp` (app sends via OpenTelemetry), or `off` |
 
 **Host metrics (CPU / memory / disk / network)**
 
