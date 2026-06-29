@@ -158,7 +158,38 @@ docker compose up -d
   admin 열람은 모두 `audit_events`에 기록됩니다.
 - `CAPTURE_MASK_KEYS`의 시크릿은 best-effort로 마스킹되고, 바디 포함 span은 7일
   보존됩니다(`EVERYUP_RETENTION_BODYCAPTUREDAYS`). 민감 라우트는
-  `CAPTURE_EXCLUDE_ROUTES`에 넣어두세요.
+  `CAPTURE_EXCLUDE_ROUTES`에 넣어두세요. `card` 정규식 프리셋은 긴 숫자열(예:
+  밀리초 타임스탬프)에 오탐할 수 있으니, 그런 경우 `EVERYUP_CAPTURE_REGEX_PRESET`에서
+  `card`를 빼세요.
+
+**기존 nginx 뒤에 둘 때 (리버스 프록시 체이닝)**
+
+이미 nginx가 앞에 있다면 프록시 포트를 게시하지 말고, nginx와 백엔드 *사이에*
+체이닝하세요. `backup`을 두면 프록시가 죽어도 API가 멈추지 않습니다 — nginx가
+백엔드로 바로 폴백합니다.
+
+```nginx
+# http {} 안 — 프록시가 우선, 백엔드가 폴백
+upstream app_upstream {
+    server everyup-proxy:8080 max_fails=2 fail_timeout=10s;  # 평소: 프록시 경유
+    server app:8080 backup;                                  # 프록시 다운: 백엔드 직결
+}
+
+# server {} 안 — 백엔드 API location 한 곳만 변경
+location /api {
+    proxy_pass http://app_upstream;
+    proxy_next_upstream error timeout http_502 http_503 http_504;  # 실패 시 백엔드로 재시도
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
+백엔드 API `location` 한 곳만 바뀌고, 정적·프론트엔드 라우트는 그대로 직결입니다.
+nginx가 계속 TLS를 종단하고 평문으로 넘기므로 프록시는 JSON만 파싱합니다. 프록시의
+`ports:` 매핑은 제거하고(nginx가 Docker 네트워크에서 `everyup-proxy:8080`으로 접근),
+`nginx -t && nginx -s reload`로 적용하세요.
 
 > **더 깊은 트레이스 (선택).** 프록시는 요청당 server span 1개를 만듭니다. 앱 내부
 > 스팬(DB·외부 호출)까지 보려면 앱의 OpenTelemetry exporter를 `http://everyup-agent:4318`

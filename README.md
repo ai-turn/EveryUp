@@ -159,7 +159,38 @@ Point its upstream at `everyup-proxy:8080` instead of publishing `8080`.
   see them redacted, and every admin view is recorded in `audit_events`.
 - Secrets in `CAPTURE_MASK_KEYS` are masked best-effort; body-bearing spans are
   retained 7 days (`EVERYUP_RETENTION_BODYCAPTUREDAYS`). Keep sensitive routes in
-  `CAPTURE_EXCLUDE_ROUTES`.
+  `CAPTURE_EXCLUDE_ROUTES`. The `card` regex preset can match long digit runs
+  (e.g. millisecond timestamps) — drop it from `EVERYUP_CAPTURE_REGEX_PRESET` if
+  that causes false positives.
+
+**Behind an existing nginx (reverse-proxy chaining)**
+
+If nginx already fronts your app, don't publish the proxy's port. Chain it
+*between* nginx and your backend, with a `backup` so the proxy can never take your
+API down — if it dies, nginx falls straight through to the backend.
+
+```nginx
+# in http {} — proxy is primary, backend is the fallback
+upstream app_upstream {
+    server everyup-proxy:8080 max_fails=2 fail_timeout=10s;  # normal: through the proxy
+    server app:8080 backup;                                  # proxy down: direct to backend
+}
+
+# in server {} — only the backend-API location changes
+location /api {
+    proxy_pass http://app_upstream;
+    proxy_next_upstream error timeout http_502 http_503 http_504;  # retry backend on failure
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
+Only the backend-API `location` changes; static/frontend routes stay direct.
+nginx keeps terminating TLS and forwards plaintext, so the proxy just parses JSON.
+Drop the proxy's `ports:` mapping (nginx reaches it over the Docker network as
+`everyup-proxy:8080`), then `nginx -t && nginx -s reload`.
 
 > **Deeper traces (optional).** The proxy already produces one server span per
 > request. To also capture in-app spans (DB, external calls), point your app's
