@@ -49,9 +49,9 @@ EveryUp has two parts:
 
 ## Quick Start
 
-> Run **Web** once, then drop the **Agent** into the Compose stack on each server
-> you want to monitor. Compose templates also live in [`web/`](web/docker-compose.yml)
-> and [`agent/`](agent/docker-compose.yml).
+> Run **Web** once, then drop the **Agent + Proxy** into the Compose stack on each
+> server you want to monitor — one stack enables every feature. Compose templates
+> also live in [`web/`](web/docker-compose.yml) and [`agent/`](agent/docker-compose.yml).
 
 ### 1. Start Web
 
@@ -90,16 +90,22 @@ Open `http://WEB_SERVER_IP:3001` and create the first admin account.
 In the dashboard, open **Services → Add** and create an Agent entry. Copy the API
 key (`evup_svc_…`) shown after creation — it belongs to the Agent only.
 
-### 3. Add the Agent to the monitored server
+### 3. Add the Agent + Proxy to the monitored server
 
-Add `everyup-agent` to that server's `docker-compose.yml` (next to your app
-services if it already has a Compose file):
+This single Compose stack enables **every** EveryUp feature: container health,
+logs, and host metrics (Agent) plus API requests, traces, and request/response
+bodies (Proxy). Client traffic enters through the proxy, which forwards it to your
+app unchanged and ships telemetry to the Agent's OTLP gateway.
 
 ```yaml
 services:
+  app:
+    image: your-app:latest        # your application
+    # No published ports — traffic enters through everyup-proxy below.
+
   everyup-agent:
     image: aiturn/everyup-agent:latest
-    container_name: everyup-agent
+    container_name: everyup-agent  # the proxy reaches it as everyup-agent:4318
     user: "0:0"
     environment:
       EVERYUP_WEB_SYNC_ENABLED: "true"
@@ -111,52 +117,57 @@ services:
       - everyup-agent-data:/data
     restart: unless-stopped
 
+  everyup-proxy:
+    image: aiturn/everyup-agent:latest   # same image, proxy mode
+    environment:
+      EVERYUP_AGENT_MODE: "proxy"
+      EVERYUP_PROXY_LISTEN_ADDR: ":8080"
+      EVERYUP_PROXY_UPSTREAM_URL: "http://app:8080"        # ← your app's service:port
+      EVERYUP_PROXY_OTLP_ENDPOINT: "http://everyup-agent:4318"
+      EVERYUP_PROXY_SERVICE_NAME: "app"                    # name this traffic shows under
+      EVERYUP_CAPTURE_ENABLED: "true"                      # capture request/response bodies
+      EVERYUP_CAPTURE_ROUTES: "/api/..."                   # which routes to capture
+      EVERYUP_CAPTURE_ON_STATUS: "400-599"                 # keep bodies for errors; use "200-599" for all
+      EVERYUP_CAPTURE_ON_SLOW_MS: "3000"                   # ...or for requests slower than this
+      EVERYUP_CAPTURE_EXCLUDE_ROUTES: "/login,/auth,/payment,/upload"
+    ports:
+      - "8080:8080"     # clients hit the proxy; it forwards to app:8080
+    restart: unless-stopped
+
 volumes:
   everyup-agent-data:
 ```
 
 ```bash
-docker compose up -d everyup-agent
+docker compose up -d
 ```
 
-The Agent appears online within ~30s and automatically finds the other containers
-on that host. **Container health, logs, and host metrics now flow with no
-per-service configuration.** For per-request API data, see the next section.
+The Agent appears online within ~30s and discovers the other containers on the
+host (health, logs, host metrics flow with no per-service config). Point your
+clients at the proxy's `:8080` instead of the app, and **API requests, traces,
+and captured bodies appear in the dashboard.** Already have nginx/TLS in front?
+Point its upstream at `everyup-proxy:8080` instead of publishing `8080`.
 
-## API Request Monitoring (optional)
+**How body capture works**
 
-Per-request API data is collected through the EveryUp Agent image running in
-`proxy` mode. Put it in front of the application service and route client traffic
-through the proxy. This is the supported path for request/response capture;
-stdout access-log parsing and app-side API capture modes are no longer supported.
+- Bodies are kept only for requests matching `CAPTURE_ON_STATUS` **or**
+  `CAPTURE_ON_SLOW_MS` — by default errors (`400-599`) and slow requests. A normal
+  `200` still appears as a request and trace; its body is skipped unless you widen
+  `CAPTURE_ON_STATUS` to `200-599`.
+- Open a request (API tab) or a log with a trace link → the **Trace** panel shows
+  spans and a **Captured bodies** section. Bodies are **admin-only**; non-admins
+  see them redacted, and every admin view is recorded in `audit_events`.
+- Secrets in `CAPTURE_MASK_KEYS` are masked best-effort; body-bearing spans are
+  retained 7 days (`EVERYUP_RETENTION_BODYCAPTUREDAYS`). Keep sensitive routes in
+  `CAPTURE_EXCLUDE_ROUTES`.
 
-```yaml
-services:
-  app:
-    image: your-app:latest
+> **Deeper traces (optional).** The proxy already produces one server span per
+> request. To also capture in-app spans (DB, external calls), point your app's
+> OpenTelemetry exporter at `http://everyup-agent:4318`. Note: running app-side
+> OTel *and* the proxy makes each request appear twice in the request list.
 
-  everyup-proxy:
-    image: aiturn/everyup-agent:latest
-    environment:
-      EVERYUP_AGENT_MODE: "proxy"
-      EVERYUP_PROXY_LISTEN_ADDR: ":8080"
-      EVERYUP_PROXY_UPSTREAM_URL: "http://app:8080"
-      EVERYUP_PROXY_OTLP_ENDPOINT: "http://everyup-agent:4318"
-      EVERYUP_CAPTURE_ENABLED: "false"
-      EVERYUP_CAPTURE_ROUTES: "/api/..."
-    ports:
-      - "8080:8080"
-    restart: unless-stopped
-```
-
-The proxy forwards traffic unchanged and exposes `/health`. Body capture is
-configured on the proxy path so route, status, latency, and masking policies have
-one source of truth. Captured body events are hidden from non-admin users in the
-trace API, admin body views are recorded in `audit_events`, and body-bearing
-spans are retained for 7 days by default (`EVERYUP_RETENTION_BODYCAPTUREDAYS`).
-
-> **Link logs to a request.** Print the trace id or request id in your logs so
-> EveryUp can correlate proxy-captured requests with application logs.
+> **Link logs to a request.** Print the trace id in your logs so EveryUp can
+> correlate proxy-captured requests with application logs.
 
 ## What Gets Collected
 
@@ -172,8 +183,8 @@ With the proxy-mode Agent in front of an app:
 
 | Data | Source |
 | --- | --- |
-| API requests | Inline HTTP proxy |
-| Request/response bodies | Proxy capture policy, off by default |
+| API requests + traces | Inline HTTP proxy |
+| Request/response bodies | Proxy capture policy (errors/slow by default) |
 
 A service that writes logs only to a file inside the container cannot be seen by
 the standard Agent. Write app logs to stdout for log collection.

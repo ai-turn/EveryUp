@@ -49,8 +49,9 @@ EveryUp은 두 부분으로 구성됩니다:
 
 ## 빠른 시작
 
-> **Web**을 한 번 띄우고, 모니터링할 각 서버의 Compose 스택에 **Agent**를 추가하면
-> 됩니다. Compose 템플릿은 [`web/`](web/docker-compose.yml)·[`agent/`](agent/docker-compose.yml)에도 있습니다.
+> **Web**을 한 번 띄우고, 모니터링할 각 서버의 Compose 스택에 **Agent + Proxy**를
+> 추가하면 됩니다 — 한 스택으로 모든 기능이 켜집니다. Compose 템플릿은
+> [`web/`](web/docker-compose.yml)·[`agent/`](agent/docker-compose.yml)에도 있습니다.
 
 ### 1. Web 실행
 
@@ -89,16 +90,22 @@ docker compose up -d
 대시보드에서 **Services → Add**로 Agent를 생성하고, 표시되는 API 키(`evup_svc_…`)를
 복사합니다 — 이 키는 Agent 전용입니다.
 
-### 3. 모니터링할 서버에 Agent 추가
+### 3. 모니터링할 서버에 Agent + Proxy 추가
 
-해당 서버의 `docker-compose.yml`에 `everyup-agent`를 추가합니다 (이미 앱 Compose
-파일이 있으면 기존 서비스 옆에):
+이 Compose 한 묶음으로 **모든** EveryUp 기능이 켜집니다: 컨테이너 health·로그·호스트
+메트릭(Agent) + API 요청·트레이스·요청/응답 바디(Proxy). 클라이언트 트래픽은
+프록시로 들어와 앱으로 변형 없이 전달되고, 텔레메트리는 Agent의 OTLP 게이트웨이로
+보내집니다.
 
 ```yaml
 services:
+  app:
+    image: your-app:latest        # 당신의 애플리케이션
+    # 포트 미게시 — 트래픽은 아래 everyup-proxy로 들어옵니다.
+
   everyup-agent:
     image: aiturn/everyup-agent:latest
-    container_name: everyup-agent
+    container_name: everyup-agent  # 프록시가 everyup-agent:4318 로 접근
     user: "0:0"
     environment:
       EVERYUP_WEB_SYNC_ENABLED: "true"
@@ -110,52 +117,56 @@ services:
       - everyup-agent-data:/data
     restart: unless-stopped
 
+  everyup-proxy:
+    image: aiturn/everyup-agent:latest   # 같은 이미지, 프록시 모드
+    environment:
+      EVERYUP_AGENT_MODE: "proxy"
+      EVERYUP_PROXY_LISTEN_ADDR: ":8080"
+      EVERYUP_PROXY_UPSTREAM_URL: "http://app:8080"        # ← 당신 앱의 서비스명:포트
+      EVERYUP_PROXY_OTLP_ENDPOINT: "http://everyup-agent:4318"
+      EVERYUP_PROXY_SERVICE_NAME: "app"                    # 이 트래픽이 표시될 서비스명
+      EVERYUP_CAPTURE_ENABLED: "true"                      # 요청/응답 바디 캡처
+      EVERYUP_CAPTURE_ROUTES: "/api/..."                   # 캡처할 라우트
+      EVERYUP_CAPTURE_ON_STATUS: "400-599"                 # 에러 바디만; 전체는 "200-599"
+      EVERYUP_CAPTURE_ON_SLOW_MS: "3000"                   # ...또는 이보다 느린 요청
+      EVERYUP_CAPTURE_EXCLUDE_ROUTES: "/login,/auth,/payment,/upload"
+    ports:
+      - "8080:8080"     # 클라이언트는 프록시로; 프록시가 app:8080 으로 전달
+    restart: unless-stopped
+
 volumes:
   everyup-agent-data:
 ```
 
 ```bash
-docker compose up -d everyup-agent
+docker compose up -d
 ```
 
-약 30초 안에 Agent가 online으로 뜨고, 같은 호스트의 다른 컨테이너를 자동으로
-발견합니다. **컨테이너 health·로그·호스트 메트릭이 서비스별 설정 없이 바로
-들어옵니다.** 요청별 API 데이터는 다음 섹션을 참고하세요.
+약 30초 안에 Agent가 online으로 뜨고 호스트의 다른 컨테이너를 자동 발견합니다
+(health·로그·호스트 메트릭은 서비스별 설정 없이 바로). 클라이언트를 앱 대신
+프록시의 `:8080`으로 향하게 하면 **API 요청·트레이스·캡처된 바디가 대시보드에
+나타납니다.** 이미 앞단에 nginx/TLS가 있다면 `8080` 게시 대신 그 upstream을
+`everyup-proxy:8080`으로 지정하세요.
 
-## API 요청 수집 (선택)
+**바디 캡처 동작 방식**
 
-요청별 API 데이터는 EveryUp Agent 이미지를 `proxy` 모드로 실행해 수집합니다.
-애플리케이션 서비스 앞단에 두고 클라이언트 트래픽을 프록시로 통과시키세요.
-이것이 request/response 수집을 위한 지원 경로이며, stdout 액세스 로그 파싱과
-앱 측 API 수집 모드는 더 이상 지원하지 않습니다.
+- 바디는 `CAPTURE_ON_STATUS` **또는** `CAPTURE_ON_SLOW_MS` 에 맞는 요청만 보관합니다
+  — 기본값은 에러(`400-599`)와 느린 요청. 정상 `200`도 요청·트레이스에는 뜨지만,
+  `CAPTURE_ON_STATUS`를 `200-599`로 넓히지 않으면 **바디는 생략**됩니다.
+- API 탭의 요청이나 트레이스 링크가 달린 로그를 열면 **Trace** 패널에 스팬과
+  **Captured bodies** 섹션이 보입니다. 바디는 **admin 전용** — 비admin에겐 가려지고,
+  admin 열람은 모두 `audit_events`에 기록됩니다.
+- `CAPTURE_MASK_KEYS`의 시크릿은 best-effort로 마스킹되고, 바디 포함 span은 7일
+  보존됩니다(`EVERYUP_RETENTION_BODYCAPTUREDAYS`). 민감 라우트는
+  `CAPTURE_EXCLUDE_ROUTES`에 넣어두세요.
 
-```yaml
-services:
-  app:
-    image: your-app:latest
+> **더 깊은 트레이스 (선택).** 프록시는 요청당 server span 1개를 만듭니다. 앱 내부
+> 스팬(DB·외부 호출)까지 보려면 앱의 OpenTelemetry exporter를 `http://everyup-agent:4318`
+> 로 향하게 하세요. 단, 앱 측 OTel과 프록시를 함께 쓰면 같은 요청이 요청 목록에 두 번
+> 나타납니다.
 
-  everyup-proxy:
-    image: aiturn/everyup-agent:latest
-    environment:
-      EVERYUP_AGENT_MODE: "proxy"
-      EVERYUP_PROXY_LISTEN_ADDR: ":8080"
-      EVERYUP_PROXY_UPSTREAM_URL: "http://app:8080"
-      EVERYUP_PROXY_OTLP_ENDPOINT: "http://everyup-agent:4318"
-      EVERYUP_CAPTURE_ENABLED: "false"
-      EVERYUP_CAPTURE_ROUTES: "/api/..."
-    ports:
-      - "8080:8080"
-    restart: unless-stopped
-```
-
-프록시는 트래픽을 변형 없이 전달하고 `/health`를 노출합니다. 바디 캡처는
-프록시 경로에서 설정하므로 route/status/latency 조건과 마스킹 정책이 한 곳에서
-관리됩니다. 캡처된 바디 이벤트는 trace API에서 admin이 아닌 사용자에게는
-숨겨지며, admin의 바디 열람은 `audit_events`에 기록되고, 바디를 포함한 span은
-기본 7일간 보존됩니다(`EVERYUP_RETENTION_BODYCAPTUREDAYS`).
-
-> **로그를 요청에 연결.** 로그에 trace id 또는 request id를 출력하면 EveryUp이
-> 프록시로 캡처한 요청과 애플리케이션 로그를 상관시킬 수 있습니다.
+> **로그를 요청에 연결.** 로그에 trace id를 출력하면 EveryUp이 프록시로 캡처한
+> 요청과 애플리케이션 로그를 상관시킬 수 있습니다.
 
 ## 수집되는 데이터
 
@@ -171,8 +182,8 @@ proxy 모드 Agent를 앱 앞단에 두면 다음을 수집합니다.
 
 | 데이터 | 소스 |
 | --- | --- |
-| API 요청 | 인라인 HTTP 프록시 |
-| 요청/응답 바디 | 프록시 캡처 정책, 기본 OFF |
+| API 요청 + 트레이스 | 인라인 HTTP 프록시 |
+| 요청/응답 바디 | 프록시 캡처 정책 (기본: 에러/느린 요청) |
 
 컨테이너 안의 파일에만 로그를 쓰는 서비스는 기본 Agent가 볼 수 없습니다.
 로그 수집을 위해 앱 로그를 stdout으로 출력하세요.
