@@ -1,8 +1,9 @@
 # Web Connected Mode
 
 Web connected mode lets the Agent sync discovered containers, Docker logs,
-events, and host metrics to EveryUp Web. API request capture is handled by the
-Agent image running in proxy mode.
+events, and host metrics to EveryUp Web. API status codes are derived from
+access-log lines in the collected logs; request/response bodies are an optional
+Tier 2 feature delivered by app-side OpenTelemetry instrumentation.
 
 ## Compose Setup
 
@@ -48,9 +49,10 @@ appears online within about 30 seconds.
 ## Logs And API Requests
 
 Docker stdout/stderr logs are forwarded automatically for containers on the same
-Docker host. API requests are not created from Docker stdout access-log lines.
-Run a separate `everyup-agent` container with `EVERYUP_AGENT_MODE=proxy` in front
-of the application when API request capture is needed.
+Docker host. Lines that parse as access logs (Nginx / Apache / structured JSON)
+are emitted as synthetic OTel SERVER spans, which Web projects into the API tab
+(status code, method, path; no latency). For headers/bodies, instrument the app
+with OpenTelemetry — see [OTEL_API_INSTRUMENTATION.md](../../docs/OTEL_API_INSTRUMENTATION.md).
 
 ## API Contract
 

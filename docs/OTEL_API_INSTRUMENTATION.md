@@ -1,29 +1,51 @@
-# Legacy OpenTelemetry API Instrumentation Notes
+# OpenTelemetry API Instrumentation (Tier 2)
 
-EveryUp no longer supports app-side API request collection modes as the recommended path.
-API request and request/response body capture should go through the EveryUp Agent image
-running in `proxy` mode.
+API **status codes** are collected for free in Tier 1 by parsing access logs — no
+instrumentation needed (see the README). This document covers **Tier 2**: getting
+full traces with real latency, plus request/response **headers and bodies**, by
+instrumenting the application with OpenTelemetry.
 
-Use OpenTelemetry in applications only for ordinary trace/log correlation when you need it.
-Do not use it as the primary API request capture path, and do not set
-`EVERYUP_API_CAPTURE_MODE`; that setting has been removed from the Agent.
+There is no proxy and no extra container. The app sends OTLP/HTTP spans to the
+Agent's OTLP gateway at `http://everyup-agent:4318` (which forwards to Web), or
+directly to Web at `/api/v1/otlp/v1/traces`. Use any OpenTelemetry SDK or
+auto-instrumentation for your language — see
+[opentelemetry.io/docs](https://opentelemetry.io/docs/) for per-language setup.
+EveryUp only cares about the span shape below.
 
-```yaml
-services:
-  everyup-proxy:
-    image: aiturn/everyup-agent:latest
-    environment:
-      EVERYUP_AGENT_MODE: "proxy"
-      EVERYUP_PROXY_LISTEN_ADDR: ":8080"
-      EVERYUP_PROXY_UPSTREAM_URL: "http://app:8080"
-      EVERYUP_PROXY_OTLP_ENDPOINT: "http://everyup-agent:4318"
-      EVERYUP_CAPTURE_ENABLED: "false"
-      EVERYUP_CAPTURE_ROUTES: "/api/..."
-    ports:
-      - "8080:8080"
-```
+## What EveryUp reads from a span
 
-The proxy path keeps request accounting, body capture policy, masking, and retention in one
-place. Captured body span events are visible only to admin users through the trace API;
-admin views are recorded in `audit_events`, and body-bearing spans use
-`EVERYUP_RETENTION_BODYCAPTUREDAYS` retention (default 7 days).
+To appear in a service's **API** tab, emit a **SERVER**-kind span per request with:
+
+| Attribute | Type | Purpose |
+| --- | --- | --- |
+| `http.request.method` (or `http.method`) | string | required — request method |
+| `http.response.status_code` (or `http.status_code`) | int | required — status code |
+| `url.path` (or `http.target`) | string | request path |
+| `http.route` | string | optional path template (e.g. `/users/:id`) |
+| `client.address` (or `net.peer.ip`) | string | optional client IP |
+
+A span missing method or status is ignored (not projected as an API request).
+Span duration becomes the request latency.
+
+## Request/response bodies (optional)
+
+To show bodies in the **Trace** panel's *Captured bodies* section, attach span
+**events** to the request span:
+
+- Event name **`request_body_masked`** and/or **`response_body_masked`**.
+- Each event carries a `body` attribute holding the body text **you have already
+  masked**. EveryUp does not mask for you on this path — strip secrets, tokens,
+  and PII in your instrumentation before export.
+
+Captured bodies are **admin-only**: Web redacts the `body` attribute for non-admin
+users, records every admin view in `audit_events`, and deletes body-bearing spans
+after `EVERYUP_RETENTION_BODYCAPTUREDAYS` days (default 7).
+
+## Avoid double-counting
+
+If a service already produces API rows from Tier 1 access-log parsing, do **not**
+also instrument it with OTel for the same requests — each request would appear
+twice in the request list. Pick one source per service.
+
+> Planned: first-party SDKs and agent-based (eBPF) capture for
+> zero-instrumentation header/body collection.

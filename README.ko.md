@@ -12,7 +12,7 @@
   <a href="README.md">English</a> -
   <a href="https://ai-turn.github.io/everyup/">Live Demo</a> -
   <a href="#빠른-시작">빠른 시작</a> -
-  <a href="#api-요청-수집-선택">API 모니터링</a> -
+  <a href="#api-헤더바디-선택">API 바디 (선택)</a> -
   <a href="#수집되는-데이터">수집 항목</a>
 </p>
 
@@ -36,9 +36,10 @@ Agent 하나만 띄우면 됩니다.
 
 - Docker 컨테이너 자동 디스커버리 — 서비스별 설정 불필요
 - 애플리케이션 코드 수정 없이 stdout/stderr 로그 수집
-- API 요청 데이터(method, path, status, duration)
+- access log에서 파싱한 API 상태코드(method, path, status) — 프록시·코드 수정 불필요
 - 호스트 CPU·메모리·디스크·네트워크 메트릭
 - Telegram, Discord, Slack 알림
+- 선택: 인라인 프록시로 요청/응답 **헤더·바디** 수집 (옵트인)
 
 EveryUp은 두 부분으로 구성됩니다:
 
@@ -49,9 +50,9 @@ EveryUp은 두 부분으로 구성됩니다:
 
 ## 빠른 시작
 
-> **Web**을 한 번 띄우고, 모니터링할 각 서버의 Compose 스택에 **Agent + Proxy**를
-> 추가하면 됩니다 — 한 스택으로 모든 기능이 켜집니다. Compose 템플릿은
-> [`web/`](web/docker-compose.yml)·[`agent/`](agent/docker-compose.yml)에도 있습니다.
+> **Web**을 한 번 띄우고, 모니터링할 각 서버의 Compose 스택에 **Agent** 서비스
+> 하나만 추가하면 됩니다. Agent는 읽기 전용이라 트래픽 변경이 필요 없습니다. Compose
+> 템플릿은 [`web/`](web/docker-compose.yml)·[`agent/`](agent/docker-compose.yml)에도 있습니다.
 
 ### 1. Web 실행
 
@@ -90,22 +91,17 @@ docker compose up -d
 대시보드에서 **Services → Add**로 Agent를 생성하고, 표시되는 API 키(`evup_svc_…`)를
 복사합니다 — 이 키는 Agent 전용입니다.
 
-### 3. 모니터링할 서버에 Agent + Proxy 추가
+### 3. 모니터링할 서버에 Agent 추가
 
-이 Compose 한 묶음으로 **모든** EveryUp 기능이 켜집니다: 컨테이너 health·로그·호스트
-메트릭(Agent) + API 요청·트레이스·요청/응답 바디(Proxy). 클라이언트 트래픽은
-프록시로 들어와 앱으로 변형 없이 전달되고, 텔레메트리는 Agent의 OTLP 게이트웨이로
-보내집니다.
+Compose 서비스 하나로 **Tier 1**이 켜집니다: 컨테이너 health, stdout/stderr 로그,
+호스트 메트릭, 그리고 **access log에서 파싱한 API 상태코드**. 서비스별 설정도, 트래픽
+가로채기도 없습니다 — Agent는 Docker 소켓을 *읽기만* 합니다.
 
 ```yaml
 services:
-  app:
-    image: your-app:latest        # 당신의 애플리케이션
-    # 포트 미게시 — 트래픽은 아래 everyup-proxy로 들어옵니다.
-
   everyup-agent:
     image: aiturn/everyup-agent:latest
-    container_name: everyup-agent  # 프록시가 everyup-agent:4318 로 접근
+    container_name: everyup-agent
     user: "0:0"
     environment:
       EVERYUP_WEB_SYNC_ENABLED: "true"
@@ -117,23 +113,6 @@ services:
       - everyup-agent-data:/data
     restart: unless-stopped
 
-  everyup-proxy:
-    image: aiturn/everyup-agent:latest   # 같은 이미지, 프록시 모드
-    environment:
-      EVERYUP_AGENT_MODE: "proxy"
-      EVERYUP_PROXY_LISTEN_ADDR: ":8080"
-      EVERYUP_PROXY_UPSTREAM_URL: "http://app:8080"        # ← 당신 앱의 서비스명:포트
-      EVERYUP_PROXY_OTLP_ENDPOINT: "http://everyup-agent:4318"
-      EVERYUP_PROXY_SERVICE_NAME: "app"                    # 이 트래픽이 표시될 서비스명
-      EVERYUP_CAPTURE_ENABLED: "true"                      # 요청/응답 바디 캡처
-      EVERYUP_CAPTURE_ROUTES: "/api/..."                   # 캡처할 라우트
-      EVERYUP_CAPTURE_ON_STATUS: "400-599"                 # 에러 바디만; 전체는 "200-599"
-      EVERYUP_CAPTURE_ON_SLOW_MS: "3000"                   # ...또는 이보다 느린 요청
-      EVERYUP_CAPTURE_EXCLUDE_ROUTES: "/login,/auth,/payment,/upload"
-    ports:
-      - "8080:8080"     # 클라이언트는 프록시로; 프록시가 app:8080 으로 전달
-    restart: unless-stopped
-
 volumes:
   everyup-agent-data:
 ```
@@ -142,82 +121,63 @@ volumes:
 docker compose up -d
 ```
 
-약 30초 안에 Agent가 online으로 뜨고 호스트의 다른 컨테이너를 자동 발견합니다
-(health·로그·호스트 메트릭은 서비스별 설정 없이 바로). 클라이언트를 앱 대신
-프록시의 `:8080`으로 향하게 하면 **API 요청·트레이스·캡처된 바디가 대시보드에
-나타납니다.** 이미 앞단에 nginx/TLS가 있다면 `8080` 게시 대신 그 upstream을
-`everyup-proxy:8080`으로 지정하세요.
+약 30초 안에 Agent가 online으로 뜨고 호스트의 모든 컨테이너를 자동 발견합니다 —
+health·로그·호스트 메트릭은 서비스별 설정 없이 바로 흐릅니다. 앱이 access log(Nginx
+/ Apache / JSON)를 남기면 요청 method·path·status가 **API** 탭에 자동으로 표시됩니다
+— 프록시도, 코드 수정도 없이. access log엔 latency가 없어 duration은 `—`로 보이고,
+access log를 안 남기는 앱은 API 행이 안 뜰 뿐 나머지는 정상 동작합니다(우아한 degrade).
 
-**바디 캡처 동작 방식**
+이것이 Tier 1 구성의 전부입니다. 요청/응답 **헤더·바디**는 앱에 OpenTelemetry 계측을
+붙여서 수집합니다(아래 Tier 2).
 
-- 바디는 `CAPTURE_ON_STATUS` **또는** `CAPTURE_ON_SLOW_MS` 에 맞는 요청만 보관합니다
-  — 기본값은 에러(`400-599`)와 느린 요청. 정상 `200`도 요청·트레이스에는 뜨지만,
-  `CAPTURE_ON_STATUS`를 `200-599`로 넓히지 않으면 **바디는 생략**됩니다.
+## API 헤더·바디 (선택)
+
+Tier 1은 상태코드를 무료로 제공합니다. **Tier 2**는 실제 latency를 포함한 전체
+트레이스와 요청/응답 **헤더·바디**를 추가로 캡처합니다 — 요청이 *왜* 실패했는지(문제의
+payload, 빠진 필드) 진단용.
+
+Tier 2는 **앱 측 OpenTelemetry 계측**으로 전달됩니다: 앱이 (기록하기로 선택한 요청/응답
+데이터를 담은) 스팬을 Agent의 OTLP 게이트웨이 `http://everyup-agent:4318`로 보냅니다.
+추가 컨테이너도, 트래픽 가로채기도 없습니다. 언어별 설정은
+[docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md) 참고.
+
 - API 탭의 요청이나 트레이스 링크가 달린 로그를 열면 **Trace** 패널에 스팬과
   **Captured bodies** 섹션이 보입니다. 바디는 **admin 전용** — 비admin에겐 가려지고,
   admin 열람은 모두 `audit_events`에 기록됩니다.
-- `CAPTURE_MASK_KEYS`의 시크릿은 best-effort로 마스킹되고, 바디 포함 span은 7일
-  보존됩니다(`EVERYUP_RETENTION_BODYCAPTUREDAYS`). 민감 라우트는
-  `CAPTURE_EXCLUDE_ROUTES`에 넣어두세요. `card` 정규식 프리셋은 긴 숫자열(예:
-  밀리초 타임스탬프)에 오탐할 수 있으니, 그런 경우 `EVERYUP_CAPTURE_REGEX_PRESET`에서
-  `card`를 빼세요.
+- 바디 포함 span은 7일 보존됩니다(`EVERYUP_RETENTION_BODYCAPTUREDAYS`). 시크릿·민감
+  필드는 export 전에 계측 단계에서 마스킹하거나 빼세요.
 
-**기존 nginx 뒤에 둘 때 (리버스 프록시 체이닝)**
+> **이중계상 주의.** 한 요청은 소스당 한 번 나타납니다. 어떤 서비스에 앱 측 OTel을
+> 켜면 그 서비스의 access-log 기반 Tier 1 행이 *같은* 요청을 덮으므로, 요청 목록에 두
+> 번 보일 수 있습니다. 서비스마다 한 소스만 쓰세요 — Tier 1 access log *또는* OTel.
 
-이미 nginx가 앞에 있다면 프록시 포트를 게시하지 말고, nginx와 백엔드 *사이에*
-체이닝하세요. `backup`을 두면 프록시가 죽어도 API가 멈추지 않습니다 — nginx가
-백엔드로 바로 폴백합니다.
+> **로그를 요청에 연결.** 로그에 trace id를 출력하면 EveryUp이 트레이스된 요청과
+> 애플리케이션 로그를 상관시킬 수 있습니다.
 
-```nginx
-# http {} 안 — 프록시가 우선, 백엔드가 폴백
-upstream app_upstream {
-    server everyup-proxy:8080 max_fails=2 fail_timeout=10s;  # 평소: 프록시 경유
-    server app:8080 backup;                                  # 프록시 다운: 백엔드 직결
-}
-
-# server {} 안 — 백엔드 API location 한 곳만 변경
-location /api {
-    proxy_pass http://app_upstream;
-    proxy_next_upstream error timeout http_502 http_503 http_504;  # 실패 시 백엔드로 재시도
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-}
-```
-
-백엔드 API `location` 한 곳만 바뀌고, 정적·프론트엔드 라우트는 그대로 직결입니다.
-nginx가 계속 TLS를 종단하고 평문으로 넘기므로 프록시는 JSON만 파싱합니다. 프록시의
-`ports:` 매핑은 제거하고(nginx가 Docker 네트워크에서 `everyup-proxy:8080`으로 접근),
-`nginx -t && nginx -s reload`로 적용하세요.
-
-> **더 깊은 트레이스 (선택).** 프록시는 요청당 server span 1개를 만듭니다. 앱 내부
-> 스팬(DB·외부 호출)까지 보려면 앱의 OpenTelemetry exporter를 `http://everyup-agent:4318`
-> 로 향하게 하세요. 단, 앱 측 OTel과 프록시를 함께 쓰면 같은 요청이 요청 목록에 두 번
-> 나타납니다.
-
-> **로그를 요청에 연결.** 로그에 trace id를 출력하면 EveryUp이 프록시로 캡처한
-> 요청과 애플리케이션 로그를 상관시킬 수 있습니다.
+> **로드맵.** 무계측 헤더·바디 수집을 위한 first-party SDK와 에이전트 기반(eBPF) 수집이
+> 예정되어 있습니다.
 
 ## 수집되는 데이터
 
-기본 Agent는 Docker 소켓과 `/hostfs`에서 다음을 수집합니다.
+**Tier 1 — 모든 Agent, 설정 없이, 읽기 전용** (Docker 소켓 + `/hostfs`):
 
 | 데이터 | 소스 |
 | --- | --- |
 | 컨테이너 up/down, 이름, 이미지, 상태, 이벤트 | Docker 소켓 |
 | stdout/stderr 로그 | `docker logs` |
+| API 요청 — method, path, status (latency 없음) | access log 파싱 |
 | 호스트 CPU, 메모리, 디스크, 네트워크 | `/hostfs` 마운트 |
 
-proxy 모드 Agent를 앱 앞단에 두면 다음을 수집합니다.
+**Tier 2 — 선택, 옵트인** (앱 측 OpenTelemetry 계측):
 
 | 데이터 | 소스 |
 | --- | --- |
-| API 요청 + 트레이스 | 인라인 HTTP 프록시 |
-| 요청/응답 바디 | 프록시 캡처 정책 (기본: 에러/느린 요청) |
+| API 요청 + 트레이스, 실제 latency 포함 | 앱 OTel → Agent `:4318` |
+| 요청/응답 헤더·바디 | 앱 계측 단계에서 기록 |
 
-컨테이너 안의 파일에만 로그를 쓰는 서비스는 기본 Agent가 볼 수 없습니다.
-로그 수집을 위해 앱 로그를 stdout으로 출력하세요.
+컨테이너 안의 파일에만 로그를 쓰는 서비스는 Agent가 볼 수 없습니다. 로그 수집을 위해
+앱 로그를 stdout으로 출력하세요. API 상태코드는 앱이 access log(Nginx / Apache / 구조화
+JSON)를 남겨야 보이며, 없어도 Tier 1은 health·로그·호스트 메트릭을 계속 수집합니다.
 
 ## 문서
 

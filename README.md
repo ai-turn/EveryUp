@@ -12,7 +12,7 @@
   <a href="README.ko.md">한국어</a> -
   <a href="https://ai-turn.github.io/everyup/">Live Demo</a> -
   <a href="#quick-start">Quick Start</a> -
-  <a href="#api-request-monitoring-optional">API Monitoring</a> -
+  <a href="#api-headers--bodies-optional">API Bodies (optional)</a> -
   <a href="#what-gets-collected">What's Collected</a>
 </p>
 
@@ -36,9 +36,10 @@ requests, infrastructure, and alerts** — fed by one lightweight Agent per serv
 
 - Automatic Docker container discovery — no per-service config
 - stdout/stderr log collection without changing application code
-- API request data (method, path, status, duration)
+- API status codes (method, path, status) parsed from access logs — no proxy, no code change
 - Host CPU, memory, disk, and network metrics
 - Telegram, Discord, and Slack notifications
+- Optional: request/response **headers and bodies** via an inline proxy (opt-in)
 
 EveryUp has two parts:
 
@@ -49,9 +50,10 @@ EveryUp has two parts:
 
 ## Quick Start
 
-> Run **Web** once, then drop the **Agent + Proxy** into the Compose stack on each
-> server you want to monitor — one stack enables every feature. Compose templates
-> also live in [`web/`](web/docker-compose.yml) and [`agent/`](agent/docker-compose.yml).
+> Run **Web** once, then drop a single **Agent** service into the Compose stack on
+> each server you want to monitor. The Agent is read-only and needs no traffic
+> changes. Compose templates also live in [`web/`](web/docker-compose.yml) and
+> [`agent/`](agent/docker-compose.yml).
 
 ### 1. Start Web
 
@@ -90,22 +92,17 @@ Open `http://WEB_SERVER_IP:3001` and create the first admin account.
 In the dashboard, open **Services → Add** and create an Agent entry. Copy the API
 key (`evup_svc_…`) shown after creation — it belongs to the Agent only.
 
-### 3. Add the Agent + Proxy to the monitored server
+### 3. Add the Agent to the monitored server
 
-This single Compose stack enables **every** EveryUp feature: container health,
-logs, and host metrics (Agent) plus API requests, traces, and request/response
-bodies (Proxy). Client traffic enters through the proxy, which forwards it to your
-app unchanged and ships telemetry to the Agent's OTLP gateway.
+One Compose service enables **Tier 1** — container health, stdout/stderr logs,
+host metrics, and **API status codes parsed from access logs**. No per-service
+config, no traffic interception: the Agent only *reads* the Docker socket.
 
 ```yaml
 services:
-  app:
-    image: your-app:latest        # your application
-    # No published ports — traffic enters through everyup-proxy below.
-
   everyup-agent:
     image: aiturn/everyup-agent:latest
-    container_name: everyup-agent  # the proxy reaches it as everyup-agent:4318
+    container_name: everyup-agent
     user: "0:0"
     environment:
       EVERYUP_WEB_SYNC_ENABLED: "true"
@@ -117,23 +114,6 @@ services:
       - everyup-agent-data:/data
     restart: unless-stopped
 
-  everyup-proxy:
-    image: aiturn/everyup-agent:latest   # same image, proxy mode
-    environment:
-      EVERYUP_AGENT_MODE: "proxy"
-      EVERYUP_PROXY_LISTEN_ADDR: ":8080"
-      EVERYUP_PROXY_UPSTREAM_URL: "http://app:8080"        # ← your app's service:port
-      EVERYUP_PROXY_OTLP_ENDPOINT: "http://everyup-agent:4318"
-      EVERYUP_PROXY_SERVICE_NAME: "app"                    # name this traffic shows under
-      EVERYUP_CAPTURE_ENABLED: "true"                      # capture request/response bodies
-      EVERYUP_CAPTURE_ROUTES: "/api/..."                   # which routes to capture
-      EVERYUP_CAPTURE_ON_STATUS: "400-599"                 # keep bodies for errors; use "200-599" for all
-      EVERYUP_CAPTURE_ON_SLOW_MS: "3000"                   # ...or for requests slower than this
-      EVERYUP_CAPTURE_EXCLUDE_ROUTES: "/login,/auth,/payment,/upload"
-    ports:
-      - "8080:8080"     # clients hit the proxy; it forwards to app:8080
-    restart: unless-stopped
-
 volumes:
   everyup-agent-data:
 ```
@@ -142,83 +122,67 @@ volumes:
 docker compose up -d
 ```
 
-The Agent appears online within ~30s and discovers the other containers on the
-host (health, logs, host metrics flow with no per-service config). Point your
-clients at the proxy's `:8080` instead of the app, and **API requests, traces,
-and captured bodies appear in the dashboard.** Already have nginx/TLS in front?
-Point its upstream at `everyup-proxy:8080` instead of publishing `8080`.
+The Agent appears online within ~30s and discovers every container on the host —
+health, logs, and host metrics flow with no per-service config. If an app emits
+access logs (Nginx / Apache / JSON), its request method, path, and status code
+show up in the **API** tab automatically — no proxy, no code change. Access logs
+carry no latency, so duration shows as `—`; an app that emits no access logs
+simply shows no API rows while everything else keeps working (graceful degrade).
 
-**How body capture works**
+That's the whole Tier 1 setup. For request/response **headers and bodies**,
+instrument the app with OpenTelemetry (Tier 2 below).
 
-- Bodies are kept only for requests matching `CAPTURE_ON_STATUS` **or**
-  `CAPTURE_ON_SLOW_MS` — by default errors (`400-599`) and slow requests. A normal
-  `200` still appears as a request and trace; its body is skipped unless you widen
-  `CAPTURE_ON_STATUS` to `200-599`.
+## API Headers & Bodies (optional)
+
+Tier 1 gives you status codes for free. **Tier 2** additionally captures full
+traces with latency, plus request/response **headers and bodies** — for
+diagnosing *why* a request failed (the offending payload, a missing field).
+
+Tier 2 is delivered by **app-side OpenTelemetry instrumentation**: the app sends
+spans (with the request/response data you choose to record) to the Agent's OTLP
+gateway at `http://everyup-agent:4318`. No extra container, no traffic
+interception. Per-language setup is in
+[docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md).
+
 - Open a request (API tab) or a log with a trace link → the **Trace** panel shows
   spans and a **Captured bodies** section. Bodies are **admin-only**; non-admins
   see them redacted, and every admin view is recorded in `audit_events`.
-- Secrets in `CAPTURE_MASK_KEYS` are masked best-effort; body-bearing spans are
-  retained 7 days (`EVERYUP_RETENTION_BODYCAPTUREDAYS`). Keep sensitive routes in
-  `CAPTURE_EXCLUDE_ROUTES`. The `card` regex preset can match long digit runs
-  (e.g. millisecond timestamps) — drop it from `EVERYUP_CAPTURE_REGEX_PRESET` if
-  that causes false positives.
+- Body-bearing spans are retained 7 days (`EVERYUP_RETENTION_BODYCAPTUREDAYS`).
+  Mask or omit secrets and sensitive fields in your instrumentation before export.
 
-**Behind an existing nginx (reverse-proxy chaining)**
-
-If nginx already fronts your app, don't publish the proxy's port. Chain it
-*between* nginx and your backend, with a `backup` so the proxy can never take your
-API down — if it dies, nginx falls straight through to the backend.
-
-```nginx
-# in http {} — proxy is primary, backend is the fallback
-upstream app_upstream {
-    server everyup-proxy:8080 max_fails=2 fail_timeout=10s;  # normal: through the proxy
-    server app:8080 backup;                                  # proxy down: direct to backend
-}
-
-# in server {} — only the backend-API location changes
-location /api {
-    proxy_pass http://app_upstream;
-    proxy_next_upstream error timeout http_502 http_503 http_504;  # retry backend on failure
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-}
-```
-
-Only the backend-API `location` changes; static/frontend routes stay direct.
-nginx keeps terminating TLS and forwards plaintext, so the proxy just parses JSON.
-Drop the proxy's `ports:` mapping (nginx reaches it over the Docker network as
-`everyup-proxy:8080`), then `nginx -t && nginx -s reload`.
-
-> **Deeper traces (optional).** The proxy already produces one server span per
-> request. To also capture in-app spans (DB, external calls), point your app's
-> OpenTelemetry exporter at `http://everyup-agent:4318`. Note: running app-side
-> OTel *and* the proxy makes each request appear twice in the request list.
+> **Avoid double-counting.** A request appears once per source. When app-side OTel
+> is enabled for a service, its access-log–derived Tier 1 rows cover the *same*
+> requests — so the request list may show each one twice. Pick one source per
+> service: rely on Tier 1 access logs *or* enable OTel, not both.
 
 > **Link logs to a request.** Print the trace id in your logs so EveryUp can
-> correlate proxy-captured requests with application logs.
+> correlate traced requests with application logs.
+
+> **Roadmap.** First-party SDKs and agent-based capture (eBPF) for
+> zero-instrumentation header/body collection are planned.
 
 ## What Gets Collected
 
-With the standard Agent, from the Docker socket and `/hostfs`:
+**Tier 1 — every Agent, no config, read-only** (Docker socket + `/hostfs`):
 
 | Data | Source |
 | --- | --- |
 | Container up/down, name, image, state, events | Docker socket |
 | stdout/stderr logs | `docker logs` |
+| API requests — method, path, status (no latency) | Access-log parsing |
 | Host CPU, memory, disk, network | `/hostfs` mount |
 
-With the proxy-mode Agent in front of an app:
+**Tier 2 — optional, opt-in** (app-side OpenTelemetry instrumentation):
 
 | Data | Source |
 | --- | --- |
-| API requests + traces | Inline HTTP proxy |
-| Request/response bodies | Proxy capture policy (errors/slow by default) |
+| API requests + traces, with real latency | App OTel → Agent `:4318` |
+| Request/response headers and bodies | Recorded in the app's instrumentation |
 
 A service that writes logs only to a file inside the container cannot be seen by
-the standard Agent. Write app logs to stdout for log collection.
+the Agent. Write app logs to stdout for log collection. API status codes need the
+app to emit access logs (Nginx / Apache / structured JSON); otherwise Tier 1 still
+collects health, logs, and host metrics.
 
 ## Documentation
 

@@ -45,6 +45,10 @@ function isDefaultParams(params: ApiRequestListParams): boolean {
 }
 
 function formatDuration(ms: number): string {
+  // Log-derived (access-log) requests carry no latency, so duration_ms is 0.
+  // ponytail: 0 reads as "unknown", not "0ms" — a genuine sub-1ms request is
+  // indistinguishable, which is harmless for monitoring.
+  if (ms <= 0) return '—';
   if (ms < 1000) return `${ms}ms`;
   return `${(ms / 1000).toFixed(2)}s`;
 }
@@ -113,7 +117,7 @@ function aggregateByPath(items: ApiRequest[]): PathAggregateItem[] {
   return Array.from(map.entries())
     .map(([key, requests]) => {
       const first = requests[0];
-      const durations = requests.map((r) => r.durationMs);
+      const durations = requests.map((r) => r.durationMs).filter((d) => d > 0);
       const buckets = Array.from({ length: 12 }, () => 0);
       const errorBuckets = Array.from({ length: 12 }, () => 0);
       requests.forEach((request) => {
@@ -276,8 +280,14 @@ function PathAggregateTable({
                     </div>
                   </td>
                   <td className="px-4 py-3 font-mono text-sm text-slate-600 dark:text-text-muted-dark">
-                    <span className="font-bold text-slate-900 dark:text-white">{item.p50}</span>
-                    <span className="text-slate-400"> / {item.p95} / {item.p99}ms</span>
+                    {item.p95 > 0 ? (
+                      <>
+                        <span className="font-bold text-slate-900 dark:text-white">{item.p50}</span>
+                        <span className="text-slate-400"> / {item.p95} / {item.p99}ms</span>
+                      </>
+                    ) : (
+                      <span className="text-slate-400">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <MiniBars buckets={item.buckets} errorBuckets={item.errorBuckets} />
@@ -316,8 +326,12 @@ function PathAggregateTable({
                   {t('apiRequests.table.errors')} {(item.errorRate * 100).toFixed(1)}%
                 </span>
                 <span>
-                  <span className="font-bold text-slate-900 dark:text-white">{item.p50}</span>
-                  <span className="text-slate-400"> / {item.p95} / {item.p99}ms</span>
+                  {item.p95 > 0 ? (
+                    <>
+                      <span className="font-bold text-slate-900 dark:text-white">{item.p50}</span>
+                      <span className="text-slate-400"> / {item.p95} / {item.p99}ms</span>
+                    </>
+                  ) : '—'}
                 </span>
                 <span className="ml-auto whitespace-nowrap">
                   {t('apiRequests.timeAgo', { value: formatTimeAgo(item.lastSeen) })}
@@ -639,7 +653,7 @@ export function RequestsTab({ serviceId, initialTraceId, onClearTraceFilter }: R
     [displayItems, pickedPath],
   );
 
-  const durations = displayItems.map((item) => item.durationMs);
+  const durations = displayItems.map((item) => item.durationMs).filter((d) => d > 0);
   const errors = displayItems.filter((item) => item.isError).length;
   const errorRate = displayItems.length === 0 ? 0 : (errors / displayItems.length) * 100;
 
@@ -653,8 +667,8 @@ export function RequestsTab({ serviceId, initialTraceId, onClearTraceFilter }: R
       <div className="grid grid-cols-2 xl:grid-cols-5 gap-3">
         <StatCard label={t('apiRequests.stats.requests')} value={displayItems.length} icon="http" tone="primary" />
         <StatCard label={t('apiRequests.stats.errors')} value={errors} icon="error" tone={errors > 0 ? 'red' : 'slate'} suffix={`${errorRate.toFixed(1)}%`} />
-        <StatCard label={t('apiRequests.stats.p50')} value={percentile(durations, 0.5)} icon="speed" tone="sky" suffix="ms" tooltip={t('apiRequests.stats.p50Tooltip')} />
-        <StatCard label={t('apiRequests.stats.p95')} value={percentile(durations, 0.95)} icon="monitoring" tone="amber" suffix="ms" tooltip={t('apiRequests.stats.p95Tooltip')} />
+        <StatCard label={t('apiRequests.stats.p50')} value={durations.length ? percentile(durations, 0.5) : '—'} icon="speed" tone="sky" suffix={durations.length ? 'ms' : undefined} tooltip={t('apiRequests.stats.p50Tooltip')} />
+        <StatCard label={t('apiRequests.stats.p95')} value={durations.length ? percentile(durations, 0.95) : '—'} icon="monitoring" tone="amber" suffix={durations.length ? 'ms' : undefined} tooltip={t('apiRequests.stats.p95Tooltip')} />
         <StatCard label={t('apiRequests.stats.endpoints')} value={aggregates.length} icon="account_tree" tone="slate" />
       </div>
 

@@ -36,6 +36,7 @@ Compose project/service metadata when available, otherwise the container name.
 
 ## API Request Capture
 
-Docker auto-discovery does not create API request records from stdout access
-logs. Use the Agent image in `proxy` mode in front of the application when API
-request or body capture is needed.
+Access-log lines in the collected stdout/stderr (Nginx / Apache / structured
+JSON) are parsed into API status-code records automatically (method, path,
+status; no latency). For request/response bodies, instrument the app with
+OpenTelemetry — see [OTEL_API_INSTRUMENTATION.md](../../docs/OTEL_API_INSTRUMENTATION.md).

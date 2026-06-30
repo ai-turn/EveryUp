@@ -2,9 +2,10 @@
 
 EveryUp Agent is the lightweight collector that runs on a server you want to
 monitor. It discovers Docker containers automatically, reads stdout/stderr logs,
-collects host metrics, and syncs everything to EveryUp Web. API request
-collection is handled by the Agent image running in proxy mode, not by stdout
-access-log parsing.
+collects host metrics, and syncs everything to EveryUp Web. API status codes are
+derived by parsing access-log lines out of the logs it already collects — no
+proxy, no app changes. Request/response headers and bodies are an optional Tier 2
+feature delivered by app-side OpenTelemetry instrumentation.
 
 Alert rules, notification channels, and dashboard behavior are configured in Web.
 The Agent only collects and forwards data.
@@ -51,6 +52,7 @@ With only the Agent service running, EveryUp can collect:
 - Container running/stopped state
 - Docker events
 - Docker stdout/stderr logs
+- API status codes (method, path, status) parsed from access logs
 - Host CPU, memory, disk, and network metrics
 
 Your application containers do not need the EveryUp Web URL or Agent API key.
@@ -64,25 +66,16 @@ what it can see with:
 docker logs <container-name> --tail 100
 ```
 
-API request records are not derived from stdout access logs anymore. Put the
-EveryUp Agent image in `proxy` mode in front of the app when you want request
-metadata, and enable body capture there when the route/status/latency policy
-allows it.
+API status codes are extracted from those same logs: lines that parse as access
+logs (Nginx / Apache / structured JSON) are emitted as synthetic OTel SERVER
+spans, which Web projects into the **API** tab. There is no latency in access
+logs, so duration is unknown; an app that emits no access logs simply shows no
+API rows while logs and metrics keep flowing.
 
-```yaml
-services:
-  everyup-proxy:
-    image: aiturn/everyup-agent:latest
-    environment:
-      EVERYUP_AGENT_MODE: "proxy"
-      EVERYUP_PROXY_LISTEN_ADDR: ":8080"
-      EVERYUP_PROXY_UPSTREAM_URL: "http://app:8080"
-      EVERYUP_PROXY_OTLP_ENDPOINT: "http://everyup-agent:4318"
-      EVERYUP_CAPTURE_ENABLED: "false"
-      EVERYUP_CAPTURE_ROUTES: "/api/..."
-    ports:
-      - "8080:8080"
-```
+For request/response **headers and bodies** with real latency, instrument the app
+with OpenTelemetry pointed at the Agent's OTLP gateway (`http://everyup-agent:4318`).
+See [docs/OTEL_API_INSTRUMENTATION.md](../docs/OTEL_API_INSTRUMENTATION.md).
+First-party SDKs and agent-based (eBPF) capture are planned.
 
 If logs are written only to files inside the container, Docker cannot show them
 and the Agent cannot collect them in compose-only mode. Configure the application
@@ -113,7 +106,6 @@ Only the three `yes` rows are required; everything else has a working default.
 
 | Variable | Required | Default | Description |
 | --- | ---: | --- | --- |
-| `EVERYUP_AGENT_MODE` | no | `agent` | Runtime mode: `agent` for host/container telemetry, `proxy` for inline API collection |
 | `EVERYUP_AGENT_NAME` | no | `everyup-agent` | Agent instance name |
 | `EVERYUP_SERVICE_NAME` | no | `local-service` | Default service name for the agent's own checks |
 | `EVERYUP_DATA_DIR` | no | `/data` | Where agent state (`agent-state.json`, `audit.jsonl`) is stored |
@@ -122,27 +114,10 @@ Only the three `yes` rows are required; everything else has a working default.
 | `EVERYUP_ALERT_COOLDOWN_SECONDS` | no | `300` | Minimum seconds between repeat alerts for the same target |
 | `EVERYUP_HEALTH_URL` | no | | Absolute URL to health-check (single-target mode; usually Docker discovery is used instead) |
 
-**Proxy mode**
-
-| Variable | Required | Default | Description |
-| --- | ---: | --- | --- |
-| `EVERYUP_AGENT_MODE` | yes | `agent` | Set to `proxy` to run the inline API proxy |
-| `EVERYUP_PROXY_LISTEN_ADDR` | no | `:8080` | Address the proxy listens on |
-| `EVERYUP_PROXY_UPSTREAM_URL` | yes | | Absolute backend URL that receives proxied traffic |
-| `EVERYUP_PROXY_SERVICE_NAME` | no | `EVERYUP_SERVICE_NAME` | Service name used on proxy-generated spans |
-| `EVERYUP_PROXY_OTLP_ENDPOINT` | no | `http://everyup-agent:4318` | OTLP/HTTP endpoint that receives proxy spans |
-| `EVERYUP_CAPTURE_ENABLED` | no | `false` | Enables request/response body events; API metadata spans are still sent |
-| `EVERYUP_CAPTURE_ROUTES` | yes for body capture | | Comma-separated route allowlist such as `/api/...`; empty captures no bodies |
-| `EVERYUP_CAPTURE_EXCLUDE_ROUTES` | no | `/login,/auth,/payment,/upload` | Routes excluded from body capture |
-| `EVERYUP_CAPTURE_MAX_BODY_BYTES` | no | `8192` | Max bytes copied from each request/response body |
-| `EVERYUP_CAPTURE_ON_STATUS` | no | `400-599` | Status codes that keep captured body events |
-| `EVERYUP_CAPTURE_ON_SLOW_MS` | no | `3000` | Latency threshold that keeps captured body events |
-| `EVERYUP_CAPTURE_MASK_KEYS` | no | `password,token,secret,authorization,cookie,set-cookie` | JSON keys masked before export |
-| `EVERYUP_CAPTURE_REGEX_PRESET` | no | `rrn,phone,email,card` | Regex masking presets applied to copied body text |
-
-Captured body events are exported as masked span events. The Web backend hides
-those event bodies from non-admin users, audits admin views, and removes
-body-bearing spans after `EVERYUP_RETENTION_BODYCAPTUREDAYS` days (default 7).
+Captured body events (delivered by app-side OpenTelemetry) are stored as span
+events. The Web backend hides those bodies from non-admin users, audits admin
+views, and removes body-bearing spans after `EVERYUP_RETENTION_BODYCAPTUREDAYS`
+days (default 7).
 
 **Docker discovery & logs**
 

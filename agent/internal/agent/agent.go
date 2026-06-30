@@ -706,10 +706,11 @@ func (a *Agent) forwardDockerLogs(ctx context.Context, targets []discovery.Targe
 		at     time.Time
 	}
 
-	// Docker stdout/stderr is forwarded as logs only. API request collection is
-	// intentionally reserved for the proxy path so request/response capture has
-	// one source of truth.
+	// Docker stdout/stderr is forwarded as logs. Lines that parse as access logs
+	// additionally emit a synthetic SERVER span (Tier 1 API status code), keeping
+	// the web's "api_requests projects from spans only" invariant intact.
 	batches := make([]webclient.OTLPLogBatch, 0)
+	spanBatches := make([]webclient.OTLPSpanBatch, 0)
 	cursors := make([]cursor, 0)
 	now := time.Now()
 	for _, target := range targets {
@@ -724,6 +725,7 @@ func (a *Agent) forwardDockerLogs(ctx context.Context, targets []discovery.Targe
 		}
 
 		entries := make([]webclient.OTLPLogEntry, 0, len(lines))
+		spanEntries := make([]webclient.OTLPSpanEntry, 0)
 		maxSeen := lastSent
 		for _, line := range lines {
 			stamp := line.Time
@@ -744,6 +746,17 @@ func (a *Agent) forwardDockerLogs(ctx context.Context, targets []discovery.Targe
 					"everyup.target.key": targetKey(target),
 				},
 			})
+			// An access-log line is also an API signal: emit it as a synthetic
+			// SERVER span so the web's span->api_request projection populates the
+			// Requests view without any app-side instrumentation.
+			if method, path, status, ok := parseAccessLog(body); ok {
+				spanEntries = append(spanEntries, webclient.OTLPSpanEntry{
+					Method:     method,
+					Path:       path,
+					StatusCode: status,
+					Timestamp:  stamp,
+				})
+			}
 			if stamp.After(maxSeen) {
 				maxSeen = stamp
 			}
@@ -757,6 +770,14 @@ func (a *Agent) forwardDockerLogs(ctx context.Context, targets []discovery.Targe
 			ContainerName: targetKey(target),
 			Entries:       entries,
 		})
+		if len(spanEntries) > 0 {
+			spanBatches = append(spanBatches, webclient.OTLPSpanBatch{
+				ServiceName:   target.ServiceName,
+				ContainerID:   target.ID,
+				ContainerName: targetKey(target),
+				Spans:         spanEntries,
+			})
+		}
 		cursors = append(cursors, cursor{target: target, at: maxSeen})
 	}
 
@@ -772,6 +793,15 @@ func (a *Agent) forwardDockerLogs(ctx context.Context, targets []discovery.Targe
 	}
 	a.saveState()
 	log.Printf("synced docker logs to EveryUp Web: services=%d", len(batches))
+
+	// Best-effort: a span send failure drops the API status signal for this tick
+	// but the logs (and cursor) already advanced, so it is not retried — degrade,
+	// don't block log delivery.
+	if len(spanBatches) > 0 {
+		if err := a.web.SendOTLPSpans(ctx, spanBatches); err != nil {
+			log.Printf("EveryUp Web access-log span sync failed: %v", err)
+		}
+	}
 }
 func (a *Agent) runResourceThresholdCheck(ctx context.Context, target discovery.Target) {
 	if a.docker == nil || target.ID == "" || strings.HasPrefix(target.ID, "env:") {
