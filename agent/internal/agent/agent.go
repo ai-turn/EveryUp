@@ -37,6 +37,7 @@ type Agent struct {
 	// CPU/net delta baseline isn't shared with hostMetrics (different sample cadences).
 	hostAlertReader *hostmetrics.Reader
 	gateway         *telemetrygateway.Server
+	ipIndex         *serviceIPIndex
 
 	mu        sync.RWMutex
 	states    map[string]*targetState
@@ -100,9 +101,10 @@ func New(cfg config.Config) (*Agent, error) {
 		hostReader = hostmetrics.New(cfg.HostMetricsRoot, cfg.HostDiskPath)
 		hostAlertReader = hostmetrics.New(cfg.HostMetricsRoot, cfg.HostDiskPath)
 	}
+	ipIndex := newServiceIPIndex()
 	var gateway *telemetrygateway.Server
 	if cfg.TelemetryGatewayEnabled && web != nil && web.Enabled() {
-		gateway = telemetrygateway.New(cfg.TelemetryGatewayListenAddr, web)
+		gateway = telemetrygateway.New(cfg.TelemetryGatewayListenAddr, web, ipIndex)
 	}
 
 	agent := &Agent{
@@ -118,6 +120,7 @@ func New(cfg config.Config) (*Agent, error) {
 		hostMetrics:     hostReader,
 		hostAlertReader: hostAlertReader,
 		gateway:         gateway,
+		ipIndex:         ipIndex,
 		states:          make(map[string]*targetState),
 		webEvents:       make([]state.AuditEvent, 0),
 	}
@@ -361,6 +364,7 @@ func (a *Agent) writeOTelConfig() {
 
 func (a *Agent) runChecks(ctx context.Context) {
 	targets := a.targets(ctx)
+	a.refreshServiceIPIndex(ctx)
 	a.pruneStaleStates(targets)
 	if len(targets) == 0 {
 		log.Printf("no Docker containers found; check the Docker socket mount or EVERYUP_HEALTH_URL")
@@ -375,6 +379,22 @@ func (a *Agent) runChecks(ctx context.Context) {
 	}
 	a.forwardDockerLogs(ctx, targets)
 	a.runHostResourceCheck(ctx)
+}
+
+// refreshServiceIPIndex rebuilds the IP->service map the telemetry gateway uses
+// to attribute inbound OTLP by source IP. Skipped when the gateway is disabled.
+// ponytail: separate /containers/json call from targets(); one extra socket GET
+// per check cycle is negligible. Fold into targets() if discovery ever gets hot.
+func (a *Agent) refreshServiceIPIndex(ctx context.Context) {
+	if a.gateway == nil || a.docker == nil || a.ipIndex == nil {
+		return
+	}
+	m, err := a.docker.ServiceIPMap(ctx)
+	if err != nil {
+		log.Printf("service IP index refresh failed: %v", err)
+		return
+	}
+	a.ipIndex.replace(m)
 }
 
 func (a *Agent) targets(ctx context.Context) []discovery.Target {

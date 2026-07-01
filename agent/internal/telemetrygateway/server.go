@@ -16,17 +16,26 @@ type Forwarder interface {
 	ForwardOTLPProtobuf(ctx context.Context, signal string, data []byte) ([]byte, error)
 }
 
+// ServiceResolver maps the source IP of an inbound OTLP connection to the
+// service name it belongs to, so spans/logs can be attributed to a service
+// without the app setting OTEL_SERVICE_NAME. A nil resolver disables
+// enrichment (the app's own service.name is forwarded untouched).
+type ServiceResolver interface {
+	ServiceNameByIP(ip string) (string, bool)
+}
+
 type Server struct {
 	addr      string
 	forwarder Forwarder
+	resolver  ServiceResolver
 	server    *http.Server
 }
 
-func New(addr string, forwarder Forwarder) *Server {
+func New(addr string, forwarder Forwarder, resolver ServiceResolver) *Server {
 	if strings.TrimSpace(addr) == "" {
 		addr = ":4318"
 	}
-	return &Server{addr: addr, forwarder: forwarder}
+	return &Server{addr: addr, forwarder: forwarder, resolver: resolver}
 }
 
 func (s *Server) Enabled() bool {
@@ -92,7 +101,18 @@ func (s *Server) handleOTLP(signal string) http.HandlerFunc {
 			return
 		}
 
-		upstreamBody, err := s.forwarder.ForwardOTLPProtobuf(r.Context(), signal, body)
+		// Attribute the payload to a service by the connection's source IP when
+		// the app didn't set a meaningful service.name itself.
+		payload := body
+		if s.resolver != nil {
+			if name, ok := s.resolver.ServiceNameByIP(clientIP(r.RemoteAddr)); ok {
+				if enriched, changed := injectServiceName(signal, body, name); changed {
+					payload = enriched
+				}
+			}
+		}
+
+		upstreamBody, err := s.forwarder.ForwardOTLPProtobuf(r.Context(), signal, payload)
 		if err != nil {
 			log.Printf("telemetry gateway forward failed: signal=%s err=%v", signal, err)
 			http.Error(w, "failed to forward OTLP payload", http.StatusBadGateway)
@@ -105,6 +125,14 @@ func (s *Server) handleOTLP(signal string) http.HandlerFunc {
 		}
 		w.WriteHeader(http.StatusOK)
 	}
+}
+
+func clientIP(remoteAddr string) string {
+	host, _, err := net.SplitHostPort(remoteAddr)
+	if err != nil {
+		return strings.TrimSpace(remoteAddr)
+	}
+	return host
 }
 
 func isProtobuf(contentType string) bool {

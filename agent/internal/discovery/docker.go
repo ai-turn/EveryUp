@@ -153,11 +153,16 @@ type DockerClient struct {
 }
 
 type dockerContainer struct {
-	ID     string            `json:"Id"`
-	Names  []string          `json:"Names"`
-	Labels map[string]string `json:"Labels"`
-	State  string            `json:"State"`  // "running", "exited", "dead", "created", etc.
-	Status string            `json:"Status"` // human-readable, e.g. "Up 2 hours", "Exited (0) 3 minutes ago"
+	ID              string            `json:"Id"`
+	Names           []string          `json:"Names"`
+	Labels          map[string]string `json:"Labels"`
+	State           string            `json:"State"`  // "running", "exited", "dead", "created", etc.
+	Status          string            `json:"Status"` // human-readable, e.g. "Up 2 hours", "Exited (0) 3 minutes ago"
+	NetworkSettings struct {
+		Networks map[string]struct {
+			IPAddress string `json:"IPAddress"`
+		} `json:"Networks"`
+	} `json:"NetworkSettings"`
 }
 
 type dockerStatsResponse struct {
@@ -212,7 +217,7 @@ func NewDockerClient(socketPath string, timeout time.Duration) *DockerClient {
 	}
 }
 
-func (c *DockerClient) ListTargets(ctx context.Context) ([]Target, error) {
+func (c *DockerClient) fetchContainers(ctx context.Context) ([]dockerContainer, error) {
 	// all=true so stopped/exited containers still appear; a docker-liveness
 	// target needs to report "down" rather than silently vanishing.
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://docker/containers/json?all=true", nil)
@@ -234,6 +239,14 @@ func (c *DockerClient) ListTargets(ctx context.Context) ([]Target, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&containers); err != nil {
 		return nil, fmt.Errorf("decode docker response: %w", err)
 	}
+	return containers, nil
+}
+
+func (c *DockerClient) ListTargets(ctx context.Context) ([]Target, error) {
+	containers, err := c.fetchContainers(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	targets := make([]Target, 0, len(containers))
 	for _, container := range containers {
@@ -243,6 +256,30 @@ func (c *DockerClient) ListTargets(ctx context.Context) ([]Target, error) {
 		targets = append(targets, target)
 	}
 	return targets, nil
+}
+
+// ServiceIPMap maps each container's network IP(s) to its service name, so the
+// telemetry gateway can attribute an inbound OTLP connection to a service
+// without the app declaring OTEL_SERVICE_NAME. Best-effort: containers on the
+// host network, or reached through another proxy, carry no distinct bridge IP
+// here and are simply absent from the map (the app's own service.name, if any,
+// still wins).
+func (c *DockerClient) ServiceIPMap(ctx context.Context) (map[string]string, error) {
+	containers, err := c.fetchContainers(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	ipToService := make(map[string]string)
+	for _, container := range containers {
+		name := serviceNameFromDocker(container.ID, containerName(container), container.Labels)
+		for _, network := range container.NetworkSettings.Networks {
+			if ip := strings.TrimSpace(network.IPAddress); ip != "" {
+				ipToService[ip] = name
+			}
+		}
+	}
+	return ipToService, nil
 }
 
 func TargetFromContainer(containerID, fallbackName string, labels map[string]string) Target {

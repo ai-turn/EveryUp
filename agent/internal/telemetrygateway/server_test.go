@@ -21,7 +21,7 @@ func (f *recordingForwarder) ForwardOTLPProtobuf(_ context.Context, signal strin
 
 func TestServerForwardsTraces(t *testing.T) {
 	forwarder := &recordingForwarder{}
-	server := New(":0", forwarder)
+	server := New(":0", forwarder, nil)
 	handler := server.handleOTLP("traces")
 
 	req := httptest.NewRequest(http.MethodPost, "/v1/traces", bytes.NewReader([]byte{1, 2, 3}))
@@ -40,7 +40,7 @@ func TestServerForwardsTraces(t *testing.T) {
 
 func TestServerRejectsNonProtobuf(t *testing.T) {
 	forwarder := &recordingForwarder{}
-	server := New(":0", forwarder)
+	server := New(":0", forwarder, nil)
 	handler := server.handleOTLP("logs")
 
 	req := httptest.NewRequest(http.MethodPost, "/v1/logs", bytes.NewReader([]byte("{}")))
