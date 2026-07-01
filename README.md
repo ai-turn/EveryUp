@@ -131,12 +131,34 @@ simply shows no API rows while everything else keeps working (graceful degrade).
 
 That covers health, logs, host metrics, and API status codes — **no app changes**.
 
-> **Optional — traces, latency, and bodies.** Real request latency, full traces,
-> and request/response **headers & bodies** are *not* collected by the Agent alone;
-> they need app-side OpenTelemetry. Point the app's OTLP exporter at the Agent's
-> gateway (`OTEL_EXPORTER_OTLP_ENDPOINT: http://everyup-agent:4318`). Without this
-> step, everything above still works — you just won't see latency, traces, or
-> bodies. See [API Headers & Bodies](#api-headers--bodies-optional) below.
+### 4. (Optional) Enable traces, latency, and bodies
+
+Steps 1–3 need no app changes. To also capture **request latency, full traces,
+and request/response headers & bodies**, instrument the app with OpenTelemetry and
+point it at the Agent's OTLP gateway. Add two env vars to the app service:
+
+```yaml
+services:
+  my-app:                     # your app, on the same host as the Agent
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://everyup-agent:4318"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+```
+
+Then add your language's auto-instrumentation — mostly zero-code:
+
+| Language | How |
+| --- | --- |
+| **Java / Spring** | add `-javaagent:/otel/opentelemetry-javaagent.jar` via `JAVA_TOOL_OPTIONS` (jar bundled in the image or mounted) |
+| **Python** | run under `opentelemetry-instrument python app.py` |
+| **Node.js** | `NODE_OPTIONS="--require @opentelemetry/auto-instrumentations-node/register"` |
+| **Go** | wrap the HTTP handler with `otelhttp` (no auto-agent for Go) |
+
+Traces, latency, and per-request API rows now appear under the service
+automatically — the Agent attributes each span to its service by the connection's
+source IP, so you don't set a service name. **Request/response bodies need one
+extra manual step** (attach them as span events). Full per-language setup and body
+capture: [docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md).
 
 ## API Headers & Bodies (optional)
 

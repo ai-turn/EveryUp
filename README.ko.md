@@ -129,12 +129,33 @@ access log를 안 남기는 앱은 API 행만 안 뜰 뿐 나머지는 그대로
 
 여기까지가 health·로그·호스트 메트릭·API 상태코드입니다 — **앱 수정 없이**.
 
-> **선택 — 트레이스·latency·바디.** 실제 요청 latency, 전체 트레이스, 요청/응답
-> **헤더·바디**는 Agent만으로는 수집되지 *않습니다*. 앱 측 OpenTelemetry가 필요합니다.
-> 앱의 OTLP exporter를 Agent 게이트웨이로 향하게 하세요
-> (`OTEL_EXPORTER_OTLP_ENDPOINT: http://everyup-agent:4318`). 이 단계를 안 해도 위의
-> 것들은 그대로 동작합니다 — latency·트레이스·바디만 안 보일 뿐입니다. 자세한 내용은
-> 아래 [API 헤더·바디](#api-헤더바디-선택) 참고.
+### 4. (선택) 트레이스·latency·바디 활성화
+
+1~3단계는 앱 수정이 필요 없습니다. **요청 latency, 전체 트레이스, 요청/응답 헤더·바디**
+까지 수집하려면 앱에 OpenTelemetry를 계측해 Agent의 OTLP 게이트웨이로 보내면 됩니다.
+앱 서비스에 env 두 개를 추가하세요:
+
+```yaml
+services:
+  my-app:                     # Agent와 같은 호스트의 앱
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://everyup-agent:4318"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+```
+
+그다음 언어별 자동 계측을 추가합니다 — 대부분 코드 수정 없이:
+
+| 언어 | 방법 |
+| --- | --- |
+| **Java / Spring** | `JAVA_TOOL_OPTIONS`로 `-javaagent:/otel/opentelemetry-javaagent.jar` 추가 (jar은 이미지에 포함하거나 마운트) |
+| **Python** | `opentelemetry-instrument python app.py`로 실행 |
+| **Node.js** | `NODE_OPTIONS="--require @opentelemetry/auto-instrumentations-node/register"` |
+| **Go** | HTTP 핸들러를 `otelhttp`로 감싸기 (Go는 자동 에이전트 없음) |
+
+이제 트레이스·latency·요청별 API 행이 해당 서비스 밑에 자동으로 뜹니다 — Agent가
+커넥션 source IP로 각 스팬을 서비스에 귀속시키므로 서비스명은 지정하지 않아도 됩니다.
+**요청/응답 바디만 수동 단계 하나가 더 필요합니다**(스팬 이벤트로 첨부). 언어별 전체
+설정과 바디 캡처는 [docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md) 참고.
 
 ## API 헤더·바디 (선택)
 
