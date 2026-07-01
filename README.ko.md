@@ -12,8 +12,8 @@
   <a href="README.md">English</a> -
   <a href="https://ai-turn.github.io/everyup/">Live Demo</a> -
   <a href="#빠른-시작">빠른 시작</a> -
-  <a href="#api-헤더바디-선택">API 바디 (선택)</a> -
-  <a href="#수집되는-데이터">수집 항목</a>
+  <a href="#수집되는-데이터">수집 항목</a> -
+  <a href="#문서">문서</a>
 </p>
 
 <p align="center">
@@ -39,7 +39,7 @@ Agent 하나만 띄우면 됩니다.
 - access log에서 파싱한 API 상태코드(method, path, status) — 프록시·코드 수정 불필요
 - 호스트 CPU·메모리·디스크·네트워크 메트릭
 - Telegram, Discord, Slack 알림
-- 선택: 인라인 프록시로 요청/응답 **헤더·바디** 수집 (옵트인)
+- 선택: 앱 측 OpenTelemetry로 요청/응답 **헤더·바디** 수집 (옵트인)
 
 EveryUp은 두 부분으로 구성됩니다:
 
@@ -93,9 +93,9 @@ docker compose up -d
 
 ### 3. 모니터링할 서버에 Agent 추가
 
-Compose 서비스 하나로 **Tier 1**이 켜집니다: 컨테이너 health, stdout/stderr 로그,
-호스트 메트릭, 그리고 **access log에서 파싱한 API 상태코드**. 서비스별 설정도, 트래픽
-가로채기도 없습니다 — Agent는 Docker 소켓을 *읽기만* 합니다.
+Compose 서비스 하나로 컨테이너 health, stdout/stderr 로그, 호스트 메트릭, 그리고
+**access log에서 파싱한 API 상태코드**를 얻습니다. 서비스별 설정도, 트래픽 가로채기도
+없습니다 — Agent는 Docker 소켓을 *읽기만* 합니다.
 
 ```yaml
 services:
@@ -127,19 +127,26 @@ health·로그·호스트 메트릭은 서비스별 설정 없이 바로 흐릅�
 — 프록시도, 코드 수정도 없이. access log엔 latency가 없어 duration은 `—`로 보이고,
 access log를 안 남기는 앱은 API 행이 안 뜰 뿐 나머지는 정상 동작합니다(우아한 degrade).
 
-이것이 Tier 1 구성의 전부입니다. 요청/응답 **헤더·바디**는 앱에 OpenTelemetry 계측을
-붙여서 수집합니다(아래 Tier 2).
+이것이 구성의 전부입니다. 요청/응답 **헤더·바디**는 앱에 OpenTelemetry 계측을
+붙여서 수집합니다(아래 참고).
 
 ## API 헤더·바디 (선택)
 
-Tier 1은 상태코드를 무료로 제공합니다. **Tier 2**는 실제 latency를 포함한 전체
-트레이스와 요청/응답 **헤더·바디**를 추가로 캡처합니다 — 요청이 *왜* 실패했는지(문제의
-payload, 빠진 필드) 진단용.
+access log는 상태코드를 무료로 제공합니다. 실제 latency를 포함한 전체 트레이스와
+요청/응답 **헤더·바디**까지 원한다면 — 요청이 *왜* 실패했는지(문제의 payload, 빠진
+필드) 진단용 — 앱에 **OpenTelemetry**를 계측하세요.
 
-Tier 2는 **앱 측 OpenTelemetry 계측**으로 전달됩니다: 앱이 (기록하기로 선택한 요청/응답
-데이터를 담은) 스팬을 Agent의 OTLP 게이트웨이 `http://everyup-agent:4318`로 보냅니다.
-추가 컨테이너도, 트래픽 가로채기도 없습니다. 언어별 설정은
+앱이 (기록하기로 선택한 요청/응답 데이터를 담은) 스팬을 Agent의 OTLP 게이트웨이
+`http://everyup-agent:4318`로 보냅니다. 추가 컨테이너도, 트래픽 가로채기도 없습니다.
+언어별 설정은
 [docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md) 참고.
+
+- **서비스명 지정 불필요.** exporter를 게이트웨이로 향하게 하는 게 유일한 설정이고,
+  그 주소는 모든 서비스가 동일합니다. `OTEL_SERVICE_NAME`을 설정할 필요가 없습니다:
+  Agent가 커넥션의 source IP로 컨테이너의 Compose 서비스명을 찾아 각 페이로드에
+  태깅하므로, 트레이스가 자동 디스커버리로 이미 만들어진 서비스 카드에 그대로 붙습니다.
+  (host 네트워크 컨테이너나 다른 프록시를 거치는 앱은 고유 컨테이너 IP가 없으므로 —
+  그 경우엔 `OTEL_SERVICE_NAME`을 직접 지정하면 그 값이 존중됩니다.)
 
 - API 탭의 요청이나 트레이스 링크가 달린 로그를 열면 **Trace** 패널에 스팬과
   **Captured bodies** 섹션이 보입니다. 바디는 **admin 전용** — 비admin에겐 가려지고,
@@ -148,8 +155,8 @@ Tier 2는 **앱 측 OpenTelemetry 계측**으로 전달됩니다: 앱이 (기록
   필드는 export 전에 계측 단계에서 마스킹하거나 빼세요.
 
 > **이중계상 주의.** 한 요청은 소스당 한 번 나타납니다. 어떤 서비스에 앱 측 OTel을
-> 켜면 그 서비스의 access-log 기반 Tier 1 행이 *같은* 요청을 덮으므로, 요청 목록에 두
-> 번 보일 수 있습니다. 서비스마다 한 소스만 쓰세요 — Tier 1 access log *또는* OTel.
+> 켜면 그 서비스의 access-log 기반 행이 *같은* 요청을 덮으므로, 요청 목록에 두 번
+> 보일 수 있습니다. 서비스마다 한 소스만 쓰세요 — access log *또는* OTel.
 
 > **로그를 요청에 연결.** 로그에 trace id를 출력하면 EveryUp이 트레이스된 요청과
 > 애플리케이션 로그를 상관시킬 수 있습니다.
@@ -159,7 +166,7 @@ Tier 2는 **앱 측 OpenTelemetry 계측**으로 전달됩니다: 앱이 (기록
 
 ## 수집되는 데이터
 
-**Tier 1 — 모든 Agent, 설정 없이, 읽기 전용** (Docker 소켓 + `/hostfs`):
+**자동으로, 모든 Agent에서 — 설정 없이, 읽기 전용** (Docker 소켓 + `/hostfs`):
 
 | 데이터 | 소스 |
 | --- | --- |
@@ -168,7 +175,7 @@ Tier 2는 **앱 측 OpenTelemetry 계측**으로 전달됩니다: 앱이 (기록
 | API 요청 — method, path, status (latency 없음) | access log 파싱 |
 | 호스트 CPU, 메모리, 디스크, 네트워크 | `/hostfs` 마운트 |
 
-**Tier 2 — 선택, 옵트인** (앱 측 OpenTelemetry 계측):
+**앱에 OpenTelemetry를 계측한 경우에만** (선택):
 
 | 데이터 | 소스 |
 | --- | --- |
@@ -177,7 +184,7 @@ Tier 2는 **앱 측 OpenTelemetry 계측**으로 전달됩니다: 앱이 (기록
 
 컨테이너 안의 파일에만 로그를 쓰는 서비스는 Agent가 볼 수 없습니다. 로그 수집을 위해
 앱 로그를 stdout으로 출력하세요. API 상태코드는 앱이 access log(Nginx / Apache / 구조화
-JSON)를 남겨야 보이며, 없어도 Tier 1은 health·로그·호스트 메트릭을 계속 수집합니다.
+JSON)를 남겨야 보이며, 없어도 Agent는 health·로그·호스트 메트릭을 계속 수집합니다.
 
 ## 문서
 
@@ -187,7 +194,7 @@ JSON)를 남겨야 보이며, 없어도 Tier 1은 health·로그·호스트 메�
 | [agent/README.md](agent/README.md) | Agent 설정, 전체 환경변수 레퍼런스, Compose 설정 |
 | [docs/NOTIFICATION_SETUP.ko.md](docs/NOTIFICATION_SETUP.ko.md) | Telegram / Discord / Slack 채널 자격증명·설정 |
 | [docs/BACKUP_RESTORE.ko.md](docs/BACKUP_RESTORE.ko.md) | `/app/data` 디렉토리 백업·복원 |
-| [docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md) | OpenTelemetry 자동 계측으로 요청별 API 수집(언어별) |
+| [docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md) | OpenTelemetry 계측으로 요청별 API 수집(언어별) |
 | [docs/API_REQUEST_LOGGING_GUIDE.md](docs/API_REQUEST_LOGGING_GUIDE.md) | `request_id` / trace id로 로그-요청 연결 |
 | [docs/OTEL_ONLY_MIGRATION.md](docs/OTEL_ONLY_MIGRATION.md) | 로그·트레이스는 OpenTelemetry OTLP/HTTP로만 수집 |
 | [docs/CHANGELOG.md](docs/CHANGELOG.md) | 기능·리팩토링·버그픽스 이력 |
