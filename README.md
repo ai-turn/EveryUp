@@ -129,8 +129,14 @@ show up in the **API** tab automatically — no proxy, no code change. Access lo
 carry no latency, so duration shows as `—`; an app that emits no access logs
 simply shows no API rows while everything else keeps working (graceful degrade).
 
-That's the whole setup. For request/response **headers and bodies**, instrument
-the app with OpenTelemetry (below).
+That covers health, logs, host metrics, and API status codes — **no app changes**.
+
+> **Optional — traces, latency, and bodies.** Real request latency, full traces,
+> and request/response **headers & bodies** are *not* collected by the Agent alone;
+> they need app-side OpenTelemetry. Point the app's OTLP exporter at the Agent's
+> gateway (`OTEL_EXPORTER_OTLP_ENDPOINT: http://everyup-agent:4318`). Without this
+> step, everything above still works — you just won't see latency, traces, or
+> bodies. See [API Headers & Bodies](#api-headers--bodies-optional) below.
 
 ## API Headers & Bodies (optional)
 
@@ -138,6 +144,11 @@ Access logs give you status codes for free. If you also want full traces with
 real latency, plus request/response **headers and bodies** — for diagnosing *why*
 a request failed (the offending payload, a missing field) — instrument the app
 with **OpenTelemetry**.
+
+> **Status.** Traces and latency work with off-the-shelf OTel auto-instrumentation.
+> **Header/body capture still requires manual instrumentation** — you attach the
+> body yourself as span events (see the per-language doc). Zero-instrumentation
+> header/body collection (first-party SDKs, eBPF) is on the roadmap, not yet available.
 
 The app sends spans (with the request/response data you choose to record) to the
 Agent's OTLP gateway at `http://everyup-agent:4318`. No extra container, no
