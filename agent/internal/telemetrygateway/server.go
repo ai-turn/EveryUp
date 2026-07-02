@@ -24,18 +24,36 @@ type ServiceResolver interface {
 	ServiceNameByIP(ip string) (string, bool)
 }
 
+// PIDResolver maps a host-namespace PID to a service name. The bundled eBPF
+// sidecar tags every resource with the instrumented process's PID
+// (service.instance.id "host:pid"); Docker discovery knows which container —
+// and therefore which service — that PID belongs to. Nil disables eBPF
+// attribution (marked resources are then dropped as unresolvable).
+type PIDResolver interface {
+	ServiceNameByPID(pid int) (string, bool)
+}
+
+// TraceObserver is notified of the service names real spans were attributed to
+// after a successful forward, so the access-log path can stop emitting
+// synthetic spans for them (double-count guard). Nil disables notifications.
+type TraceObserver interface {
+	MarkTraced(service string)
+}
+
 type Server struct {
 	addr      string
 	forwarder Forwarder
 	resolver  ServiceResolver
+	pids      PIDResolver
+	observer  TraceObserver
 	server    *http.Server
 }
 
-func New(addr string, forwarder Forwarder, resolver ServiceResolver) *Server {
+func New(addr string, forwarder Forwarder, resolver ServiceResolver, pids PIDResolver, observer TraceObserver) *Server {
 	if strings.TrimSpace(addr) == "" {
 		addr = ":4318"
 	}
-	return &Server{addr: addr, forwarder: forwarder, resolver: resolver}
+	return &Server{addr: addr, forwarder: forwarder, resolver: resolver, pids: pids, observer: observer}
 }
 
 func (s *Server) Enabled() bool {
@@ -50,6 +68,7 @@ func (s *Server) Run(ctx context.Context) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/logs", s.handleOTLP("logs"))
 	mux.HandleFunc("/v1/traces", s.handleOTLP("traces"))
+	mux.HandleFunc("/v1/metrics", s.handleOTLP("metrics"))
 	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
@@ -101,14 +120,37 @@ func (s *Server) handleOTLP(signal string) http.HandlerFunc {
 			return
 		}
 
-		// Attribute the payload to a service by the connection's source IP when
-		// the app didn't set a meaningful service.name itself.
+		// Attribute the payload to a service. Traces get per-resource handling
+		// (the eBPF sidecar batches many services into one request); logs keep
+		// the connection-source-IP rule.
 		payload := body
+		var tracedServices []string
+		connName, connOK := "", false
 		if s.resolver != nil {
-			if name, ok := s.resolver.ServiceNameByIP(clientIP(r.RemoteAddr)); ok {
-				if enriched, changed := injectServiceName(signal, body, name); changed {
-					payload = enriched
-				}
+			connName, connOK = s.resolver.ServiceNameByIP(clientIP(r.RemoteAddr))
+		}
+		if signal == "traces" {
+			enriched, services, forward := enrichTraces(body, connName, connOK, s.pids, s.resolver)
+			if !forward {
+				// Everything was dropped (unattributable eBPF noise): ack with
+				// an empty success response so the sender doesn't retry.
+				w.Header().Set("Content-Type", "application/x-protobuf")
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+			payload = enriched
+			tracedServices = services
+		} else if signal == "metrics" {
+			enriched, forward := enrichMetrics(body, connName, connOK)
+			if !forward {
+				w.Header().Set("Content-Type", "application/x-protobuf")
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+			payload = enriched
+		} else if connOK {
+			if enriched, changed := injectServiceName(signal, body, connName); changed {
+				payload = enriched
 			}
 		}
 
@@ -117,6 +159,11 @@ func (s *Server) handleOTLP(signal string) http.HandlerFunc {
 			log.Printf("telemetry gateway forward failed: signal=%s err=%v", signal, err)
 			http.Error(w, "failed to forward OTLP payload", http.StatusBadGateway)
 			return
+		}
+		if s.observer != nil {
+			for _, service := range tracedServices {
+				s.observer.MarkTraced(service)
+			}
 		}
 		w.Header().Set("Content-Type", "application/x-protobuf")
 		if len(upstreamBody) > 0 {

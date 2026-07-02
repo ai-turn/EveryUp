@@ -22,11 +22,35 @@ services:
       EVERYUP_WEB_SYNC_ENABLED: "true"
       EVERYUP_WEB_BASE_URL: "http://your-everyup-web:3001"
       EVERYUP_AGENT_API_KEY: "evup_svc_replace_me"
+      # TZ: "Asia/Seoul"  # agent log timestamps in your local time (default: UTC)
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro  # Docker auto-discovery/logs
       - /:/hostfs:ro                                   # host CPU/memory/disk metrics
       - everyup-agent-data:/data
     restart: unless-stopped
+
+  # --- Optional: zero-code API tracing (eBPF) --------------------------------
+  # Adds real traces — method, path, status, and latency — for every service on
+  # this host, all languages including Go, HTTPS included, without touching your
+  # app containers. The agent matches spans to your services and drops anything
+  # it can't match, and pauses the access-log fallback for covered services so
+  # requests aren't counted twice.
+  # Requires: Linux kernel 5.8+ with BTF (most modern distros; Docker Desktop OK).
+  # To enable: uncomment this block, set BEYLA_OPEN_PORT to your app ports, then
+  # `docker compose up -d`.
+  # everyup-ebpf:
+  #   image: grafana/beyla:3
+  #   container_name: everyup-ebpf
+  #   restart: unless-stopped
+  #   privileged: true   # eBPF probe loading
+  #   pid: "host"        # see app processes on the host
+  #   environment:
+  #     BEYLA_OPEN_PORT: "80,3000,8080"  # ports your apps listen on (list or range, e.g. "8000-8999")
+  #     # Traces-only endpoint: Beyla's RED metrics would duplicate the span-derived stats.
+  #     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://everyup-agent:4318/v1/traces"
+  #     OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+  #     # Required: marks spans so the agent attributes them to your services.
+  #     OTEL_RESOURCE_ATTRIBUTES: "everyup.source=ebpf"
 
 volumes:
   everyup-agent-data:

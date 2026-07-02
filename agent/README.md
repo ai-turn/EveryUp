@@ -72,14 +72,42 @@ spans, which Web projects into the **API** tab. There is no latency in access
 logs, so duration is unknown; an app that emits no access logs simply shows no
 API rows while logs and metrics keep flowing.
 
-For request/response **headers and bodies** with real latency, instrument the app
-with OpenTelemetry pointed at the Agent's OTLP gateway (`http://everyup-agent:4318`).
+For real latency without touching your apps, enable the eBPF sidecar (below).
+For request/response **headers and bodies**, instrument the app with
+OpenTelemetry pointed at the Agent's OTLP gateway (`http://everyup-agent:4318`).
 See [docs/OTEL_API_INSTRUMENTATION.md](../docs/OTEL_API_INSTRUMENTATION.md).
-First-party SDKs and agent-based (eBPF) capture are planned.
 
 If logs are written only to files inside the container, Docker cannot show them
 and the Agent cannot collect them in compose-only mode. Configure the application
 or reverse proxy to write logs to stdout.
+
+## Zero-Code Tracing (eBPF, Optional)
+
+The compose file ships a commented `everyup-ebpf` service
+([Grafana Beyla](https://grafana.com/oss/beyla-ebpf/)). Uncomment it, set
+`BEYLA_OPEN_PORT` to the ports your apps listen on, and `docker compose up -d`
+— no app changes, no restarts of your services. It captures real SERVER spans
+(method, path, status, **latency**) for every listening process, all languages
+including Go, HTTPS included.
+
+How it fits together: Beyla sends spans to the Agent's OTLP gateway, tagged
+`everyup.source=ebpf`. The Agent maps each span to a service by the
+instrumented process's PID (via Docker) and renames it accordingly; spans it
+cannot match — `docker-proxy`, host processes, the sidecar itself — are dropped
+so they never appear as phantom services. Services covered by real spans stop
+receiving synthetic access-log spans automatically (no double counting).
+
+Notes:
+
+- Requires a Linux kernel 5.8+ with BTF (`/sys/kernel/btf/vmlinux` exists).
+  Docker Desktop's VM qualifies.
+- `privileged` + `pid: host` are inherent to eBPF instrumentation — the sidecar
+  reads process memory to trace requests. Skip this block if that is not
+  acceptable for your host; everything else keeps working.
+- eBPF sees sizes only, never payloads: headers and bodies still require
+  app-side OpenTelemetry (see above).
+- A service freshly (re)started may drop its first seconds of spans until the
+  Agent's next PID refresh (one check interval).
 
 ## Networking Notes
 
@@ -106,6 +134,7 @@ Only the three `yes` rows are required; everything else has a working default.
 
 | Variable | Required | Default | Description |
 | --- | ---: | --- | --- |
+| `TZ` | no | `UTC` | Timezone for the agent's own log lines (e.g. `Asia/Seoul`); synced data always carries zone info regardless |
 | `EVERYUP_AGENT_NAME` | no | `everyup-agent` | Agent instance name |
 | `EVERYUP_SERVICE_NAME` | no | `local-service` | Default service name for the agent's own checks |
 | `EVERYUP_DATA_DIR` | no | `/data` | Where agent state (`agent-state.json`, `audit.jsonl`) is stored |

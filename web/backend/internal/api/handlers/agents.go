@@ -22,15 +22,17 @@ type AgentHandler struct {
 	repo             *database.AgentRepository
 	logRepo          *database.LogRepository
 	reqRepo          *database.ApiRequestRepository
+	otelMetricRepo   *database.OtelMetricRepository
 	ruleEvaluator    *alerter.RuleEvaluator
 	serviceEvaluator *alerter.ServiceRuleEvaluator
 }
 
 func NewAgentHandler() *AgentHandler {
 	return &AgentHandler{
-		repo:    database.NewAgentRepository(),
-		logRepo: database.NewLogRepository(),
-		reqRepo: database.NewApiRequestRepository(),
+		repo:           database.NewAgentRepository(),
+		logRepo:        database.NewLogRepository(),
+		reqRepo:        database.NewApiRequestRepository(),
+		otelMetricRepo: database.NewOtelMetricRepository(),
 	}
 }
 
@@ -529,6 +531,89 @@ func (h *AgentHandler) GetServiceRequests(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": fiber.Map{"data": requests, "total": total}})
 }
 
+
+// GetServiceOtelMetricNames returns the distinct OTLP metrics a service has
+// exported, for the metric picker. GET /agents/:agentId/services/:key/otel-metrics
+func (h *AgentHandler) GetServiceOtelMetricNames(c *fiber.Ctx) error {
+	agentID := c.Params("agentId")
+	key := c.Params("key")
+
+	service, err := h.repo.GetServiceByKey(agentID, key)
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	if service == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"success": false,
+			"error":   fiber.Map{"code": "NOT_FOUND", "message": "service not found"},
+		})
+	}
+
+	names, err := h.otelMetricRepo.ListNames(&models.OtelMetricFilter{
+		AgentID:     agentID,
+		ServiceName: service.Name,
+	})
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	if names == nil {
+		names = []models.OtelMetricName{}
+	}
+	return c.JSON(fiber.Map{"success": true, "data": names})
+}
+
+// GetServiceOtelMetricPoints returns data points for one metric.
+// GET /agents/:agentId/services/:key/otel-metrics/points?name=...&from=&to=&limit=
+func (h *AgentHandler) GetServiceOtelMetricPoints(c *fiber.Ctx) error {
+	agentID := c.Params("agentId")
+	key := c.Params("key")
+	name := c.Query("name")
+	if name == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"error":   fiber.Map{"code": "VALIDATION_ERROR", "message": "name query parameter is required"},
+		})
+	}
+
+	service, err := h.repo.GetServiceByKey(agentID, key)
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	if service == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"success": false,
+			"error":   fiber.Map{"code": "NOT_FOUND", "message": "service not found"},
+		})
+	}
+
+	filter := &models.OtelMetricFilter{
+		AgentID:     agentID,
+		ServiceName: service.Name,
+		MetricName:  name,
+	}
+	if from := c.Query("from"); from != "" {
+		if t, err2 := time.Parse(time.RFC3339, from); err2 == nil {
+			filter.From = t
+		}
+	}
+	if to := c.Query("to"); to != "" {
+		if t, err2 := time.Parse(time.RFC3339, to); err2 == nil {
+			filter.To = t
+		}
+	}
+	if limit, _ := strconv.Atoi(c.Query("limit", "0")); limit > 0 {
+		filter.Limit = limit
+	}
+
+	points, err := h.otelMetricRepo.ListPoints(filter)
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	if points == nil {
+		points = []models.OtelMetric{}
+	}
+	return c.JSON(fiber.Map{"success": true, "data": points})
+}
 
 // GetServiceLogFilter returns the per-service ingest log-level filter (empty = accept all).
 func (h *AgentHandler) GetServiceLogFilter(c *fiber.Ctx) error {

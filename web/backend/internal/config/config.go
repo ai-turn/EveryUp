@@ -103,6 +103,7 @@ type RetentionConfig struct {
 	SystemMetrics   string `mapstructure:"systemMetrics"`
 	ApiRequestsDays int    `mapstructure:"apiRequestsDays"`
 	BodyCaptureDays int    `mapstructure:"bodyCaptureDays"`
+	OtelMetricsDays int    `mapstructure:"otelMetricsDays"`
 }
 
 // Global config instance

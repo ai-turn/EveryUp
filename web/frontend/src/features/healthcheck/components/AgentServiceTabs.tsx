@@ -9,6 +9,7 @@ import { AgentResponseTimeChart } from './AgentResponseTimeChart';
 import { AgentFailureHistory } from './AgentFailureHistory';
 import { AgentServiceLogsTab } from './AgentServiceLogsTab';
 import { AgentServiceRequestsTab } from './AgentServiceRequestsTab';
+import { AgentServiceMetricsTab } from './AgentServiceMetricsTab';
 import { AgentServiceInfraTab } from './AgentServiceInfraTab';
 import { ServiceIncidentBanner } from './ServiceIncidentBanner';
 
@@ -21,12 +22,13 @@ export interface ServiceTabsProps {
   showServiceName?: boolean;
 }
 
-type DetailTab = 'health' | 'logs' | 'requests' | 'infra';
+type DetailTab = 'health' | 'logs' | 'requests' | 'metrics' | 'infra';
 
 const TABS: { key: DetailTab; labelKo: string }[] = [
   { key: 'health',   labelKo: '헬스체크' },
   { key: 'logs',     labelKo: '로그' },
   { key: 'requests', labelKo: 'API' },
+  { key: 'metrics',  labelKo: '메트릭' },
   { key: 'infra',    labelKo: '인프라' },
 ];
 
@@ -74,6 +76,7 @@ function HealthContent({ service, agentId, serviceKey, refreshKey, showServiceNa
 function TabContent({ tab, service, agentId, serviceKey, refreshKey, showServiceName }: { tab: DetailTab } & ServiceTabsProps) {
   if (tab === 'logs')     return <AgentServiceLogsTab agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />;
   if (tab === 'requests') return <AgentServiceRequestsTab agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />;
+  if (tab === 'metrics')  return <AgentServiceMetricsTab agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />;
   if (tab === 'infra')    return <AgentServiceInfraTab agentId={agentId} refreshKey={refreshKey} />;
   return <HealthContent service={service} agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} showServiceName={showServiceName} />;
 }

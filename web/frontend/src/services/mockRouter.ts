@@ -613,6 +613,34 @@ const mockAgentServiceRequests: ApiRequest[] = [
   { id: 204, serviceId: '', serviceName: 'api', requestId: 'r04', method: 'GET',    path: '/api/v1/products',        pathTemplate: '/api/v1/products',    statusCode: 200, durationMs: 67,  isError: false, createdAt: new Date(nowAgent - 600_000).toISOString() },
 ];
 
+const mockOtelMetricNames = [
+  { metricName: 'http.server.request.duration', metricType: 'histogram', unit: 's',  lastAt: new Date(nowAgent - 30_000).toISOString() },
+  { metricName: 'jvm.memory.used',              metricType: 'gauge',     unit: 'By', lastAt: new Date(nowAgent - 30_000).toISOString() },
+  { metricName: 'http.server.active_requests',  metricType: 'sum',       unit: '1',  lastAt: new Date(nowAgent - 30_000).toISOString() },
+];
+
+// One point per minute over the last hour, two attribute series for the
+// histogram metric so the multi-series pivot renders in mock mode.
+function mockOtelMetricPoints(endpoint: string) {
+  const name = new URLSearchParams(endpoint.split('?')[1] ?? '').get('name') ?? 'jvm.memory.used';
+  const points = [];
+  let id = 1;
+  for (let i = 60; i >= 0; i -= 1) {
+    const createdAt = new Date(nowAgent - i * 60_000).toISOString();
+    if (name === 'http.server.request.duration') {
+      points.push(
+        { id: id++, metricName: name, metricType: 'histogram', unit: 's', attributes: { 'http.route': '/orders' },   value: 0.05 + 0.02 * Math.sin(i / 5) + Math.random() * 0.01, count: 12, total: 0.7, createdAt },
+        { id: id++, metricName: name, metricType: 'histogram', unit: 's', attributes: { 'http.route': '/users/:id' }, value: 0.02 + 0.01 * Math.cos(i / 7) + Math.random() * 0.005, count: 30, total: 0.66, createdAt },
+      );
+    } else if (name === 'jvm.memory.used') {
+      points.push({ id: id++, metricName: name, metricType: 'gauge', unit: 'By', attributes: {}, value: 256 * 1048576 + 64 * 1048576 * Math.sin(i / 10) + Math.random() * 10 * 1048576, createdAt });
+    } else {
+      points.push({ id: id++, metricName: name, metricType: 'sum', unit: '1', attributes: {}, value: Math.max(0, Math.round(4 + 3 * Math.sin(i / 4) + Math.random() * 2)), createdAt });
+    }
+  }
+  return points;
+}
+
 const mockAppSettings: AppSettings = {
   alerts: { consecutiveFailures: 3 },
   retention: { metrics: '30d', logs: '90d' },
@@ -739,6 +767,12 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   // /agents/:agentId/services/:key/requests
   if (/^\/agents\/[^/]+\/services\/[^/]+\/requests/.test(endpoint))
     return { data: mockAgentServiceRequests, total: mockAgentServiceRequests.length } as unknown as T;
+  // /agents/:agentId/services/:key/otel-metrics/points?name=...
+  if (/^\/agents\/[^/]+\/services\/[^/]+\/otel-metrics\/points/.test(endpoint))
+    return mockOtelMetricPoints(endpoint) as T;
+  // /agents/:agentId/services/:key/otel-metrics
+  if (/^\/agents\/[^/]+\/services\/[^/]+\/otel-metrics/.test(endpoint))
+    return mockOtelMetricNames as T;
   // /agents/:agentId/services/:key/history
   if (/^\/agents\/[^/]+\/services\/[^/]+\/history/.test(endpoint)) return mockAgentHistory as T;
   // /agents/:agentId/services/:key/uptime

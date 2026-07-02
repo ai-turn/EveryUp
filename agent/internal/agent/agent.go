@@ -38,6 +38,8 @@ type Agent struct {
 	hostAlertReader *hostmetrics.Reader
 	gateway         *telemetrygateway.Server
 	ipIndex         *serviceIPIndex
+	pidIndex        *servicePIDIndex
+	traced          *tracedServices
 
 	mu        sync.RWMutex
 	states    map[string]*targetState
@@ -102,9 +104,11 @@ func New(cfg config.Config) (*Agent, error) {
 		hostAlertReader = hostmetrics.New(cfg.HostMetricsRoot, cfg.HostDiskPath)
 	}
 	ipIndex := newServiceIPIndex()
+	pidIndex := newServicePIDIndex()
+	traced := newTracedServices(10 * time.Minute)
 	var gateway *telemetrygateway.Server
 	if cfg.TelemetryGatewayEnabled && web != nil && web.Enabled() {
-		gateway = telemetrygateway.New(cfg.TelemetryGatewayListenAddr, web, ipIndex)
+		gateway = telemetrygateway.New(cfg.TelemetryGatewayListenAddr, web, ipIndex, pidIndex, traced)
 	}
 
 	agent := &Agent{
@@ -121,6 +125,8 @@ func New(cfg config.Config) (*Agent, error) {
 		hostAlertReader: hostAlertReader,
 		gateway:         gateway,
 		ipIndex:         ipIndex,
+		pidIndex:        pidIndex,
+		traced:          traced,
 		states:          make(map[string]*targetState),
 		webEvents:       make([]state.AuditEvent, 0),
 	}
@@ -381,8 +387,9 @@ func (a *Agent) runChecks(ctx context.Context) {
 	a.runHostResourceCheck(ctx)
 }
 
-// refreshServiceIPIndex rebuilds the IP->service map the telemetry gateway uses
-// to attribute inbound OTLP by source IP. Skipped when the gateway is disabled.
+// refreshServiceIPIndex rebuilds the IP->service and PID->service maps the
+// telemetry gateway uses to attribute inbound OTLP (source IP for app SDKs,
+// host PID for the eBPF sidecar). Skipped when the gateway is disabled.
 // ponytail: separate /containers/json call from targets(); one extra socket GET
 // per check cycle is negligible. Fold into targets() if discovery ever gets hot.
 func (a *Agent) refreshServiceIPIndex(ctx context.Context) {
@@ -395,6 +402,16 @@ func (a *Agent) refreshServiceIPIndex(ctx context.Context) {
 		return
 	}
 	a.ipIndex.replace(m)
+
+	if a.pidIndex == nil {
+		return
+	}
+	pids, err := a.docker.ServicePIDMap(ctx)
+	if err != nil {
+		log.Printf("service PID index refresh failed: %v", err)
+		return
+	}
+	a.pidIndex.replace(pids)
 }
 
 func (a *Agent) targets(ctx context.Context) []discovery.Target {
@@ -746,6 +763,10 @@ func (a *Agent) forwardDockerLogs(ctx context.Context, targets []discovery.Targe
 
 		entries := make([]webclient.OTLPLogEntry, 0, len(lines))
 		spanEntries := make([]webclient.OTLPSpanEntry, 0)
+		// A service already shipping real spans through the gateway (app OTel or
+		// the eBPF sidecar) must not also get synthetic access-log spans — the
+		// same request would be counted twice.
+		emitSynthetic := a.traced == nil || !a.traced.isTraced(target.ServiceName)
 		maxSeen := lastSent
 		for _, line := range lines {
 			stamp := line.Time
@@ -769,7 +790,7 @@ func (a *Agent) forwardDockerLogs(ctx context.Context, targets []discovery.Targe
 			// An access-log line is also an API signal: emit it as a synthetic
 			// SERVER span so the web's span->api_request projection populates the
 			// Requests view without any app-side instrumentation.
-			if method, path, status, ok := parseAccessLog(body); ok {
+			if method, path, status, ok := parseAccessLog(body); ok && emitSynthetic {
 				spanEntries = append(spanEntries, webclient.OTLPSpanEntry{
 					Method:     method,
 					Path:       path,

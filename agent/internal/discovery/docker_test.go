@@ -103,3 +103,21 @@ func TestParseDockerLogLinesWithTimestamp(t *testing.T) {
 		t.Fatalf("second line = %#v", lines[1])
 	}
 }
+
+func TestParsePIDsFromTop(t *testing.T) {
+	titles := []string{"UID", "PID", "PPID", "CMD"}
+	processes := [][]string{
+		{"root", "768", "740", "/whoami"},
+		{"root", "not-a-pid", "740", "zombie"},
+		{"root", "801"}, // short row: PID column present, still parsed
+		{"root"},        // short row: PID column missing, skipped
+	}
+	pids := parsePIDsFromTop(titles, processes)
+	if len(pids) != 2 || pids[0] != 768 || pids[1] != 801 {
+		t.Fatalf("pids = %v, want [768 801]", pids)
+	}
+
+	if pids := parsePIDsFromTop([]string{"UID", "CMD"}, processes); pids != nil {
+		t.Fatalf("no PID column should yield nil, got %v", pids)
+	}
+}

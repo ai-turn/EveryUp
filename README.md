@@ -135,24 +135,29 @@ That covers health, logs, host metrics, and API status codes — **no app change
 
 Steps 1–3 need no app changes. To also capture **request latency, full traces,
 and request/response headers & bodies**, instrument the app with OpenTelemetry and
-point it at the Agent's OTLP gateway. Add two env vars to the app service:
+point it at the Agent's OTLP gateway. For **Java / Spring**, download the
+[OpenTelemetry Java agent](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases)
+jar, put it next to your compose file, and mount it into the app:
 
 ```yaml
 services:
   my-app:                     # your app, on the same host as the Agent
+    volumes:
+      - ./opentelemetry-javaagent.jar:/otel/opentelemetry-javaagent.jar:ro
     environment:
+      JAVA_TOOL_OPTIONS: "-javaagent:/otel/opentelemetry-javaagent.jar"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://everyup-agent:4318"
       OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
 ```
 
-Then add your language's auto-instrumentation — mostly zero-code:
+Other languages need the same two `OTEL_EXPORTER_OTLP_*` vars plus their own
+auto-instrumentation (no jar):
 
-| Language | How |
+| Language | Auto-instrumentation |
 | --- | --- |
-| **Java / Spring** | add `-javaagent:/otel/opentelemetry-javaagent.jar` via `JAVA_TOOL_OPTIONS` (jar bundled in the image or mounted) |
 | **Python** | run under `opentelemetry-instrument python app.py` |
 | **Node.js** | `NODE_OPTIONS="--require @opentelemetry/auto-instrumentations-node/register"` |
-| **Go** | wrap the HTTP handler with `otelhttp` (no auto-agent for Go) |
+| **Go** | wrap the HTTP handler with `otelhttp` |
 
 Traces, latency, and per-request API rows now appear under the service
 automatically — the Agent attributes each span to its service by the connection's

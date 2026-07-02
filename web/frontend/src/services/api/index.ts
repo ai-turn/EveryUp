@@ -67,6 +67,8 @@ export type {
   AgentEvent,
   ServiceHistoryPoint,
   ServiceUptimeDay,
+  OtelMetricName,
+  OtelMetricPoint,
 } from './agents';
 export type {
   AlertRuleType,

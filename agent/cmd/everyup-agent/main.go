@@ -7,6 +7,11 @@ import (
 	"os/signal"
 	"syscall"
 
+	// Embed the timezone database so the TZ env var works in the alpine/scratch
+	// image (no OS tzdata): without it agent log lines stay UTC while app logs
+	// and the web UI render in local time, which reads as a 9-hour clock skew.
+	_ "time/tzdata"
+
 	"github.com/aiturn/everyup/agent/internal/agent"
 	"github.com/aiturn/everyup/agent/internal/config"
 )

@@ -151,4 +151,17 @@ func (s *Scheduler) cleanup() {
 	} else {
 		log.Printf("Failed to clean up audit events: %v", err)
 	}
+
+	// Delete old OTLP metric points (default: 7 days — raw points, high volume).
+	otelMetricDays := cfg.Retention.OtelMetricsDays
+	if otelMetricDays <= 0 {
+		otelMetricDays = 7
+	}
+	otelMetricCutoff := time.Now().Add(-time.Duration(otelMetricDays) * 24 * time.Hour)
+	otelMetricRepo := database.NewOtelMetricRepository()
+	if deleted, err := otelMetricRepo.DeleteOlderThan(otelMetricCutoff); err == nil {
+		log.Printf("Cleaned up %d old otel metrics (cutoff: %d days)", deleted, otelMetricDays)
+	} else {
+		log.Printf("Failed to clean up otel metrics: %v", err)
+	}
 }

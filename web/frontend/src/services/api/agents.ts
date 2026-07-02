@@ -60,6 +60,28 @@ export interface ServiceUptimeDay {
   totalChecks: number;
 }
 
+// One OTLP metric a service exports (for the metric picker).
+export interface OtelMetricName {
+  metricName: string;
+  metricType: 'gauge' | 'sum' | 'histogram';
+  unit?: string;
+  lastAt: string;
+}
+
+// One OTLP metric data point. Histogram-family points carry count/total with
+// value = average.
+export interface OtelMetricPoint {
+  id: number;
+  metricName: string;
+  metricType: string;
+  unit?: string;
+  attributes?: Record<string, unknown>;
+  value: number;
+  count?: number;
+  total?: number;
+  createdAt: string;
+}
+
 export function createAgentsApi(request: RequestFn) {
   return {
     createAgent: (name: string) =>
@@ -115,6 +137,19 @@ export function createAgentsApi(request: RequestFn) {
       if (params?.from) p.set('from', params.from);
       if (params?.to) p.set('to', params.to);
       return request<{ data: ApiRequest[]; total: number }>(`/agents/${agentId}/services/${encodeURIComponent(key)}/requests?${p}`);
+    },
+    getAgentServiceOtelMetricNames: (agentId: string, key: string) =>
+      request<OtelMetricName[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/otel-metrics`),
+    getAgentServiceOtelMetricPoints: (
+      agentId: string, key: string,
+      params: { name: string; from?: string; to?: string; limit?: number },
+    ) => {
+      const p = new URLSearchParams();
+      p.set('name', params.name);
+      if (params.from) p.set('from', params.from);
+      if (params.to) p.set('to', params.to);
+      if (params.limit) p.set('limit', String(params.limit));
+      return request<OtelMetricPoint[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/otel-metrics/points?${p}`);
     },
     // Per-service OTLP ingest filter: which log levels are stored. [] = accept all.
     getAgentServiceLogFilter: (agentId: string, key: string) =>

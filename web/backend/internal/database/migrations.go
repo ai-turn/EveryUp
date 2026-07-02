@@ -236,6 +236,9 @@ func migrate() error {
 	if err := migrateV36(); err != nil {
 		return fmt.Errorf("v36 migration failed: %w", err)
 	}
+	if err := migrateV37(); err != nil {
+		return fmt.Errorf("v37 migration failed: %w", err)
+	}
 
 	return nil
 }
@@ -1222,6 +1225,39 @@ func migrateV36() error {
 		`CREATE INDEX IF NOT EXISTS idx_audit_events_action_time ON audit_events(action, created_at DESC)`,
 		`CREATE INDEX IF NOT EXISTS idx_audit_events_trace_time ON audit_events(trace_id, created_at DESC)`,
 		`CREATE INDEX IF NOT EXISTS idx_audit_events_user_time ON audit_events(user_id, created_at DESC)`,
+	}
+	for _, stmt := range stmts {
+		if _, err := DB.Exec(stmt); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// migrateV37 creates otel_metrics: OTLP metric data points flattened one row
+// per point (gauge/sum store the value; histogram-family stores count, total,
+// and value=avg). Kept raw with a short retention — charts read it directly.
+// Added: 2026-07-02
+func migrateV37() error {
+	stmts := []string{
+		`CREATE TABLE IF NOT EXISTS otel_metrics (
+			id             INTEGER PRIMARY KEY AUTOINCREMENT,
+			service_id     TEXT NOT NULL DEFAULT '',
+			agent_id       TEXT NOT NULL DEFAULT '',
+			service_name   TEXT NOT NULL DEFAULT '',
+			metric_name    TEXT NOT NULL,
+			metric_type    TEXT NOT NULL,
+			unit           TEXT NOT NULL DEFAULT '',
+			attributes     TEXT,
+			value          REAL NOT NULL DEFAULT 0,
+			count          INTEGER NOT NULL DEFAULT 0,
+			total          REAL NOT NULL DEFAULT 0,
+			time_unix_nano INTEGER NOT NULL DEFAULT 0,
+			created_at     DATETIME NOT NULL
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_otel_metrics_agent_service ON otel_metrics(agent_id, service_name, metric_name, created_at DESC)`,
+		`CREATE INDEX IF NOT EXISTS idx_otel_metrics_service       ON otel_metrics(service_id, metric_name, created_at DESC)`,
+		`CREATE INDEX IF NOT EXISTS idx_otel_metrics_created       ON otel_metrics(created_at)`,
 	}
 	for _, stmt := range stmts {
 		if _, err := DB.Exec(stmt); err != nil {

@@ -16,6 +16,7 @@ func RegisterIngestRoutes(api fiber.Router) {
 
 	api.Post("/otlp/v1/logs", append(logIngestMiddleware, otlpBodyLimit(), otlpIngestHandler.IngestLogs)...)
 	api.Post("/otlp/v1/traces", append(logIngestMiddleware, otlpBodyLimit(), otlpIngestHandler.IngestTraces)...)
+	api.Post("/otlp/v1/metrics", append(logIngestMiddleware, otlpBodyLimit(), otlpIngestHandler.IngestMetrics)...)
 }
 
 func otlpBodyLimit() fiber.Handler {

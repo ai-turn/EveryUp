@@ -150,6 +150,8 @@ func (c *Client) ForwardOTLPProtobuf(ctx context.Context, signal string, data []
 		path = "/api/v1/otlp/v1/logs"
 	case "traces":
 		path = "/api/v1/otlp/v1/traces"
+	case "metrics":
+		path = "/api/v1/otlp/v1/metrics"
 	default:
 		return nil, fmt.Errorf("unsupported OTLP signal %q", signal)
 	}

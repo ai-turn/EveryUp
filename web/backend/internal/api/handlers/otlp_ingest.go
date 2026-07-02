@@ -18,9 +18,11 @@ import (
 	"github.com/aiturn/everyup/internal/models"
 	"github.com/gofiber/fiber/v2"
 	collectorlogspb "go.opentelemetry.io/proto/otlp/collector/logs/v1"
+	collectormetricspb "go.opentelemetry.io/proto/otlp/collector/metrics/v1"
 	collectortracepb "go.opentelemetry.io/proto/otlp/collector/trace/v1"
 	commonpb "go.opentelemetry.io/proto/otlp/common/v1"
 	logspb "go.opentelemetry.io/proto/otlp/logs/v1"
+	metricspb "go.opentelemetry.io/proto/otlp/metrics/v1"
 	resourcepb "go.opentelemetry.io/proto/otlp/resource/v1"
 	tracepb "go.opentelemetry.io/proto/otlp/trace/v1"
 	"google.golang.org/protobuf/proto"
@@ -33,6 +35,7 @@ type OTLPIngestHandler struct {
 	spanRepo          *database.SpanRepository
 	reqRepo           *database.ApiRequestRepository
 	agentRepo         *database.AgentRepository
+	metricRepo        *database.OtelMetricRepository
 }
 
 // NewOTLPIngestHandler creates an OTLP ingest handler.
@@ -43,6 +46,7 @@ func NewOTLPIngestHandler() *OTLPIngestHandler {
 		spanRepo:          database.NewSpanRepository(),
 		reqRepo:           database.NewApiRequestRepository(),
 		agentRepo:         database.NewAgentRepository(),
+		metricRepo:        database.NewOtelMetricRepository(),
 	}
 }
 
@@ -225,6 +229,149 @@ func (h *OTLPIngestHandler) IngestTraces(c *fiber.Ctx) error {
 	c.Set("X-EveryUp-Spans", strconv.Itoa(insertedSpans))
 	c.Set("X-EveryUp-Api-Requests", strconv.Itoa(insertedRequests))
 	return c.Status(fiber.StatusOK).Send(respBody)
+}
+
+// IngestMetrics handles POST /api/v1/otlp/v1/metrics. Data points are
+// flattened one row per point; unsupported shapes are counted and skipped.
+func (h *OTLPIngestHandler) IngestMetrics(c *fiber.Ctx) error {
+	principal, ok := c.Locals("ingestPrincipal").(*middleware.IngestPrincipal)
+	if !ok || principal == nil {
+		return unauthorizedOTLP(c)
+	}
+
+	var req collectormetricspb.ExportMetricsServiceRequest
+	body, readErr := readOTLPBody(c)
+	if readErr != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"error": fiber.Map{
+				"code":    ErrCodeInvalidRequest,
+				"message": readErr.Error(),
+			},
+		})
+	}
+
+	if err := proto.Unmarshal(body, &req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"error": fiber.Map{
+				"code":    ErrCodeInvalidRequest,
+				"message": "Invalid OTLP metrics protobuf payload: " + err.Error(),
+			},
+		})
+	}
+
+	var rows []models.OtelMetric
+	skipped := 0
+	for _, resourceMetrics := range req.ResourceMetrics {
+		resourceMap := attrsToMap(resourceMetrics.GetResource().GetAttributes())
+		serviceName := firstString(resourceMap, "service.name")
+		if serviceName == "" {
+			serviceName = principal.Name
+		}
+
+		for _, scopeMetrics := range resourceMetrics.ScopeMetrics {
+			for _, metric := range scopeMetrics.Metrics {
+				points, ok := flattenMetric(metric)
+				if !ok {
+					skipped++
+					continue
+				}
+				for i := range points {
+					points[i].ServiceID = principal.ServiceID
+					points[i].AgentID = principal.AgentID
+					points[i].ServiceName = serviceName
+				}
+				rows = append(rows, points...)
+			}
+		}
+	}
+
+	inserted, err := h.metricRepo.CreateBatch(rows)
+	if err != nil {
+		log.Printf("[OTLP] failed to store metrics for %s: %v", principal.Name, err)
+		return internalError(c, ErrCodeDatabase, err)
+	}
+
+	respBody, err := proto.Marshal(&collectormetricspb.ExportMetricsServiceResponse{})
+	if err != nil {
+		return err
+	}
+	c.Set(fiber.HeaderContentType, "application/x-protobuf")
+	c.Set("X-EveryUp-Metric-Points", strconv.Itoa(inserted))
+	c.Set("X-EveryUp-Skipped", strconv.Itoa(skipped))
+	return c.Status(fiber.StatusOK).Send(respBody)
+}
+
+// flattenMetric projects one OTLP metric into rows: gauges and sums keep the
+// point value; the histogram family stores count + total with value = average.
+// Returns ok=false for a metric shape with no supported data.
+func flattenMetric(metric *metricspb.Metric) ([]models.OtelMetric, bool) {
+	name := metric.GetName()
+	if name == "" {
+		return nil, false
+	}
+
+	var rows []models.OtelMetric
+	switch {
+	case metric.GetGauge() != nil:
+		for _, dp := range metric.GetGauge().GetDataPoints() {
+			rows = append(rows, numberPointRow(name, "gauge", metric.GetUnit(), dp))
+		}
+	case metric.GetSum() != nil:
+		for _, dp := range metric.GetSum().GetDataPoints() {
+			rows = append(rows, numberPointRow(name, "sum", metric.GetUnit(), dp))
+		}
+	case metric.GetHistogram() != nil:
+		for _, dp := range metric.GetHistogram().GetDataPoints() {
+			rows = append(rows, histogramRow(name, metric.GetUnit(), dp.GetCount(), dp.GetSum(), dp.GetAttributes(), dp.GetTimeUnixNano()))
+		}
+	case metric.GetExponentialHistogram() != nil:
+		for _, dp := range metric.GetExponentialHistogram().GetDataPoints() {
+			rows = append(rows, histogramRow(name, metric.GetUnit(), dp.GetCount(), dp.GetSum(), dp.GetAttributes(), dp.GetTimeUnixNano()))
+		}
+	case metric.GetSummary() != nil:
+		for _, dp := range metric.GetSummary().GetDataPoints() {
+			rows = append(rows, histogramRow(name, metric.GetUnit(), dp.GetCount(), dp.GetSum(), dp.GetAttributes(), dp.GetTimeUnixNano()))
+		}
+	default:
+		return nil, false
+	}
+	return rows, len(rows) > 0
+}
+
+func numberPointRow(name, metricType, unit string, dp *metricspb.NumberDataPoint) models.OtelMetric {
+	value := dp.GetAsDouble()
+	if _, isInt := dp.GetValue().(*metricspb.NumberDataPoint_AsInt); isInt {
+		value = float64(dp.GetAsInt())
+	}
+	return metricRow(name, metricType, unit, value, 0, 0, dp.GetAttributes(), dp.GetTimeUnixNano())
+}
+
+func histogramRow(name, unit string, count uint64, sum float64, attrs []*commonpb.KeyValue, timeUnixNano uint64) models.OtelMetric {
+	avg := 0.0
+	if count > 0 {
+		avg = sum / float64(count)
+	}
+	return metricRow(name, "histogram", unit, avg, count, sum, attrs, timeUnixNano)
+}
+
+func metricRow(name, metricType, unit string, value float64, count uint64, total float64, attrs []*commonpb.KeyValue, timeUnixNano uint64) models.OtelMetric {
+	createdAt := time.Now()
+	if timeUnixNano > 0 {
+		createdAt = timeFromUnixNano(timeUnixNano)
+	}
+	return models.OtelMetric{
+		MetricName:   name,
+		MetricType:   metricType,
+		Unit:         unit,
+		Attributes:   mustJSON(attrsToMap(attrs)),
+		Value:        value,
+		Count:        count,
+		Total:        total,
+		TimeUnixNano: timeUnixNano,
+		CreatedAt:    createdAt,
+	}
 }
 
 type otelLogFields struct {

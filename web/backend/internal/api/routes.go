@@ -151,6 +151,8 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	local.Get("/agents/:agentId/services/:key/log-filter", agentHandler.GetServiceLogFilter)
 	local.Put("/agents/:agentId/services/:key/log-filter", agentHandler.SetServiceLogFilter)
 	local.Get("/agents/:agentId/services/:key/requests", agentHandler.GetServiceRequests)
+	local.Get("/agents/:agentId/services/:key/otel-metrics", agentHandler.GetServiceOtelMetricNames)
+	local.Get("/agents/:agentId/services/:key/otel-metrics/points", agentHandler.GetServiceOtelMetricPoints)
 
 	// Notification History
 	notificationHistoryHandler := handlers.NewNotificationHistoryHandler()

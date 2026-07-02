@@ -282,6 +282,85 @@ func (c *DockerClient) ServiceIPMap(ctx context.Context) (map[string]string, err
 	return ipToService, nil
 }
 
+// ServicePIDMap maps host-namespace PIDs to service names, so the telemetry
+// gateway can attribute spans from the bundled eBPF sidecar: it tags each span
+// with the instrumented process's PID (service.instance.id "host:pid"), and the
+// Docker top API reports the same host-namespace PIDs. Best-effort: a container
+// whose top call fails is simply absent (its spans are dropped until the next
+// refresh).
+func (c *DockerClient) ServicePIDMap(ctx context.Context) (map[int]string, error) {
+	containers, err := c.fetchContainers(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	pidToService := make(map[int]string)
+	for _, container := range containers {
+		if container.State != "running" {
+			continue
+		}
+		name := serviceNameFromDocker(container.ID, containerName(container), container.Labels)
+		pids, err := c.containerPIDs(ctx, container.ID)
+		if err != nil {
+			continue
+		}
+		for _, pid := range pids {
+			pidToService[pid] = name
+		}
+	}
+	return pidToService, nil
+}
+
+type dockerTopResponse struct {
+	Titles    []string   `json:"Titles"`
+	Processes [][]string `json:"Processes"`
+}
+
+func (c *DockerClient) containerPIDs(ctx context.Context, containerID string) ([]int, error) {
+	endpoint := fmt.Sprintf("http://docker/containers/%s/top", url.PathEscape(containerID))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create docker top request: %w", err)
+	}
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("query docker top: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("docker top returned %d", resp.StatusCode)
+	}
+	var top dockerTopResponse
+	if err := json.NewDecoder(resp.Body).Decode(&top); err != nil {
+		return nil, fmt.Errorf("decode docker top response: %w", err)
+	}
+	return parsePIDsFromTop(top.Titles, top.Processes), nil
+}
+
+// parsePIDsFromTop extracts the PID column from a docker top response.
+func parsePIDsFromTop(titles []string, processes [][]string) []int {
+	pidCol := -1
+	for i, title := range titles {
+		if strings.EqualFold(strings.TrimSpace(title), "PID") {
+			pidCol = i
+			break
+		}
+	}
+	if pidCol < 0 {
+		return nil
+	}
+	pids := make([]int, 0, len(processes))
+	for _, row := range processes {
+		if pidCol >= len(row) {
+			continue
+		}
+		if pid, err := strconv.Atoi(strings.TrimSpace(row[pidCol])); err == nil && pid > 0 {
+			pids = append(pids, pid)
+		}
+	}
+	return pids
+}
+
 func TargetFromContainer(containerID, fallbackName string, labels map[string]string) Target {
 	serviceName := serviceNameFromDocker(containerID, fallbackName, labels)
 	return Target{
