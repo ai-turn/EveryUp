@@ -52,6 +52,7 @@ type ServiceSnapshot struct {
 	Name        string    `json:"name"`
 	CheckType   string    `json:"checkType"`
 	Endpoint    string    `json:"endpoint"`
+	Runtime     string    `json:"runtime,omitempty"` // detected language runtime ("java", "node", ...)
 	Healthy     bool      `json:"healthy"`
 	Seen        bool      `json:"seen"`
 	Silenced    bool      `json:"silenced"`

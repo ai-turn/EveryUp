@@ -119,11 +119,14 @@ func TestEnrichTracesGarbagePassesThrough(t *testing.T) {
 
 func TestEnrichTracesEBPFAttribution(t *testing.T) {
 	pids := fakePIDResolver{2264: "checkout-api"}
-	ips := fakeIPResolver{"172.19.0.3": "cart-api"}
+	// The network-identity index holds IPs AND rDNS names (container name /
+	// compose alias) — the sidecar's server.address is usually the alias.
+	ips := fakeIPResolver{"172.19.0.3": "cart-api", "whoami": "whoami-svc"}
 
 	body := marshalTraces(t,
 		ebpfResource("whoami", "4c3d0f1ceb39:2264", "whoami"),     // resolves by PID
 		ebpfResource("node", "4c3d0f1ceb39:9999", "172.19.0.3"),   // PID unknown -> server.address IP fallback
+		ebpfResource("whoami", "4c3d0f1ceb39:3731", "whoami"),     // dead-TID PID -> server.address alias fallback
 		ebpfResource("docker-proxy", "4c3d0f1ceb39:1", "gateway"), // unresolvable -> dropped
 		appResource("billing"),                                    // app resource untouched, no connection match
 	)
@@ -134,8 +137,8 @@ func TestEnrichTracesEBPFAttribution(t *testing.T) {
 	}
 	req := unmarshalTraces(t, out)
 	kept := req.GetResourceSpans()
-	if len(kept) != 3 {
-		t.Fatalf("kept %d resources, want 3 (unresolvable eBPF resource dropped)", len(kept))
+	if len(kept) != 4 {
+		t.Fatalf("kept %d resources, want 4 (unresolvable eBPF resource dropped)", len(kept))
 	}
 	if got := serviceNameOf(kept[0]); got != "checkout-api" {
 		t.Fatalf("PID-resolved service.name = %q, want checkout-api", got)
@@ -143,10 +146,13 @@ func TestEnrichTracesEBPFAttribution(t *testing.T) {
 	if got := serviceNameOf(kept[1]); got != "cart-api" {
 		t.Fatalf("IP-fallback service.name = %q, want cart-api", got)
 	}
-	if got := serviceNameOf(kept[2]); got != "billing" {
+	if got := serviceNameOf(kept[2]); got != "whoami-svc" {
+		t.Fatalf("alias-fallback service.name = %q, want whoami-svc", got)
+	}
+	if got := serviceNameOf(kept[3]); got != "billing" {
 		t.Fatalf("app service.name = %q, want billing", got)
 	}
-	wantTraced := map[string]bool{"checkout-api": true, "cart-api": true}
+	wantTraced := map[string]bool{"checkout-api": true, "cart-api": true, "whoami-svc": true}
 	if len(services) != len(wantTraced) {
 		t.Fatalf("services = %v, want checkout-api and cart-api", services)
 	}

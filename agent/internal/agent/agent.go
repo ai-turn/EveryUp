@@ -44,6 +44,10 @@ type Agent struct {
 	mu        sync.RWMutex
 	states    map[string]*targetState
 	webEvents []state.AuditEvent
+	// runtimes maps service name -> detected language runtime ("java", "node",
+	// ...), refreshed from Docker process listings each check cycle and synced
+	// to Web so the UI can show runtime-specific OTel setup guidance.
+	runtimes map[string]string
 }
 
 type targetState struct {
@@ -104,7 +108,7 @@ func New(cfg config.Config) (*Agent, error) {
 		hostAlertReader = hostmetrics.New(cfg.HostMetricsRoot, cfg.HostDiskPath)
 	}
 	ipIndex := newServiceIPIndex()
-	pidIndex := newServicePIDIndex()
+	pidIndex := newServicePIDIndex(cfg.HostMetricsRoot)
 	traced := newTracedServices(10 * time.Minute)
 	var gateway *telemetrygateway.Server
 	if cfg.TelemetryGatewayEnabled && web != nil && web.Enabled() {
@@ -129,6 +133,7 @@ func New(cfg config.Config) (*Agent, error) {
 		traced:          traced,
 		states:          make(map[string]*targetState),
 		webEvents:       make([]state.AuditEvent, 0),
+		runtimes:        make(map[string]string),
 	}
 
 	return agent, nil
@@ -282,6 +287,7 @@ func (a *Agent) flushWebServices(ctx context.Context) {
 			Name:        service.Name,
 			CheckType:   service.CheckType,
 			Endpoint:    service.Endpoint,
+			Runtime:     a.runtimeOf(service.Name),
 			Healthy:     service.Healthy,
 			Seen:        service.Seen,
 			Silenced:    service.Silenced,
@@ -406,12 +412,22 @@ func (a *Agent) refreshServiceIPIndex(ctx context.Context) {
 	if a.pidIndex == nil {
 		return
 	}
-	pids, err := a.docker.ServicePIDMap(ctx)
+	pids, runtimes, err := a.docker.ServiceProcessMaps(ctx)
 	if err != nil {
 		log.Printf("service PID index refresh failed: %v", err)
 		return
 	}
 	a.pidIndex.replace(pids)
+	a.mu.Lock()
+	a.runtimes = runtimes
+	a.mu.Unlock()
+}
+
+// runtimeOf returns the detected language runtime for a service ("" = unknown).
+func (a *Agent) runtimeOf(serviceName string) string {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return a.runtimes[serviceName]
 }
 
 func (a *Agent) targets(ctx context.Context) []discovery.Target {

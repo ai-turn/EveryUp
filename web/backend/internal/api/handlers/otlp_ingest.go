@@ -523,6 +523,12 @@ func spanToAPIRequest(serviceID, agentID, serviceName string, apiExcludePaths []
 	durationMs := 0
 	if end > start {
 		durationMs = int((end - start) / uint64(time.Millisecond))
+		if durationMs == 0 {
+			// Sub-millisecond spans carry real timing; floor-to-0 would render
+			// as "unknown" (the frontend treats <=0 as no data — only synthetic
+			// access-log spans, which genuinely lack duration, should show that).
+			durationMs = 1
+		}
 	}
 
 	errMsg := span.GetStatus().GetMessage()

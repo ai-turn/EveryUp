@@ -17,6 +17,8 @@ export interface AgentServiceSnapshot {
   name: string;
   checkType: string;
   endpoint: string;
+  /** Agent-detected language runtime ("java", "node", "python", "go", "dotnet"). */
+  runtime?: string;
   healthy: boolean;
   seen: boolean;
   silenced: boolean;

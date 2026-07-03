@@ -239,6 +239,9 @@ func migrate() error {
 	if err := migrateV37(); err != nil {
 		return fmt.Errorf("v37 migration failed: %w", err)
 	}
+	if err := migrateV38(); err != nil {
+		return fmt.Errorf("v38 migration failed: %w", err)
+	}
 
 	return nil
 }
@@ -1265,6 +1268,17 @@ func migrateV37() error {
 		}
 	}
 	return nil
+}
+
+// migrateV38 adds the agent-detected language runtime to agent_services, so
+// the UI can show runtime-specific OTel setup guidance.
+// Added: 2026-07-03
+func migrateV38() error {
+	_, err := DB.Exec(`ALTER TABLE agent_services ADD COLUMN runtime TEXT NOT NULL DEFAULT ''`)
+	if err != nil && strings.Contains(err.Error(), "duplicate column name") {
+		return nil
+	}
+	return err
 }
 
 func ensureAPIRequestIndexes() error {

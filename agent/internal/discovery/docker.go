@@ -155,6 +155,7 @@ type DockerClient struct {
 type dockerContainer struct {
 	ID              string            `json:"Id"`
 	Names           []string          `json:"Names"`
+	Image           string            `json:"Image"`
 	Labels          map[string]string `json:"Labels"`
 	State           string            `json:"State"`  // "running", "exited", "dead", "created", etc.
 	Status          string            `json:"Status"` // human-readable, e.g. "Up 2 hours", "Exited (0) 3 minutes ago"
@@ -258,57 +259,83 @@ func (c *DockerClient) ListTargets(ctx context.Context) ([]Target, error) {
 	return targets, nil
 }
 
-// ServiceIPMap maps each container's network IP(s) to its service name, so the
-// telemetry gateway can attribute an inbound OTLP connection to a service
-// without the app declaring OTEL_SERVICE_NAME. Best-effort: containers on the
-// host network, or reached through another proxy, carry no distinct bridge IP
-// here and are simply absent from the map (the app's own service.name, if any,
-// still wins).
+// ServiceIPMap maps each container's network identities — bridge IP(s),
+// container name, and compose service label — to its service name, so the
+// telemetry gateway can attribute inbound OTLP by connection source IP and
+// eBPF sidecar spans by server.address (Docker's rDNS hands the sidecar the
+// compose service alias, e.g. "whoami", not an IP). Best-effort: containers on
+// the host network carry no distinct identity here and are simply absent (the
+// app's own service.name, if any, still wins). A name claimed by two different
+// services (same compose service name in two projects) is dropped from the map
+// — a missing span beats a misattributed one.
 func (c *DockerClient) ServiceIPMap(ctx context.Context) (map[string]string, error) {
 	containers, err := c.fetchContainers(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	ipToService := make(map[string]string)
+	keyToService := make(map[string]string)
+	ambiguous := make(map[string]bool)
+	add := func(key, service string) {
+		key = strings.TrimSpace(key)
+		if key == "" || ambiguous[key] {
+			return
+		}
+		if existing, ok := keyToService[key]; ok && existing != service {
+			delete(keyToService, key)
+			ambiguous[key] = true
+			return
+		}
+		keyToService[key] = service
+	}
+
 	for _, container := range containers {
 		name := serviceNameFromDocker(container.ID, containerName(container), container.Labels)
 		for _, network := range container.NetworkSettings.Networks {
-			if ip := strings.TrimSpace(network.IPAddress); ip != "" {
-				ipToService[ip] = name
-			}
+			add(network.IPAddress, name)
 		}
+		add(containerName(container), name)
+		add(container.Labels[ComposeServiceLabel], name)
 	}
-	return ipToService, nil
+	return keyToService, nil
 }
 
-// ServicePIDMap maps host-namespace PIDs to service names, so the telemetry
-// gateway can attribute spans from the bundled eBPF sidecar: it tags each span
-// with the instrumented process's PID (service.instance.id "host:pid"), and the
-// Docker top API reports the same host-namespace PIDs. Best-effort: a container
-// whose top call fails is simply absent (its spans are dropped until the next
-// refresh).
-func (c *DockerClient) ServicePIDMap(ctx context.Context) (map[int]string, error) {
+// ServiceProcessMaps walks each running container's processes (docker top) and
+// returns two views the agent refreshes together each cycle:
+//
+//   - pidToService: host-namespace PID -> service name, so the telemetry
+//     gateway can attribute eBPF sidecar spans (service.instance.id "host:pid").
+//   - serviceRuntime: service name -> detected runtime ("java", "node", ...),
+//     from process commands with the image name as fallback, so the UI can show
+//     runtime-specific OTel setup guidance.
+//
+// Best-effort: a container whose top call fails is simply absent from both
+// (its spans are dropped until the next refresh, its runtime stays unknown).
+func (c *DockerClient) ServiceProcessMaps(ctx context.Context) (map[int]string, map[string]string, error) {
 	containers, err := c.fetchContainers(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	pidToService := make(map[int]string)
+	serviceRuntime := make(map[string]string)
 	for _, container := range containers {
 		if container.State != "running" {
 			continue
 		}
 		name := serviceNameFromDocker(container.ID, containerName(container), container.Labels)
-		pids, err := c.containerPIDs(ctx, container.ID)
+		pids, cmds, err := c.containerProcesses(ctx, container.ID)
 		if err != nil {
 			continue
 		}
 		for _, pid := range pids {
 			pidToService[pid] = name
 		}
+		if runtime := detectRuntime(container.Image, cmds); runtime != "" {
+			serviceRuntime[name] = runtime
+		}
 	}
-	return pidToService, nil
+	return pidToService, serviceRuntime, nil
 }
 
 type dockerTopResponse struct {
@@ -316,49 +343,111 @@ type dockerTopResponse struct {
 	Processes [][]string `json:"Processes"`
 }
 
-func (c *DockerClient) containerPIDs(ctx context.Context, containerID string) ([]int, error) {
+func (c *DockerClient) containerProcesses(ctx context.Context, containerID string) ([]int, []string, error) {
 	endpoint := fmt.Sprintf("http://docker/containers/%s/top", url.PathEscape(containerID))
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
-		return nil, fmt.Errorf("create docker top request: %w", err)
+		return nil, nil, fmt.Errorf("create docker top request: %w", err)
 	}
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("query docker top: %w", err)
+		return nil, nil, fmt.Errorf("query docker top: %w", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("docker top returned %d", resp.StatusCode)
+		return nil, nil, fmt.Errorf("docker top returned %d", resp.StatusCode)
 	}
 	var top dockerTopResponse
 	if err := json.NewDecoder(resp.Body).Decode(&top); err != nil {
-		return nil, fmt.Errorf("decode docker top response: %w", err)
+		return nil, nil, fmt.Errorf("decode docker top response: %w", err)
 	}
-	return parsePIDsFromTop(top.Titles, top.Processes), nil
+	pids, cmds := parseTopRows(top.Titles, top.Processes)
+	return pids, cmds, nil
 }
 
-// parsePIDsFromTop extracts the PID column from a docker top response.
-func parsePIDsFromTop(titles []string, processes [][]string) []int {
-	pidCol := -1
+// parseTopRows extracts the PID and CMD columns from a docker top response.
+func parseTopRows(titles []string, processes [][]string) ([]int, []string) {
+	pidCol, cmdCol := -1, -1
 	for i, title := range titles {
-		if strings.EqualFold(strings.TrimSpace(title), "PID") {
+		switch strings.ToUpper(strings.TrimSpace(title)) {
+		case "PID":
 			pidCol = i
-			break
+		case "CMD", "COMMAND":
+			cmdCol = i
 		}
 	}
-	if pidCol < 0 {
-		return nil
-	}
-	pids := make([]int, 0, len(processes))
+	var pids []int
+	var cmds []string
 	for _, row := range processes {
-		if pidCol >= len(row) {
+		if pidCol >= 0 && pidCol < len(row) {
+			if pid, err := strconv.Atoi(strings.TrimSpace(row[pidCol])); err == nil && pid > 0 {
+				pids = append(pids, pid)
+			}
+		}
+		if cmdCol >= 0 && cmdCol < len(row) {
+			if cmd := strings.TrimSpace(row[cmdCol]); cmd != "" {
+				cmds = append(cmds, cmd)
+			}
+		}
+	}
+	return pids, cmds
+}
+
+// runtimeCommands maps a process executable basename (version digits trimmed,
+// so "python3.12" matches "python") to a runtime.
+var runtimeCommands = map[string]string{
+	"java":     "java",
+	"node":     "node",
+	"nodejs":   "node",
+	"bun":      "node",
+	"python":   "python",
+	"gunicorn": "python",
+	"uvicorn":  "python",
+	"dotnet":   "dotnet",
+}
+
+// runtimeImageHints maps an image-name substring to a runtime; checked only
+// when no process command matched (custom app images hide their base image, so
+// commands are the stronger signal).
+var runtimeImageHints = []struct{ hint, runtime string }{
+	{"temurin", "java"}, {"openjdk", "java"}, {"corretto", "java"}, {"zulu", "java"},
+	{"node", "node"},
+	{"python", "python"}, {"pypy", "python"},
+	{"golang", "go"},
+	{"dotnet", "dotnet"}, {"aspnet", "dotnet"},
+}
+
+// detectRuntime classifies a container's language runtime from its process
+// commands, falling back to the image name. Returns "" when unknown — Go
+// binaries are usually indistinguishable here, and that is fine: eBPF tracing
+// covers them without any runtime-specific setup.
+func detectRuntime(image string, cmds []string) string {
+	for _, cmd := range cmds {
+		fields := strings.Fields(cmd)
+		if len(fields) == 0 {
 			continue
 		}
-		if pid, err := strconv.Atoi(strings.TrimSpace(row[pidCol])); err == nil && pid > 0 {
-			pids = append(pids, pid)
+		exe := strings.ToLower(fields[0])
+		if idx := strings.LastIndexByte(exe, '/'); idx >= 0 {
+			exe = exe[idx+1:]
+		}
+		// "python3.12" / "node20" style version suffixes.
+		exe = strings.TrimRightFunc(exe, func(r rune) bool { return r == '.' || (r >= '0' && r <= '9') })
+		if runtime, ok := runtimeCommands[exe]; ok {
+			return runtime
 		}
 	}
-	return pids
+
+	image = strings.ToLower(image)
+	if idx := strings.IndexByte(image, ':'); idx >= 0 {
+		image = image[:idx] // drop the tag; hints like "python" would match tag digits' prefix otherwise
+	}
+	for _, h := range runtimeImageHints {
+		if strings.Contains(image, h.hint) {
+			return h.runtime
+		}
+	}
+	return ""
 }
 
 func TargetFromContainer(containerID, fallbackName string, labels map[string]string) Target {

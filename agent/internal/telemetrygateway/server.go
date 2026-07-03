@@ -16,10 +16,11 @@ type Forwarder interface {
 	ForwardOTLPProtobuf(ctx context.Context, signal string, data []byte) ([]byte, error)
 }
 
-// ServiceResolver maps the source IP of an inbound OTLP connection to the
-// service name it belongs to, so spans/logs can be attributed to a service
-// without the app setting OTEL_SERVICE_NAME. A nil resolver disables
-// enrichment (the app's own service.name is forwarded untouched).
+// ServiceResolver maps a container network identity — source IP of an inbound
+// OTLP connection, or a server.address from an eBPF span (IP, container name,
+// or compose service alias) — to the service name it belongs to, so telemetry
+// can be attributed without the app setting OTEL_SERVICE_NAME. A nil resolver
+// disables enrichment (the app's own service.name is forwarded untouched).
 type ServiceResolver interface {
 	ServiceNameByIP(ip string) (string, bool)
 }

@@ -1,7 +1,7 @@
 package telemetrygateway
 
 import (
-	"net"
+	"log"
 	"strconv"
 	"strings"
 
@@ -113,6 +113,11 @@ func enrichTraces(body []byte, connName string, connOK bool, pids PIDResolver, i
 		if resourceAttr(rs.Resource, "everyup.source") == ebpfSourceMarker {
 			name, ok := resolveEBPFService(rs, pids, ips)
 			if !ok {
+				// One line per dropped resource: this is the first place to look
+				// when a service's eBPF spans don't show up (PID index stale,
+				// non-container process, sidecar misconfig).
+				log.Printf("telemetry gateway: dropped ebpf resource service=%q instance=%q (no matching container)",
+					resourceAttr(rs.Resource, "service.name"), resourceAttr(rs.Resource, "service.instance.id"))
 				changed = true
 				continue
 			}
@@ -181,9 +186,13 @@ func enrichMetrics(body []byte, connName string, connOK bool) ([]byte, bool) {
 }
 
 // resolveEBPFService maps one eBPF-sourced ResourceSpans to a service name:
-// host PID from service.instance.id ("host:pid") first, then server.address
-// when it is a literal IP. A resource groups spans of exactly one process, so
-// one lookup attributes the whole batch.
+// host PID from service.instance.id ("host:pid") first, then the spans'
+// server.address against the network-identity index (it holds container IPs,
+// container names, and compose service aliases — the sidecar's rDNS usually
+// hands us the alias, e.g. "whoami"). The PID path alone is not enough: for Go
+// targets the sidecar stamps the first-seen serving thread's TID, which the
+// runtime may have already reaped. A resource groups spans of exactly one
+// process, so one lookup attributes the whole batch.
 func resolveEBPFService(rs *tracepb.ResourceSpans, pids PIDResolver, ips ServiceResolver) (string, bool) {
 	if pids != nil {
 		if pid := instancePID(resourceAttr(rs.GetResource(), "service.instance.id")); pid > 0 {
@@ -199,11 +208,7 @@ func resolveEBPFService(rs *tracepb.ResourceSpans, pids PIDResolver, ips Service
 					if attr.GetKey() != "server.address" {
 						continue
 					}
-					addr := attr.GetValue().GetStringValue()
-					if net.ParseIP(addr) == nil {
-						continue
-					}
-					if name, ok := ips.ServiceNameByIP(addr); ok {
+					if name, ok := ips.ServiceNameByIP(attr.GetValue().GetStringValue()); ok {
 						return name, true
 					}
 				}

@@ -41,6 +41,7 @@ type AgentService struct {
 	Name        string    `json:"name"`
 	CheckType   string    `json:"checkType"`
 	Endpoint    string    `json:"endpoint"`
+	Runtime     string    `json:"runtime,omitempty"` // agent-detected language runtime ("java", "node", ...)
 	Healthy     bool      `json:"healthy"`
 	Seen        bool      `json:"seen"`
 	Silenced    bool      `json:"silenced"`

@@ -544,7 +544,7 @@ const mockAgents: ConnectedAgent[] = [
 const mockAgentServicesFlat: AgentServiceFlat[] = [
   {
     agentId: 'agent_demo_01', agentName: 'prod-server',
-    key: 'api', name: 'api', checkType: 'http',
+    key: 'api', name: 'api', checkType: 'http', runtime: 'node',
     endpoint: 'http://api:8080/health', healthy: true, seen: true, silenced: false,
     lastStatus: 200, lastLatency: '42ms',
     updatedAt: new Date(Date.now() - 30_000).toISOString(),
@@ -560,7 +560,7 @@ const mockAgentServicesFlat: AgentServiceFlat[] = [
   },
   {
     agentId: 'agent_demo_01', agentName: 'prod-server',
-    key: 'payment-worker', name: 'payment-worker', checkType: 'http',
+    key: 'payment-worker', name: 'payment-worker', checkType: 'http', runtime: 'java',
     endpoint: 'http://payment-worker:8090/health', healthy: false, seen: true, silenced: false,
     lastStatus: 503, lastLatency: '5001ms', lastError: 'payment gateway timeout',
     updatedAt: new Date(Date.now() - 90_000).toISOString(),
@@ -764,7 +764,10 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   // /agents/:agentId/services/:key/logs
   if (/^\/agents\/[^/]+\/services\/[^/]+\/logs/.test(endpoint))
     return { data: mockAgentServiceLogs, total: mockAgentServiceLogs.length } as unknown as T;
-  // /agents/:agentId/services/:key/requests
+  // /agents/:agentId/services/:key/requests — payment-worker has no HTTP
+  // traffic, so its API tab exercises the empty state + setup guidance.
+  if (/^\/agents\/[^/]+\/services\/payment-worker\/requests/.test(endpoint))
+    return { data: [], total: 0 } as unknown as T;
   if (/^\/agents\/[^/]+\/services\/[^/]+\/requests/.test(endpoint))
     return { data: mockAgentServiceRequests, total: mockAgentServiceRequests.length } as unknown as T;
   // /agents/:agentId/services/:key/otel-metrics/points?name=...

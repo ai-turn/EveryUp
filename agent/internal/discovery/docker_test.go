@@ -104,20 +104,46 @@ func TestParseDockerLogLinesWithTimestamp(t *testing.T) {
 	}
 }
 
-func TestParsePIDsFromTop(t *testing.T) {
+func TestParseTopRows(t *testing.T) {
 	titles := []string{"UID", "PID", "PPID", "CMD"}
 	processes := [][]string{
-		{"root", "768", "740", "/whoami"},
+		{"root", "768", "740", "java -jar /app.jar"},
 		{"root", "not-a-pid", "740", "zombie"},
-		{"root", "801"}, // short row: PID column present, still parsed
+		{"root", "801"}, // short row: PID column present, CMD missing
 		{"root"},        // short row: PID column missing, skipped
 	}
-	pids := parsePIDsFromTop(titles, processes)
+	pids, cmds := parseTopRows(titles, processes)
 	if len(pids) != 2 || pids[0] != 768 || pids[1] != 801 {
 		t.Fatalf("pids = %v, want [768 801]", pids)
 	}
+	if len(cmds) != 2 || cmds[0] != "java -jar /app.jar" {
+		t.Fatalf("cmds = %v", cmds)
+	}
 
-	if pids := parsePIDsFromTop([]string{"UID", "CMD"}, processes); pids != nil {
+	if pids, _ := parseTopRows([]string{"UID", "CMD"}, processes); pids != nil {
 		t.Fatalf("no PID column should yield nil, got %v", pids)
+	}
+}
+
+func TestDetectRuntime(t *testing.T) {
+	cases := []struct {
+		image string
+		cmds  []string
+		want  string
+	}{
+		{"mycompany/api:1.2", []string{"java -jar /app.jar"}, "java"},                    // custom image, cmd wins
+		{"mycompany/web:latest", []string{"sh -c start", "/usr/bin/node server.js"}, "node"},
+		{"backend:2", []string{"gunicorn app:app -w 4"}, "python"},
+		{"tool:1", []string{"/usr/local/bin/python3.12 -m http.server"}, "python"},
+		{"eclipse-temurin:17-jre", nil, "java"},                                          // image fallback
+		{"node:20-alpine", []string{"/whoami"}, "node"},                                  // unknown cmd -> image
+		{"traefik/whoami:latest", []string{"/whoami"}, ""},                               // Go binary: unknown, by design
+		{"python:3.12", nil, "python"},
+		{"mcr.microsoft.com/dotnet/aspnet:8.0", nil, "dotnet"},
+	}
+	for _, tc := range cases {
+		if got := detectRuntime(tc.image, tc.cmds); got != tc.want {
+			t.Fatalf("detectRuntime(%q, %v) = %q, want %q", tc.image, tc.cmds, got, tc.want)
+		}
 	}
 }

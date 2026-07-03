@@ -75,7 +75,7 @@ function HealthContent({ service, agentId, serviceKey, refreshKey, showServiceNa
 
 function TabContent({ tab, service, agentId, serviceKey, refreshKey, showServiceName }: { tab: DetailTab } & ServiceTabsProps) {
   if (tab === 'logs')     return <AgentServiceLogsTab agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />;
-  if (tab === 'requests') return <AgentServiceRequestsTab agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />;
+  if (tab === 'requests') return <AgentServiceRequestsTab agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} runtime={service.runtime} />;
   if (tab === 'metrics')  return <AgentServiceMetricsTab agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />;
   if (tab === 'infra')    return <AgentServiceInfraTab agentId={agentId} refreshKey={refreshKey} />;
   return <HealthContent service={service} agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} showServiceName={showServiceName} />;

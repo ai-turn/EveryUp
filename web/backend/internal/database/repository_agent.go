@@ -165,12 +165,13 @@ func (r *AgentRepository) UpsertServices(agentID string, observedAt time.Time, s
 				service.UpdatedAt = observedAt
 			}
 			if _, err := tx.Exec(`
-INSERT INTO agent_services(agent_id, key, name, check_type, endpoint, healthy, seen, silenced, last_error, last_status, last_latency, updated_at, observed_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO agent_services(agent_id, key, name, check_type, endpoint, runtime, healthy, seen, silenced, last_error, last_status, last_latency, updated_at, observed_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(agent_id, key) DO UPDATE SET
 	name = excluded.name,
 	check_type = excluded.check_type,
 	endpoint = excluded.endpoint,
+	runtime = excluded.runtime,
 	healthy = excluded.healthy,
 	seen = excluded.seen,
 	silenced = excluded.silenced,
@@ -179,7 +180,7 @@ ON CONFLICT(agent_id, key) DO UPDATE SET
 	last_latency = excluded.last_latency,
 	updated_at = excluded.updated_at,
 	observed_at = excluded.observed_at`,
-				agentID, service.Key, service.Name, service.CheckType, service.Endpoint, boolInt(service.Healthy), boolInt(service.Seen),
+				agentID, service.Key, service.Name, service.CheckType, service.Endpoint, service.Runtime, boolInt(service.Healthy), boolInt(service.Seen),
 				boolInt(service.Silenced), service.LastError, service.LastStatus, service.LastLatency, service.UpdatedAt, observedAt); err != nil {
 				return err
 			}
@@ -219,7 +220,7 @@ func (r *AgentRepository) DeleteService(agentID, key string) error {
 
 func (r *AgentRepository) GetServices(agentID string) ([]models.AgentService, error) {
 	rows, err := DB.Query(`
-SELECT agent_id, key, name, check_type, endpoint, healthy, seen, silenced, last_error, last_status, last_latency, updated_at, observed_at
+SELECT agent_id, key, name, check_type, endpoint, runtime, healthy, seen, silenced, last_error, last_status, last_latency, updated_at, observed_at
 FROM agent_services WHERE agent_id = ? ORDER BY name`, agentID)
 	if err != nil {
 		return nil, err
@@ -229,7 +230,7 @@ FROM agent_services WHERE agent_id = ? ORDER BY name`, agentID)
 	for rows.Next() {
 		var service models.AgentService
 		var healthy, seen, silenced int
-		if err := rows.Scan(&service.AgentID, &service.Key, &service.Name, &service.CheckType, &service.Endpoint,
+		if err := rows.Scan(&service.AgentID, &service.Key, &service.Name, &service.CheckType, &service.Endpoint, &service.Runtime,
 			&healthy, &seen, &silenced, &service.LastError, &service.LastStatus, &service.LastLatency, &service.UpdatedAt, &service.ObservedAt); err != nil {
 			return nil, err
 		}
@@ -245,9 +246,9 @@ func (r *AgentRepository) GetServiceByKey(agentID, key string) (*models.AgentSer
 	var service models.AgentService
 	var healthy, seen, silenced int
 	err := DB.QueryRow(`
-SELECT agent_id, key, name, check_type, endpoint, healthy, seen, silenced, last_error, last_status, last_latency, updated_at, observed_at
+SELECT agent_id, key, name, check_type, endpoint, runtime, healthy, seen, silenced, last_error, last_status, last_latency, updated_at, observed_at
 FROM agent_services WHERE agent_id = ? AND key = ?`, agentID, key).Scan(
-		&service.AgentID, &service.Key, &service.Name, &service.CheckType, &service.Endpoint,
+		&service.AgentID, &service.Key, &service.Name, &service.CheckType, &service.Endpoint, &service.Runtime,
 		&healthy, &seen, &silenced, &service.LastError, &service.LastStatus, &service.LastLatency, &service.UpdatedAt, &service.ObservedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -373,7 +374,7 @@ FROM agent_events WHERE agent_id = ? ORDER BY time DESC LIMIT ?`, agentID, limit
 // GetAllServicesFlat returns all agent services joined with agent name for list views.
 func (r *AgentRepository) GetAllServicesFlat() ([]models.AgentServiceFlat, error) {
 	rows, err := DB.Query(`
-SELECT s.agent_id, s.key, s.name, s.check_type, s.endpoint, s.healthy, s.seen, s.silenced,
+SELECT s.agent_id, s.key, s.name, s.check_type, s.endpoint, s.runtime, s.healthy, s.seen, s.silenced,
        s.last_error, s.last_status, s.last_latency, s.updated_at, s.observed_at, a.name
 FROM agent_services s
 JOIN agents a ON a.id = s.agent_id
@@ -388,7 +389,7 @@ ORDER BY a.name, s.name`)
 		var f models.AgentServiceFlat
 		var healthy, seen, silenced int
 		if err := rows.Scan(
-			&f.AgentID, &f.Key, &f.Name, &f.CheckType, &f.Endpoint,
+			&f.AgentID, &f.Key, &f.Name, &f.CheckType, &f.Endpoint, &f.Runtime,
 			&healthy, &seen, &silenced,
 			&f.LastError, &f.LastStatus, &f.LastLatency,
 			&f.UpdatedAt, &f.ObservedAt, &f.AgentName,

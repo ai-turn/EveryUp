@@ -5,6 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
 import { MaterialIcon } from '../../../components/common';
 import type { AgentServiceFlat } from '../../../services/api';
+import { runtimeLabel } from '../runtimeLabels';
 
 interface InfoChipProps {
   icon: string;
@@ -73,6 +74,7 @@ export function AgentIdentity({ service, showName = true }: { service: AgentServ
 
       <div className="flex flex-wrap gap-2">
         <InfoChip icon="language" label={t('타입')} value={service.checkType.toUpperCase()} />
+        {service.runtime && <InfoChip icon="code" label={t('런타임')} value={runtimeLabel(service.runtime)} />}
         {showName && <InfoChip icon="sensors" label={t('프로젝트')} value={service.agentName} />}
         {service.lastLatency && (
           <InfoChip icon="speed" label={t('지연시간')} value={service.lastLatency} />

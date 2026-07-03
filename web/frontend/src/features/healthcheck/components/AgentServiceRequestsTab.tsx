@@ -4,11 +4,14 @@ import { api, type ApiRequest } from '../../../services/api';
 import { getErrorMessage } from '../../../utils/errors';
 import { toast } from 'react-hot-toast';
 import { TracePanel } from '../../traces/components/TracePanel';
+import { runtimeLabel } from '../runtimeLabels';
 
 interface Props {
   agentId: string;
   serviceKey: string;
   refreshKey: number;
+  /** Agent-detected runtime — drives the setup hint in the empty state. */
+  runtime?: string;
 }
 
 type DatePreset = '1d' | '7d' | '30d' | '';
@@ -44,7 +47,7 @@ function formatTime(ts: string) {
   });
 }
 
-export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey }: Props) {
+export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, runtime }: Props) {
   const [requests, setRequests] = useState<ApiRequest[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -168,6 +171,33 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey }: Pro
           <p className="text-sm text-slate-400 dark:text-text-muted-dark">
             {search || errorsOnly || datePreset ? '조건에 맞는 요청이 없습니다' : '수집된 API 요청이 없습니다'}
           </p>
+          {!search && !errorsOnly && !datePreset && (
+            <div className="mt-6 mx-auto max-w-md text-left p-4 rounded-xl bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark">
+              <p className="text-sm font-semibold text-slate-700 dark:text-text-base-dark mb-2">
+                {runtime
+                  ? `${runtimeLabel(runtime)} 서비스로 감지되었습니다. 트레이스를 수집하려면:`
+                  : '트레이스를 수집하려면:'}
+              </p>
+              <ul className="space-y-1.5 text-sm text-slate-500 dark:text-text-muted-dark">
+                <li className="flex gap-2">
+                  <span className="shrink-0 font-bold text-primary">1</span>
+                  <span>
+                    에이전트 compose의 <code className="font-mono text-xs bg-slate-100 dark:bg-ui-hover-dark px-1 py-0.5 rounded">everyup-ebpf</code> 블록
+                    주석 해제 — 앱 수정 없이 경로·상태·지연시간 수집
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="shrink-0 font-bold text-primary">2</span>
+                  <span>
+                    헤더까지 필요하면 앱에 OpenTelemetry 연결
+                    {runtime === 'java' && ' — Java는 JAVA_TOOL_OPTIONS 환경변수만으로 가능'}
+                    {runtime === 'node' && ' — Node.js는 NODE_OPTIONS 환경변수만으로 가능'}
+                    {runtime === 'python' && ' — Python은 opentelemetry-instrument로 가능'}
+                  </span>
+                </li>
+              </ul>
+            </div>
+          )}
         </div>
       ) : (
         <div className="divide-y divide-slate-100 dark:divide-ui-border-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
