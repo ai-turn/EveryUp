@@ -5,6 +5,7 @@ import { getErrorMessage } from '../../../utils/errors';
 import { toast } from 'react-hot-toast';
 import { TracePanel } from '../../traces/components/TracePanel';
 import { runtimeLabel } from '../runtimeLabels';
+import { AgentServiceRequestTrends } from './AgentServiceRequestTrends';
 
 interface Props {
   agentId: string;
@@ -89,6 +90,9 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, runti
 
   return (
     <div className="space-y-4">
+      {/* Trends — volume, error rate, and latency percentiles over time */}
+      <AgentServiceRequestTrends agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
+
       {/* KPI row */}
       {!loading && requests.length > 0 && (
         <div className="grid grid-cols-3 gap-3">

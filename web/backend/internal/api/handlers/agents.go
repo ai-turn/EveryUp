@@ -532,6 +532,47 @@ func (h *AgentHandler) GetServiceRequests(c *fiber.Ctx) error {
 }
 
 
+// GetServiceRequestStats returns time-bucketed request aggregates (volume,
+// errors, p50, p95) for a service's trends chart.
+// GET /agents/:agentId/services/:key/request-stats?from=&to=&bucketMins=
+func (h *AgentHandler) GetServiceRequestStats(c *fiber.Ctx) error {
+	agentID := c.Params("agentId")
+	key := c.Params("key")
+
+	service, err := h.repo.GetServiceByKey(agentID, key)
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	if service == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"success": false,
+			"error":   fiber.Map{"code": "NOT_FOUND", "message": "service not found"},
+		})
+	}
+
+	filter := &models.ApiRequestFilter{AgentID: agentID, ServiceName: service.Name}
+	if from := c.Query("from"); from != "" {
+		if t, err2 := time.Parse(time.RFC3339, from); err2 == nil {
+			filter.From = t
+		}
+	}
+	if to := c.Query("to"); to != "" {
+		if t, err2 := time.Parse(time.RFC3339, to); err2 == nil {
+			filter.To = t
+		}
+	}
+	bucketMins, _ := strconv.Atoi(c.Query("bucketMins", "5"))
+
+	stats, err := h.reqRepo.RequestStats(filter, bucketMins)
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	if stats == nil {
+		stats = []models.ApiRequestStatBucket{}
+	}
+	return c.JSON(fiber.Map{"success": true, "data": stats})
+}
+
 // GetServiceOtelMetricNames returns the distinct OTLP metrics a service has
 // exported, for the metric picker. GET /agents/:agentId/services/:key/otel-metrics
 func (h *AgentHandler) GetServiceOtelMetricNames(c *fiber.Ctx) error {

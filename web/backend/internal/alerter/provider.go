@@ -22,6 +22,7 @@ const (
 	AlertTypeEndpoint    = "endpoint"
 	AlertTypeSystem      = "system"
 	AlertTypeApiRequest  = "api_request"
+	AlertTypeOtelMetric  = "otel_metric"
 )
 
 // Channel types — mirror the notification_channels.type column in the database.

@@ -8,6 +8,7 @@ import { useSpinAction } from '../../hooks/useSpinAction';
 import { api, type AgentServiceFlat, type ConnectedAgent } from '../../services/api';
 import { AgentServiceTabs } from '../../features/healthcheck/components/AgentServiceTabs';
 import { ApiKeyModal } from '../../features/services/components/ApiKeyModal';
+import { InstrumentationOverrideModal } from '../../features/services/components/InstrumentationOverrideModal';
 import { getErrorMessage } from '../../utils/errors';
 
 function agentOnline(agent: ConnectedAgent): boolean {
@@ -85,6 +86,7 @@ export function ProjectDetailPage() {
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [showKey, setShowKey] = useState(false);
+  const [showInstrumentation, setShowInstrumentation] = useState(false);
 
   const load = useCallback(async () => {
     if (!agentId) return;
@@ -165,6 +167,13 @@ export function ProjectDetailPage() {
             className="p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
           >
             <MaterialIcon name="key" className="text-xl" />
+          </button>
+          <button
+            onClick={() => setShowInstrumentation(true)}
+            title="OTel 계측 설정 (헤더·바디)"
+            className="p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
+          >
+            <MaterialIcon name="integration_instructions" className="text-xl" />
           </button>
           <button
             onClick={handleDeleteAgent}
@@ -272,6 +281,9 @@ export function ProjectDetailPage() {
 
       {showKey && agent && (
         <ApiKeyModal agentId={agent.id} agentName={agent.name} onClose={() => setShowKey(false)} onRotated={load} />
+      )}
+      {showInstrumentation && agent && (
+        <InstrumentationOverrideModal agentId={agent.id} onClose={() => setShowInstrumentation(false)} />
       )}
     </div>
   );

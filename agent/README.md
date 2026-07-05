@@ -109,6 +109,61 @@ Notes:
 - A service freshly (re)started may drop its first seconds of spans until the
   Agent's next PID refresh (one check interval).
 
+## App Instrumentation (Headers/Bodies, One Restart)
+
+eBPF (above) needs zero changes but only sees method/path/status/latency. For
+**headers and bodies** the app itself must be instrumented — still no code or
+Dockerfile changes, just env vars and one restart:
+
+1. In the agent compose, uncomment the `everyup-instrumentation` volume (two
+   marked lines) and `docker compose up -d`. The agent fills the volume with
+   the OTel Java agent and a Node.js bundle.
+2. Add an override next to **your app's** compose file and restart once:
+
+```yaml
+# docker-compose.everyup.yml — docker compose -f compose.yml -f docker-compose.everyup.yml up -d
+volumes:
+  everyup-instrumentation:
+    external: true
+
+services:
+  your-java-api:
+    volumes: ["everyup-instrumentation:/everyup:ro"]
+    environment:
+      JAVA_TOOL_OPTIONS: "-javaagent:/everyup/java/opentelemetry-javaagent.jar"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://everyup-agent:4318"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+      OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS: "content-type,user-agent,accept"
+      OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_RESPONSE_HEADERS: "content-type"
+
+  your-node-api:
+    volumes: ["everyup-instrumentation:/everyup:ro"]
+    environment:
+      NODE_OPTIONS: "--require /everyup/node/register.js"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://everyup-agent:4318"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+      OTEL_INSTRUMENTATION_HTTP_CAPTURE_HEADERS_SERVER_REQUEST: "content-type,user-agent,accept"
+      # Bodies (opt-in): masked and truncated inside the app before export.
+      # EVERYUP_CAPTURE_BODIES: "true"
+      # EVERYUP_BODY_MAX_BYTES: "8192"
+```
+
+Notes:
+
+- The agent's telemetry gateway attributes spans to the right service
+  automatically; sensitive headers (authorization, cookie, ...) are masked at
+  ingest regardless of what you list.
+- Body capture (`EVERYUP_CAPTURE_BODIES`) is Node-only today and masks the
+  fields in `EVERYUP_MASKED_BODY_FIELDS` (password, token, ... by default)
+  before anything leaves the app. Viewing bodies in the web UI is admin-only
+  and audited.
+- The app and agent must share a Docker network for `everyup-agent:4318` to
+  resolve, or point the endpoint at a published gateway port instead.
+- The override **sets** `JAVA_TOOL_OPTIONS` / `NODE_OPTIONS`. If your app
+  already uses either variable, append the EveryUp flags to the existing value
+  instead of replacing it.
+- Java/Node versions: JVM 8+, Node 18+.
+
 ## Networking Notes
 
 The Agent discovers containers through the mounted Docker socket. It can run in

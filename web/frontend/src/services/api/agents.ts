@@ -62,6 +62,16 @@ export interface ServiceUptimeDay {
   totalChecks: number;
 }
 
+// One time bucket of API request aggregates for the trends chart.
+export interface ApiRequestStatBucket {
+  time: string;
+  count: number;
+  errorCount: number;
+  p50: number;
+  p95: number;
+  timed: number;
+}
+
 // One OTLP metric a service exports (for the metric picker).
 export interface OtelMetricName {
   metricName: string;
@@ -139,6 +149,16 @@ export function createAgentsApi(request: RequestFn) {
       if (params?.from) p.set('from', params.from);
       if (params?.to) p.set('to', params.to);
       return request<{ data: ApiRequest[]; total: number }>(`/agents/${agentId}/services/${encodeURIComponent(key)}/requests?${p}`);
+    },
+    getAgentServiceRequestStats: (
+      agentId: string, key: string,
+      params?: { from?: string; to?: string; bucketMins?: number },
+    ) => {
+      const p = new URLSearchParams();
+      if (params?.from) p.set('from', params.from);
+      if (params?.to) p.set('to', params.to);
+      if (params?.bucketMins) p.set('bucketMins', String(params.bucketMins));
+      return request<ApiRequestStatBucket[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/request-stats?${p}`);
     },
     getAgentServiceOtelMetricNames: (agentId: string, key: string) =>
       request<OtelMetricName[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/otel-metrics`),

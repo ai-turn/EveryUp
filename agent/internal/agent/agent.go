@@ -145,6 +145,7 @@ func (a *Agent) Run(ctx context.Context) error {
 		log.Printf("failed to load local state: %v", err)
 	}
 	a.writeOTelConfig()
+	a.syncInstrumentationVolume()
 
 	a.auditEvent("agent_started", a.cfg.ServiceName, "", fmt.Sprintf("Agent %s is running.", a.cfg.AgentName), nil)
 	a.startWebSync(ctx)

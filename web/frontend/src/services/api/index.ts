@@ -67,6 +67,7 @@ export type {
   AgentEvent,
   ServiceHistoryPoint,
   ServiceUptimeDay,
+  ApiRequestStatBucket,
   OtelMetricName,
   OtelMetricPoint,
 } from './agents';

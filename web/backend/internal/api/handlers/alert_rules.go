@@ -123,6 +123,15 @@ func (h *AlertRuleHandler) Create(c *fiber.Ctx) error {
 			},
 		})
 	}
+	if req.Metric == models.AlertMetricOtelMetric && req.MetricName == "" {
+		return c.Status(400).JSON(fiber.Map{
+			"success": false,
+			"error": fiber.Map{
+				"code":    "VALIDATION_ERROR",
+				"message": "metricName is required for otel_metric rules",
+			},
+		})
+	}
 
 	rule := req.ToAlertRule(uuid.New().String())
 

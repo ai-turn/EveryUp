@@ -19,6 +19,15 @@ var sensitiveOTelHeaderNames = map[string]struct{}{
 // otelMaskedValue replaces sensitive attribute values.
 const otelMaskedValue = "***"
 
+// sensitiveHeaderName reports whether a header attribute name is on the mask
+// list. Instrumentations disagree on separators — the Node SDK emits
+// `set_cookie` where the Java agent emits `set-cookie` — so underscores are
+// normalized to dashes before the lookup.
+func sensitiveHeaderName(name string) bool {
+	_, sensitive := sensitiveOTelHeaderNames[strings.ReplaceAll(name, "_", "-")]
+	return sensitive
+}
+
 // maskOTelAttrs scrubs known sensitive keys in a parsed OTel attribute map.
 // Mutates the input map in place. Caller owns the map; passing a shared map
 // would propagate masking, which is the desired behavior.
@@ -27,13 +36,13 @@ func maskOTelAttrs(m map[string]interface{}) {
 		lk := strings.ToLower(key)
 
 		if name, ok := strings.CutPrefix(lk, "http.request.header."); ok {
-			if _, sensitive := sensitiveOTelHeaderNames[name]; sensitive {
+			if sensitiveHeaderName(name) {
 				m[key] = otelMaskedValue
 			}
 			continue
 		}
 		if name, ok := strings.CutPrefix(lk, "http.response.header."); ok {
-			if _, sensitive := sensitiveOTelHeaderNames[name]; sensitive {
+			if sensitiveHeaderName(name) {
 				m[key] = otelMaskedValue
 			}
 			continue

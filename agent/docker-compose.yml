@@ -27,6 +27,11 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro  # Docker auto-discovery/logs
       - /:/hostfs:ro                                   # host CPU/memory/disk metrics
       - everyup-agent-data:/data
+      # Optional: header capture via app OTel injection — uncomment this line
+      # AND the everyup-instrumentation volume at the bottom. The agent fills
+      # the volume with the OTel Java agent jar + Node bundle; your app compose
+      # mounts it read-only (see "App Instrumentation" in the README).
+      # - everyup-instrumentation:/everyup-instrumentation
     restart: unless-stopped
 
   # --- Optional: zero-code API tracing (eBPF) --------------------------------
@@ -55,3 +60,7 @@ services:
 volumes:
   everyup-agent-data:
     driver: local
+  # Uncomment together with the agent volume line above. The fixed name lets
+  # your app compose reference it as an external volume.
+  # everyup-instrumentation:
+  #   name: everyup-instrumentation

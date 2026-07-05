@@ -160,6 +160,64 @@ function formatCapturedBodyCopy(item: CapturedBody): string {
   ].filter(Boolean).join('\n');
 }
 
+interface HeaderEntry {
+  name: string;
+  value: string;
+}
+
+interface CapturedHeaders {
+  id: string;
+  spanName: string;
+  serviceName?: string;
+  request: HeaderEntry[];
+  response: HeaderEntry[];
+}
+
+// OTel captures headers as `http.request.header.<name>` / `http.response.header.<name>`
+// span attributes; values are arrays of strings per semconv. Sensitive names
+// arrive already masked ("***") from ingest.
+function headerValue(value: unknown): string {
+  if (Array.isArray(value)) return value.map(String).join(', ');
+  return String(value ?? '');
+}
+
+function extractCapturedHeaders(spans: TraceSpan[]): CapturedHeaders[] {
+  const out: CapturedHeaders[] = [];
+  for (const span of spans) {
+    const request: HeaderEntry[] = [];
+    const response: HeaderEntry[] = [];
+    for (const [key, value] of Object.entries(span.attributes ?? {})) {
+      if (key.startsWith('http.request.header.')) {
+        request.push({ name: key.slice('http.request.header.'.length), value: headerValue(value) });
+      } else if (key.startsWith('http.response.header.')) {
+        response.push({ name: key.slice('http.response.header.'.length), value: headerValue(value) });
+      }
+    }
+    if (request.length === 0 && response.length === 0) continue;
+    request.sort((a, b) => a.name.localeCompare(b.name));
+    response.sort((a, b) => a.name.localeCompare(b.name));
+    out.push({
+      id: `${span.traceId}-${span.spanId}-headers`,
+      spanName: span.name || '(unnamed)',
+      serviceName: span.serviceName,
+      request,
+      response,
+    });
+  }
+  return out;
+}
+
+function formatCapturedHeadersCopy(item: CapturedHeaders): string {
+  const lines = [item.serviceName ? `service=${item.serviceName}` : null, `span=${item.spanName}`];
+  if (item.request.length > 0) {
+    lines.push('[request headers]', ...item.request.map((h) => `${h.name}: ${h.value}`));
+  }
+  if (item.response.length > 0) {
+    lines.push('[response headers]', ...item.response.map((h) => `${h.name}: ${h.value}`));
+  }
+  return lines.filter(Boolean).join('\n');
+}
+
 export function TracePanel({ traceId, onClose }: TracePanelProps) {
   const { copy } = useClipboardCopy();
   const { t } = useTranslation('logs');
@@ -199,6 +257,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
   const logs = data?.logs ?? [];
   const apiRequests = data?.apiRequests ?? [];
   const capturedBodies = extractCapturedBodies(spans);
+  const capturedHeaders = extractCapturedHeaders(spans);
   const isEmpty = !loading && !error && spans.length === 0 && logs.length === 0 && apiRequests.length === 0;
 
   return (
@@ -288,6 +347,9 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
           {!loading && !error && spans.length > 0 && (
             <SpanList spans={spans} onCopy={copy} />
           )}
+          {!loading && !error && capturedHeaders.length > 0 && (
+            <CapturedHeadersList items={capturedHeaders} onCopy={copy} />
+          )}
           {!loading && !error && capturedBodies.length > 0 && (
             <CapturedBodyList items={capturedBodies} onCopy={copy} />
           )}
@@ -345,6 +407,55 @@ function SpanList({ spans, onCopy }: { spans: TraceSpan[]; onCopy: CopyFn }) {
               {formatDuration(span.durationMs)}
             </span>
             {copyButton(() => onCopy(formatSpanCopy(span)), 'Copy span row')}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function HeaderRows({ label, headers }: { label: string; headers: HeaderEntry[] }) {
+  if (headers.length === 0) return null;
+  return (
+    <div>
+      <p className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-text-dim-dark">{label}</p>
+      <dl className="space-y-0.5">
+        {headers.map((h) => (
+          <div key={h.name} className="flex gap-2 font-mono text-xs">
+            <dt className="shrink-0 text-slate-500 dark:text-text-muted-dark">{h.name}:</dt>
+            <dd className={`min-w-0 break-all ${h.value === '***' ? 'text-amber-600 dark:text-amber-400' : 'text-slate-700 dark:text-text-base-dark'}`}>
+              {h.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+function CapturedHeadersList({ items, onCopy }: { items: CapturedHeaders[]; onCopy: CopyFn }) {
+  return (
+    <section>
+      <SectionHeader icon="list_alt" title="Headers" count={items.length} />
+      <ul className="space-y-2">
+        {items.map((item) => (
+          <li
+            key={item.id}
+            className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm dark:border-ui-border-dark dark:bg-ui-hover-dark"
+          >
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              {item.serviceName && (
+                <span className="text-slate-500 dark:text-text-muted-dark">{item.serviceName}</span>
+              )}
+              <span className="min-w-0 flex-1 truncate font-mono text-slate-500 dark:text-text-muted-dark" title={item.spanName}>
+                {item.spanName}
+              </span>
+              {copyButton(() => onCopy(formatCapturedHeadersCopy(item)), 'Copy headers')}
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <HeaderRows label="Request" headers={item.request} />
+              <HeaderRows label="Response" headers={item.response} />
+            </div>
           </li>
         ))}
       </ul>

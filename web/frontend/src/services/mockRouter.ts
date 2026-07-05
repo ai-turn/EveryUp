@@ -415,6 +415,11 @@ const mockTraceDetails: Record<string, TraceDetail> = {
           'http.request.method': 'POST',
           'url.path': '/api/v1/auth/login',
           'http.response.status_code': 200,
+          'http.request.header.content-type': ['application/json'],
+          'http.request.header.user-agent': ['Mozilla/5.0 (demo)'],
+          'http.request.header.authorization': '***',
+          'http.response.header.content-type': ['application/json; charset=utf-8'],
+          'http.response.header.set-cookie': '***',
         },
         events: [
           {
@@ -544,7 +549,7 @@ const mockAgents: ConnectedAgent[] = [
 const mockAgentServicesFlat: AgentServiceFlat[] = [
   {
     agentId: 'agent_demo_01', agentName: 'prod-server',
-    key: 'api', name: 'api', checkType: 'http', runtime: 'node',
+    key: 'shop:api', name: 'api', checkType: 'http', runtime: 'node',
     endpoint: 'http://api:8080/health', healthy: true, seen: true, silenced: false,
     lastStatus: 200, lastLatency: '42ms',
     updatedAt: new Date(Date.now() - 30_000).toISOString(),
@@ -560,7 +565,7 @@ const mockAgentServicesFlat: AgentServiceFlat[] = [
   },
   {
     agentId: 'agent_demo_01', agentName: 'prod-server',
-    key: 'payment-worker', name: 'payment-worker', checkType: 'http', runtime: 'java',
+    key: 'shop:payment-worker', name: 'payment-worker', checkType: 'http', runtime: 'java',
     endpoint: 'http://payment-worker:8090/health', healthy: false, seen: true, silenced: false,
     lastStatus: 503, lastLatency: '5001ms', lastError: 'payment gateway timeout',
     updatedAt: new Date(Date.now() - 90_000).toISOString(),
@@ -612,6 +617,22 @@ const mockAgentServiceRequests: ApiRequest[] = [
   { id: 203, serviceId: '', serviceName: 'api', requestId: 'r03', method: 'POST',   path: '/api/v1/payments',        pathTemplate: '/api/v1/payments',    statusCode: 503, durationMs: 5001, isError: true,  error: 'payment gateway timeout', traceId: mockTraceIds.paymentWebhook, createdAt: new Date(nowAgent - 400_000).toISOString() },
   { id: 204, serviceId: '', serviceName: 'api', requestId: 'r04', method: 'GET',    path: '/api/v1/products',        pathTemplate: '/api/v1/products',    statusCode: 200, durationMs: 67,  isError: false, createdAt: new Date(nowAgent - 600_000).toISOString() },
 ];
+
+// 5-minute buckets over the last 6h: rising volume with a latency spike +
+// error burst in the middle so the trends chart shows movement.
+function mockRequestStats() {
+  const buckets = [];
+  for (let i = 72; i >= 0; i -= 1) {
+    const time = new Date(nowAgent - i * 5 * 60_000).toISOString();
+    const spike = i > 30 && i < 40; // a rough patch mid-window
+    const count = Math.round(20 + 30 * Math.sin(i / 8) + Math.random() * 10 + (spike ? 25 : 0));
+    const errorCount = spike ? Math.round(count * 0.18) : Math.round(count * 0.01 + Math.random());
+    const p50 = Math.round(35 + 10 * Math.sin(i / 5) + (spike ? 120 : 0));
+    const p95 = Math.round(p50 * 2.3 + (spike ? 300 : 40));
+    buckets.push({ time, count, errorCount, p50, p95, timed: count });
+  }
+  return buckets;
+}
 
 const mockOtelMetricNames = [
   { metricName: 'http.server.request.duration', metricType: 'histogram', unit: 's',  lastAt: new Date(nowAgent - 30_000).toISOString() },
@@ -764,9 +785,12 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   // /agents/:agentId/services/:key/logs
   if (/^\/agents\/[^/]+\/services\/[^/]+\/logs/.test(endpoint))
     return { data: mockAgentServiceLogs, total: mockAgentServiceLogs.length } as unknown as T;
+  // /agents/:agentId/services/:key/request-stats
+  if (/^\/agents\/[^/]+\/services\/[^/]+\/request-stats/.test(endpoint))
+    return mockRequestStats() as T;
   // /agents/:agentId/services/:key/requests — payment-worker has no HTTP
   // traffic, so its API tab exercises the empty state + setup guidance.
-  if (/^\/agents\/[^/]+\/services\/payment-worker\/requests/.test(endpoint))
+  if (/^\/agents\/[^/]+\/services\/shop%3Apayment-worker\/requests/.test(endpoint))
     return { data: [], total: 0 } as unknown as T;
   if (/^\/agents\/[^/]+\/services\/[^/]+\/requests/.test(endpoint))
     return { data: mockAgentServiceRequests, total: mockAgentServiceRequests.length } as unknown as T;

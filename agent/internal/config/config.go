@@ -60,6 +60,12 @@ type Config struct {
 	HostCPUPercent     float64
 	HostMemoryPercent  float64
 	HostDiskPercent    float64
+
+	// App-instrumentation bundle (OTel Java agent jar + Node register bundle),
+	// shipped in the image and copied to InstrumentationDir at startup when
+	// that directory exists (i.e. the shared volume is mounted).
+	InstrumentationSrcDir string
+	InstrumentationDir    string
 }
 
 func LoadFromEnv() (Config, error) {
@@ -103,6 +109,9 @@ func LoadFromEnv() (Config, error) {
 		HostCPUPercent:     percentEnv("EVERYUP_HOST_CPU_PERCENT", 0),
 		HostMemoryPercent:  percentEnv("EVERYUP_HOST_MEMORY_PERCENT", 0),
 		HostDiskPercent:    percentEnv("EVERYUP_HOST_DISK_PERCENT", 0),
+
+		InstrumentationSrcDir: getEnv("EVERYUP_INSTRUMENTATION_SRC_DIR", "/opt/everyup/instrumentation"),
+		InstrumentationDir:    getEnv("EVERYUP_INSTRUMENTATION_DIR", "/everyup-instrumentation"),
 	}
 
 	if cfg.HealthURL != "" {

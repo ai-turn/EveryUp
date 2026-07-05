@@ -16,7 +16,8 @@ func NewAlertRuleRepository() *AlertRuleRepository {
 }
 
 // alertRuleSelectColumns is the column list for alert rule queries.
-const alertRuleSelectColumns = `id, name, type, agent_id, service_key, metric, operator,
+const alertRuleSelectColumns = `id, name, type, agent_id, service_key, metric,
+	COALESCE(metric_name, '') as metric_name, operator,
 	threshold, duration, severity, is_enabled, cooldown, COALESCE(message, '') as message,
 	COALESCE(is_system, 0) as is_system, created_at, updated_at`
 
@@ -27,7 +28,7 @@ func scanAlertRuleFields(scan func(dest ...interface{}) error) (models.AlertRule
 	var agentID, serviceKey sql.NullString
 
 	err := scan(
-		&r.ID, &r.Name, &r.Type, &agentID, &serviceKey, &r.Metric, &r.Operator,
+		&r.ID, &r.Name, &r.Type, &agentID, &serviceKey, &r.Metric, &r.MetricName, &r.Operator,
 		&r.Threshold, &r.Duration, &r.Severity, &isEnabled, &r.Cooldown, &r.Message,
 		&isSystem, &r.CreatedAt, &r.UpdatedAt,
 	)
@@ -248,6 +249,33 @@ func (r *AlertRuleRepository) GetEnabledApiRequestRulesByServiceID(serviceID str
 	return loadChannelIDsAll(rules), nil
 }
 
+// GetEnabledOtelMetricRules returns enabled OTLP-metric threshold rules for an
+// agent (agent-scoped or global). Scoped in Go by the caller against each
+// data point's metric name + attributes.
+func (r *AlertRuleRepository) GetEnabledOtelMetricRules(agentID string) ([]models.AlertRule, error) {
+	rows, err := DB.Query(`
+		SELECT `+alertRuleSelectColumns+`
+		FROM alert_rules
+		WHERE is_enabled = 1 AND metric = 'otel_metric'
+		  AND (agent_id IS NULL OR agent_id = '' OR agent_id = ?)
+		ORDER BY severity DESC
+	`, agentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var rules []models.AlertRule
+	for rows.Next() {
+		rule, err := scanAlertRuleFields(rows.Scan)
+		if err != nil {
+			return nil, err
+		}
+		rules = append(rules, rule)
+	}
+	return loadChannelIDsAll(rules), nil
+}
+
 // GetEnabledLogRulesByServiceID returns enabled log rules (global or service-scoped).
 func (r *AlertRuleRepository) GetEnabledLogRulesByServiceID(serviceID string) ([]models.AlertRule, error) {
 	rows, err := DB.Query(`
@@ -285,12 +313,12 @@ func (r *AlertRuleRepository) Create(rule *models.AlertRule) error {
 		}
 
 		_, err := tx.Exec(`
-			INSERT INTO alert_rules (id, name, type, agent_id, service_key, metric, operator,
+			INSERT INTO alert_rules (id, name, type, agent_id, service_key, metric, metric_name, operator,
 			                         threshold, duration, severity, is_enabled, cooldown,
 			                         message, is_system, created_at, updated_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`, rule.ID, rule.Name, rule.Type, rule.AgentID, rule.ServiceKey,
-			rule.Metric, rule.Operator, rule.Threshold, rule.Duration,
+			rule.Metric, rule.MetricName, rule.Operator, rule.Threshold, rule.Duration,
 			rule.Severity, isEnabled, rule.Cooldown, rule.Message, isSystem, rule.CreatedAt, rule.UpdatedAt)
 		if err != nil {
 			return err
@@ -324,6 +352,10 @@ func (r *AlertRuleRepository) Update(id string, req *models.AlertRuleUpdateReque
 		if req.Metric != nil {
 			setClauses = append(setClauses, "metric = ?")
 			args = append(args, string(*req.Metric))
+		}
+		if req.MetricName != nil {
+			setClauses = append(setClauses, "metric_name = ?")
+			args = append(args, *req.MetricName)
 		}
 		if req.Operator != nil {
 			setClauses = append(setClauses, "operator = ?")

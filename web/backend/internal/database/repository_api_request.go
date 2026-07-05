@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"sort"
 	"strings"
 	"time"
 
@@ -315,6 +316,129 @@ func (r *ApiRequestRepository) List(f *models.ApiRequestFilter) ([]models.ApiReq
 	}
 
 	return items, total, nil
+}
+
+// RequestStats returns time-bucketed request aggregates (volume, errors, p50,
+// p95) for the trends chart. Scoped by the same agent/service/time filter as
+// List; rows are fetched raw and bucketed in Go (SQLite has no percentile
+// function — same approach as GetServiceHistoryBuckets). maxRows caps the scan.
+func (r *ApiRequestRepository) RequestStats(f *models.ApiRequestFilter, bucketMins int) ([]models.ApiRequestStatBucket, error) {
+	if f == nil {
+		f = &models.ApiRequestFilter{}
+	}
+	if bucketMins <= 0 {
+		bucketMins = 5
+	}
+
+	where := "1=1"
+	args := []interface{}{}
+	if f.ServiceID != "" {
+		where += " AND service_id = ?"
+		args = append(args, f.ServiceID)
+	}
+	if f.AgentID != "" {
+		where += " AND agent_id = ?"
+		args = append(args, f.AgentID)
+	}
+	if f.ServiceName != "" {
+		where += " AND service_name = ?"
+		args = append(args, f.ServiceName)
+	}
+	if !f.From.IsZero() {
+		where += " AND created_at >= ?"
+		args = append(args, f.From)
+	}
+	if !f.To.IsZero() {
+		where += " AND created_at <= ?"
+		args = append(args, f.To)
+	}
+
+	const maxRows = 100000
+	args = append(args, maxRows)
+	rows, err := DB.Query(
+		"SELECT created_at, duration_ms, is_error FROM api_requests WHERE "+where+
+			" ORDER BY created_at LIMIT ?", args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	type raw struct {
+		at       time.Time
+		duration int
+		isError  bool
+	}
+	var records []raw
+	for rows.Next() {
+		var rec raw
+		if err := rows.Scan(&rec.at, &rec.duration, &rec.isError); err != nil {
+			return nil, err
+		}
+		records = append(records, rec)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if len(records) == 0 {
+		return []models.ApiRequestStatBucket{}, nil
+	}
+
+	bucketDur := time.Duration(bucketMins) * time.Minute
+	type bucket struct {
+		count      int
+		errorCount int
+		durations  []int // only durationMs > 0
+	}
+	ordered := make([]time.Time, 0)
+	buckets := make(map[time.Time]*bucket)
+	for _, rec := range records {
+		t := rec.at.Truncate(bucketDur)
+		b := buckets[t]
+		if b == nil {
+			b = &bucket{}
+			buckets[t] = b
+			ordered = append(ordered, t)
+		}
+		b.count++
+		if rec.isError {
+			b.errorCount++
+		}
+		if rec.duration > 0 {
+			b.durations = append(b.durations, rec.duration)
+		}
+	}
+
+	out := make([]models.ApiRequestStatBucket, 0, len(ordered))
+	for _, t := range ordered {
+		b := buckets[t]
+		out = append(out, models.ApiRequestStatBucket{
+			Time:       t,
+			Count:      b.count,
+			ErrorCount: b.errorCount,
+			P50:        percentile(b.durations, 50),
+			P95:        percentile(b.durations, 95),
+			Timed:      len(b.durations),
+		})
+	}
+	return out, nil
+}
+
+// percentile returns the p-th percentile (nearest-rank) of vals, or 0 when
+// empty. Sorts a copy; caller's slice is untouched.
+func percentile(vals []int, p int) int {
+	if len(vals) == 0 {
+		return 0
+	}
+	sorted := append([]int(nil), vals...)
+	sort.Ints(sorted)
+	rank := (p*len(sorted) + 99) / 100 // ceil(p/100 * n)
+	if rank < 1 {
+		rank = 1
+	}
+	if rank > len(sorted) {
+		rank = len(sorted)
+	}
+	return sorted[rank-1]
 }
 
 // DeleteOlderThan deletes all api_requests created before cutoff.

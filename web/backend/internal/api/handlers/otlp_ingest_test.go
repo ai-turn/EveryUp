@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"io"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -171,7 +172,7 @@ func TestSpanToAPIRequestOnlyProjectsHTTPServerSpans(t *testing.T) {
 		},
 	}
 
-	req, ok := spanToAPIRequest(service.ID, "", "checkout-api", service.ApiExcludePaths,serverSpan)
+	req, ok := spanToAPIRequest(service.ID, "", "checkout-api", service.ApiExcludePaths, serverSpan)
 	if !ok {
 		t.Fatal("expected HTTP SERVER span to project to api_requests")
 	}
@@ -187,7 +188,7 @@ func TestSpanToAPIRequestOnlyProjectsHTTPServerSpans(t *testing.T) {
 
 	clientSpan := *serverSpan
 	clientSpan.Kind = tracepb.Span_SPAN_KIND_CLIENT
-	if _, ok := spanToAPIRequest(service.ID, "", "checkout-api", service.ApiExcludePaths,&clientSpan); ok {
+	if _, ok := spanToAPIRequest(service.ID, "", "checkout-api", service.ApiExcludePaths, &clientSpan); ok {
 		t.Fatal("client span should not project to api_requests")
 	}
 }
@@ -242,13 +243,13 @@ func TestSpanToAPIRequestRespectsExcludePaths(t *testing.T) {
 		}
 	}
 
-	if _, ok := spanToAPIRequest(service.ID, "", "checkout-api", service.ApiExcludePaths,build("/")); ok {
+	if _, ok := spanToAPIRequest(service.ID, "", "checkout-api", service.ApiExcludePaths, build("/")); ok {
 		t.Fatal("root path should be excluded")
 	}
-	if _, ok := spanToAPIRequest(service.ID, "", "checkout-api", service.ApiExcludePaths,build("/actuator/health")); ok {
+	if _, ok := spanToAPIRequest(service.ID, "", "checkout-api", service.ApiExcludePaths, build("/actuator/health")); ok {
 		t.Fatal("actuator path should be excluded")
 	}
-	if _, ok := spanToAPIRequest(service.ID, "", "checkout-api", service.ApiExcludePaths,build("/orders/42")); !ok {
+	if _, ok := spanToAPIRequest(service.ID, "", "checkout-api", service.ApiExcludePaths, build("/orders/42")); !ok {
 		t.Fatal("non-excluded path should still project")
 	}
 }
@@ -293,4 +294,36 @@ func stringValue(value string) *commonpb.AnyValue {
 
 func intValue(value int64) *commonpb.AnyValue {
 	return &commonpb.AnyValue{Value: &commonpb.AnyValue_IntValue{IntValue: value}}
+}
+
+func TestSpanEventsToSliceCapsBodySize(t *testing.T) {
+	huge := strings.Repeat("x", maxStoredBodyBytes+100)
+	events := []*tracepb.Span_Event{
+		{
+			Name: "request_body_masked",
+			Attributes: []*commonpb.KeyValue{
+				{Key: "body", Value: stringValue(huge)},
+			},
+		},
+		{
+			Name: "some_other_event",
+			Attributes: []*commonpb.KeyValue{
+				{Key: "body", Value: stringValue(huge)},
+			},
+		},
+	}
+	out := spanEventsToSlice(events)
+
+	capped := out[0]["attributes"].(map[string]interface{})
+	if body := capped["body"].(string); len(body) != maxStoredBodyBytes {
+		t.Fatalf("captured body len = %d, want %d", len(body), maxStoredBodyBytes)
+	}
+	if capped["body_truncated"] != true {
+		t.Fatal("capped body must be flagged truncated")
+	}
+	// Non-contract events keep their attributes untouched.
+	other := out[1]["attributes"].(map[string]interface{})
+	if body := other["body"].(string); len(body) != len(huge) {
+		t.Fatalf("unrelated event body len = %d, want %d", len(body), len(huge))
+	}
 }

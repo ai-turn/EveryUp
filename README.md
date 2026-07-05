@@ -131,81 +131,26 @@ simply shows no API rows while everything else keeps working (graceful degrade).
 
 That covers health, logs, host metrics, and API status codes — **no app changes**.
 
-### 4. (Optional) Enable traces, latency, and bodies
+### 4. (Optional) Traces, latency, headers, and bodies
 
-Steps 1–3 need no app changes. To also capture **request latency, full traces,
-and request/response headers & bodies**, instrument the app with OpenTelemetry and
-point it at the Agent's OTLP gateway. For **Java / Spring**, download the
-[OpenTelemetry Java agent](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases)
-jar, put it next to your compose file, and mount it into the app:
+Steps 1–3 need no app changes and give you health, logs, host metrics, and API
+status codes. Richer signals come in two more steps, each smaller than the last:
 
-```yaml
-services:
-  my-app:                     # your app, on the same host as the Agent
-    volumes:
-      - ./opentelemetry-javaagent.jar:/otel/opentelemetry-javaagent.jar:ro
-    environment:
-      JAVA_TOOL_OPTIONS: "-javaagent:/otel/opentelemetry-javaagent.jar"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://everyup-agent:4318"
-      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
-```
+**Latency + full traces — zero code, all languages (incl. Go), even HTTPS.**
+Uncomment the `everyup-ebpf` sidecar in the Agent compose and `docker compose up
+-d`. It uses eBPF to trace every service on the host — no restart of *your*
+containers, no code, no exporter config. The Agent attributes each span to the
+right service automatically. See "Zero-Code Tracing" in
+[agent/README.md](agent/README.md).
 
-Other languages need the same two `OTEL_EXPORTER_OTLP_*` vars plus their own
-auto-instrumentation (no jar):
-
-| Language | Auto-instrumentation |
-| --- | --- |
-| **Python** | run under `opentelemetry-instrument python app.py` |
-| **Node.js** | `NODE_OPTIONS="--require @opentelemetry/auto-instrumentations-node/register"` |
-| **Go** | wrap the HTTP handler with `otelhttp` |
-
-Traces, latency, and per-request API rows now appear under the service
-automatically — the Agent attributes each span to its service by the connection's
-source IP, so you don't set a service name. **Request/response bodies need one
-extra manual step** (attach them as span events). Full per-language setup and body
-capture: [docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md).
-
-## API Headers & Bodies (optional)
-
-Access logs give you status codes for free. If you also want full traces with
-real latency, plus request/response **headers and bodies** — for diagnosing *why*
-a request failed (the offending payload, a missing field) — instrument the app
-with **OpenTelemetry**.
-
-> **Status.** Traces and latency work with off-the-shelf OTel auto-instrumentation.
-> **Header/body capture still requires manual instrumentation** — you attach the
-> body yourself as span events (see the per-language doc). Zero-instrumentation
-> header/body collection (first-party SDKs, eBPF) is on the roadmap, not yet available.
-
-The app sends spans (with the request/response data you choose to record) to the
-Agent's OTLP gateway at `http://everyup-agent:4318`. No extra container, no
-traffic interception. Per-language setup is in
+**Headers + bodies — one restart, no code.** The Agent ships a ready-made
+OpenTelemetry bundle (Java agent jar + Node.js bootstrap) in a shared volume. In
+the web UI, open a project and use the **OTel instrumentation** action to
+generate a `docker-compose.everyup.yml` override tailored to the detected
+runtimes, then restart your app once with it. Bodies are masked inside the app
+before export and are admin-only (viewing is audited). Full walkthrough, the
+span contract, and other languages (Python, manual SDKs):
 [docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md).
-
-- **No per-service naming.** Pointing the exporter at the gateway is the only
-  setting, and it's the same URL for every service. You don't need to set
-  `OTEL_SERVICE_NAME`: the Agent tags each payload with the container's Compose
-  service name by matching the connection's source IP, so traces land on the same
-  service card auto-discovery already created. (Apps on the host network or reached
-  through another proxy have no distinct container IP — set `OTEL_SERVICE_NAME`
-  yourself there and it's respected.)
-
-- Open a request (API tab) or a log with a trace link → the **Trace** panel shows
-  spans and a **Captured bodies** section. Bodies are **admin-only**; non-admins
-  see them redacted, and every admin view is recorded in `audit_events`.
-- Body-bearing spans are retained 7 days (`EVERYUP_RETENTION_BODYCAPTUREDAYS`).
-  Mask or omit secrets and sensitive fields in your instrumentation before export.
-
-> **Avoid double-counting.** A request appears once per source. When app-side OTel
-> is enabled for a service, its access-log–derived rows cover the *same*
-> requests — so the request list may show each one twice. Pick one source per
-> service: rely on access logs *or* enable OTel, not both.
-
-> **Link logs to a request.** Print the trace id in your logs so EveryUp can
-> correlate traced requests with application logs.
-
-> **Roadmap.** First-party SDKs and agent-based capture (eBPF) for
-> zero-instrumentation header/body collection are planned.
 
 ## What Gets Collected
 
@@ -218,12 +163,19 @@ traffic interception. Per-language setup is in
 | API requests — method, path, status (no latency) | Access-log parsing |
 | Host CPU, memory, disk, network | `/hostfs` mount |
 
-**Only if you instrument the app with OpenTelemetry** (optional):
+**With the optional eBPF sidecar — still no app changes:**
 
 | Data | Source |
 | --- | --- |
-| API requests + traces, with real latency | App OTel → Agent `:4318` |
-| Request/response headers and bodies | Recorded in the app's instrumentation |
+| API traces with real latency, all languages + HTTPS | `everyup-ebpf` sidecar (eBPF) |
+
+**With one restart of the app (bundled OTel instrumentation):**
+
+| Data | Source |
+| --- | --- |
+| Request/response headers | `http.*.header.*` span attributes |
+| Request/response bodies (masked, admin-only) | `*_body_masked` span events |
+| App metrics — JVM memory, GC, custom counters | App OTel → Agent `:4318` |
 
 A service that writes logs only to a file inside the container cannot be seen by
 the Agent. Write app logs to stdout for log collection. API status codes need the

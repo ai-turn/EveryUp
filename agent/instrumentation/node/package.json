@@ -1,0 +1,11 @@
+{
+  "name": "everyup-node-instrumentation",
+  "version": "0.1.0",
+  "private": true,
+  "description": "EveryUp zero-code OTel bootstrap for Node.js apps: loaded via NODE_OPTIONS=--require, adds auto-instrumentation plus opt-in masked header/body capture.",
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.62.0",
+    "@opentelemetry/sdk-node": "^0.203.0"
+  }
+}

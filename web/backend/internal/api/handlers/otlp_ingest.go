@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aiturn/everyup/internal/alerter"
 	"github.com/aiturn/everyup/internal/api/middleware"
 	"github.com/aiturn/everyup/internal/database"
 	"github.com/aiturn/everyup/internal/models"
@@ -36,6 +37,8 @@ type OTLPIngestHandler struct {
 	reqRepo           *database.ApiRequestRepository
 	agentRepo         *database.AgentRepository
 	metricRepo        *database.OtelMetricRepository
+	ruleRepo          *database.AlertRuleRepository
+	alertManager      *alerter.Manager
 }
 
 // NewOTLPIngestHandler creates an OTLP ingest handler.
@@ -47,6 +50,38 @@ func NewOTLPIngestHandler() *OTLPIngestHandler {
 		reqRepo:           database.NewApiRequestRepository(),
 		agentRepo:         database.NewAgentRepository(),
 		metricRepo:        database.NewOtelMetricRepository(),
+		ruleRepo:          database.NewAlertRuleRepository(),
+		alertManager:      alerter.NewManager(),
+	}
+}
+
+// evaluateOtelMetricAlerts checks each stored metric point against enabled
+// otel_metric threshold rules for the agent and dispatches on breach. Instant
+// per-datapoint evaluation, mirroring api_status alerts; dedup/cooldown in the
+// manager collapses repeats per (rule, service, metric, attribute series).
+func (h *OTLPIngestHandler) evaluateOtelMetricAlerts(principal *middleware.IngestPrincipal, rows []models.OtelMetric) {
+	if principal.AgentID == "" || len(rows) == 0 {
+		return
+	}
+	rules, err := h.ruleRepo.GetEnabledOtelMetricRules(principal.AgentID)
+	if err != nil {
+		log.Printf("[OTLP] failed to load metric alert rules for %s: %v", principal.AgentID, err)
+		return
+	}
+	if len(rules) == 0 {
+		return
+	}
+	for _, row := range rows {
+		for _, rule := range rules {
+			if rule.MetricName != row.MetricName {
+				continue
+			}
+			if !compareAlertValue(row.Value, rule.Operator, rule.Threshold) {
+				continue
+			}
+			h.alertManager.DispatchOtelMetricAlertForRule(
+				rule, principal.AgentID, row.ServiceName, row.MetricName, string(row.Attributes), row.Value)
+		}
 	}
 }
 
@@ -292,6 +327,8 @@ func (h *OTLPIngestHandler) IngestMetrics(c *fiber.Ctx) error {
 		log.Printf("[OTLP] failed to store metrics for %s: %v", principal.Name, err)
 		return internalError(c, ErrCodeDatabase, err)
 	}
+
+	h.evaluateOtelMetricAlerts(principal, rows)
 
 	respBody, err := proto.Marshal(&collectormetricspb.ExportMetricsServiceResponse{})
 	if err != nil {
@@ -603,13 +640,26 @@ func anyValueToString(v *commonpb.AnyValue) string {
 	return string(data)
 }
 
+// maxStoredBodyBytes caps captured-body span events at ingest. Well-behaved
+// clients truncate before export (EVERYUP_BODY_MAX_BYTES, default 8KiB); this
+// is the server-side backstop against misconfigured or hostile senders filling
+// the spans table within the 4MiB OTLP request limit.
+const maxStoredBodyBytes = 64 << 10
+
 func spanEventsToSlice(events []*tracepb.Span_Event) []map[string]interface{} {
 	out := make([]map[string]interface{}, 0, len(events))
 	for _, event := range events {
+		attrs := attrsToMap(event.GetAttributes())
+		if capturedBodyEventNames[event.GetName()] {
+			if body, ok := attrs["body"].(string); ok && len(body) > maxStoredBodyBytes {
+				attrs["body"] = body[:maxStoredBodyBytes]
+				attrs["body_truncated"] = true
+			}
+		}
 		out = append(out, map[string]interface{}{
 			"name":         event.GetName(),
 			"timeUnixNano": event.GetTimeUnixNano(),
-			"attributes":   attrsToMap(event.GetAttributes()),
+			"attributes":   attrs,
 		})
 	}
 	return out

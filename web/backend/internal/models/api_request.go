@@ -27,6 +27,19 @@ type ApiRequest struct {
 	CreatedAt    time.Time `json:"createdAt"`
 }
 
+// ApiRequestStatBucket is one time bucket of request aggregates for the trends
+// chart. Percentiles are computed only over requests with a known duration
+// (durationMs > 0); access-log synthetic rows have no duration and are counted
+// for volume/errors but excluded from latency.
+type ApiRequestStatBucket struct {
+	Time       time.Time `json:"time"`
+	Count      int       `json:"count"`
+	ErrorCount int       `json:"errorCount"`
+	P50        int       `json:"p50"`
+	P95        int       `json:"p95"`
+	Timed      int       `json:"timed"` // requests contributing to percentiles
+}
+
 // ApiRequestFilter holds query parameters for listing captured requests.
 type ApiRequestFilter struct {
 	ServiceID   string

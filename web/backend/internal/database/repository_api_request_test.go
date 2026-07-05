@@ -509,3 +509,68 @@ func TestApiRequestRepo_CreateAgentRequestWithoutLegacyService(t *testing.T) {
 		t.Fatalf("unexpected ownership fields: got serviceID=%q agentID=%q serviceName=%q", got.ServiceID, got.AgentID, got.ServiceName)
 	}
 }
+
+// --- TestApiRequestRepo_RequestStats ---
+
+func TestApiRequestRepo_RequestStats(t *testing.T) {
+	openTestDB(t)
+	makeTestService(t, "svc-stats")
+
+	repo := database.NewApiRequestRepository()
+	base := time.Now().Truncate(time.Hour)
+
+	mk := func(path string, status int, isErr bool, dur int, at time.Time) models.ApiRequest {
+		return models.ApiRequest{
+			ServiceID: "svc-stats", RequestID: path + at.String(), Method: "GET", Path: path,
+			PathTemplate: path, StatusCode: status, DurationMs: dur, IsError: isErr, CreatedAt: at,
+		}
+	}
+
+	// Bucket A (base): 10 timed requests 10..100ms + 2 errors, plus 1 untimed (dur 0).
+	var rows []models.ApiRequest
+	for i := 1; i <= 10; i++ {
+		rows = append(rows, mk("/a", 200, false, i*10, base.Add(time.Duration(i)*time.Second)))
+	}
+	rows = append(rows,
+		mk("/a", 500, true, 30, base.Add(20*time.Second)),
+		mk("/a", 503, true, 40, base.Add(21*time.Second)),
+		mk("/a", 200, false, 0, base.Add(22*time.Second)), // untimed (access-log style)
+	)
+	// Bucket B (base+10m): 1 request.
+	rows = append(rows, mk("/b", 200, false, 5, base.Add(10*time.Minute)))
+
+	if _, err := repo.CreateBatch(rows); err != nil {
+		t.Fatalf("CreateBatch: %v", err)
+	}
+
+	stats, err := repo.RequestStats(&models.ApiRequestFilter{ServiceID: "svc-stats"}, 5)
+	if err != nil {
+		t.Fatalf("RequestStats: %v", err)
+	}
+	if len(stats) != 2 {
+		t.Fatalf("buckets = %d, want 2", len(stats))
+	}
+
+	a := stats[0]
+	if a.Count != 13 {
+		t.Errorf("bucket A count = %d, want 13", a.Count)
+	}
+	if a.ErrorCount != 2 {
+		t.Errorf("bucket A errors = %d, want 2", a.ErrorCount)
+	}
+	if a.Timed != 12 {
+		t.Errorf("bucket A timed = %d, want 12 (untimed excluded)", a.Timed)
+	}
+	// 12 timed durations: 10,20,...,100,30,40 → p50 nearest-rank(ceil .5*12=6)→6th smallest.
+	// sorted: 10,20,30,30,40,40,50,60,70,80,90,100 → 6th=40, p95(ceil .95*12=12)→100.
+	if a.P50 != 40 {
+		t.Errorf("bucket A p50 = %d, want 40", a.P50)
+	}
+	if a.P95 != 100 {
+		t.Errorf("bucket A p95 = %d, want 100", a.P95)
+	}
+
+	if stats[1].Count != 1 {
+		t.Errorf("bucket B count = %d, want 1", stats[1].Count)
+	}
+}

@@ -24,6 +24,7 @@ const (
 	AlertMetricResponseTime AlertMetric = "response_time" // Response time in ms
 	AlertMetricLogLevel     AlertMetric = "log_level"
 	AlertMetricApiStatus    AlertMetric = "api_status_code" // captured API request status code
+	AlertMetricOtelMetric   AlertMetric = "otel_metric"     // OTLP metric value; pairs with MetricName
 )
 
 // AlertOperator defines comparison operators
@@ -54,6 +55,7 @@ type AlertRule struct {
 	AgentID    *string       `json:"agentId"`
 	ServiceKey *string       `json:"serviceKey"`
 	Metric     AlertMetric   `json:"metric"`
+	MetricName string        `json:"metricName,omitempty"` // OTLP metric name when Metric == otel_metric
 	Operator   AlertOperator `json:"operator"`
 	Threshold  float64       `json:"threshold"`
 	Duration   int           `json:"duration"` // minutes of consecutive breach
@@ -76,6 +78,7 @@ type AlertRuleCreateRequest struct {
 	AgentID    *string       `json:"agentId"`
 	ServiceKey *string       `json:"serviceKey"`
 	Metric     AlertMetric   `json:"metric"`
+	MetricName string        `json:"metricName"`
 	Operator   AlertOperator `json:"operator"`
 	Threshold  float64       `json:"threshold"`
 	Duration   int           `json:"duration"`
@@ -112,6 +115,7 @@ func (r *AlertRuleCreateRequest) ToAlertRule(id string) *AlertRule {
 		AgentID:    r.AgentID,
 		ServiceKey: r.ServiceKey,
 		Metric:     r.Metric,
+		MetricName: r.MetricName,
 		Operator:   r.Operator,
 		Threshold:  r.Threshold,
 		Duration:   r.Duration,
@@ -131,6 +135,7 @@ type AlertRuleUpdateRequest struct {
 	AgentID    *string        `json:"agentId"`
 	ServiceKey *string        `json:"serviceKey"`
 	Metric     *AlertMetric   `json:"metric"`
+	MetricName *string        `json:"metricName"`
 	Operator   *AlertOperator `json:"operator"`
 	Threshold  *float64       `json:"threshold"`
 	Duration   *int           `json:"duration"`

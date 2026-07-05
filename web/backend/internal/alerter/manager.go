@@ -153,6 +153,48 @@ func (m *Manager) DispatchLogAlertForRule(rule models.AlertRule, serviceID, serv
 	m.DispatchToChannels(notification, rule.ChannelIDs)
 }
 
+// DispatchOtelMetricAlertForRule sends an OTLP-metric threshold alert through
+// the rule's channels. The breach check (value vs rule.Threshold) is done at
+// the call site. seriesKey identifies the attribute series so distinct series
+// (e.g. per route) dedup independently.
+func (m *Manager) DispatchOtelMetricAlertForRule(rule models.AlertRule, agentID, serviceName, metricName, seriesKey string, value float64) {
+	fpKey := rule.ID + ":" + agentID + ":" + serviceName
+	fingerprint := GenerateFingerprint(fpKey, metricName, seriesKey)
+	if !m.dedup.ShouldAlert(fingerprint) {
+		log.Printf("Dedup: suppressed duplicate metric alert for %s/%s [%s=%.2f]", serviceName, metricName, seriesKey, value)
+		return
+	}
+
+	defaultMessage := fmt.Sprintf("%s %s = %.2f (threshold %s %.2f)", serviceName, metricName, value, rule.Operator, rule.Threshold)
+	message := defaultMessage
+	if rule.Message != "" {
+		message = strings.NewReplacer(
+			"{service_name}", serviceName,
+			"{metric}", metricName,
+			"{value}", fmt.Sprintf("%.2f", value),
+			"{threshold}", fmt.Sprintf("%.2f", rule.Threshold),
+		).Replace(rule.Message)
+	}
+
+	notification := Notification{
+		RuleID:      rule.ID,
+		ServiceName: serviceName,
+		Message:     message,
+		Time:        time.Now(),
+		AlertType:   AlertTypeOtelMetric,
+		Metric:      metricName,
+		Value:       value,
+		Threshold:   rule.Threshold,
+		Severity:    string(rule.Severity),
+		Metadata: map[string]interface{}{
+			"metricName": metricName,
+			"series":     seriesKey,
+			"agentId":    agentID,
+		},
+	}
+	m.DispatchToChannels(notification, rule.ChannelIDs)
+}
+
 // DispatchApiRequestAlertForRule sends an API request alert through channels selected by a rule.
 // statusCode is compared against rule.Threshold via rule.Operator at the call site.
 func (m *Manager) DispatchApiRequestAlertForRule(rule models.AlertRule, serviceID, serviceName, method, path string, statusCode int, durationMs float64) {

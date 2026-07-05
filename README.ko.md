@@ -129,77 +129,24 @@ access log를 안 남기는 앱은 API 행만 안 뜰 뿐 나머지는 그대로
 
 여기까지가 health·로그·호스트 메트릭·API 상태코드입니다 — **앱 수정 없이**.
 
-### 4. (선택) 트레이스·latency·바디 활성화
+### 4. (선택) 트레이스·latency·헤더·바디
 
-1~3단계는 앱 수정이 필요 없습니다. **요청 latency, 전체 트레이스, 요청/응답 헤더·바디**
-까지 수집하려면 앱에 OpenTelemetry를 계측해 Agent의 OTLP 게이트웨이로 보내면 됩니다.
-**Java / Spring**은
-[OpenTelemetry Java agent](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases)
-jar을 받아 compose 파일 옆에 두고 앱에 마운트하세요:
+1~3단계는 앱 수정 없이 health·로그·호스트 메트릭·API 상태코드를 줍니다. 더 풍부한
+신호는 두 단계로 추가되며, 뒤로 갈수록 더 간단합니다:
 
-```yaml
-services:
-  my-app:                     # Agent와 같은 호스트의 앱
-    volumes:
-      - ./opentelemetry-javaagent.jar:/otel/opentelemetry-javaagent.jar:ro
-    environment:
-      JAVA_TOOL_OPTIONS: "-javaagent:/otel/opentelemetry-javaagent.jar"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://everyup-agent:4318"
-      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
-```
+**latency + 전체 트레이스 — 무코드, 전 언어(Go 포함), HTTPS까지.**
+Agent compose의 `everyup-ebpf` 사이드카 주석을 해제하고 `docker compose up -d`
+하세요. eBPF로 호스트의 모든 서비스를 트레이싱합니다 — *앱* 컨테이너 재시작도, 코드도,
+exporter 설정도 없습니다. Agent가 각 스팬을 알맞은 서비스에 자동 귀속시킵니다.
+[agent/README.md](agent/README.md)의 "Zero-Code Tracing" 참고.
 
-다른 언어는 위와 같은 `OTEL_EXPORTER_OTLP_*` 두 개에 각자의 자동 계측을 더하면 됩니다
-(jar 불필요):
-
-| 언어 | 자동 계측 |
-| --- | --- |
-| **Python** | `opentelemetry-instrument python app.py`로 실행 |
-| **Node.js** | `NODE_OPTIONS="--require @opentelemetry/auto-instrumentations-node/register"` |
-| **Go** | HTTP 핸들러를 `otelhttp`로 감싸기 |
-
-이제 트레이스·latency·요청별 API 행이 해당 서비스 밑에 자동으로 뜹니다 — Agent가
-커넥션 source IP로 각 스팬을 서비스에 귀속시키므로 서비스명은 지정하지 않아도 됩니다.
-**요청/응답 바디만 수동 단계 하나가 더 필요합니다**(스팬 이벤트로 첨부). 언어별 전체
-설정과 바디 캡처는 [docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md) 참고.
-
-## API 헤더·바디 (선택)
-
-access log만 있으면 상태코드는 거저 얻습니다. 여기에 더해 실제 latency가 담긴 전체
-트레이스와 요청/응답 **헤더·바디**까지 보고 싶다면 — 요청이 *왜* 실패했는지(문제의
-payload, 빠진 필드)를 진단하려면 — 앱에 **OpenTelemetry**를 계측하세요.
-
-> **현재 상태.** 트레이스와 latency는 표준 OTel 자동 계측만으로 동작합니다. 하지만
-> **헤더·바디 수집은 아직 수동 계측이 필요합니다** — 바디를 스팬 이벤트로 직접 붙여야
-> 합니다(언어별 문서 참고). 무계측 헤더·바디 수집(first-party SDK, eBPF)은 로드맵이며
-> 아직 제공되지 않습니다.
-
-앱이 (기록하기로 선택한 요청/응답 데이터를 담은) 스팬을 Agent의 OTLP 게이트웨이
-`http://everyup-agent:4318`로 보냅니다. 추가 컨테이너도, 트래픽 가로채기도 없습니다.
-언어별 설정은
+**헤더 + 바디 — 재시작 1회, 무코드.** Agent가 바로 쓸 수 있는 OpenTelemetry 번들
+(Java agent jar + Node.js 부트스트랩)을 공유 볼륨에 실어 보냅니다. 웹 UI에서
+프로젝트를 열고 **OTel 계측 설정**을 실행하면 감지된 런타임에 맞춘
+`docker-compose.everyup.yml` override가 생성됩니다. 그걸로 앱을 한 번만 재시작하세요.
+바디는 앱 안에서 export 전에 마스킹되며 admin 전용(열람은 감사 기록)입니다. 전체
+안내와 스팬 계약, 다른 언어(Python, 수동 SDK)는
 [docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md) 참고.
-
-- **서비스명 지정 불필요.** exporter를 게이트웨이로 향하게 하는 게 유일한 설정이고,
-  그 주소는 모든 서비스가 동일합니다. `OTEL_SERVICE_NAME`을 설정할 필요가 없습니다:
-  Agent가 커넥션의 source IP로 컨테이너의 Compose 서비스명을 찾아 각 페이로드에
-  태깅하므로, 트레이스가 자동 디스커버리로 이미 만들어진 서비스 카드에 그대로 붙습니다.
-  (host 네트워크 컨테이너나 다른 프록시를 거치는 앱은 고유 컨테이너 IP가 없으니,
-  그 경우엔 `OTEL_SERVICE_NAME`을 직접 지정하면 그 값을 그대로 따릅니다.)
-
-- API 탭의 요청이나 트레이스 링크가 달린 로그를 열면 **Trace** 패널에 스팬과
-  **Captured bodies** 섹션이 보입니다. 바디는 **admin 전용** — 비admin에겐 가려지고,
-  admin 열람은 모두 `audit_events`에 기록됩니다.
-- 바디 포함 span은 7일 보존됩니다(`EVERYUP_RETENTION_BODYCAPTUREDAYS`). 시크릿·민감
-  필드는 export 전에 계측 단계에서 마스킹하거나 빼세요.
-
-> **중복 집계 주의.** 한 요청은 소스당 한 번 나타납니다. 어떤 서비스에 앱 측 OTel을
-> 켜면 그 서비스의 access-log 기반 행도 *같은* 요청을 잡으므로, 요청 목록에 하나가 두 번
-> 보일 수 있습니다. 서비스마다 한 소스만 쓰세요 — access log *또는* OTel.
-
-> **로그를 요청에 연결.** 로그에 trace id를 출력하면 EveryUp이 트레이스된 요청과
-> 애플리케이션 로그를 연결할 수 있습니다.
-
-> **로드맵.** 무계측 헤더·바디 수집을 위한 first-party SDK와 에이전트 기반(eBPF) 수집이
-> 예정되어 있습니다.
 
 ## 수집되는 데이터
 
@@ -212,12 +159,19 @@ payload, 빠진 필드)를 진단하려면 — 앱에 **OpenTelemetry**를 계�
 | API 요청 — method, path, status (latency 없음) | access log 파싱 |
 | 호스트 CPU, 메모리, 디스크, 네트워크 | `/hostfs` 마운트 |
 
-**앱에 OpenTelemetry를 계측한 경우에만** (선택):
+**선택적 eBPF 사이드카로 — 여전히 앱 수정 없이:**
 
 | 데이터 | 소스 |
 | --- | --- |
-| API 요청 + 트레이스, 실제 latency 포함 | 앱 OTel → Agent `:4318` |
-| 요청/응답 헤더·바디 | 앱 계측 단계에서 기록 |
+| 실제 latency 포함 API 트레이스, 전 언어 + HTTPS | `everyup-ebpf` 사이드카(eBPF) |
+
+**앱 재시작 1회로 (번들 OTel 계측):**
+
+| 데이터 | 소스 |
+| --- | --- |
+| 요청/응답 헤더 | `http.*.header.*` 스팬 속성 |
+| 요청/응답 바디 (마스킹, admin 전용) | `*_body_masked` 스팬 이벤트 |
+| 앱 메트릭 — JVM 메모리, GC, 커스텀 카운터 | 앱 OTel → Agent `:4318` |
 
 컨테이너 안의 파일에만 로그를 쓰는 서비스는 Agent가 볼 수 없습니다. 로그 수집을 위해
 앱 로그를 stdout으로 출력하세요. API 상태코드는 앱이 access log(Nginx / Apache / 구조화

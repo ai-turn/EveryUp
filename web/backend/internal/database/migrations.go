@@ -242,6 +242,9 @@ func migrate() error {
 	if err := migrateV38(); err != nil {
 		return fmt.Errorf("v38 migration failed: %w", err)
 	}
+	if err := migrateV39(); err != nil {
+		return fmt.Errorf("v39 migration failed: %w", err)
+	}
 
 	return nil
 }
@@ -1275,6 +1278,17 @@ func migrateV37() error {
 // Added: 2026-07-03
 func migrateV38() error {
 	_, err := DB.Exec(`ALTER TABLE agent_services ADD COLUMN runtime TEXT NOT NULL DEFAULT ''`)
+	if err != nil && strings.Contains(err.Error(), "duplicate column name") {
+		return nil
+	}
+	return err
+}
+
+// migrateV39 adds metric_name to alert_rules, so a rule can target a specific
+// OTLP metric series (e.g. "jvm.memory.used"). Empty for all other rule types.
+// Added: 2026-07-05
+func migrateV39() error {
+	_, err := DB.Exec(`ALTER TABLE alert_rules ADD COLUMN metric_name TEXT NOT NULL DEFAULT ''`)
 	if err != nil && strings.Contains(err.Error(), "duplicate column name") {
 		return nil
 	}
