@@ -131,25 +131,27 @@ simply shows no API rows while everything else keeps working (graceful degrade).
 
 That covers health, logs, host metrics, and API status codes — **no app changes**.
 
-### 4. (Optional) Traces, latency, headers, and bodies
+> **Optional — latency & full traces, still no app changes.** Uncomment the
+> `everyup-ebpf` sidecar in the Agent compose and `docker compose up -d`. It uses
+> eBPF to trace every service on the host — all languages including Go, HTTPS
+> included — with no app restart and no code. The Agent attributes each span to
+> the right service automatically. See "Zero-Code Tracing" in
+> [agent/README.md](agent/README.md).
 
-Steps 1–3 need no app changes and give you health, logs, host metrics, and API
-status codes. Richer signals come in two more steps, each smaller than the last:
+### 4. (Optional) Request/response headers & bodies
 
-**Latency + full traces — zero code, all languages (incl. Go), even HTTPS.**
-Uncomment the `everyup-ebpf` sidecar in the Agent compose and `docker compose up
--d`. It uses eBPF to trace every service on the host — no restart of *your*
-containers, no code, no exporter config. The Agent attributes each span to the
-right service automatically. See "Zero-Code Tracing" in
-[agent/README.md](agent/README.md).
-
-**Headers + bodies — one restart, no code.** The Agent ships a ready-made
-OpenTelemetry bundle (Java agent jar + Node.js bootstrap) in a shared volume. In
+This is the one step that touches your app — and the only way to capture
+request/response **headers and bodies**, for diagnosing *why* a request failed
+(the offending payload, a missing field). The Agent ships a ready-made
+OpenTelemetry bundle (Java agent jar + Node.js bootstrap) in a shared volume; in
 the web UI, open a project and use the **OTel instrumentation** action to
-generate a `docker-compose.everyup.yml` override tailored to the detected
-runtimes, then restart your app once with it. Bodies are masked inside the app
-before export and are admin-only (viewing is audited). Full walkthrough, the
-span contract, and other languages (Python, manual SDKs):
+generate a `docker-compose.everyup.yml` override for the detected runtimes, then
+restart your app once with it.
+
+This also brings full traces and real latency for that service, so it does not
+need the eBPF sidecar. Bodies are masked inside the app before export and are
+admin-only (viewing is audited). Full walkthrough, the span contract, and other
+languages (Python, manual SDKs):
 [docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md).
 
 ## What Gets Collected

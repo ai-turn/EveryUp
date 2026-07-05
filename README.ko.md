@@ -129,23 +129,23 @@ access log를 안 남기는 앱은 API 행만 안 뜰 뿐 나머지는 그대로
 
 여기까지가 health·로그·호스트 메트릭·API 상태코드입니다 — **앱 수정 없이**.
 
-### 4. (선택) 트레이스·latency·헤더·바디
+> **(선택) 레이턴시·전체 트레이스 — 여전히 앱 무수정.** Agent compose의
+> `everyup-ebpf` 사이드카 주석을 해제하고 `docker compose up -d` 하세요. eBPF로
+> 호스트의 모든 서비스를 트레이싱합니다 — 전 언어(Go 포함), HTTPS까지 — 앱 재시작도
+> 코드도 없이. Agent가 각 스팬을 알맞은 서비스에 자동 귀속시킵니다.
+> [agent/README.md](agent/README.md)의 "Zero-Code Tracing" 참고.
 
-1~3단계는 앱 수정 없이 health·로그·호스트 메트릭·API 상태코드를 줍니다. 더 풍부한
-신호는 두 단계로 추가되며, 뒤로 갈수록 더 간단합니다:
+### 4. (선택) 요청/응답 헤더·바디
 
-**latency + 전체 트레이스 — 무코드, 전 언어(Go 포함), HTTPS까지.**
-Agent compose의 `everyup-ebpf` 사이드카 주석을 해제하고 `docker compose up -d`
-하세요. eBPF로 호스트의 모든 서비스를 트레이싱합니다 — *앱* 컨테이너 재시작도, 코드도,
-exporter 설정도 없습니다. Agent가 각 스팬을 알맞은 서비스에 자동 귀속시킵니다.
-[agent/README.md](agent/README.md)의 "Zero-Code Tracing" 참고.
-
-**헤더 + 바디 — 재시작 1회, 무코드.** Agent가 바로 쓸 수 있는 OpenTelemetry 번들
-(Java agent jar + Node.js 부트스트랩)을 공유 볼륨에 실어 보냅니다. 웹 UI에서
-프로젝트를 열고 **OTel 계측 설정**을 실행하면 감지된 런타임에 맞춘
+앱을 건드리는 유일한 단계이자, 요청/응답 **헤더·바디**를 수집하는 유일한 방법입니다 —
+요청이 *왜* 실패했는지(문제의 payload, 빠진 필드)를 진단할 때 씁니다. Agent가 바로 쓸
+수 있는 OpenTelemetry 번들(Java agent jar + Node.js 부트스트랩)을 공유 볼륨에 실어
+보냅니다. 웹 UI에서 프로젝트를 열고 **OTel 계측 설정**을 실행하면 감지된 런타임에 맞춘
 `docker-compose.everyup.yml` override가 생성됩니다. 그걸로 앱을 한 번만 재시작하세요.
-바디는 앱 안에서 export 전에 마스킹되며 admin 전용(열람은 감사 기록)입니다. 전체
-안내와 스팬 계약, 다른 언어(Python, 수동 SDK)는
+
+이 단계는 해당 서비스의 전체 트레이스·실제 레이턴시도 함께 주므로 eBPF 사이드카가 따로
+필요 없습니다. 바디는 앱 안에서 export 전에 마스킹되며 admin 전용(열람은 감사 기록)
+입니다. 전체 안내와 스팬 계약, 다른 언어(Python, 수동 SDK)는
 [docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md) 참고.
 
 ## 수집되는 데이터
