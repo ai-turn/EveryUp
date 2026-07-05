@@ -121,13 +121,9 @@ volumes:
 docker compose up -d
 ```
 
-약 30초 안에 Agent가 online으로 뜨고 호스트의 모든 컨테이너를 자동 발견합니다 —
-health·로그·호스트 메트릭은 서비스별 설정 없이 곧바로 들어옵니다. 앱이 access log(Nginx
-/ Apache / JSON)를 남기면 요청 method·path·status가 **API** 탭에 자동으로 표시됩니다
-— 프록시도, 코드 수정도 없이. access log엔 latency가 없어 duration은 `—`로 보이고,
-access log를 안 남기는 앱은 API 행만 안 뜰 뿐 나머지는 그대로 동작합니다(graceful degrade).
-
-여기까지가 health·로그·호스트 메트릭·API 상태코드입니다 — **앱 수정 없이**.
+약 30초 안에 Agent가 online으로 뜨고 모든 컨테이너를 자동 발견합니다 —
+health·로그·호스트 메트릭·API 상태코드가 **앱 수정 없이** 들어옵니다.
+(무엇이 어떻게 수집되는지는 아래 "수집되는 데이터" 참고.)
 
 > **(선택) 레이턴시·전체 트레이스 — 여전히 앱 무수정.** Agent compose의
 > `everyup-ebpf` 사이드카 주석을 해제하고 `docker compose up -d` 하세요. eBPF로

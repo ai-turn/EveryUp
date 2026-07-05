@@ -122,14 +122,9 @@ volumes:
 docker compose up -d
 ```
 
-The Agent appears online within ~30s and discovers every container on the host —
-health, logs, and host metrics flow with no per-service config. If an app emits
-access logs (Nginx / Apache / JSON), its request method, path, and status code
-show up in the **API** tab automatically — no proxy, no code change. Access logs
-carry no latency, so duration shows as `—`; an app that emits no access logs
-simply shows no API rows while everything else keeps working (graceful degrade).
-
-That covers health, logs, host metrics, and API status codes — **no app changes**.
+The Agent comes online within ~30s and auto-discovers every container — health,
+logs, host metrics, and API status codes flow with **no app changes**. (What's
+collected and how is detailed in "What Gets Collected" below.)
 
 > **Optional — latency & full traces, still no app changes.** Uncomment the
 > `everyup-ebpf` sidecar in the Agent compose and `docker compose up -d`. It uses

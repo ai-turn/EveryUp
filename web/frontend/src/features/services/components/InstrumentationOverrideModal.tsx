@@ -12,6 +12,8 @@ interface Props {
 // Runtimes the bundled instrumentation can inject via env vars alone.
 const INJECTABLE = new Set(['java', 'node']);
 
+const DOC_URL = 'https://github.com/ai-turn/everyup/blob/main/docs/OTEL_API_INSTRUMENTATION.ko.md';
+
 // Compose-managed services carry a "project:service" key (see the agent's
 // stableServiceKey); only those can be targeted by a compose override.
 function composeServiceOf(key: string): string | null {
@@ -19,41 +21,43 @@ function composeServiceOf(key: string): string | null {
   return idx > 0 ? key.slice(idx + 1) : null;
 }
 
-function envLines(runtime: string): string[] {
+function envLines(runtime: string, captureBodies: boolean): string[] {
   const shared = [
     '      OTEL_EXPORTER_OTLP_ENDPOINT: "http://everyup-agent:4318"',
     '      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"',
   ];
   if (runtime === 'java') {
+    // Java bodies need a code-side filter (see the doc), so the toggle only
+    // affects Node here — Java blocks stay headers-only.
     return [
-      '      # 주의: 앱이 JAVA_TOOL_OPTIONS를 이미 쓰고 있다면 기존 값 뒤에 이어 붙이세요.',
+      '      # 앱이 JAVA_TOOL_OPTIONS를 이미 쓰면 기존 값 뒤에 이어 붙이세요',
       '      JAVA_TOOL_OPTIONS: "-javaagent:/everyup/java/opentelemetry-javaagent.jar"',
       ...shared,
       '      OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS: "content-type,user-agent,accept"',
       '      OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_RESPONSE_HEADERS: "content-type"',
     ];
   }
-  return [
+  const node = [
     '      NODE_OPTIONS: "--require /everyup/node/register.js"',
     ...shared,
     '      OTEL_INSTRUMENTATION_HTTP_CAPTURE_HEADERS_SERVER_REQUEST: "content-type,user-agent,accept"',
     '      OTEL_INSTRUMENTATION_HTTP_CAPTURE_HEADERS_SERVER_RESPONSE: "content-type"',
-    '      # 바디 수집(선택): 앱 안에서 마스킹·8KiB 절단 후 전송됩니다.',
-    '      # EVERYUP_CAPTURE_BODIES: "true"',
   ];
+  if (captureBodies) {
+    node.push('      EVERYUP_CAPTURE_BODIES: "true"   # 바디: 앱 안에서 마스킹·8KiB 절단 후 전송');
+  }
+  return node;
 }
 
-function buildOverride(targets: { composeService: string; runtime: string }[]): string {
+function buildOverride(targets: { composeService: string; runtime: string }[], captureBodies: boolean): string {
   const blocks = targets.map(({ composeService, runtime }) => [
     `  ${composeService}:`,
     '    volumes: ["everyup-instrumentation:/everyup:ro"]',
     '    environment:',
-    ...envLines(runtime),
+    ...envLines(runtime, captureBodies),
   ].join('\n'));
 
   return [
-    '# docker-compose.everyup.yml — 앱 compose 파일 옆에 저장한 뒤:',
-    '#   docker compose -f <앱-compose>.yml -f docker-compose.everyup.yml up -d',
     'volumes:',
     '  everyup-instrumentation:',
     '    external: true',
@@ -64,10 +68,29 @@ function buildOverride(targets: { composeService: string; runtime: string }[]): 
   ].join('\n');
 }
 
+// One labeled file in the "3 files on this server" mental map.
+function FileRow({ icon, name, note, tone }: { icon: string; name: string; note: string; tone: 'new' | 'edit' | 'keep' }) {
+  const toneCls = {
+    new: 'text-primary',
+    edit: 'text-slate-500 dark:text-text-muted-dark',
+    keep: 'text-slate-400 dark:text-text-dim-dark',
+  }[tone];
+  return (
+    <div className="flex items-start gap-2 text-sm">
+      <MaterialIcon name={icon} className={`text-base mt-0.5 shrink-0 ${toneCls}`} />
+      <div className="min-w-0">
+        <code className="font-mono text-xs text-slate-700 dark:text-text-base-dark">{name}</code>
+        <span className="text-slate-500 dark:text-text-muted-dark"> — {note}</span>
+      </div>
+    </div>
+  );
+}
+
 export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
   const { copy } = useClipboardCopy();
   const [services, setServices] = useState<AgentServiceSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
+  const [captureBodies, setCaptureBodies] = useState(false);
 
   useEffect(() => {
     api.getAgentServices(agentId)
@@ -85,7 +108,8 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
   const skipped = services.filter(
     (s) => s.runtime && INJECTABLE.has(s.runtime) && !composeServiceOf(s.key),
   );
-  const yaml = buildOverride(targets);
+  const yaml = buildOverride(targets, captureBodies);
+  const hasJava = targets.some((t) => t.runtime === 'java');
 
   return (
     <div
@@ -94,15 +118,15 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
       aria-modal="true"
       aria-label="OTel instrumentation override"
     >
-      <div className="bg-white dark:bg-bg-surface-dark shadow-2xl w-full max-w-3xl h-full max-h-full flex flex-col sm:h-auto sm:max-h-[85vh] sm:rounded-xl">
+      <div className="bg-white dark:bg-bg-surface-dark shadow-2xl w-full max-w-2xl h-full max-h-full flex flex-col sm:h-auto sm:max-h-[88vh] sm:rounded-xl">
         <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 dark:border-ui-border-dark">
           <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary">
             <MaterialIcon name="integration_instructions" className="text-lg" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">OTel 계측 설정 (헤더·바디)</h3>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">API 헤더·바디 수집 설정</h3>
             <p className="text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">
-              감지된 런타임 기반으로 생성된 compose override — 코드·Dockerfile 수정 없이 재시작 1회
+              앱 코드·Dockerfile 수정 없이, 재시작 한 번으로 이 프로젝트의 요청/응답 헤더·바디를 수집합니다.
             </p>
           </div>
           <button
@@ -114,57 +138,130 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
           {loading ? (
             <div className="h-40 bg-slate-100 dark:bg-ui-hover-dark rounded-xl animate-pulse" />
           ) : targets.length === 0 ? (
-            <p className="py-10 text-center text-sm text-slate-400 dark:text-text-muted-dark">
-              주입 가능한 서비스가 없습니다 — Java/Node 런타임이 감지된 compose 서비스가 대상입니다.
-              (Go 서비스는 eBPF 사이드카가 코드 없이 커버합니다.)
-            </p>
+            <div className="py-10 text-center space-y-2">
+              <MaterialIcon name="info" className="text-3xl text-slate-300 dark:text-text-dim-dark" />
+              <p className="text-sm text-slate-500 dark:text-text-muted-dark">
+                주입 가능한 서비스가 없습니다.
+              </p>
+              <p className="text-xs text-slate-400 dark:text-text-dim-dark max-w-sm mx-auto">
+                Java·Node.js 런타임이 감지된 compose 서비스가 대상입니다. Go 서비스는 코드 없이
+                eBPF 사이드카가 커버하고, 그 외 런타임은{' '}
+                <a href={DOC_URL} target="_blank" rel="noreferrer" className="text-primary hover:underline">문서의 수동 계측</a>을 참고하세요.
+              </p>
+            </div>
           ) : (
             <>
-              <ol className="space-y-1.5 text-sm text-slate-600 dark:text-text-muted-dark list-decimal list-inside">
-                <li>
-                  에이전트 compose에서 <code className="font-mono text-xs bg-slate-100 dark:bg-ui-hover-dark px-1 py-0.5 rounded">everyup-instrumentation</code> 볼륨
-                  두 줄의 주석을 해제하고 에이전트를 재기동 (계측 번들이 볼륨에 채워집니다)
-                </li>
-                <li>아래 파일을 앱 compose 옆에 <code className="font-mono text-xs bg-slate-100 dark:bg-ui-hover-dark px-1 py-0.5 rounded">docker-compose.everyup.yml</code>로 저장</li>
-                <li>
-                  <code className="font-mono text-xs bg-slate-100 dark:bg-ui-hover-dark px-1 py-0.5 rounded">
-                    docker compose -f &lt;앱-compose&gt;.yml -f docker-compose.everyup.yml up -d
-                  </code>
-                </li>
-              </ol>
-
-              <div className="flex flex-wrap gap-1.5">
-                {targets.map((t) => (
-                  <span key={t.composeService} className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">
-                    {t.name}
-                    <span className="opacity-70">· {runtimeLabel(t.runtime)}</span>
-                  </span>
-                ))}
+              {/* What this targets */}
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-text-dim-dark mb-1.5">대상 서비스</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {targets.map((t) => (
+                    <span key={t.composeService} className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">
+                      {t.name}
+                      <span className="opacity-70">· {runtimeLabel(t.runtime)}</span>
+                    </span>
+                  ))}
+                </div>
               </div>
 
-              <div className="relative">
-                <pre className="max-h-96 overflow-auto rounded-xl border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark p-4 font-mono text-xs text-slate-700 dark:text-text-base-dark whitespace-pre">{yaml}</pre>
-                <CopyButton
-                  onCopy={() => copy(yaml)}
-                  className="absolute top-2 right-2 p-1.5 rounded-lg bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark text-slate-500 hover:text-primary cursor-pointer"
-                  title="Copy override"
-                  iconClassName="text-base"
+              {/* Body capture toggle — reflects into the YAML below */}
+              <label className="flex items-start gap-3 p-3 rounded-xl border border-slate-200 dark:border-ui-border-dark cursor-pointer hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors">
+                <input
+                  type="checkbox"
+                  checked={captureBodies}
+                  onChange={(e) => setCaptureBodies(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-primary cursor-pointer"
                 />
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-slate-800 dark:text-text-base-dark">요청/응답 바디도 수집</span>
+                  <span className="block text-xs text-slate-500 dark:text-text-muted-dark mt-0.5">
+                    헤더는 항상 포함됩니다. 바디는 앱 안에서 마스킹·절단 후 전송되며 열람은 admin 전용입니다.
+                    {hasJava && captureBodies && (
+                      <> (Java 바디는 코드 필터가 추가로 필요 —{' '}
+                        <a href={DOC_URL} target="_blank" rel="noreferrer" className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>문서</a> 참고)</>
+                    )}
+                  </span>
+                </span>
+              </label>
+
+              {/* The deliverable — the override file, front and center */}
+              <div>
+                <div className="flex items-baseline justify-between gap-2 mb-1.5">
+                  <p className="text-sm font-bold text-slate-800 dark:text-text-base-dark">
+                    붙여넣을 override <code className="font-mono text-xs bg-slate-100 dark:bg-ui-hover-dark px-1 py-0.5 rounded">docker-compose.everyup.yml</code>
+                  </p>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-text-muted-dark mb-2">
+                  앱 컨테이너에 계측을 주입합니다 — 앱 이미지·코드는 그대로 두고 env와 볼륨만 얹습니다.
+                </p>
+                <div className="relative">
+                  <pre className="max-h-80 overflow-auto rounded-xl border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark p-4 font-mono text-xs text-slate-700 dark:text-text-base-dark whitespace-pre">{yaml}</pre>
+                  <CopyButton
+                    onCopy={() => copy(yaml)}
+                    className="absolute top-2 right-2 p-1.5 rounded-lg bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark text-slate-500 hover:text-primary cursor-pointer"
+                    title="Copy override"
+                    iconClassName="text-base"
+                  />
+                </div>
               </div>
 
-              {skipped.length > 0 && (
+              {/* File map — the 3 files and what happens to each, all on the monitored server */}
+              <div className="rounded-xl bg-slate-50 dark:bg-ui-hover-dark p-3 space-y-1.5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-text-dim-dark mb-1">이 서버의 파일 3개</p>
+                <FileRow icon="add_circle" tone="new" name="docker-compose.everyup.yml" note="위 내용을 새 파일로 저장 (신규)" />
+                <FileRow icon="edit" tone="edit" name="에이전트 compose" note="계측 볼륨 활성화, 최초 1회 (아래 사전 준비)" />
+                <FileRow icon="check_circle" tone="keep" name="앱 compose (기존)" note="수정 없음 — 실행할 때 함께 지정만" />
+              </div>
+
+              {/* How to apply — prereq first (agent-side, once), then this-service steps */}
+              <div className="space-y-3">
+                <p className="text-sm font-bold text-slate-800 dark:text-text-base-dark">적용하기</p>
+
+                <div className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark p-3">
+                  <p className="text-xs font-bold text-slate-600 dark:text-text-secondary-dark mb-1 flex items-center gap-1.5">
+                    <MaterialIcon name="schedule" className="text-sm text-slate-400 dark:text-text-dim-dark" /> 사전 준비 · 에이전트 쪽 · 최초 1회
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-text-muted-dark">
+                    에이전트 compose에서 <code className="font-mono bg-white dark:bg-bg-surface-dark px-1 rounded">everyup-instrumentation</code> 볼륨
+                    두 줄(에이전트 마운트 + volumes 정의)의 주석을 해제하고 에이전트를 재기동하세요.
+                    계측 번들을 앱과 공유할 볼륨을 켜는 단계이며, 이미 켰다면 넘어가세요.
+                  </p>
+                </div>
+
+                <ol className="space-y-2 text-sm text-slate-600 dark:text-text-muted-dark">
+                  <li className="flex gap-2">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">1</span>
+                    <span>위 YAML을 앱 compose 옆에 <code className="font-mono text-xs bg-slate-100 dark:bg-ui-hover-dark px-1 py-0.5 rounded">docker-compose.everyup.yml</code>로 저장</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">2</span>
+                    <span>
+                      두 파일을 함께 지정해 재시작:
+                      <code className="block mt-1 font-mono text-xs bg-slate-100 dark:bg-ui-hover-dark px-2 py-1 rounded overflow-x-auto">docker compose -f &lt;앱-compose&gt;.yml -f docker-compose.everyup.yml up -d</code>
+                    </span>
+                  </li>
+                </ol>
+              </div>
+
+              {/* Footnotes */}
+              <div className="space-y-1 border-t border-slate-100 dark:border-ui-border-dark pt-3">
+                {skipped.length > 0 && (
+                  <p className="text-xs text-slate-400 dark:text-text-dim-dark">
+                    제외됨 (compose로 관리되지 않는 컨테이너): {skipped.map((s) => s.name).join(', ')}
+                  </p>
+                )}
                 <p className="text-xs text-slate-400 dark:text-text-dim-dark">
-                  제외됨 (compose로 관리되지 않는 컨테이너): {skipped.map((s) => s.name).join(', ')}
+                  민감 헤더(authorization, cookie 등)는 수집 목록과 무관하게 서버에서 자동 마스킹됩니다.
                 </p>
-              )}
-              <p className="text-xs text-slate-400 dark:text-text-dim-dark">
-                민감 헤더(authorization, cookie 등)는 수집 목록과 무관하게 서버에서 마스킹됩니다.
-                바디 열람은 admin 전용이며 감사 로그가 남습니다.
-              </p>
+                <p className="text-xs text-slate-400 dark:text-text-dim-dark">
+                  언어별 계측·스팬 계약 자세히:{' '}
+                  <a href={DOC_URL} target="_blank" rel="noreferrer" className="text-primary hover:underline">API 헤더·바디 수집 문서</a>
+                </p>
+              </div>
             </>
           )}
         </div>
