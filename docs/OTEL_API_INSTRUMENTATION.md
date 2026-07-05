@@ -1,18 +1,30 @@
-# OpenTelemetry API Instrumentation (Tier 2)
+# OpenTelemetry API Instrumentation
 
-API **status codes** are collected for free in Tier 1 by parsing access logs, and
-**latency** for every language via the optional eBPF sidecar — no instrumentation
-needed (see the agent README). This document covers **Tier 2**: request/response
-**headers and bodies**, by instrumenting the application with OpenTelemetry.
+Service health, logs, host metrics, and API **status codes** need no app changes,
+and the optional eBPF sidecar adds real **latency and traces** with no code either
+(see the agent README). This document covers the one app-side step: capturing
+request/response **headers and bodies**, by instrumenting the app with
+OpenTelemetry.
 
-**Prefer the bundle first**: for Java and Node.js the agent ships a ready-made
-instrumentation bundle — one shared volume plus env vars, no code changes. See
-"App Instrumentation" in the agent README. This document is for other languages,
-custom setups, and the body-capture event contract itself.
+Instrumented spans go to the Agent's OTLP gateway at `http://everyup-agent:4318`
+(which attributes them to the right service and forwards to Web), or directly to
+Web at `/api/v1/otlp/v1/traces`.
 
-The app sends OTLP/HTTP spans to the Agent's OTLP gateway at
-`http://everyup-agent:4318` (which attributes and forwards to Web), or directly
-to Web at `/api/v1/otlp/v1/traces`.
+## Quickest path — the bundled instrumentation (Java, Node.js)
+
+For Java and Node.js you don't write any code. The Agent ships a ready-made
+OpenTelemetry bundle (Java agent jar + Node.js bootstrap) in a shared volume:
+
+1. In the web UI, open a project and use the **OTel instrumentation** action to
+   generate a `docker-compose.everyup.yml` override for the runtimes it detected.
+2. Restart your app once with that override.
+
+The override sets the exporter endpoint and header-capture env vars for you.
+Bodies are opt-in (`EVERYUP_CAPTURE_BODIES=true` for Node). Full walkthrough:
+"App Instrumentation" in the agent README.
+
+Everything below is for **other languages, manual SDK setups, or understanding
+the span contract** the bundle produces.
 
 ## What EveryUp reads from a span
 
@@ -46,10 +58,10 @@ Sensitive headers (`authorization`, `cookie`, `set-cookie`, `x-api-key`, ...)
 are masked at ingest **regardless of what you capture** — both dash and
 underscore spellings.
 
-## Request/response bodies (optional)
+## Request/response bodies (the event contract)
 
-To show bodies in the **Trace** panel's *Captured bodies* section, attach span
-**events** to the request span:
+Bodies are not a standard span attribute, so they ride as span **events** on the
+request span:
 
 - Event name **`request_body_masked`** and/or **`response_body_masked`**.
 - Each event carries a `body` attribute holding the body text **you have already
@@ -129,6 +141,20 @@ async def capture_request_body(request, call_next):
 
 Response-body capture with streaming responses is more involved in Starlette;
 start with request bodies.
+
+## Correlating logs with a request
+
+The Trace panel stitches a request together with the logs and spans that share
+its **trace id**. To make your application logs show up there:
+
+- **Using OTLP logs** (SDK log exporter): the trace id is injected automatically
+  when a log is emitted inside a traced request — nothing to do.
+- **Using plain stdout logs** (collected by the Agent): print the trace id (or a
+  `request_id` you propagate via the `x-request-id` header) in each log line so
+  you can search by it and line the log up with the request.
+
+This is how you recover full request/response detail even where body capture is
+off — the body stays in your own service log, findable by the shared id.
 
 ## Double-counting
 

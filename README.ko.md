@@ -146,7 +146,7 @@ access log를 안 남기는 앱은 API 행만 안 뜰 뿐 나머지는 그대로
 이 단계는 해당 서비스의 전체 트레이스·실제 레이턴시도 함께 주므로 eBPF 사이드카가 따로
 필요 없습니다. 바디는 앱 안에서 export 전에 마스킹되며 admin 전용(열람은 감사 기록)
 입니다. 전체 안내와 스팬 계약, 다른 언어(Python, 수동 SDK)는
-[docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md) 참고.
+[docs/OTEL_API_INSTRUMENTATION.ko.md](docs/OTEL_API_INSTRUMENTATION.ko.md) 참고.
 
 ## 수집되는 데이터
 
@@ -185,9 +185,7 @@ JSON)를 남겨야 보이며, 없어도 Agent는 health·로그·호스트 메�
 | [agent/README.md](agent/README.md) | Agent 설정, 전체 환경변수 레퍼런스, Compose 설정 |
 | [docs/NOTIFICATION_SETUP.ko.md](docs/NOTIFICATION_SETUP.ko.md) | Telegram / Discord / Slack 채널 자격증명·설정 |
 | [docs/BACKUP_RESTORE.ko.md](docs/BACKUP_RESTORE.ko.md) | `/app/data` 디렉토리 백업·복원 |
-| [docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md) | OpenTelemetry 계측으로 요청별 API 수집(언어별) |
-| [docs/API_REQUEST_LOGGING_GUIDE.md](docs/API_REQUEST_LOGGING_GUIDE.md) | `request_id` / trace id로 로그-요청 연결 |
-| [docs/OTEL_ONLY_MIGRATION.md](docs/OTEL_ONLY_MIGRATION.md) | 로그·트레이스는 OpenTelemetry OTLP/HTTP로만 수집 |
+| [docs/OTEL_API_INSTRUMENTATION.ko.md](docs/OTEL_API_INSTRUMENTATION.ko.md) | OpenTelemetry 계측으로 요청/응답 헤더·바디 수집(언어별) |
 | [docs/CHANGELOG.md](docs/CHANGELOG.md) | 기능·리팩토링·버그픽스 이력 |
 
 ## 레퍼런스
