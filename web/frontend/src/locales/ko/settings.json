@@ -1,155 +1,161 @@
 {
-    "settings": {
-        "title": "환경 설정",
-        "subtitle": "애플리케이션 및 서비스 설정 구성",
-        "advanced": "고급 모니터링 설정",
-        "advancedDesc": "보안 환경을 위한 복잡한 헬스 체크, 레거시 프로토콜 지원 및 네트워크 터널링을 구성합니다.",
-        "dirty": "미저장 변경사항",
-        "saving": "저장 중...",
-        "apply": "변경 사항 적용",
-        "discard": "취소",
-        "errorsCount": "{{count}}개 오류",
-        "checkInputs": "입력값을 확인해주세요",
-        "discardConfirm": "저장하지 않은 변경 사항이 있습니다. 정말 취소하시겠습니까?",
-        "discardSuccess": "변경 사항이 취소되었습니다.",
-        "saveSuccess": "설정이 저장되었습니다.",
-        "saveError": "설정 저장에 실패했습니다.",
-        "general": {
-            "title": "일반 설정",
-            "description": "시스템 전체 모니터링 구성",
-            "descriptionApp": "애플리케이션 기본 설정 및 글로벌 구성"
-        },
-        "alerts": {
-            "title": "알림 설정",
-            "description": "알림 채널 및 규칙 관리",
-            "descriptionAlerts": "알림 채널 및 알림 규칙 구성",
-            "integrations": "통합 및 알림"
-        },
-        "security": {
-            "title": "보안 및 권한",
-            "description": "인증 및 권한 부여 설정",
-            "descriptionSecurity": "보안 정책 및 액세스 제어 관리",
-            "dashboard": "보안 대시보드",
-            "subtitle": "인프라 전체의 보안 이벤트 및 위협 모니터링",
-            "score": "보안 점수",
-            "threats": "활성 위협",
-            "compliance": "컴플라이언스",
-            "noIssues": "심각한 문제 없음",
-            "secure": "모든 시스템 보안 유지됨",
-            "passed": "모든 체크 통과됨",
-            "events": "최근 보안 이벤트"
-        },
-        "serviceSpecific": "서비스별 설정",
-        "protocols": {
-            "title": "프로토콜 선택",
-            "description": "액티브 헬스 프로브에 사용할 하위 전송 프로토콜을 선택합니다. gRPC 및 ICMP는 백엔드 간 통신에 최적화되어 있습니다."
-        },
-        "proxy": {
-            "title": "프록시 및 터널링",
-            "address": "프록시 주소",
-            "addressPlaceholder": "예: proxy.internal.network:8080",
-            "method": "터널 방법",
-            "enabledMsg": "터널링이 활성화되었습니다. 모든 헬스 체크는 보안 게이트웨이를 통해 라우팅됩니다. 지연 시간 지표에는 터널 오버헤드가 포함됩니다.",
-            "methods": {
-                "wireguard": "WireGuard 터널",
-                "socks5": "SOCKS5 프록시",
-                "http": "HTTP Connect",
-                "legacy": "레거시 VPN 래퍼"
-            }
-        },
-        "editor": {
-            "title": "페이로드 스크립팅",
-            "runTest": "테스트 실행",
-            "copy": "복사",
-            "validated": "스크립트 검증됨 - 구문 오류가 발견되지 않았습니다."
-        },
-        "envHealth": {
-            "title": "환경 상태",
-            "status": "상태",
-            "lastPing": "최근 핑",
-            "successRate": "성공률",
-            "connected": "연결됨",
-            "disconnected": "연결 끊김"
-        },
-        "configGroups": {
-            "title": "구성 그룹",
-            "intervals": "간격 및 타임아웃",
-            "ssl": "SSL/TLS 레거시 플래그",
-            "metadata": "메타데이터 및 태그"
-        },
-        "help": {
-            "title": "도움이 필요하신가요?",
-            "desc": "레거시 프로토콜에는 특정 암호화 스위트가 필요합니다. 호환성 표는 설명서를 확인하세요.",
-            "button": "설명서 읽기"
-        },
-        "saved": "저장되었습니다.",
-        "interface": {
-            "title": "인터페이스",
-            "subtitle": "언어, 테마, 시간대 설정",
-            "language": "언어",
-            "languageDesc": "대시보드 표시 언어를 선택합니다",
-            "theme": "테마",
-            "themeDesc": "라이트 또는 다크 모드를 선택합니다",
-            "light": "라이트",
-            "dark": "다크",
-            "timezone": "시간대",
-            "timezoneDesc": "날짜 및 시간 표시에 사용할 시간대"
-        },
-        "checkDefaults": {
-            "title": "체크 기본값",
-            "subtitle": "새 서비스 생성 시 적용될 기본값",
-            "interval": "기본 체크 간격",
-            "intervalDesc": "새 서비스의 기본 헬스체크 간격 (초)",
-            "intervalError": "간격은 1초 이상이어야 합니다",
-            "timeout": "기본 타임아웃",
-            "timeoutDesc": "새 서비스의 기본 응답 대기 시간 (밀리초)",
-            "timeoutError": "타임아웃은 100ms 이상이어야 합니다",
-            "sec": "초"
-        },
-        "alertThreshold": {
-            "title": "알림 임계값",
-            "subtitle": "알림 발송 조건 설정",
-            "consecutiveFailures": "연속 실패 횟수",
-            "consecutiveFailuresDesc": "알림을 발송하기 전 필요한 연속 실패 횟수",
-            "times": "회"
-        },
-        "retention": {
-            "title": "데이터 보존",
-            "subtitle": "메트릭 및 로그 데이터 보존 기간",
-            "metrics": "메트릭 보존 기간",
-            "metricsDesc": "수집된 시스템 메트릭 데이터 보존 기간",
-            "logs": "로그 보존 기간",
-            "logsDesc": "에러 로그 데이터 보존 기간"
-        },
-        "audit": {
-            "title": "바디 열람 감사 로그",
-            "subtitle": "관리자가 캡처된 요청/응답 본문을 열람한 기록",
-            "empty": "열람 기록이 없습니다",
-            "viewedTrace": "Trace {{trace}} 본문 열람",
-            "bodyCount": "본문 {{count}}건"
-        },
-        "accountReset": {
-            "title": "계정 초기화",
-            "subtitle": "관리자 계정을 삭제하고 최초 설정 상태로 초기화합니다",
-            "button": "계정 초기화",
-            "confirmTitle": "정말 초기화하시겠습니까?",
-            "confirmDesc": "모든 계정 정보가 삭제되며, 다시 계정을 생성해야 합니다. 이 작업은 되돌릴 수 없습니다.",
-            "confirmButton": "초기화",
-            "cancel": "취소",
-            "success": "계정이 초기화되었습니다. 다시 로그인해 주세요.",
-            "error": "계정 초기화에 실패했습니다.",
-            "demoNotice": "데모 환경에서는 계정 초기화를 사용할 수 없습니다."
-        },
-        "dataManagement": {
-            "title": "데이터 관리",
-            "subtitle": "서비스 설정 내보내기 및 API 정보",
-            "exportServices": "서비스 설정 내보내기",
-            "exportServicesDesc": "현재 등록된 모든 서비스 설정을 JSON 파일로 내보냅니다",
-            "export": "내보내기",
-            "exportSuccess": "서비스 설정이 내보내기되었습니다",
-            "exportError": "내보내기에 실패했습니다",
-            "apiEndpoint": "API 엔드포인트",
-            "apiEndpointDesc": "현재 연결된 백엔드 API 주소"
-        }
+  "settings": {
+    "title": "환경 설정",
+    "subtitle": "애플리케이션 및 서비스 설정 구성",
+    "advanced": "고급 모니터링 설정",
+    "advancedDesc": "보안 환경을 위한 복잡한 헬스 체크, 레거시 프로토콜 지원 및 네트워크 터널링을 구성합니다.",
+    "dirty": "미저장 변경사항",
+    "saving": "저장 중...",
+    "apply": "변경 사항 적용",
+    "discard": "취소",
+    "errorsCount": "{{count}}개 오류",
+    "checkInputs": "입력값을 확인해주세요",
+    "discardConfirm": "저장하지 않은 변경 사항이 있습니다. 정말 취소하시겠습니까?",
+    "discardSuccess": "변경 사항이 취소되었습니다.",
+    "saveSuccess": "설정이 저장되었습니다.",
+    "saveError": "설정 저장에 실패했습니다.",
+    "general": {
+      "title": "일반 설정",
+      "description": "시스템 전체 모니터링 구성",
+      "descriptionApp": "애플리케이션 기본 설정 및 글로벌 구성"
+    },
+    "alerts": {
+      "title": "알림 설정",
+      "description": "알림 채널 및 규칙 관리",
+      "descriptionAlerts": "알림 채널 및 알림 규칙 구성",
+      "integrations": "통합 및 알림"
+    },
+    "security": {
+      "title": "보안 및 권한",
+      "description": "인증 및 권한 부여 설정",
+      "descriptionSecurity": "보안 정책 및 액세스 제어 관리",
+      "dashboard": "보안 대시보드",
+      "subtitle": "인프라 전체의 보안 이벤트 및 위협 모니터링",
+      "score": "보안 점수",
+      "threats": "활성 위협",
+      "compliance": "컴플라이언스",
+      "noIssues": "심각한 문제 없음",
+      "secure": "모든 시스템 보안 유지됨",
+      "passed": "모든 체크 통과됨",
+      "events": "최근 보안 이벤트"
+    },
+    "serviceSpecific": "서비스별 설정",
+    "protocols": {
+      "title": "프로토콜 선택",
+      "description": "액티브 헬스 프로브에 사용할 하위 전송 프로토콜을 선택합니다. gRPC 및 ICMP는 백엔드 간 통신에 최적화되어 있습니다."
+    },
+    "proxy": {
+      "title": "프록시 및 터널링",
+      "address": "프록시 주소",
+      "addressPlaceholder": "예: proxy.internal.network:8080",
+      "method": "터널 방법",
+      "enabledMsg": "터널링이 활성화되었습니다. 모든 헬스 체크는 보안 게이트웨이를 통해 라우팅됩니다. 지연 시간 지표에는 터널 오버헤드가 포함됩니다.",
+      "methods": {
+        "wireguard": "WireGuard 터널",
+        "socks5": "SOCKS5 프록시",
+        "http": "HTTP Connect",
+        "legacy": "레거시 VPN 래퍼"
+      }
+    },
+    "editor": {
+      "title": "페이로드 스크립팅",
+      "runTest": "테스트 실행",
+      "copy": "복사",
+      "validated": "스크립트 검증됨 - 구문 오류가 발견되지 않았습니다."
+    },
+    "envHealth": {
+      "title": "환경 상태",
+      "status": "상태",
+      "lastPing": "최근 핑",
+      "successRate": "성공률",
+      "connected": "연결됨",
+      "disconnected": "연결 끊김"
+    },
+    "configGroups": {
+      "title": "구성 그룹",
+      "intervals": "간격 및 타임아웃",
+      "ssl": "SSL/TLS 레거시 플래그",
+      "metadata": "메타데이터 및 태그"
+    },
+    "help": {
+      "title": "도움이 필요하신가요?",
+      "desc": "레거시 프로토콜에는 특정 암호화 스위트가 필요합니다. 호환성 표는 설명서를 확인하세요.",
+      "button": "설명서 읽기"
+    },
+    "saved": "저장되었습니다.",
+    "interface": {
+      "title": "인터페이스",
+      "subtitle": "언어, 테마, 시간대 설정",
+      "language": "언어",
+      "languageDesc": "대시보드 표시 언어를 선택합니다",
+      "theme": "테마",
+      "themeDesc": "라이트 또는 다크 모드를 선택합니다",
+      "light": "라이트",
+      "dark": "다크",
+      "timezone": "시간대",
+      "timezoneDesc": "날짜 및 시간 표시에 사용할 시간대"
+    },
+    "checkDefaults": {
+      "title": "체크 기본값",
+      "subtitle": "새 서비스 생성 시 적용될 기본값",
+      "interval": "기본 체크 간격",
+      "intervalDesc": "새 서비스의 기본 헬스체크 간격 (초)",
+      "intervalError": "간격은 1초 이상이어야 합니다",
+      "timeout": "기본 타임아웃",
+      "timeoutDesc": "새 서비스의 기본 응답 대기 시간 (밀리초)",
+      "timeoutError": "타임아웃은 100ms 이상이어야 합니다",
+      "sec": "초"
+    },
+    "alertThreshold": {
+      "title": "알림 임계값",
+      "subtitle": "알림 발송 조건 설정",
+      "consecutiveFailures": "연속 실패 횟수",
+      "consecutiveFailuresDesc": "알림을 발송하기 전 필요한 연속 실패 횟수",
+      "times": "회"
+    },
+    "retention": {
+      "title": "데이터 보존",
+      "subtitle": "메트릭 및 로그 데이터 보존 기간",
+      "metrics": "메트릭 보존 기간",
+      "metricsDesc": "수집된 시스템 메트릭 데이터 보존 기간",
+      "logs": "로그 보존 기간",
+      "logsDesc": "에러 로그 데이터 보존 기간"
+    },
+    "audit": {
+      "title": "바디 열람 감사 로그",
+      "subtitle": "관리자가 캡처된 요청/응답 본문을 열람한 기록",
+      "empty": "열람 기록이 없습니다",
+      "viewedTrace": "Trace {{trace}} 본문 열람",
+      "bodyCount": "본문 {{count}}건"
+    },
+    "accountReset": {
+      "title": "계정 초기화",
+      "subtitle": "관리자 계정을 삭제하고 최초 설정 상태로 초기화합니다",
+      "button": "계정 초기화",
+      "confirmTitle": "정말 초기화하시겠습니까?",
+      "confirmDesc": "모든 계정 정보가 삭제되며, 다시 계정을 생성해야 합니다. 이 작업은 되돌릴 수 없습니다.",
+      "confirmButton": "초기화",
+      "cancel": "취소",
+      "success": "계정이 초기화되었습니다. 다시 로그인해 주세요.",
+      "error": "계정 초기화에 실패했습니다.",
+      "demoNotice": "데모 환경에서는 계정 초기화를 사용할 수 없습니다."
+    },
+    "dataManagement": {
+      "title": "데이터 관리",
+      "subtitle": "서비스 설정 내보내기 및 API 정보",
+      "exportServices": "서비스 설정 내보내기",
+      "exportServicesDesc": "현재 등록된 모든 서비스 설정을 JSON 파일로 내보냅니다",
+      "export": "내보내기",
+      "exportSuccess": "서비스 설정이 내보내기되었습니다",
+      "exportError": "내보내기에 실패했습니다",
+      "apiEndpoint": "API 엔드포인트",
+      "apiEndpointDesc": "현재 연결된 백엔드 API 주소"
+    },
+    "account": {
+      "title": "계정 · 인증",
+      "subtitle": "로그인 계정과 세션 정보",
+      "role": "역할",
+      "session": "세션 JWT 7일 · 로컬 비밀번호"
     }
+  }
 }

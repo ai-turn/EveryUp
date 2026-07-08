@@ -5,20 +5,25 @@ import { getUptimeTextClass } from '../uptimeTone';
 
 interface AgentCheckHistoryBarProps {
   agentId: string;
-  serviceKey: string;
+  /** Omit for a project-level rollup across all of the agent's services. */
+  serviceKey?: string;
   refreshKey?: number;
+  className?: string;
 }
 
 const DAYS = 90;
 
-export function AgentCheckHistoryBar({ agentId, serviceKey, refreshKey }: AgentCheckHistoryBarProps) {
+export function AgentCheckHistoryBar({ agentId, serviceKey, refreshKey, className }: AgentCheckHistoryBarProps) {
   const { t } = useTranslate();
   const [days, setDays] = useState<ServiceUptimeDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [hovered, setHovered] = useState<ServiceUptimeDay | null>(null);
 
   useEffect(() => {
-    api.getAgentServiceUptime(agentId, serviceKey, DAYS)
+    const fetchUptime = serviceKey
+      ? api.getAgentServiceUptime(agentId, serviceKey, DAYS)
+      : api.getAgentUptime(agentId, DAYS);
+    fetchUptime
       .then(setDays)
       .catch(() => setDays([]))
       .finally(() => setLoading(false));
@@ -45,7 +50,7 @@ export function AgentCheckHistoryBar({ agentId, serviceKey, refreshKey }: AgentC
     : 100;
 
   return (
-    <div className="mb-8 p-6 rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-chart-bg">
+    <div className={`p-6 rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-chart-bg ${className ?? 'mb-8'}`}>
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-slate-900 dark:text-white font-bold text-lg">

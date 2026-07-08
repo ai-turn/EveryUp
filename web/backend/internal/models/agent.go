@@ -24,6 +24,17 @@ type ServiceUptimeDay struct {
 	TotalChecks   int     `json:"totalChecks"`
 }
 
+// AgentIncident is one unhealthy episode of an agent service, derived from
+// consecutive healthy=0 runs in agent_service_history.
+type AgentIncident struct {
+	Key         string     `json:"key"`
+	ServiceName string     `json:"serviceName"`
+	StartedAt   time.Time  `json:"startedAt"`
+	EndedAt     *time.Time `json:"endedAt,omitempty"` // nil while still unhealthy
+	DurationSec int64      `json:"durationSec"`
+	Active      bool       `json:"active"`
+}
+
 type Agent struct {
 	ID         string    `json:"id"`
 	Name       string    `json:"name"`

@@ -150,6 +150,22 @@ function extractCapturedBodies(spans: TraceSpan[]): CapturedBody[] {
   );
 }
 
+// Non-admins get captured bodies stripped server-side (body deleted,
+// body_redacted=true). Count them so the panel can show an access notice
+// instead of silently hiding the section.
+function countRedactedBodies(spans: TraceSpan[]): number {
+  return spans.reduce(
+    (n, span) =>
+      n +
+      (span.events ?? []).filter(
+        (event) =>
+          (event.name === 'request_body_masked' || event.name === 'response_body_masked') &&
+          attrBool(event.attributes, 'body_redacted'),
+      ).length,
+    0,
+  );
+}
+
 function formatCapturedBodyCopy(item: CapturedBody): string {
   return [
     `${item.label.toLowerCase()} body`,
@@ -257,6 +273,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
   const logs = data?.logs ?? [];
   const apiRequests = data?.apiRequests ?? [];
   const capturedBodies = extractCapturedBodies(spans);
+  const redactedBodyCount = countRedactedBodies(spans);
   const capturedHeaders = extractCapturedHeaders(spans);
   const isEmpty = !loading && !error && spans.length === 0 && logs.length === 0 && apiRequests.length === 0;
 
@@ -353,6 +370,9 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
           {!loading && !error && capturedBodies.length > 0 && (
             <CapturedBodyList items={capturedBodies} onCopy={copy} />
           )}
+          {!loading && !error && capturedBodies.length === 0 && redactedBodyCount > 0 && (
+            <RestrictedBodyNotice count={redactedBodyCount} />
+          )}
           {!loading && !error && apiRequests.length > 0 && (
             <ApiRequestList items={apiRequests} onCopy={copy} />
           )}
@@ -377,38 +397,68 @@ function SectionHeader({ icon, title, count }: { icon: string; title: string; co
   );
 }
 
+// Solid bar color for the waterfall track — error wins, else by span kind.
+function spanBarColor(span: TraceSpan): string {
+  if (span.statusCode === 'ERROR') return 'bg-red-500';
+  switch (span.kind) {
+    case 'SERVER':   return 'bg-emerald-500';
+    case 'CLIENT':   return 'bg-sky-500';
+    case 'PRODUCER':
+    case 'CONSUMER': return 'bg-amber-500';
+    default:         return 'bg-slate-400';
+  }
+}
+
 function SpanList({ spans, onCopy }: { spans: TraceSpan[]; onCopy: CopyFn }) {
+  // Waterfall bounds: earliest start → latest end across the trace.
+  const traceStart = Math.min(...spans.map((s) => s.startUnixNano));
+  const traceEnd = Math.max(...spans.map((s) => s.endUnixNano));
+  const total = Math.max(traceEnd - traceStart, 1);
+
   return (
     <section>
       <SectionHeader icon="account_tree" title="Spans" count={spans.length} />
       <ul className="space-y-1.5">
-        {spans.map((span) => (
-          <li
-            key={`${span.traceId}-${span.spanId}`}
-            className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-sm sm:flex-nowrap"
-          >
-            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold shrink-0 ${spanKindBadge(span.kind)}`}>
-              {span.kind}
-            </span>
-            <span className="font-mono text-slate-700 dark:text-text-base-dark truncate flex-1 min-w-0" title={span.name}>
-              {span.name || '(unnamed)'}
-            </span>
-            {span.serviceName && (
-              <span className="text-slate-500 dark:text-text-muted-dark shrink-0">
-                {span.serviceName}
-              </span>
-            )}
-            {span.statusCode && span.statusCode !== 'UNSET' && (
-              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold shrink-0 ${statusBadge(span.statusCode)}`}>
-                {span.statusCode}
-              </span>
-            )}
-            <span className="text-slate-500 dark:text-text-muted-dark font-mono shrink-0">
-              {formatDuration(span.durationMs)}
-            </span>
-            {copyButton(() => onCopy(formatSpanCopy(span)), 'Copy span row')}
-          </li>
-        ))}
+        {spans.map((span) => {
+          const leftPct = Math.min(Math.max(((span.startUnixNano - traceStart) / total) * 100, 0), 100);
+          const widthPct = Math.min(Math.max(((span.endUnixNano - span.startUnixNano) / total) * 100, 0.75), 100 - leftPct);
+          return (
+            <li
+              key={`${span.traceId}-${span.spanId}`}
+              className="px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-sm"
+            >
+              <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold shrink-0 ${spanKindBadge(span.kind)}`}>
+                  {span.kind}
+                </span>
+                <span className="font-mono text-slate-700 dark:text-text-base-dark truncate flex-1 min-w-0" title={span.name}>
+                  {span.name || '(unnamed)'}
+                </span>
+                {span.serviceName && (
+                  <span className="text-slate-500 dark:text-text-muted-dark shrink-0">
+                    {span.serviceName}
+                  </span>
+                )}
+                {span.statusCode && span.statusCode !== 'UNSET' && (
+                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold shrink-0 ${statusBadge(span.statusCode)}`}>
+                    {span.statusCode}
+                  </span>
+                )}
+                <span className="text-slate-500 dark:text-text-muted-dark font-mono shrink-0">
+                  {formatDuration(span.durationMs)}
+                </span>
+                {copyButton(() => onCopy(formatSpanCopy(span)), 'Copy span row')}
+              </div>
+              {/* Waterfall track: bar positioned/sized by the span's time window */}
+              <div className="relative mt-1.5 h-1.5 w-full rounded bg-slate-200/70 dark:bg-ui-active-dark">
+                <div
+                  className={`absolute top-0 h-full rounded ${spanBarColor(span)}`}
+                  style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
+                />
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
@@ -463,10 +513,33 @@ function CapturedHeadersList({ items, onCopy }: { items: CapturedHeaders[]; onCo
   );
 }
 
+// Captured request/response bodies are admin-only; the backend audit-logs every
+// admin view on fetch. Non-admins never reach this list (see RestrictedBodyNotice).
+function RestrictedBodyNotice({ count }: { count: number }) {
+  return (
+    <section>
+      <SectionHeader icon="data_object" title="Captured bodies" count={count} />
+      <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm dark:border-ui-border-dark dark:bg-ui-hover-dark">
+        <MaterialIcon name="lock" className="text-lg text-amber-500 shrink-0" />
+        <div>
+          <p className="font-semibold text-slate-700 dark:text-text-base-dark">Admin only</p>
+          <p className="text-slate-500 dark:text-text-muted-dark">
+            You don't have permission to view captured bodies.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function CapturedBodyList({ items, onCopy }: { items: CapturedBody[]; onCopy: CopyFn }) {
   return (
     <section>
       <SectionHeader icon="data_object" title="Captured bodies" count={items.length} />
+      <p className="mb-2 flex items-center gap-1.5 text-xs text-slate-400 dark:text-text-dim-dark">
+        <MaterialIcon name="policy" className="text-sm" />
+        Admin only · every view is recorded in the audit log
+      </p>
       <ul className="space-y-2">
         {items.map((item) => (
           <li

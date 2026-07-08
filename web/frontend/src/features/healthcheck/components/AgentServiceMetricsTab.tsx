@@ -123,19 +123,9 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey }: Prop
     <div className="p-6 rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-chart-bg">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-3 min-w-0">
-          <select
-            value={selected}
-            onChange={(e) => setSelected(e.target.value)}
-            className="max-w-xs truncate rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-3 py-1.5 text-sm text-slate-900 dark:text-white"
-          >
-            {names.map((n) => (
-              <option key={`${n.metricName}:${n.metricType}`} value={n.metricName}>
-                {n.metricName}
-              </option>
-            ))}
-          </select>
+          <span className="font-mono text-sm font-semibold text-slate-900 dark:text-white truncate">{selected}</span>
           {selectedMeta && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark shrink-0">
               {selectedMeta.metricType}{unit ? ` · ${unit}` : ''}
             </span>
           )}
@@ -218,6 +208,51 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey }: Prop
           )}
         </>
       )}
+
+      {/* All exported series — row click swaps the chart (ver2: 전체 시리즈) */}
+      <div className="mt-6 border-t border-slate-100 dark:border-ui-border-dark pt-4">
+        <div className="flex items-center gap-2 mb-2">
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{t('전체 시리즈')}</h3>
+          <span className="text-xs text-slate-400 dark:text-text-dim-dark">{t('행 클릭 → 차트 표시')}</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-2xs font-semibold uppercase tracking-wide text-slate-400 dark:text-text-dim-dark border-b border-slate-100 dark:border-ui-border-dark">
+                <th className="py-1.5 pr-3 font-semibold">{t('시리즈')}</th>
+                <th className="py-1.5 pr-3 font-semibold">{t('타입')}</th>
+                <th className="py-1.5 pr-3 font-semibold">{t('단위')}</th>
+                <th className="py-1.5 text-right font-semibold">{t('마지막 수신')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {names.map((n) => {
+                const active = n.metricName === selected;
+                return (
+                  <tr
+                    key={`${n.metricName}:${n.metricType}`}
+                    onClick={() => setSelected(n.metricName)}
+                    className={`cursor-pointer border-b border-slate-50 dark:border-ui-border-dark/50 last:border-0 transition-colors ${
+                      active
+                        ? 'bg-primary/5 dark:bg-primary/10'
+                        : 'hover:bg-slate-50 dark:hover:bg-ui-hover-dark'
+                    }`}
+                  >
+                    <td className={`py-2 pr-3 font-mono text-xs ${active ? 'font-semibold text-primary' : 'text-slate-700 dark:text-text-secondary-dark'}`}>
+                      {n.metricName}
+                    </td>
+                    <td className="py-2 pr-3 text-xs text-slate-500 dark:text-text-muted-dark">{n.metricType}</td>
+                    <td className="py-2 pr-3 text-xs text-slate-500 dark:text-text-muted-dark">{n.unit || '—'}</td>
+                    <td className="py-2 text-right text-xs font-mono text-slate-400 dark:text-text-dim-dark whitespace-nowrap">
+                      {new Date(n.lastAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

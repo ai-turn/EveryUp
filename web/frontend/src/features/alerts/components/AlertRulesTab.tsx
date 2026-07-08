@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon, EmptyState, ConfirmDialog } from '../../../components/common';
 import { api, type AlertRule, type NotificationChannel, type AgentServiceFlat, type ConnectedAgent } from '../../../services/api';
+import { AlertRuleForm } from './AlertRuleForm';
 
 const SEVERITY_DOT: Record<string, string> = {
   critical: 'bg-red-500',
@@ -156,7 +156,6 @@ interface AlertRulesTabProps {
 
 export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
   const { t } = useTranslation(['alerts', 'common']);
-  const navigate = useNavigate();
   const [rules, setRules] = useState<AlertRule[]>([]);
   const [channels, setChannels] = useState<NotificationChannel[]>([]);
   const [agentServices, setAgentServices] = useState<AgentServiceFlat[]>([]);
@@ -165,6 +164,12 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Inline rule form (replaces the /alerts/rules/new|edit page navigation)
+  const [formOpen, setFormOpen] = useState(false);
+  const [formRule, setFormRule] = useState<AlertRule | undefined>(undefined);
+  const [formLoading, setFormLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filters
   const [categoryFilter, setCategoryFilter] = useState<CategoryKey>('all');
@@ -236,8 +241,25 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
     }
   };
 
-  const handleEdit = (rule: AlertRule) => navigate(`/alerts/rules/${rule.id}/edit`);
-  const handleAddRule = () => navigate('/alerts/rules/new');
+  const closeForm = () => { setFormOpen(false); setFormRule(undefined); };
+  const onFormSuccess = () => { closeForm(); loadData(); };
+
+  const handleAddRule = () => { setFormRule(undefined); setFormLoading(false); setFormOpen(true); };
+
+  // Edit fetches the full rule (list rows may omit channelIds) — same as the old page.
+  const handleEdit = async (rule: AlertRule) => {
+    setFormRule(undefined);
+    setFormOpen(true);
+    setFormLoading(true);
+    try {
+      setFormRule(await api.getAlertRuleById(rule.id));
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+      closeForm();
+    } finally {
+      setFormLoading(false);
+    }
+  };
 
   const filteredRules = useMemo(() => {
     const filtered = rules.filter(r => {
@@ -274,6 +296,57 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
     setSearchQuery('');
   };
 
+  // Inline expanding form — reuses AlertRuleForm; submit button lives here and
+  // targets the form via form="alert-rule-form" (same wiring as the old page).
+  const inlineForm = formOpen ? (
+    <div className="mb-5 rounded-xl border border-primary/40 bg-white dark:bg-bg-surface-dark overflow-hidden">
+      <div className="flex items-center justify-between gap-4 px-6 py-3 border-b border-slate-200 dark:border-ui-border-dark">
+        <h3 className="text-base font-bold text-slate-900 dark:text-white">
+          {formRule
+            ? t('alerts.rules.editTitle', { defaultValue: '규칙 편집' })
+            : t('alerts.rules.newTitle', { defaultValue: '새 알림 규칙' })}
+        </h3>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={closeForm}
+            className="px-4 py-2 text-sm font-bold border border-slate-200 dark:border-ui-border-dark rounded-lg text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors"
+          >
+            {t('common.cancel')}
+          </button>
+          <button
+            type="submit"
+            form="alert-rule-form"
+            disabled={formLoading || isSubmitting}
+            className="px-5 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-all shadow-sm active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
+          >
+            {isSubmitting ? (
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <>
+                <MaterialIcon name="check" className="text-sm" />
+                {formRule ? t('common.save') : t('alerts.rules.create')}
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+      {formLoading ? (
+        <div className="flex min-h-40 items-center justify-center">
+          <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+        </div>
+      ) : (
+        <AlertRuleForm
+          rule={formRule}
+          channels={channels}
+          onSuccess={onFormSuccess}
+          onCancel={closeForm}
+          onSubmittingChange={setIsSubmitting}
+        />
+      )}
+    </div>
+  ) : null;
+
   if (isLoading) {
     return (
       <div className="p-8 text-center text-slate-500">
@@ -285,18 +358,24 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
 
   if (rules.length === 0) {
     return (
-      <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl">
-        <EmptyState
-          icon="rule"
-          title={t('alerts.rules.noRules')}
-          action={{ label: t('alerts.rules.addRule'), onClick: handleAddRule }}
-        />
-      </div>
+      <>
+        {inlineForm}
+        {!formOpen && (
+          <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl">
+            <EmptyState
+              icon="rule"
+              title={t('alerts.rules.noRules')}
+              action={{ label: t('alerts.rules.addRule'), onClick: handleAddRule }}
+            />
+          </div>
+        )}
+      </>
     );
   }
 
   return (
     <>
+      {inlineForm}
       {/* Filter bar — category pills + severity/enabled + search */}
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <div className="inline-flex bg-slate-100 dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-lg p-0.5">

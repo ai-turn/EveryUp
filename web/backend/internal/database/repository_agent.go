@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -488,12 +489,28 @@ ORDER BY recorded_at`,
 // calendar date here matches how the bar chart reads days.
 func (r *AgentRepository) GetServiceUptimeByDay(agentID, key string, days int) ([]models.ServiceUptimeDay, error) {
 	since := time.Now().AddDate(0, 0, -days)
-	rows, err := DB.Query(`
+	return uptimeByDay(`
 SELECT healthy, recorded_at
 FROM agent_service_history
 WHERE agent_id = ? AND key = ? AND recorded_at >= ?
 ORDER BY recorded_at`,
 		agentID, key, since)
+}
+
+// GetAgentUptimeByDay rolls daily uptime up across every service of one agent
+// (project dashboard: 30-day uptime KPI + 90-day calendar).
+func (r *AgentRepository) GetAgentUptimeByDay(agentID string, days int) ([]models.ServiceUptimeDay, error) {
+	since := time.Now().AddDate(0, 0, -days)
+	return uptimeByDay(`
+SELECT healthy, recorded_at
+FROM agent_service_history
+WHERE agent_id = ? AND recorded_at >= ?
+ORDER BY recorded_at`,
+		agentID, since)
+}
+
+func uptimeByDay(query string, args ...interface{}) ([]models.ServiceUptimeDay, error) {
+	rows, err := DB.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -535,6 +552,75 @@ ORDER BY recorded_at`,
 		out = append(out, d)
 	}
 	return out, nil
+}
+
+// GetAgentIncidents derives unhealthy episodes per service from
+// agent_service_history: a run of healthy=0 checks is one incident, closed by
+// the first healthy check after it. Newest first, capped at limit.
+func (r *AgentRepository) GetAgentIncidents(agentID string, days, limit int) ([]models.AgentIncident, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 20
+	}
+	since := time.Now().AddDate(0, 0, -days)
+	rows, err := DB.Query(`
+SELECT h.key, COALESCE(s.name, h.key), h.healthy, h.recorded_at
+FROM agent_service_history h
+LEFT JOIN agent_services s ON s.agent_id = h.agent_id AND s.key = h.key
+WHERE h.agent_id = ? AND h.recorded_at >= ?
+ORDER BY h.key, h.recorded_at`,
+		agentID, since)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	incidents := make([]models.AgentIncident, 0)
+	var open *models.AgentIncident
+	prevKey := ""
+	for rows.Next() {
+		var key, name string
+		var healthy int
+		var recordedAt time.Time
+		if err := rows.Scan(&key, &name, &healthy, &recordedAt); err != nil {
+			return nil, err
+		}
+		if key != prevKey {
+			// key boundary: an episode still open for the previous key stays active
+			if open != nil {
+				incidents = append(incidents, *open)
+				open = nil
+			}
+			prevKey = key
+		}
+		switch {
+		case healthy == 0 && open == nil:
+			open = &models.AgentIncident{Key: key, ServiceName: name, StartedAt: recordedAt, Active: true}
+		case healthy == 1 && open != nil:
+			ended := recordedAt
+			open.EndedAt = &ended
+			open.DurationSec = int64(ended.Sub(open.StartedAt).Seconds())
+			open.Active = false
+			incidents = append(incidents, *open)
+			open = nil
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if open != nil {
+		incidents = append(incidents, *open)
+	}
+	now := time.Now()
+	for i := range incidents {
+		if incidents[i].Active {
+			incidents[i].DurationSec = int64(now.Sub(incidents[i].StartedAt).Seconds())
+		}
+	}
+	sort.Slice(incidents, func(i, j int) bool { return incidents[i].StartedAt.After(incidents[j].StartedAt) })
+	if len(incidents) > limit {
+		incidents = incidents[:limit]
+	}
+	return incidents, nil
 }
 
 // GetServiceKeyEvents returns agent_events filtered to a specific service key.

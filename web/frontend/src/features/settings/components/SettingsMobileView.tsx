@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from '../../../components/common';
 import { SectionCard } from './SectionCard';
+import { AccountSection } from './AccountSection';
 import { AuditLogSection } from './AuditLogSection';
 import { env } from '../../../config/env';
 
@@ -60,6 +61,9 @@ export function SettingsMobileView({
         <h1 className="text-xl font-bold text-slate-900 dark:text-white">{t('settings.title')}</h1>
         <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{t('settings.subtitle')}</p>
       </div>
+
+      {/* Account (ver2: 계정 · 인증) */}
+      <AccountSection />
 
       {/* Interface */}
       <SectionCard icon="palette" title={t('settings.interface.title')} subtitle={t('settings.interface.subtitle')}>

@@ -14,7 +14,6 @@ const SettingsPage          = lazy(() => import('./pages/settings/SettingsPage')
 const NotFoundPage          = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const LoginPage             = lazy(() => import('./pages/auth/LoginPage').then(m => ({ default: m.LoginPage })));
 const ChannelFormPage       = lazy(() => import('./pages/alerts/ChannelFormPage').then(m => ({ default: m.ChannelFormPage })));
-const AlertRuleFormPage     = lazy(() => import('./pages/alerts/AlertRuleFormPage').then(m => ({ default: m.AlertRuleFormPage })));
 
 function PageLoader() {
   return (
@@ -57,8 +56,6 @@ function App() {
                 <Route path="/alerts" element={<AlertsPage />} />
                 <Route path="/alerts/channels/new" element={<ChannelFormPage />} />
                 <Route path="/alerts/channels/:id/edit" element={<ChannelFormPage />} />
-                <Route path="/alerts/rules/new" element={<AlertRuleFormPage />} />
-                <Route path="/alerts/rules/:id/edit" element={<AlertRuleFormPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Route>

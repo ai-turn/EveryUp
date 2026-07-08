@@ -19,7 +19,7 @@
 <p align="center">
   <a href="https://ai-turn.github.io/everyup/"><img src="https://img.shields.io/badge/Demo-live-brightgreen" alt="Live demo"></a>
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license">
-  <img src="https://img.shields.io/badge/Go-1.24-00ADD8?logo=go" alt="Go 1.24">
+  <img src="https://img.shields.io/badge/Go-1.24%2F1.25-00ADD8?logo=go" alt="Go 1.24 / 1.25">
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react" alt="React 19">
   <img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker" alt="Docker ready">
 </p>
@@ -39,7 +39,7 @@ Agent 하나만 띄우면 됩니다.
 - access log에서 파싱한 API 상태코드(method, path, status) — 프록시·코드 수정 불필요
 - 호스트 CPU·메모리·디스크·네트워크 메트릭
 - Telegram, Discord, Slack 알림
-- 선택: 앱 측 OpenTelemetry로 요청/응답 **헤더·바디** 수집 (옵트인)
+- 선택: 앱 측 OpenTelemetry로 요청/응답 **헤더**와 지원 런타임의 **바디 캡처** 수집 (옵트인)
 
 EveryUp은 두 부분으로 구성됩니다:
 
@@ -86,10 +86,14 @@ docker compose up -d
 
 `http://WEB_SERVER_IP:3001`을 열고 첫 관리자 계정을 만듭니다.
 
-### 2. Agent key 만들기
+> **운영 참고.** `/app/data`를 백업하세요. `EVERYUP_ENCRYPTION_KEY`를 설정했다면
+> 같은 64자 hex 키를 배포 secret과 함께 보관해야 합니다. 데이터베이스 백업만으로는
+> 일치하는 키 자료 없이 암호화된 Agent 키나 알림 secret을 복원할 수 없습니다.
 
-대시보드에서 **Services → Add**로 Agent를 생성하고, 표시되는 API 키(`evup_svc_…`)를
-복사합니다 — 이 키는 Agent 전용입니다.
+### 2. Agent 키 만들기
+
+대시보드의 **프로젝트** 화면(Services 페이지)에서 **프로젝트 추가**를 누릅니다.
+생성 후 표시되는 API 키(`evup_svc_…`)를 복사하세요 — 이 키는 Agent 전용입니다.
 
 ### 3. 모니터링할 서버에 Agent 추가
 
@@ -102,7 +106,6 @@ services:
   everyup-agent:
     image: aiturn/everyup-agent:latest
     container_name: everyup-agent
-    user: "0:0"
     environment:
       EVERYUP_WEB_SYNC_ENABLED: "true"
       EVERYUP_WEB_BASE_URL: "http://WEB_SERVER_IP:3001"   # 이 서버에서 접근 가능한 주소
@@ -121,27 +124,32 @@ volumes:
 docker compose up -d
 ```
 
+호스트에서 Agent가 `/var/run/docker.sock`을 읽지 못한다면 `user: "0:0"`으로 실행하거나
+[agent/docs/docker-socket-proxy.md](agent/docs/docker-socket-proxy.md)의 Docker socket proxy
+패턴을 사용하세요.
+
 약 30초 안에 Agent가 online으로 뜨고 모든 컨테이너를 자동 발견합니다 —
 health·로그·호스트 메트릭·API 상태코드가 **앱 수정 없이** 들어옵니다.
 (무엇이 어떻게 수집되는지는 아래 "수집되는 데이터" 참고.)
 
 > **(선택) 레이턴시·전체 트레이스 — 여전히 앱 무수정.** Agent compose의
-> `everyup-ebpf` 사이드카 주석을 해제하고 `docker compose up -d` 하세요. eBPF로
-> 호스트의 모든 서비스를 트레이싱합니다 — 전 언어(Go 포함), HTTPS까지 — 앱 재시작도
-> 코드도 없이. Agent가 각 스팬을 알맞은 서비스에 자동 귀속시킵니다.
+> `everyup-ebpf` 사이드카 주석을 해제하고, `BEYLA_OPEN_PORT`를 앱 포트로 설정한 뒤
+> `docker compose up -d` 하세요. eBPF로 호스트의 서비스를 트레이싱합니다 — 전 언어(Go 포함),
+> HTTPS까지 — 앱 재시작도 코드도 없이. Agent가 각 스팬을 알맞은 서비스에 자동 귀속시킵니다.
 > [agent/README.md](agent/README.md)의 "Zero-Code Tracing" 참고.
 
 ### 4. (선택) 요청/응답 헤더·바디
 
-앱을 건드리는 유일한 단계이자, 요청/응답 **헤더·바디**를 수집하는 유일한 방법입니다 —
-요청이 *왜* 실패했는지(문제의 payload, 빠진 필드)를 진단할 때 씁니다. Agent가 바로 쓸
-수 있는 OpenTelemetry 번들(Java agent jar + Node.js 부트스트랩)을 공유 볼륨에 실어
-보냅니다. 웹 UI에서 프로젝트를 열고 **OTel 계측 설정**을 실행하면 감지된 런타임에 맞춘
-`docker-compose.everyup.yml` override가 생성됩니다. 그걸로 앱을 한 번만 재시작하세요.
+앱을 건드리는 단계이며, 요청이 *왜* 실패했는지 진단할 수 있도록 더 풍부한 요청/응답
+정보를 수집하는 방법입니다. Agent가 바로 쓸 수 있는 OpenTelemetry 번들(Java agent jar +
+Node.js 부트스트랩)을 공유 볼륨에 실어 보냅니다. 웹 UI에서 프로젝트를 열고
+**OTel 계측 설정**을 실행하면 감지된 Java/Node.js 런타임에 맞춘
+`docker-compose.everyup.yml` 오버라이드가 생성됩니다. 그걸로 앱을 한 번만 재시작하세요.
 
-이 단계는 해당 서비스의 전체 트레이스·실제 레이턴시도 함께 주므로 eBPF 사이드카가 따로
-필요 없습니다. 바디는 앱 안에서 export 전에 마스킹되며 admin 전용(열람은 감사 기록)
-입니다. 전체 안내와 스팬 계약, 다른 언어(Python, 수동 SDK)는
+번들 설정은 헤더와 실제 레이턴시가 포함된 전체 트레이스를 수집합니다. 자동 바디 캡처는
+현재 Node.js에서 지원됩니다. Java, Python, 수동 SDK는 마스킹된 body span event를 명시적으로
+추가할 수 있습니다. 바디는 앱 안에서 export 전에 마스킹되며 Web에서는 관리자 전용입니다
+(열람은 감사 기록). 전체 안내와 스팬 계약, 언어별 참고는
 [docs/OTEL_API_INSTRUMENTATION.ko.md](docs/OTEL_API_INSTRUMENTATION.ko.md) 참고.
 
 ## 수집되는 데이터
@@ -166,7 +174,7 @@ health·로그·호스트 메트릭·API 상태코드가 **앱 수정 없이** �
 | 데이터 | 소스 |
 | --- | --- |
 | 요청/응답 헤더 | `http.*.header.*` 스팬 속성 |
-| 요청/응답 바디 (마스킹, admin 전용) | `*_body_masked` 스팬 이벤트 |
+| 요청/응답 바디 (Node 자동 캡처, 다른 런타임은 수동 span event; 마스킹, 관리자 전용) | `*_body_masked` 스팬 이벤트 |
 | 앱 메트릭 — JVM 메모리, GC, 커스텀 카운터 | 앱 OTel → Agent `:4318` |
 
 컨테이너 안의 파일에만 로그를 쓰는 서비스는 Agent가 볼 수 없습니다. 로그 수집을 위해
@@ -179,10 +187,14 @@ JSON)를 남겨야 보이며, 없어도 Agent는 health·로그·호스트 메�
 | --- | --- |
 | [web/README.md](web/README.md) | Web 설정, 환경변수, API 영역, 로컬 개발 |
 | [agent/README.md](agent/README.md) | Agent 설정, 전체 환경변수 레퍼런스, Compose 설정 |
+| [agent/docs/docker-socket-proxy.md](agent/docs/docker-socket-proxy.md) | 운영 환경의 더 엄격한 Docker socket 접근 구성 |
+| [agent/docs/web-connected-mode.md](agent/docs/web-connected-mode.md) | Agent 등록과 Web 동기화 동작 방식 |
+| [agent/docs/host-metrics.md](agent/docs/host-metrics.md) | 호스트 CPU, 메모리, 디스크, 네트워크 수집 세부사항 |
+| [agent/docs/otel-collector.md](agent/docs/otel-collector.md) | Agent가 생성하는 선택적 OTel collector 설정 |
 | [docs/NOTIFICATION_SETUP.ko.md](docs/NOTIFICATION_SETUP.ko.md) | Telegram / Discord / Slack 채널 자격증명·설정 |
 | [docs/BACKUP_RESTORE.ko.md](docs/BACKUP_RESTORE.ko.md) | `/app/data` 디렉토리 백업·복원 |
 | [docs/OTEL_API_INSTRUMENTATION.ko.md](docs/OTEL_API_INSTRUMENTATION.ko.md) | OpenTelemetry 계측으로 요청/응답 헤더·바디 수집(언어별) |
-| [docs/CHANGELOG.md](docs/CHANGELOG.md) | 기능·리팩토링·버그픽스 이력 |
+| [docs/CHANGELOG.md](docs/CHANGELOG.md) | 기능·리팩토링·버그픽스의 과거 이력 |
 
 ## 레퍼런스
 
@@ -193,14 +205,22 @@ Compose 프로젝트에서도 동작합니다. 가장 깔끔한 구성은 `every
 **저장소 구조**
 
 ```text
-web/                       # Web — Go API + SQLite + React 대시보드
-  docker-compose.yml
-agent/                     # Agent — Docker 디스커버리, 로그, 호스트 메트릭
-  docker-compose.yml
-docker-compose.yml         # 루트 편의용 (Web 전용)
+web/
+  backend/                 # Go 1.24 API 서버, SQLite migration, OTLP ingest
+  frontend/                # React 19 / Vite 대시보드
+  docker-compose.yml       # Web 전용 Compose 템플릿
+agent/
+  cmd/                     # Agent entrypoint
+  docs/                    # Agent 배포/운영 문서
+  instrumentation/         # 앱 측 OTel helper 번들
+  docker-compose.yml       # Agent Compose 템플릿
+docs/                      # 사용자 문서, 백업/복원, 알림, OTel 가이드
+docker-compose.yml         # 루트 편의용 Compose 파일 (Web 전용)
 ```
 
 **개발**
+
+소스 개발 사전 요구사항: Docker, pnpm, Web용 Go 1.24, Agent용 Go 1.25.
 
 ```bash
 cd web/backend && go test ./...     # 백엔드 테스트

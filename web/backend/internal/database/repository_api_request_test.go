@@ -574,3 +574,51 @@ func TestApiRequestRepo_RequestStats(t *testing.T) {
 		t.Errorf("bucket B count = %d, want 1", stats[1].Count)
 	}
 }
+
+// --- TestApiRequestRepo_RequestStats_ByAgent ---
+// Project-level Requests trend: requests from multiple services under one agent
+// roll up into the same time bucket, and other agents' requests are excluded.
+func TestApiRequestRepo_RequestStats_ByAgent(t *testing.T) {
+	openTestDB(t)
+	makeTestService(t, "svc-a")
+	makeTestService(t, "svc-b")
+
+	repo := database.NewApiRequestRepository()
+	base := time.Now().Truncate(time.Hour)
+
+	mk := func(svc, agent, path string, status int, isErr bool, dur int, at time.Time) models.ApiRequest {
+		return models.ApiRequest{
+			ServiceID: svc, AgentID: agent, RequestID: svc + agent + path + at.String(),
+			Method: "GET", Path: path, PathTemplate: path,
+			StatusCode: status, DurationMs: dur, IsError: isErr, CreatedAt: at,
+		}
+	}
+
+	rows := []models.ApiRequest{
+		// agent-x, two services, same 5-min bucket → 5 requests, 1 error.
+		mk("svc-a", "agent-x", "/a", 200, false, 10, base.Add(1*time.Second)),
+		mk("svc-a", "agent-x", "/a", 200, false, 20, base.Add(2*time.Second)),
+		mk("svc-a", "agent-x", "/a", 500, true, 30, base.Add(3*time.Second)),
+		mk("svc-b", "agent-x", "/b", 200, false, 40, base.Add(4*time.Second)),
+		mk("svc-b", "agent-x", "/b", 200, false, 50, base.Add(5*time.Second)),
+		// different agent — must be excluded by the AgentID filter.
+		mk("svc-a", "agent-other", "/a", 200, false, 99, base.Add(6*time.Second)),
+	}
+	if _, err := repo.CreateBatch(rows); err != nil {
+		t.Fatalf("CreateBatch: %v", err)
+	}
+
+	stats, err := repo.RequestStats(&models.ApiRequestFilter{AgentID: "agent-x"}, 5)
+	if err != nil {
+		t.Fatalf("RequestStats: %v", err)
+	}
+	if len(stats) != 1 {
+		t.Fatalf("buckets = %d, want 1", len(stats))
+	}
+	if stats[0].Count != 5 {
+		t.Errorf("agent-x bucket count = %d, want 5 (both services, other agent excluded)", stats[0].Count)
+	}
+	if stats[0].ErrorCount != 1 {
+		t.Errorf("agent-x bucket errors = %d, want 1", stats[0].ErrorCount)
+	}
+}

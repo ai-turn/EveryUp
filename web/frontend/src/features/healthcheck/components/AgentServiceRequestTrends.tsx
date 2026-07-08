@@ -17,7 +17,8 @@ const RANGES: { label: string; value: TimeRange; hours: number; bucketMins: numb
 
 interface Props {
   agentId: string;
-  serviceKey: string;
+  /** Omit for a project-level rollup across all of the agent's services. */
+  serviceKey?: string;
   refreshKey?: number;
 }
 
@@ -38,11 +39,15 @@ export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey }: P
 
   useEffect(() => {
     const r = RANGES.find((x) => x.value === range)!;
-    setLoading(true);
-    api.getAgentServiceRequestStats(agentId, serviceKey, {
+    const params = {
       from: new Date(Date.now() - r.hours * 3600 * 1000).toISOString(),
       bucketMins: r.bucketMins,
-    })
+    };
+    setLoading(true);
+    const fetchStats = serviceKey
+      ? api.getAgentServiceRequestStats(agentId, serviceKey, params)
+      : api.getAgentRequestStats(agentId, params);
+    fetchStats
       .then((b) => setBuckets(b ?? []))
       .catch(() => setBuckets([]))
       .finally(() => setLoading(false));

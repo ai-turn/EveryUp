@@ -35,6 +35,7 @@ import type {
   AgentEvent,
   ServiceHistoryPoint,
   ServiceUptimeDay,
+  AgentIncident,
 } from './api';
 
 // ?? Dashboard ????????????????????????????????????????????????????????????????
@@ -589,6 +590,26 @@ const mockAgentUptime: ServiceUptimeDay[] = Array.from({ length: 90 }, (_, i) =>
   totalChecks: 300,
 }));
 
+const mockAgentIncidents: AgentIncident[] = [
+  {
+    key: 'shop:payment-worker', serviceName: 'payment-worker',
+    startedAt: new Date(nowAgent - 12 * 60_000).toISOString(),
+    durationSec: 12 * 60, active: true,
+  },
+  {
+    key: 'api', serviceName: 'api',
+    startedAt: new Date(nowAgent - 3 * 86_400_000).toISOString(),
+    endedAt: new Date(nowAgent - 3 * 86_400_000 + 24 * 60_000).toISOString(),
+    durationSec: 24 * 60, active: false,
+  },
+  {
+    key: 'postgres', serviceName: 'postgres',
+    startedAt: new Date(nowAgent - 8 * 86_400_000).toISOString(),
+    endedAt: new Date(nowAgent - 8 * 86_400_000 + 8 * 60_000).toISOString(),
+    durationSec: 8 * 60, active: false,
+  },
+];
+
 const mockAgentEvents: AgentEvent[] = [
   {
     id: 1, agentId: 'agent_demo_01', time: new Date(nowAgent - 2 * 3_600_000).toISOString(),
@@ -788,6 +809,9 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   // /agents/:agentId/services/:key/request-stats
   if (/^\/agents\/[^/]+\/services\/[^/]+\/request-stats/.test(endpoint))
     return mockRequestStats() as T;
+  // /agents/:agentId/request-stats — project-level rollup (all services)
+  if (/^\/agents\/[^/]+\/request-stats/.test(endpoint))
+    return mockRequestStats() as T;
   // /agents/:agentId/services/:key/requests — payment-worker has no HTTP
   // traffic, so its API tab exercises the empty state + setup guidance.
   if (/^\/agents\/[^/]+\/services\/shop%3Apayment-worker\/requests/.test(endpoint))
@@ -810,6 +834,10 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   if (/^\/agents\/[^/]+\/services/.test(endpoint)) return mockAgentServicesFlat as T;
   // /agents/:agentId/events
   if (/^\/agents\/[^/]+\/events/.test(endpoint)) return mockAgentEvents as T;
+  // /agents/:agentId/uptime — project-level rollup
+  if (/^\/agents\/[^/]+\/uptime/.test(endpoint)) return mockAgentUptime as T;
+  // /agents/:agentId/incidents
+  if (/^\/agents\/[^/]+\/incidents/.test(endpoint)) return mockAgentIncidents as T;
   // /agents
   if (endpoint.startsWith('/agents')) return mockAgents as T;
 

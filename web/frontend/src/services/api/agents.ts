@@ -62,6 +62,16 @@ export interface ServiceUptimeDay {
   totalChecks: number;
 }
 
+// One unhealthy episode derived from service history (project dashboard).
+export interface AgentIncident {
+  key: string;
+  serviceName: string;
+  startedAt: string;
+  endedAt?: string; // absent while still unhealthy
+  durationSec: number;
+  active: boolean;
+}
+
 // One time bucket of API request aggregates for the trends chart.
 export interface ApiRequestStatBucket {
   time: string;
@@ -160,6 +170,23 @@ export function createAgentsApi(request: RequestFn) {
       if (params?.bucketMins) p.set('bucketMins', String(params.bucketMins));
       return request<ApiRequestStatBucket[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/request-stats?${p}`);
     },
+    // Project-level Requests trend: rolls up all of an agent's services.
+    getAgentRequestStats: (
+      agentId: string,
+      params?: { from?: string; to?: string; bucketMins?: number },
+    ) => {
+      const p = new URLSearchParams();
+      if (params?.from) p.set('from', params.from);
+      if (params?.to) p.set('to', params.to);
+      if (params?.bucketMins) p.set('bucketMins', String(params.bucketMins));
+      return request<ApiRequestStatBucket[]>(`/agents/${agentId}/request-stats?${p}`);
+    },
+    // Project-level uptime rollup across all of the agent's services.
+    getAgentUptime: (agentId: string, days = 90) =>
+      request<ServiceUptimeDay[]>(`/agents/${agentId}/uptime?days=${days}`),
+    // Unhealthy episodes derived from service history, newest first.
+    getAgentIncidents: (agentId: string, days = 30, limit = 20) =>
+      request<AgentIncident[]>(`/agents/${agentId}/incidents?days=${days}&limit=${limit}`),
     getAgentServiceOtelMetricNames: (agentId: string, key: string) =>
       request<OtelMetricName[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/otel-metrics`),
     getAgentServiceOtelMetricPoints: (

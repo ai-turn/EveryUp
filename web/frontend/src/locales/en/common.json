@@ -56,7 +56,7 @@
     },
     "nav": {
         "dashboard": "Main",
-        "services": "Services",
+        "services": "Projects",
         "logs": "Logs",
         "alerts": "Alerts",
         "monitoring": "Infrastructure",

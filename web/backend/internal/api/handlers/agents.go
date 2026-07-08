@@ -424,6 +424,33 @@ func (h *AgentHandler) GetServiceUptime(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": data})
 }
 
+// GetAgentUptime returns per-day uptime rolled up across all services of one agent.
+func (h *AgentHandler) GetAgentUptime(c *fiber.Ctx) error {
+	days, _ := strconv.Atoi(c.Query("days", "90"))
+	if days <= 0 || days > 365 {
+		days = 90
+	}
+	data, err := h.repo.GetAgentUptimeByDay(c.Params("agentId"), days)
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	return c.JSON(fiber.Map{"success": true, "data": data})
+}
+
+// GetAgentIncidents returns unhealthy episodes derived from service history.
+func (h *AgentHandler) GetAgentIncidents(c *fiber.Ctx) error {
+	days, _ := strconv.Atoi(c.Query("days", "30"))
+	if days <= 0 || days > 365 {
+		days = 30
+	}
+	limit, _ := strconv.Atoi(c.Query("limit", "20"))
+	data, err := h.repo.GetAgentIncidents(c.Params("agentId"), days, limit)
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	return c.JSON(fiber.Map{"success": true, "data": data})
+}
+
 // GetServiceKeyEvents returns agent_events filtered to a specific service key.
 func (h *AgentHandler) GetServiceKeyEvents(c *fiber.Ctx) error {
 	agentID := c.Params("agentId")
@@ -558,6 +585,35 @@ func (h *AgentHandler) GetServiceRequestStats(c *fiber.Ctx) error {
 	}
 	if to := c.Query("to"); to != "" {
 		if t, err2 := time.Parse(time.RFC3339, to); err2 == nil {
+			filter.To = t
+		}
+	}
+	bucketMins, _ := strconv.Atoi(c.Query("bucketMins", "5"))
+
+	stats, err := h.reqRepo.RequestStats(filter, bucketMins)
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	if stats == nil {
+		stats = []models.ApiRequestStatBucket{}
+	}
+	return c.JSON(fiber.Map{"success": true, "data": stats})
+}
+
+// GetAgentRequestStats returns time-bucketed request aggregates rolled up across
+// ALL of a project's (agent's) services — the project-level Requests trend.
+// GET /agents/:agentId/request-stats?from=&to=&bucketMins=
+func (h *AgentHandler) GetAgentRequestStats(c *fiber.Ctx) error {
+	agentID := c.Params("agentId")
+
+	filter := &models.ApiRequestFilter{AgentID: agentID}
+	if from := c.Query("from"); from != "" {
+		if t, err := time.Parse(time.RFC3339, from); err == nil {
+			filter.From = t
+		}
+	}
+	if to := c.Query("to"); to != "" {
+		if t, err := time.Parse(time.RFC3339, to); err == nil {
 			filter.To = t
 		}
 	}

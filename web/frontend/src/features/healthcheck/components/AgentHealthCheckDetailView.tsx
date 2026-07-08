@@ -1,7 +1,7 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { MaterialIcon, Toggle } from '../../../components/common';
-import { Breadcrumbs } from '../../../components/layout/Breadcrumbs';
+import { useTranslate } from '@tolgee/react';
+import { MaterialIcon } from '../../../components/common';
 import { useSpinAction } from '../../../hooks/useSpinAction';
 import { useIsMobile } from '../../../hooks/useMediaQuery';
 import type { AgentServiceFlat } from '../../../services/api';
@@ -12,42 +12,65 @@ export interface AgentHealthCheckDetailViewProps {
   agentId: string;
   serviceKey: string;
   refreshKey: number;
-  isLive: boolean;
-  onLiveToggle: (live: boolean) => void;
   onRefresh: () => void;
-  onDelete: () => void;
+}
+
+function StatusBadge({ healthy }: { healthy: boolean }) {
+  const { t } = useTranslate();
+  return (
+    <span
+      className={`text-2xs font-bold px-1.5 py-0.5 rounded border ${
+        healthy
+          ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+          : 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20'
+      }`}
+    >
+      {healthy ? t('정상') : t('장애')}
+    </span>
+  );
+}
+
+function RefreshButton({ onRefresh }: { onRefresh: () => void }) {
+  const { spinning, trigger: handleRefresh } = useSpinAction(onRefresh);
+  return (
+    <button
+      onClick={handleRefresh}
+      title="새로고침"
+      className="p-2 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-ui-hover-dark transition-colors"
+    >
+      <MaterialIcon name="refresh" className={`text-lg ${spinning ? 'animate-spin' : ''}`} />
+    </button>
+  );
 }
 
 function DesktopLayout(props: AgentHealthCheckDetailViewProps) {
-  const { t: tc } = useTranslation('common');
-  const { service, agentId, serviceKey, refreshKey, isLive, onLiveToggle, onRefresh, onDelete } = props;
-  const { spinning, trigger: handleRefresh } = useSpinAction(onRefresh);
+  const { service, agentId, serviceKey, refreshKey, onRefresh } = props;
 
   return (
     <>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
-        <Breadcrumbs items={[{ label: tc('common.backToList'), href: '/' }]} />
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark px-3 py-2">
-            <Toggle checked={isLive} onChange={onLiveToggle} />
-          </div>
-          <button
-            onClick={handleRefresh}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-100 dark:bg-ui-hover-dark px-3 py-2 text-sm font-bold text-slate-600 dark:text-text-secondary-dark transition-colors hover:bg-slate-200 dark:hover:bg-ui-active-dark"
-          >
-            <MaterialIcon name="refresh" className={`text-base ${spinning ? 'animate-spin' : ''}`} />
-            {tc('common.refresh')}
-          </button>
-          <button
-            onClick={onDelete}
-            title="서비스 삭제"
-            className="inline-flex items-center justify-center rounded-lg bg-slate-100 dark:bg-ui-hover-dark px-3 py-2 text-slate-500 dark:text-text-secondary-dark transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20"
-          >
-            <MaterialIcon name="delete_outline" className="text-base" />
-          </button>
+      {/* ver2: breadcrumb (project / service) + status badge, refresh on the right */}
+      <div className="flex items-center gap-2.5 mb-6">
+        <Link
+          to={`/projects/${agentId}`}
+          className="text-sm text-slate-500 dark:text-text-muted-dark hover:text-primary transition-colors shrink-0"
+        >
+          {service.agentName}
+        </Link>
+        <span className="text-slate-300 dark:text-text-dim-dark">/</span>
+        <h1 className="text-lg font-bold text-slate-900 dark:text-white truncate">{service.name}</h1>
+        <StatusBadge healthy={service.healthy} />
+        <div className="ml-auto">
+          <RefreshButton onRefresh={onRefresh} />
         </div>
       </div>
-      <AgentServiceTabs key={serviceKey} service={service} agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
+      <AgentServiceTabs
+        key={serviceKey}
+        service={service}
+        agentId={agentId}
+        serviceKey={serviceKey}
+        refreshKey={refreshKey}
+        showServiceName={false}
+      />
     </>
   );
 }
@@ -55,8 +78,7 @@ function DesktopLayout(props: AgentHealthCheckDetailViewProps) {
 function MobileLayout(props: AgentHealthCheckDetailViewProps) {
   const { t: tc } = useTranslation('common');
   const navigate = useNavigate();
-  const { service, agentId, serviceKey, refreshKey, isLive, onLiveToggle, onRefresh, onDelete } = props;
-  const { spinning, trigger: handleRefresh } = useSpinAction(onRefresh);
+  const { service, agentId, serviceKey, refreshKey, onRefresh } = props;
 
   return (
     <div className="space-y-4">
@@ -68,24 +90,7 @@ function MobileLayout(props: AgentHealthCheckDetailViewProps) {
           <MaterialIcon name="arrow_back" className="text-lg" />
           <span className="text-sm font-medium">{tc('common.backToList')}</span>
         </button>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark">
-            <Toggle checked={isLive} onChange={onLiveToggle} />
-          </div>
-          <button
-            onClick={handleRefresh}
-            className="p-2.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-secondary-dark active:scale-95 transition-transform"
-          >
-            <MaterialIcon name="refresh" className={`text-lg ${spinning ? 'animate-spin' : ''}`} />
-          </button>
-          <button
-            onClick={onDelete}
-            title="서비스 삭제"
-            className="p-2.5 rounded-lg bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-secondary-dark active:scale-95 transition-transform hover:text-red-500"
-          >
-            <MaterialIcon name="delete_outline" className="text-lg" />
-          </button>
-        </div>
+        <RefreshButton onRefresh={onRefresh} />
       </div>
       <AgentServiceTabs key={serviceKey} service={service} agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
     </div>

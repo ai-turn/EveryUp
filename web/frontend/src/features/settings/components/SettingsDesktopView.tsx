@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from '../../../components/common';
 import { SectionCard } from './SectionCard';
 import { SettingRow } from './SettingRow';
+import { AccountSection } from './AccountSection';
 import { AuditLogSection } from './AuditLogSection';
 import { env } from '../../../config/env';
 
@@ -56,7 +57,8 @@ export function SettingsDesktopView({
 
   return (
     <>
-      <div className="space-y-6">
+      {/* ver2: settings column caps at ~840px, left-aligned */}
+      <div className="space-y-5 max-w-4xl">
         {/* Page Header */}
         <div className="mb-2">
           <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
@@ -66,6 +68,9 @@ export function SettingsDesktopView({
             {t('settings.subtitle')}
           </p>
         </div>
+
+        {/* Account (ver2: 계정 · 인증) */}
+        <AccountSection />
 
         {/* Interface */}
         <SectionCard icon="palette" title={t('settings.interface.title')} subtitle={t('settings.interface.subtitle')}>

@@ -78,3 +78,69 @@ func TestAgentRepositoryRoundTrip(t *testing.T) {
 		t.Fatalf("unexpected events: %+v", events)
 	}
 }
+
+// Agent-level uptime rollup + incident derivation from history transitions.
+func TestAgentUptimeAndIncidents(t *testing.T) {
+	openTestDB(t)
+
+	repo := database.NewAgentRepository()
+	agent := models.Agent{ID: "agent-1", Name: "prod", Mode: "connected", LastSeenAt: time.Now()}
+	if err := repo.UpsertAgent(agent); err != nil {
+		t.Fatalf("UpsertAgent: %v", err)
+	}
+
+	svc := func(key string, healthy bool) models.AgentService {
+		return models.AgentService{AgentID: agent.ID, Key: key, Name: key + "-svc", CheckType: "http", Endpoint: "http://x", Healthy: healthy, Seen: true}
+	}
+	// t0: all healthy → t1,t2: a down → t3: a recovered, c goes down (still open)
+	now := time.Now()
+	steps := []struct {
+		at       time.Time
+		aOK, cOK bool
+	}{
+		{now.Add(-3 * time.Hour), true, true},
+		{now.Add(-2 * time.Hour), false, true},
+		{now.Add(-1 * time.Hour), false, true},
+		{now.Add(-30 * time.Minute), true, false},
+	}
+	for _, s := range steps {
+		if err := repo.UpsertServices(agent.ID, s.at, []models.AgentService{svc("a", s.aOK), svc("b", true), svc("c", s.cOK)}); err != nil {
+			t.Fatalf("UpsertServices: %v", err)
+		}
+	}
+
+	days, err := repo.GetAgentUptimeByDay(agent.ID, 90)
+	if err != nil {
+		t.Fatalf("GetAgentUptimeByDay: %v", err)
+	}
+	total, healthy := 0, 0
+	for _, d := range days {
+		total += d.TotalChecks
+		healthy += d.HealthyChecks
+	}
+	if total != 12 || healthy != 9 { // 4 syncs × 3 services, 3 unhealthy points (a×2, c×1)
+		t.Fatalf("uptime rollup: total=%d healthy=%d, want 12/9", total, healthy)
+	}
+
+	incidents, err := repo.GetAgentIncidents(agent.ID, 30, 20)
+	if err != nil {
+		t.Fatalf("GetAgentIncidents: %v", err)
+	}
+	if len(incidents) != 2 {
+		t.Fatalf("expected 2 incidents, got %+v", incidents)
+	}
+	// newest first: c is still open, a was resolved
+	if incidents[0].Key != "c" || !incidents[0].Active || incidents[0].EndedAt != nil {
+		t.Fatalf("unexpected open incident: %+v", incidents[0])
+	}
+	if incidents[0].ServiceName != "c-svc" || incidents[0].DurationSec <= 0 {
+		t.Fatalf("open incident name/duration: %+v", incidents[0])
+	}
+	if incidents[1].Key != "a" || incidents[1].Active || incidents[1].EndedAt == nil {
+		t.Fatalf("unexpected resolved incident: %+v", incidents[1])
+	}
+	// a: started -2h, first healthy check again at -30m → 90min
+	if got := incidents[1].DurationSec; got < 5300 || got > 5500 {
+		t.Fatalf("resolved incident duration: %d", got)
+	}
+}
