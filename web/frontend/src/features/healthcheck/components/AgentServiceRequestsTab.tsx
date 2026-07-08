@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MaterialIcon } from '../../../components/common';
+import { MaterialIcon, type GlobalTimeRange } from '../../../components/common';
 import { api, type ApiRequest } from '../../../services/api';
 import { getErrorMessage } from '../../../utils/errors';
 import { toast } from 'react-hot-toast';
@@ -11,6 +11,8 @@ interface Props {
   agentId: string;
   serviceKey: string;
   refreshKey: number;
+  /** Shared chart range from the page-header picker (trends chart only; the list keeps day presets). */
+  range?: GlobalTimeRange;
   /** Agent-detected runtime — drives the setup hint in the empty state. */
   runtime?: string;
 }
@@ -48,7 +50,7 @@ function formatTime(ts: string) {
   });
 }
 
-export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, runtime }: Props) {
+export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, range, runtime }: Props) {
   const [requests, setRequests] = useState<ApiRequest[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -91,7 +93,7 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, runti
   return (
     <div className="space-y-4">
       {/* Trends — volume, error rate, and latency percentiles over time */}
-      <AgentServiceRequestTrends agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
+      <AgentServiceRequestTrends agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} range={range} />
 
       {/* KPI row */}
       {!loading && requests.length > 0 && (

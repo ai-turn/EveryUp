@@ -18,9 +18,10 @@ interface NavItemProps {
   icon: string;
   label: string;
   active: boolean;
+  badge?: number;
 }
 
-function NavItem({ to, icon, label, active }: NavItemProps) {
+function NavItem({ to, icon, label, active, badge }: NavItemProps) {
   return (
     <Link
       to={to}
@@ -32,6 +33,11 @@ function NavItem({ to, icon, label, active }: NavItemProps) {
     >
       <MaterialIcon name={icon} className="text-lg shrink-0" />
       <span className="truncate">{label}</span>
+      {badge != null && badge > 0 && (
+        <span className="ml-auto shrink-0 rounded-full bg-red-500 px-1.5 py-px text-2xs font-bold text-white">
+          {badge}
+        </span>
+      )}
     </Link>
   );
 }
@@ -87,6 +93,18 @@ export function Sidebar() {
         <span className="text-lg font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-primary transition-colors">EveryUp</span>
       </Link>
 
+      {/* ⌘K 팔레트 트리거 (CommandPalette가 이벤트 수신) */}
+      <button
+        onClick={() => window.dispatchEvent(new Event('everyup:command-palette'))}
+        className="mx-3 mb-2 flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-main-dark text-slate-400 dark:text-text-dim-dark hover:border-primary/40 hover:text-slate-600 dark:hover:text-white transition-colors"
+      >
+        <MaterialIcon name="search" className="text-base shrink-0" />
+        <span className="flex-1 text-left text-xs">{t('검색')}</span>
+        <kbd className="text-2xs font-semibold border border-slate-200 dark:border-ui-border-dark rounded px-1 py-0.5">
+          {navigator.platform.toLowerCase().includes('mac') ? '⌘K' : 'Ctrl K'}
+        </kbd>
+      </button>
+
       {/* 내비게이션 */}
       <nav className="flex-1 min-h-0 overflow-y-auto px-3 flex flex-col gap-0.5">
         <NavItem to="/" icon="grid_view" label={t('프로젝트')} active={isHome} />
@@ -113,7 +131,8 @@ export function Sidebar() {
             )}
           </>
         )}
-        <NavItem to="/alerts" icon="notifications" label={t('알림')} active={isAlerts} />
+        {/* Badge = currently unhealthy services across every project (same 30s poll) */}
+        <NavItem to="/alerts" icon="notifications" label={t('알림')} active={isAlerts} badge={services.filter(s => !s.healthy).length} />
         <NavItem to="/settings" icon="settings" label={t('환경설정')} active={isSettings} />
       </nav>
 

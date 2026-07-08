@@ -8,6 +8,7 @@ import {
   api,
   type AgentServiceFlat, type ConnectedAgent, type AgentIncident,
   type AgentEvent, type ServiceUptimeDay, type ApiRequestStatBucket,
+  type OtelServiceMetric,
 } from '../../services/api';
 import { ApiKeyModal } from '../../features/services/components/ApiKeyModal';
 import { InstrumentationOverrideModal } from '../../features/services/components/InstrumentationOverrideModal';
@@ -60,10 +61,32 @@ function KpiCard({ label, value, unit, sub, tone }: {
   );
 }
 
+// Formats a representative metric value; OTel bytes ("By") as KB/MB/GB, else a
+// rounded number with its unit appended.
+function formatMetricValue(v: number, unit?: string): string {
+  if (unit === 'By') {
+    const abs = Math.abs(v);
+    if (abs >= 1024 ** 3) return `${(v / 1024 ** 3).toFixed(1)}GB`;
+    if (abs >= 1024 ** 2) return `${(v / 1024 ** 2).toFixed(1)}MB`;
+    if (abs >= 1024) return `${(v / 1024).toFixed(1)}KB`;
+    return `${Math.round(v)}B`;
+  }
+  const r = Math.round(v * 100) / 100;
+  return unit && unit !== '1' ? `${r}${unit}` : String(r);
+}
+
+// Compact label from a dotted metric name, e.g. "jvm.memory.used" → "memory.used".
+function metricLabel(name: string): string {
+  return name.split('.').slice(-2).join('.');
+}
+
 // One service in the project overview grid. Current health/latency/status come
-// straight from the flat snapshot (no extra fetch). Click → full service detail.
-function ServiceCard({ service, onOpen, onDelete }: {
+// straight from the flat snapshot (no extra fetch). The representative metric,
+// when present, is the service's most telling exported OTel metric. Click →
+// full service detail.
+function ServiceCard({ service, metric, onOpen, onDelete }: {
   service: AgentServiceFlat;
+  metric?: OtelServiceMetric;
   onOpen: () => void;
   onDelete: () => void;
 }) {
@@ -106,6 +129,16 @@ function ServiceCard({ service, onOpen, onDelete }: {
             {service.lastStatus ?? '—'}
           </div>
         </div>
+        {metric && (
+          <div className="min-w-0">
+            <div className="text-2xs text-slate-400 dark:text-text-dim-dark truncate" title={metric.metricName}>
+              {metricLabel(metric.metricName)}
+            </div>
+            <div className="font-mono font-semibold text-slate-800 dark:text-white truncate">
+              {formatMetricValue(metric.value, metric.unit)}
+            </div>
+          </div>
+        )}
       </div>
 
       {!service.healthy && service.lastError && (
@@ -139,10 +172,15 @@ export function ProjectDetailPage() {
   const [uptimeDays, setUptimeDays] = useState<ServiceUptimeDay[]>([]);
   const [reqBuckets, setReqBuckets] = useState<ApiRequestStatBucket[]>([]);
   const [events, setEvents] = useState<AgentEvent[]>([]);
+  // Representative OTel metric per service name (project cards); non-critical.
+  const [metrics, setMetrics] = useState<Record<string, OtelServiceMetric>>({});
 
   const load = useCallback(async () => {
     if (!agentId) return;
     api.getAgentIncidents(agentId).then((d) => setIncidents(d ?? [])).catch(() => {});
+    api.getAgentServiceMetrics(agentId)
+      .then((rows) => setMetrics(Object.fromEntries((rows ?? []).map((m) => [m.serviceName, m]))))
+      .catch(() => {});
     api.getAgentUptime(agentId, 30).then((d) => setUptimeDays(d ?? [])).catch(() => {});
     api.getAgentRequestStats(agentId, {
       from: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
@@ -341,6 +379,7 @@ export function ProjectDetailPage() {
             <ServiceCard
               key={s.key}
               service={s}
+              metric={metrics[s.name]}
               onOpen={() => navigate(`/services/${agentId}/${encodeURIComponent(s.key)}`)}
               onDelete={() => handleDeleteService(s)}
             />

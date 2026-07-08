@@ -245,6 +245,9 @@ func migrate() error {
 	if err := migrateV39(); err != nil {
 		return fmt.Errorf("v39 migration failed: %w", err)
 	}
+	if err := migrateV40(); err != nil {
+		return fmt.Errorf("v40 migration failed: %w", err)
+	}
 
 	return nil
 }
@@ -1293,6 +1296,23 @@ func migrateV39() error {
 		return nil
 	}
 	return err
+}
+
+// migrateV40 adds docker container provenance to agent_services (image ref,
+// restart count, start time) so the service header can show container meta and
+// surface restart loops.
+// Added: 2026-07-08
+func migrateV40() error {
+	for _, stmt := range []string{
+		`ALTER TABLE agent_services ADD COLUMN image TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE agent_services ADD COLUMN restart_count INTEGER NOT NULL DEFAULT 0`,
+		`ALTER TABLE agent_services ADD COLUMN started_at DATETIME`,
+	} {
+		if _, err := DB.Exec(stmt); err != nil && !strings.Contains(err.Error(), "duplicate column name") {
+			return err
+		}
+	}
+	return nil
 }
 
 func ensureAPIRequestIndexes() error {

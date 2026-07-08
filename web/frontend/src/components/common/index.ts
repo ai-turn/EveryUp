@@ -12,3 +12,4 @@ export { SectionHeader } from './SectionHeader';
 export { FilterBar } from './FilterBar';
 export { KPIChip } from './KPIChip';
 export { Sparkline } from './Sparkline';
+export { TimeRangePicker, type GlobalTimeRange } from './TimeRangePicker';

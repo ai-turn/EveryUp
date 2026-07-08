@@ -36,6 +36,8 @@ import type {
   ServiceHistoryPoint,
   ServiceUptimeDay,
   AgentIncident,
+  AgentOverview,
+  OtelServiceMetric,
 } from './api';
 
 // ?? Dashboard ????????????????????????????????????????????????????????????????
@@ -547,10 +549,17 @@ const mockAgents: ConnectedAgent[] = [
   },
 ];
 
+// Home card KPI rollup — mirrors the demo dashboard numbers (99.87% / 2.6K / 121ms).
+const mockAgentOverview: AgentOverview[] = [
+  { agentId: 'agent_demo_01', uptimePct: 99.87, activeIncidents: 1, requests24h: 2600, p95Ms: 121 },
+];
+
 const mockAgentServicesFlat: AgentServiceFlat[] = [
   {
     agentId: 'agent_demo_01', agentName: 'prod-server',
     key: 'shop:api', name: 'api', checkType: 'http', runtime: 'node',
+    image: 'ghcr.io/shop/api:2.4.1', restartCount: 0,
+    startedAt: new Date(Date.now() - 4 * 86400_000 - 3 * 3600_000).toISOString(),
     endpoint: 'http://api:8080/health', healthy: true, seen: true, silenced: false,
     lastStatus: 200, lastLatency: '42ms',
     updatedAt: new Date(Date.now() - 30_000).toISOString(),
@@ -559,6 +568,8 @@ const mockAgentServicesFlat: AgentServiceFlat[] = [
   {
     agentId: 'agent_demo_01', agentName: 'prod-server',
     key: 'postgres', name: 'postgres', checkType: 'tcp',
+    image: 'postgres:16-alpine', restartCount: 0,
+    startedAt: new Date(Date.now() - 4 * 86400_000 - 3 * 3600_000).toISOString(),
     endpoint: 'postgres:5432', healthy: true, seen: true, silenced: false,
     lastStatus: 0, lastLatency: '5ms',
     updatedAt: new Date(Date.now() - 30_000).toISOString(),
@@ -567,11 +578,20 @@ const mockAgentServicesFlat: AgentServiceFlat[] = [
   {
     agentId: 'agent_demo_01', agentName: 'prod-server',
     key: 'shop:payment-worker', name: 'payment-worker', checkType: 'http', runtime: 'java',
+    image: 'ghcr.io/shop/payment-worker:1.8.3', restartCount: 4,
+    startedAt: new Date(Date.now() - 12 * 60_000).toISOString(),
     endpoint: 'http://payment-worker:8090/health', healthy: false, seen: true, silenced: false,
     lastStatus: 503, lastLatency: '5001ms', lastError: 'payment gateway timeout',
     updatedAt: new Date(Date.now() - 90_000).toISOString(),
     observedAt: new Date(Date.now() - 90_000).toISOString(),
   },
+];
+
+// Representative OTel metric per service (project cards). Keyed by service name.
+const mockServiceMetrics: OtelServiceMetric[] = [
+  { serviceName: 'postgres', metricName: 'container.memory.usage', metricType: 'gauge', unit: 'By', value: 268_435_456 },
+  { serviceName: 'api', metricName: 'container.cpu.utilization', metricType: 'gauge', unit: '1', value: 0.12 },
+  { serviceName: 'payment-worker', metricName: 'queue.messages.pending', metricType: 'gauge', unit: '', value: 1843 },
 ];
 
 const nowAgent = Date.now();
@@ -651,6 +671,25 @@ function mockRequestStats() {
     const p50 = Math.round(35 + 10 * Math.sin(i / 5) + (spike ? 120 : 0));
     const p95 = Math.round(p50 * 2.3 + (spike ? 300 : 40));
     buckets.push({ time, count, errorCount, p50, p95, timed: count });
+  }
+  return buckets;
+}
+
+// 10-minute buckets over the last 6h: mostly info with a warn/error burst
+// mid-window so the logs-tab volume histogram shows movement.
+function mockLogHistogram() {
+  const buckets = [];
+  for (let i = 36; i >= 0; i -= 1) {
+    const time = new Date(nowAgent - i * 10 * 60_000).toISOString();
+    const burst = i > 14 && i < 20;
+    buckets.push({
+      time,
+      error: burst ? Math.round(4 + Math.random() * 4) : Math.random() < 0.15 ? 1 : 0,
+      warn: burst ? Math.round(2 + Math.random() * 3) : Math.random() < 0.3 ? 1 : 0,
+      info: Math.round(8 + 6 * Math.sin(i / 6) + Math.random() * 4),
+      debug: 0,
+      trace: 0,
+    });
   }
   return buckets;
 }
@@ -797,12 +836,17 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
 
   // /agents/services/all — must come before /agents/:id/services
   if (endpoint === '/agents/services/all') return mockAgentServicesFlat as T;
+  // /agents/overview — home card KPI rollup
+  if (endpoint === '/agents/overview') return mockAgentOverview as T;
   // /agents/:agentId/key
   if (/^\/agents\/[^/]+\/key$/.test(endpoint))
     return { apiKey: 'evup_svc_3f9c4a1b8e3d6f0a5c7b9d2e4f6a8c0b1d3e5f7a9c2b4d6e', available: true } as T;
   // /agents/:agentId/services/:key/log-filter
   if (/^\/agents\/[^/]+\/services\/[^/]+\/log-filter$/.test(endpoint))
     return { levels: ['error', 'warn', 'info'] } as T;
+  // /agents/:agentId/services/:key/log-histogram
+  if (/^\/agents\/[^/]+\/services\/[^/]+\/log-histogram/.test(endpoint))
+    return mockLogHistogram() as T;
   // /agents/:agentId/services/:key/logs
   if (/^\/agents\/[^/]+\/services\/[^/]+\/logs/.test(endpoint))
     return { data: mockAgentServiceLogs, total: mockAgentServiceLogs.length } as unknown as T;
@@ -812,6 +856,12 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   // /agents/:agentId/request-stats — project-level rollup (all services)
   if (/^\/agents\/[^/]+\/request-stats/.test(endpoint))
     return mockRequestStats() as T;
+  // status-class distribution + top 5xx (service + agent level)
+  if (/^\/agents\/[^/]+(\/services\/[^/]+)?\/request-status-summary/.test(endpoint))
+    return {
+      count2xx: 2394, count3xx: 96, count4xx: 89, count5xx: 21, countOther: 0,
+      top5xxMethod: 'POST', top5xxPath: '/v1/payments', top5xxCount: 14,
+    } as T;
   // /agents/:agentId/services/:key/requests — payment-worker has no HTTP
   // traffic, so its API tab exercises the empty state + setup guidance.
   if (/^\/agents\/[^/]+\/services\/shop%3Apayment-worker\/requests/.test(endpoint))
@@ -838,6 +888,8 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   if (/^\/agents\/[^/]+\/uptime/.test(endpoint)) return mockAgentUptime as T;
   // /agents/:agentId/incidents
   if (/^\/agents\/[^/]+\/incidents/.test(endpoint)) return mockAgentIncidents as T;
+  // /agents/:agentId/service-metrics — representative metric per service
+  if (/^\/agents\/[^/]+\/service-metrics/.test(endpoint)) return mockServiceMetrics as T;
   // /agents
   if (endpoint.startsWith('/agents')) return mockAgents as T;
 

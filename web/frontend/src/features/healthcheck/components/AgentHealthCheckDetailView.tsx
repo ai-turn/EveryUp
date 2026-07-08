@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useTranslate } from '@tolgee/react';
-import { MaterialIcon } from '../../../components/common';
+import { MaterialIcon, TimeRangePicker, type GlobalTimeRange } from '../../../components/common';
 import { useSpinAction } from '../../../hooks/useSpinAction';
 import { useIsMobile } from '../../../hooks/useMediaQuery';
 import type { AgentServiceFlat } from '../../../services/api';
@@ -13,6 +14,12 @@ export interface AgentHealthCheckDetailViewProps {
   serviceKey: string;
   refreshKey: number;
   onRefresh: () => void;
+}
+
+// Internal: layouts receive the shared chart time range from the wrapper below.
+interface LayoutProps extends AgentHealthCheckDetailViewProps {
+  range: GlobalTimeRange;
+  onRangeChange: (r: GlobalTimeRange) => void;
 }
 
 function StatusBadge({ healthy }: { healthy: boolean }) {
@@ -30,6 +37,48 @@ function StatusBadge({ healthy }: { healthy: boolean }) {
   );
 }
 
+// Container uptime from an ISO start time; null when absent or the zero stamp.
+function formatUptime(startedAt?: string): string | null {
+  if (!startedAt) return null;
+  const d = new Date(startedAt);
+  if (Number.isNaN(d.getTime()) || d.getFullYear() < 2000) return null;
+  const sec = Math.max(0, Math.floor((Date.now() - d.getTime()) / 1000));
+  const days = Math.floor(sec / 86400);
+  const hours = Math.floor((sec % 86400) / 3600);
+  const mins = Math.floor((sec % 3600) / 60);
+  if (days > 0) return `${days}일 ${hours}시간`;
+  if (hours > 0) return `${hours}시간 ${mins}분`;
+  return `${mins}분`;
+}
+
+// Container provenance line (image · restarts · uptime). Non-container services
+// have no image → renders nothing. A restart count ≥3 is highlighted as a
+// possible crash/restart loop.
+function ContainerMeta({ service }: { service: AgentServiceFlat }) {
+  if (!service.image) return null;
+  const uptime = formatUptime(service.startedAt);
+  const restarts = service.restartCount ?? 0;
+  return (
+    <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-400 dark:text-text-dim-dark min-w-0">
+      <span className="font-mono truncate">{service.image}</span>
+      {restarts > 0 && (
+        <>
+          <span className="text-slate-300 dark:text-text-dim-dark shrink-0">·</span>
+          <span className={`shrink-0 ${restarts >= 3 ? 'text-amber-600 dark:text-amber-400 font-medium' : ''}`}>
+            재시작 {restarts}회
+          </span>
+        </>
+      )}
+      {uptime && (
+        <>
+          <span className="text-slate-300 dark:text-text-dim-dark shrink-0">·</span>
+          <span className="shrink-0">업타임 {uptime}</span>
+        </>
+      )}
+    </div>
+  );
+}
+
 function RefreshButton({ onRefresh }: { onRefresh: () => void }) {
   const { spinning, trigger: handleRefresh } = useSpinAction(onRefresh);
   return (
@@ -43,25 +92,29 @@ function RefreshButton({ onRefresh }: { onRefresh: () => void }) {
   );
 }
 
-function DesktopLayout(props: AgentHealthCheckDetailViewProps) {
-  const { service, agentId, serviceKey, refreshKey, onRefresh } = props;
+function DesktopLayout(props: LayoutProps) {
+  const { service, agentId, serviceKey, refreshKey, onRefresh, range, onRangeChange } = props;
 
   return (
     <>
-      {/* ver2: breadcrumb (project / service) + status badge, refresh on the right */}
-      <div className="flex items-center gap-2.5 mb-6">
-        <Link
-          to={`/projects/${agentId}`}
-          className="text-sm text-slate-500 dark:text-text-muted-dark hover:text-primary transition-colors shrink-0"
-        >
-          {service.agentName}
-        </Link>
-        <span className="text-slate-300 dark:text-text-dim-dark">/</span>
-        <h1 className="text-lg font-bold text-slate-900 dark:text-white truncate">{service.name}</h1>
-        <StatusBadge healthy={service.healthy} />
-        <div className="ml-auto">
-          <RefreshButton onRefresh={onRefresh} />
+      {/* ver2: breadcrumb (project / service) + status badge, range + refresh on the right */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2.5">
+          <Link
+            to={`/projects/${agentId}`}
+            className="text-sm text-slate-500 dark:text-text-muted-dark hover:text-primary transition-colors shrink-0"
+          >
+            {service.agentName}
+          </Link>
+          <span className="text-slate-300 dark:text-text-dim-dark">/</span>
+          <h1 className="text-lg font-bold text-slate-900 dark:text-white truncate">{service.name}</h1>
+          <StatusBadge healthy={service.healthy} />
+          <div className="ml-auto flex items-center gap-2">
+            <TimeRangePicker value={range} onChange={onRangeChange} />
+            <RefreshButton onRefresh={onRefresh} />
+          </div>
         </div>
+        <ContainerMeta service={service} />
       </div>
       <AgentServiceTabs
         key={serviceKey}
@@ -69,16 +122,17 @@ function DesktopLayout(props: AgentHealthCheckDetailViewProps) {
         agentId={agentId}
         serviceKey={serviceKey}
         refreshKey={refreshKey}
+        range={range}
         showServiceName={false}
       />
     </>
   );
 }
 
-function MobileLayout(props: AgentHealthCheckDetailViewProps) {
+function MobileLayout(props: LayoutProps) {
   const { t: tc } = useTranslation('common');
   const navigate = useNavigate();
-  const { service, agentId, serviceKey, refreshKey, onRefresh } = props;
+  const { service, agentId, serviceKey, refreshKey, onRefresh, range, onRangeChange } = props;
 
   return (
     <div className="space-y-4">
@@ -90,14 +144,21 @@ function MobileLayout(props: AgentHealthCheckDetailViewProps) {
           <MaterialIcon name="arrow_back" className="text-lg" />
           <span className="text-sm font-medium">{tc('common.backToList')}</span>
         </button>
-        <RefreshButton onRefresh={onRefresh} />
+        <div className="flex items-center gap-2">
+          <TimeRangePicker value={range} onChange={onRangeChange} />
+          <RefreshButton onRefresh={onRefresh} />
+        </div>
       </div>
-      <AgentServiceTabs key={serviceKey} service={service} agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
+      <ContainerMeta service={service} />
+      <AgentServiceTabs key={serviceKey} service={service} agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} range={range} />
     </div>
   );
 }
 
 export function AgentHealthCheckDetailView(props: AgentHealthCheckDetailViewProps) {
   const isMobile = useIsMobile();
-  return isMobile ? <MobileLayout {...props} /> : <DesktopLayout {...props} />;
+  // Shared chart range for all tabs; survives service switches (Tabs remount on key).
+  const [range, setRange] = useState<GlobalTimeRange>('6h');
+  const layoutProps: LayoutProps = { ...props, range, onRangeChange: setRange };
+  return isMobile ? <MobileLayout {...layoutProps} /> : <DesktopLayout {...layoutProps} />;
 }

@@ -68,9 +68,13 @@ export type {
   ServiceHistoryPoint,
   ServiceUptimeDay,
   AgentIncident,
+  AgentOverview,
   ApiRequestStatBucket,
+  ApiRequestStatusSummary,
+  LogHistogramBucket,
   OtelMetricName,
   OtelMetricPoint,
+  OtelServiceMetric,
 } from './agents';
 export type {
   AlertRuleType,

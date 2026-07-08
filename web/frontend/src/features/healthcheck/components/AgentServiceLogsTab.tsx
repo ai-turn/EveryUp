@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MaterialIcon } from '../../../components/common';
-import { api, type LogEntry, type LogLevel } from '../../../services/api';
+import {
+  ResponsiveContainer, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip,
+} from 'recharts';
+import { MaterialIcon, type GlobalTimeRange } from '../../../components/common';
+import { ChartTooltip, getChartTheme } from '../../../components/charts';
+import { api, type LogEntry, type LogHistogramBucket, type LogLevel } from '../../../services/api';
 import { getErrorMessage } from '../../../utils/errors';
 import { toast } from 'react-hot-toast';
 import { TracePanel } from '../../traces/components/TracePanel';
@@ -9,7 +14,25 @@ interface Props {
   agentId: string;
   serviceKey: string;
   refreshKey: number;
+  /** Shared chart range from the page-header picker (drives the volume histogram). */
+  range: GlobalTimeRange;
 }
+
+// Histogram window/bucket per header range — same widths as the request trends chart.
+const RANGE_BUCKET: Record<GlobalTimeRange, { hours: number; bucketMins: number }> = {
+  '1h': { hours: 1, bucketMins: 2 },
+  '6h': { hours: 6, bucketMins: 10 },
+  '24h': { hours: 24, bucketMins: 30 },
+};
+
+// Stacked-bar colors matching LEVEL_STYLE badge colors.
+const LEVEL_BAR: { key: keyof Omit<LogHistogramBucket, 'time'>; color: string; name: string }[] = [
+  { key: 'error', color: '#ef4444', name: 'ERROR' },
+  { key: 'warn',  color: '#f59e0b', name: 'WARN' },
+  { key: 'info',  color: '#0ea5e9', name: 'INFO' },
+  { key: 'debug', color: '#8b5cf6', name: 'DEBUG' },
+  { key: 'trace', color: '#94a3b8', name: 'TRACE' },
+];
 
 const LOG_LEVELS: { value: LogLevel | ''; label: string }[] = [
   { value: '', label: '전체' },
@@ -90,7 +113,7 @@ function LogRow({ log, onOpenTrace }: { log: LogEntry; onOpenTrace: (traceId: st
   );
 }
 
-export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey }: Props) {
+export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: Props) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [activeTraceId, setActiveTraceId] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
@@ -99,6 +122,8 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey }: Props) 
   const [search, setSearch] = useState('');
   const [inputValue, setInputValue] = useState('');
   const [datePreset, setDatePreset] = useState<DatePreset>('');
+  const [histogram, setHistogram] = useState<LogHistogramBucket[]>([]);
+  const [live, setLive] = useState(false);
 
   // Ingest filter: which levels are stored at OTLP ingest ([] = accept all).
   const [showSettings, setShowSettings] = useState(false);
@@ -127,8 +152,8 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey }: Props) 
     }
   };
 
-  const fetch = useCallback(async () => {
-    setLoading(true);
+  const fetch = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const res = await api.getAgentServiceLogs(agentId, serviceKey, {
         level: level || undefined,
@@ -138,13 +163,38 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey }: Props) 
       setLogs(res?.data ?? []);
       setTotal(res?.total ?? 0);
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      if (!silent) toast.error(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
   }, [agentId, serviceKey, refreshKey, level, search, datePreset]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { fetch(); }, [fetch]);
+
+  // Volume histogram — follows the header range and the level/search view filters.
+  const fetchHistogram = useCallback(() => {
+    const r = RANGE_BUCKET[range];
+    api.getAgentServiceLogHistogram(agentId, serviceKey, {
+      level: level || undefined,
+      search: search || undefined,
+      from: new Date(Date.now() - r.hours * 3600 * 1000).toISOString(),
+      bucketMins: r.bucketMins,
+    })
+      .then((b) => setHistogram(b ?? []))
+      .catch(() => setHistogram([]));
+  }, [agentId, serviceKey, level, search, range, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { fetchHistogram(); }, [fetchHistogram]);
+
+  // Live tail: 5s silent polling of both list and histogram.
+  useEffect(() => {
+    if (!live) return;
+    const id = setInterval(() => {
+      fetch(true);
+      fetchHistogram();
+    }, 5_000);
+    return () => clearInterval(id);
+  }, [live, fetch, fetchHistogram]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -209,6 +259,21 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey }: Props) 
           )}
         </form>
 
+        {/* Live tail: 5s silent polling while on */}
+        <button
+          type="button"
+          onClick={() => setLive(v => !v)}
+          title="5초마다 자동 갱신"
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+            live
+              ? 'bg-red-500/10 text-red-500'
+              : 'bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark'
+          }`}
+        >
+          <span className={`h-1.5 w-1.5 rounded-full ${live ? 'bg-red-500 animate-pulse' : 'bg-slate-400 dark:bg-text-dim-dark'}`} />
+          LIVE
+        </button>
+
         {/* Ingest filter settings toggle */}
         <button
           type="button"
@@ -269,6 +334,32 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey }: Props) 
           </div>
         </div>
       )}
+
+      {/* Volume histogram — stacked per-level counts over the header range */}
+      {histogram.length > 0 && (() => {
+        const theme = getChartTheme();
+        const data = histogram.map((b) => ({
+          ...b,
+          timeLabel: new Date(b.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }));
+        return (
+          <div className="p-4 rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-chart-bg">
+            <ResponsiveContainer width="100%" height={110}>
+              <BarChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={theme.gridColor} vertical={false} />
+                <XAxis dataKey="timeLabel" tick={{ fill: theme.tickColor, fontSize: 11 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+                <YAxis allowDecimals={false} tick={{ fill: theme.tickColor, fontSize: 11 }} tickLine={false} axisLine={false} width={36} />
+                <Tooltip content={({ active, label, payload }) => (
+                  <ChartTooltip active={active} label={label} payload={payload as import('../../../components/charts').TooltipPayloadItem[]} unit="" theme={theme} valueFormatter={(v) => String(v)} />
+                )} />
+                {LEVEL_BAR.map((l) => (
+                  <Bar key={l.key} dataKey={l.key} stackId="lv" fill={l.color} name={l.name} />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        );
+      })()}
 
       {/* Count */}
       {!loading && (

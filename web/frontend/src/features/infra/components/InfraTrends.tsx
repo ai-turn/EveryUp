@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ResponsiveContainer,
@@ -10,17 +9,17 @@ import {
   CartesianGrid,
   Tooltip,
 } from 'recharts';
-import { MaterialIcon } from '../../../components/common';
+import { MaterialIcon, type GlobalTimeRange } from '../../../components/common';
 import { ChartTooltip, formatAxisValue, formatMetricValue, getChartTheme, getYAxisMax } from '../../../components/charts';
 import { useMonitoringTrends } from '../../../hooks/useInfra';
 import { Skeleton } from '../../../components/skeleton';
 import type { ChartData } from '../../../types/infra';
 
-type TimeRange = '6H' | '12H' | '24H';
-
 interface InfraTrendsProps {
   hostId: string;
   refreshKey?: number;
+  /** Shared chart range from the page-header picker. */
+  range: GlobalTimeRange;
 }
 
 function getXAxisInterval(pointCount: number): number {
@@ -28,17 +27,16 @@ function getXAxisInterval(pointCount: number): number {
   return Math.max(1, Math.ceil(pointCount / 6));
 }
 
-export function InfraTrends({ hostId, refreshKey = 0 }: InfraTrendsProps) {
+export function InfraTrends({ hostId, refreshKey = 0, range }: InfraTrendsProps) {
   const { t } = useTranslation(['infra', 'common']);
-  const [timeRange, setTimeRange] = useState<TimeRange>('6H');
-  const { data: charts, loading } = useMonitoringTrends(hostId, timeRange.toLowerCase(), refreshKey);
+  const { data: charts, loading } = useMonitoringTrends(hostId, range, refreshKey);
 
   const theme = getChartTheme();
 
-  const rangeLabel: Record<TimeRange, string> = {
-    '6H': t('infra.trends.last6h'),
-    '12H': t('infra.trends.last12h'),
-    '24H': t('infra.trends.last24h'),
+  const rangeLabel: Record<GlobalTimeRange, string> = {
+    '1h': t('infra.trends.last1h'),
+    '6h': t('infra.trends.last6h'),
+    '24h': t('infra.trends.last24h'),
   };
 
   const pointCount = charts?.reduce((max, chart) => Math.max(max, chart.data.length), 0) ?? 12;
@@ -52,24 +50,8 @@ export function InfraTrends({ hostId, refreshKey = 0 }: InfraTrendsProps) {
             {t('infra.trends.title')}
           </h2>
           <p className="mt-1 text-sm font-medium text-slate-500 dark:text-text-muted-dark">
-            {rangeLabel[timeRange]}
+            {rangeLabel[range]}
           </p>
-        </div>
-
-        <div className="inline-flex shrink-0 rounded-lg border border-slate-200 bg-white p-1 shadow-sm dark:border-ui-border-dark dark:bg-bg-surface-dark">
-          {(['6H', '12H', '24H'] as const).map((range) => (
-            <button
-              key={range}
-              onClick={() => setTimeRange(range)}
-              className={`rounded-md px-3 py-1.5 text-sm font-bold transition-colors ${
-                timeRange === range
-                  ? 'bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-950'
-                  : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-text-muted-dark dark:hover:bg-ui-hover-dark dark:hover:text-white'
-              }`}
-            >
-              {range}
-            </button>
-          ))}
         </div>
       </div>
 
@@ -87,7 +69,7 @@ export function InfraTrends({ hostId, refreshKey = 0 }: InfraTrendsProps) {
               chart={chart}
               chartIndex={chartIndex}
               xInterval={xInterval}
-              rangeLabel={rangeLabel[timeRange]}
+              rangeLabel={rangeLabel[range]}
               theme={theme}
             />
           ))}

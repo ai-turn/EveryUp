@@ -168,6 +168,87 @@ func (r *LogRepository) GetAll(filter models.LogFilter) ([]models.Log, int, erro
 	return logs, total, nil
 }
 
+// Histogram buckets per-level log counts over the filter window for the volume
+// chart. Rows are bucketed in Go (same pattern as ApiRequestRepository.RequestStats)
+// to stay independent of the driver's datetime storage format.
+func (r *LogRepository) Histogram(filter models.LogFilter, bucketMins int) ([]models.LogHistogramBucket, error) {
+	if bucketMins <= 0 {
+		bucketMins = 10
+	}
+	query := "SELECT l.level, l.created_at FROM logs l LEFT JOIN services s ON s.id = l.service_id WHERE 1=1"
+	args := []interface{}{}
+	if filter.AgentID != "" {
+		query += " AND l.agent_id = ?"
+		args = append(args, filter.AgentID)
+	}
+	if filter.ServiceName != "" {
+		query += " AND COALESCE(NULLIF(l.service_name, ''), s.name) = ?"
+		args = append(args, filter.ServiceName)
+	}
+	if filter.Level != "" {
+		query += " AND l.level = ?"
+		args = append(args, filter.Level)
+	}
+	if filter.Search != "" {
+		query += " AND l.message LIKE ?"
+		args = append(args, "%"+filter.Search+"%")
+	}
+	if !filter.From.IsZero() {
+		query += " AND l.created_at >= ?"
+		args = append(args, filter.From)
+	}
+	if !filter.To.IsZero() {
+		query += " AND l.created_at <= ?"
+		args = append(args, filter.To)
+	}
+	const maxRows = 100000
+	args = append(args, maxRows)
+	rows, err := DB.Query(query+" ORDER BY l.created_at LIMIT ?", args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	bucketDur := time.Duration(bucketMins) * time.Minute
+	ordered := make([]time.Time, 0)
+	buckets := make(map[time.Time]*models.LogHistogramBucket)
+	for rows.Next() {
+		var level string
+		var createdAt time.Time
+		if err := rows.Scan(&level, &createdAt); err != nil {
+			return nil, err
+		}
+		t := createdAt.Truncate(bucketDur)
+		b := buckets[t]
+		if b == nil {
+			b = &models.LogHistogramBucket{Time: t}
+			buckets[t] = b
+			ordered = append(ordered, t)
+		}
+		switch level {
+		case "error":
+			b.Error++
+		case "warn":
+			b.Warn++
+		case "debug":
+			b.Debug++
+		case "trace":
+			b.Trace++
+		default: // info + unknown levels
+			b.Info++
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	out := make([]models.LogHistogramBucket, 0, len(ordered))
+	for _, t := range ordered {
+		out = append(out, *buckets[t])
+	}
+	return out, nil
+}
+
 // attachLinkedRequests decorates logs with the earliest api_request matching
 // (service_id, trace_id). Runs as a separate query AFTER rows are closed so
 // it can't deadlock the single SQLite connection. Logs without trace_id are

@@ -37,6 +37,16 @@ type ContainerStats struct {
 	MemoryPercent    float64
 }
 
+// ContainerMeta is per-container provenance for the service header: the image
+// reference (with tag), how many times the container has restarted, and when it
+// last started (the UI derives uptime from StartedAt). Image comes from the
+// cheap list call; restart count and start time require a per-container inspect.
+type ContainerMeta struct {
+	Image        string
+	RestartCount int
+	StartedAt    time.Time
+}
+
 type DockerLogLine struct {
 	Time    time.Time
 	Message string
@@ -145,6 +155,61 @@ func (c *DockerClient) ContainerStats(ctx context.Context, containerID string) (
 		return ContainerStats{}, fmt.Errorf("decode docker stats: %w", err)
 	}
 	return statsFromDocker(payload), nil
+}
+
+// ContainerMetaMap returns container provenance keyed by stable service key
+// (matching Target.Key), so the agent can attach it to each synced service.
+// ponytail: one inspect call per container each web sync (N+1 socket GETs); a
+// handful of containers on a compose host makes this negligible. Best-effort —
+// a container whose inspect fails still reports its image from the list.
+func (c *DockerClient) ContainerMetaMap(ctx context.Context) (map[string]ContainerMeta, error) {
+	containers, err := c.fetchContainers(ctx)
+	if err != nil {
+		return nil, err
+	}
+	metas := make(map[string]ContainerMeta, len(containers))
+	for _, container := range containers {
+		key := stableServiceKey(container.ID, containerName(container), container.Labels)
+		meta := ContainerMeta{Image: container.Image}
+		if inspect, err := c.containerInspect(ctx, container.ID); err == nil {
+			meta.RestartCount = inspect.RestartCount
+			// A never-started container reports "0001-01-01T00:00:00Z"; parse
+			// leaves StartedAt as the zero time, which the UI treats as "no uptime".
+			if started, perr := time.Parse(time.RFC3339Nano, inspect.State.StartedAt); perr == nil {
+				meta.StartedAt = started
+			}
+		}
+		metas[key] = meta
+	}
+	return metas, nil
+}
+
+type dockerInspectResponse struct {
+	RestartCount int `json:"RestartCount"`
+	State        struct {
+		StartedAt string `json:"StartedAt"`
+	} `json:"State"`
+}
+
+func (c *DockerClient) containerInspect(ctx context.Context, containerID string) (dockerInspectResponse, error) {
+	endpoint := fmt.Sprintf("http://docker/containers/%s/json", url.PathEscape(containerID))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	if err != nil {
+		return dockerInspectResponse{}, fmt.Errorf("create docker inspect request: %w", err)
+	}
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return dockerInspectResponse{}, fmt.Errorf("query docker inspect: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return dockerInspectResponse{}, fmt.Errorf("docker inspect returned %d", resp.StatusCode)
+	}
+	var inspect dockerInspectResponse
+	if err := json.NewDecoder(resp.Body).Decode(&inspect); err != nil {
+		return dockerInspectResponse{}, fmt.Errorf("decode docker inspect: %w", err)
+	}
+	return inspect, nil
 }
 
 type DockerClient struct {

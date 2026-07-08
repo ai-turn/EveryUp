@@ -622,3 +622,48 @@ func TestApiRequestRepo_RequestStats_ByAgent(t *testing.T) {
 		t.Errorf("agent-x bucket errors = %d, want 1", stats[0].ErrorCount)
 	}
 }
+
+// Status-class distribution + top 5xx endpoint over a filter window.
+func TestApiRequestRepo_StatusSummary(t *testing.T) {
+	openTestDB(t)
+	makeTestService(t, "svc-a")
+
+	repo := database.NewApiRequestRepository()
+	base := time.Now().Truncate(time.Hour)
+	mk := func(id, method, path string, status int, at time.Time) models.ApiRequest {
+		return models.ApiRequest{
+			ServiceID: "svc-a", AgentID: "agent-x", RequestID: id,
+			Method: method, Path: path, PathTemplate: path,
+			StatusCode: status, IsError: status >= 500, CreatedAt: at,
+		}
+	}
+	rows := []models.ApiRequest{
+		mk("r1", "GET", "/ok", 200, base),
+		mk("r2", "GET", "/ok", 200, base),
+		mk("r3", "GET", "/moved", 301, base),
+		mk("r4", "GET", "/missing", 404, base),
+		mk("r5", "POST", "/pay", 500, base),
+		mk("r6", "POST", "/pay", 502, base),
+		mk("r7", "GET", "/other-5xx", 500, base),
+		// outside the window — excluded by From
+		mk("r8", "GET", "/old", 500, base.Add(-2*time.Hour)),
+		// different agent — excluded by AgentID
+		mk("r9", "GET", "/foreign", 500, base),
+	}
+	// give the foreign row a different agent
+	rows[8].AgentID = "agent-other"
+	if _, err := repo.CreateBatch(rows); err != nil {
+		t.Fatalf("CreateBatch: %v", err)
+	}
+
+	sum, err := repo.StatusSummary(&models.ApiRequestFilter{AgentID: "agent-x", From: base.Add(-time.Hour)})
+	if err != nil {
+		t.Fatalf("StatusSummary: %v", err)
+	}
+	if sum.Count2xx != 2 || sum.Count3xx != 1 || sum.Count4xx != 1 || sum.Count5xx != 3 {
+		t.Errorf("class counts = 2xx:%d 3xx:%d 4xx:%d 5xx:%d, want 2/1/1/3", sum.Count2xx, sum.Count3xx, sum.Count4xx, sum.Count5xx)
+	}
+	if sum.Top5xxMethod != "POST" || sum.Top5xxPath != "/pay" || sum.Top5xxCount != 2 {
+		t.Errorf("top 5xx = %s %s ×%d, want POST /pay ×2", sum.Top5xxMethod, sum.Top5xxPath, sum.Top5xxCount)
+	}
+}

@@ -5,7 +5,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from 'recharts';
 import { ChartTooltip, formatAxisValue, getChartTheme } from '../../../components/charts';
-import { api, type ApiRequestStatBucket } from '../../../services/api';
+import { api, type ApiRequestStatBucket, type ApiRequestStatusSummary } from '../../../services/api';
 
 type TimeRange = '1h' | '6h' | '24h';
 // Bucket width per range keeps ~30-60 points on the chart.
@@ -20,6 +20,8 @@ interface Props {
   /** Omit for a project-level rollup across all of the agent's services. */
   serviceKey?: string;
   refreshKey?: number;
+  /** Controlled range from the page-header picker; when set, own buttons hide. */
+  range?: TimeRange;
 }
 
 interface ChartPoint {
@@ -31,18 +33,18 @@ interface ChartPoint {
   hasLatency: boolean;
 }
 
-export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey }: Props) {
+export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey, range: controlledRange }: Props) {
   const { t } = useTranslate();
-  const [range, setRange] = useState<TimeRange>('6h');
+  const [localRange, setLocalRange] = useState<TimeRange>('6h');
+  const range = controlledRange ?? localRange;
   const [buckets, setBuckets] = useState<ApiRequestStatBucket[]>([]);
+  const [summary, setSummary] = useState<ApiRequestStatusSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const r = RANGES.find((x) => x.value === range)!;
-    const params = {
-      from: new Date(Date.now() - r.hours * 3600 * 1000).toISOString(),
-      bucketMins: r.bucketMins,
-    };
+    const from = new Date(Date.now() - r.hours * 3600 * 1000).toISOString();
+    const params = { from, bucketMins: r.bucketMins };
     setLoading(true);
     const fetchStats = serviceKey
       ? api.getAgentServiceRequestStats(agentId, serviceKey, params)
@@ -51,6 +53,10 @@ export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey }: P
       .then((b) => setBuckets(b ?? []))
       .catch(() => setBuckets([]))
       .finally(() => setLoading(false));
+    // Non-critical — the strip hides itself when the summary is missing.
+    api.getRequestStatusSummary(agentId, serviceKey, { from })
+      .then((s) => setSummary(s))
+      .catch(() => setSummary(null));
   }, [agentId, serviceKey, range, refreshKey]);
 
   const theme = getChartTheme();
@@ -79,22 +85,56 @@ export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey }: P
     <div className="p-5 rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-chart-bg">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-slate-900 dark:text-white font-bold text-base">{t('요청 추이')}</h3>
-        <div className="flex gap-1">
-          {RANGES.map((r) => (
-            <button
-              key={r.value}
-              onClick={() => setRange(r.value)}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
-                range === r.value
-                  ? 'bg-primary text-white'
-                  : 'bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-secondary-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark'
-              }`}
-            >
-              {r.label}
-            </button>
-          ))}
-        </div>
+        {!controlledRange && (
+          <div className="flex gap-1">
+            {RANGES.map((r) => (
+              <button
+                key={r.value}
+                onClick={() => setLocalRange(r.value)}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
+                  range === r.value
+                    ? 'bg-primary text-white'
+                    : 'bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-secondary-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark'
+                }`}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* Status-class distribution + top 5xx endpoint (1a 콘솔 prototype) */}
+      {summary && (summary.count2xx + summary.count3xx + summary.count4xx + summary.count5xx + summary.countOther) > 0 && (() => {
+        const total = summary.count2xx + summary.count3xx + summary.count4xx + summary.count5xx + summary.countOther;
+        const classes = [
+          { label: '2xx', count: summary.count2xx, bar: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400' },
+          { label: '3xx', count: summary.count3xx, bar: 'bg-slate-400', text: 'text-slate-500 dark:text-text-muted-dark' },
+          { label: '4xx', count: summary.count4xx, bar: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400' },
+          { label: '5xx', count: summary.count5xx, bar: 'bg-red-500', text: 'text-red-500' },
+        ].filter((c) => c.count > 0);
+        return (
+          <div className="mb-4">
+            <div className="flex h-2 rounded-full overflow-hidden bg-slate-100 dark:bg-ui-hover-dark">
+              {classes.map((c) => (
+                <div key={c.label} className={c.bar} style={{ width: `${(c.count / total) * 100}%` }} />
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-2xs">
+              {classes.map((c) => (
+                <span key={c.label} className={`font-mono font-semibold ${c.text}`}>
+                  {c.label} {((c.count / total) * 100).toFixed(1)}%
+                </span>
+              ))}
+              {summary.top5xxPath && (
+                <span className="text-slate-500 dark:text-text-muted-dark truncate">
+                  · {t('5xx 최다')}: <span className="font-mono font-semibold text-red-500">{summary.top5xxMethod} {summary.top5xxPath}</span> ×{summary.top5xxCount}
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Latency percentiles (only when we have timed requests) */}
       {anyLatency && (

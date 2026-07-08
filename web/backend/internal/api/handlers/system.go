@@ -149,6 +149,9 @@ func getHistoryFromDB(repo *database.SystemMetricRepository, hostID, rangeStr st
 	var bucketMins int
 
 	switch rangeStr {
+	case "1h":
+		duration   = 1 * time.Hour
+		bucketMins = 2
 	case "12h":
 		duration   = 12 * time.Hour
 		bucketMins = 10

@@ -136,6 +136,38 @@ func (r *OtelMetricRepository) ListPoints(f *models.OtelMetricFilter) ([]models.
 	return points, rows.Err()
 }
 
+// LatestValuesByService returns the latest value of each metric every service
+// under the agent has exported since the cutoff — one row per
+// (service_name, metric_name), newest point per group. The caller picks each
+// service's representative metric from these. ponytail: a metric with multiple
+// attribute series collapses to whichever series holds the newest id; a glance
+// card doesn't need per-series aggregation.
+func (r *OtelMetricRepository) LatestValuesByService(agentID string, since time.Time) ([]models.OtelServiceMetric, error) {
+	rows, err := DB.Query(`
+		SELECT service_name, metric_name, metric_type, unit, value
+		FROM otel_metrics
+		WHERE id IN (
+			SELECT MAX(id) FROM otel_metrics
+			WHERE agent_id = ? AND created_at >= ?
+			GROUP BY service_name, metric_name
+		)
+	`, agentID, since)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []models.OtelServiceMetric
+	for rows.Next() {
+		var m models.OtelServiceMetric
+		if err := rows.Scan(&m.ServiceName, &m.MetricName, &m.MetricType, &m.Unit, &m.Value); err != nil {
+			return nil, err
+		}
+		out = append(out, m)
+	}
+	return out, rows.Err()
+}
+
 // DeleteOlderThan removes metric points older than the cutoff.
 func (r *OtelMetricRepository) DeleteOlderThan(cutoff time.Time) (int64, error) {
 	result, err := DB.Exec(`DELETE FROM otel_metrics WHERE created_at < ?`, cutoff)

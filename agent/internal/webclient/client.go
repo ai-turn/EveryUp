@@ -48,18 +48,21 @@ type ServiceSnapshotRequest struct {
 }
 
 type ServiceSnapshot struct {
-	Key         string    `json:"key"`
-	Name        string    `json:"name"`
-	CheckType   string    `json:"checkType"`
-	Endpoint    string    `json:"endpoint"`
-	Runtime     string    `json:"runtime,omitempty"` // detected language runtime ("java", "node", ...)
-	Healthy     bool      `json:"healthy"`
-	Seen        bool      `json:"seen"`
-	Silenced    bool      `json:"silenced"`
-	LastError   string    `json:"lastError,omitempty"`
-	LastStatus  int       `json:"lastStatus,omitempty"`
-	LastLatency string    `json:"lastLatency,omitempty"`
-	UpdatedAt   time.Time `json:"updatedAt,omitempty"`
+	Key          string    `json:"key"`
+	Name         string    `json:"name"`
+	CheckType    string    `json:"checkType"`
+	Endpoint     string    `json:"endpoint"`
+	Runtime      string    `json:"runtime,omitempty"`      // detected language runtime ("java", "node", ...)
+	Image        string    `json:"image,omitempty"`        // container image ref incl tag
+	RestartCount int       `json:"restartCount,omitempty"` // docker container restart count
+	StartedAt    time.Time `json:"startedAt,omitempty"`    // container start time; UI derives uptime
+	Healthy      bool      `json:"healthy"`
+	Seen         bool      `json:"seen"`
+	Silenced     bool      `json:"silenced"`
+	LastError    string    `json:"lastError,omitempty"`
+	LastStatus   int       `json:"lastStatus,omitempty"`
+	LastLatency  string    `json:"lastLatency,omitempty"`
+	UpdatedAt    time.Time `json:"updatedAt,omitempty"`
 }
 
 type OTLPLogBatch struct {

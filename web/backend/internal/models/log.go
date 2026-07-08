@@ -71,6 +71,17 @@ type LogIngestEntry struct {
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
+// LogHistogramBucket is one time bucket of per-level log counts for the
+// volume histogram on the service logs tab.
+type LogHistogramBucket struct {
+	Time  time.Time `json:"time"`
+	Error int       `json:"error"`
+	Warn  int       `json:"warn"`
+	Info  int       `json:"info"`
+	Debug int       `json:"debug"`
+	Trace int       `json:"trace"`
+}
+
 // LogFilter represents filter options for log queries
 type LogFilter struct {
 	ServiceID   string    `json:"serviceId,omitempty"`

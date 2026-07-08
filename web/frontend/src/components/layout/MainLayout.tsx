@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { Header } from './Header';
+import { CommandPalette } from './CommandPalette';
 import { Sidebar } from './Sidebar';
 import { Footer } from './Footer';
 import { DemoBanner } from './DemoBanner';
@@ -21,6 +22,9 @@ export function MainLayout() {
       </a>
 
       <DemoBanner />
+
+      {/* ⌘K / Ctrl+K project·service·page jumper */}
+      <CommandPalette />
 
       {/* Content area: 좌측 Sidebar(lg+) + 우측 본문 */}
       <div className="flex flex-1 overflow-hidden relative">

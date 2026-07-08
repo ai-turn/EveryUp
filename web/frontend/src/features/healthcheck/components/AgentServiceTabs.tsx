@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslate } from '@tolgee/react';
-import { MaterialIcon } from '../../../components/common';
+import { MaterialIcon, type GlobalTimeRange } from '../../../components/common';
 import type { AgentServiceFlat } from '../../../services/api';
 import { AgentIdentity } from './AgentIdentity';
 import { AgentRealtimeMetrics } from './AgentRealtimeMetrics';
@@ -18,6 +18,8 @@ export interface ServiceTabsProps {
   agentId: string;
   serviceKey: string;
   refreshKey: number;
+  /** Shared chart time range picked in the page header. */
+  range: GlobalTimeRange;
   /** Hide the service name + status badge in the health tab (e.g. when a sidebar already shows them). */
   showServiceName?: boolean;
 }
@@ -52,14 +54,14 @@ function TabBar({ active, onChange }: { active: DetailTab; onChange: (t: DetailT
   );
 }
 
-function HealthContent({ service, agentId, serviceKey, refreshKey, showServiceName = true }: ServiceTabsProps) {
+function HealthContent({ service, agentId, serviceKey, refreshKey, range, showServiceName = true }: ServiceTabsProps) {
   const { t } = useTranslate();
   return (
     <>
       <AgentIdentity service={service} showName={showServiceName} />
       <AgentRealtimeMetrics agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
       <AgentCheckHistoryBar agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
-      <AgentResponseTimeChart agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
+      <AgentResponseTimeChart agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} range={range} />
 
       <div className="flex items-center gap-2 mt-2 mb-4">
         <MaterialIcon name="report" className="text-base text-slate-400 dark:text-text-dim-dark" />
@@ -73,12 +75,12 @@ function HealthContent({ service, agentId, serviceKey, refreshKey, showServiceNa
   );
 }
 
-function TabContent({ tab, service, agentId, serviceKey, refreshKey, showServiceName }: { tab: DetailTab } & ServiceTabsProps) {
-  if (tab === 'logs')     return <AgentServiceLogsTab agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />;
-  if (tab === 'requests') return <AgentServiceRequestsTab agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} runtime={service.runtime} />;
-  if (tab === 'metrics')  return <AgentServiceMetricsTab agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />;
-  if (tab === 'infra')    return <AgentServiceInfraTab agentId={agentId} refreshKey={refreshKey} />;
-  return <HealthContent service={service} agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} showServiceName={showServiceName} />;
+function TabContent({ tab, service, agentId, serviceKey, refreshKey, range, showServiceName }: { tab: DetailTab } & ServiceTabsProps) {
+  if (tab === 'logs')     return <AgentServiceLogsTab agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} range={range} />;
+  if (tab === 'requests') return <AgentServiceRequestsTab agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} range={range} runtime={service.runtime} />;
+  if (tab === 'metrics')  return <AgentServiceMetricsTab agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} range={range} />;
+  if (tab === 'infra')    return <AgentServiceInfraTab agentId={agentId} refreshKey={refreshKey} range={range} />;
+  return <HealthContent service={service} agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} range={range} showServiceName={showServiceName} />;
 }
 
 // Tab bar + content for a single agent service. Reused by the full-page service

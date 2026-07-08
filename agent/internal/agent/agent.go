@@ -281,21 +281,35 @@ func (a *Agent) flushWebServices(ctx context.Context) {
 	}
 
 	snapshot := a.snapshot(ctx)
+	// Container provenance (image/restart count/uptime) for the service header;
+	// best-effort, keyed by the same stable service key as the snapshot.
+	var meta map[string]discovery.ContainerMeta
+	if a.docker != nil {
+		if m, err := a.docker.ContainerMetaMap(ctx); err != nil {
+			log.Printf("container meta collection failed: %v", err)
+		} else {
+			meta = m
+		}
+	}
 	services := make([]webclient.ServiceSnapshot, 0, len(snapshot.Services))
 	for _, service := range snapshot.Services {
+		m := meta[service.Key]
 		services = append(services, webclient.ServiceSnapshot{
-			Key:         service.Key,
-			Name:        service.Name,
-			CheckType:   service.CheckType,
-			Endpoint:    service.Endpoint,
-			Runtime:     a.runtimeOf(service.Name),
-			Healthy:     service.Healthy,
-			Seen:        service.Seen,
-			Silenced:    service.Silenced,
-			LastError:   service.LastError,
-			LastStatus:  service.LastStatus,
-			LastLatency: service.LastLatency,
-			UpdatedAt:   service.UpdatedAt,
+			Key:          service.Key,
+			Name:         service.Name,
+			CheckType:    service.CheckType,
+			Endpoint:     service.Endpoint,
+			Runtime:      a.runtimeOf(service.Name),
+			Image:        m.Image,
+			RestartCount: m.RestartCount,
+			StartedAt:    m.StartedAt,
+			Healthy:      service.Healthy,
+			Seen:         service.Seen,
+			Silenced:     service.Silenced,
+			LastError:    service.LastError,
+			LastStatus:   service.LastStatus,
+			LastLatency:  service.LastLatency,
+			UpdatedAt:    service.UpdatedAt,
 		})
 	}
 

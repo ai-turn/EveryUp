@@ -4,23 +4,21 @@ import {
   ResponsiveContainer, ComposedChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from 'recharts';
+import type { GlobalTimeRange } from '../../../components/common';
 import { ChartTooltip, formatAxisValue, getChartTheme } from '../../../components/charts';
 import { api, type OtelMetricName, type OtelMetricPoint } from '../../../services/api';
 
 const SERIES_COLORS = ['#3b76c9', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#14b8a6'];
 const MAX_SERIES = 6;
 
-type TimeRange = '1h' | '6h' | '24h';
-const RANGES: { label: string; value: TimeRange; hours: number }[] = [
-  { label: '1H', value: '1h', hours: 1 },
-  { label: '6H', value: '6h', hours: 6 },
-  { label: '24H', value: '24h', hours: 24 },
-];
+const RANGE_HOURS: Record<GlobalTimeRange, number> = { '1h': 1, '6h': 6, '24h': 24 };
 
 interface Props {
   agentId: string;
   serviceKey: string;
   refreshKey?: number;
+  /** Shared chart range from the page-header picker. */
+  range: GlobalTimeRange;
 }
 
 // OTel semconv bytes unit ("By") formatted as KB/MB/GB; other units defer to
@@ -43,12 +41,11 @@ function seriesLabel(attributes?: Record<string, unknown>): string {
   return entries.map(([k, v]) => `${k.split('.').pop()}=${String(v)}`).join(', ');
 }
 
-export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey }: Props) {
+export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range }: Props) {
   const { t } = useTranslate();
   const [names, setNames] = useState<OtelMetricName[]>([]);
   const [namesLoading, setNamesLoading] = useState(true);
   const [selected, setSelected] = useState('');
-  const [range, setRange] = useState<TimeRange>('6h');
   const [points, setPoints] = useState<OtelMetricPoint[]>([]);
   const [pointsLoading, setPointsLoading] = useState(false);
 
@@ -65,7 +62,7 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey }: Prop
 
   useEffect(() => {
     if (!selected) return;
-    const hours = RANGES.find((r) => r.value === range)?.hours ?? 6;
+    const hours = RANGE_HOURS[range];
     setPointsLoading(true);
     api.getAgentServiceOtelMetricPoints(agentId, serviceKey, {
       name: selected,
@@ -129,21 +126,6 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey }: Prop
               {selectedMeta.metricType}{unit ? ` · ${unit}` : ''}
             </span>
           )}
-        </div>
-        <div className="flex gap-1">
-          {RANGES.map((r) => (
-            <button
-              key={r.value}
-              onClick={() => setRange(r.value)}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
-                range === r.value
-                  ? 'bg-primary text-white'
-                  : 'bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-secondary-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark'
-              }`}
-            >
-              {r.label}
-            </button>
-          ))}
         </div>
       </div>
 

@@ -301,6 +301,66 @@ func (h *AgentHandler) GetAll(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": agents})
 }
 
+// GetOverview returns per-agent KPI rollups (30d uptime, active incidents,
+// 24h requests, latest p95) in one call for the home project cards.
+// ponytail: sequential per-agent aggregation — fine for self-hosted agent
+// counts; switch to grouped SQL if a deployment ever has dozens of agents.
+func (h *AgentHandler) GetOverview(c *fiber.Ctx) error {
+	agents, err := h.repo.GetAllAgents()
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	out := make([]models.AgentOverview, 0, len(agents))
+	for _, a := range agents {
+		ov := models.AgentOverview{AgentID: a.ID}
+
+		days, err := h.repo.GetAgentUptimeByDay(a.ID, 30)
+		if err != nil {
+			return internalError(c, "DATABASE_ERROR", err)
+		}
+		healthy, total := 0, 0
+		for _, d := range days {
+			healthy += d.HealthyChecks
+			total += d.TotalChecks
+		}
+		if total > 0 {
+			pct := float64(healthy) * 100.0 / float64(total)
+			ov.UptimePct = &pct
+		}
+
+		incidents, err := h.repo.GetAgentIncidents(a.ID, 30, 100)
+		if err != nil {
+			return internalError(c, "DATABASE_ERROR", err)
+		}
+		for _, in := range incidents {
+			if in.Active {
+				ov.ActiveIncidents++
+			}
+		}
+
+		buckets, err := h.reqRepo.RequestStats(&models.ApiRequestFilter{
+			AgentID: a.ID,
+			From:    time.Now().Add(-24 * time.Hour),
+		}, 60)
+		if err != nil {
+			return internalError(c, "DATABASE_ERROR", err)
+		}
+		for _, b := range buckets {
+			ov.Requests24h += b.Count
+		}
+		for i := len(buckets) - 1; i >= 0; i-- {
+			if buckets[i].Timed > 0 {
+				p95 := buckets[i].P95
+				ov.P95Ms = &p95
+				break
+			}
+		}
+
+		out = append(out, ov)
+	}
+	return c.JSON(fiber.Map{"success": true, "data": out})
+}
+
 // GetKey returns the agent's full API key (decrypted) for display in the UI.
 // available is false for agents created before key storage existed — those have
 // only the hash and must be rotated to obtain a viewable key.
@@ -390,6 +450,9 @@ func (h *AgentHandler) GetServiceHistory(c *fiber.Ctx) error {
 	var since time.Time
 	var bucketMins int
 	switch c.Query("range", "24h") {
+	case "1h":
+		since = time.Now().Add(-1 * time.Hour)
+		bucketMins = 2
 	case "12h":
 		since = time.Now().Add(-12 * time.Hour)
 		bucketMins = 10
@@ -509,6 +572,46 @@ func (h *AgentHandler) GetServiceLogs(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": fiber.Map{"data": logs, "total": total}})
 }
 
+// GetServiceLogHistogram returns per-level log counts bucketed over time for
+// the volume chart. GET /agents/:agentId/services/:key/log-histogram
+func (h *AgentHandler) GetServiceLogHistogram(c *fiber.Ctx) error {
+	agentID := c.Params("agentId")
+	service, err := h.repo.GetServiceByKey(agentID, c.Params("key"))
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	if service == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"success": false,
+			"error":   fiber.Map{"code": "NOT_FOUND", "message": "service not found"},
+		})
+	}
+
+	filter := models.LogFilter{
+		AgentID:     agentID,
+		ServiceName: service.Name,
+		Level:       models.LogLevel(c.Query("level")),
+		Search:      c.Query("search"),
+	}
+	if from := c.Query("from"); from != "" {
+		if t, err2 := time.Parse(time.RFC3339, from); err2 == nil {
+			filter.From = t
+		}
+	}
+	if to := c.Query("to"); to != "" {
+		if t, err2 := time.Parse(time.RFC3339, to); err2 == nil {
+			filter.To = t
+		}
+	}
+	bucketMins, _ := strconv.Atoi(c.Query("bucketMins", "10"))
+
+	buckets, err := h.logRepo.Histogram(filter, bucketMins)
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	return c.JSON(fiber.Map{"success": true, "data": buckets})
+}
+
 // GetServiceRequests returns API requests for a service identified by agentId+key using service_name as the filter.
 func (h *AgentHandler) GetServiceRequests(c *fiber.Ctx) error {
 	agentID := c.Params("agentId")
@@ -557,7 +660,6 @@ func (h *AgentHandler) GetServiceRequests(c *fiber.Ctx) error {
 	// { data, total } — total is otherwise dropped as an envelope sibling.
 	return c.JSON(fiber.Map{"success": true, "data": fiber.Map{"data": requests, "total": total}})
 }
-
 
 // GetServiceRequestStats returns time-bucketed request aggregates (volume,
 // errors, p50, p95) for a service's trends chart.
@@ -627,6 +729,54 @@ func (h *AgentHandler) GetAgentRequestStats(c *fiber.Ctx) error {
 		stats = []models.ApiRequestStatBucket{}
 	}
 	return c.JSON(fiber.Map{"success": true, "data": stats})
+}
+
+// requestWindowFilter builds an ApiRequestFilter from optional from/to query params.
+func requestWindowFilter(c *fiber.Ctx, base models.ApiRequestFilter) *models.ApiRequestFilter {
+	if from := c.Query("from"); from != "" {
+		if t, err := time.Parse(time.RFC3339, from); err == nil {
+			base.From = t
+		}
+	}
+	if to := c.Query("to"); to != "" {
+		if t, err := time.Parse(time.RFC3339, to); err == nil {
+			base.To = t
+		}
+	}
+	return &base
+}
+
+// GetAgentRequestStatusSummary returns the status-class distribution + top 5xx
+// endpoint across all of an agent's services. GET /agents/:agentId/request-status-summary
+func (h *AgentHandler) GetAgentRequestStatusSummary(c *fiber.Ctx) error {
+	filter := requestWindowFilter(c, models.ApiRequestFilter{AgentID: c.Params("agentId")})
+	summary, err := h.reqRepo.StatusSummary(filter)
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	return c.JSON(fiber.Map{"success": true, "data": summary})
+}
+
+// GetServiceRequestStatusSummary is the per-service variant.
+// GET /agents/:agentId/services/:key/request-status-summary
+func (h *AgentHandler) GetServiceRequestStatusSummary(c *fiber.Ctx) error {
+	agentID := c.Params("agentId")
+	service, err := h.repo.GetServiceByKey(agentID, c.Params("key"))
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	if service == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"success": false,
+			"error":   fiber.Map{"code": "NOT_FOUND", "message": "service not found"},
+		})
+	}
+	filter := requestWindowFilter(c, models.ApiRequestFilter{AgentID: agentID, ServiceName: service.Name})
+	summary, err := h.reqRepo.StatusSummary(filter)
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	return c.JSON(fiber.Map{"success": true, "data": summary})
 }
 
 // GetServiceOtelMetricNames returns the distinct OTLP metrics a service has
@@ -710,6 +860,45 @@ func (h *AgentHandler) GetServiceOtelMetricPoints(c *fiber.Ctx) error {
 		points = []models.OtelMetric{}
 	}
 	return c.JSON(fiber.Map{"success": true, "data": points})
+}
+
+// representativeMetricPatterns orders metric-name substrings from most
+// service-specific to most generic; the first exported metric matching the
+// earliest pattern becomes a service's representative "at a glance" metric
+// (worker→queue, db→connections, redis/postgres→memory, else cpu).
+var representativeMetricPatterns = []string{"queue", "connection", "memory", "cpu"}
+
+func pickRepresentativeMetric(metrics []models.OtelServiceMetric) (models.OtelServiceMetric, bool) {
+	for _, pat := range representativeMetricPatterns {
+		for _, m := range metrics {
+			if strings.Contains(strings.ToLower(m.MetricName), pat) {
+				return m, true
+			}
+		}
+	}
+	return models.OtelServiceMetric{}, false
+}
+
+// GetAgentServiceMetrics returns each service's representative metric (latest
+// value) for the project overview cards, keyed by service name.
+// GET /agents/:agentId/service-metrics
+func (h *AgentHandler) GetAgentServiceMetrics(c *fiber.Ctx) error {
+	agentID := c.Params("agentId")
+	metrics, err := h.otelMetricRepo.LatestValuesByService(agentID, time.Now().Add(-15*time.Minute))
+	if err != nil {
+		return internalError(c, "DATABASE_ERROR", err)
+	}
+	byService := make(map[string][]models.OtelServiceMetric)
+	for _, m := range metrics {
+		byService[m.ServiceName] = append(byService[m.ServiceName], m)
+	}
+	out := make([]models.OtelServiceMetric, 0, len(byService))
+	for _, list := range byService {
+		if repr, ok := pickRepresentativeMetric(list); ok {
+			out = append(out, repr)
+		}
+	}
+	return c.JSON(fiber.Map{"success": true, "data": out})
 }
 
 // GetServiceLogFilter returns the per-service ingest log-level filter (empty = accept all).

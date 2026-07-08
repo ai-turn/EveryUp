@@ -19,6 +19,12 @@ export interface AgentServiceSnapshot {
   endpoint: string;
   /** Agent-detected language runtime ("java", "node", "python", "go", "dotnet"). */
   runtime?: string;
+  /** Container image ref incl tag (docker-discovered services only). */
+  image?: string;
+  /** Docker container restart count; >0 hints a crash/restart loop. */
+  restartCount?: number;
+  /** Container start time (ISO); UI derives uptime. Absent/zero for non-container services. */
+  startedAt?: string;
   healthy: boolean;
   seen: boolean;
   silenced: boolean;
@@ -62,6 +68,15 @@ export interface ServiceUptimeDay {
   totalChecks: number;
 }
 
+// Per-project KPI rollup for the home project cards (one row per agent).
+export interface AgentOverview {
+  agentId: string;
+  uptimePct: number | null; // 30d weighted, null when no checks yet
+  activeIncidents: number;
+  requests24h: number;
+  p95Ms: number | null; // latest timed bucket, null when no latency data
+}
+
 // One unhealthy episode derived from service history (project dashboard).
 export interface AgentIncident {
   key: string;
@@ -80,6 +95,28 @@ export interface ApiRequestStatBucket {
   p50: number;
   p95: number;
   timed: number;
+}
+
+// One time bucket of per-level log counts for the logs-tab volume histogram.
+export interface LogHistogramBucket {
+  time: string;
+  error: number;
+  warn: number;
+  info: number;
+  debug: number;
+  trace: number;
+}
+
+// Status-class distribution + most frequent 5xx endpoint over a window.
+export interface ApiRequestStatusSummary {
+  count2xx: number;
+  count3xx: number;
+  count4xx: number;
+  count5xx: number;
+  countOther: number;
+  top5xxMethod?: string;
+  top5xxPath?: string;
+  top5xxCount?: number;
 }
 
 // One OTLP metric a service exports (for the metric picker).
@@ -104,6 +141,16 @@ export interface OtelMetricPoint {
   createdAt: string;
 }
 
+// A service's representative metric (latest value) for the project overview
+// cards. Chosen server-side from whatever the service exports.
+export interface OtelServiceMetric {
+  serviceName: string;
+  metricName: string;
+  metricType: string;
+  unit?: string;
+  value: number;
+}
+
 export function createAgentsApi(request: RequestFn) {
   return {
     createAgent: (name: string) =>
@@ -123,6 +170,8 @@ export function createAgentsApi(request: RequestFn) {
     rotateAgentKey: (agentId: string) =>
       request<{ apiKey: string }>(`/agents/${agentId}/rotate-key`, { method: 'POST' }),
     getAgents: () => request<ConnectedAgent[]>('/agents'),
+    // Home project cards: per-agent KPI rollup in one call (no N+1).
+    getAgentsOverview: () => request<AgentOverview[]>('/agents/overview'),
     getAgentServices: (agentId: string) => request<AgentServiceSnapshot[]>(`/agents/${agentId}/services`),
     getAgentEvents: (agentId: string, limit = 100) =>
       request<AgentEvent[]>(`/agents/${agentId}/events?limit=${limit}`),
@@ -146,6 +195,19 @@ export function createAgentsApi(request: RequestFn) {
       if (params?.from) p.set('from', params.from);
       if (params?.to) p.set('to', params.to);
       return request<{ data: LogEntry[]; total: number }>(`/agents/${agentId}/services/${encodeURIComponent(key)}/logs?${p}`);
+    },
+    // Per-level log counts bucketed over time (logs-tab volume histogram).
+    getAgentServiceLogHistogram: (
+      agentId: string, key: string,
+      params?: { level?: string; search?: string; from?: string; to?: string; bucketMins?: number },
+    ) => {
+      const p = new URLSearchParams();
+      if (params?.level) p.set('level', params.level);
+      if (params?.search) p.set('search', params.search);
+      if (params?.from) p.set('from', params.from);
+      if (params?.to) p.set('to', params.to);
+      if (params?.bucketMins) p.set('bucketMins', String(params.bucketMins));
+      return request<LogHistogramBucket[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/log-histogram?${p}`);
     },
     getAgentServiceRequests: (
       agentId: string, key: string,
@@ -181,12 +243,28 @@ export function createAgentsApi(request: RequestFn) {
       if (params?.bucketMins) p.set('bucketMins', String(params.bucketMins));
       return request<ApiRequestStatBucket[]>(`/agents/${agentId}/request-stats?${p}`);
     },
+    // Status-class distribution + top 5xx endpoint. Omit key for the agent rollup.
+    getRequestStatusSummary: (
+      agentId: string, key?: string,
+      params?: { from?: string; to?: string },
+    ) => {
+      const p = new URLSearchParams();
+      if (params?.from) p.set('from', params.from);
+      if (params?.to) p.set('to', params.to);
+      const base = key
+        ? `/agents/${agentId}/services/${encodeURIComponent(key)}/request-status-summary`
+        : `/agents/${agentId}/request-status-summary`;
+      return request<ApiRequestStatusSummary>(`${base}?${p}`);
+    },
     // Project-level uptime rollup across all of the agent's services.
     getAgentUptime: (agentId: string, days = 90) =>
       request<ServiceUptimeDay[]>(`/agents/${agentId}/uptime?days=${days}`),
     // Unhealthy episodes derived from service history, newest first.
     getAgentIncidents: (agentId: string, days = 30, limit = 20) =>
       request<AgentIncident[]>(`/agents/${agentId}/incidents?days=${days}&limit=${limit}`),
+    // Each service's representative metric (latest value) for the project cards.
+    getAgentServiceMetrics: (agentId: string) =>
+      request<OtelServiceMetric[]>(`/agents/${agentId}/service-metrics`),
     getAgentServiceOtelMetricNames: (agentId: string, key: string) =>
       request<OtelMetricName[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/otel-metrics`),
     getAgentServiceOtelMetricPoints: (

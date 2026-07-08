@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslate } from '@tolgee/react';
 import { MaterialIcon } from '../../components/common';
-import { api, type AgentServiceFlat, type ConnectedAgent } from '../../services/api';
+import { api, type AgentOverview, type AgentServiceFlat, type ConnectedAgent } from '../../services/api';
 import { PendingServiceCard } from '../../features/services/components/PendingServiceCard';
 import { AddServiceModal } from '../../features/services/components/AddServiceModal';
 import { ApiKeyModal } from '../../features/services/components/ApiKeyModal';
@@ -18,13 +18,14 @@ interface ProjectCardProps {
   agent?: ConnectedAgent;
   agentName: string;
   services: AgentServiceFlat[];
+  overview?: AgentOverview;
   onDeleteAgent: (id: string) => void;
   onViewKey: (agent: ConnectedAgent) => void;
 }
 
 // One project (= one agent = one docker-compose host) rendered as a single card.
 // Clicking drills into the project detail page that lists its internal services.
-function ProjectCard({ agentId, agent, agentName, services, onDeleteAgent, onViewKey }: ProjectCardProps) {
+function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAgent, onViewKey }: ProjectCardProps) {
   const navigate = useNavigate();
   const online = agent ? agentOnline(agent) : true;
   const total = services.length;
@@ -84,6 +85,36 @@ function ProjectCard({ agentId, agent, agentName, services, onDeleteAgent, onVie
         </p>
       )}
 
+      {/* KPI rollup (from /agents/overview; hidden until it loads) */}
+      {overview && (
+        <div className="flex items-center gap-4 text-sm">
+          <div>
+            <div className="text-2xs text-slate-400 dark:text-text-dim-dark">가동률 30일</div>
+            <div className="font-mono font-semibold text-slate-800 dark:text-white">
+              {overview.uptimePct != null ? `${overview.uptimePct.toFixed(2)}%` : '—'}
+            </div>
+          </div>
+          <div>
+            <div className="text-2xs text-slate-400 dark:text-text-dim-dark">요청 24h</div>
+            <div className="font-mono font-semibold text-slate-800 dark:text-white">
+              {overview.requests24h > 0
+                ? Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(overview.requests24h)
+                : '—'}
+            </div>
+          </div>
+          <div>
+            <div className="text-2xs text-slate-400 dark:text-text-dim-dark">p95</div>
+            <div className={`font-mono font-semibold ${
+              overview.p95Ms != null && overview.p95Ms > 500
+                ? 'text-amber-600 dark:text-amber-400'
+                : 'text-slate-800 dark:text-white'
+            }`}>
+              {overview.p95Ms != null ? `${overview.p95Ms}ms` : '—'}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Divider */}
       <div className="border-t border-slate-100 dark:border-ui-border-dark" />
 
@@ -129,12 +160,17 @@ export function ServiceGridPage() {
   const { t } = useTranslate();
   const [services, setServices] = useState<AgentServiceFlat[]>([]);
   const [agents, setAgents] = useState<ConnectedAgent[]>([]);
+  const [overview, setOverview] = useState<Record<string, AgentOverview>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [keyModalAgent, setKeyModalAgent] = useState<{ id: string; name: string } | null>(null);
 
   const load = useCallback(async () => {
+    // KPI rollup is non-critical — cards render without it and fill in when it lands.
+    api.getAgentsOverview()
+      .then((rows) => setOverview(Object.fromEntries((rows ?? []).map((o) => [o.agentId, o]))))
+      .catch(() => {});
     try {
       const [svcs, agts] = await Promise.all([
         api.getAllAgentServicesFlat(),
@@ -208,9 +244,9 @@ export function ServiceGridPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('서비스')}</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('프로젝트')}</h1>
           <p className="text-sm text-slate-500 dark:text-text-muted-dark">
-            {t('Agent가 감지한 모니터링 서비스')}
+            {t('연결된 프로젝트와 모니터링 서비스 현황')}
           </p>
         </div>
         <button
@@ -259,6 +295,7 @@ export function ServiceGridPage() {
               agent={g.agent}
               agentName={g.agentName}
               services={g.services}
+              overview={overview[g.agentId]}
               onDeleteAgent={handleDelete}
               onViewKey={(a) => setKeyModalAgent({ id: a.id, name: a.name })}
             />

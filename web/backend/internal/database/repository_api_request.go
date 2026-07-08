@@ -423,6 +423,77 @@ func (r *ApiRequestRepository) RequestStats(f *models.ApiRequestFilter, bucketMi
 	return out, nil
 }
 
+// StatusSummary aggregates status-code classes over the filter window plus the
+// most frequent 5xx endpoint, for the "상태코드 분포" strip on the trends card.
+func (r *ApiRequestRepository) StatusSummary(f *models.ApiRequestFilter) (*models.ApiRequestStatusSummary, error) {
+	if f == nil {
+		f = &models.ApiRequestFilter{}
+	}
+	where := "1=1"
+	args := []interface{}{}
+	if f.ServiceID != "" {
+		where += " AND service_id = ?"
+		args = append(args, f.ServiceID)
+	}
+	if f.AgentID != "" {
+		where += " AND agent_id = ?"
+		args = append(args, f.AgentID)
+	}
+	if f.ServiceName != "" {
+		where += " AND service_name = ?"
+		args = append(args, f.ServiceName)
+	}
+	if !f.From.IsZero() {
+		where += " AND created_at >= ?"
+		args = append(args, f.From)
+	}
+	if !f.To.IsZero() {
+		where += " AND created_at <= ?"
+		args = append(args, f.To)
+	}
+
+	out := &models.ApiRequestStatusSummary{}
+	rows, err := DB.Query("SELECT status_code/100, COUNT(*) FROM api_requests WHERE "+where+" GROUP BY status_code/100", args...)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var cls, n int
+		if err := rows.Scan(&cls, &n); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		switch cls {
+		case 2:
+			out.Count2xx = n
+		case 3:
+			out.Count3xx = n
+		case 4:
+			out.Count4xx = n
+		case 5:
+			out.Count5xx = n
+		default:
+			out.CountOther += n
+		}
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return nil, err
+	}
+	rows.Close() // single connection — close before the next query
+
+	if out.Count5xx > 0 {
+		err := DB.QueryRow(
+			"SELECT method, COALESCE(NULLIF(path_template,''), path), COUNT(*) AS c FROM api_requests WHERE "+where+
+				" AND status_code >= 500 GROUP BY 1, 2 ORDER BY c DESC LIMIT 1", args...,
+		).Scan(&out.Top5xxMethod, &out.Top5xxPath, &out.Top5xxCount)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return out, nil
+}
+
 // percentile returns the p-th percentile (nearest-rank) of vals, or 0 when
 // empty. Sorts a copy; caller's slice is untouched.
 func percentile(vals []int, p int) int {

@@ -166,13 +166,16 @@ func (r *AgentRepository) UpsertServices(agentID string, observedAt time.Time, s
 				service.UpdatedAt = observedAt
 			}
 			if _, err := tx.Exec(`
-INSERT INTO agent_services(agent_id, key, name, check_type, endpoint, runtime, healthy, seen, silenced, last_error, last_status, last_latency, updated_at, observed_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO agent_services(agent_id, key, name, check_type, endpoint, runtime, image, restart_count, started_at, healthy, seen, silenced, last_error, last_status, last_latency, updated_at, observed_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(agent_id, key) DO UPDATE SET
 	name = excluded.name,
 	check_type = excluded.check_type,
 	endpoint = excluded.endpoint,
 	runtime = excluded.runtime,
+	image = excluded.image,
+	restart_count = excluded.restart_count,
+	started_at = excluded.started_at,
 	healthy = excluded.healthy,
 	seen = excluded.seen,
 	silenced = excluded.silenced,
@@ -181,7 +184,7 @@ ON CONFLICT(agent_id, key) DO UPDATE SET
 	last_latency = excluded.last_latency,
 	updated_at = excluded.updated_at,
 	observed_at = excluded.observed_at`,
-				agentID, service.Key, service.Name, service.CheckType, service.Endpoint, service.Runtime, boolInt(service.Healthy), boolInt(service.Seen),
+				agentID, service.Key, service.Name, service.CheckType, service.Endpoint, service.Runtime, service.Image, service.RestartCount, nullableTime(service.StartedAt), boolInt(service.Healthy), boolInt(service.Seen),
 				boolInt(service.Silenced), service.LastError, service.LastStatus, service.LastLatency, service.UpdatedAt, observedAt); err != nil {
 				return err
 			}
@@ -221,7 +224,7 @@ func (r *AgentRepository) DeleteService(agentID, key string) error {
 
 func (r *AgentRepository) GetServices(agentID string) ([]models.AgentService, error) {
 	rows, err := DB.Query(`
-SELECT agent_id, key, name, check_type, endpoint, runtime, healthy, seen, silenced, last_error, last_status, last_latency, updated_at, observed_at
+SELECT agent_id, key, name, check_type, endpoint, runtime, image, restart_count, started_at, healthy, seen, silenced, last_error, last_status, last_latency, updated_at, observed_at
 FROM agent_services WHERE agent_id = ? ORDER BY name`, agentID)
 	if err != nil {
 		return nil, err
@@ -231,10 +234,13 @@ FROM agent_services WHERE agent_id = ? ORDER BY name`, agentID)
 	for rows.Next() {
 		var service models.AgentService
 		var healthy, seen, silenced int
+		var startedAt sql.NullTime
 		if err := rows.Scan(&service.AgentID, &service.Key, &service.Name, &service.CheckType, &service.Endpoint, &service.Runtime,
+			&service.Image, &service.RestartCount, &startedAt,
 			&healthy, &seen, &silenced, &service.LastError, &service.LastStatus, &service.LastLatency, &service.UpdatedAt, &service.ObservedAt); err != nil {
 			return nil, err
 		}
+		service.StartedAt = startedAt.Time
 		service.Healthy = healthy == 1
 		service.Seen = seen == 1
 		service.Silenced = silenced == 1
@@ -246,10 +252,12 @@ FROM agent_services WHERE agent_id = ? ORDER BY name`, agentID)
 func (r *AgentRepository) GetServiceByKey(agentID, key string) (*models.AgentService, error) {
 	var service models.AgentService
 	var healthy, seen, silenced int
+	var startedAt sql.NullTime
 	err := DB.QueryRow(`
-SELECT agent_id, key, name, check_type, endpoint, runtime, healthy, seen, silenced, last_error, last_status, last_latency, updated_at, observed_at
+SELECT agent_id, key, name, check_type, endpoint, runtime, image, restart_count, started_at, healthy, seen, silenced, last_error, last_status, last_latency, updated_at, observed_at
 FROM agent_services WHERE agent_id = ? AND key = ?`, agentID, key).Scan(
 		&service.AgentID, &service.Key, &service.Name, &service.CheckType, &service.Endpoint, &service.Runtime,
+		&service.Image, &service.RestartCount, &startedAt,
 		&healthy, &seen, &silenced, &service.LastError, &service.LastStatus, &service.LastLatency, &service.UpdatedAt, &service.ObservedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -257,6 +265,7 @@ FROM agent_services WHERE agent_id = ? AND key = ?`, agentID, key).Scan(
 	if err != nil {
 		return nil, err
 	}
+	service.StartedAt = startedAt.Time
 	service.Healthy = healthy == 1
 	service.Seen = seen == 1
 	service.Silenced = silenced == 1
@@ -375,7 +384,7 @@ FROM agent_events WHERE agent_id = ? ORDER BY time DESC LIMIT ?`, agentID, limit
 // GetAllServicesFlat returns all agent services joined with agent name for list views.
 func (r *AgentRepository) GetAllServicesFlat() ([]models.AgentServiceFlat, error) {
 	rows, err := DB.Query(`
-SELECT s.agent_id, s.key, s.name, s.check_type, s.endpoint, s.runtime, s.healthy, s.seen, s.silenced,
+SELECT s.agent_id, s.key, s.name, s.check_type, s.endpoint, s.runtime, s.image, s.restart_count, s.started_at, s.healthy, s.seen, s.silenced,
        s.last_error, s.last_status, s.last_latency, s.updated_at, s.observed_at, a.name
 FROM agent_services s
 JOIN agents a ON a.id = s.agent_id
@@ -389,14 +398,17 @@ ORDER BY a.name, s.name`)
 	for rows.Next() {
 		var f models.AgentServiceFlat
 		var healthy, seen, silenced int
+		var startedAt sql.NullTime
 		if err := rows.Scan(
 			&f.AgentID, &f.Key, &f.Name, &f.CheckType, &f.Endpoint, &f.Runtime,
+			&f.Image, &f.RestartCount, &startedAt,
 			&healthy, &seen, &silenced,
 			&f.LastError, &f.LastStatus, &f.LastLatency,
 			&f.UpdatedAt, &f.ObservedAt, &f.AgentName,
 		); err != nil {
 			return nil, err
 		}
+		f.StartedAt = startedAt.Time
 		f.Healthy = healthy == 1
 		f.Seen = seen == 1
 		f.Silenced = silenced == 1
@@ -658,4 +670,13 @@ func boolInt(value bool) int {
 		return 1
 	}
 	return 0
+}
+
+// nullableTime stores the zero time as SQL NULL (e.g. non-container services
+// have no container start time), so scans distinguish "never set" from year 1.
+func nullableTime(t time.Time) interface{} {
+	if t.IsZero() {
+		return nil
+	}
+	return t
 }

@@ -35,6 +35,16 @@ type AgentIncident struct {
 	Active      bool       `json:"active"`
 }
 
+// AgentOverview is the per-project KPI rollup for the home project cards —
+// one row per agent so the list renders without N+1 fetches.
+type AgentOverview struct {
+	AgentID         string   `json:"agentId"`
+	UptimePct       *float64 `json:"uptimePct"` // 30d weighted, nil when no checks yet
+	ActiveIncidents int      `json:"activeIncidents"`
+	Requests24h     int      `json:"requests24h"`
+	P95Ms           *int     `json:"p95Ms"` // latest timed bucket, nil when no latency data
+}
+
 type Agent struct {
 	ID         string    `json:"id"`
 	Name       string    `json:"name"`
@@ -47,20 +57,23 @@ type Agent struct {
 }
 
 type AgentService struct {
-	AgentID     string    `json:"agentId"`
-	Key         string    `json:"key"`
-	Name        string    `json:"name"`
-	CheckType   string    `json:"checkType"`
-	Endpoint    string    `json:"endpoint"`
-	Runtime     string    `json:"runtime,omitempty"` // agent-detected language runtime ("java", "node", ...)
-	Healthy     bool      `json:"healthy"`
-	Seen        bool      `json:"seen"`
-	Silenced    bool      `json:"silenced"`
-	LastError   string    `json:"lastError,omitempty"`
-	LastStatus  int       `json:"lastStatus,omitempty"`
-	LastLatency string    `json:"lastLatency,omitempty"`
-	UpdatedAt   time.Time `json:"updatedAt,omitempty"`
-	ObservedAt  time.Time `json:"observedAt"`
+	AgentID      string    `json:"agentId"`
+	Key          string    `json:"key"`
+	Name         string    `json:"name"`
+	CheckType    string    `json:"checkType"`
+	Endpoint     string    `json:"endpoint"`
+	Runtime      string    `json:"runtime,omitempty"`      // agent-detected language runtime ("java", "node", ...)
+	Image        string    `json:"image,omitempty"`        // container image ref incl tag
+	RestartCount int       `json:"restartCount,omitempty"` // docker container restart count
+	StartedAt    time.Time `json:"startedAt,omitempty"`    // container start time; UI derives uptime
+	Healthy      bool      `json:"healthy"`
+	Seen         bool      `json:"seen"`
+	Silenced     bool      `json:"silenced"`
+	LastError    string    `json:"lastError,omitempty"`
+	LastStatus   int       `json:"lastStatus,omitempty"`
+	LastLatency  string    `json:"lastLatency,omitempty"`
+	UpdatedAt    time.Time `json:"updatedAt,omitempty"`
+	ObservedAt   time.Time `json:"observedAt"`
 }
 
 type AgentEvent struct {

@@ -1,20 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslate } from '@tolgee/react';
 import {
   ResponsiveContainer, ComposedChart, Area, Line,
   XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts';
+import type { GlobalTimeRange } from '../../../components/common';
 import { ChartTooltip, formatAxisValue, getChartTheme } from '../../../components/charts';
 import { api, type ServiceHistoryPoint } from '../../../services/api';
 
 const PRIMARY = '#3b76c9';
 
-type TimeRange = '6h' | '12h' | '24h';
-
 interface AgentResponseTimeChartProps {
   agentId: string;
   serviceKey: string;
   refreshKey?: number;
+  /** Shared chart range from the page-header picker. */
+  range: GlobalTimeRange;
 }
 
 interface ChartPoint {
@@ -22,9 +23,8 @@ interface ChartPoint {
   timeLabel: string;
 }
 
-export function AgentResponseTimeChart({ agentId, serviceKey, refreshKey }: AgentResponseTimeChartProps) {
+export function AgentResponseTimeChart({ agentId, serviceKey, refreshKey, range }: AgentResponseTimeChartProps) {
   const { t } = useTranslate();
-  const [range, setRange] = useState<TimeRange>('24h');
   const [points, setPoints] = useState<ServiceHistoryPoint[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,31 +46,10 @@ export function AgentResponseTimeChart({ agentId, serviceKey, refreshKey }: Agen
   const maxLatency = chartData.length > 0 ? Math.max(...chartData.map((p) => p.latencyMs)) : 0;
   const yMax = Math.max(maxLatency * 1.2, 100);
 
-  const RANGES: { label: string; value: TimeRange }[] = [
-    { label: '6H', value: '6h' },
-    { label: '12H', value: '12h' },
-    { label: '24H', value: '24h' },
-  ];
-
   return (
     <div className="mb-8 p-6 rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-chart-bg">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-slate-900 dark:text-white font-bold text-lg">{t('응답 시간')}</h3>
-        <div className="flex gap-1">
-          {RANGES.map((r) => (
-            <button
-              key={r.value}
-              onClick={() => setRange(r.value)}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
-                range === r.value
-                  ? 'bg-primary text-white'
-                  : 'bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-secondary-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark'
-              }`}
-            >
-              {r.label}
-            </button>
-          ))}
-        </div>
       </div>
 
       {loading ? (

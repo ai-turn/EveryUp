@@ -40,6 +40,19 @@ type ApiRequestStatBucket struct {
 	Timed      int       `json:"timed"` // requests contributing to percentiles
 }
 
+// ApiRequestStatusSummary aggregates status-code classes over a window plus
+// the most frequent 5xx endpoint (empty fields when the window has no 5xx).
+type ApiRequestStatusSummary struct {
+	Count2xx     int    `json:"count2xx"`
+	Count3xx     int    `json:"count3xx"`
+	Count4xx     int    `json:"count4xx"`
+	Count5xx     int    `json:"count5xx"`
+	CountOther   int    `json:"countOther"` // 1xx / unknown status
+	Top5xxMethod string `json:"top5xxMethod,omitempty"`
+	Top5xxPath   string `json:"top5xxPath,omitempty"`
+	Top5xxCount  int    `json:"top5xxCount,omitempty"`
+}
+
 // ApiRequestFilter holds query parameters for listing captured requests.
 type ApiRequestFilter struct {
 	ServiceID   string

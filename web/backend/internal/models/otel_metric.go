@@ -32,6 +32,16 @@ type OtelMetricName struct {
 	LastAt     time.Time `json:"lastAt"`
 }
 
+// OtelServiceMetric is the latest value of one metric a service exports, used
+// to derive each service's representative metric for the project overview cards.
+type OtelServiceMetric struct {
+	ServiceName string  `json:"serviceName"`
+	MetricName  string  `json:"metricName"`
+	MetricType  string  `json:"metricType"`
+	Unit        string  `json:"unit,omitempty"`
+	Value       float64 `json:"value"`
+}
+
 // OtelMetricFilter scopes data point reads. AgentID+ServiceName is the
 // connected-agent path; ServiceID the legacy log-service path.
 type OtelMetricFilter struct {

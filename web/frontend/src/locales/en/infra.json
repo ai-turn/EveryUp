@@ -98,6 +98,7 @@
         },
         "trends": {
             "title": "Infrastructure Trends",
+            "last1h": "Last 1 Hour",
             "last6h": "Last 6 Hours",
             "last12h": "Last 12 Hours",
             "last24h": "Last 24 Hours",
