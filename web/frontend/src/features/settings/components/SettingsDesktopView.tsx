@@ -57,11 +57,10 @@ export function SettingsDesktopView({
 
   return (
     <>
-      {/* ver2: settings column caps at ~840px, left-aligned */}
-      <div className="space-y-5 max-w-4xl">
+      <div className="space-y-5">
         {/* Page Header */}
         <div className="mb-2">
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
             {t('settings.title')}
           </h1>
           <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-1">

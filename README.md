@@ -30,30 +30,36 @@
 
 ## What is EveryUp?
 
-Monitor Docker services on your own servers without standing up a large
-observability stack. You get a Web dashboard for **service health, logs, API
-requests, infrastructure, and alerts** — fed by one lightweight Agent per server.
-
-- Automatic Docker container discovery — no per-service config
-- stdout/stderr log collection without changing application code
-- API status codes (method, path, status) parsed from access logs — no proxy, no code change
-- Host CPU, memory, disk, and network metrics
-- Telegram, Discord, and Slack notifications
-- Optional: request/response **headers** and supported **body capture** via app-side OpenTelemetry (opt-in)
-
-EveryUp has two parts:
+EveryUp is a self-hosted tool for monitoring your Docker services in one place.
+Run **Web** once on a dashboard server and one **Agent** on each server you
+want to monitor. There is no large observability stack to set up.
 
 | Part | What it does | Where it runs |
 | --- | --- | --- |
 | **Web** | Dashboard, users, alert rules, notification channels, history | Your dashboard server |
 | **Agent** | Docker discovery, container state, logs, host metrics | Each server you monitor |
 
+## Features
+
+The default install collects the following without changing application code.
+
+- Automatic Docker container discovery, container state and health
+- Container stdout/stderr logs
+- API request status codes (method, path, status) parsed from access logs
+- Host CPU, memory, disk, and network metrics
+- Telegram, Discord, and Slack notifications
+
+Optional features go deeper.
+
+- **eBPF sidecar**: API latency and traces with no app changes
+- **OpenTelemetry instrumentation**: request/response headers and bodies with one app restart
+
 ## Quick Start
 
-> Run **Web** once, then drop a single **Agent** service into the Compose stack on
-> each server you want to monitor. The Agent is read-only and needs no traffic
-> changes. Compose templates also live in [`web/`](web/docker-compose.yml) and
-> [`agent/`](agent/docker-compose.yml).
+This is the smallest setup: one Web and one Agent, both with Docker Compose.
+On a single server you can run both side by side. Compose templates live in
+[`web/docker-compose.yml`](web/docker-compose.yml) and
+[`agent/docker-compose.yml`](agent/docker-compose.yml).
 
 ### 1. Start Web
 
@@ -85,24 +91,17 @@ volumes:
 docker compose up -d
 ```
 
-Open `http://WEB_SERVER_IP:3001` and create the first admin account.
-
-> **Production note.** Back up `/app/data`. If you set
-> `EVERYUP_ENCRYPTION_KEY`, keep that same 64-char hex key with your deployment
-> secrets; a database backup alone cannot restore encrypted Agent keys or
-> notification secrets without the matching key material.
+Open `http://WEB_SERVER_IP:3001` and create the first admin account. Done.
 
 ### 2. Create an Agent key
 
-In the dashboard, open **Projects** (the Services page) and click **Add
-Project**. Copy the API key (`evup_svc_…`) shown after creation — it belongs to
-the Agent only.
+In the dashboard, open **Services** and click **Add Project**. Copy the API
+key (`evup_svc_...`) shown after creation.
 
 ### 3. Add the Agent to the monitored server
 
-One Compose service gets you container health, stdout/stderr logs, host metrics,
-and **API status codes parsed from access logs**. No per-service config, no
-traffic interception: the Agent only *reads* the Docker socket.
+Add an `everyup-agent` service to the Compose file on the server you want to
+monitor. Your app containers need no configuration.
 
 ```yaml
 services:
@@ -111,7 +110,7 @@ services:
     container_name: everyup-agent
     environment:
       EVERYUP_WEB_SYNC_ENABLED: "true"
-      EVERYUP_WEB_BASE_URL: "http://WEB_SERVER_IP:3001"   # reachable from this server
+      EVERYUP_WEB_BASE_URL: "http://WEB_SERVER_IP:3001"   # Web address reachable from the Agent container
       EVERYUP_AGENT_API_KEY: "evup_svc_replace_me"        # key from step 2
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -127,67 +126,99 @@ volumes:
 docker compose up -d
 ```
 
-If the Agent cannot read `/var/run/docker.sock` on your host, either run it with
-`user: "0:0"` or use the Docker socket proxy pattern in
-[agent/docs/docker-socket-proxy.md](agent/docs/docker-socket-proxy.md).
+Within about 30 seconds the Agent shows as online in Web and the containers on
+that server appear automatically. If something goes wrong, see
+[Troubleshooting](#troubleshooting).
 
-The Agent comes online within ~30s and auto-discovers every container — health,
-logs, host metrics, and API status codes flow with **no app changes**. (What's
-collected and how is detailed in "What Gets Collected" below.)
+## Optional Features
 
-> **Optional — latency & full traces, still no app changes.** Uncomment the
-> `everyup-ebpf` sidecar in the Agent compose, set `BEYLA_OPEN_PORT` to your app
-> ports, and `docker compose up -d`. It uses eBPF to trace services on the host —
-> all languages including Go, HTTPS included — with no app restart and no code.
-> The Agent attributes each span to the right service automatically. See
-> "Zero-Code Tracing" in
-> [agent/README.md](agent/README.md).
+### eBPF sidecar: API latency and traces
 
-### 4. (Optional) Request/response headers & bodies
+The default Agent reads method, path, and status from access logs. To see real
+latency and traces, enable the `everyup-ebpf` sidecar included in the Agent
+Compose file.
 
-This is the one step that touches your app, and it is how EveryUp captures richer
-request/response details for diagnosing *why* a request failed. The Agent ships a
-ready-made OpenTelemetry bundle (Java agent jar + Node.js bootstrap) in a shared
-volume; in the web UI, open a project and use the **OTel instrumentation** action
-to generate a `docker-compose.everyup.yml` override for detected Java/Node.js
-runtimes, then restart your app once with it.
+1. Uncomment the `everyup-ebpf` service in `agent/docker-compose.yml`.
+2. Set `BEYLA_OPEN_PORT` to the ports your apps listen on, e.g. `"80,3000,8080"`.
+3. Run `docker compose up -d` again.
 
-The bundled setup captures headers and full traces with real latency. Automatic
-body capture is currently available for Node.js; Java, Python, and manual SDKs
-can add masked body span events explicitly. Bodies are masked inside the app
-before export and are admin-only in Web (viewing is audited). Full walkthrough,
-the span contract, and language notes:
-[docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md).
+This does not change your app code, Dockerfile, or app containers. eBPF
+observes processes on the host to build traces, and the Agent attributes each
+span to the matching Docker service. Requires Linux kernel 5.8+ with BTF. See
+"Zero-Code Tracing" in [agent/README.md](agent/README.md) for details.
+
+### OpenTelemetry instrumentation: request/response headers and bodies
+
+To diagnose why a request failed, use app-side OpenTelemetry instrumentation.
+It requires one app restart, but for Java and Node.js it attaches through a
+Compose override without touching your code or Dockerfile.
+
+In the web UI, open a project and run the **OTel instrumentation** action. It
+generates a `docker-compose.everyup.yml` tailored to the detected Java/Node.js
+runtimes. Restart your app with this override to collect request/response
+headers and traces with real latency.
+
+Automatic body capture is currently available for Node.js. Bodies are masked
+inside the app before export, are admin-only in Web, and viewing is audited.
+Java, Python, and manual SDKs can add masked body span events explicitly. For
+the full setup, see the
+[OTel API instrumentation guide](docs/OTEL_API_INSTRUMENTATION.md).
 
 ## What Gets Collected
 
-**Automatically, from every Agent — no config, read-only** (Docker socket + `/hostfs`):
+### Default Agent
+
+Collected with no app changes. The Agent mounts the Docker socket and
+`/hostfs` read-only.
 
 | Data | Source |
 | --- | --- |
 | Container up/down, name, image, state, events | Docker socket |
 | stdout/stderr logs | `docker logs` |
-| API requests — method, path, status (no latency) | Access-log parsing |
+| API request method, path, status (no latency) | Access-log parsing |
 | Host CPU, memory, disk, network | `/hostfs` mount |
 
-**With the optional eBPF sidecar — still no app changes:**
+API status codes appear when the app or a proxy writes access logs to
+stdout/stderr. Without access logs, container state, regular logs, and host
+metrics are still collected.
+
+### Optional: eBPF sidecar
 
 | Data | Source |
 | --- | --- |
-| API traces with real latency, all languages + HTTPS | `everyup-ebpf` sidecar (eBPF) |
+| API traces with real latency | `everyup-ebpf` sidecar (eBPF) |
+| method, path, status, duration | Host process observation |
+| Many languages including Go, and HTTPS services | Grafana Beyla-based eBPF |
 
-**With one restart of the app (bundled OTel instrumentation):**
+### Optional: app-side OpenTelemetry instrumentation
 
 | Data | Source |
 | --- | --- |
 | Request/response headers | `http.*.header.*` span attributes |
-| Request/response bodies (Node auto-capture, other runtimes by manual span events; masked, admin-only) | `*_body_masked` span events |
-| App metrics — JVM memory, GC, custom counters | App OTel → Agent `:4318` |
+| Request/response bodies | `*_body_masked` span events |
+| App metrics (JVM memory, GC, custom counters) | App OTel -> Agent `:4318` |
 
-A service that writes logs only to a file inside the container cannot be seen by
-the Agent. Write app logs to stdout for log collection. API status codes need the
-app to emit access logs (Nginx / Apache / structured JSON); otherwise the Agent
-still collects health, logs, and host metrics.
+## Troubleshooting
+
+**The Agent does not show as online.**
+`EVERYUP_WEB_BASE_URL` must be a Web address reachable from inside the Agent
+container. Even on the same server, `localhost` inside the container may point
+to the Agent itself, not Web. Use a Compose service name or a host-reachable IP.
+
+**The Agent cannot read the Docker socket.**
+This is a permission issue. The simplest fix is to add `user: "0:0"` to the
+Agent service. To narrow socket access in production, use the
+[Docker socket proxy guide](agent/docs/docker-socket-proxy.md).
+
+**Logs are not showing up.**
+Logs written only to a file inside the container are not visible to Docker, so
+the Agent cannot collect them. Write app or proxy logs to stdout/stderr.
+
+**Backups for production deployments.**
+Back up `/app/data`. If you set `EVERYUP_ENCRYPTION_KEY`, keep that same
+64-char hex key with your deployment secrets. A database backup alone cannot
+restore encrypted Agent keys or notification secrets without the key.
+See the [backup and restore guide](docs/BACKUP_RESTORE.md) for details.
 
 ## Documentation
 
@@ -206,9 +237,10 @@ still collects health, logs, and host metrics.
 
 ## Reference
 
-**Networking** — The Agent reaches containers and logs through the mounted Docker
-socket, so it works even from its own Compose project. For the cleanest setup, put
-`everyup-agent` in the same Compose file as the app stack on that server.
+**Networking.** The Agent reaches containers and logs through the mounted
+Docker socket, so it works even from its own Compose project. The cleanest
+setup is to put `everyup-agent` in the same Compose file as the app stack on
+that server.
 
 **Repository layout**
 
@@ -228,8 +260,8 @@ docker-compose.yml         # root convenience Compose file (Web only)
 
 **Development**
 
-Prerequisites for source development: Docker, pnpm, Go 1.24 for Web, and Go 1.25
-for Agent.
+Prerequisites for source development: Docker, pnpm, Go 1.24 for Web, and Go
+1.25 for Agent.
 
 ```bash
 cd web/backend && go test ./...     # backend tests

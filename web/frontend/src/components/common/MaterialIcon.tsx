@@ -34,6 +34,7 @@ import ExpandMoreOutlined from '@mui/icons-material/ExpandMoreOutlined';
 import FavoriteOutlined from '@mui/icons-material/FavoriteOutlined';
 import FilterAltOutlined from '@mui/icons-material/FilterAltOutlined';
 import FolderCopyOutlined from '@mui/icons-material/FolderCopyOutlined';
+import FolderOpenOutlined from '@mui/icons-material/FolderOpenOutlined';
 import GridViewOutlined from '@mui/icons-material/GridViewOutlined';
 import HelpOutlineOutlined from '@mui/icons-material/HelpOutlineOutlined';
 import HelpOutlined from '@mui/icons-material/HelpOutlined';
@@ -140,6 +141,7 @@ const iconMap: Record<string, MaterialSvgIcon> = {
   favorite: FavoriteOutlined,
   filter_alt: FilterAltOutlined,
   folder_copy: FolderCopyOutlined,
+  folder_open: FolderOpenOutlined,
   grid_view: GridViewOutlined,
   help: HelpOutlined,
   help_outline: HelpOutlineOutlined,

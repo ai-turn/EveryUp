@@ -250,6 +250,14 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
   };
 
   useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
+
+  useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -279,33 +287,36 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-stretch justify-center bg-slate-900/60 backdrop-blur-sm sm:items-center sm:p-4"
+      className="fixed inset-0 z-50"
       role="dialog"
       aria-modal="true"
       aria-label="Trace detail"
+      onClick={onClose}
     >
-      <div className="bg-white dark:bg-bg-surface-dark shadow-2xl w-full max-w-3xl h-full max-h-full flex flex-col sm:h-auto sm:max-h-[85vh] sm:rounded-xl">
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 dark:border-ui-border-dark">
-          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary">
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="fixed inset-y-0 right-0 w-full sm:w-[560px] lg:w-[720px] bg-white dark:bg-bg-surface-dark border-l border-slate-200 dark:border-ui-border-dark shadow-2xl flex flex-col animate-slide-in-right"
+      >
+        <div className="flex-none flex items-center gap-3 px-5 h-16 border-b border-slate-200 dark:border-ui-border-dark">
+          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary shrink-0">
             <MaterialIcon name="timeline" className="text-lg" />
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">Trace</h3>
-            <div className="flex items-center gap-1 mt-0.5 min-w-0">
-              <code className="text-xs font-mono text-slate-500 dark:text-text-muted-dark break-all min-w-0">
-                {traceId}
-              </code>
-              <CopyButton
-                onCopy={() => copy(traceId)}
-                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-ui-hover-dark text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer shrink-0"
-                title="Copy trace ID"
-                iconClassName="text-sm"
-              />
-            </div>
-          </div>
+          <h3 className="text-base font-bold text-slate-900 dark:text-white shrink-0">Trace</h3>
+          <code
+            className="flex-1 min-w-0 truncate text-xs font-mono text-slate-400 dark:text-text-dim-dark"
+            title={traceId}
+          >
+            {traceId}
+          </code>
+          <CopyButton
+            onCopy={() => copy(traceId)}
+            className="p-1 rounded hover:bg-slate-100 dark:hover:bg-ui-hover-dark text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer shrink-0"
+            title="Copy trace ID"
+            iconClassName="text-sm"
+          />
           <button
             onClick={onClose}
-            className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-ui-hover-dark text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+            className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-ui-hover-dark text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer shrink-0"
             aria-label="Close"
           >
             <MaterialIcon name="close" className="text-base" />

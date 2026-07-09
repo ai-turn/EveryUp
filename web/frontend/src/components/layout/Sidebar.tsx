@@ -110,14 +110,14 @@ export function Sidebar() {
         <NavItem to="/" icon="grid_view" label={t('프로젝트')} active={isHome} />
         {agentId && (
           <>
-            <NavItem to={`/projects/${agentId}`} icon="dashboard" label={currentAgent?.name ?? t('대시보드')} active={isDash} />
+            <NavItem to={`/projects/${agentId}`} icon="folder_open" label={currentAgent?.name ?? t('대시보드')} active={isDash} />
             {projectServices.length > 0 && (
               <div className="flex flex-col gap-0.5 pl-3 py-1">
                 {projectServices.map(s => (
                   <Link
                     key={s.key}
                     to={`/services/${agentId}/${encodeURIComponent(s.key)}`}
-                    className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-2xs transition-colors ${
+                    className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors ${
                       s.key === activeServiceKey
                         ? 'bg-primary/10 text-primary font-semibold'
                         : 'text-slate-500 dark:text-text-muted-dark hover:bg-slate-100 dark:hover:bg-ui-hover-dark hover:text-slate-800 dark:hover:text-white'
