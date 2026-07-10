@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslate } from '@tolgee/react';
-import { MaterialIcon } from '../../components/common';
+import { ConfirmDialog, EmptyState, MaterialIcon } from '../../components/common';
 import { api, type AgentOverview, type AgentServiceFlat, type ConnectedAgent } from '../../services/api';
 import { PendingServiceCard } from '../../features/services/components/PendingServiceCard';
 import { AddServiceModal } from '../../features/services/components/AddServiceModal';
@@ -27,6 +27,7 @@ interface ProjectCardProps {
 // Clicking drills into the project detail page that lists its internal services.
 function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAgent, onViewKey }: ProjectCardProps) {
   const navigate = useNavigate();
+  const { t } = useTranslate();
   const online = agent ? agentOnline(agent) : true;
   const total = services.length;
   const healthy = services.filter(s => s.healthy).length;
@@ -53,14 +54,14 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
           <div className="flex items-center gap-0.5 shrink-0">
             <button
               onClick={(e) => { e.stopPropagation(); onViewKey(agent); }}
-              title="API 키 보기"
+              title={t('API 키 보기')}
               className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
             >
               <MaterialIcon name="key" className="text-base" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onDeleteAgent(agent.id); }}
-              title="프로젝트 비활성화"
+              title={t('프로젝트 비활성화')}
               className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
             >
               <MaterialIcon name="delete_outline" className="text-base" />
@@ -71,17 +72,17 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
 
       {/* Summary: service count + health */}
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm text-slate-500 dark:text-text-muted-dark">서비스 {total}개</span>
+        <span className="text-sm text-slate-500 dark:text-text-muted-dark">{t('서비스 {count}개', { count: total })}</span>
         <span className={`flex items-center gap-1 text-sm font-semibold ${allHealthy ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
           <MaterialIcon name={allHealthy ? 'check_circle' : 'cancel'} className="text-sm" />
-          {healthy}/{total} 정상
+          {healthy}/{total} {t('정상')}
         </span>
       </div>
 
       {/* Failing services preview */}
       {down.length > 0 && (
         <p className="text-xs text-red-500 dark:text-red-400 truncate -mt-1">
-          장애: {down.map(s => s.name).join(', ')}
+          {t('장애')}: {down.map(s => s.name).join(', ')}
         </p>
       )}
 
@@ -89,13 +90,13 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
       {overview && (
         <div className="flex items-center gap-4 text-sm">
           <div>
-            <div className="text-2xs text-slate-400 dark:text-text-dim-dark">가동률 30일</div>
+            <div className="text-2xs text-slate-400 dark:text-text-dim-dark">{t('가동률 30일')}</div>
             <div className="font-mono font-semibold text-slate-800 dark:text-white">
               {overview.uptimePct != null ? `${overview.uptimePct.toFixed(2)}%` : '—'}
             </div>
           </div>
           <div>
-            <div className="text-2xs text-slate-400 dark:text-text-dim-dark">요청 24h</div>
+            <div className="text-2xs text-slate-400 dark:text-text-dim-dark">{t('요청 24h')}</div>
             <div className="font-mono font-semibold text-slate-800 dark:text-white">
               {overview.requests24h > 0
                 ? Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(overview.requests24h)
@@ -120,38 +121,12 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
 
       {/* Footer: online state + drill-in hint */}
       <div className="flex items-center justify-between gap-2 text-xs text-slate-400 dark:text-text-dim-dark">
-        <span>{online ? '온라인' : '오프라인'}</span>
+        <span>{online ? t('온라인') : t('오프라인')}</span>
         <span className="flex items-center gap-0.5">
-          서비스 보기
+          {t('서비스 보기')}
           <MaterialIcon name="chevron_right" className="text-sm" />
         </span>
       </div>
-    </div>
-  );
-}
-
-function EmptyState({ onAdd }: { onAdd: () => void }) {
-  const { t } = useTranslate();
-  return (
-    <div className="flex flex-col items-center justify-center py-32 gap-5 text-center">
-      <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-ui-hover-dark flex items-center justify-center">
-        <MaterialIcon name="sensors" className="text-4xl text-slate-300 dark:text-text-dim-dark" />
-      </div>
-      <div className="space-y-1.5">
-        <p className="text-lg font-semibold text-slate-700 dark:text-white">
-          {t('아직 프로젝트가 없습니다')}
-        </p>
-        <p className="text-sm text-slate-500 dark:text-text-muted-dark max-w-sm">
-          {t('프로젝트를 추가하고 API 키로 에이전트를 연결하세요')}
-        </p>
-      </div>
-      <button
-        onClick={onAdd}
-        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors"
-      >
-        <MaterialIcon name="add" className="text-base" />
-        프로젝트 추가
-      </button>
     </div>
   );
 }
@@ -165,6 +140,7 @@ export function ServiceGridPage() {
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [keyModalAgent, setKeyModalAgent] = useState<{ id: string; name: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const load = useCallback(async () => {
     // KPI rollup is non-critical — cards render without it and fill in when it lands.
@@ -191,15 +167,21 @@ export function ServiceGridPage() {
     return () => clearInterval(id);
   }, [load]);
 
-  const handleDelete = async (agentId: string) => {
+  const handleDelete = (agentId: string) => {
     const agent = agents.find(a => a.id === agentId);
-    if (!confirm(`'${agent?.name ?? agentId}' 프로젝트를 비활성화하시겠습니까?\n에이전트 연결이 차단되며 수집 데이터는 보존됩니다.`)) return;
+    setDeleteTarget({ id: agentId, name: agent?.name ?? agentId });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      await api.deleteAgent(agentId);
-      toast.success('프로젝트가 비활성화됐습니다');
+      await api.deleteAgent(deleteTarget.id);
+      toast.success(t('프로젝트가 비활성화됐습니다'));
       load();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
@@ -240,7 +222,7 @@ export function ServiceGridPage() {
   const visiblePending = pendingAgents.filter((a) => !search || a.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
@@ -251,10 +233,10 @@ export function ServiceGridPage() {
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors shrink-0"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors shrink-0"
         >
           <MaterialIcon name="add" className="text-base" />
-          프로젝트 추가
+          {t('프로젝트 추가')}
         </button>
       </div>
 
@@ -269,7 +251,7 @@ export function ServiceGridPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t('서비스 또는 프로젝트 이름으로 검색')}
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-text-dim-dark focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow"
+          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-text-dim-dark focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow"
         />
       </div>
 
@@ -281,7 +263,12 @@ export function ServiceGridPage() {
           ))}
         </div>
       ) : services.length === 0 && agents.length === 0 ? (
-        <EmptyState onAdd={() => setShowAddModal(true)} />
+        <EmptyState
+          icon="sensors"
+          title={t('아직 프로젝트가 없습니다')}
+          description={t('프로젝트를 추가하고 API 키로 에이전트를 연결하세요')}
+          action={{ label: t('프로젝트 추가'), onClick: () => setShowAddModal(true) }}
+        />
       ) : groups.length === 0 && visiblePending.length === 0 ? (
         <div className="py-16 text-center text-slate-400 dark:text-text-muted-dark text-sm">
           {t('검색 결과가 없습니다')}
@@ -317,6 +304,16 @@ export function ServiceGridPage() {
           onCreated={load}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        title={t('프로젝트 비활성화')}
+        message={t("'{name}' 프로젝트를 비활성화하시겠습니까?", { name: deleteTarget?.name ?? '' })}
+        description={t('에이전트 연결이 차단되며 수집 데이터는 보존됩니다.')}
+        confirmLabel={t('비활성화')}
+      />
 
       {keyModalAgent && (
         <ApiKeyModal

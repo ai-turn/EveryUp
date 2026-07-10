@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { MaterialIcon } from '../../../components/common';
+import { ConfirmDialog, MaterialIcon } from '../../../components/common';
 import { SectionCard } from './SectionCard';
 import { AccountSection } from './AccountSection';
 import { AuditLogSection } from './AuditLogSection';
@@ -126,15 +126,15 @@ export function SettingsMobileView({
             <div className="space-y-2">
               <p className="text-sm font-medium text-slate-900 dark:text-white">{t('settings.retention.metrics')}</p>
               <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('settings.retention.metricsDesc')}</p>
-              <div className="flex gap-1.5 flex-wrap">
+              <div className="flex gap-1 flex-wrap bg-slate-100 dark:bg-ui-hover-dark p-1 rounded-lg">
                 {METRICS_RETENTION_OPTIONS.map((opt) => (
                   <button
                     key={opt}
                     onClick={() => onMetricsRetentionChange(opt)}
-                    className={`cursor-pointer px-3 py-1.5 rounded-full text-sm font-semibold border transition-all ${
+                    className={`flex-1 cursor-pointer px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${
                       metricsRetention === opt
-                        ? 'bg-primary text-white border-primary'
-                        : 'bg-transparent text-slate-500 dark:text-text-muted-dark border-slate-200 dark:border-ui-border-dark'
+                        ? 'bg-white dark:bg-ui-active-dark text-primary shadow-sm'
+                        : 'text-slate-500 dark:text-text-muted-dark'
                     }`}
                   >
                     {retentionLabel(opt)}
@@ -149,15 +149,15 @@ export function SettingsMobileView({
             <div className="space-y-2">
               <p className="text-sm font-medium text-slate-900 dark:text-white">{t('settings.retention.logs')}</p>
               <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('settings.retention.logsDesc')}</p>
-              <div className="flex gap-1.5 flex-wrap">
+              <div className="flex gap-1 flex-wrap bg-slate-100 dark:bg-ui-hover-dark p-1 rounded-lg">
                 {LOGS_RETENTION_OPTIONS.map((opt) => (
                   <button
                     key={opt}
                     onClick={() => onLogsRetentionChange(opt)}
-                    className={`cursor-pointer px-3 py-1.5 rounded-full text-sm font-semibold border transition-all ${
+                    className={`flex-1 cursor-pointer px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${
                       logsRetention === opt
-                        ? 'bg-primary text-white border-primary'
-                        : 'bg-transparent text-slate-500 dark:text-text-muted-dark border-slate-200 dark:border-ui-border-dark'
+                        ? 'bg-white dark:bg-ui-active-dark text-primary shadow-sm'
+                        : 'text-slate-500 dark:text-text-muted-dark'
                     }`}
                   >
                     {retentionLabel(opt)}
@@ -208,41 +208,16 @@ export function SettingsMobileView({
         </div>
       </SectionCard>
 
-      {/* Reset Confirm Dialog */}
-      {showResetConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div role="dialog" aria-modal="true" aria-labelledby="reset-dialog-title-mobile" className="bg-white dark:bg-bg-surface-dark rounded-xl shadow-2xl max-w-sm w-full p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 shrink-0">
-                <MaterialIcon name="warning" className="text-2xl text-red-600 dark:text-red-400" />
-              </div>
-              <h3 id="reset-dialog-title-mobile" className="text-base font-bold text-slate-900 dark:text-white">
-                {t('settings.accountReset.confirmTitle')}
-              </h3>
-            </div>
-            <p className="text-sm text-slate-600 dark:text-text-muted-dark mb-6">
-              {t('settings.accountReset.confirmDesc')}
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={onResetCancel}
-                disabled={resetting}
-                className="flex-1 cursor-pointer px-4 py-2.5 rounded-lg border border-slate-200 dark:border-ui-border-dark text-sm font-semibold text-slate-700 dark:text-text-secondary-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors disabled:opacity-50"
-              >
-                {t('settings.accountReset.cancel')}
-              </button>
-              <button
-                onClick={onResetConfirm}
-                disabled={resetting}
-                className="flex-1 cursor-pointer flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
-              >
-                {resetting && <MaterialIcon name="sync" className="text-lg animate-spin" />}
-                {t('settings.accountReset.confirmButton')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        isOpen={showResetConfirm}
+        onClose={onResetCancel}
+        onConfirm={onResetConfirm}
+        title={t('settings.accountReset.confirmTitle')}
+        message={t('settings.accountReset.confirmDesc')}
+        confirmLabel={t('settings.accountReset.confirmButton')}
+        cancelLabel={t('settings.accountReset.cancel')}
+        isProcessing={resetting}
+      />
     </div>
   );
 }

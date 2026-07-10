@@ -1,18 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ComponentType, SVGProps } from 'react';
-import {
-  IconHealthCheck,
-  IconAlerts,
-  IconSettings,
-} from '../icons/SidebarIcons';
+import { MaterialIcon } from '../common';
 
-type IconComponent = ComponentType<SVGProps<SVGSVGElement> & { size?: number }>;
-
-const navItems: { Icon: IconComponent; labelKey: string; href: string }[] = [
-  { Icon: IconHealthCheck, labelKey: 'nav.services', href: '/' },
-  { Icon: IconAlerts,      labelKey: 'nav.alerts',   href: '/alerts' },
-  { Icon: IconSettings,    labelKey: 'nav.settings', href: '/settings' },
+// Same icons as the desktop sidebar (grid_view/notifications/settings).
+const navItems: { icon: string; labelKey: string; href: string }[] = [
+  { icon: 'grid_view',     labelKey: 'nav.services', href: '/' },
+  { icon: 'notifications', labelKey: 'nav.alerts',   href: '/alerts' },
+  { icon: 'settings',      labelKey: 'nav.settings', href: '/settings' },
 ];
 
 export function BottomNavMobile() {
@@ -42,7 +36,7 @@ export function BottomNavMobile() {
             }
           `}
         >
-          <item.Icon size={23} />
+          <MaterialIcon name={item.icon} className="text-2xl" />
           <span className="text-sm font-medium whitespace-nowrap">{t(item.labelKey)}</span>
           {isActive(item.href) && (
             <span className="absolute top-1.5 w-1 h-1 rounded-full bg-primary" />

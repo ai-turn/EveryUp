@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { useTranslate } from '@tolgee/react';
-import { MaterialIcon, type GlobalTimeRange } from '../../../components/common';
+import { type GlobalTimeRange } from '../../../components/common';
 import type { AgentServiceFlat } from '../../../services/api';
 import { AgentIdentity } from './AgentIdentity';
 import { AgentRealtimeMetrics } from './AgentRealtimeMetrics';
@@ -41,7 +40,7 @@ function TabBar({ active, onChange }: { active: DetailTab; onChange: (t: DetailT
         <button
           key={tab.key}
           onClick={() => onChange(tab.key)}
-          className={`px-4 py-2.5 text-base font-semibold transition-colors border-b-2 -mb-px ${
+          className={`px-4 py-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px ${
             active === tab.key
               ? 'border-primary text-primary'
               : 'border-transparent text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
@@ -55,21 +54,12 @@ function TabBar({ active, onChange }: { active: DetailTab; onChange: (t: DetailT
 }
 
 function HealthContent({ service, agentId, serviceKey, refreshKey, range, showServiceName = true }: ServiceTabsProps) {
-  const { t } = useTranslate();
   return (
     <>
       <AgentIdentity service={service} showName={showServiceName} />
       <AgentRealtimeMetrics agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
       <AgentCheckHistoryBar agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
       <AgentResponseTimeChart agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} range={range} />
-
-      <div className="flex items-center gap-2 mt-2 mb-4">
-        <MaterialIcon name="report" className="text-base text-slate-400 dark:text-text-dim-dark" />
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-400 dark:text-text-dim-dark">
-          {t('장애')}
-        </h2>
-        <div className="flex-1 border-t border-slate-200 dark:border-ui-border-dark" />
-      </div>
       <AgentFailureHistory agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
     </>
   );

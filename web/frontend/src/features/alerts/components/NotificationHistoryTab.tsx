@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MaterialIcon } from '../../../components/common';
+import { KPIChip, MaterialIcon } from '../../../components/common';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { api, NotificationHistory, NotificationHistoryFilter, NotificationStats } from '../../../services/api';
 import { formatDistanceToNow } from 'date-fns';
@@ -70,20 +70,20 @@ export function NotificationHistoryTab() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'sent':
-        return <MaterialIcon name="check_circle" className="text-green-500" />;
+        return <MaterialIcon name="check_circle" className="text-emerald-500" />;
       case 'failed':
         return <MaterialIcon name="error" className="text-red-500" />;
       case 'pending':
-        return <MaterialIcon name="schedule" className="text-yellow-500" />;
+        return <MaterialIcon name="schedule" className="text-amber-500" />;
       default:
-        return <MaterialIcon name="help" className="text-gray-500" />;
+        return <MaterialIcon name="help" className="text-slate-400" />;
     }
   };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'resource':
-        return <MaterialIcon name="memory" className="text-blue-500" />;
+        return <MaterialIcon name="memory" className="text-sky-500" />;
       case 'healthcheck':
         return <MaterialIcon name="favorite" className="text-pink-500" />;
       case 'endpoint':
@@ -91,11 +91,11 @@ export function NotificationHistoryTab() {
       case 'log':
         return <MaterialIcon name="description" className="text-orange-500" />;
       case 'scheduled':
-        return <MaterialIcon name="schedule" className="text-purple-500" />;
+        return <MaterialIcon name="schedule" className="text-violet-500" />;
       case 'system':
-        return <MaterialIcon name="power_settings_new" className="text-green-500" />;
+        return <MaterialIcon name="power_settings_new" className="text-emerald-500" />;
       default:
-        return <MaterialIcon name="notifications" className="text-gray-500" />;
+        return <MaterialIcon name="notifications" className="text-slate-400" />;
     }
   };
 
@@ -103,9 +103,9 @@ export function NotificationHistoryTab() {
     if (!severity) return null;
 
     const colors: Record<string, string> = {
-      critical: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-      warning: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-      info: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+      critical: 'bg-red-500/10 text-red-500 dark:text-red-400',
+      warning: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+      info: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
     };
 
     return (
@@ -115,68 +115,36 @@ export function NotificationHistoryTab() {
     );
   };
 
+  const thClass = 'px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-text-muted-dark uppercase tracking-wider';
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-bg-surface-dark rounded-lg p-4 shadow-sm border border-gray-200 dark:border-ui-border-dark">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{t('alerts.history.totalSent')}</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalSent}</p>
-              </div>
-              <MaterialIcon name="send" className="text-3xl text-green-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-bg-surface-dark rounded-lg p-4 shadow-sm border border-gray-200 dark:border-ui-border-dark">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{t('alerts.history.totalFailed')}</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalFailed}</p>
-              </div>
-              <MaterialIcon name="error_outline" className="text-3xl text-red-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-bg-surface-dark rounded-lg p-4 shadow-sm border border-gray-200 dark:border-ui-border-dark">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{t('alerts.history.successRate')}</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {stats.successRate.toFixed(1)}%
-                </p>
-              </div>
-              <MaterialIcon name="check_circle" className="text-3xl text-blue-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-bg-surface-dark rounded-lg p-4 shadow-sm border border-gray-200 dark:border-ui-border-dark">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{t('alerts.history.totalNotifications')}</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {stats.totalSent + stats.totalFailed}
-                </p>
-              </div>
-              <MaterialIcon name="notifications_active" className="text-3xl text-purple-500" />
-            </div>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <KPIChip label={t('alerts.history.totalSent')} value={stats.totalSent} tone="emerald" icon="send" />
+          <KPIChip label={t('alerts.history.totalFailed')} value={stats.totalFailed} tone="red" icon="error_outline" />
+          <KPIChip label={t('alerts.history.successRate')} value={`${stats.successRate.toFixed(1)}%`} tone="primary" icon="check_circle" />
+          <KPIChip
+            label={t('alerts.history.totalNotifications')}
+            value={stats.totalSent + stats.totalFailed}
+            tone="slate"
+            icon="notifications_active"
+          />
         </div>
       )}
 
       {/* Filters */}
-      <div className="bg-white dark:bg-bg-surface-dark rounded-lg p-4 shadow-sm border border-gray-200 dark:border-ui-border-dark">
+      <div className="bg-white dark:bg-bg-surface-dark rounded-xl p-4 border border-slate-200 dark:border-ui-border-dark">
         <div className="flex flex-wrap gap-4 items-end">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark mb-2">
               {t('alerts.history.status')}
             </label>
             <select
               value={statusFilter}
               onChange={(e) => handleStatusFilterChange(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-ui-border-dark rounded-lg bg-white dark:bg-bg-surface-dark text-gray-900 dark:text-white"
+              className="px-3 py-2 border border-slate-200 dark:border-ui-border-dark rounded-lg bg-white dark:bg-bg-surface-dark text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
             >
               <option value="all">{t('alerts.history.statusAll')}</option>
               <option value="sent">{t('alerts.history.statusSent')}</option>
@@ -186,13 +154,13 @@ export function NotificationHistoryTab() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark mb-2">
               {t('alerts.history.type')}
             </label>
             <select
               value={typeFilter}
               onChange={(e) => handleTypeFilterChange(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-ui-border-dark rounded-lg bg-white dark:bg-bg-surface-dark text-gray-900 dark:text-white"
+              className="px-3 py-2 border border-slate-200 dark:border-ui-border-dark rounded-lg bg-white dark:bg-bg-surface-dark text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
             >
               <option value="all">{t('alerts.history.typeAll')}</option>
               <option value="resource">{t('alerts.history.typeResource')}</option>
@@ -206,7 +174,7 @@ export function NotificationHistoryTab() {
 
           <button
             onClick={loadHistory}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-bg-surface-dark hover:bg-slate-200 dark:hover:bg-ui-hover-dark rounded-lg text-sm font-medium transition-all text-slate-900 dark:text-white border border-gray-300 dark:border-ui-border-dark"
+            className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-ui-border-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark rounded-lg text-sm font-medium transition-all text-slate-600 dark:text-text-muted-dark"
           >
             <MaterialIcon name="refresh" className="text-lg" />
             {t('alerts.history.refresh')}
@@ -215,56 +183,42 @@ export function NotificationHistoryTab() {
       </div>
 
       {/* History Table */}
-      <div className="bg-white dark:bg-bg-surface-dark rounded-lg shadow-sm border border-gray-200 dark:border-ui-border-dark overflow-hidden">
+      <div className="bg-white dark:bg-bg-surface-dark rounded-xl border border-slate-200 dark:border-ui-border-dark overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-ui-border-dark">
-            <thead className="bg-gray-50 dark:bg-bg-surface-dark">
+          <table className="min-w-full divide-y divide-slate-200 dark:divide-ui-border-dark">
+            <thead className="bg-slate-50 dark:bg-bg-surface-dark">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t('alerts.history.status')}
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t('alerts.history.type')}
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t('alerts.history.channel')}
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t('alerts.history.message')}
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t('alerts.history.severity')}
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t('alerts.history.retryCount')}
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t('alerts.history.time')}
-                </th>
+                <th className={thClass}>{t('alerts.history.status')}</th>
+                <th className={thClass}>{t('alerts.history.type')}</th>
+                <th className={thClass}>{t('alerts.history.channel')}</th>
+                <th className={thClass}>{t('alerts.history.message')}</th>
+                <th className={thClass}>{t('alerts.history.severity')}</th>
+                <th className={thClass}>{t('alerts.history.retryCount')}</th>
+                <th className={thClass}>{t('alerts.history.time')}</th>
               </tr>
             </thead>
-            <tbody className="bg-white dark:bg-bg-surface-dark divide-y divide-gray-200 dark:divide-ui-border-dark">
+            <tbody className="bg-white dark:bg-bg-surface-dark divide-y divide-slate-200 dark:divide-ui-border-dark">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                    <MaterialIcon name="hourglass_empty" className="text-4xl animate-spin mx-auto mb-2" />
+                  <td colSpan={7} className="px-6 py-12 text-center text-slate-500 dark:text-text-muted-dark">
+                    <MaterialIcon name="sync" className="text-4xl animate-spin mx-auto mb-2" />
                     <p>{t('alerts.history.loading')}</p>
                   </td>
                 </tr>
               ) : history.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400 dark:text-text-muted-dark">
                     <MaterialIcon name="inbox" className="text-4xl mx-auto mb-2" />
-                    <p>{t('alerts.history.empty')}</p>
+                    <p className="text-sm">{t('alerts.history.empty')}</p>
                   </td>
                 </tr>
               ) : (
                 history.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-ui-hover-dark transition-colors">
+                  <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         {getStatusIcon(item.status)}
-                        <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">
+                        <span className="text-sm font-medium text-slate-900 dark:text-white capitalize">
                           {item.status}
                         </span>
                       </div>
@@ -272,7 +226,7 @@ export function NotificationHistoryTab() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         {getTypeIcon(item.alertType)}
-                        <span className="text-sm text-gray-900 dark:text-white capitalize">
+                        <span className="text-sm text-slate-900 dark:text-white capitalize">
                           {item.alertType}
                         </span>
                       </div>
@@ -280,14 +234,14 @@ export function NotificationHistoryTab() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <ChannelIcon type={item.channelType} size={18} className="text-slate-500 dark:text-text-muted-dark" />
-                        <span className="text-sm text-gray-900 dark:text-white">
+                        <span className="text-sm text-slate-900 dark:text-white">
                           {item.channelName}
                         </span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="max-w-md">
-                        <p className="text-sm text-gray-900 dark:text-white truncate">
+                        <p className="text-sm text-slate-900 dark:text-white truncate">
                           {item.message}
                         </p>
                         {item.errorMessage && (
@@ -301,11 +255,11 @@ export function NotificationHistoryTab() {
                       {getSeverityBadge(item.severity)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-900 dark:text-white">
+                      <span className="text-sm text-slate-900 dark:text-white">
                         {item.retryCount > 0 ? item.retryCount : '-'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-text-muted-dark">
                       {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true, locale: dateLocale })}
                     </td>
                   </tr>
@@ -317,9 +271,9 @@ export function NotificationHistoryTab() {
 
         {/* Pagination */}
         {total > 50 && (
-          <div className="px-6 py-4 border-t border-gray-200 dark:border-ui-border-dark">
+          <div className="px-6 py-4 border-t border-slate-200 dark:border-ui-border-dark">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-700 dark:text-gray-300">
+              <p className="text-sm text-slate-600 dark:text-text-muted-dark">
                 {t('alerts.history.pagination', {
                   start: (filter.offset || 0) + 1,
                   end: Math.min((filter.offset || 0) + (filter.limit || 50), total),
@@ -330,14 +284,14 @@ export function NotificationHistoryTab() {
                 <button
                   onClick={() => setFilter(prev => ({ ...prev, offset: Math.max(0, (prev.offset || 0) - 50) }))}
                   disabled={(filter.offset || 0) === 0}
-                  className="px-3 py-1 border border-gray-300 dark:border-ui-border-dark rounded disabled:opacity-50 text-sm text-gray-900 dark:text-white"
+                  className="px-3 py-1 border border-slate-200 dark:border-ui-border-dark rounded-lg disabled:opacity-50 text-sm text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark"
                 >
                   {t('common.previous', { defaultValue: 'Previous' })}
                 </button>
                 <button
                   onClick={() => setFilter(prev => ({ ...prev, offset: (prev.offset || 0) + 50 }))}
                   disabled={(filter.offset || 0) + 50 >= total}
-                  className="px-3 py-1 border border-gray-300 dark:border-ui-border-dark rounded disabled:opacity-50 text-sm text-gray-900 dark:text-white"
+                  className="px-3 py-1 border border-slate-200 dark:border-ui-border-dark rounded-lg disabled:opacity-50 text-sm text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark"
                 >
                   {t('common.next', { defaultValue: 'Next' })}
                 </button>

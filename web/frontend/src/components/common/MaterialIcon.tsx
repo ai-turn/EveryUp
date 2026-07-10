@@ -1,7 +1,13 @@
 import type { CSSProperties, ComponentType } from 'react';
 import type { SvgIconProps } from '@mui/material/SvgIcon';
+import AccountTreeOutlined from '@mui/icons-material/AccountTreeOutlined';
+import AddCircleOutlined from '@mui/icons-material/AddCircleOutlined';
 import AddOutlined from '@mui/icons-material/AddOutlined';
 import AltRouteOutlined from '@mui/icons-material/AltRouteOutlined';
+import ArrowForwardOutlined from '@mui/icons-material/ArrowForwardOutlined';
+import DataObjectOutlined from '@mui/icons-material/DataObjectOutlined';
+import InsightsOutlined from '@mui/icons-material/InsightsOutlined';
+import ListAltOutlined from '@mui/icons-material/ListAltOutlined';
 import ApiOutlined from '@mui/icons-material/ApiOutlined';
 import AppsOutlined from '@mui/icons-material/AppsOutlined';
 import ArrowBackOutlined from '@mui/icons-material/ArrowBackOutlined';
@@ -105,8 +111,11 @@ interface MaterialIconProps {
 type MaterialSvgIcon = ComponentType<SvgIconProps>;
 
 const iconMap: Record<string, MaterialSvgIcon> = {
+  account_tree: AccountTreeOutlined,
   add: AddOutlined,
+  add_circle: AddCircleOutlined,
   alt_route: AltRouteOutlined,
+  arrow_forward: ArrowForwardOutlined,
   api: ApiOutlined,
   apps: AppsOutlined,
   arrow_back: ArrowBackOutlined,
@@ -132,6 +141,7 @@ const iconMap: Record<string, MaterialSvgIcon> = {
   description: DescriptionOutlined,
   dark_mode: DarkModeOutlined,
   dashboard: DashboardOutlined,
+  data_object: DataObjectOutlined,
   edit: EditOutlined,
   error: ErrorOutlined,
   error_outline: ErrorOutlineOutlined,
@@ -159,9 +169,11 @@ const iconMap: Record<string, MaterialSvgIcon> = {
   language: LanguageOutlined,
   light_mode: LightModeOutlined,
   lightbulb: LightbulbOutlined,
+  list_alt: ListAltOutlined,
   lock: LockOutlined,
   memory: MemoryOutlined,
   monitor_heart: MonitorHeartOutlined,
+  monitoring: InsightsOutlined,
   more_vert: MoreVertOutlined,
   notifications: NotificationsOutlined,
   notifications_active: NotificationsActiveOutlined,

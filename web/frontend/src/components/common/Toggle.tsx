@@ -1,18 +1,28 @@
 interface ToggleProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
+  disabled?: boolean;
+  title?: string;
 }
 
-export function Toggle({ checked, onChange }: ToggleProps) {
+export function Toggle({ checked, onChange, disabled = false, title }: ToggleProps) {
   return (
-    <label className="relative inline-flex items-center cursor-pointer">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="sr-only peer"
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      disabled={disabled}
+      title={title}
+      className={`relative w-9 h-5 shrink-0 rounded-full transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer ${
+        checked ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'
+      }`}
+    >
+      <span
+        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
+          checked ? 'translate-x-4' : 'translate-x-0'
+        }`}
       />
-      <div className="w-11 h-6 bg-slate-200 dark:bg-ui-active-dark peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
-    </label>
+    </button>
   );
 }

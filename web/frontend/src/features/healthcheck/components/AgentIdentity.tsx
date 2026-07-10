@@ -34,17 +34,18 @@ export function AgentIdentity({ service, showName = true }: { service: AgentServ
     [i18n.language],
   );
 
-  const status = service.healthy ? 'online' : 'offline';
+  // red = 장애(unhealthy); offline(수집 중단)은 slate — 색/어휘 매핑 규칙 준수
+  const status = service.healthy ? 'healthy' : 'unhealthy';
   const statusConfig = {
-    online: {
+    healthy: {
       bg: 'bg-emerald-500/10', border: 'border-emerald-500/20',
       text: 'text-emerald-500', dot: 'bg-emerald-500', ping: 'bg-emerald-400',
-      labelKey: 'common.online',
+      label: t('정상'),
     },
-    offline: {
+    unhealthy: {
       bg: 'bg-red-500/10', border: 'border-red-500/20',
       text: 'text-red-500', dot: 'bg-red-500', ping: 'bg-red-400',
-      labelKey: 'common.offline',
+      label: t('장애'),
     },
   };
   const cfg = statusConfig[status];
@@ -66,7 +67,7 @@ export function AgentIdentity({ service, showName = true }: { service: AgentServ
               <span className={`relative inline-flex rounded-full h-2 w-2 ${cfg.dot}`} />
             </span>
             <span className={`${cfg.text} text-sm font-bold uppercase tracking-wider`}>
-              {tc(cfg.labelKey)}
+              {cfg.label}
             </span>
           </div>
         </div>

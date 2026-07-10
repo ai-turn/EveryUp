@@ -198,7 +198,30 @@
     "tracePanel": {
       "jumpTo": "Open in:",
       "openInLogs": "Logs ({{count}})",
-      "openInRequests": "API requests ({{count}})"
+      "openInRequests": "API requests ({{count}})",
+      "title": "Trace",
+      "ariaLabel": "Trace detail",
+      "copyTraceId": "Copy trace ID",
+      "close": "Close",
+      "loading": "Loading trace...",
+      "empty": "No spans, logs, or API requests for this trace.",
+      "spans": "Spans",
+      "headers": "Headers",
+      "capturedBodies": "Captured bodies",
+      "apiRequestsTitle": "API requests",
+      "logs": "Logs",
+      "request": "Request",
+      "response": "Response",
+      "body": "Body",
+      "truncated": "truncated",
+      "adminOnly": "Admin only",
+      "adminOnlyDesc": "You don't have permission to view captured bodies.",
+      "auditNotice": "Admin only · every view is recorded in the audit log",
+      "copySpan": "Copy span row",
+      "copyHeaders": "Copy headers",
+      "copyBody": "Copy captured body",
+      "copyApiRequest": "Copy API request row",
+      "copyLog": "Copy log row"
     },
     "pagination": {
       "showing": "Showing {{shown}} of {{total}}"

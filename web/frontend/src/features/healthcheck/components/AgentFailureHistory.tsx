@@ -44,7 +44,7 @@ export function AgentFailureHistory({ agentId, serviceKey, refreshKey }: AgentFa
   }
 
   return (
-    <div className="mb-8 p-6 rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-chart-bg">
+    <div className="mb-8 p-6 rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark">
       <div className="flex items-center gap-3 mb-5">
         <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-red-500/10 shrink-0">
           <MaterialIcon name="history" className="text-lg text-red-500" />

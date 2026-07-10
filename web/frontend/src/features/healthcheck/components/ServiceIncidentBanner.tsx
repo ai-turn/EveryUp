@@ -31,7 +31,7 @@ export function ServiceIncidentBanner({ service, onInvestigate }: ServiceInciden
     : null;
 
   return (
-    <div className="flex items-center gap-3.5 mb-5 rounded-xl border border-red-200 dark:border-red-800/50 border-l-4 border-l-red-500 bg-red-50 dark:bg-red-900/15 px-4 py-3.5">
+    <div className="flex items-center gap-3.5 mb-5 rounded-xl border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/15 px-4 py-3.5">
       <div className="flex items-center justify-center h-9 w-9 shrink-0 rounded-full bg-red-100 dark:bg-red-900/40">
         <MaterialIcon name="warning" className="text-xl text-red-500" />
       </div>

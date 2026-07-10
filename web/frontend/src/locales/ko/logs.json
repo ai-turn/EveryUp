@@ -198,7 +198,30 @@
     "tracePanel": {
       "jumpTo": "탭에서 보기:",
       "openInLogs": "로그 ({{count}})",
-      "openInRequests": "API 요청 ({{count}})"
+      "openInRequests": "API 요청 ({{count}})",
+      "title": "트레이스",
+      "ariaLabel": "트레이스 상세",
+      "copyTraceId": "트레이스 ID 복사",
+      "close": "닫기",
+      "loading": "트레이스 불러오는 중...",
+      "empty": "이 트레이스에 대한 span·로그·API 요청이 없습니다.",
+      "spans": "스팬",
+      "headers": "헤더",
+      "capturedBodies": "캡처된 바디",
+      "apiRequestsTitle": "API 요청",
+      "logs": "로그",
+      "request": "요청",
+      "response": "응답",
+      "body": "바디",
+      "truncated": "잘림",
+      "adminOnly": "관리자 전용",
+      "adminOnlyDesc": "캡처된 바디를 볼 권한이 없습니다.",
+      "auditNotice": "관리자 전용 · 모든 열람은 감사 로그에 기록됩니다",
+      "copySpan": "스팬 행 복사",
+      "copyHeaders": "헤더 복사",
+      "copyBody": "캡처된 바디 복사",
+      "copyApiRequest": "API 요청 행 복사",
+      "copyLog": "로그 행 복사"
     },
     "pagination": {
       "showing": "전체 {{total}}개 중 {{shown}}개 표시"

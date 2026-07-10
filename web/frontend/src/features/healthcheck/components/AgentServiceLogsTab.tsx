@@ -230,7 +230,7 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: 
               onClick={() => setDatePreset(val)}
               className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
                 datePreset === val
-                  ? 'bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900'
+                  ? 'bg-primary text-white'
                   : 'bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark'
               }`}
             >
@@ -248,7 +248,7 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: 
               value={inputValue}
               onChange={e => setInputValue(e.target.value)}
               placeholder="메시지 검색..."
-              className="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg bg-slate-100 dark:bg-ui-hover-dark border border-transparent focus:border-primary dark:text-white placeholder-slate-400 dark:placeholder-text-dim-dark outline-none transition-colors"
+              className="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg bg-slate-100 dark:bg-ui-hover-dark border border-transparent focus:ring-2 focus:ring-primary/50 dark:text-white placeholder-slate-400 dark:placeholder-text-dim-dark outline-none transition-colors"
             />
           </div>
           {search && (

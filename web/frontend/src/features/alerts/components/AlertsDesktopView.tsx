@@ -1,4 +1,4 @@
-import { MaterialIcon, PageHeader, EmptyState, KPIChip } from '../../../components/common';
+import { MaterialIcon, PageHeader, EmptyState, KPIChip, Toggle } from '../../../components/common';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { AlertRulesTab } from './AlertRulesTab';
 import { NotificationHistoryTab } from './NotificationHistoryTab';
@@ -75,7 +75,7 @@ export function AlertsDesktopView({
         {activeTab !== 'history' && (
           <button
             onClick={activeTab === 'rules' ? onAddRule : onAddChannel}
-            className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 rounded-lg text-sm font-bold transition-all text-primary cursor-pointer active:scale-95"
+            className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 rounded-lg text-sm font-semibold transition-all text-white cursor-pointer active:scale-95"
           >
             <MaterialIcon name="add" className="text-lg" />
             {activeTab === 'rules' ? t('alerts.rules.addRule') : t('alerts.addChannel')}
@@ -232,14 +232,14 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
       <table className="w-full min-w-[1200px] table-fixed">
         <thead className="bg-slate-50 dark:bg-ui-hover-dark/40">
           <tr className="border-b border-slate-200 dark:border-ui-border-dark">
-            <th className="w-[270px] px-4 py-3 text-left text-sm font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.channel')}</th>
-            <th className="w-[120px] px-4 py-3 text-left text-sm font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.type')}</th>
-            <th className="w-[96px] px-4 py-3 text-left text-sm font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.status')}</th>
-            <th className="w-[135px] px-4 py-3 text-right text-sm font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.successRate7d')}</th>
-            <th className="w-[120px] px-4 py-3 text-right text-sm font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.sentFailed')}</th>
-            <th className="w-[120px] px-4 py-3 text-right text-sm font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.linkedRules')}</th>
-            <th className="w-[155px] px-4 py-3 text-left text-sm font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.lastSent')}</th>
-            <th className="w-[184px] px-4 py-3 text-right text-sm font-bold uppercase text-slate-500 dark:text-text-muted-dark">{t('alerts.table.actions')}</th>
+            <th className="w-[270px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.channel')}</th>
+            <th className="w-[120px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.type')}</th>
+            <th className="w-[96px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.status')}</th>
+            <th className="w-[135px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.successRate7d')}</th>
+            <th className="w-[120px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.sentFailed')}</th>
+            <th className="w-[120px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.linkedRules')}</th>
+            <th className="w-[155px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.lastSent')}</th>
+            <th className="w-[184px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.actions')}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-ui-border-dark">
@@ -280,14 +280,12 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <button
-                    onClick={() => onToggle(channel.id)}
+                  <Toggle
+                    checked={channel.isEnabled}
+                    onChange={() => onToggle(channel.id)}
                     disabled={togglingIds.has(channel.id)}
-                    className={`relative h-5.5 w-10 rounded-full transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${channel.isEnabled ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
                     title={channel.isEnabled ? t('alerts.disable') : t('alerts.enable')}
-                  >
-                    <span className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${channel.isEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
-                  </button>
+                  />
                 </td>
                 <td className={`px-4 py-3 text-right text-sm font-bold tabular-nums ${rateColor}`}>
                   {rate != null ? `${rate}%` : '-'}
@@ -326,7 +324,7 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
                       className="flex h-8 w-8 items-center justify-center rounded-md text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
                       title={t('common.delete')}
                     >
-                      <MaterialIcon name="delete" className="text-base" />
+                      <MaterialIcon name="delete_outline" className="text-base" />
                     </button>
                   </div>
                 </td>

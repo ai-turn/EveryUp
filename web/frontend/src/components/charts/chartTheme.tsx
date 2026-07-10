@@ -5,6 +5,8 @@ export interface ChartTheme {
   tickColor: string;
   tooltipBg: string;
   tooltipBorder: string;
+  /** Brand primary for chart series — follows the light/dark CSS token. */
+  primaryColor: string;
 }
 
 export interface TooltipPayloadItem {
@@ -37,6 +39,7 @@ export function getChartTheme(): ChartTheme {
     tickColor: isDark ? getCssVar('--color-text-muted-dark') || '#94a3b8' : '#94a3b8',
     tooltipBg: isDark ? getCssVar('--color-bg-surface-dark') || '#111827' : '#ffffff',
     tooltipBorder: isDark ? getCssVar('--color-chart-border') || '#334155' : '#e2e8f0',
+    primaryColor: getCssVar('--color-primary') || '#3b76c9',
   };
 }
 

@@ -8,7 +8,8 @@ import type { GlobalTimeRange } from '../../../components/common';
 import { ChartTooltip, formatAxisValue, getChartTheme } from '../../../components/charts';
 import { api, type OtelMetricName, type OtelMetricPoint } from '../../../services/api';
 
-const SERIES_COLORS = ['#3b76c9', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#14b8a6'];
+// First slot is filled with the theme primary at render time (light/dark aware).
+const SERIES_COLORS = ['#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#14b8a6'];
 const MAX_SERIES = 6;
 
 const RANGE_HOURS: Record<GlobalTimeRange, number> = { '1h': 1, '6h': 6, '24h': 24 };
@@ -100,6 +101,7 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range 
   }, [points]);
 
   const theme = getChartTheme();
+  const seriesColors = [theme.primaryColor, ...SERIES_COLORS];
   const unit = selectedMeta?.unit ?? '';
 
   if (namesLoading) {
@@ -117,6 +119,7 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range 
   }
 
   return (
+    <div className="space-y-4">
     <div className="p-6 rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-chart-bg">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-3 min-w-0">
@@ -172,7 +175,7 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range 
                   key={key}
                   type="monotone"
                   dataKey={key}
-                  stroke={SERIES_COLORS[i % SERIES_COLORS.length]}
+                  stroke={seriesColors[i % seriesColors.length]}
                   strokeWidth={2}
                   dot={false}
                   connectNulls
@@ -191,16 +194,18 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range 
         </>
       )}
 
+    </div>
+
       {/* All exported series — row click swaps the chart (ver2: 전체 시리즈) */}
-      <div className="mt-6 border-t border-slate-100 dark:border-ui-border-dark pt-4">
+      <div className="p-6 rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark">
         <div className="flex items-center gap-2 mb-2">
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{t('전체 시리즈')}</h3>
+          <h3 className="text-base font-bold text-slate-900 dark:text-white">{t('전체 시리즈')}</h3>
           <span className="text-xs text-slate-400 dark:text-text-dim-dark">{t('행 클릭 → 차트 표시')}</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-2xs font-semibold uppercase tracking-wide text-slate-400 dark:text-text-dim-dark border-b border-slate-100 dark:border-ui-border-dark">
+              <tr className="text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark border-b border-slate-100 dark:border-ui-border-dark">
                 <th className="py-1.5 pr-3 font-semibold">{t('시리즈')}</th>
                 <th className="py-1.5 pr-3 font-semibold">{t('타입')}</th>
                 <th className="py-1.5 pr-3 font-semibold">{t('단위')}</th>

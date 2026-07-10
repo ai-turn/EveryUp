@@ -30,7 +30,7 @@ interface AlertsMobileViewProps {
 const severityColors: Record<string, { text: string; bg: string }> = {
   critical: { text: 'text-red-600 dark:text-red-400', bg: 'bg-red-500/10' },
   warning: { text: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10' },
-  info: { text: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/10' },
+  info: { text: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-500/10' },
 };
 
 const historyStatusConfig: Record<string, { icon: string; color: string }> = {
@@ -76,7 +76,7 @@ export function AlertsMobileView({
         {activeTab === 'channels' && (
           <button
             onClick={onAddChannel}
-            className="flex items-center gap-1.5 px-3 py-2 bg-primary/10 hover:bg-primary/20 rounded-lg text-sm font-bold text-primary transition-all cursor-pointer active:scale-95 shrink-0"
+            className="flex items-center gap-1.5 px-3 py-2 bg-primary hover:bg-primary/90 rounded-lg text-sm font-semibold text-white transition-all cursor-pointer active:scale-95 shrink-0"
           >
             <MaterialIcon name="add" className="text-base" />
             {t('alerts.addChannel')}

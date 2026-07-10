@@ -63,7 +63,7 @@ export function CommandPalette() {
     { id: 'page-alerts', icon: 'notifications', label: t('알림'), to: '/alerts' },
     { id: 'page-settings', icon: 'settings', label: t('환경설정'), to: '/settings' },
     ...agents.map((a) => ({
-      id: `proj-${a.id}`, icon: 'dashboard', label: a.name, meta: t('프로젝트'), to: `/projects/${a.id}`,
+      id: `proj-${a.id}`, icon: 'folder_open', label: a.name, meta: t('프로젝트'), to: `/projects/${a.id}`,
     })),
     ...services.map((s) => ({
       id: `svc-${s.agentId}-${s.key}`, icon: '', label: s.name, meta: s.agentName,

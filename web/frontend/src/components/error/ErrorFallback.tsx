@@ -14,7 +14,7 @@ export function ErrorFallback({ error, onReset }: ErrorFallbackProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background-light dark:bg-bg-main-dark p-8">
+    <div className="min-h-screen flex items-center justify-center bg-bg-main dark:bg-bg-main-dark p-8">
       <div className="text-center max-w-md">
         <MaterialIcon
           name="error_outline"

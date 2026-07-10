@@ -290,7 +290,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
       className="fixed inset-0 z-50"
       role="dialog"
       aria-modal="true"
-      aria-label="Trace detail"
+      aria-label={t('apiRequests.tracePanel.ariaLabel')}
       onClick={onClose}
     >
       <div
@@ -301,7 +301,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
           <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary shrink-0">
             <MaterialIcon name="timeline" className="text-lg" />
           </div>
-          <h3 className="text-base font-bold text-slate-900 dark:text-white shrink-0">Trace</h3>
+          <h3 className="text-base font-bold text-slate-900 dark:text-white shrink-0">{t('apiRequests.tracePanel.title')}</h3>
           <code
             className="flex-1 min-w-0 truncate text-xs font-mono text-slate-400 dark:text-text-dim-dark"
             title={traceId}
@@ -311,13 +311,13 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
           <CopyButton
             onCopy={() => copy(traceId)}
             className="p-1 rounded hover:bg-slate-100 dark:hover:bg-ui-hover-dark text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer shrink-0"
-            title="Copy trace ID"
+            title={t('apiRequests.tracePanel.copyTraceId')}
             iconClassName="text-sm"
           />
           <button
             onClick={onClose}
             className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-ui-hover-dark text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer shrink-0"
-            aria-label="Close"
+            aria-label={t('apiRequests.tracePanel.close')}
           >
             <MaterialIcon name="close" className="text-base" />
           </button>
@@ -327,7 +327,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
           {loading && (
             <div className="flex items-center justify-center py-10 text-sm text-slate-500 dark:text-text-muted-dark">
               <MaterialIcon name="sync" className="text-base mr-2 animate-spin" />
-              Loading trace...
+              {t('apiRequests.tracePanel.loading')}
             </div>
           )}
 
@@ -340,7 +340,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
 
           {isEmpty && (
             <div className="text-center py-10 text-sm text-slate-500 dark:text-text-muted-dark">
-              No spans, logs, or API requests for this trace.
+              {t('apiRequests.tracePanel.empty')}
             </div>
           )}
 
@@ -396,7 +396,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
   );
 }
 
-function SectionHeader({ icon, title, count }: { icon: string; title: string; count: number }) {
+function PanelSectionHeader({ icon, title, count }: { icon: string; title: string; count: number }) {
   return (
     <div className="flex items-center gap-2 mb-2">
       <MaterialIcon name={icon} className="text-base text-primary" />
@@ -421,6 +421,7 @@ function spanBarColor(span: TraceSpan): string {
 }
 
 function SpanList({ spans, onCopy }: { spans: TraceSpan[]; onCopy: CopyFn }) {
+  const { t } = useTranslation('logs');
   // Waterfall bounds: earliest start → latest end across the trace.
   const traceStart = Math.min(...spans.map((s) => s.startUnixNano));
   const traceEnd = Math.max(...spans.map((s) => s.endUnixNano));
@@ -428,7 +429,7 @@ function SpanList({ spans, onCopy }: { spans: TraceSpan[]; onCopy: CopyFn }) {
 
   return (
     <section>
-      <SectionHeader icon="account_tree" title="Spans" count={spans.length} />
+      <PanelSectionHeader icon="account_tree" title={t('apiRequests.tracePanel.spans')} count={spans.length} />
       <ul className="space-y-1.5">
         {spans.map((span) => {
           const leftPct = Math.min(Math.max(((span.startUnixNano - traceStart) / total) * 100, 0), 100);
@@ -458,7 +459,7 @@ function SpanList({ spans, onCopy }: { spans: TraceSpan[]; onCopy: CopyFn }) {
                 <span className="text-slate-500 dark:text-text-muted-dark font-mono shrink-0">
                   {formatDuration(span.durationMs)}
                 </span>
-                {copyButton(() => onCopy(formatSpanCopy(span)), 'Copy span row')}
+                {copyButton(() => onCopy(formatSpanCopy(span)), t('apiRequests.tracePanel.copySpan'))}
               </div>
               {/* Waterfall track: bar positioned/sized by the span's time window */}
               <div className="relative mt-1.5 h-1.5 w-full rounded bg-slate-200/70 dark:bg-ui-active-dark">
@@ -495,9 +496,10 @@ function HeaderRows({ label, headers }: { label: string; headers: HeaderEntry[] 
 }
 
 function CapturedHeadersList({ items, onCopy }: { items: CapturedHeaders[]; onCopy: CopyFn }) {
+  const { t } = useTranslation('logs');
   return (
     <section>
-      <SectionHeader icon="list_alt" title="Headers" count={items.length} />
+      <PanelSectionHeader icon="list_alt" title={t('apiRequests.tracePanel.headers')} count={items.length} />
       <ul className="space-y-2">
         {items.map((item) => (
           <li
@@ -511,11 +513,11 @@ function CapturedHeadersList({ items, onCopy }: { items: CapturedHeaders[]; onCo
               <span className="min-w-0 flex-1 truncate font-mono text-slate-500 dark:text-text-muted-dark" title={item.spanName}>
                 {item.spanName}
               </span>
-              {copyButton(() => onCopy(formatCapturedHeadersCopy(item)), 'Copy headers')}
+              {copyButton(() => onCopy(formatCapturedHeadersCopy(item)), t('apiRequests.tracePanel.copyHeaders'))}
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <HeaderRows label="Request" headers={item.request} />
-              <HeaderRows label="Response" headers={item.response} />
+              <HeaderRows label={t('apiRequests.tracePanel.request')} headers={item.request} />
+              <HeaderRows label={t('apiRequests.tracePanel.response')} headers={item.response} />
             </div>
           </li>
         ))}
@@ -527,15 +529,16 @@ function CapturedHeadersList({ items, onCopy }: { items: CapturedHeaders[]; onCo
 // Captured request/response bodies are admin-only; the backend audit-logs every
 // admin view on fetch. Non-admins never reach this list (see RestrictedBodyNotice).
 function RestrictedBodyNotice({ count }: { count: number }) {
+  const { t } = useTranslation('logs');
   return (
     <section>
-      <SectionHeader icon="data_object" title="Captured bodies" count={count} />
+      <PanelSectionHeader icon="data_object" title={t('apiRequests.tracePanel.capturedBodies')} count={count} />
       <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm dark:border-ui-border-dark dark:bg-ui-hover-dark">
         <MaterialIcon name="lock" className="text-lg text-amber-500 shrink-0" />
         <div>
-          <p className="font-semibold text-slate-700 dark:text-text-base-dark">Admin only</p>
+          <p className="font-semibold text-slate-700 dark:text-text-base-dark">{t('apiRequests.tracePanel.adminOnly')}</p>
           <p className="text-slate-500 dark:text-text-muted-dark">
-            You don't have permission to view captured bodies.
+            {t('apiRequests.tracePanel.adminOnlyDesc')}
           </p>
         </div>
       </div>
@@ -544,12 +547,13 @@ function RestrictedBodyNotice({ count }: { count: number }) {
 }
 
 function CapturedBodyList({ items, onCopy }: { items: CapturedBody[]; onCopy: CopyFn }) {
+  const { t } = useTranslation('logs');
   return (
     <section>
-      <SectionHeader icon="data_object" title="Captured bodies" count={items.length} />
+      <PanelSectionHeader icon="data_object" title={t('apiRequests.tracePanel.capturedBodies')} count={items.length} />
       <p className="mb-2 flex items-center gap-1.5 text-xs text-slate-400 dark:text-text-dim-dark">
         <MaterialIcon name="policy" className="text-sm" />
-        Admin only · every view is recorded in the audit log
+        {t('apiRequests.tracePanel.auditNotice')}
       </p>
       <ul className="space-y-2">
         {items.map((item) => (
@@ -559,7 +563,7 @@ function CapturedBodyList({ items, onCopy }: { items: CapturedBody[]; onCopy: Co
           >
             <div className="mb-2 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center rounded bg-primary/10 px-1.5 py-0.5 text-xs font-bold text-primary">
-                {item.label}
+                {t(`apiRequests.tracePanel.${item.label.toLowerCase()}`)}
               </span>
               {item.serviceName && (
                 <span className="text-slate-500 dark:text-text-muted-dark">
@@ -576,10 +580,10 @@ function CapturedBodyList({ items, onCopy }: { items: CapturedBody[]; onCopy: Co
               )}
               {item.truncated && (
                 <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-xs font-bold text-amber-600 dark:text-amber-400">
-                  truncated
+                  {t('apiRequests.tracePanel.truncated')}
                 </span>
               )}
-              {copyButton(() => onCopy(formatCapturedBodyCopy(item)), 'Copy captured body')}
+              {copyButton(() => onCopy(formatCapturedBodyCopy(item)), t('apiRequests.tracePanel.copyBody'))}
             </div>
             <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-all rounded border border-slate-200 bg-white p-2 font-mono text-xs text-slate-700 dark:border-ui-border-dark dark:bg-bg-surface-dark dark:text-text-base-dark">{item.body}</pre>
           </li>
@@ -590,9 +594,10 @@ function CapturedBodyList({ items, onCopy }: { items: CapturedBody[]; onCopy: Co
 }
 
 function ApiRequestList({ items, onCopy }: { items: ApiRequest[]; onCopy: CopyFn }) {
+  const { t } = useTranslation('logs');
   return (
     <section>
-      <SectionHeader icon="api" title="API requests" count={items.length} />
+      <PanelSectionHeader icon="api" title={t('apiRequests.tracePanel.apiRequestsTitle')} count={items.length} />
       <ul className="space-y-1.5">
         {items.map((req) => (
           <li
@@ -615,7 +620,7 @@ function ApiRequestList({ items, onCopy }: { items: ApiRequest[]; onCopy: CopyFn
             <span className="text-slate-500 dark:text-text-muted-dark font-mono shrink-0">
               {formatDuration(req.durationMs)}
             </span>
-            {copyButton(() => onCopy(formatApiRequestCopy(req)), 'Copy API request row')}
+            {copyButton(() => onCopy(formatApiRequestCopy(req)), t('apiRequests.tracePanel.copyApiRequest'))}
           </li>
         ))}
       </ul>
@@ -624,9 +629,10 @@ function ApiRequestList({ items, onCopy }: { items: ApiRequest[]; onCopy: CopyFn
 }
 
 function LogList({ logs, onCopy }: { logs: LogEntry[]; onCopy: CopyFn }) {
+  const { t } = useTranslation('logs');
   return (
     <section>
-      <SectionHeader icon="article" title="Logs" count={logs.length} />
+      <PanelSectionHeader icon="article" title={t('apiRequests.tracePanel.logs')} count={logs.length} />
       <ul className="space-y-1.5">
         {logs.map((log) => (
           <li
@@ -642,7 +648,7 @@ function LogList({ logs, onCopy }: { logs: LogEntry[]; onCopy: CopyFn }) {
             <span className="text-slate-700 dark:text-text-base-dark break-all flex-1 min-w-0">
               {log.message}
             </span>
-            {copyButton(() => onCopy(formatLogCopy(log)), 'Copy log row')}
+            {copyButton(() => onCopy(formatLogCopy(log)), t('apiRequests.tracePanel.copyLog'))}
           </li>
         ))}
       </ul>

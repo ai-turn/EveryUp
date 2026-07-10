@@ -107,7 +107,7 @@ function DesktopLayout(props: LayoutProps) {
             {service.agentName}
           </Link>
           <span className="text-slate-300 dark:text-text-dim-dark">/</span>
-          <h1 className="text-lg font-bold text-slate-900 dark:text-white truncate">{service.name}</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white truncate">{service.name}</h1>
           <StatusBadge healthy={service.healthy} />
           <div className="ml-auto flex items-center gap-2">
             <TimeRangePicker value={range} onChange={onRangeChange} />

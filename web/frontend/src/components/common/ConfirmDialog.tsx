@@ -107,7 +107,7 @@ export function ConfirmDialog({
             className={`flex-1 py-2 ${styles.button} text-white font-bold rounded-lg transition-all shadow-md active:scale-95 disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2`}
           >
             {isProcessing ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <MaterialIcon name="sync" className="text-lg animate-spin" />
             ) : (
               <>
                 {variant === 'danger' && <MaterialIcon name="delete" className="text-lg" />}

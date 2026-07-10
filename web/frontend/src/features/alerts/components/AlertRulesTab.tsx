@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { getErrorMessage } from '../../../utils/errors';
-import { MaterialIcon, EmptyState, ConfirmDialog } from '../../../components/common';
+import { MaterialIcon, EmptyState, ConfirmDialog, Toggle } from '../../../components/common';
 import { api, type AlertRule, type NotificationChannel, type AgentServiceFlat, type ConnectedAgent } from '../../../services/api';
 import { AlertRuleForm } from './AlertRuleForm';
 
@@ -321,7 +321,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
             className="px-5 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-all shadow-sm active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
           >
             {isSubmitting ? (
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <MaterialIcon name="sync" className="text-base animate-spin" />
             ) : (
               <>
                 <MaterialIcon name="check" className="text-sm" />
@@ -333,7 +333,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
       </div>
       {formLoading ? (
         <div className="flex min-h-40 items-center justify-center">
-          <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <MaterialIcon name="sync" className="text-3xl text-primary animate-spin" />
         </div>
       ) : (
         <AlertRuleForm
@@ -350,7 +350,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
   if (isLoading) {
     return (
       <div className="p-8 text-center text-slate-500">
-        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-2" />
+        <MaterialIcon name="sync" className="text-3xl text-primary animate-spin mx-auto mb-2 block" />
         {t('common.loading')}
       </div>
     );
@@ -450,13 +450,13 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
               <tr className="bg-slate-50 dark:bg-bg-surface-dark/50 border-b border-slate-200 dark:border-ui-border-dark">
                 <SortableTH className="w-[300px]" label={t('alerts.rules.colName', { defaultValue: 'Rule' })} active={sortKey === 'name'} dir={sortDir} onClick={() => onSort('name')} />
                 <SortableTH className="w-[220px]" label={t('alerts.rules.colTarget', { defaultValue: 'Target' })} active={sortKey === 'target'} dir={sortDir} onClick={() => onSort('target')} />
-                <th className="w-[300px] px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <th className="w-[300px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.rules.colTrigger', { defaultValue: 'Trigger' })}
                 </th>
-                <th className="w-[140px] px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <th className="w-[140px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.rules.colChannels', { defaultValue: 'Channels' })}
                 </th>
-                <th className="w-[110px] px-4 py-3 text-right text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <th className="w-[110px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.rules.colActions', { defaultValue: 'Actions' })}
                 </th>
               </tr>
@@ -509,14 +509,12 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                       </td>
                       <td className="px-4 py-2 text-right align-middle whitespace-nowrap">
                         <div className="inline-flex items-center justify-end gap-1">
-                          <button
-                            onClick={() => handleToggle(rule.id)}
+                          <Toggle
+                            checked={rule.isEnabled}
+                            onChange={() => handleToggle(rule.id)}
                             disabled={togglingIds.has(rule.id)}
-                            className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${rule.isEnabled ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'} disabled:opacity-50`}
                             title={rule.isEnabled ? t('alerts.disable', { defaultValue: 'Disable' }) : t('alerts.enable', { defaultValue: 'Enable' })}
-                          >
-                            <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${rule.isEnabled ? 'translate-x-4' : 'translate-x-0'}`} />
-                          </button>
+                          />
                           <button
                             onClick={() => handleEdit(rule)}
                             className="p-1 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-ui-hover-dark rounded transition-all"
@@ -538,7 +536,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                               ? t('alerts.rules.systemRuleDeleteDisabled')
                               : t('common.delete', { defaultValue: 'Delete' })}
                           >
-                            <MaterialIcon name="delete" className="text-base" />
+                            <MaterialIcon name="delete_outline" className="text-base" />
                           </button>
                         </div>
                       </td>
@@ -569,7 +567,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
 
 function SortableTH({ label, active, dir, onClick, className = '' }: { label: string; active: boolean; dir: SortDir; onClick: () => void; className?: string }) {
   return (
-    <th className={`cursor-pointer select-none px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark ${className}`} onClick={onClick}>
+    <th className={`cursor-pointer select-none px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark ${className}`} onClick={onClick}>
       <span className={`inline-flex items-center gap-1 ${active ? 'text-slate-900 dark:text-white' : ''}`}>
         {label}
         <span className={active ? 'opacity-100' : 'opacity-30'}>{active && dir === 'desc' ? '↓' : '↑'}</span>

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslate } from '@tolgee/react';
 import { toast } from 'react-hot-toast';
-import { MaterialIcon } from '../../components/common';
+import { ConfirmDialog, MaterialIcon } from '../../components/common';
 import { useSpinAction } from '../../hooks/useSpinAction';
 import {
   api,
@@ -50,7 +50,7 @@ function KpiCard({ label, value, unit, sub, tone }: {
     : tone === 'warn' ? 'text-amber-600 dark:text-amber-400'
     : 'text-slate-900 dark:text-white';
   return (
-    <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl px-4 py-3.5">
+    <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-4">
       <div className="text-xs text-slate-500 dark:text-text-muted-dark">{label}</div>
       <div className={`text-xl font-bold mt-1 font-mono ${valueColor}`}>
         {value}
@@ -166,6 +166,9 @@ export function ProjectDetailPage() {
   const [loading, setLoading] = useState(true);
   const [showKey, setShowKey] = useState(false);
   const [showInstrumentation, setShowInstrumentation] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<
+    { type: 'agent' } | { type: 'service'; svc: AgentServiceFlat } | null
+  >(null);
 
   // Dashboard aggregates — non-critical, each fails independent of the main load.
   const [incidents, setIncidents] = useState<AgentIncident[]>([]);
@@ -206,26 +209,23 @@ export function ProjectDetailPage() {
 
   const { spinning, trigger: handleRefresh } = useSpinAction(load);
 
-  const handleDeleteAgent = async () => {
-    if (!agentId) return;
-    if (!confirm(`'${agent?.name ?? agentId}' 프로젝트를 비활성화하시겠습니까?\n에이전트 연결이 차단되며 수집 데이터는 보존됩니다.`)) return;
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirm) return;
     try {
-      await api.deleteAgent(agentId);
-      toast.success('프로젝트가 비활성화됐습니다');
-      navigate('/');
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
-  };
-
-  const handleDeleteService = async (svc: AgentServiceFlat) => {
-    if (!confirm(`'${svc.name}' 서비스를 목록에서 삭제하시겠습니까?\n에이전트가 이 대상을 계속 수집 중이면 다음 동기화 때 다시 나타날 수 있습니다.`)) return;
-    try {
-      await api.deleteAgentService(svc.agentId, svc.key);
-      toast.success('서비스가 삭제됐습니다');
-      load();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
+      if (deleteConfirm.type === 'agent') {
+        if (!agentId) return;
+        await api.deleteAgent(agentId);
+        toast.success('프로젝트가 비활성화됐습니다');
+        navigate('/');
+      } else {
+        await api.deleteAgentService(deleteConfirm.svc.agentId, deleteConfirm.svc.key);
+        toast.success('서비스가 삭제됐습니다');
+        load();
+      }
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setDeleteConfirm(null);
     }
   };
 
@@ -291,7 +291,7 @@ export function ProjectDetailPage() {
             title="새로고침"
             className="p-2 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-ui-hover-dark transition-colors"
           >
-            <MaterialIcon name="refresh" className={`text-xl ${spinning ? 'animate-spin' : ''}`} />
+            <MaterialIcon name="refresh" className={`text-lg ${spinning ? 'animate-spin' : ''}`} />
           </button>
           {agent && (
             <>
@@ -310,7 +310,7 @@ export function ProjectDetailPage() {
                 <MaterialIcon name="integration_instructions" className="text-xl" />
               </button>
               <button
-                onClick={handleDeleteAgent}
+                onClick={() => setDeleteConfirm({ type: 'agent' })}
                 title="프로젝트 비활성화"
                 className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
               >
@@ -381,7 +381,7 @@ export function ProjectDetailPage() {
               service={s}
               metric={metrics[s.name]}
               onOpen={() => navigate(`/services/${agentId}/${encodeURIComponent(s.key)}`)}
-              onDelete={() => handleDeleteService(s)}
+              onDelete={() => setDeleteConfirm({ type: 'service', svc: s })}
             />
           ))}
         </div>
@@ -401,7 +401,7 @@ export function ProjectDetailPage() {
           <div className="flex flex-col gap-4">
             {/* Incident history */}
             <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-4">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">{t('장애 이력 · 30일')}</h3>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3">{t('장애 이력 · 30일')}</h3>
               {incidents.length === 0 ? (
                 <p className="text-xs text-slate-400 dark:text-text-dim-dark py-4 text-center">{t('최근 30일간 장애가 없습니다')}</p>
               ) : (
@@ -434,7 +434,7 @@ export function ProjectDetailPage() {
 
             {/* Event timeline */}
             <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-4">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">{t('타임라인')}</h3>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3">{t('타임라인')}</h3>
               {events.length === 0 ? (
                 <p className="text-xs text-slate-400 dark:text-text-dim-dark py-4 text-center">{t('최근 이벤트가 없습니다')}</p>
               ) : (
@@ -460,6 +460,24 @@ export function ProjectDetailPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={deleteConfirm !== null}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={handleConfirmDelete}
+        title={deleteConfirm?.type === 'service' ? '서비스 삭제' : '프로젝트 비활성화'}
+        message={
+          deleteConfirm?.type === 'service'
+            ? `'${deleteConfirm.svc.name}' 서비스를 목록에서 삭제하시겠습니까?`
+            : `'${agent?.name ?? agentId}' 프로젝트를 비활성화하시겠습니까?`
+        }
+        description={
+          deleteConfirm?.type === 'service'
+            ? '에이전트가 이 대상을 계속 수집 중이면 다음 동기화 때 다시 나타날 수 있습니다.'
+            : '에이전트 연결이 차단되며 수집 데이터는 보존됩니다.'
+        }
+        confirmLabel={deleteConfirm?.type === 'service' ? undefined : '비활성화'}
+      />
 
       {showKey && agent && (
         <ApiKeyModal agentId={agent.id} agentName={agent.name} onClose={() => setShowKey(false)} onRotated={load} />
