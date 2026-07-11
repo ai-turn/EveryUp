@@ -41,18 +41,17 @@ want to monitor. There is no large observability stack to set up.
 
 ## Features
 
-The default install collects the following without changing application code.
+🟢 Built-in — works out of the box, no app code changes · 🔵 Optional — enable when needed
 
-- Automatic Docker container discovery, container state and health
-- Container stdout/stderr logs
-- API request status codes (method, path, status) parsed from access logs
-- Host CPU, memory, disk, and network metrics
-- Telegram, Discord, and Slack notifications
-
-Optional features go deeper.
-
-- **eBPF sidecar**: API latency and traces with no app changes
-- **OpenTelemetry instrumentation**: request/response headers and bodies with one app restart
+|  | Feature | Description |
+| :-: | --- | --- |
+| 🟢 | 💓 Health checks | Automatic Docker container discovery, container state and health |
+| 🟢 | 🖥️ Infrastructure | Host CPU, memory, disk, and network metrics |
+| 🟢 | 📜 Logs | Container stdout/stderr collection |
+| 🟢 | 🌐 API status | Request status codes (method, path, status) parsed from access logs |
+| 🟢 | 🔔 Notifications | Telegram, Discord, and Slack channels |
+| 🔵 | ⚡ API latency & traces | eBPF sidecar — no app changes |
+| 🔵 | 🔍 API headers & bodies | OpenTelemetry instrumentation — one app restart |
 
 ## Quick Start
 

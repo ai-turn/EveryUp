@@ -41,18 +41,17 @@ EveryUp은 Docker로 실행 중인 서비스를 한곳에서 모니터링하는 
 
 ## 핵심 기능
 
-앱 코드를 수정하지 않아도 기본 설치만으로 다음을 수집합니다.
+🟢 기본 제공 — 앱 코드 수정 없이 설치만으로 동작 · 🔵 선택 — 필요할 때 활성화
 
-- Docker 컨테이너 자동 발견, 실행 상태와 health
-- 컨테이너 stdout/stderr 로그
-- access log에서 읽은 API 요청 상태코드(method, path, status)
-- 호스트 CPU, 메모리, 디스크, 네트워크 메트릭
-- Telegram, Discord, Slack 알림
-
-선택 기능을 켜면 더 깊게 볼 수 있습니다.
-
-- **eBPF 사이드카**: 앱 수정 없이 API latency와 trace 수집
-- **OpenTelemetry 계측**: 앱 재시작 한 번으로 요청/응답 헤더와 바디까지 수집
+|  | 기능 | 설명 |
+| :-: | --- | --- |
+| 🟢 | 💓 헬스체크 | Docker 컨테이너 자동 발견, 실행 상태와 health |
+| 🟢 | 🖥️ 인프라 | 호스트 CPU·메모리·디스크·네트워크 메트릭 |
+| 🟢 | 📜 로그 | 컨테이너 stdout/stderr 수집 |
+| 🟢 | 🌐 API 상태 | access log에서 읽은 요청 상태코드(method·path·status) |
+| 🟢 | 🔔 알림 | Telegram·Discord·Slack 채널 |
+| 🔵 | ⚡ API latency·트레이스 | eBPF 사이드카 — 앱 수정 없음 |
+| 🔵 | 🔍 API 헤더·바디 | OpenTelemetry 계측 — 앱 재시작 한 번 |
 
 ## 빠른 시작
 
