@@ -2,9 +2,12 @@ import { useState, useEffect, useMemo } from 'react';
 import { useTranslate } from '@tolgee/react';
 import {
   ResponsiveContainer, ComposedChart, Line, Bar,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts';
-import { ChartTooltip, formatAxisValue, getChartTheme } from '../../../components/charts';
+import {
+  ChartLegend, ChartStatsLegend, ChartTooltip, SERIES_HEX, chartCardClass, formatAxisValue,
+  getChartTheme, gridProps, lineProps, tooltipCursor, xAxisProps, yAxisProps,
+} from '../../../components/charts';
 import { api, type ApiRequestStatBucket, type ApiRequestStatusSummary } from '../../../services/api';
 
 type TimeRange = '1h' | '6h' | '24h';
@@ -82,9 +85,17 @@ export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey, ran
   }
 
   return (
-    <div className="p-6 rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-chart-bg">
+    <div className={`p-6 ${chartCardClass}`}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-slate-900 dark:text-white font-bold text-base">{t('요청 추이')}</h3>
+        <div className="flex flex-wrap items-center gap-3">
+          <h3 className="text-slate-900 dark:text-white font-bold text-base">{t('요청 추이')}</h3>
+          <ChartLegend
+            items={[
+              { label: t('요청 수'), color: theme.primaryColor },
+              { label: t('에러율(%)'), color: SERIES_HEX.red },
+            ]}
+          />
+        </div>
         {!controlledRange && (
           <div className="flex gap-1">
             {RANGES.map((r) => (
@@ -138,34 +149,44 @@ export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey, ran
 
       {/* Latency percentiles (only when we have timed requests) */}
       {anyLatency && (
-        <ResponsiveContainer width="100%" height={160}>
-          <ComposedChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={theme.gridColor} vertical={false} />
-            <XAxis dataKey="timeLabel" tick={{ fill: theme.tickColor, fontSize: 11 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-            <YAxis tickFormatter={(v) => formatAxisValue(v, 'ms')} tick={{ fill: theme.tickColor, fontSize: 11 }} tickLine={false} axisLine={false} width={52} />
-            <Tooltip content={({ active, label, payload }) => (
-              <ChartTooltip active={active} label={label} payload={payload as import('../../../components/charts').TooltipPayloadItem[]} unit="ms" theme={theme} valueFormatter={(v) => String(Math.round(v))} />
-            )} />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
-            <Line type="monotone" dataKey="p50" name="p50" stroke={theme.primaryColor} strokeWidth={2} dot={false} connectNulls />
-            <Line type="monotone" dataKey="p95" name="p95" stroke="#f59e0b" strokeWidth={2} dot={false} connectNulls />
-          </ComposedChart>
-        </ResponsiveContainer>
+        <>
+          <ResponsiveContainer width="100%" height={160}>
+            <ComposedChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid {...gridProps(theme)} />
+              <XAxis dataKey="timeLabel" {...xAxisProps(theme)} />
+              <YAxis {...yAxisProps(theme, 52)} tickFormatter={(v) => formatAxisValue(v, 'ms')} />
+              <Tooltip cursor={tooltipCursor(theme)} content={({ active, label, payload }) => (
+                <ChartTooltip active={active} label={label} payload={payload as import('../../../components/charts').TooltipPayloadItem[]} unit="ms" theme={theme} valueFormatter={(v) => String(Math.round(v))} />
+              )} />
+              <Line {...lineProps(theme.primaryColor)} dataKey="p50" name="p50" />
+              <Line {...lineProps(SERIES_HEX.amber)} dataKey="p95" name="p95" />
+            </ComposedChart>
+          </ResponsiveContainer>
+          <div className="mb-3 mt-2">
+            <ChartStatsLegend
+              series={[
+                { label: 'p50', color: theme.primaryColor, values: data.filter((d) => d.hasLatency).map((d) => d.p50) },
+                { label: 'p95', color: SERIES_HEX.amber, values: data.filter((d) => d.hasLatency).map((d) => d.p95) },
+              ]}
+              unit="ms"
+              valueFormatter={(v) => String(Math.round(v))}
+            />
+          </div>
+        </>
       )}
 
       {/* Volume + error rate */}
       <ResponsiveContainer width="100%" height={140}>
         <ComposedChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={theme.gridColor} vertical={false} />
-          <XAxis dataKey="timeLabel" tick={{ fill: theme.tickColor, fontSize: 11 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-          <YAxis yAxisId="count" domain={[0, 'dataMax']} allowDataOverflow tick={{ fill: theme.tickColor, fontSize: 11 }} tickLine={false} axisLine={false} width={40} allowDecimals={false} />
-          <YAxis yAxisId="err" orientation="right" tickFormatter={(v) => `${v}%`} tick={{ fill: theme.tickColor, fontSize: 11 }} tickLine={false} axisLine={false} width={40} domain={[0, 100]} />
-          <Tooltip content={({ active, label, payload }) => (
+          <CartesianGrid {...gridProps(theme)} />
+          <XAxis dataKey="timeLabel" {...xAxisProps(theme)} />
+          <YAxis yAxisId="count" {...yAxisProps(theme, 40)} domain={[0, 'dataMax']} allowDataOverflow allowDecimals={false} />
+          <YAxis yAxisId="err" {...yAxisProps(theme, 40)} orientation="right" tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
+          <Tooltip cursor={tooltipCursor(theme)} content={({ active, label, payload }) => (
             <ChartTooltip active={active} label={label} payload={payload as import('../../../components/charts').TooltipPayloadItem[]} unit="" theme={theme} valueFormatter={(v) => String(v)} />
           )} />
-          <Legend wrapperStyle={{ fontSize: 11 }} />
-          <Bar yAxisId="count" dataKey="count" name={t('요청 수')} fill={theme.primaryColor} fillOpacity={0.35} radius={[2, 2, 0, 0]} />
-          <Line yAxisId="err" type="monotone" dataKey="errorRate" name={t('에러율(%)')} stroke="#ef4444" strokeWidth={2} dot={false} connectNulls />
+          <Bar yAxisId="count" dataKey="count" name={t('요청 수')} fill={theme.primaryColor} fillOpacity={0.35} radius={[2, 2, 0, 0]} isAnimationActive={false} />
+          <Line {...lineProps(SERIES_HEX.red)} yAxisId="err" dataKey="errorRate" name={t('에러율(%)')} />
         </ComposedChart>
       </ResponsiveContainer>
     </div>

@@ -10,7 +10,10 @@ import {
   Tooltip,
 } from 'recharts';
 import { MaterialIcon, type GlobalTimeRange } from '../../../components/common';
-import { ChartTooltip, formatAxisValue, formatMetricValue, getChartTheme, getYAxisMax } from '../../../components/charts';
+import {
+  ChartStatsLegend, ChartTooltip, areaProps, chartCardClass, formatAxisValue,
+  getChartTheme, getYAxisMax, gridProps, lineProps, tooltipCursor, xAxisProps, yAxisProps,
+} from '../../../components/charts';
 import { useMonitoringTrends } from '../../../hooks/useInfra';
 import { Skeleton } from '../../../components/skeleton';
 import type { ChartData } from '../../../types/infra';
@@ -63,11 +66,10 @@ export function InfraTrends({ hostId, refreshKey = 0, range }: InfraTrendsProps)
         </div>
       ) : (
         <div className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {(charts || []).map((chart, chartIndex) => (
+          {(charts || []).map((chart) => (
             <ChartCard
               key={chart.title}
               chart={chart}
-              chartIndex={chartIndex}
               xInterval={xInterval}
               rangeLabel={rangeLabel[range]}
               theme={theme}
@@ -81,57 +83,27 @@ export function InfraTrends({ hostId, refreshKey = 0, range }: InfraTrendsProps)
 
 function ChartCard({
   chart,
-  chartIndex,
   xInterval,
   rangeLabel,
   theme,
 }: {
   chart: ChartData;
-  chartIndex: number;
   xInterval: number;
   rangeLabel: string;
   theme: ReturnType<typeof getChartTheme>;
 }) {
   const { t } = useTranslation(['infra']);
-  const primary = chart.series[0];
-  const primaryValues = chart.data.map((p) => Number(p[primary.key])).filter(Number.isFinite);
   const allValues = chart.series.flatMap((s) =>
     chart.data.map((p) => Number(p[s.key])).filter(Number.isFinite)
   );
-  const latest = primaryValues.length > 0 ? primaryValues[primaryValues.length - 1] : 0;
-  const peak = allValues.length > 0 ? Math.max(...allValues) : 0;
   const maxVal = allValues.length > 0 ? Math.max(...allValues) : 0;
   const yMax = getYAxisMax(chart, allValues);
   const isEmpty = chart.data.length === 0 || maxVal < 0.001;
 
   return (
-    <section
-      className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-chart-border dark:bg-bg-surface-dark"
-      aria-label={chart.title}
-    >
-      <div className="flex items-start justify-between gap-3 px-5 pb-3 pt-5">
-        <div className="min-w-0">
-          <p className="truncate text-base font-bold text-slate-900 dark:text-white">{chart.title}</p>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {chart.series.map((s) => (
-              <span
-                key={s.key}
-                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-semibold text-slate-500 dark:border-ui-border-dark dark:bg-ui-hover-dark/40 dark:text-text-muted-dark"
-              >
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />
-                {s.label}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {!isEmpty && (
-          <div className="hidden shrink-0 items-center gap-2 sm:flex">
-            <InlineStat label={t('infra.trends.now')} value={latest} unit={chart.unit} color={primary.color} />
-            <span className="h-4 w-px bg-slate-200 dark:bg-ui-border-dark" />
-            <InlineStat label={t('infra.trends.peak')} value={peak} unit={chart.unit} color="#f59e0b" />
-          </div>
-        )}
+    <section className={`overflow-hidden ${chartCardClass}`} aria-label={chart.title}>
+      <div className="px-5 pb-1 pt-5">
+        <p className="truncate text-base font-bold text-slate-900 dark:text-white">{chart.title}</p>
       </div>
 
       {isEmpty ? (
@@ -146,90 +118,46 @@ function ChartCard({
           <div className="h-60 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={chart.data} margin={{ top: 16, right: 20, left: 0, bottom: 2 }}>
-                <defs>
-                  {chart.series.map((s, si) => (
-                    <linearGradient key={s.key} id={`trend-area-${chartIndex}-${si}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={s.color} stopOpacity={0.18} />
-                      <stop offset="65%" stopColor={s.color} stopOpacity={0.05} />
-                      <stop offset="100%" stopColor={s.color} stopOpacity={0} />
-                    </linearGradient>
-                  ))}
-                </defs>
+                <CartesianGrid {...gridProps(theme)} />
 
-                <CartesianGrid stroke={theme.gridColor} strokeDasharray="2 8" vertical={false} />
-
-                <XAxis
-                  dataKey="time"
-                  tick={{ fontSize: 11, fill: theme.tickColor, fontWeight: 600 }}
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={10}
-                  interval={xInterval}
-                  minTickGap={20}
-                />
+                <XAxis dataKey="time" {...xAxisProps(theme)} interval={xInterval} minTickGap={20} />
 
                 <YAxis
+                  {...yAxisProps(theme, 42)}
                   domain={[0, yMax]}
-                  tick={{ fontSize: 11, fill: theme.tickColor, fontWeight: 600 }}
-                  tickLine={false}
-                  axisLine={false}
-                  width={42}
                   tickCount={5}
                   allowDecimals={chart.unit !== '%'}
                   tickFormatter={(value) => formatAxisValue(Number(value), chart.unit)}
                 />
 
                 <Tooltip
-                  cursor={{ stroke: theme.gridColor, strokeWidth: 1, strokeDasharray: '4 4' }}
+                  cursor={tooltipCursor(theme)}
                   content={<ChartTooltip unit={chart.unit} theme={theme} />}
                 />
 
-                {chart.series.map((s, si) => (
-                  <Area
-                    key={`${s.key}-area`}
-                    type="monotoneX"
-                    dataKey={s.key}
-                    stroke="none"
-                    fill={`url(#trend-area-${chartIndex}-${si})`}
-                    fillOpacity={1}
-                    isAnimationActive={false}
-                  />
+                {chart.series.map((s) => (
+                  <Area key={`${s.key}-area`} {...areaProps(s.color)} dataKey={s.key} />
                 ))}
 
                 {chart.series.map((s) => (
-                  <Line
-                    key={`${s.key}-line`}
-                    type="monotoneX"
-                    dataKey={s.key}
-                    name={s.label}
-                    stroke={s.color}
-                    strokeWidth={2.75}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    dot={false}
-                    activeDot={{ r: 4.5, stroke: '#ffffff', strokeWidth: 2, fill: s.color }}
-                    connectNulls
-                    isAnimationActive={false}
-                  />
+                  <Line key={`${s.key}-line`} {...lineProps(s.color)} dataKey={s.key} name={s.label} />
                 ))}
               </ComposedChart>
             </ResponsiveContainer>
           </div>
+
+          <div className="mt-2 px-3">
+            <ChartStatsLegend
+              series={chart.series.map((s) => ({
+                label: s.label,
+                color: s.color,
+                values: chart.data.map((p) => Number(p[s.key])),
+              }))}
+              unit={chart.unit}
+            />
+          </div>
         </div>
       )}
     </section>
-  );
-}
-
-function InlineStat({ label, value, unit, color }: { label: string; value: number; unit: string; color: string }) {
-  return (
-    <div className="flex items-center gap-1">
-      <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />
-      <span className="text-sm text-slate-400 dark:text-text-dim-dark">{label}</span>
-      <span className="text-sm font-bold tabular-nums text-slate-800 dark:text-text-base-dark">
-        {formatMetricValue(value)}
-        <span className="ml-0.5 text-xs font-semibold text-slate-400 dark:text-text-dim-dark">{unit}</span>
-      </span>
-    </div>
   );
 }

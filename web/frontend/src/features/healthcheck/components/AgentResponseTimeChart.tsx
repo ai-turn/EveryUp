@@ -5,10 +5,11 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts';
 import type { GlobalTimeRange } from '../../../components/common';
-import { ChartTooltip, formatAxisValue, getChartTheme } from '../../../components/charts';
+import {
+  ChartStatsLegend, ChartTooltip, areaProps, chartCardClass, formatAxisValue,
+  getChartTheme, gridProps, lineProps, tooltipCursor, xAxisProps, yAxisProps,
+} from '../../../components/charts';
 import { api, type ServiceHistoryPoint } from '../../../services/api';
-
-const PRIMARY = '#3b76c9';
 
 interface AgentResponseTimeChartProps {
   agentId: string;
@@ -47,7 +48,7 @@ export function AgentResponseTimeChart({ agentId, serviceKey, refreshKey, range 
   const yMax = Math.max(maxLatency * 1.2, 100);
 
   return (
-    <div className="mb-8 p-6 rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-chart-bg">
+    <div className={`mb-8 p-6 ${chartCardClass}`}>
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-slate-900 dark:text-white font-bold text-lg">{t('응답 시간')}</h3>
       </div>
@@ -59,60 +60,45 @@ export function AgentResponseTimeChart({ agentId, serviceKey, refreshKey, range 
           {t('데이터 없음')}
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height={192}>
-          <ComposedChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-            <defs>
-              <linearGradient id="agentLatencyGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={PRIMARY} stopOpacity={0.3} />
-                <stop offset="95%" stopColor={PRIMARY} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke={theme.gridColor} vertical={false} />
-            <XAxis
-              dataKey="timeLabel"
-              tick={{ fill: theme.tickColor, fontSize: 11 }}
-              tickLine={false}
-              axisLine={false}
-              interval="preserveStartEnd"
+        <>
+          <ResponsiveContainer width="100%" height={192}>
+            <ComposedChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid {...gridProps(theme)} />
+              <XAxis dataKey="timeLabel" {...xAxisProps(theme)} />
+              <YAxis
+                {...yAxisProps(theme, 52)}
+                tickFormatter={(v) => formatAxisValue(v, 'ms')}
+                domain={[0, yMax]}
+              />
+              <Tooltip
+                cursor={tooltipCursor(theme)}
+                content={({ active, label, payload }) => (
+                  <ChartTooltip
+                    active={active}
+                    label={label}
+                    payload={payload as import('../../../components/charts').TooltipPayloadItem[]}
+                    unit="ms"
+                    theme={theme}
+                    valueFormatter={(v) => String(Math.round(v))}
+                  />
+                )}
+              />
+              <Area {...areaProps(theme.primaryColor)} dataKey="latencyMs" />
+              <Line {...lineProps(theme.primaryColor)} dataKey="latencyMs" />
+            </ComposedChart>
+          </ResponsiveContainer>
+          <div className="mt-2">
+            <ChartStatsLegend
+              series={[{
+                label: t('응답 시간'),
+                color: theme.primaryColor,
+                values: chartData.map((p) => p.latencyMs),
+              }]}
+              unit="ms"
+              valueFormatter={(v) => String(Math.round(v))}
             />
-            <YAxis
-              tickFormatter={(v) => formatAxisValue(v, 'ms')}
-              tick={{ fill: theme.tickColor, fontSize: 11 }}
-              tickLine={false}
-              axisLine={false}
-              domain={[0, yMax]}
-              width={52}
-            />
-            <Tooltip
-              content={({ active, label, payload }) => (
-                <ChartTooltip
-                  active={active}
-                  label={label}
-                  payload={payload as import('../../../components/charts').TooltipPayloadItem[]}
-                  unit="ms"
-                  theme={theme}
-                  valueFormatter={(v) => String(Math.round(v))}
-                />
-              )}
-            />
-            <Area
-              type="monotone"
-              dataKey="latencyMs"
-              stroke={PRIMARY}
-              strokeWidth={2}
-              fill="url(#agentLatencyGradient)"
-              dot={false}
-              activeDot={{ r: 4 }}
-            />
-            <Line
-              type="monotone"
-              dataKey="latencyMs"
-              stroke={PRIMARY}
-              strokeWidth={2}
-              dot={false}
-            />
-          </ComposedChart>
-        </ResponsiveContainer>
+          </div>
+        </>
       )}
     </div>
   );

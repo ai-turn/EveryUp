@@ -1,5 +1,6 @@
 import type { Host, SystemInfo, SystemMetricsHistory, SystemProcess } from '../services/api';
 import type { GaugeData, ChartData, Process, Resource } from '../types/infra';
+import { SERIES_HEX } from '../components/charts';
 
 // --- Host → Resource ---
 export function hostToResource(host: Host): Resource {
@@ -70,21 +71,21 @@ export function systemInfoToGauges(info: SystemInfo, history?: SystemMetricsHist
     {
       label: 'CPU',
       percentage: info.cpu.usage,
-      color: '#137fec',
+      color: SERIES_HEX.primary,
       subtitle: `${info.cpu.cores} Cores Online`,
       ...trendFromSeries(pts.map((p) => p.cpu)),
     },
     {
       label: 'Memory',
       percentage: info.memory.usage,
-      color: '#a3e635',
+      color: SERIES_HEX.emerald,
       subtitle: `${info.memory.used} GB / ${info.memory.total} GB`,
       ...trendFromSeries(pts.map((p) => p.memUsed)),
     },
     {
       label: 'Disk',
       percentage: info.disk.usage,
-      color: '#f59e0b',
+      color: SERIES_HEX.amber,
       subtitle: `${info.disk.used} GB / ${info.disk.total} GB`,
       // 디스크 용량%는 history에 시계열이 없어 추세 미산출 (diskRead/Write는 I/O throughput).
       trend: '',
@@ -100,7 +101,7 @@ export function systemInfoToGauges(info: SystemInfo, history?: SystemMetricsHist
   gauges.push({
     label: 'Network',
     percentage: Math.max(0, Math.min(100, Math.round((total / NETWORK_FULL_SCALE_MBPS) * 100))),
-    color: '#10b981',
+    color: SERIES_HEX.teal,
     subtitle: `In ${formatThroughput(netIn).value} ${formatThroughput(netIn).unit} · Out ${formatThroughput(netOut).value} ${formatThroughput(netOut).unit}`,
     displayValue: value,
     displayUnit: unit,
@@ -162,15 +163,15 @@ export function historyToCharts(history: SystemMetricsHistory, currentInfo?: Sys
       unit: '%',
       yMax: 100,
       data,
-      series: [{ key: 'cpu', label: 'Usage', color: '#2563eb' }],
+      series: [{ key: 'cpu', label: 'Usage', color: SERIES_HEX.primary }],
     },
     {
       title: 'Memory Flow',
       unit: 'GB',
       data,
       series: [
-        { key: 'memUsed',   label: 'Used',   color: '#3b82f6' },
-        { key: 'memCached', label: 'Cached', color: '#14b8a6' },
+        { key: 'memUsed',   label: 'Used',   color: SERIES_HEX.primary },
+        { key: 'memCached', label: 'Cached', color: SERIES_HEX.teal },
       ],
     },
     {
@@ -179,8 +180,8 @@ export function historyToCharts(history: SystemMetricsHistory, currentInfo?: Sys
       yMax: parseFloat((diskMax * 1.2).toFixed(2)),
       data,
       series: [
-        { key: 'diskRead', label: 'Read', color: '#0ea5e9' },
-        { key: 'diskWrite', label: 'Write', color: '#f97316' },
+        { key: 'diskRead', label: 'Read', color: SERIES_HEX.primary },
+        { key: 'diskWrite', label: 'Write', color: SERIES_HEX.amber },
       ],
     },
     {
@@ -189,8 +190,8 @@ export function historyToCharts(history: SystemMetricsHistory, currentInfo?: Sys
       yMax: parseFloat((networkMax * 1.2).toFixed(2)),
       data,
       series: [
-        { key: 'netIn', label: 'In', color: '#10b981' },
-        { key: 'netOut', label: 'Out', color: '#06b6d4' },
+        { key: 'netIn', label: 'In', color: SERIES_HEX.primary },
+        { key: 'netOut', label: 'Out', color: SERIES_HEX.emerald },
       ],
     },
   ];

@@ -2,14 +2,16 @@ import { useState, useEffect, useMemo } from 'react';
 import { useTranslate } from '@tolgee/react';
 import {
   ResponsiveContainer, ComposedChart, Line,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts';
 import type { GlobalTimeRange } from '../../../components/common';
-import { ChartTooltip, formatAxisValue, getChartTheme } from '../../../components/charts';
+import {
+  ChartStatsLegend, ChartTooltip, chartCardClass, formatAxisValue, getChartTheme,
+  getSeriesPalette, gridProps, lineProps, tooltipCursor, xAxisProps, yAxisProps,
+} from '../../../components/charts';
 import { api, type OtelMetricName, type OtelMetricPoint } from '../../../services/api';
 
-// First slot is filled with the theme primary at render time (light/dark aware).
-const SERIES_COLORS = ['#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#14b8a6'];
+// 팔레트 크기와 동일 — 초과 시리즈는 표에서만 노출.
 const MAX_SERIES = 6;
 
 const RANGE_HOURS: Record<GlobalTimeRange, number> = { '1h': 1, '6h': 6, '24h': 24 };
@@ -101,7 +103,7 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range 
   }, [points]);
 
   const theme = getChartTheme();
-  const seriesColors = [theme.primaryColor, ...SERIES_COLORS];
+  const seriesColors = getSeriesPalette(theme);
   const unit = selectedMeta?.unit ?? '';
 
   if (namesLoading) {
@@ -120,7 +122,7 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range 
 
   return (
     <div className="space-y-4">
-    <div className="p-6 rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-chart-bg">
+    <div className={`p-6 ${chartCardClass}`}>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-3 min-w-0">
           <span className="font-mono text-sm font-semibold text-slate-900 dark:text-white truncate">{selected}</span>
@@ -142,22 +144,11 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range 
         <>
           <ResponsiveContainer width="100%" height={256}>
             <ComposedChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={theme.gridColor} vertical={false} />
-              <XAxis
-                dataKey="timeLabel"
-                tick={{ fill: theme.tickColor, fontSize: 11 }}
-                tickLine={false}
-                axisLine={false}
-                interval="preserveStartEnd"
-              />
-              <YAxis
-                tickFormatter={(v) => formatMetricValue(v, unit)}
-                tick={{ fill: theme.tickColor, fontSize: 11 }}
-                tickLine={false}
-                axisLine={false}
-                width={64}
-              />
+              <CartesianGrid {...gridProps(theme)} />
+              <XAxis dataKey="timeLabel" {...xAxisProps(theme)} />
+              <YAxis {...yAxisProps(theme, 64)} tickFormatter={(v) => formatMetricValue(v, unit)} />
               <Tooltip
+                cursor={tooltipCursor(theme)}
                 content={({ active, label, payload }) => (
                   <ChartTooltip
                     active={active}
@@ -169,20 +160,22 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range 
                   />
                 )}
               />
-              {seriesKeys.length > 1 && <Legend wrapperStyle={{ fontSize: 11 }} />}
               {seriesKeys.map((key, i) => (
-                <Line
-                  key={key}
-                  type="monotone"
-                  dataKey={key}
-                  stroke={seriesColors[i % seriesColors.length]}
-                  strokeWidth={2}
-                  dot={false}
-                  connectNulls
-                />
+                <Line key={key} {...lineProps(seriesColors[i % seriesColors.length])} dataKey={key} />
               ))}
             </ComposedChart>
           </ResponsiveContainer>
+          <div className="mt-2">
+            <ChartStatsLegend
+              series={seriesKeys.map((key, i) => ({
+                label: key,
+                color: seriesColors[i % seriesColors.length],
+                values: chartData.map((row) => Number(row[key])),
+              }))}
+              unit={unit === 'By' ? '' : unit}
+              valueFormatter={(v) => (unit === 'By' ? formatMetricValue(v, unit) : String(Math.round(v * 100) / 100))}
+            />
+          </div>
           {truncatedSeries > 0 && (
             <p className="mt-2 text-xs text-slate-400 dark:text-text-dim-dark">
               {t('속성 조합이 많아 상위 {count}개 시리즈만 표시합니다 (+{rest}개 생략)', {

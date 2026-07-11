@@ -4,7 +4,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts';
 import { MaterialIcon, type GlobalTimeRange } from '../../../components/common';
-import { ChartTooltip, getChartTheme } from '../../../components/charts';
+import { ChartTooltip, chartCardClass, getChartTheme, gridProps, xAxisProps, yAxisProps } from '../../../components/charts';
 import { api, type LogEntry, type LogHistogramBucket, type LogLevel } from '../../../services/api';
 import { getErrorMessage } from '../../../utils/errors';
 import { toast } from 'react-hot-toast';
@@ -343,17 +343,17 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: 
           timeLabel: new Date(b.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         }));
         return (
-          <div className="p-4 rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-chart-bg">
+          <div className={`p-4 ${chartCardClass}`}>
             <ResponsiveContainer width="100%" height={110}>
               <BarChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={theme.gridColor} vertical={false} />
-                <XAxis dataKey="timeLabel" tick={{ fill: theme.tickColor, fontSize: 11 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                <YAxis allowDecimals={false} tick={{ fill: theme.tickColor, fontSize: 11 }} tickLine={false} axisLine={false} width={36} />
+                <CartesianGrid {...gridProps(theme)} />
+                <XAxis dataKey="timeLabel" {...xAxisProps(theme)} />
+                <YAxis {...yAxisProps(theme, 36)} allowDecimals={false} />
                 <Tooltip content={({ active, label, payload }) => (
                   <ChartTooltip active={active} label={label} payload={payload as import('../../../components/charts').TooltipPayloadItem[]} unit="" theme={theme} valueFormatter={(v) => String(v)} />
                 )} />
                 {LEVEL_BAR.map((l) => (
-                  <Bar key={l.key} dataKey={l.key} stackId="lv" fill={l.color} name={l.name} />
+                  <Bar key={l.key} dataKey={l.key} stackId="lv" fill={l.color} name={l.name} isAnimationActive={false} />
                 ))}
               </BarChart>
             </ResponsiveContainer>

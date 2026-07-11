@@ -31,6 +31,157 @@ function getCssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
+/* ── EveryUp 차트 스펙 (Grafana풍) ────────────────────────────────
+ * 모든 recharts 차트는 아래 팩토리/상수를 사용한다. 개별 차트에서
+ * 선 굵기·그리드·축 스타일을 다시 정의하지 말 것.
+ * 규칙: 첫 시리즈=프라이머리, monotoneX+둥근 캡, 얇은 1.5px 라인,
+ *       평면 10% 채움, 얕은 실선 그리드, semibold 11px 눈금,
+ *       애니메이션 없음, 트렌드 차트 범례는 ChartStatsLegend(Last/Min/Max/Avg). */
+
+/** 시리즈 hex 단일 소스 — 정적 컨텍스트(데이터 변환 등)용. 컴포넌트에서는 getSeriesPalette 사용. */
+export const SERIES_HEX = {
+  primary: '#3b76c9',
+  emerald: '#10b981',
+  amber: '#f59e0b',
+  violet: '#8b5cf6',
+  red: '#ef4444',
+  teal: '#14b8a6',
+} as const;
+
+/** 다중 시리즈 순환 팔레트 — 첫 슬롯은 항상 브랜드 프라이머리. */
+export function getSeriesPalette(theme: ChartTheme): string[] {
+  return [theme.primaryColor, SERIES_HEX.emerald, SERIES_HEX.amber, SERIES_HEX.violet, SERIES_HEX.red, SERIES_HEX.teal];
+}
+
+/** 차트 카드 공통 클래스 — 패딩(p-4/p-6)은 소비처에서 붙인다. */
+export const chartCardClass =
+  'rounded-xl border border-slate-200 bg-white dark:border-ui-border-dark dark:bg-chart-bg';
+
+export function gridProps(theme: ChartTheme) {
+  return { stroke: theme.gridColor, strokeOpacity: 0.55, vertical: false } as const;
+}
+
+export function xAxisProps(theme: ChartTheme) {
+  return {
+    tick: { fill: theme.tickColor, fontSize: 11, fontWeight: 600 },
+    tickLine: false,
+    axisLine: false,
+    tickMargin: 8,
+    interval: 'preserveStartEnd',
+  } as const;
+}
+
+export function yAxisProps(theme: ChartTheme, width = 44) {
+  return {
+    tick: { fill: theme.tickColor, fontSize: 11, fontWeight: 600 },
+    tickLine: false,
+    axisLine: false,
+    width,
+  } as const;
+}
+
+export function tooltipCursor(theme: ChartTheme) {
+  return { stroke: theme.gridColor, strokeWidth: 1, strokeDasharray: '4 4' } as const;
+}
+
+export function lineProps(color: string) {
+  return {
+    type: 'monotoneX',
+    stroke: color,
+    strokeWidth: 1.5,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    dot: false,
+    activeDot: { r: 4, stroke: '#ffffff', strokeWidth: 2, fill: color },
+    connectNulls: true,
+    isAnimationActive: false,
+  } as const;
+}
+
+/** 라인 아래 평면 10% 채움 — 선은 별도 Line으로 그린다. */
+export function areaProps(color: string) {
+  return {
+    type: 'monotoneX',
+    stroke: 'none',
+    fill: color,
+    fillOpacity: 0.1,
+    isAnimationActive: false,
+  } as const;
+}
+
+/** Grafana풍 스탯 범례 — 트렌드 차트 아래에 시리즈별 Last/Min/Max/Avg를 렌더. */
+export function ChartStatsLegend({
+  series,
+  unit,
+  valueFormatter = formatMetricValue,
+}: {
+  series: { label: string; color: string; values: number[] }[];
+  unit: string;
+  valueFormatter?: (value: number) => string;
+}) {
+  const rows = series
+    .map((s) => ({ ...s, values: s.values.filter(Number.isFinite) }))
+    .filter((s) => s.values.length > 0);
+  if (rows.length === 0) return null;
+
+  return (
+    <table className="w-full text-2xs tabular-nums">
+      <thead>
+        <tr className="text-slate-400 dark:text-text-dim-dark">
+          <th className="py-0.5 text-left font-semibold" />
+          <th className="text-right font-semibold">Last</th>
+          <th className="text-right font-semibold">Min</th>
+          <th className="text-right font-semibold">Max</th>
+          <th className="text-right font-semibold">Avg</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((s) => {
+          const stats = [
+            s.values[s.values.length - 1],
+            Math.min(...s.values),
+            Math.max(...s.values),
+            s.values.reduce((sum, v) => sum + v, 0) / s.values.length,
+          ];
+          return (
+            <tr key={s.label} className="text-slate-600 dark:text-text-secondary-dark">
+              <td className="py-0.5">
+                <span className="inline-flex items-center gap-1.5 font-semibold">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />
+                  {s.label}
+                </span>
+              </td>
+              {stats.map((v, i) => (
+                <td key={i} className="text-right">
+                  {valueFormatter(v)}
+                  <span className="ml-0.5 text-slate-400 dark:text-text-dim-dark">{unit}</span>
+                </td>
+              ))}
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  );
+}
+
+/** 공용 칩 범례 — recharts <Legend> 대신 차트 위/카드 헤더에 렌더. */
+export function ChartLegend({ items, className = '' }: { items: { label: string; color: string }[]; className?: string }) {
+  return (
+    <div className={`flex flex-wrap gap-1.5 ${className}`}>
+      {items.map((it) => (
+        <span
+          key={it.label}
+          className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-semibold text-slate-500 dark:border-ui-border-dark dark:bg-ui-hover-dark/40 dark:text-text-muted-dark"
+        >
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: it.color }} />
+          {it.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function getChartTheme(): ChartTheme {
   const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 
@@ -39,7 +190,7 @@ export function getChartTheme(): ChartTheme {
     tickColor: isDark ? getCssVar('--color-text-muted-dark') || '#94a3b8' : '#94a3b8',
     tooltipBg: isDark ? getCssVar('--color-bg-surface-dark') || '#111827' : '#ffffff',
     tooltipBorder: isDark ? getCssVar('--color-chart-border') || '#334155' : '#e2e8f0',
-    primaryColor: getCssVar('--color-primary') || '#3b76c9',
+    primaryColor: getCssVar('--color-primary') || SERIES_HEX.primary,
   };
 }
 

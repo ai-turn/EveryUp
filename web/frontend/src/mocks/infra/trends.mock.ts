@@ -1,4 +1,5 @@
 import type { ChartData } from '../../types/infra';
+import { SERIES_HEX } from '../../components/charts';
 
 export type { ChartData };
 
@@ -21,7 +22,7 @@ export const mockCharts: ChartData[] = [
     data: makePoints(12, (i) => ({
       cpu: Math.round(20 + Math.sin(i * 0.8) * 15 + (i % 3) * 4),
     })),
-    series: [{ key: 'cpu', label: 'Usage', color: '#2563eb' }],
+    series: [{ key: 'cpu', label: 'Usage', color: SERIES_HEX.primary }],
   },
   {
     title: 'Memory Flow',
@@ -31,8 +32,8 @@ export const mockCharts: ChartData[] = [
       memCached: parseFloat((8 + Math.cos(i * 0.4) * 2).toFixed(1)),
     })),
     series: [
-      { key: 'memUsed', label: 'Used', color: '#3b82f6' },
-      { key: 'memCached', label: 'Cached', color: '#14b8a6' },
+      { key: 'memUsed', label: 'Used', color: SERIES_HEX.primary },
+      { key: 'memCached', label: 'Cached', color: SERIES_HEX.teal },
     ],
   },
   {
@@ -43,8 +44,8 @@ export const mockCharts: ChartData[] = [
       diskWrite: parseFloat((Math.abs(Math.cos(i * 0.9)) * 40 + 5).toFixed(2)),
     })),
     series: [
-      { key: 'diskRead', label: 'Read', color: '#0ea5e9' },
-      { key: 'diskWrite', label: 'Write', color: '#f97316' },
+      { key: 'diskRead', label: 'Read', color: SERIES_HEX.primary },
+      { key: 'diskWrite', label: 'Write', color: SERIES_HEX.amber },
     ],
   },
   {
@@ -55,8 +56,8 @@ export const mockCharts: ChartData[] = [
       netOut: parseFloat((Math.abs(Math.cos(i * 0.9)) * 18 + 2).toFixed(2)),
     })),
     series: [
-      { key: 'netIn', label: 'In', color: '#10b981' },
-      { key: 'netOut', label: 'Out', color: '#06b6d4' },
+      { key: 'netIn', label: 'In', color: SERIES_HEX.primary },
+      { key: 'netOut', label: 'Out', color: SERIES_HEX.emerald },
     ],
   },
 ];
