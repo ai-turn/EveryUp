@@ -137,11 +137,11 @@ export function ChartStatsLegend({
       </thead>
       <tbody>
         {rows.map((s) => {
-          const stats = [
-            s.values[s.values.length - 1],
-            Math.min(...s.values),
-            Math.max(...s.values),
-            s.values.reduce((sum, v) => sum + v, 0) / s.values.length,
+          const stats: [string, number][] = [
+            ['last', s.values[s.values.length - 1]],
+            ['min', Math.min(...s.values)],
+            ['max', Math.max(...s.values)],
+            ['avg', s.values.reduce((sum, v) => sum + v, 0) / s.values.length],
           ];
           return (
             <tr key={s.label} className="text-slate-600 dark:text-text-secondary-dark">
@@ -151,8 +151,8 @@ export function ChartStatsLegend({
                   {s.label}
                 </span>
               </td>
-              {stats.map((v, i) => (
-                <td key={i} className="text-right">
+              {stats.map(([key, v]) => (
+                <td key={key} className="text-right">
                   {valueFormatter(v)}
                   <span className="ml-0.5 text-slate-400 dark:text-text-dim-dark">{unit}</span>
                 </td>
