@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslate } from '@tolgee/react';
 import { api, type ServiceUptimeDay } from '../../../services/api';
+import { chartCardClass } from '../../../components/charts';
 import { getUptimeTextClass } from '../uptimeTone';
 
 interface AgentCheckHistoryBarProps {
@@ -50,7 +51,7 @@ export function AgentCheckHistoryBar({ agentId, serviceKey, refreshKey, classNam
     : 100;
 
   return (
-    <div className={`p-6 rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-chart-bg ${className ?? 'mb-8'}`}>
+    <div className={`p-6 ${chartCardClass} ${className ?? 'mb-8'}`}>
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-slate-900 dark:text-white font-bold text-lg">
@@ -92,18 +93,18 @@ export function AgentCheckHistoryBar({ agentId, serviceKey, refreshKey, classNam
             ))}
           </div>
 
-          {hovered && (
-            <div className="mt-3 p-2.5 rounded-lg bg-slate-50 dark:bg-ui-hover-dark text-xs text-slate-700 dark:text-text-secondary-dark">
-              <span className="font-semibold">{hovered.date}</span>
-              {' — '}
-              {hovered.uptimePct.toFixed(1)}% {t('업타임')}
-              {' '}({hovered.healthyChecks}/{hovered.totalChecks} {t('정상')})
-            </div>
-          )}
-
-          <div className="flex justify-between text-xs text-slate-400 dark:text-text-dim-dark mt-2">
-            <span>{t('90일 전')}</span>
-            <span>{t('오늘')}</span>
+          {/* 호버 상세를 라벨 줄 가운데 인라인 표시 — 카드 높이 고정(레이아웃 시프트 없음) */}
+          <div className="flex justify-between gap-3 text-xs text-slate-400 dark:text-text-dim-dark mt-2">
+            <span className="shrink-0">{t('90일 전')}</span>
+            {hovered && (
+              <span className="truncate text-slate-700 dark:text-text-secondary-dark">
+                <span className="font-semibold">{hovered.date}</span>
+                {' — '}
+                {hovered.uptimePct.toFixed(1)}% {t('업타임')}
+                {' '}({hovered.healthyChecks}/{hovered.totalChecks} {t('정상')})
+              </span>
+            )}
+            <span className="shrink-0">{t('오늘')}</span>
           </div>
         </>
       )}

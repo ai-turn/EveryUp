@@ -392,15 +392,16 @@ export function ProjectDetailPage() {
         <AgentServiceRequestTrends agentId={agentId} />
       )}
 
-      {/* 90-day uptime calendar + incidents / timeline */}
+      {/* 90-day uptime — 낮고 넓은 바라서 full-width 단독 행 (바 폭 확보 + 높이 불일치 해소) */}
       {services.length > 0 && agentId && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
-          <div className="lg:col-span-2">
-            <AgentCheckHistoryBar agentId={agentId} className="" />
-          </div>
-          <div className="flex flex-col gap-4">
-            {/* Incident history */}
-            <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-4">
+        <AgentCheckHistoryBar agentId={agentId} className="" />
+      )}
+
+      {/* Incident history | event timeline — 둘 다 리스트 카드라 나란히 두면 높이가 맞는다 */}
+      {services.length > 0 && agentId && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+          {/* Incident history */}
+          <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-4">
               <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3">{t('장애 이력 · 30일')}</h3>
               {incidents.length === 0 ? (
                 <p className="text-xs text-slate-400 dark:text-text-dim-dark py-4 text-center">{t('최근 30일간 장애가 없습니다')}</p>
@@ -457,7 +458,6 @@ export function ProjectDetailPage() {
                 </div>
               )}
             </div>
-          </div>
         </div>
       )}
 
