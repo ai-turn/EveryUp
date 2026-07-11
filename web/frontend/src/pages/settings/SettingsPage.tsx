@@ -20,6 +20,7 @@ export function SettingsPage() {
 
   const [metricsRetention, setMetricsRetention] = useState('7d');
   const [logsRetention, setLogsRetention] = useState('3d');
+  const [consecutiveFailures, setConsecutiveFailures] = useState(3);
   const [backendLoading, setBackendLoading] = useState(true);
   const [savingRetention, setSavingRetention] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -31,6 +32,7 @@ export function SettingsPage() {
         const settings = await api.getSettings();
         setMetricsRetention(settings.retention.metrics);
         setLogsRetention(settings.retention.logs);
+        setConsecutiveFailures(settings.alerts.consecutiveFailures);
       } catch {
         // Backend unreachable in mock/dev mode
       } finally {
@@ -42,6 +44,19 @@ export function SettingsPage() {
 
   const handleLanguageChange = (lng: string) => {
     i18n.changeLanguage(lng);
+  };
+
+  // 연속 실패 횟수는 선택 즉시 저장 (백엔드 PUT은 부분 업데이트 지원).
+  const handleConsecutiveFailuresChange = async (n: number) => {
+    const prev = consecutiveFailures;
+    setConsecutiveFailures(n);
+    try {
+      await api.updateSettings({ alerts: { consecutiveFailures: n } });
+      toast.success(t('settings.saved'));
+    } catch (error) {
+      setConsecutiveFailures(prev);
+      toast.error(getErrorMessage(error));
+    }
   };
 
   const handleSaveRetention = async () => {
@@ -74,6 +89,7 @@ export function SettingsPage() {
     theme: theme as 'light' | 'dark',
     metricsRetention,
     logsRetention,
+    consecutiveFailures,
     backendLoading,
     savingRetention,
     showResetConfirm,
@@ -82,6 +98,7 @@ export function SettingsPage() {
     onThemeChange: setTheme,
     onMetricsRetentionChange: setMetricsRetention,
     onLogsRetentionChange: setLogsRetention,
+    onConsecutiveFailuresChange: handleConsecutiveFailuresChange,
     onSaveRetention: handleSaveRetention,
     onResetClick: () => !env.useMock && setShowResetConfirm(true),
     onResetConfirm: handleReset,

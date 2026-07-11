@@ -38,7 +38,7 @@ export function AuditLogSection() {
   if (!isAdmin) return null;
 
   return (
-    <SectionCard icon="policy" title={t('settings.audit.title')} subtitle={t('settings.audit.subtitle')}>
+    <SectionCard title={t('settings.audit.title')} subtitle={t('settings.audit.subtitle')}>
       {events.length === 0 ? (
         <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('settings.audit.empty')}</p>
       ) : (

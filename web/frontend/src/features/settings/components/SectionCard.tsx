@@ -1,28 +1,21 @@
-import { MaterialIcon } from '../../../components/common';
-
 export function SectionCard({
-  icon,
   title,
   subtitle,
   children,
 }: {
-  icon: string;
   title: string;
   subtitle?: string;
   children: React.ReactNode;
 }) {
+  // ver2 프로토타입 오마주: 아이콘 칩 없는 컴팩트 헤더 (13.5px bold + 11.5px muted).
+  // 파괴적 작업도 카드는 중립 — 색은 액션 텍스트에만 싣는다.
   return (
-    <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-6">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-          <MaterialIcon name={icon} className="text-primary text-lg" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">{title}</h2>
-          {subtitle && (
-            <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{subtitle}</p>
-          )}
-        </div>
+    <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-5">
+      <div className="mb-3">
+        <h2 className="text-sm font-bold text-slate-900 dark:text-white">{title}</h2>
+        {subtitle && (
+          <p className="text-2xs text-slate-400 dark:text-text-dim-dark mt-0.5">{subtitle}</p>
+        )}
       </div>
       {children}
     </div>

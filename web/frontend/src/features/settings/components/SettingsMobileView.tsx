@@ -2,24 +2,20 @@ import { useTranslation } from 'react-i18next';
 import { ConfirmDialog, MaterialIcon } from '../../../components/common';
 import { SectionCard } from './SectionCard';
 import { AccountSection } from './AccountSection';
+import { AlertsSection } from './AlertsSection';
 import { AuditLogSection } from './AuditLogSection';
+import { retentionLabel } from '../retentionLabel';
 import { env } from '../../../config/env';
 
 const METRICS_RETENTION_OPTIONS = ['7d', '30d', '90d', '1y'];
 const LOGS_RETENTION_OPTIONS = ['1d', '3d', '7d', '30d'];
-
-function retentionLabel(v: string) {
-  if (v === '1y') return '1년 / 1 Year';
-  const n = parseInt(v);
-  const unit = v.endsWith('d') ? `일 / ${n === 1 ? 'Day' : 'Days'}` : '';
-  return `${n} ${unit}`;
-}
 
 interface SettingsMobileViewProps {
   currentLanguage: string;
   theme: 'light' | 'dark';
   metricsRetention: string;
   logsRetention: string;
+  consecutiveFailures: number;
   backendLoading: boolean;
   savingRetention: boolean;
   showResetConfirm: boolean;
@@ -28,6 +24,7 @@ interface SettingsMobileViewProps {
   onThemeChange: (theme: 'light' | 'dark') => void;
   onMetricsRetentionChange: (value: string) => void;
   onLogsRetentionChange: (value: string) => void;
+  onConsecutiveFailuresChange: (n: number) => void;
   onSaveRetention: () => void;
   onResetClick: () => void;
   onResetConfirm: () => void;
@@ -39,6 +36,7 @@ export function SettingsMobileView({
   theme,
   metricsRetention,
   logsRetention,
+  consecutiveFailures,
   backendLoading,
   savingRetention,
   showResetConfirm,
@@ -47,6 +45,7 @@ export function SettingsMobileView({
   onThemeChange,
   onMetricsRetentionChange,
   onLogsRetentionChange,
+  onConsecutiveFailuresChange,
   onSaveRetention,
   onResetClick,
   onResetConfirm,
@@ -66,7 +65,7 @@ export function SettingsMobileView({
       <AccountSection />
 
       {/* Interface */}
-      <SectionCard icon="palette" title={t('settings.interface.title')} subtitle={t('settings.interface.subtitle')}>
+      <SectionCard title={t('settings.interface.title')} subtitle={t('settings.interface.subtitle')}>
         {/* Language */}
         <div className="space-y-2">
           <p className="text-sm font-medium text-slate-900 dark:text-white">{t('settings.interface.language')}</p>
@@ -114,7 +113,7 @@ export function SettingsMobileView({
       </SectionCard>
 
       {/* Data Retention */}
-      <SectionCard icon="archive" title={t('settings.retention.title')} subtitle={t('settings.retention.subtitle')}>
+      <SectionCard title={t('settings.retention.title')} subtitle={t('settings.retention.subtitle')}>
         {backendLoading ? (
           <div className="space-y-3">
             <div className="h-14 bg-slate-100 dark:bg-ui-hover-dark rounded-lg animate-pulse" />
@@ -137,7 +136,7 @@ export function SettingsMobileView({
                         : 'text-slate-500 dark:text-text-muted-dark'
                     }`}
                   >
-                    {retentionLabel(opt)}
+                    {retentionLabel(opt, currentLanguage)}
                   </button>
                 ))}
               </div>
@@ -160,11 +159,15 @@ export function SettingsMobileView({
                         : 'text-slate-500 dark:text-text-muted-dark'
                     }`}
                   >
-                    {retentionLabel(opt)}
+                    {retentionLabel(opt, currentLanguage)}
                   </button>
                 ))}
               </div>
             </div>
+
+            <p className="mt-3 text-xs text-slate-400 dark:text-text-dim-dark">
+              {t('settings.retention.shrinkWarning')}
+            </p>
 
             {/* Save Button - Full width on mobile */}
             <button
@@ -183,26 +186,23 @@ export function SettingsMobileView({
         )}
       </SectionCard>
 
+      {/* Alert threshold — 선택 즉시 저장 */}
+      <AlertsSection value={consecutiveFailures} loading={backendLoading} onChange={onConsecutiveFailuresChange} />
+
       {/* Body access audit log (admin-only) */}
       <AuditLogSection />
 
-      {/* Account Reset */}
-      <SectionCard icon="person_off" title={t('settings.accountReset.title')} subtitle={t('settings.accountReset.subtitle')}>
-        {env.useMock && (
-          <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-            <MaterialIcon name="info" className="text-sm text-amber-500 shrink-0" />
-            <p className="text-sm text-amber-700 dark:text-amber-400">{t('settings.accountReset.demoNotice')}</p>
-          </div>
-        )}
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-slate-900 dark:text-white">{t('settings.accountReset.title')}</p>
-          <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('settings.accountReset.subtitle')}</p>
+      {/* Account Reset — ver2 프로토타입 오마주: 중립 카드 + 붉은 텍스트 액션 */}
+      <SectionCard title={t('settings.accountReset.title')} subtitle={t('settings.accountReset.subtitle')}>
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-2xs text-slate-400 dark:text-text-dim-dark">
+            {env.useMock ? t('settings.accountReset.demoNotice') : t('settings.accountReset.confirmDesc')}
+          </p>
           <button
             onClick={onResetClick}
             disabled={env.useMock}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-red-200 dark:border-red-800 text-sm font-semibold text-red-600 dark:text-red-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20"
+            className="shrink-0 text-xs font-semibold text-red-600 dark:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
-            <MaterialIcon name="restart_alt" className="text-lg" />
             {t('settings.accountReset.button')}
           </button>
         </div>

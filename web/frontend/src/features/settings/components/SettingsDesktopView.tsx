@@ -1,26 +1,31 @@
 import { useTranslation } from 'react-i18next';
 import { ConfirmDialog, MaterialIcon } from '../../../components/common';
+import { useAuth } from '../../../contexts/AuthContext';
 import { SectionCard } from './SectionCard';
 import { SettingRow } from './SettingRow';
 import { AccountSection } from './AccountSection';
+import { AlertsSection } from './AlertsSection';
 import { AuditLogSection } from './AuditLogSection';
+import { retentionLabel } from '../retentionLabel';
 import { env } from '../../../config/env';
 
 const METRICS_RETENTION_OPTIONS = ['7d', '30d', '90d', '1y'];
 const LOGS_RETENTION_OPTIONS = ['1d', '3d', '7d', '30d'];
 
-function retentionLabel(v: string) {
-  if (v === '1y') return '1년 / 1 Year';
-  const n = parseInt(v);
-  const unit = v.endsWith('d') ? `일 / ${n === 1 ? 'Day' : 'Days'}` : '';
-  return `${n} ${unit}`;
-}
+// ver2 프로토타입 오마주: 컴팩트 세그먼티드 (text-xs, 얇은 컨테이너).
+const segmentedButtonClass = (active: boolean) =>
+  `cursor-pointer px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+    active
+      ? 'bg-white dark:bg-ui-active-dark text-primary shadow-sm'
+      : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
+  }`;
 
 interface SettingsDesktopViewProps {
   currentLanguage: string;
   theme: 'light' | 'dark';
   metricsRetention: string;
   logsRetention: string;
+  consecutiveFailures: number;
   backendLoading: boolean;
   savingRetention: boolean;
   showResetConfirm: boolean;
@@ -29,6 +34,7 @@ interface SettingsDesktopViewProps {
   onThemeChange: (theme: 'light' | 'dark') => void;
   onMetricsRetentionChange: (value: string) => void;
   onLogsRetentionChange: (value: string) => void;
+  onConsecutiveFailuresChange: (n: number) => void;
   onSaveRetention: () => void;
   onResetClick: () => void;
   onResetConfirm: () => void;
@@ -40,6 +46,7 @@ export function SettingsDesktopView({
   theme,
   metricsRetention,
   logsRetention,
+  consecutiveFailures,
   backendLoading,
   savingRetention,
   showResetConfirm,
@@ -48,42 +55,39 @@ export function SettingsDesktopView({
   onThemeChange,
   onMetricsRetentionChange,
   onLogsRetentionChange,
+  onConsecutiveFailuresChange,
   onSaveRetention,
   onResetClick,
   onResetConfirm,
   onResetCancel,
 }: SettingsDesktopViewProps) {
   const { t } = useTranslation(['settings', 'common']);
+  const { user } = useAuth();
 
   return (
     <>
-      <div className="space-y-5">
-        {/* Page Header */}
-        <div className="mb-2">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-            {t('settings.title')}
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-1">
-            {t('settings.subtitle')}
-          </p>
-        </div>
+      {/* Page Header */}
+      <div className="mb-5">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+          {t('settings.title')}
+        </h1>
+        <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-1">
+          {t('settings.subtitle')}
+        </p>
+      </div>
 
-        {/* Account (ver2: 계정 · 인증) */}
-        <AccountSection />
+      {/* ver2 프로토타입 오마주: 탭 없는 단일 컬럼 스크롤 */}
+      <div className="max-w-3xl space-y-3.5">
+        {user && <AccountSection />}
 
-        {/* Interface */}
-        <SectionCard icon="palette" title={t('settings.interface.title')} subtitle={t('settings.interface.subtitle')}>
+        <SectionCard title={t('settings.interface.title')} subtitle={t('settings.interface.subtitle')}>
           <SettingRow label={t('settings.interface.language')} description={t('settings.interface.languageDesc')}>
-            <div className="flex gap-1 bg-slate-100 dark:bg-ui-hover-dark p-1 rounded-lg">
+            <div className="flex gap-1 bg-slate-100 dark:bg-ui-hover-dark p-0.5 rounded-lg">
               {(['ko', 'en'] as const).map((lng) => (
                 <button
                   key={lng}
                   onClick={() => onLanguageChange(lng)}
-                  className={`cursor-pointer px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${
-                    currentLanguage.startsWith(lng)
-                      ? 'bg-white dark:bg-ui-active-dark text-primary shadow-sm'
-                      : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
-                  }`}
+                  className={segmentedButtonClass(currentLanguage.startsWith(lng))}
                 >
                   {lng === 'ko' ? '한국어' : 'English'}
                 </button>
@@ -92,18 +96,14 @@ export function SettingsDesktopView({
           </SettingRow>
 
           <SettingRow label={t('settings.interface.theme')} description={t('settings.interface.themeDesc')}>
-            <div className="flex gap-1 bg-slate-100 dark:bg-ui-hover-dark p-1 rounded-lg">
+            <div className="flex gap-1 bg-slate-100 dark:bg-ui-hover-dark p-0.5 rounded-lg">
               {(['light', 'dark'] as const).map((t_) => (
                 <button
                   key={t_}
                   onClick={() => onThemeChange(t_)}
-                  className={`cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${
-                    theme === t_
-                      ? 'bg-white dark:bg-ui-active-dark text-primary shadow-sm'
-                      : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
-                  }`}
+                  className={`flex items-center gap-1.5 ${segmentedButtonClass(theme === t_)}`}
                 >
-                  <MaterialIcon name={t_ === 'light' ? 'light_mode' : 'dark_mode'} className="text-base" />
+                  <MaterialIcon name={t_ === 'light' ? 'light_mode' : 'dark_mode'} className="text-sm" />
                   {t_ === 'light' ? t('settings.interface.light') : t('settings.interface.dark')}
                 </button>
               ))}
@@ -111,61 +111,55 @@ export function SettingsDesktopView({
           </SettingRow>
         </SectionCard>
 
-        {/* Data Retention */}
-        <SectionCard icon="archive" title={t('settings.retention.title')} subtitle={t('settings.retention.subtitle')}>
+        <SectionCard title={t('settings.retention.title')} subtitle={t('settings.retention.subtitle')}>
           {backendLoading ? (
             <div className="space-y-3">
-              <div className="h-14 bg-slate-100 dark:bg-ui-hover-dark rounded-lg animate-pulse" />
-              <div className="h-14 bg-slate-100 dark:bg-ui-hover-dark rounded-lg animate-pulse" />
+              <div className="h-10 bg-slate-100 dark:bg-ui-hover-dark rounded-lg animate-pulse" />
+              <div className="h-10 bg-slate-100 dark:bg-ui-hover-dark rounded-lg animate-pulse" />
             </div>
           ) : (
             <>
               <SettingRow label={t('settings.retention.metrics')} description={t('settings.retention.metricsDesc')}>
-                <div className="flex gap-1 flex-wrap justify-end bg-slate-100 dark:bg-ui-hover-dark p-1 rounded-lg">
+                <div className="flex gap-1 flex-wrap justify-end bg-slate-100 dark:bg-ui-hover-dark p-0.5 rounded-lg">
                   {METRICS_RETENTION_OPTIONS.map((opt) => (
                     <button
                       key={opt}
                       onClick={() => onMetricsRetentionChange(opt)}
-                      className={`cursor-pointer px-3 py-1 rounded-md text-sm font-semibold transition-all ${
-                        metricsRetention === opt
-                          ? 'bg-white dark:bg-ui-active-dark text-primary shadow-sm'
-                          : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
-                      }`}
+                      className={`font-mono ${segmentedButtonClass(metricsRetention === opt)}`}
                     >
-                      {retentionLabel(opt)}
+                      {retentionLabel(opt, currentLanguage)}
                     </button>
                   ))}
                 </div>
               </SettingRow>
 
               <SettingRow label={t('settings.retention.logs')} description={t('settings.retention.logsDesc')}>
-                <div className="flex gap-1 flex-wrap justify-end bg-slate-100 dark:bg-ui-hover-dark p-1 rounded-lg">
+                <div className="flex gap-1 flex-wrap justify-end bg-slate-100 dark:bg-ui-hover-dark p-0.5 rounded-lg">
                   {LOGS_RETENTION_OPTIONS.map((opt) => (
                     <button
                       key={opt}
                       onClick={() => onLogsRetentionChange(opt)}
-                      className={`cursor-pointer px-3 py-1 rounded-md text-sm font-semibold transition-all ${
-                        logsRetention === opt
-                          ? 'bg-white dark:bg-ui-active-dark text-primary shadow-sm'
-                          : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
-                      }`}
+                      className={`font-mono ${segmentedButtonClass(logsRetention === opt)}`}
                     >
-                      {retentionLabel(opt)}
+                      {retentionLabel(opt, currentLanguage)}
                     </button>
                   ))}
                 </div>
               </SettingRow>
 
-              <div className="pt-4 flex justify-end">
+              <div className="pt-3 flex items-center justify-between gap-4">
+                <p className="text-2xs text-slate-400 dark:text-text-dim-dark">
+                  {t('settings.retention.shrinkWarning')}
+                </p>
                 <button
                   onClick={onSaveRetention}
                   disabled={savingRetention}
-                  className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  className="cursor-pointer shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
                 >
                   {savingRetention ? (
-                    <MaterialIcon name="sync" className="text-lg animate-spin" />
+                    <MaterialIcon name="sync" className="text-base animate-spin" />
                   ) : (
-                    <MaterialIcon name="save" className="text-lg" />
+                    <MaterialIcon name="save" className="text-base" />
                   )}
                   {t('common.saveChanges')}
                 </button>
@@ -174,27 +168,26 @@ export function SettingsDesktopView({
           )}
         </SectionCard>
 
-        {/* Body access audit log (admin-only) */}
+        {/* Alert threshold — 선택 즉시 저장 */}
+        <AlertsSection value={consecutiveFailures} loading={backendLoading} onChange={onConsecutiveFailuresChange} />
+
+        {/* Body access audit log — 컴포넌트가 admin 아닐 때 스스로 숨는다 */}
         <AuditLogSection />
 
-        {/* Account Reset */}
-        <SectionCard icon="person_off" title={t('settings.accountReset.title')} subtitle={t('settings.accountReset.subtitle')}>
-          {env.useMock && (
-            <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-              <MaterialIcon name="info" className="text-sm text-amber-500 shrink-0" />
-              <p className="text-sm text-amber-700 dark:text-amber-400">{t('settings.accountReset.demoNotice')}</p>
-            </div>
-          )}
-          <SettingRow label={t('settings.accountReset.title')} description={t('settings.accountReset.subtitle')}>
+        {/* Account Reset — ver2 프로토타입 오마주: 중립 카드 + 우측 붉은 텍스트 액션 */}
+        <SectionCard title={t('settings.accountReset.title')} subtitle={t('settings.accountReset.subtitle')}>
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-2xs text-slate-400 dark:text-text-dim-dark">
+              {env.useMock ? t('settings.accountReset.demoNotice') : t('settings.accountReset.confirmDesc')}
+            </p>
             <button
               onClick={onResetClick}
               disabled={env.useMock}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-red-200 dark:border-red-800 text-sm font-semibold text-red-600 dark:text-red-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20"
+              className="shrink-0 text-xs font-semibold text-red-600 dark:text-red-400 hover:underline disabled:opacity-40 disabled:cursor-not-allowed disabled:no-underline cursor-pointer"
             >
-              <MaterialIcon name="restart_alt" className="text-lg" />
               {t('settings.accountReset.button')}
             </button>
-          </SettingRow>
+          </div>
         </SectionCard>
       </div>
 

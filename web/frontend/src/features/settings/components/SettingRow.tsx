@@ -7,15 +7,14 @@ export function SettingRow({
   description?: string;
   children: React.ReactNode;
 }) {
+  // ver2 프로토타입 오마주: 고정폭 레이블 | 설명 | 컨트롤 3열 행.
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 py-4 border-b border-slate-100 dark:border-ui-border-dark last:border-0">
-      <div className="min-w-0">
-        <p className="text-base font-medium text-slate-900 dark:text-white">{label}</p>
-        {description && (
-          <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{description}</p>
-        )}
-      </div>
-      <div className="shrink-0">{children}</div>
+    <div className="flex flex-col gap-2 py-2.5 sm:flex-row sm:items-center sm:gap-3 border-b border-slate-100 dark:border-ui-border-dark last:border-0">
+      <p className="w-40 shrink-0 text-sm font-semibold text-slate-700 dark:text-text-secondary-dark">{label}</p>
+      {description && (
+        <p className="flex-1 min-w-0 text-2xs text-slate-400 dark:text-text-dim-dark">{description}</p>
+      )}
+      <div className="shrink-0 sm:ml-auto">{children}</div>
     </div>
   );
 }

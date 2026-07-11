@@ -119,7 +119,8 @@
       "metrics": "Metrics Retention",
       "metricsDesc": "How long to keep collected system metrics",
       "logs": "Logs Retention",
-      "logsDesc": "How long to keep error log data"
+      "logsDesc": "How long to keep error log data",
+      "shrinkWarning": "Shortening a retention period deletes data older than the new limit on the next cleanup cycle."
     },
     "audit": {
       "title": "Body Access Audit Log",

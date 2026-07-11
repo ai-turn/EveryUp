@@ -13,7 +13,7 @@ export function AccountSection() {
   const initials = user.username.slice(0, 2).toUpperCase();
 
   return (
-    <SectionCard icon="person" title={t('settings.account.title')} subtitle={t('settings.account.subtitle')}>
+    <SectionCard title={t('settings.account.title')} subtitle={t('settings.account.subtitle')}>
       <div className="flex items-center gap-4">
         <span className="w-10 h-10 rounded-full bg-slate-200 dark:bg-ui-active-dark flex items-center justify-center text-sm font-bold text-slate-600 dark:text-text-secondary-dark shrink-0">
           {initials}
