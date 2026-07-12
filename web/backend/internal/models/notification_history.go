@@ -28,6 +28,7 @@ type NotificationHistoryFilter struct {
 	ChannelID *string
 	AlertType *string
 	Status    *string
+	Search    *string
 	FromDate  *time.Time
 	ToDate    *time.Time
 	Limit     int

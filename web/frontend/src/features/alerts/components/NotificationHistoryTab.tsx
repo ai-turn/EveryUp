@@ -1,301 +1,353 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { KPIChip, MaterialIcon } from '../../../components/common';
+import { MaterialIcon, SegmentedControl } from '../../../components/common';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
-import { api, NotificationHistory, NotificationHistoryFilter, NotificationStats } from '../../../services/api';
-import { formatDistanceToNow } from 'date-fns';
+import { api, NotificationChannel, NotificationHistory, NotificationStats } from '../../../services/api';
+import { getChannelStyle } from '../utils/channelMeta';
+import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
 
-export function NotificationHistoryTab() {
+const PAGE_SIZE = 25;
+
+type StatusFilter = 'all' | 'sent' | 'failed';
+type PeriodDays = 1 | 7 | 30;
+
+const SEVERITY_BADGE: Record<string, string> = {
+  critical: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400',
+  warning: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
+  info: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-400',
+};
+
+const STATUS_META: Record<string, { dot: string; text: string }> = {
+  sent: { dot: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400' },
+  failed: { dot: 'bg-red-500', text: 'text-red-600 dark:text-red-400' },
+  pending: { dot: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400' },
+};
+
+// Pages to render: first, last, current±1, with null for ellipsis gaps.
+function pageItems(current: number, totalPages: number): (number | null)[] {
+  const pages = new Set([1, totalPages, current - 1, current, current + 1]);
+  const sorted = [...pages].filter(p => p >= 1 && p <= totalPages).sort((a, b) => a - b);
+  const items: (number | null)[] = [];
+  let prev = 0;
+  for (const p of sorted) {
+    if (p - prev > 1) items.push(null);
+    items.push(p);
+    prev = p;
+  }
+  return items;
+}
+
+interface NotificationHistoryTabProps {
+  channels: NotificationChannel[];
+  initialStatus?: StatusFilter;
+}
+
+export function NotificationHistoryTab({ channels, initialStatus }: NotificationHistoryTabProps) {
   const { t, i18n } = useTranslation(['alerts', 'common']);
   const [history, setHistory] = useState<NotificationHistory[]>([]);
   const [stats, setStats] = useState<NotificationStats | null>(null);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<NotificationHistoryFilter>({
-    limit: 50,
-    offset: 0,
-  });
 
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(initialStatus ?? 'all');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [channelFilter, setChannelFilter] = useState('all');
+  const [periodDays, setPeriodDays] = useState<PeriodDays>(7);
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [page, setPage] = useState(1);
 
   const dateLocale = i18n.language === 'ko' ? ko : enUS;
 
   useEffect(() => {
-    loadHistory();
-    loadStats();
-  }, [filter]);
+    const handle = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(handle);
+  }, [search]);
 
-  const loadHistory = async () => {
-    try {
-      setLoading(true);
-      const response = await api.getNotificationHistory(filter);
-      setHistory(response.items || []);
-      setTotal(response.total || 0);
-    } catch (error) {
-      console.error('Failed to load notification history:', error);
-    } finally {
-      setLoading(false);
+  // Any filter change resets to page 1
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, typeFilter, channelFilter, periodDays, debouncedSearch]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    api.getNotificationHistory({
+      status: statusFilter === 'all' ? undefined : statusFilter,
+      alert_type: typeFilter === 'all' ? undefined : typeFilter,
+      channel_id: channelFilter === 'all' ? undefined : channelFilter,
+      q: debouncedSearch || undefined,
+      from: new Date(Date.now() - periodDays * 86400_000).toISOString(),
+      limit: PAGE_SIZE,
+      offset: (page - 1) * PAGE_SIZE,
+    })
+      .then(response => {
+        if (cancelled) return;
+        setHistory(response.items || []);
+        setTotal(response.total || 0);
+      })
+      .catch(error => console.error('Failed to load notification history:', error))
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [statusFilter, typeFilter, channelFilter, periodDays, debouncedSearch, page]);
+
+  useEffect(() => {
+    api.getNotificationHistoryStats(periodDays)
+      .then(setStats)
+      .catch(error => console.error('Failed to load stats:', error));
+  }, [periodDays]);
+
+  const totalSent = stats?.totalSent ?? 0;
+  const totalFailed = stats?.totalFailed ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  const typeLabel = (type: string) => {
+    const cap = type.charAt(0).toUpperCase() + type.slice(1);
+    return t(`alerts.history.type${cap}`, { defaultValue: cap });
+  };
+
+  const dateGroupLabel = (d: Date) => {
+    const dayLabel = format(d, i18n.language === 'ko' ? 'M월 d일' : 'MMM d', { locale: dateLocale });
+    if (isToday(d)) return `${t('alerts.history.today')} · ${dayLabel}`;
+    if (isYesterday(d)) return `${t('alerts.history.yesterday')} · ${dayLabel}`;
+    return dayLabel;
+  };
+
+  // Rows interleaved with date-group headers
+  const groupedRows = useMemo(() => {
+    const rows: ({ kind: 'group'; label: string; key: string } | { kind: 'item'; item: NotificationHistory })[] = [];
+    let prevDay = '';
+    for (const item of history) {
+      const d = new Date(item.createdAt);
+      const day = format(d, 'yyyy-MM-dd');
+      if (day !== prevDay) {
+        rows.push({ kind: 'group', label: dateGroupLabel(d), key: day });
+        prevDay = day;
+      }
+      rows.push({ kind: 'item', item });
     }
-  };
+    return rows;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [history, i18n.language]);
 
-  const loadStats = async () => {
-    try {
-      const statsData = await api.getNotificationHistoryStats(7);
-      setStats(statsData);
-    } catch (error) {
-      console.error('Failed to load stats:', error);
-    }
-  };
-
-  const handleStatusFilterChange = (status: string) => {
-    setStatusFilter(status);
-    setFilter(prev => ({
-      ...prev,
-      status: status === 'all' ? undefined : status,
-      offset: 0,
-    }));
-  };
-
-  const handleTypeFilterChange = (type: string) => {
-    setTypeFilter(type);
-    setFilter(prev => ({
-      ...prev,
-      alert_type: type === 'all' ? undefined : type,
-      offset: 0,
-    }));
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'sent':
-        return <MaterialIcon name="check_circle" className="text-emerald-500" />;
-      case 'failed':
-        return <MaterialIcon name="error" className="text-red-500" />;
-      case 'pending':
-        return <MaterialIcon name="schedule" className="text-amber-500" />;
-      default:
-        return <MaterialIcon name="help" className="text-slate-400" />;
-    }
-  };
-
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'resource':
-        return <MaterialIcon name="memory" className="text-sky-500" />;
-      case 'healthcheck':
-        return <MaterialIcon name="favorite" className="text-pink-500" />;
-      case 'endpoint':
-        return <MaterialIcon name="http" className="text-teal-500" />;
-      case 'log':
-        return <MaterialIcon name="description" className="text-orange-500" />;
-      case 'scheduled':
-        return <MaterialIcon name="schedule" className="text-violet-500" />;
-      case 'system':
-        return <MaterialIcon name="power_settings_new" className="text-emerald-500" />;
-      default:
-        return <MaterialIcon name="notifications" className="text-slate-400" />;
-    }
-  };
-
-  const getSeverityBadge = (severity?: string) => {
-    if (!severity) return null;
-
-    const colors: Record<string, string> = {
-      critical: 'bg-red-500/10 text-red-500 dark:text-red-400',
-      warning: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-      info: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
-    };
-
-    return (
-      <span className={`px-2 py-1 rounded text-xs font-medium ${colors[severity] || colors.info}`}>
-        {severity.toUpperCase()}
-      </span>
-    );
-  };
-
-  const thClass = 'px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-text-muted-dark uppercase tracking-wider';
+  const thClass = 'px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-text-muted-dark uppercase tracking-wider';
 
   return (
-    <div className="space-y-5">
-      {/* Stats Cards */}
-      {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <KPIChip label={t('alerts.history.totalSent')} value={stats.totalSent} tone="emerald" icon="send" />
-          <KPIChip label={t('alerts.history.totalFailed')} value={stats.totalFailed} tone="red" icon="error_outline" />
-          <KPIChip label={t('alerts.history.successRate')} value={`${stats.successRate.toFixed(1)}%`} tone="primary" icon="check_circle" />
-          <KPIChip
-            label={t('alerts.history.totalNotifications')}
-            value={stats.totalSent + stats.totalFailed}
-            tone="slate"
-            icon="notifications_active"
+    <div className="space-y-3">
+      {/* Filter bar — status segments + type/channel/period + search */}
+      <div className="flex flex-wrap items-center gap-2">
+        <SegmentedControl
+          size="md"
+          ariaLabel={t('alerts.history.status')}
+          value={statusFilter}
+          onChange={setStatusFilter}
+          options={[
+            { value: 'all', label: `${t('alerts.history.statusAll')} ${totalSent + totalFailed}` },
+            { value: 'sent', label: `${t('alerts.history.statusSent')} ${totalSent}` },
+            { value: 'failed', label: `${t('alerts.history.statusFailed')} ${totalFailed}` },
+          ]}
+        />
+
+        <select
+          value={typeFilter}
+          onChange={e => setTypeFilter(e.target.value)}
+          className="px-2 py-1.5 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-md text-sm font-medium text-slate-700 dark:text-text-muted-dark cursor-pointer"
+        >
+          <option value="all">{t('alerts.history.typeAllOption')}</option>
+          <option value="resource">{t('alerts.history.typeResource')}</option>
+          <option value="healthcheck">{t('alerts.history.typeHealthcheck')}</option>
+          <option value="endpoint">{t('alerts.history.typeEndpoint')}</option>
+          <option value="log">{t('alerts.history.typeLog')}</option>
+          <option value="scheduled">{t('alerts.history.typeScheduled')}</option>
+          <option value="system">{t('alerts.history.typeSystem')}</option>
+        </select>
+
+        <select
+          value={channelFilter}
+          onChange={e => setChannelFilter(e.target.value)}
+          className="px-2 py-1.5 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-md text-sm font-medium text-slate-700 dark:text-text-muted-dark cursor-pointer"
+        >
+          <option value="all">{t('alerts.history.channelAll')}</option>
+          {channels.map(ch => (
+            <option key={ch.id} value={ch.id}>{ch.name}</option>
+          ))}
+        </select>
+
+        <select
+          value={periodDays}
+          onChange={e => setPeriodDays(Number(e.target.value) as PeriodDays)}
+          className="px-2 py-1.5 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-md text-sm font-medium text-slate-700 dark:text-text-muted-dark cursor-pointer"
+        >
+          <option value={1}>{t('alerts.history.period24h')}</option>
+          <option value={7}>{t('alerts.history.period7d')}</option>
+          <option value={30}>{t('alerts.history.period30d')}</option>
+        </select>
+
+        <div className="ml-auto relative w-64">
+          <MaterialIcon name="search" className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-base pointer-events-none" />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder={t('alerts.history.searchPlaceholder')}
+            className="w-full pl-7 pr-7 py-1.5 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-md text-sm outline-none focus:ring-1 focus:ring-primary dark:text-white"
           />
-        </div>
-      )}
-
-      {/* Filters */}
-      <div className="bg-white dark:bg-bg-surface-dark rounded-xl p-4 border border-slate-200 dark:border-ui-border-dark">
-        <div className="flex flex-wrap gap-4 items-end">
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark mb-2">
-              {t('alerts.history.status')}
-            </label>
-            <select
-              value={statusFilter}
-              onChange={(e) => handleStatusFilterChange(e.target.value)}
-              className="px-3 py-2 border border-slate-200 dark:border-ui-border-dark rounded-lg bg-white dark:bg-bg-surface-dark text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-700"
+              aria-label="Clear"
             >
-              <option value="all">{t('alerts.history.statusAll')}</option>
-              <option value="sent">{t('alerts.history.statusSent')}</option>
-              <option value="failed">{t('alerts.history.statusFailed')}</option>
-              <option value="pending">{t('alerts.history.statusPending')}</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark mb-2">
-              {t('alerts.history.type')}
-            </label>
-            <select
-              value={typeFilter}
-              onChange={(e) => handleTypeFilterChange(e.target.value)}
-              className="px-3 py-2 border border-slate-200 dark:border-ui-border-dark rounded-lg bg-white dark:bg-bg-surface-dark text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
-            >
-              <option value="all">{t('alerts.history.typeAll')}</option>
-              <option value="resource">{t('alerts.history.typeResource')}</option>
-              <option value="healthcheck">{t('alerts.history.typeHealthcheck')}</option>
-              <option value="endpoint">{t('alerts.history.typeEndpoint')}</option>
-              <option value="log">{t('alerts.history.typeLog')}</option>
-              <option value="scheduled">{t('alerts.history.typeScheduled')}</option>
-              <option value="system">{t('alerts.history.typeSystem')}</option>
-            </select>
-          </div>
-
-          <button
-            onClick={loadHistory}
-            className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-ui-border-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark rounded-lg text-sm font-medium transition-all text-slate-600 dark:text-text-muted-dark"
-          >
-            <MaterialIcon name="refresh" className="text-lg" />
-            {t('alerts.history.refresh')}
-          </button>
+              <MaterialIcon name="close" className="text-sm" />
+            </button>
+          )}
         </div>
       </div>
 
       {/* History Table */}
       <div className="bg-white dark:bg-bg-surface-dark rounded-xl border border-slate-200 dark:border-ui-border-dark overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 dark:divide-ui-border-dark">
-            <thead className="bg-slate-50 dark:bg-bg-surface-dark">
-              <tr>
-                <th className={thClass}>{t('alerts.history.status')}</th>
-                <th className={thClass}>{t('alerts.history.type')}</th>
-                <th className={thClass}>{t('alerts.history.channel')}</th>
+          <table className="w-full min-w-[960px] table-fixed">
+            <thead className="bg-slate-50 dark:bg-ui-hover-dark/40">
+              <tr className="border-b border-slate-200 dark:border-ui-border-dark">
+                <th className={`${thClass} w-[110px]`}>{t('alerts.history.status')}</th>
+                <th className={`${thClass} w-[120px]`}>{t('alerts.history.type')}</th>
+                <th className={`${thClass} w-[190px]`}>{t('alerts.history.channel')}</th>
                 <th className={thClass}>{t('alerts.history.message')}</th>
-                <th className={thClass}>{t('alerts.history.severity')}</th>
-                <th className={thClass}>{t('alerts.history.retryCount')}</th>
-                <th className={thClass}>{t('alerts.history.time')}</th>
+                <th className={`${thClass} w-[110px]`}>{t('alerts.history.severity')}</th>
+                <th className={`${thClass} w-[170px] text-right`}>{t('alerts.history.time')}</th>
               </tr>
             </thead>
-            <tbody className="bg-white dark:bg-bg-surface-dark divide-y divide-slate-200 dark:divide-ui-border-dark">
+            <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-slate-500 dark:text-text-muted-dark">
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500 dark:text-text-muted-dark">
                     <MaterialIcon name="sync" className="text-4xl animate-spin mx-auto mb-2" />
                     <p>{t('alerts.history.loading')}</p>
                   </td>
                 </tr>
               ) : history.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400 dark:text-text-muted-dark">
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400 dark:text-text-muted-dark">
                     <MaterialIcon name="inbox" className="text-4xl mx-auto mb-2" />
                     <p className="text-sm">{t('alerts.history.empty')}</p>
                   </td>
                 </tr>
               ) : (
-                history.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(item.status)}
-                        <span className="text-sm font-medium text-slate-900 dark:text-white capitalize">
+                groupedRows.map(row => {
+                  if (row.kind === 'group') {
+                    return (
+                      <tr key={`g-${row.key}`}>
+                        <td colSpan={6} className="px-4 py-1.5 border-t border-slate-100 dark:border-ui-border-dark/50 bg-slate-50 dark:bg-ui-hover-dark/30 text-2xs font-bold text-slate-500 dark:text-text-muted-dark">
+                          {row.label}
+                        </td>
+                      </tr>
+                    );
+                  }
+                  const { item } = row;
+                  const statusMeta = STATUS_META[item.status] ?? STATUS_META.pending;
+                  const channelStyle = getChannelStyle(item.channelType);
+                  const created = new Date(item.createdAt);
+                  const failed = item.status === 'failed';
+                  return (
+                    <tr
+                      key={item.id}
+                      className={`border-t border-slate-100 dark:border-ui-border-dark/50 transition-colors ${
+                        failed
+                          ? 'bg-red-50/60 dark:bg-red-900/10 hover:bg-red-50 dark:hover:bg-red-900/15'
+                          : 'hover:bg-slate-50 dark:hover:bg-ui-hover-dark/40'
+                      }`}
+                    >
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center gap-1.5 text-sm font-bold capitalize ${statusMeta.text}`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${statusMeta.dot}`} />
                           {item.status}
                         </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        {getTypeIcon(item.alertType)}
-                        <span className="text-sm text-slate-900 dark:text-white capitalize">
-                          {item.alertType}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <ChannelIcon type={item.channelType} size={18} className="text-slate-500 dark:text-text-muted-dark" />
-                        <span className="text-sm text-slate-900 dark:text-white">
-                          {item.channelName}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="max-w-md">
-                        <p className="text-sm text-slate-900 dark:text-white truncate">
-                          {item.message}
-                        </p>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-700 dark:text-text-muted-dark">
+                        {typeLabel(item.alertType)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${channelStyle.bg}`}>
+                            <ChannelIcon type={item.channelType} size={13} className={channelStyle.text} />
+                          </div>
+                          <span className="truncate text-sm text-slate-700 dark:text-text-muted-dark">{item.channelName}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="truncate text-sm text-slate-900 dark:text-white">{item.message}</p>
                         {item.errorMessage && (
-                          <p className="text-sm text-red-600 dark:text-red-400 mt-1 truncate">
-                            Error: {item.errorMessage}
+                          <p className="mt-0.5 truncate text-2xs text-red-600 dark:text-red-400">
+                            {item.errorMessage}
+                            {item.retryCount > 0 && ` · ${t('alerts.history.retried', { count: item.retryCount })}`}
                           </p>
                         )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getSeverityBadge(item.severity)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-slate-900 dark:text-white">
-                        {item.retryCount > 0 ? item.retryCount : '-'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-text-muted-dark">
-                      {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true, locale: dateLocale })}
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="px-4 py-3">
+                        {item.severity && (
+                          <span className={`inline-flex rounded-md px-2 py-0.5 text-2xs font-bold uppercase tracking-wide ${SEVERITY_BADGE[item.severity] ?? SEVERITY_BADGE.info}`}>
+                            {item.severity}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right text-sm text-slate-600 dark:text-text-muted-dark whitespace-nowrap">
+                        {formatDistanceToNow(created, { addSuffix: true, locale: dateLocale })}
+                        <span className="text-slate-400 dark:text-text-dim-dark"> · {format(created, 'HH:mm')}</span>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
 
         {/* Pagination */}
-        {total > 50 && (
-          <div className="px-6 py-4 border-t border-slate-200 dark:border-ui-border-dark">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-slate-600 dark:text-text-muted-dark">
-                {t('alerts.history.pagination', {
-                  start: (filter.offset || 0) + 1,
-                  end: Math.min((filter.offset || 0) + (filter.limit || 50), total),
-                  total
-                })}
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setFilter(prev => ({ ...prev, offset: Math.max(0, (prev.offset || 0) - 50) }))}
-                  disabled={(filter.offset || 0) === 0}
-                  className="px-3 py-1 border border-slate-200 dark:border-ui-border-dark rounded-lg disabled:opacity-50 text-sm text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark"
-                >
-                  {t('common.previous', { defaultValue: 'Previous' })}
-                </button>
-                <button
-                  onClick={() => setFilter(prev => ({ ...prev, offset: (prev.offset || 0) + 50 }))}
-                  disabled={(filter.offset || 0) + 50 >= total}
-                  className="px-3 py-1 border border-slate-200 dark:border-ui-border-dark rounded-lg disabled:opacity-50 text-sm text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark"
-                >
-                  {t('common.next', { defaultValue: 'Next' })}
-                </button>
-              </div>
+        {!loading && total > 0 && (
+          <div className="flex items-center justify-between border-t border-slate-200 dark:border-ui-border-dark bg-slate-50/60 dark:bg-ui-hover-dark/20 px-4 py-2.5">
+            <p className="text-xs text-slate-500 dark:text-text-muted-dark">
+              {t('alerts.history.pagination', {
+                start: (page - 1) * PAGE_SIZE + 1,
+                end: Math.min(page * PAGE_SIZE, total),
+                total,
+              })}
+            </p>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 dark:border-ui-border-dark text-sm text-slate-600 dark:text-text-muted-dark hover:bg-slate-100 dark:hover:bg-ui-hover-dark disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label={t('common.previous', { defaultValue: 'Previous' })}
+              >
+                ‹
+              </button>
+              {pageItems(page, totalPages).map((p, i) =>
+                p === null ? (
+                  <span key={`e-${i}`} className="px-1 text-sm text-slate-400 dark:text-text-dim-dark">…</span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={`flex h-7 min-w-7 items-center justify-center rounded-md px-1 text-xs font-semibold ${
+                      p === page
+                        ? 'bg-primary text-white'
+                        : 'border border-slate-200 dark:border-ui-border-dark text-slate-600 dark:text-text-muted-dark hover:bg-slate-100 dark:hover:bg-ui-hover-dark'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+                className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 dark:border-ui-border-dark text-sm text-slate-600 dark:text-text-muted-dark hover:bg-slate-100 dark:hover:bg-ui-hover-dark disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label={t('common.next', { defaultValue: 'Next' })}
+              >
+                ›
+              </button>
             </div>
           </div>
         )}

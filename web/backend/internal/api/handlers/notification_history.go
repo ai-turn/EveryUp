@@ -36,6 +36,9 @@ func (h *NotificationHistoryHandler) GetAll(c *fiber.Ctx) error {
 	if status := c.Query("status"); status != "" {
 		filter.Status = &status
 	}
+	if search := c.Query("q"); search != "" {
+		filter.Search = &search
+	}
 	if fromStr := c.Query("from"); fromStr != "" {
 		if from, err := time.Parse(time.RFC3339, fromStr); err == nil {
 			filter.FromDate = &from

@@ -38,12 +38,15 @@
             "failed7d": "실패 (7일)",
             "successRate": "성공률",
             "activeRules": "활성 규칙",
-            "activeChannels": "활성 채널"
+            "activeChannels": "활성 채널",
+            "viewFailedLogs": "실패 로그 보기 →"
         },
         "health": {
             "lastSent": "마지막 발송",
             "lastSentAgo": "{{ago}} 발송됨",
             "never": "발송 이력 없음",
+            "noHistory": "이력 없음",
+            "testHint": "— 테스트로 확인",
             "successRate7d": "7일 성공률",
             "noActivity": "최근 7일 활동 없음",
             "noActivityShort": "활동 없음",
@@ -235,6 +238,14 @@
             "messageLabel": "알림 메시지",
             "noChannels": "등록된 알림 채널이 없습니다",
             "colName": "규칙",
+            "severityAll": "전체 심각도",
+            "enabledAll": "전체 상태",
+            "enabledOn": "활성",
+            "enabledOff": "비활성",
+            "searchPlaceholder": "규칙 이름 · 대상 검색",
+            "colSeverity": "심각도",
+            "colLastFired": "최근 발동",
+            "systemRuleNote": "시스템 기본 규칙 · 삭제 불가, 채널만 변경 가능",
             "colCategory": "카테고리",
             "colTarget": "대상",
             "colCondition": "조건",
@@ -294,7 +305,8 @@
             "type": "타입",
             "status": "상태",
             "successRate7d": "7일 성공률",
-            "sentFailed": "발송 / 실패",
+            "sentFailed": "7일 발송 / 실패",
+            "failedCount": "실패 {{count}}",
             "linkedRules": "연결 규칙",
             "lastSent": "최근 발송",
             "actions": "작업",
@@ -333,6 +345,15 @@
             "statusPending": "대기중",
             "type": "알림 타입",
             "typeAll": "전체",
+            "typeAllOption": "전체 타입",
+            "channelAll": "전체 채널",
+            "period24h": "최근 24시간",
+            "period7d": "최근 7일",
+            "period30d": "최근 30일",
+            "searchPlaceholder": "메시지 검색",
+            "today": "오늘",
+            "yesterday": "어제",
+            "retried": "{{count}}회 재시도",
             "typeResource": "리소스",
             "typeHealthcheck": "헬스체크",
             "typeEndpoint": "엔드포인트",
@@ -347,7 +368,7 @@
             "loading": "로딩 중...",
             "empty": "알림 히스토리가 없습니다",
             "refresh": "새로고침",
-            "pagination": "총 {{total}}개 중 {{start}}-{{end}}개 표시"
+            "pagination": "총 {{total}}건 중 {{start}}–{{end}}"
         }
     }
 }

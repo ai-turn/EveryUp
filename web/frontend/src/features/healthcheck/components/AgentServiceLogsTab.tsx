@@ -3,7 +3,7 @@ import {
   ResponsiveContainer, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts';
-import { MaterialIcon, type GlobalTimeRange } from '../../../components/common';
+import { MaterialIcon, SegmentedControl, type GlobalTimeRange } from '../../../components/common';
 import { ChartTooltip, chartCardClass, getChartTheme, gridProps, xAxisProps, yAxisProps } from '../../../components/charts';
 import { api, type LogEntry, type LogHistogramBucket, type LogLevel } from '../../../services/api';
 import { getErrorMessage } from '../../../utils/errors';
@@ -55,6 +55,13 @@ const LEVEL_STYLE: Record<string, string> = {
 const INGEST_LEVELS: LogLevel[] = ['error', 'warn', 'info', 'debug', 'trace'];
 
 type DatePreset = '1d' | '7d' | '30d' | '';
+
+const DATE_PRESETS: { value: DatePreset; label: string }[] = [
+  { value: '', label: '전체' },
+  { value: '1d', label: '오늘' },
+  { value: '7d', label: '7일' },
+  { value: '30d', label: '30일' },
+];
 
 function toISOFrom(preset: DatePreset): string | undefined {
   if (!preset) return undefined;
@@ -205,39 +212,11 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: 
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
-        {/* Level chips */}
-        <div className="flex flex-wrap gap-1">
-          {LOG_LEVELS.map(l => (
-            <button
-              key={l.value}
-              onClick={() => setLevel(l.value as LogLevel | '')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${
-                level === l.value
-                  ? 'bg-primary text-white'
-                  : 'bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-muted-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark'
-              }`}
-            >
-              {l.label}
-            </button>
-          ))}
-        </div>
+        {/* Level filter */}
+        <SegmentedControl options={LOG_LEVELS} value={level} onChange={setLevel} ariaLabel="로그 레벨" />
 
         {/* Date presets */}
-        <div className="flex gap-1">
-          {([['', '전체'], ['1d', '오늘'], ['7d', '7일'], ['30d', '30일']] as [DatePreset, string][]).map(([val, lbl]) => (
-            <button
-              key={val}
-              onClick={() => setDatePreset(val)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
-                datePreset === val
-                  ? 'bg-primary text-white'
-                  : 'bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark'
-              }`}
-            >
-              {lbl}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl options={DATE_PRESETS} value={datePreset} onChange={setDatePreset} ariaLabel="기간" />
 
         {/* Search */}
         <form onSubmit={handleSearchSubmit} className="flex-1 min-w-48 flex gap-1.5">

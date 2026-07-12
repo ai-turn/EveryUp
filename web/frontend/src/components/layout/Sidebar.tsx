@@ -86,7 +86,7 @@ export function Sidebar() {
   const isSettings = location.pathname.startsWith('/settings');
 
   return (
-    <aside className="hidden lg:flex w-60 shrink-0 flex-col bg-slate-50 dark:bg-bg-surface-dark border-r border-slate-200 dark:border-ui-border-dark">
+    <aside className="hidden lg:flex w-60 shrink-0 flex-col bg-white dark:bg-bg-surface-dark border-r border-slate-200 dark:border-ui-border-dark">
       {/* Logo → 홈(프로젝트 목록) */}
       <Link to="/" className="flex items-center gap-2 px-4 h-16 shrink-0 group">
         <img src={theme === 'dark' ? logoDark : logo} alt="EveryUp" className="h-9 w-9 object-contain" />
@@ -96,7 +96,7 @@ export function Sidebar() {
       {/* ⌘K 팔레트 트리거 (CommandPalette가 이벤트 수신) */}
       <button
         onClick={() => window.dispatchEvent(new Event('everyup:command-palette'))}
-        className="mx-3 mb-2 flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-main-dark text-slate-400 dark:text-text-dim-dark hover:border-primary/40 hover:text-slate-600 dark:hover:text-white transition-colors"
+        className="mx-3 mb-2 flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-bg-main-dark text-slate-400 dark:text-text-dim-dark hover:border-primary/40 hover:text-slate-600 dark:hover:text-white transition-colors"
       >
         <MaterialIcon name="search" className="text-base shrink-0" />
         <span className="flex-1 text-left text-xs">{t('검색')}</span>
@@ -112,7 +112,7 @@ export function Sidebar() {
           <>
             <NavItem to={`/projects/${agentId}`} icon="folder_open" label={currentAgent?.name ?? t('대시보드')} active={isDash} />
             {projectServices.length > 0 && (
-              <div className="flex flex-col gap-0.5 pl-3 py-1">
+              <div className="flex flex-col gap-0.5 ml-[18px] pl-3 py-1 border-l border-slate-200 dark:border-ui-border-dark">
                 {projectServices.map(s => (
                   <Link
                     key={s.key}
@@ -139,7 +139,7 @@ export function Sidebar() {
       {/* 하단: 에이전트 상태 + 테마/언어 */}
       <div className="p-3 shrink-0 flex flex-col gap-2">
         {currentAgent && (
-          <div className="rounded-lg bg-white dark:bg-bg-main-dark border border-slate-200 dark:border-ui-border-dark px-3 py-2.5">
+          <div className="rounded-lg bg-slate-50 dark:bg-bg-main-dark border border-slate-200 dark:border-ui-border-dark px-3 py-2.5">
             <div className="flex items-center gap-1.5 text-2xs font-semibold text-slate-700 dark:text-white">
               <span className={`h-1.5 w-1.5 rounded-full ${online ? 'bg-emerald-500' : 'bg-slate-400'}`} />
               <span className="truncate">
@@ -151,7 +151,7 @@ export function Sidebar() {
             </div>
           </div>
         )}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center justify-between">
           <button
             onClick={toggleTheme}
             aria-label="Toggle theme"
@@ -159,7 +159,7 @@ export function Sidebar() {
           >
             <MaterialIcon name={theme === 'light' ? 'dark_mode' : 'light_mode'} className="text-lg" />
           </button>
-          <div className="flex items-center gap-1 bg-white dark:bg-bg-main-dark border border-slate-200 dark:border-ui-border-dark p-0.5 rounded-lg">
+          <div className="flex items-center gap-1 bg-slate-50 dark:bg-bg-main-dark border border-slate-200 dark:border-ui-border-dark p-0.5 rounded-lg">
             {(['ko', 'en'] as const).map(lng => (
               <button
                 key={lng}

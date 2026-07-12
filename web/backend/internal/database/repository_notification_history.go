@@ -176,6 +176,10 @@ func (r *NotificationHistoryRepository) GetAll(filter *models.NotificationHistor
 			query += " AND status = ?"
 			args = append(args, *filter.Status)
 		}
+		if filter.Search != nil {
+			query += " AND message LIKE ?"
+			args = append(args, "%"+*filter.Search+"%")
+		}
 		if filter.FromDate != nil {
 			query += " AND created_at >= ?"
 			args = append(args, *filter.FromDate)
@@ -284,6 +288,10 @@ func (r *NotificationHistoryRepository) GetCount(filter *models.NotificationHist
 		if filter.Status != nil {
 			query += " AND status = ?"
 			args = append(args, *filter.Status)
+		}
+		if filter.Search != nil {
+			query += " AND message LIKE ?"
+			args = append(args, "%"+*filter.Search+"%")
 		}
 		if filter.FromDate != nil {
 			query += " AND created_at >= ?"

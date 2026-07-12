@@ -97,7 +97,40 @@ func (r *AlertRuleRepository) GetAll() ([]models.AlertRule, error) {
 		}
 		rules = append(rules, rule)
 	}
-	return loadChannelIDsAll(rules), nil
+	rules = loadChannelIDsAll(rules)
+	loadLastTriggeredAll(rules)
+	return rules, nil
+}
+
+// loadLastTriggeredAll fills LastTriggeredAt from notification_history
+// (separate query after the rules rows are closed — single-connection SQLite).
+func loadLastTriggeredAll(rules []models.AlertRule) {
+	rows, err := DB.Query(`
+		SELECT rule_id, MAX(created_at)
+		FROM notification_history
+		WHERE rule_id IS NOT NULL AND rule_id != ''
+		GROUP BY rule_id
+	`)
+	if err != nil {
+		return // last-triggered is display-only; rules list still works without it
+	}
+	defer rows.Close()
+
+	lastByRule := make(map[string]time.Time)
+	for rows.Next() {
+		var ruleID string
+		var last time.Time
+		if err := rows.Scan(&ruleID, &last); err != nil {
+			return
+		}
+		lastByRule[ruleID] = last
+	}
+	for i := range rules {
+		if last, ok := lastByRule[rules[i].ID]; ok {
+			t := last
+			rules[i].LastTriggeredAt = &t
+		}
+	}
 }
 
 // GetByID returns an alert rule by ID with channel IDs

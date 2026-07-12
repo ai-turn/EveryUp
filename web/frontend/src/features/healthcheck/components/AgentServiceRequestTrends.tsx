@@ -9,13 +9,14 @@ import {
   getChartTheme, gridProps, lineProps, tooltipCursor, xAxisProps, yAxisProps,
 } from '../../../components/charts';
 import { api, type ApiRequestStatBucket, type ApiRequestStatusSummary } from '../../../services/api';
+import { TimeRangePicker } from '../../../components/common/TimeRangePicker';
 
 type TimeRange = '1h' | '6h' | '24h';
 // Bucket width per range keeps ~30-60 points on the chart.
-const RANGES: { label: string; value: TimeRange; hours: number; bucketMins: number }[] = [
-  { label: '1H', value: '1h', hours: 1, bucketMins: 2 },
-  { label: '6H', value: '6h', hours: 6, bucketMins: 10 },
-  { label: '24H', value: '24h', hours: 24, bucketMins: 30 },
+const RANGES: { value: TimeRange; hours: number; bucketMins: number }[] = [
+  { value: '1h', hours: 1, bucketMins: 2 },
+  { value: '6h', hours: 6, bucketMins: 10 },
+  { value: '24h', hours: 24, bucketMins: 30 },
 ];
 
 interface Props {
@@ -97,21 +98,7 @@ export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey, ran
           />
         </div>
         {!controlledRange && (
-          <div className="flex gap-1">
-            {RANGES.map((r) => (
-              <button
-                key={r.value}
-                onClick={() => setLocalRange(r.value)}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
-                  range === r.value
-                    ? 'bg-primary text-white'
-                    : 'bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-secondary-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark'
-                }`}
-              >
-                {r.label}
-              </button>
-            ))}
-          </div>
+          <TimeRangePicker value={range} onChange={setLocalRange} />
         )}
       </div>
 

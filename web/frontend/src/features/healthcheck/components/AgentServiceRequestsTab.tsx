@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MaterialIcon, type GlobalTimeRange } from '../../../components/common';
+import { MaterialIcon, SegmentedControl, type GlobalTimeRange } from '../../../components/common';
 import { api, type ApiRequest } from '../../../services/api';
 import { getErrorMessage } from '../../../utils/errors';
 import { toast } from 'react-hot-toast';
@@ -18,6 +18,13 @@ interface Props {
 }
 
 type DatePreset = '1d' | '7d' | '30d' | '';
+
+const DATE_PRESETS: { value: DatePreset; label: string }[] = [
+  { value: '', label: '전체' },
+  { value: '1d', label: '오늘' },
+  { value: '7d', label: '7일' },
+  { value: '30d', label: '30일' },
+];
 
 function toISOFrom(preset: DatePreset): string | undefined {
   if (!preset) return undefined;
@@ -127,21 +134,7 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, range
         </button>
 
         {/* Date presets */}
-        <div className="flex gap-1">
-          {([['', '전체'], ['1d', '오늘'], ['7d', '7일'], ['30d', '30일']] as [DatePreset, string][]).map(([val, lbl]) => (
-            <button
-              key={val}
-              onClick={() => setDatePreset(val)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
-                datePreset === val
-                  ? 'bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900'
-                  : 'bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark'
-              }`}
-            >
-              {lbl}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl options={DATE_PRESETS} value={datePreset} onChange={setDatePreset} ariaLabel="기간" />
 
         {/* Path search */}
         <form onSubmit={handleSearchSubmit} className="flex-1 min-w-48 flex gap-1.5">

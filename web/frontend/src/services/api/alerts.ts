@@ -24,6 +24,7 @@ export interface AlertRule {
   cooldown: number;
   message?: string;
   channelIds: string[];
+  lastTriggeredAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -128,6 +129,7 @@ export interface NotificationHistoryFilter {
   channel_id?: string;
   alert_type?: string;
   status?: string;
+  q?: string;
   from?: string;
   to?: string;
   limit?: number;
@@ -244,6 +246,7 @@ export function createAlertsApi(request: RequestFn) {
       if (filter?.channel_id) params.append('channel_id', filter.channel_id);
       if (filter?.alert_type) params.append('alert_type', filter.alert_type);
       if (filter?.status) params.append('status', filter.status);
+      if (filter?.q) params.append('q', filter.q);
       if (filter?.from) params.append('from', filter.from);
       if (filter?.to) params.append('to', filter.to);
       if (filter?.limit) params.append('limit', filter.limit.toString());

@@ -1,4 +1,5 @@
-import { MaterialIcon, PageHeader, EmptyState, KPIChip, Toggle } from '../../../components/common';
+import { useState } from 'react';
+import { MaterialIcon, PageHeader, EmptyState, Toggle } from '../../../components/common';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { AlertRulesTab } from './AlertRulesTab';
 import { NotificationHistoryTab } from './NotificationHistoryTab';
@@ -12,7 +13,7 @@ import type {
   NotificationStats,
 } from '../../../services/api';
 import { useTranslation } from 'react-i18next';
-import { getChannelStyle, getChannelTypeLabel } from '../utils/channelMeta';
+import { getChannelStyle, getChannelSubtitle } from '../utils/channelMeta';
 
 type TabType = 'channels' | 'rules' | 'history';
 
@@ -54,11 +55,27 @@ export function AlertsDesktopView({
 }: AlertsDesktopViewProps) {
   const { t } = useTranslation(['alerts', 'common']);
 
+  // 'failed' only for the history-tab mount triggered by the failed-logs link;
+  // any normal tab click clears it (the key remounts the tab either way).
+  const [historyStatus, setHistoryStatus] = useState<'failed' | undefined>(undefined);
+  const selectTab = (tab: TabType) => {
+    setHistoryStatus(undefined);
+    setActiveTab(tab);
+  };
+  const viewFailedLogs = () => {
+    setHistoryStatus('failed');
+    setActiveTab('history');
+  };
+
   const enabledRules = rules.filter(r => r.isEnabled).length;
   const totalSent = stats?.totalSent ?? 0;
   const totalFailed = stats?.totalFailed ?? 0;
   const successRate = stats ? Math.round(stats.successRate) : null;
   const totalNotifications = totalSent + totalFailed;
+  const rateBarColor = successRate == null ? 'bg-slate-300'
+    : successRate >= 95 ? 'bg-emerald-500'
+    : successRate >= 80 ? 'bg-amber-500'
+    : 'bg-red-500';
 
   const tabs: { key: TabType; label: string; count?: number }[] = [
     { key: 'channels', label: t('alerts.channelsTitle'), count: channels.length },
@@ -83,38 +100,51 @@ export function AlertsDesktopView({
         )}
       </PageHeader>
 
-      {/* KPI strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-5">
-        <KPIChip
-          label={t('alerts.kpi.sent7d')}
-          value={totalSent}
-          tone="emerald"
-          icon="send"
-        />
-        <KPIChip
-          label={t('alerts.kpi.failed7d')}
-          value={totalFailed}
-          tone={totalFailed > 0 ? 'red' : 'slate'}
-          icon="error_outline"
-        />
-        <KPIChip
-          label={t('alerts.kpi.successRate')}
-          value={successRate != null ? `${successRate}%` : '—'}
-          tone={successRate == null ? 'slate' : successRate >= 95 ? 'emerald' : successRate >= 80 ? 'amber' : 'red'}
-          icon="check_circle"
-        />
-        <KPIChip
-          label={t('alerts.kpi.activeRules')}
-          value={`${enabledRules}/${rules.length}`}
-          tone="primary"
-          icon="rule"
-        />
-        <KPIChip
-          label={t('alerts.kpi.activeChannels')}
-          value={`${channels.filter(c => c.isEnabled).length}/${channels.length}`}
-          tone="primary"
-          icon="notifications_active"
-        />
+      {/* KPI stat bar — one card, divider-separated cells */}
+      <div className="mb-5 grid grid-cols-5 divide-x divide-slate-100 dark:divide-ui-border-dark rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark py-3.5">
+        <div className="flex flex-col gap-0.5 px-5">
+          <span className="text-2xs text-slate-500 dark:text-text-muted-dark">{t('alerts.kpi.sent7d')}</span>
+          <span className="text-xl font-extrabold tabular-nums text-slate-900 dark:text-white">{totalSent}</span>
+        </div>
+        <div className="flex flex-col gap-0.5 px-5">
+          <span className="text-2xs text-slate-500 dark:text-text-muted-dark">{t('alerts.kpi.failed7d')}</span>
+          <span className="flex items-baseline gap-2.5">
+            <span className={`text-xl font-extrabold tabular-nums ${totalFailed > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white'}`}>
+              {totalFailed}
+            </span>
+            {totalFailed > 0 && (
+              <button
+                onClick={viewFailedLogs}
+                className="text-2xs font-semibold text-primary hover:underline"
+              >
+                {t('alerts.kpi.viewFailedLogs')}
+              </button>
+            )}
+          </span>
+        </div>
+        <div className="flex flex-col gap-0.5 px-5">
+          <span className="text-2xs text-slate-500 dark:text-text-muted-dark">{t('alerts.kpi.successRate')}</span>
+          <span className="flex items-center gap-2">
+            <span className="text-xl font-extrabold tabular-nums text-slate-900 dark:text-white">
+              {successRate != null ? `${successRate}%` : '—'}
+            </span>
+            {successRate != null && (
+              <span className="h-1 w-12 overflow-hidden rounded-full bg-slate-200 dark:bg-ui-hover-dark">
+                <span className={`block h-full ${rateBarColor}`} style={{ width: `${successRate}%` }} />
+              </span>
+            )}
+          </span>
+        </div>
+        <div className="flex flex-col gap-0.5 px-5">
+          <span className="text-2xs text-slate-500 dark:text-text-muted-dark">{t('alerts.kpi.activeRules')}</span>
+          <span className="text-xl font-extrabold tabular-nums text-slate-900 dark:text-white">{enabledRules}/{rules.length}</span>
+        </div>
+        <div className="flex flex-col gap-0.5 px-5">
+          <span className="text-2xs text-slate-500 dark:text-text-muted-dark">{t('alerts.kpi.activeChannels')}</span>
+          <span className="text-xl font-extrabold tabular-nums text-slate-900 dark:text-white">
+            {channels.filter(c => c.isEnabled).length}/{channels.length}
+          </span>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -125,7 +155,7 @@ export function AlertsDesktopView({
               key={tab.key}
               role="tab"
               aria-selected={activeTab === tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => selectTab(tab.key)}
               className={`relative px-4 py-2.5 text-sm font-semibold transition-colors -mb-px border-b-2 ${
                 activeTab === tab.key
                   ? 'text-slate-900 dark:text-white border-primary'
@@ -149,7 +179,7 @@ export function AlertsDesktopView({
 
       {/* Tab Content */}
       {activeTab === 'history' ? (
-        <NotificationHistoryTab />
+        <NotificationHistoryTab key={historyStatus ?? 'default'} channels={channels} initialStatus={historyStatus} />
       ) : activeTab === 'channels' ? (
         <ChannelsTable
           channels={channels}
@@ -192,7 +222,7 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-ui-border-dark dark:bg-bg-surface-dark">
         <div className="divide-y divide-slate-100 dark:divide-ui-border-dark">
           {[1, 2, 3].map(i => (
-            <div key={i} className="grid grid-cols-[minmax(220px,1.4fr)_120px_96px_135px_120px_120px_155px_184px] gap-4 px-4 py-3 animate-pulse">
+            <div key={i} className="grid grid-cols-[minmax(220px,1.6fr)_90px_150px_110px_150px_180px] gap-4 px-4 py-3 animate-pulse">
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-lg bg-slate-100 dark:bg-ui-hover-dark" />
                 <div className="space-y-2">
@@ -200,8 +230,6 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
                   <div className="h-2.5 w-20 rounded bg-slate-100 dark:bg-ui-hover-dark" />
                 </div>
               </div>
-              <div className="h-5 rounded bg-slate-100 dark:bg-ui-hover-dark" />
-              <div className="h-5 rounded bg-slate-100 dark:bg-ui-hover-dark" />
               <div className="h-5 rounded bg-slate-100 dark:bg-ui-hover-dark" />
               <div className="h-5 rounded bg-slate-100 dark:bg-ui-hover-dark" />
               <div className="h-5 rounded bg-slate-100 dark:bg-ui-hover-dark" />
@@ -229,17 +257,15 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
 
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-ui-border-dark dark:bg-bg-surface-dark">
-      <table className="w-full min-w-[1200px] table-fixed">
+      <table className="w-full min-w-[960px] table-fixed">
         <thead className="bg-slate-50 dark:bg-ui-hover-dark/40">
           <tr className="border-b border-slate-200 dark:border-ui-border-dark">
-            <th className="w-[270px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.channel')}</th>
-            <th className="w-[120px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.type')}</th>
-            <th className="w-[96px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.status')}</th>
-            <th className="w-[135px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.successRate7d')}</th>
-            <th className="w-[120px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.sentFailed')}</th>
-            <th className="w-[120px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.linkedRules')}</th>
-            <th className="w-[155px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.lastSent')}</th>
-            <th className="w-[184px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.actions')}</th>
+            <th className="w-[280px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.channel')}</th>
+            <th className="w-[90px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.status')}</th>
+            <th className="w-[150px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.sentFailed')}</th>
+            <th className="w-[110px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.linkedRules')}</th>
+            <th className="w-[160px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.lastSent')}</th>
+            <th className="w-[180px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">{t('alerts.table.actions')}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-ui-border-dark">
@@ -249,11 +275,6 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
             const sent = health?.successCount ?? 0;
             const failed = health?.failedCount ?? 0;
             const total = sent + failed;
-            const rate = total > 0 ? Math.round((sent / total) * 100) : null;
-            const rateColor = rate == null ? 'text-slate-400 dark:text-text-dim-dark'
-              : rate >= 95 ? 'text-emerald-500'
-              : rate >= 80 ? 'text-amber-500'
-              : 'text-red-500';
             const lastSent = health?.lastSentAt ? new Date(health.lastSentAt) : null;
 
             return (
@@ -268,16 +289,11 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
                     </div>
                     <div className="min-w-0">
                       <p className="truncate text-sm font-bold text-slate-900 dark:text-white">{channel.name}</p>
-                      <p className="truncate text-sm text-slate-500 dark:text-text-muted-dark">
-                        {channel.isEnabled ? t('common.enabled', { defaultValue: 'Enabled' }) : t('common.disabled')}
+                      <p className="truncate text-2xs text-slate-400 dark:text-text-dim-dark">
+                        {getChannelSubtitle(channel.type, t)}
                       </p>
                     </div>
                   </div>
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`inline-flex rounded px-2 py-0.5 text-xs font-bold uppercase ${style.bg} ${style.text}`}>
-                    {getChannelTypeLabel(channel.type, t)}
-                  </span>
                 </td>
                 <td className="px-4 py-3">
                   <Toggle
@@ -287,27 +303,32 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
                     title={channel.isEnabled ? t('alerts.disable') : t('alerts.enable')}
                   />
                 </td>
-                <td className={`px-4 py-3 text-right text-sm font-bold tabular-nums ${rateColor}`}>
-                  {rate != null ? `${rate}%` : '-'}
+                <td className="px-4 py-3 text-sm font-semibold tabular-nums">
+                  {total > 0 ? (
+                    <span className="text-slate-900 dark:text-white">
+                      {sent}
+                      {failed > 0 && (
+                        <span className="text-red-600 dark:text-red-400"> · {t('alerts.table.failedCount', { count: failed })}</span>
+                      )}
+                    </span>
+                  ) : (
+                    <span className="font-normal text-slate-400 dark:text-text-dim-dark">{t('alerts.health.noHistory')}</span>
+                  )}
                 </td>
-                <td className="px-4 py-3 text-right text-sm font-bold tabular-nums text-slate-900 dark:text-white">
-                  {sent}
-                  {failed > 0 && <span className="ml-1 text-sm font-semibold text-red-500">/ {failed}</span>}
-                </td>
-                <td className="px-4 py-3 text-right text-sm font-bold tabular-nums text-slate-900 dark:text-white">
-                  {health?.ruleCount ?? 0}
+                <td className="px-4 py-3 text-sm font-semibold text-slate-700 dark:text-text-base-dark">
+                  {t('alerts.health.rulesCount', { count: health?.ruleCount ?? 0 })}
                 </td>
                 <td className="px-4 py-3 text-sm text-slate-500 dark:text-text-muted-dark">
                   {lastSent
                     ? formatDistanceToNow(lastSent, { addSuffix: true, locale })
-                    : t('alerts.health.never')}
+                    : <span className="text-slate-400 dark:text-text-dim-dark">{t('alerts.health.testHint')}</span>}
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-1">
                     <button
                       onClick={() => onTest(channel.id)}
                       disabled={!channel.isEnabled}
-                      className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md px-3 text-sm font-bold text-primary transition-all hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-primary/20"
+                      className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-ui-border-dark dark:bg-bg-surface-dark dark:text-text-base-dark dark:hover:bg-ui-hover-dark"
                     >
                       <MaterialIcon name="send" className="text-sm" />
                       {t('alerts.test')}

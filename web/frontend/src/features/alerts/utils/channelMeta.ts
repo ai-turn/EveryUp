@@ -19,3 +19,14 @@ export function getChannelTypeLabel(type: string, t: TFunction): string {
   const translated = t(key, { defaultValue: '' });
   return translated || type;
 }
+
+// Brand name + transport, e.g. "Telegram · Bot API" — brand names are not translated
+const channelSubtitles: Record<string, string> = {
+  telegram: 'Telegram · Bot API',
+  discord: 'Discord · Webhook',
+  slack: 'Slack · Webhook',
+};
+
+export function getChannelSubtitle(type: string, t: TFunction): string {
+  return channelSubtitles[type] ?? getChannelTypeLabel(type, t);
+}

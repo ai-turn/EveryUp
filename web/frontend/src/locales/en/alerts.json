@@ -38,12 +38,15 @@
             "failed7d": "Failed (7d)",
             "successRate": "Success rate",
             "activeRules": "Active rules",
-            "activeChannels": "Active channels"
+            "activeChannels": "Active channels",
+            "viewFailedLogs": "View failed logs →"
         },
         "health": {
             "lastSent": "Last sent",
             "lastSentAgo": "Sent {{ago}}",
             "never": "Never sent",
+            "noHistory": "No history",
+            "testHint": "— verify with a test",
             "successRate7d": "7d success rate",
             "noActivity": "No activity in last 7 days",
             "noActivityShort": "No activity",
@@ -235,6 +238,14 @@
             "messageLabel": "Notification Message",
             "noChannels": "No notification channels registered",
             "colName": "Rule",
+            "severityAll": "All severity",
+            "enabledAll": "All states",
+            "enabledOn": "Enabled",
+            "enabledOff": "Disabled",
+            "searchPlaceholder": "Rule name · target",
+            "colSeverity": "Severity",
+            "colLastFired": "Last fired",
+            "systemRuleNote": "System default rule · cannot delete, channels only",
             "colCategory": "Category",
             "colTarget": "Target",
             "colCondition": "Condition",
@@ -294,7 +305,8 @@
             "type": "Type",
             "status": "Status",
             "successRate7d": "7d success",
-            "sentFailed": "Sent / Failed",
+            "sentFailed": "7d Sent / Failed",
+            "failedCount": "{{count}} failed",
             "linkedRules": "Linked rules",
             "lastSent": "Last sent",
             "actions": "Actions",
@@ -333,6 +345,16 @@
             "statusPending": "Pending",
             "type": "Alert Type",
             "typeAll": "All",
+            "typeAllOption": "All types",
+            "channelAll": "All channels",
+            "period24h": "Last 24 hours",
+            "period7d": "Last 7 days",
+            "period30d": "Last 30 days",
+            "searchPlaceholder": "Search messages",
+            "today": "Today",
+            "yesterday": "Yesterday",
+            "retried_one": "{{count}} retry",
+            "retried_other": "{{count}} retries",
             "typeResource": "Resource",
             "typeHealthcheck": "Healthcheck",
             "typeEndpoint": "Endpoint",
@@ -347,7 +369,7 @@
             "loading": "Loading...",
             "empty": "No notification history",
             "refresh": "Refresh",
-            "pagination": "Showing {{start}}-{{end}} of {{total}} total"
+            "pagination": "{{start}}–{{end}} of {{total}}"
         }
     }
 }

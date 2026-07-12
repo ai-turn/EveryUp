@@ -160,10 +160,6 @@ export function createAgentsApi(request: RequestFn) {
       }),
     deleteAgent: (agentId: string) =>
       request<void>(`/agents/${agentId}`, { method: 'DELETE' }),
-    // Remove a single service card. Reappears on next sync if the agent still
-    // reports this target (i.e. it's live, not a stale/zombie one).
-    deleteAgentService: (agentId: string, key: string) =>
-      request<void>(`/agents/${agentId}/services/${encodeURIComponent(key)}`, { method: 'DELETE' }),
     // Reveal the full API key. available=false for projects created before key storage existed.
     getAgentKey: (agentId: string) =>
       request<{ apiKey: string; available: boolean }>(`/agents/${agentId}/key`),

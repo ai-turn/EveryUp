@@ -84,11 +84,10 @@ function metricLabel(name: string): string {
 // straight from the flat snapshot (no extra fetch). The representative metric,
 // when present, is the service's most telling exported OTel metric. Click →
 // full service detail.
-function ServiceCard({ service, metric, onOpen, onDelete }: {
+function ServiceCard({ service, metric, onOpen }: {
   service: AgentServiceFlat;
   metric?: OtelServiceMetric;
   onOpen: () => void;
-  onDelete: () => void;
 }) {
   const { t } = useTranslate();
   return (
@@ -108,17 +107,11 @@ function ServiceCard({ service, metric, onOpen, onDelete }: {
           {!service.healthy && (
             <span className="text-2xs font-bold text-red-600 bg-red-500/10 px-1.5 py-0.5 rounded">{t('장애')}</span>
           )}
-          <button
-            onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            title="서비스 삭제"
-            className="p-1 rounded-md text-slate-300 dark:text-text-dim-dark opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
-          >
-            <MaterialIcon name="delete_outline" className="text-base" />
-          </button>
+          <MaterialIcon name="chevron_right" className="text-base text-slate-300 dark:text-text-dim-dark group-hover:text-primary transition-colors" />
         </div>
       </div>
 
-      <div className="flex items-center gap-4 text-sm">
+      <div className="grid grid-cols-3 gap-3 text-sm">
         <div className="min-w-0">
           <div className="text-2xs text-slate-400 dark:text-text-dim-dark">{t('응답시간')}</div>
           <div className="font-mono font-semibold text-slate-800 dark:text-white truncate">{service.lastLatency ?? '—'}</div>
@@ -144,12 +137,6 @@ function ServiceCard({ service, metric, onOpen, onDelete }: {
       {!service.healthy && service.lastError && (
         <p className="text-xs text-red-500 dark:text-red-400 truncate -mt-1">{service.lastError}</p>
       )}
-
-      <div className="border-t border-slate-100 dark:border-ui-border-dark" />
-      <div className="flex items-center justify-end gap-0.5 text-xs text-primary font-medium">
-        {t('상세 보기')}
-        <MaterialIcon name="chevron_right" className="text-sm" />
-      </div>
     </div>
   );
 }
@@ -166,9 +153,7 @@ export function ProjectDetailPage() {
   const [loading, setLoading] = useState(true);
   const [showKey, setShowKey] = useState(false);
   const [showInstrumentation, setShowInstrumentation] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<
-    { type: 'agent' } | { type: 'service'; svc: AgentServiceFlat } | null
-  >(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
 
   // Dashboard aggregates — non-critical, each fails independent of the main load.
   const [incidents, setIncidents] = useState<AgentIncident[]>([]);
@@ -210,22 +195,15 @@ export function ProjectDetailPage() {
   const { spinning, trigger: handleRefresh } = useSpinAction(load);
 
   const handleConfirmDelete = async () => {
-    if (!deleteConfirm) return;
+    if (!deleteConfirm || !agentId) return;
     try {
-      if (deleteConfirm.type === 'agent') {
-        if (!agentId) return;
-        await api.deleteAgent(agentId);
-        toast.success('프로젝트가 비활성화됐습니다');
-        navigate('/');
-      } else {
-        await api.deleteAgentService(deleteConfirm.svc.agentId, deleteConfirm.svc.key);
-        toast.success('서비스가 삭제됐습니다');
-        load();
-      }
+      await api.deleteAgent(agentId);
+      toast.success('프로젝트가 비활성화됐습니다');
+      navigate('/');
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
-      setDeleteConfirm(null);
+      setDeleteConfirm(false);
     }
   };
 
@@ -310,7 +288,7 @@ export function ProjectDetailPage() {
                 <MaterialIcon name="integration_instructions" className="text-xl" />
               </button>
               <button
-                onClick={() => setDeleteConfirm({ type: 'agent' })}
+                onClick={() => setDeleteConfirm(true)}
                 title="프로젝트 비활성화"
                 className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
               >
@@ -381,7 +359,6 @@ export function ProjectDetailPage() {
               service={s}
               metric={metrics[s.name]}
               onOpen={() => navigate(`/services/${agentId}/${encodeURIComponent(s.key)}`)}
-              onDelete={() => setDeleteConfirm({ type: 'service', svc: s })}
             />
           ))}
         </div>
@@ -462,21 +439,13 @@ export function ProjectDetailPage() {
       )}
 
       <ConfirmDialog
-        isOpen={deleteConfirm !== null}
-        onClose={() => setDeleteConfirm(null)}
+        isOpen={deleteConfirm}
+        onClose={() => setDeleteConfirm(false)}
         onConfirm={handleConfirmDelete}
-        title={deleteConfirm?.type === 'service' ? '서비스 삭제' : '프로젝트 비활성화'}
-        message={
-          deleteConfirm?.type === 'service'
-            ? `'${deleteConfirm.svc.name}' 서비스를 목록에서 삭제하시겠습니까?`
-            : `'${agent?.name ?? agentId}' 프로젝트를 비활성화하시겠습니까?`
-        }
-        description={
-          deleteConfirm?.type === 'service'
-            ? '에이전트가 이 대상을 계속 수집 중이면 다음 동기화 때 다시 나타날 수 있습니다.'
-            : '에이전트 연결이 차단되며 수집 데이터는 보존됩니다.'
-        }
-        confirmLabel={deleteConfirm?.type === 'service' ? undefined : '비활성화'}
+        title="프로젝트 비활성화"
+        message={`'${agent?.name ?? agentId}' 프로젝트를 비활성화하시겠습니까?`}
+        description="에이전트 연결이 차단되며 수집 데이터는 보존됩니다."
+        confirmLabel="비활성화"
       />
 
       {showKey && agent && (

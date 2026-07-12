@@ -2,14 +2,18 @@ import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { getErrorMessage } from '../../../utils/errors';
-import { MaterialIcon, EmptyState, ConfirmDialog, Toggle } from '../../../components/common';
+import { MaterialIcon, EmptyState, ConfirmDialog, Toggle, SegmentedControl } from '../../../components/common';
+import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { api, type AlertRule, type NotificationChannel, type AgentServiceFlat, type ConnectedAgent } from '../../../services/api';
+import { getChannelStyle } from '../utils/channelMeta';
 import { AlertRuleForm } from './AlertRuleForm';
+import { formatDistanceToNow } from 'date-fns';
+import { ko, enUS } from 'date-fns/locale';
 
-const SEVERITY_DOT: Record<string, string> = {
-  critical: 'bg-red-500',
-  warning: 'bg-amber-500',
-  info: 'bg-sky-500',
+const SEVERITY_BADGE: Record<string, string> = {
+  critical: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400',
+  warning: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
+  info: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-400',
 };
 
 const SEVERITY_ORDER: Record<string, number> = { critical: 0, warning: 1, info: 2 };
@@ -155,7 +159,8 @@ interface AlertRulesTabProps {
 }
 
 export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
-  const { t } = useTranslation(['alerts', 'common']);
+  const { t, i18n } = useTranslation(['alerts', 'common']);
+  const dateLocale = i18n.language === 'ko' ? ko : enUS;
   const [rules, setRules] = useState<AlertRule[]>([]);
   const [channels, setChannels] = useState<NotificationChannel[]>([]);
   const [agentServices, setAgentServices] = useState<AgentServiceFlat[]>([]);
@@ -378,27 +383,19 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
       {inlineForm}
       {/* Filter bar — category pills + severity/enabled + search */}
       <div className="flex flex-wrap items-center gap-2 mb-3">
-        <div className="inline-flex bg-slate-100 dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-lg p-0.5">
-          {([
-            { id: 'all', label: t('common.all') },
-            { id: 'endpoint', label: t('alerts.rules.endpointHealth', { defaultValue: 'Healthcheck' }) },
-            { id: 'log', label: t('alerts.rules.logRule', { defaultValue: 'Log' }) },
-            { id: 'resource', label: t('alerts.rules.serverResource', { defaultValue: 'Infra' }) },
-            { id: 'system', label: t('alerts.rules.systemRule', { defaultValue: 'System' }) },
-          ] as const).map(c => (
-            <button
-              key={c.id}
-              onClick={() => setCategoryFilter(c.id)}
-              className={`px-2.5 py-1.5 text-sm font-bold rounded-md transition-colors ${
-                categoryFilter === c.id
-                  ? 'bg-white dark:bg-ui-hover-dark text-primary shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700 dark:text-text-muted-dark dark:hover:text-white'
-              }`}
-            >
-              {c.label}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          size="md"
+          ariaLabel={t('alerts.rules.category', { defaultValue: 'Category' })}
+          value={categoryFilter}
+          onChange={setCategoryFilter}
+          options={[
+            { value: 'all', label: t('common.all') },
+            { value: 'endpoint', label: t('alerts.rules.endpointHealth', { defaultValue: 'Healthcheck' }) },
+            { value: 'log', label: t('alerts.rules.logRule', { defaultValue: 'Log' }) },
+            { value: 'resource', label: t('alerts.rules.serverResource', { defaultValue: 'Infra' }) },
+            { value: 'system', label: t('alerts.rules.systemRule', { defaultValue: 'System' }) },
+          ]}
+        />
 
         <select
           value={severityFilter}
@@ -445,18 +442,22 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
       {/* Table */}
       <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1040px] table-fixed text-sm">
+          <table className="w-full min-w-[1180px] table-fixed text-sm">
             <thead>
               <tr className="bg-slate-50 dark:bg-bg-surface-dark/50 border-b border-slate-200 dark:border-ui-border-dark">
-                <SortableTH className="w-[300px]" label={t('alerts.rules.colName', { defaultValue: 'Rule' })} active={sortKey === 'name'} dir={sortDir} onClick={() => onSort('name')} />
-                <SortableTH className="w-[220px]" label={t('alerts.rules.colTarget', { defaultValue: 'Target' })} active={sortKey === 'target'} dir={sortDir} onClick={() => onSort('target')} />
-                <th className="w-[300px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <SortableTH className="w-[260px]" label={t('alerts.rules.colName', { defaultValue: 'Rule' })} active={sortKey === 'name'} dir={sortDir} onClick={() => onSort('name')} />
+                <SortableTH className="w-[110px]" label={t('alerts.rules.colSeverity', { defaultValue: 'Severity' })} active={sortKey === 'severity'} dir={sortDir} onClick={() => onSort('severity')} />
+                <SortableTH className="w-[200px]" label={t('alerts.rules.colTarget', { defaultValue: 'Target' })} active={sortKey === 'target'} dir={sortDir} onClick={() => onSort('target')} />
+                <th className="w-[250px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.rules.colTrigger', { defaultValue: 'Trigger' })}
                 </th>
-                <th className="w-[140px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <th className="w-[120px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.rules.colChannels', { defaultValue: 'Channels' })}
                 </th>
-                <th className="w-[110px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <th className="w-[120px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                  {t('alerts.rules.colLastFired', { defaultValue: 'Last fired' })}
+                </th>
+                <th className="w-[120px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
                   {t('alerts.rules.colActions', { defaultValue: 'Actions' })}
                 </th>
               </tr>
@@ -464,7 +465,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
             <tbody>
               {filteredRules.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-10 text-center text-sm text-slate-500 dark:text-text-muted-dark">
+                  <td colSpan={7} className="p-10 text-center text-sm text-slate-500 dark:text-text-muted-dark">
                     {t('alerts.rules.noFilterResults', { defaultValue: 'No rules match your filters' })}{' · '}
                     <button onClick={clearFilters} className="text-primary hover:underline font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded">
                       {t('common.clearFilters', { defaultValue: 'Clear filters' })}
@@ -474,38 +475,51 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
               ) : (
                 filteredRules.map(rule => {
                   const cat = ruleCategory(rule);
-                  const severityDot = SEVERITY_DOT[rule.severity] ?? SEVERITY_DOT.info;
                   return (
                     <tr
                       key={rule.id}
-                      className={`h-12 border-t border-slate-100 transition-colors hover:bg-slate-50 dark:border-ui-border-dark/50 dark:hover:bg-ui-hover-dark/40 ${!rule.isEnabled ? 'bg-slate-50/70 dark:bg-ui-hover-dark/20' : ''}`}
+                      className={`border-t border-slate-100 transition-colors hover:bg-slate-50 dark:border-ui-border-dark/50 dark:hover:bg-ui-hover-dark/40 ${!rule.isEnabled ? 'bg-slate-50/70 dark:bg-ui-hover-dark/20' : ''}`}
                     >
-                      <td className="px-4 py-2 align-middle">
+                      <td className="px-4 py-2.5 align-middle">
                         <div className="flex min-w-0 items-center gap-2">
-                          <span className={`h-2 w-2 shrink-0 rounded-full ${severityDot}`} title={severityLabel(rule.severity, t)} />
                           <span className={`truncate font-semibold ${rule.isEnabled ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-text-muted-dark'}`}>
                             {rule.name}
                           </span>
                           {rule.isSystem && (
                             <MaterialIcon name="lock" className="shrink-0 text-sm text-slate-400" />
                           )}
-                          <span className="shrink-0 text-xs font-semibold text-slate-400 dark:text-text-dim-dark">
-                            {categoryLabel(cat, t)}
-                          </span>
                         </div>
+                        <p className="truncate text-2xs text-slate-400 dark:text-text-dim-dark">
+                          {rule.isSystem
+                            ? t('alerts.rules.systemRuleNote', { defaultValue: '시스템 기본 규칙 · 삭제 불가, 채널만 변경 가능' })
+                            : categoryLabel(cat, t)}
+                        </p>
                       </td>
-                      <td className="px-4 py-2 align-middle text-sm text-slate-700 dark:text-text-muted-dark">
-                        <span className="block truncate font-medium text-slate-800 dark:text-text-base-dark" title={targetLabel(rule, agentServices, agents, t)}>
+                      <td className="px-4 py-2.5 align-middle">
+                        <span className={`inline-flex rounded-md px-2 py-0.5 text-2xs font-bold uppercase tracking-wide ${SEVERITY_BADGE[rule.severity] ?? SEVERITY_BADGE.info}`}>
+                          {severityLabel(rule.severity, t)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 align-middle">
+                        <span
+                          className="inline-block max-w-full truncate rounded-md bg-slate-100 px-2 py-0.5 font-mono text-xs text-slate-700 dark:bg-ui-hover-dark dark:text-text-base-dark"
+                          title={targetLabel(rule, agentServices, agents, t)}
+                        >
                           {targetLabel(rule, agentServices, agents, t)}
                         </span>
                       </td>
-                      <td className="px-4 py-2 align-middle text-sm">
-                        <p className="truncate font-semibold text-slate-900 dark:text-white" title={evaluationSummary(rule, t)}>
+                      <td className="px-4 py-2.5 align-middle text-sm">
+                        <p className="truncate text-slate-700 dark:text-text-muted-dark" title={evaluationSummary(rule, t)}>
                           {compactTrigger(rule, t)}
                         </p>
                       </td>
-                      <td className="px-4 py-2 align-middle">
-                        <ChannelSummary rule={rule} channels={channels} />
+                      <td className="px-4 py-2.5 align-middle">
+                        <ChannelAvatars rule={rule} channels={channels} />
+                      </td>
+                      <td className="px-4 py-2.5 align-middle text-sm text-slate-600 dark:text-text-muted-dark whitespace-nowrap">
+                        {rule.lastTriggeredAt
+                          ? formatDistanceToNow(new Date(rule.lastTriggeredAt), { addSuffix: true, locale: dateLocale })
+                          : <span className="text-slate-400 dark:text-text-dim-dark">—</span>}
                       </td>
                       <td className="px-4 py-2 text-right align-middle whitespace-nowrap">
                         <div className="inline-flex items-center justify-end gap-1">
@@ -576,12 +590,19 @@ function SortableTH({ label, active, dir, onClick, className = '' }: { label: st
   );
 }
 
-function ChannelSummary({ rule, channels }: { rule: AlertRule; channels: NotificationChannel[] }) {
-  const { t } = useTranslation('alerts');
-  const selectedCount = rule.channelIds?.length ?? 0;
-  const channelCount = selectedCount === 0 ? channels.length : selectedCount;
+const MAX_CHANNEL_AVATARS = 4;
 
-  if (channelCount === 0) {
+function ChannelAvatars({ rule, channels }: { rule: AlertRule; channels: NotificationChannel[] }) {
+  const { t } = useTranslation('alerts');
+
+  // Empty channelIds = the rule notifies all channels
+  const ruleChannels = !rule.channelIds || rule.channelIds.length === 0
+    ? channels
+    : rule.channelIds
+        .map(cid => channels.find(c => c.id === cid))
+        .filter((c): c is NotificationChannel => !!c);
+
+  if (ruleChannels.length === 0) {
     return (
       <span className="inline-flex max-w-full items-center gap-1.5 text-sm font-medium text-slate-400 dark:text-text-dim-dark">
         <MaterialIcon name="notifications_off" className="shrink-0 text-base" />
@@ -590,40 +611,28 @@ function ChannelSummary({ rule, channels }: { rule: AlertRule; channels: Notific
     );
   }
 
-  if (!rule.channelIds || rule.channelIds.length === 0) {
-    return (
-      <span
-        className="inline-flex max-w-full items-center gap-1.5 text-sm font-medium text-slate-500 dark:text-text-muted-dark"
-        title={t('alerts.rules.allChannelsDisplay', { defaultValue: 'all channels' })}
-      >
-        <MaterialIcon name="notifications" className="shrink-0 text-base text-slate-400" />
-        <span className="truncate">
-          {t('alerts.rules.channelSummaryAll', {
-            count: channelCount,
-            defaultValue: `All ${channelCount}`,
-          })}
-        </span>
-      </span>
-    );
-  }
-
-  const names = rule.channelIds
-    .map(cid => channels.find(c => c.id === cid)?.name)
-    .filter(Boolean)
-    .join(', ');
+  const visible = ruleChannels.slice(0, MAX_CHANNEL_AVATARS);
+  const overflow = ruleChannels.length - visible.length;
+  const names = ruleChannels.map(c => c.name).join(', ');
 
   return (
-    <span
-      className="inline-flex max-w-full items-center gap-1.5 text-sm font-medium text-slate-700 dark:text-text-base-dark"
-      title={names || undefined}
-    >
-      <MaterialIcon name="notifications_active" className="shrink-0 text-base text-slate-400" />
-      <span className="truncate">
-        {t('alerts.rules.channelSummarySelected', {
-          count: channelCount,
-          defaultValue: `${channelCount} selected`,
-        })}
-      </span>
-    </span>
+    <div className="flex items-center" title={names}>
+      {visible.map((ch, i) => {
+        const style = getChannelStyle(ch.type);
+        return (
+          <div
+            key={ch.id}
+            className={`flex h-6 w-6 items-center justify-center rounded-md ring-2 ring-white dark:ring-bg-surface-dark ${style.bg} ${i > 0 ? '-ml-1.5' : ''}`}
+          >
+            <ChannelIcon type={ch.type} size={13} className={style.text} />
+          </div>
+        );
+      })}
+      {overflow > 0 && (
+        <span className="-ml-1.5 flex h-6 w-6 items-center justify-center rounded-md bg-slate-100 text-2xs font-bold text-slate-500 ring-2 ring-white dark:bg-ui-hover-dark dark:text-text-muted-dark dark:ring-bg-surface-dark">
+          +{overflow}
+        </span>
+      )}
+    </div>
   );
 }

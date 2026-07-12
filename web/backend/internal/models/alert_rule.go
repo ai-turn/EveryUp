@@ -68,7 +68,8 @@ type AlertRule struct {
 	UpdatedAt  time.Time     `json:"updatedAt"`
 
 	// Populated by JOIN queries, not stored in alert_rules table
-	ChannelIDs []string `json:"channelIds,omitempty"`
+	ChannelIDs      []string   `json:"channelIds,omitempty"`
+	LastTriggeredAt *time.Time `json:"lastTriggeredAt,omitempty"`
 }
 
 // AlertRuleCreateRequest is the API request to create a rule
