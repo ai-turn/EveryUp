@@ -161,6 +161,9 @@ export interface AppSettings {
     metrics: string;
     logs: string;
   };
+  system: {
+    collectInterval: number; // seconds
+  };
 }
 
 // --- API ---

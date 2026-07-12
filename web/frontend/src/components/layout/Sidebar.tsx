@@ -147,7 +147,7 @@ export function Sidebar() {
               </span>
             </div>
             <div className="mt-1 text-2xs text-slate-400 dark:text-text-dim-dark">
-              {t('서비스')} {projectServices.length}{t('개')} · {t('정상')} {healthyCount}
+              {t('서비스 {count}개', { count: projectServices.length })} · {t('정상')} {healthyCount}
             </div>
           </div>
         )}

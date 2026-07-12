@@ -35,6 +35,9 @@ func (h *SettingsHandler) Get(c *fiber.Ctx) error {
 				"metrics": cfg.Retention.Metrics,
 				"logs":    cfg.Retention.Logs,
 			},
+			"system": fiber.Map{
+				"collectInterval": cfg.System.CollectInterval,
+			},
 		},
 	})
 }
@@ -48,6 +51,9 @@ type UpdateSettingsRequest struct {
 		Metrics string `json:"metrics"`
 		Logs    string `json:"logs"`
 	} `json:"retention"`
+	System *struct {
+		CollectInterval int `json:"collectInterval"`
+	} `json:"system"`
 }
 
 // Update updates mutable system settings
@@ -78,6 +84,7 @@ func (h *SettingsHandler) Update(c *fiber.Ctx) error {
 	consecutiveFailures := cfg.Alerts.ConsecutiveFailures
 	metricsRetention := cfg.Retention.Metrics
 	logsRetention := cfg.Retention.Logs
+	collectInterval := cfg.System.CollectInterval
 
 	// Apply provided fields
 	if req.Alerts != nil {
@@ -93,8 +100,13 @@ func (h *SettingsHandler) Update(c *fiber.Ctx) error {
 			logsRetention = req.Retention.Logs
 		}
 	}
+	if req.System != nil {
+		if req.System.CollectInterval > 0 {
+			collectInterval = req.System.CollectInterval
+		}
+	}
 
-	if err := config.UpdateSettings(consecutiveFailures, metricsRetention, logsRetention); err != nil {
+	if err := config.UpdateSettings(consecutiveFailures, metricsRetention, logsRetention, collectInterval); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"success": false,
 			"error": fiber.Map{
@@ -113,6 +125,9 @@ func (h *SettingsHandler) Update(c *fiber.Ctx) error {
 			"retention": fiber.Map{
 				"metrics": metricsRetention,
 				"logs":    logsRetention,
+			},
+			"system": fiber.Map{
+				"collectInterval": collectInterval,
 			},
 		},
 	})

@@ -20,9 +20,9 @@ export function SettingsPage() {
 
   const [metricsRetention, setMetricsRetention] = useState('7d');
   const [logsRetention, setLogsRetention] = useState('3d');
+  const [collectInterval, setCollectInterval] = useState(30);
   const [consecutiveFailures, setConsecutiveFailures] = useState(3);
   const [backendLoading, setBackendLoading] = useState(true);
-  const [savingRetention, setSavingRetention] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetting, setResetting] = useState(false);
 
@@ -32,6 +32,7 @@ export function SettingsPage() {
         const settings = await api.getSettings();
         setMetricsRetention(settings.retention.metrics);
         setLogsRetention(settings.retention.logs);
+        setCollectInterval(settings.system.collectInterval);
         setConsecutiveFailures(settings.alerts.consecutiveFailures);
       } catch {
         // Backend unreachable in mock/dev mode
@@ -46,29 +47,39 @@ export function SettingsPage() {
     i18n.changeLanguage(lng);
   };
 
-  // 연속 실패 횟수는 선택 즉시 저장 (백엔드 PUT은 부분 업데이트 지원).
-  const handleConsecutiveFailuresChange = async (n: number) => {
-    const prev = consecutiveFailures;
-    setConsecutiveFailures(n);
+  // 모든 설정은 선택 즉시 저장 (백엔드 PUT은 부분 업데이트 지원). 실패 시 롤백.
+  const saveSetting = async (patch: Parameters<typeof api.updateSettings>[0], rollback: () => void) => {
     try {
-      await api.updateSettings({ alerts: { consecutiveFailures: n } });
+      await api.updateSettings(patch);
       toast.success(t('settings.saved'));
     } catch (error) {
-      setConsecutiveFailures(prev);
+      rollback();
       toast.error(getErrorMessage(error));
     }
   };
 
-  const handleSaveRetention = async () => {
-    setSavingRetention(true);
-    try {
-      await api.updateSettings({ retention: { metrics: metricsRetention, logs: logsRetention } });
-      toast.success(t('settings.saved'));
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    } finally {
-      setSavingRetention(false);
-    }
+  const handleConsecutiveFailuresChange = (n: number) => {
+    const prev = consecutiveFailures;
+    setConsecutiveFailures(n);
+    saveSetting({ alerts: { consecutiveFailures: n } }, () => setConsecutiveFailures(prev));
+  };
+
+  const handleMetricsRetentionChange = (value: string) => {
+    const prev = metricsRetention;
+    setMetricsRetention(value);
+    saveSetting({ retention: { metrics: value, logs: logsRetention } }, () => setMetricsRetention(prev));
+  };
+
+  const handleLogsRetentionChange = (value: string) => {
+    const prev = logsRetention;
+    setLogsRetention(value);
+    saveSetting({ retention: { metrics: metricsRetention, logs: value } }, () => setLogsRetention(prev));
+  };
+
+  const handleCollectIntervalChange = (seconds: number) => {
+    const prev = collectInterval;
+    setCollectInterval(seconds);
+    saveSetting({ system: { collectInterval: seconds } }, () => setCollectInterval(prev));
   };
 
   const handleReset = async () => {
@@ -89,17 +100,17 @@ export function SettingsPage() {
     theme: theme as 'light' | 'dark',
     metricsRetention,
     logsRetention,
+    collectInterval,
     consecutiveFailures,
     backendLoading,
-    savingRetention,
     showResetConfirm,
     resetting,
     onLanguageChange: handleLanguageChange,
     onThemeChange: setTheme,
-    onMetricsRetentionChange: setMetricsRetention,
-    onLogsRetentionChange: setLogsRetention,
+    onMetricsRetentionChange: handleMetricsRetentionChange,
+    onLogsRetentionChange: handleLogsRetentionChange,
+    onCollectIntervalChange: handleCollectIntervalChange,
     onConsecutiveFailuresChange: handleConsecutiveFailuresChange,
-    onSaveRetention: handleSaveRetention,
     onResetClick: () => !env.useMock && setShowResetConfirm(true),
     onResetConfirm: handleReset,
     onResetCancel: () => setShowResetConfirm(false),

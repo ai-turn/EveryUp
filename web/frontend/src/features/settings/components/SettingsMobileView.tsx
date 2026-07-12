@@ -4,28 +4,29 @@ import { SectionCard } from './SectionCard';
 import { AccountSection } from './AccountSection';
 import { AlertsSection } from './AlertsSection';
 import { AuditLogSection } from './AuditLogSection';
-import { retentionLabel } from '../retentionLabel';
+import { retentionLabel, intervalLabel } from '../retentionLabel';
 import { env } from '../../../config/env';
 
 const METRICS_RETENTION_OPTIONS = ['7d', '30d', '90d', '1y'];
 const LOGS_RETENTION_OPTIONS = ['1d', '3d', '7d', '30d'];
+const COLLECT_INTERVAL_OPTIONS = [15, 30, 60, 300];
 
 interface SettingsMobileViewProps {
   currentLanguage: string;
   theme: 'light' | 'dark';
   metricsRetention: string;
   logsRetention: string;
+  collectInterval: number;
   consecutiveFailures: number;
   backendLoading: boolean;
-  savingRetention: boolean;
   showResetConfirm: boolean;
   resetting: boolean;
   onLanguageChange: (lng: string) => void;
   onThemeChange: (theme: 'light' | 'dark') => void;
   onMetricsRetentionChange: (value: string) => void;
   onLogsRetentionChange: (value: string) => void;
+  onCollectIntervalChange: (seconds: number) => void;
   onConsecutiveFailuresChange: (n: number) => void;
-  onSaveRetention: () => void;
   onResetClick: () => void;
   onResetConfirm: () => void;
   onResetCancel: () => void;
@@ -36,17 +37,17 @@ export function SettingsMobileView({
   theme,
   metricsRetention,
   logsRetention,
+  collectInterval,
   consecutiveFailures,
   backendLoading,
-  savingRetention,
   showResetConfirm,
   resetting,
   onLanguageChange,
   onThemeChange,
   onMetricsRetentionChange,
   onLogsRetentionChange,
+  onCollectIntervalChange,
   onConsecutiveFailuresChange,
-  onSaveRetention,
   onResetClick,
   onResetConfirm,
   onResetCancel,
@@ -121,6 +122,32 @@ export function SettingsMobileView({
           </div>
         ) : (
           <>
+            {/* Collect interval */}
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-slate-900 dark:text-white">{t('settings.retention.collect')}</p>
+              <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('settings.retention.collectDesc')}</p>
+              <div className="flex gap-1 flex-wrap bg-slate-100 dark:bg-ui-hover-dark p-1 rounded-lg">
+                {(COLLECT_INTERVAL_OPTIONS.includes(collectInterval)
+                  ? COLLECT_INTERVAL_OPTIONS
+                  : [...COLLECT_INTERVAL_OPTIONS, collectInterval].sort((a, b) => a - b)
+                ).map((sec) => (
+                  <button
+                    key={sec}
+                    onClick={() => onCollectIntervalChange(sec)}
+                    className={`flex-1 cursor-pointer px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${
+                      collectInterval === sec
+                        ? 'bg-white dark:bg-ui-active-dark text-primary shadow-sm'
+                        : 'text-slate-500 dark:text-text-muted-dark'
+                    }`}
+                  >
+                    {intervalLabel(sec, currentLanguage)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="border-t border-slate-100 dark:border-ui-border-dark my-3" />
+
             {/* Metrics */}
             <div className="space-y-2">
               <p className="text-sm font-medium text-slate-900 dark:text-white">{t('settings.retention.metrics')}</p>
@@ -168,20 +195,6 @@ export function SettingsMobileView({
             <p className="mt-3 text-xs text-slate-400 dark:text-text-dim-dark">
               {t('settings.retention.shrinkWarning')}
             </p>
-
-            {/* Save Button - Full width on mobile */}
-            <button
-              onClick={onSaveRetention}
-              disabled={savingRetention}
-              className="w-full mt-4 cursor-pointer flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
-            >
-              {savingRetention ? (
-                <MaterialIcon name="sync" className="text-lg animate-spin" />
-              ) : (
-                <MaterialIcon name="save" className="text-lg" />
-              )}
-              {t('common.saveChanges')}
-            </button>
           </>
         )}
       </SectionCard>

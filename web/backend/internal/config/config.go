@@ -185,17 +185,20 @@ func Get() *Config {
 	return cfg
 }
 
-// UpdateSettings updates mutable config fields in memory and persists to config.json
-func UpdateSettings(consecutiveFailures int, metricsRetention, logsRetention string) error {
+// UpdateSettings updates mutable config fields in memory and persists to config.json.
+// collectInterval is applied on next process start (collector/evaluator read it once).
+func UpdateSettings(consecutiveFailures int, metricsRetention, logsRetention string, collectInterval int) error {
 	if viperInstance == nil || cfg == nil {
 		return fmt.Errorf("config not initialized")
 	}
 	viperInstance.Set("alerts.consecutiveFailures", consecutiveFailures)
 	viperInstance.Set("retention.metrics", metricsRetention)
 	viperInstance.Set("retention.logs", logsRetention)
+	viperInstance.Set("system.collectInterval", collectInterval)
 	cfg.Alerts.ConsecutiveFailures = consecutiveFailures
 	cfg.Retention.Metrics = metricsRetention
 	cfg.Retention.Logs = logsRetention
+	cfg.System.CollectInterval = collectInterval
 	return viperInstance.WriteConfig()
 }
 

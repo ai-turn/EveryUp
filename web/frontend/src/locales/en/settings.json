@@ -114,13 +114,18 @@
       "times": "times"
     },
     "retention": {
-      "title": "Data Retention",
-      "subtitle": "Retention periods for metrics and log data",
+      "title": "Data Collection & Retention",
+      "subtitle": "Metric collection interval and data retention",
+      "collect": "Collection Interval",
+      "collectDesc": "Interval for collecting system metrics · applies on next start",
       "metrics": "Metrics Retention",
       "metricsDesc": "How long to keep collected system metrics",
       "logs": "Logs Retention",
       "logsDesc": "How long to keep error log data",
       "shrinkWarning": "Shortening a retention period deletes data older than the new limit on the next cleanup cycle."
+    },
+    "nav": {
+      "menu": "Settings Menu"
     },
     "audit": {
       "title": "Body Access Audit Log",
