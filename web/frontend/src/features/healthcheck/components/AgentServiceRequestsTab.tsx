@@ -99,10 +99,7 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, range
 
   return (
     <div className="space-y-4">
-      {/* Trends — volume, error rate, and latency percentiles over time */}
-      <AgentServiceRequestTrends agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} range={range} />
-
-      {/* KPI row */}
+      {/* KPI row — 다른 탭과 동일하게 상단 고정 */}
       {!loading && requests.length > 0 && (
         <div className="grid grid-cols-3 gap-3">
           {[
@@ -117,6 +114,9 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, range
           ))}
         </div>
       )}
+
+      {/* Trends — volume, error rate, and latency percentiles over time */}
+      <AgentServiceRequestTrends agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} range={range} />
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
