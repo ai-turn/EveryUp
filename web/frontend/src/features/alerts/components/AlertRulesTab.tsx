@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { getErrorMessage } from '../../../utils/errors';
@@ -175,6 +175,13 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
   const [formRule, setFormRule] = useState<AlertRule | undefined>(undefined);
   const [formLoading, setFormLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  // The form opens above the table — bring it into view (edit from a long list
+  // would otherwise appear to do nothing).
+  useEffect(() => {
+    if (formOpen) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [formOpen]);
 
   // Filters
   const [categoryFilter, setCategoryFilter] = useState<CategoryKey>('all');
@@ -303,51 +310,60 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
 
   // Inline expanding form — reuses AlertRuleForm; submit button lives here and
   // targets the form via form="alert-rule-form" (same wiring as the old page).
+  const formActions = (
+    <div className="flex items-center gap-2 shrink-0">
+      <button
+        type="button"
+        onClick={closeForm}
+        className="px-4 py-2 text-sm font-bold border border-slate-200 dark:border-ui-border-dark rounded-lg text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors"
+      >
+        {t('common.cancel')}
+      </button>
+      <button
+        type="submit"
+        form="alert-rule-form"
+        disabled={formLoading || isSubmitting}
+        className="px-5 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-all shadow-sm active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
+      >
+        {isSubmitting ? (
+          <MaterialIcon name="sync" className="text-base animate-spin" />
+        ) : (
+          <>
+            <MaterialIcon name="check" className="text-sm" />
+            {formRule ? t('common.save') : t('alerts.rules.create')}
+          </>
+        )}
+      </button>
+    </div>
+  );
+
   const inlineForm = formOpen ? (
-    <div className="mb-5 rounded-xl border border-primary/40 bg-white dark:bg-bg-surface-dark overflow-hidden">
+    <div ref={formRef} className="mb-5 scroll-mt-4 rounded-xl border border-primary/40 bg-white dark:bg-bg-surface-dark overflow-hidden">
       <div className="flex items-center justify-between gap-4 px-6 py-3 border-b border-slate-200 dark:border-ui-border-dark">
         <h3 className="text-base font-bold text-slate-900 dark:text-white">
           {formRule
             ? t('alerts.rules.editTitle', { defaultValue: '규칙 편집' })
             : t('alerts.rules.newTitle', { defaultValue: '새 알림 규칙' })}
         </h3>
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={closeForm}
-            className="px-4 py-2 text-sm font-bold border border-slate-200 dark:border-ui-border-dark rounded-lg text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors"
-          >
-            {t('common.cancel')}
-          </button>
-          <button
-            type="submit"
-            form="alert-rule-form"
-            disabled={formLoading || isSubmitting}
-            className="px-5 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-all shadow-sm active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
-          >
-            {isSubmitting ? (
-              <MaterialIcon name="sync" className="text-base animate-spin" />
-            ) : (
-              <>
-                <MaterialIcon name="check" className="text-sm" />
-                {formRule ? t('common.save') : t('alerts.rules.create')}
-              </>
-            )}
-          </button>
-        </div>
+        {formActions}
       </div>
       {formLoading ? (
         <div className="flex min-h-40 items-center justify-center">
           <MaterialIcon name="sync" className="text-3xl text-primary animate-spin" />
         </div>
       ) : (
-        <AlertRuleForm
-          rule={formRule}
-          channels={channels}
-          onSuccess={onFormSuccess}
-          onCancel={closeForm}
-          onSubmittingChange={setIsSubmitting}
-        />
+        <>
+          <AlertRuleForm
+            rule={formRule}
+            channels={channels}
+            onSuccess={onFormSuccess}
+            onCancel={closeForm}
+            onSubmittingChange={setIsSubmitting}
+          />
+          <div className="flex justify-end border-t border-slate-200 dark:border-ui-border-dark px-6 py-3">
+            {formActions}
+          </div>
+        </>
       )}
     </div>
   ) : null;

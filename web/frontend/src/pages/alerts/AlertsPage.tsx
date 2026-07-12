@@ -238,8 +238,7 @@ export function AlertsPage() {
         setActiveTab={handleSetActiveTab}
         togglingIds={togglingIds}
         rulesAddTrigger={rulesAddTrigger}
-        onAddChannel={handleAddChannel}
-        onEditChannel={handleEditChannel}
+        onChannelsChanged={refreshChannels}
         onDeleteChannel={handleDeleteChannel}
         onToggleChannel={handleToggleChannel}
         onTestChannel={handleTestChannel}

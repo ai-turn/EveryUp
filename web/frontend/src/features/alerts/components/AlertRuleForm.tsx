@@ -6,6 +6,8 @@ import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { getErrorMessage } from '../../../utils/errors';
 import { MaterialIcon } from '../../../components/common';
+import { ChannelIcon } from '../../../components/icons/ChannelIcons';
+import { getChannelStyle } from '../utils/channelMeta';
 import {
     api,
     type AlertRule,
@@ -82,15 +84,6 @@ function buildDefaultMessage(metric: RuleFormValues['metric'], operator: RuleFor
     if (metric === 'otel_metric') return `{service_name} {metric} = {value} (threshold ${opSym} {threshold})`;
     const metricLabel = { cpu: 'CPU', memory: 'Memory', disk: 'Disk' }[metric] ?? metric.toUpperCase();
     return `${metricLabel} usage ${opSym} ${threshold}%, sustained for ${duration}min on {host_name}`;
-}
-
-function getEvalPath(category: RuleCategory, metric: RuleFormValues['metric']): string {
-    if (category === 'resource') return 'collector → evaluator.go  (N분 연속 임계 초과 시 발동)';
-    if (category === 'endpoint') return 'healthcheck → service_evaluator.go  (N회 연속 실패 시 발동)';
-    if (category === 'log' && metric === 'api_status_code') return 'api_request_ingest.go  (이벤트당 즉시 평가 · cooldown=0)';
-    if (category === 'log') return 'log_ingest.go  (이벤트당 즉시 평가 · cooldown=0)';
-    if (category === 'metric') return 'otlp_ingest.go  (데이터포인트당 즉시 평가 · dedup)';
-    return '시스템 자동 생성 룰';
 }
 
 // ─── Layout primitives ────────────────────────────────────────────────────────
@@ -184,7 +177,7 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
                         </div>
                     </FormStep>
 
-                    <FormStep n={2} title={t('alerts.rules.messageLabel')} subtitle="알림 발송 시 사용될 메시지">
+                    <FormStep n={2} title={t('alerts.rules.messageLabel')} subtitle={t('alerts.rules.messageSubtitle', { defaultValue: '알림 발송 시 사용될 메시지' })}>
                         <textarea
                             value={message}
                             onChange={e => setMessage(e.target.value)}
@@ -194,14 +187,14 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
                         />
                     </FormStep>
 
-                    <FormStep n={3} title={t('alerts.rules.notifyChannels')} subtitle="발송할 채널 선택">
+                    <FormStep n={3} title={t('alerts.rules.notifyChannels')} subtitle={t('alerts.rules.channelsSubtitle', { defaultValue: '발송할 채널 선택' })}>
                         <div className="space-y-2">
                             {channels.length === 0 ? (
                                 <p className="text-sm text-slate-400">{t('alerts.rules.noChannels')}</p>
                             ) : channels.map(ch => (
                                 <button key={ch.id} type="button" onClick={() => handleToggleChannel(ch.id)}
                                     className={`w-full flex items-center gap-3 px-3 py-2.5 border-2 rounded-xl transition-all ${selectedChannels.includes(ch.id) ? 'border-primary bg-primary/5 text-primary' : 'border-slate-100 dark:border-ui-border-dark text-slate-500'}`}>
-                                    <MaterialIcon name={ch.type === 'telegram' ? 'send' : 'sports_esports'} className="text-sm" />
+                                    <ChannelIcon type={ch.type} size={16} className={getChannelStyle(ch.type).text} />
                                     <span className="text-sm font-bold flex-1 text-left">{ch.name}</span>
                                 </button>
                             ))}
@@ -437,9 +430,8 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
     return (
         <form
             id="alert-rule-form"
-            onSubmit={handleSubmit(onSubmit, (validationErrors) => {
-                const firstError = Object.values(validationErrors)[0];
-                toast.error(firstError?.message as string || t('alerts.rules.validationFailed', { defaultValue: 'Please check required fields' }));
+            onSubmit={handleSubmit(onSubmit, () => {
+                toast.error(t('alerts.rules.validationFailed', { defaultValue: '필수 항목을 확인해주세요' }));
             })}
             className="px-6 py-6"
         >
@@ -449,30 +441,27 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                 <div className="space-y-4 min-w-0">
 
                     {/* Step 1: Target */}
-                    <FormStep n={1} title="대상 (Target)">
+                    <FormStep n={1} title={t('alerts.rules.stepTarget', { defaultValue: '대상' })}>
                         <Field label={t('alerts.rules.category', { defaultValue: '카테고리' })}>
                             <div className="flex gap-2">
                                 {([
-                                    { value: 'endpoint' as const, label: t('alerts.rules.endpointHealth'), sub: 'ENDPOINT · 헬스체크', icon: 'monitor_heart' },
-                                    { value: 'log'      as const, label: t('alerts.rules.logRule'),       sub: 'LOG · 로그 분석',     icon: 'article' },
-                                    { value: 'metric'   as const, label: t('alerts.rules.metricRule', { defaultValue: '메트릭' }), sub: 'METRIC · OTel 지표', icon: 'monitoring' },
-                                    { value: 'resource' as const, label: t('alerts.rules.serverResource'), sub: 'INFRA · 서버 리소스', icon: 'memory' },
+                                    { value: 'endpoint' as const, label: t('alerts.rules.endpointHealth'), icon: 'monitor_heart' },
+                                    { value: 'log'      as const, label: t('alerts.rules.logRule'),        icon: 'article' },
+                                    { value: 'metric'   as const, label: t('alerts.rules.metricRule', { defaultValue: '메트릭' }), icon: 'monitoring' },
+                                    { value: 'resource' as const, label: t('alerts.rules.serverResource'), icon: 'memory' },
                                 ]).map(cat => (
                                     <button
                                         key={cat.value}
                                         type="button"
                                         onClick={() => handleCategoryChange(cat.value)}
-                                        className={`flex-1 flex flex-col items-start gap-1 px-3 py-3 border-2 rounded-xl transition-all text-left ${
+                                        className={`flex-1 flex items-center gap-2 px-3 py-3 border-2 rounded-xl transition-all text-left ${
                                             watchedCategory === cat.value
                                                 ? 'border-primary bg-primary/10 text-primary'
                                                 : 'border-slate-100 dark:border-ui-border-dark text-slate-600 dark:text-text-muted-dark hover:border-slate-200 dark:hover:border-slate-600'
                                         }`}
                                     >
-                                        <span className="flex items-center gap-2 font-bold text-sm">
-                                            <MaterialIcon name={cat.icon} className="text-base" />
-                                            {cat.label}
-                                        </span>
-                                        <span className="text-sm font-semibold uppercase tracking-wider opacity-60">{cat.sub}</span>
+                                        <MaterialIcon name={cat.icon} className="text-base" />
+                                        <span className="font-bold text-sm">{cat.label}</span>
                                     </button>
                                 ))}
                             </div>
@@ -481,7 +470,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                         <div className="grid grid-cols-2 gap-4">
                             <Field
                                 label={t('alerts.rules.target')}
-                                hint={!watchedAgentId ? '* 미선택 시 모든 대상에 적용됩니다' : null}
+                                hint={!watchedAgentId ? t('alerts.rules.targetHintAll', { defaultValue: '미선택 시 모든 대상에 적용됩니다' }) : null}
                             >
                                 {isEndpoint || isLog || isMetric ? (
                                     <select
@@ -514,7 +503,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                 )}
                             </Field>
 
-                            <Field label={t('alerts.rules.metric')} hint={isMetric && !watchedServiceKey ? '* 서비스를 선택하면 수집된 메트릭이 제안됩니다' : null}>
+                            <Field label={t('alerts.rules.metric')} hint={isMetric && !watchedServiceKey ? t('alerts.rules.metricSuggestHint', { defaultValue: '서비스를 선택하면 수집된 메트릭이 제안됩니다' }) : null}>
                                 {isMetric ? (
                                     <>
                                         <input
@@ -564,29 +553,26 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                     </FormStep>
 
                     {/* Step 2: Condition */}
-                    <FormStep n={2} title="조건 (Condition)">
+                    <FormStep n={2} title={t('alerts.rules.stepCondition', { defaultValue: '조건' })}>
                         <Field label={t('alerts.rules.preset', { defaultValue: '프리셋' })}>
                             <div className="grid grid-cols-3 gap-2">
                                 {([
-                                    { value: 'normal' as const, icon: 'check_circle', label: t('alerts.rules.conditionNormal'), sub: 'normal range' },
-                                    { value: 'error'  as const, icon: 'warning',      label: t('alerts.rules.conditionError'),  sub: 'threshold breach' },
-                                    { value: 'custom' as const, icon: 'tune',         label: t('alerts.rules.conditionCustom'), sub: 'manual' },
+                                    { value: 'normal' as const, icon: 'check_circle', label: t('alerts.rules.conditionNormal') },
+                                    { value: 'error'  as const, icon: 'warning',      label: t('alerts.rules.conditionError') },
+                                    { value: 'custom' as const, icon: 'tune',         label: t('alerts.rules.conditionCustom') },
                                 ]).map(p => (
                                     <button
                                         key={p.value}
                                         type="button"
                                         onClick={() => handleConditionPreset(p.value)}
-                                        className={`flex flex-col items-start gap-1 p-3 border-2 rounded-xl transition-all ${
+                                        className={`flex items-center justify-center gap-1.5 p-3 border-2 rounded-xl transition-all text-sm font-bold ${
                                             conditionPreset === p.value
                                                 ? 'border-primary bg-primary/10 text-primary'
                                                 : 'border-slate-100 dark:border-ui-border-dark text-slate-500 hover:border-slate-200 dark:hover:border-slate-600'
                                         }`}
                                     >
-                                        <span className="flex items-center gap-1.5 text-sm font-bold">
-                                            <MaterialIcon name={p.icon} className="text-sm" />
-                                            {p.label}
-                                        </span>
-                                        <span className="text-sm font-semibold uppercase tracking-wider opacity-60">{p.sub}</span>
+                                        <MaterialIcon name={p.icon} className="text-sm" />
+                                        {p.label}
                                     </button>
                                 ))}
                             </div>
@@ -607,6 +593,20 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                     </select>
                                 </Field>
                                 <Field label={t('alerts.rules.customInputThreshold')}>
+                                    {watchedMetric === 'log_level' ? (
+                                        // Log levels are stored numerically — expose them as named levels
+                                        <select
+                                            value={watchedThreshold}
+                                            onChange={e => setValue('threshold', Number(e.target.value))}
+                                            className={inputCls}
+                                        >
+                                            <option value={4}>ERROR (4)</option>
+                                            <option value={3}>WARN (3)</option>
+                                            <option value={2}>INFO (2)</option>
+                                            <option value={1}>DEBUG (1)</option>
+                                            <option value={0}>TRACE (0)</option>
+                                        </select>
+                                    ) : (
                                     <div className="flex">
                                         <input
                                             type="number"
@@ -624,6 +624,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                             </span>
                                         )}
                                     </div>
+                                    )}
                                 </Field>
                                 {isEndpoint ? (
                                     <Field label={t('alerts.rules.consecutiveChecks')}>
@@ -643,7 +644,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                     </Field>
                                 ) : (
                                     <Field label={t('alerts.rules.evalMode', { defaultValue: '평가 방식' })}>
-                                        <p className="text-sm text-slate-400 italic py-2.5">이벤트당 즉시 평가</p>
+                                        <p className="text-sm text-slate-400 italic py-2.5">{t('alerts.rules.evalImmediate', { defaultValue: '이벤트당 즉시 평가' })}</p>
                                     </Field>
                                 )}
                             </div>
@@ -666,7 +667,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                         {!isEndpoint && !isLog && (
                             <Field
                                 label={t('alerts.rules.cooldown', { defaultValue: '쿨다운 (초)' })}
-                                hint="동일 규칙은 이 시간 내 재발송하지 않음"
+                                hint={t('alerts.rules.cooldownHint', { defaultValue: '동일 규칙은 이 시간 내 재발송하지 않음' })}
                             >
                                 <input
                                     type="number" min={0} max={86400}
@@ -676,54 +677,29 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                             </Field>
                         )}
 
-                        {/* Compact inline IF expression (visible on all screen sizes) */}
-                        <div className="flex flex-wrap items-center gap-1.5 px-3 py-2.5 bg-slate-900 dark:bg-slate-950 rounded-xl border border-slate-700/60">
-                            <span className="text-slate-500 font-mono text-xs">IF</span>
-                            <code className="px-2 py-0.5 bg-sky-500/20 text-sky-300 rounded text-xs font-mono">{metricName}</code>
-                            <code className="px-1.5 py-0.5 bg-slate-700 text-slate-300 rounded text-xs font-mono">{OPERATOR_SYMBOLS[watchedOperator] ?? watchedOperator}</code>
-                            <code className="px-2 py-0.5 bg-red-500/20 text-red-300 rounded text-xs font-mono">{watchedThreshold}{thresholdUnit}</code>
-                            {isApiStatus ? (
-                                <span className="text-slate-600 font-mono text-xs">PER REQUEST</span>
-                            ) : isLog ? (
-                                <>
-                                    <span className="text-slate-600 font-mono text-xs">MATCHES</span>
-                                    <code className="px-2 py-0.5 bg-slate-700 text-slate-300 rounded text-xs font-mono">{watchedThreshold >= 4 ? 'ERROR' : 'WARN+'}</code>
-                                </>
-                            ) : isEndpoint ? (
-                                <>
-                                    <span className="text-slate-600 font-mono text-xs">FAILS</span>
-                                    <code className="px-2 py-0.5 bg-slate-700 text-slate-300 rounded text-xs font-mono">{watchedDuration}x</code>
-                                </>
-                            ) : (
-                                <>
-                                    <span className="text-slate-600 font-mono text-xs">FOR</span>
-                                    <code className="px-2 py-0.5 bg-slate-700 text-slate-300 rounded text-xs font-mono">{watchedDuration}min</code>
-                                </>
-                            )}
-                            <span className="text-slate-600 font-mono text-xs">ON</span>
-                            <code className="px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded text-xs font-mono max-w-32 truncate">{targetLabel}</code>
-                        </div>
                     </FormStep>
 
                     {/* Step 3: Notify */}
-                    <FormStep n={3} title="알림 (Notify)">
+                    <FormStep n={3} title={t('alerts.rules.stepNotify', { defaultValue: '알림' })}>
                         <Field label={t('alerts.rules.severity')}>
                             <div className="grid grid-cols-3 gap-2">
-                                {(['critical', 'warning', 'info'] as const).map(s => (
+                                {([
+                                    { value: 'critical' as const, active: 'border-red-500 bg-red-500/10 text-red-600 dark:text-red-400', dot: 'bg-red-500' },
+                                    { value: 'warning'  as const, active: 'border-amber-500 bg-amber-500/10 text-amber-600 dark:text-amber-400', dot: 'bg-amber-500' },
+                                    { value: 'info'     as const, active: 'border-sky-500 bg-sky-500/10 text-sky-600 dark:text-sky-400', dot: 'bg-sky-500' },
+                                ]).map(s => (
                                     <button
-                                        key={s}
+                                        key={s.value}
                                         type="button"
-                                        onClick={() => setValue('severity', s)}
+                                        onClick={() => setValue('severity', s.value)}
                                         className={`py-2.5 text-sm font-bold rounded-xl border-2 transition-all flex items-center justify-center gap-2 uppercase tracking-wide ${
-                                            watchedSeverity === s
-                                                ? 'border-primary bg-primary/10 text-primary'
+                                            watchedSeverity === s.value
+                                                ? s.active
                                                 : 'border-slate-100 dark:border-ui-border-dark text-slate-500 hover:border-slate-200 dark:hover:border-slate-600'
                                         }`}
                                     >
-                                        <span className={`w-1.5 h-1.5 rounded-full ${
-                                            s === 'critical' ? 'bg-red-500' : s === 'warning' ? 'bg-amber-500' : 'bg-sky-500'
-                                        }`} />
-                                        {t(`alerts.rules.${s}`)}
+                                        <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+                                        {t(`alerts.rules.${s.value}`)}
                                     </button>
                                 ))}
                             </div>
@@ -731,7 +707,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
 
                         <Field
                             label={t('alerts.rules.notifyChannels')}
-                            hint={watchedChannelIds.length === 0 && channels.length > 0 ? '* 미선택 시 모든 활성 채널로 발송됩니다' : null}
+                            hint={watchedChannelIds.length === 0 && channels.length > 0 ? t('alerts.rules.channelsHintAll', { defaultValue: '미선택 시 모든 활성 채널로 발송됩니다' }) : null}
                         >
                             <div className="space-y-2">
                                 {channels.length === 0 ? (
@@ -747,7 +723,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                                 : 'border-slate-100 dark:border-ui-border-dark text-slate-500 hover:border-slate-200 dark:hover:border-slate-600'
                                         }`}
                                     >
-                                        <MaterialIcon name={ch.type === 'telegram' ? 'send' : 'sports_esports'} className="text-sm" />
+                                        <ChannelIcon type={ch.type} size={16} className={getChannelStyle(ch.type).text} />
                                         <span className="text-sm font-bold flex-1 text-left">{ch.name}</span>
                                         <span className="text-sm uppercase tracking-wider text-slate-400 font-mono">{ch.type}</span>
                                     </button>
@@ -755,34 +731,28 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                             </div>
                         </Field>
 
-                        <div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <label className="text-sm font-bold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide">
-                                    <span className="text-sky-400 font-mono">"message"</span>
-                                </label>
-                                <span className="text-sm font-normal text-slate-400 normal-case">
-                                    {t('alerts.rules.messageOverridesHint')}
-                                </span>
-                            </div>
+                        <Field
+                            label={t('alerts.rules.messageLabel')}
+                            hint={t('alerts.rules.messageOverridesHint') + ' · ' + t('alerts.rules.messageVarsHint', {
+                                vars: (isApiStatus
+                                    ? ['{service_name}', '{method}', '{path}', '{status}', '{duration}']
+                                    : isLog
+                                    ? ['{service_name}', '{level}', '{message}']
+                                    : isEndpoint
+                                    ? ['{service_name}', '{value}', '{threshold}', '{metric}']
+                                    : ['{host_name}', '{value}', '{threshold}', '{metric}', '{duration}']
+                                ).join(' '),
+                                defaultValue: '사용 가능한 변수: {{vars}}',
+                            })}
+                        >
                             <textarea
                                 value={customMessage}
                                 onChange={e => setCustomMessage(e.target.value)}
                                 rows={2}
                                 placeholder={buildDefaultMessage(watchedMetric, watchedOperator, watchedThreshold, watchedDuration)}
-                                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm font-mono text-emerald-400 outline-none focus:border-primary resize-none placeholder:text-slate-600"
+                                className={inputCls + " resize-none"}
                             />
-                            <p className="mt-1.5 text-sm text-slate-400 font-mono">
-                                <span className="text-slate-500">// vars: </span>
-                                {isApiStatus
-                                    ? <span className="text-violet-400">{'{service_name}'} {'{method}'} {'{path}'} {'{status}'} {'{duration}'}</span>
-                                    : isLog
-                                    ? <span className="text-violet-400">{'{service_name}'} {'{level}'} {'{message}'}</span>
-                                    : isEndpoint
-                                    ? <span className="text-violet-400">{'{service_name}'} {'{value}'} {'{threshold}'} {'{metric}'}</span>
-                                    : <span className="text-violet-400">{'{host_name}'} {'{value}'} {'{threshold}'} {'{metric}'} {'{duration}'}</span>
-                                }
-                            </p>
-                        </div>
+                        </Field>
                     </FormStep>
                 </div>
 
@@ -795,15 +765,15 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                             <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30">
                                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                                 <div>
-                                    <p className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest">라이브 미리보기</p>
-                                    <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">입력값 변경 시 자동 갱신</p>
+                                    <p className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest">{t('alerts.rules.livePreview', { defaultValue: '라이브 미리보기' })}</p>
+                                    <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{t('alerts.rules.livePreviewSub', { defaultValue: '입력값 변경 시 자동 갱신' })}</p>
                                 </div>
                             </div>
                             <div className="p-5 space-y-5">
 
                                 {/* IF block */}
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">IF (조건)</p>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{t('alerts.rules.previewCondition', { defaultValue: '조건' })}</p>
                                     <div className="bg-slate-900 dark:bg-slate-950 rounded-lg px-4 py-3 font-mono text-xs leading-7">
                                         <div>
                                             <span className="text-sky-300">IF </span>
@@ -844,14 +814,14 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
 
                                 {/* THEN block */}
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">THEN (메시지)</p>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{t('alerts.rules.previewMessage', { defaultValue: '메시지' })}</p>
                                     <div className={`rounded-xl px-3 py-3 ${severityClasses.bg}`}>
                                         <div className="flex items-center gap-2 mb-1.5">
                                             <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide ${severityClasses.badge}`}>
                                                 <span className={`w-1.5 h-1.5 rounded-full ${severityClasses.dot}`} />
                                                 {watchedSeverity}
                                             </span>
-                                            <span className="text-sm text-slate-500 dark:text-text-muted-dark truncate">{watchedName || '<규칙 이름>'}</span>
+                                            <span className="text-sm text-slate-500 dark:text-text-muted-dark truncate">{watchedName || `<${t('alerts.rules.ruleName')}>`}</span>
                                         </div>
                                         <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
                                             {customMessage || buildDefaultMessage(watchedMetric, watchedOperator, watchedThreshold, watchedDuration)}
@@ -862,61 +832,27 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                 {/* Channels */}
                                 <div>
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
-                                        발송 → {watchedChannelIds.length === 0 ? `${channels.length}개 채널 전체` : `${watchedChannelIds.length}개 선택`}
+                                        {watchedChannelIds.length === 0
+                                            ? t('alerts.rules.sendToAll', { count: channels.length, defaultValue: '발송 → 전체 {{count}}개 채널' })
+                                            : t('alerts.rules.sendToSelected', { count: watchedChannelIds.length, defaultValue: '발송 → {{count}}개 선택' })}
                                     </p>
                                     <div className="space-y-1.5">
                                         {channels.length === 0 ? (
-                                            <p className="text-sm text-slate-400 italic">등록된 채널 없음</p>
+                                            <p className="text-sm text-slate-400 italic">{t('alerts.rules.noChannels')}</p>
                                         ) : previewChannels.slice(0, 5).map(ch => (
                                             <div key={ch.id} className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-lg">
-                                                <MaterialIcon name={ch.type === 'telegram' ? 'send' : 'sports_esports'} className="text-sm text-slate-400" />
+                                                <ChannelIcon type={ch.type} size={14} className={getChannelStyle(ch.type).text} />
                                                 <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex-1 truncate">{ch.name}</span>
                                                 <span className="text-xs text-slate-400 uppercase font-mono">{ch.type}</span>
                                             </div>
                                         ))}
                                         {previewChannels.length > 5 && (
-                                            <p className="text-sm text-slate-400 italic pl-1">+{previewChannels.length - 5}개 더...</p>
+                                            <p className="text-sm text-slate-400 italic pl-1">{t('alerts.rules.moreChannels', { count: previewChannels.length - 5, defaultValue: '+{{count}}개 더' })}</p>
                                         )}
                                     </div>
                                 </div>
 
-                                {/* JSON payload */}
-                                <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">JSON 페이로드</p>
-                                    <div className="rounded-lg overflow-hidden border border-slate-700">
-                                        <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 border-b border-slate-700">
-                                            <div className="flex gap-1">
-                                                <span className="w-2 h-2 rounded-full bg-red-400" />
-                                                <span className="w-2 h-2 rounded-full bg-amber-400" />
-                                                <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                                            </div>
-                                            <span className="text-xs text-slate-500 font-mono ml-1">payload.json</span>
-                                        </div>
-                                        <div className="bg-slate-950 px-3 py-2.5 font-mono text-xs leading-5 overflow-x-auto">
-                                            <span className="text-slate-500">{'{'}</span>
-                                            <div className="pl-3 space-y-px">
-                                                <div><span className="text-sky-400">"type"</span><span className="text-slate-500">: </span><span className="text-emerald-400">"{isApiStatus ? 'api_request' : isLog ? 'log' : isEndpoint ? 'healthcheck' : 'resource'}"</span><span className="text-slate-500">,</span></div>
-                                                <div><span className="text-sky-400">"{isEndpoint || isLog ? 'service' : 'host'}"</span><span className="text-slate-500">: </span><span className="text-yellow-300">"{targetLabel}"</span><span className="text-slate-500">,</span></div>
-                                                <div><span className="text-sky-400">"metric"</span><span className="text-slate-500">: </span><span className="text-yellow-300">"{metricName}"</span><span className="text-slate-500">,</span></div>
-                                                <div><span className="text-sky-400">"operator"</span><span className="text-slate-500">: </span><span className="text-yellow-300">"{OPERATOR_SYMBOLS[watchedOperator] ?? watchedOperator}"</span><span className="text-slate-500">,</span></div>
-                                                <div><span className="text-sky-400">"threshold"</span><span className="text-slate-500">: </span><span className="text-pink-400">{watchedThreshold}</span><span className="text-slate-500">{thresholdUnit ? `,  // ${thresholdUnit}` : ','}</span></div>
-                                                <div><span className="text-sky-400">"current"</span><span className="text-slate-500">: </span><span className="text-violet-400 italic">{'<live_value>'}</span><span className="text-slate-500">,</span></div>
-                                                <div><span className="text-sky-400">"severity"</span><span className="text-slate-500">: </span><span className={watchedSeverity === 'critical' ? 'text-red-400' : watchedSeverity === 'warning' ? 'text-amber-400' : 'text-sky-400'}>"{watchedSeverity}"</span><span className="text-slate-500">,</span></div>
-                                                <div className="flex items-start"><span className="text-sky-400 shrink-0">"message"</span><span className="text-slate-500 shrink-0">: "</span><span className={`wrap-break-word ${customMessage ? 'text-emerald-400' : 'text-slate-500 italic'}`}>{customMessage || 'auto-generated'}</span><span className="text-slate-500 shrink-0">"</span></div>
-                                            </div>
-                                            <span className="text-slate-500">{'}'}</span>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
-                        </div>
-
-                        {/* Eval path card */}
-                        <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-4">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">평가 경로</p>
-                            <p className="text-sm text-slate-500 dark:text-text-muted-dark font-mono leading-relaxed whitespace-pre-wrap">
-                                {getEvalPath(watchedCategory, watchedMetric)}
-                            </p>
                         </div>
 
                     </div>

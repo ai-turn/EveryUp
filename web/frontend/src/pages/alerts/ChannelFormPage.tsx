@@ -56,7 +56,7 @@ export function ChannelFormPage() {
             onClick={goBack}
             className="hover:text-slate-800 dark:hover:text-white transition-colors"
           >
-            알림
+            {t('alerts.title')}
           </button>
           <MaterialIcon name="chevron_right" className="text-sm opacity-50" />
           <button
@@ -64,11 +64,11 @@ export function ChannelFormPage() {
             onClick={goBack}
             className="hover:text-slate-800 dark:hover:text-white transition-colors"
           >
-            채널
+            {t('alerts.table.channel')}
           </button>
           <MaterialIcon name="chevron_right" className="text-sm opacity-50" />
           <span className="text-slate-900 dark:text-white font-medium truncate max-w-50">
-            {loading ? '...' : isEdit ? (channel?.name ?? '편집') : '새 채널'}
+            {loading ? '...' : isEdit ? (channel?.name ?? t('common.edit')) : t('alerts.modal.newChannel', { defaultValue: '새 채널' })}
           </span>
         </nav>
         <div className="flex items-center justify-between gap-4">
@@ -76,8 +76,8 @@ export function ChannelFormPage() {
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{title}</h1>
             <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">
               {isEdit
-                ? `${channel?.name ?? ''} · 채널 설정을 수정합니다`
-                : 'Telegram, Discord, Slack 중 채널을 선택하고 연결 정보를 입력하세요'}
+                ? t('alerts.modal.editSubtitle', { name: channel?.name ?? '', defaultValue: '{{name}} · 채널 설정을 수정합니다' })
+                : t('alerts.modal.newSubtitle', { defaultValue: 'Telegram, Discord, Slack 중 채널을 선택하고 연결 정보를 입력하세요' })}
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">

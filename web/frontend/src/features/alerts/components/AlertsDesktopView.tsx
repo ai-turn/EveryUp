@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MaterialIcon, PageHeader, EmptyState, Toggle } from '../../../components/common';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { AlertRulesTab } from './AlertRulesTab';
+import { ChannelForm } from './ChannelForm';
 import { NotificationHistoryTab } from './NotificationHistoryTab';
 import { formatDistanceToNow } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
@@ -28,8 +29,7 @@ interface AlertsDesktopViewProps {
   setActiveTab: (tab: TabType) => void;
   togglingIds: Set<string>;
   rulesAddTrigger: number;
-  onAddChannel: () => void;
-  onEditChannel: (channel: NotificationChannel) => void;
+  onChannelsChanged: () => void;
   onDeleteChannel: (id: string) => void;
   onToggleChannel: (id: string) => void;
   onTestChannel: (id: string) => void;
@@ -46,14 +46,32 @@ export function AlertsDesktopView({
   setActiveTab,
   togglingIds,
   rulesAddTrigger,
-  onAddChannel,
-  onEditChannel,
+  onChannelsChanged,
   onDeleteChannel,
   onToggleChannel,
   onTestChannel,
   onAddRule,
 }: AlertsDesktopViewProps) {
   const { t } = useTranslation(['alerts', 'common']);
+
+  // Inline channel form — same pattern as the rules tab's inline form
+  const [channelFormOpen, setChannelFormOpen] = useState(false);
+  const [channelFormTarget, setChannelFormTarget] = useState<NotificationChannel | undefined>(undefined);
+  const [channelSubmitting, setChannelSubmitting] = useState(false);
+  const channelFormRef = useRef<HTMLDivElement>(null);
+
+  const openChannelForm = (channel?: NotificationChannel) => {
+    setChannelFormTarget(channel);
+    setChannelFormOpen(true);
+  };
+  const closeChannelForm = () => {
+    setChannelFormOpen(false);
+    setChannelFormTarget(undefined);
+  };
+
+  useEffect(() => {
+    if (channelFormOpen) channelFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [channelFormOpen, channelFormTarget]);
 
   // 'failed' only for the history-tab mount triggered by the failed-logs link;
   // any normal tab click clears it (the key remounts the tab either way).
@@ -91,7 +109,7 @@ export function AlertsDesktopView({
       >
         {activeTab !== 'history' && (
           <button
-            onClick={activeTab === 'rules' ? onAddRule : onAddChannel}
+            onClick={activeTab === 'rules' ? onAddRule : () => openChannelForm()}
             className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 rounded-lg text-sm font-semibold transition-all text-white cursor-pointer active:scale-95"
           >
             <MaterialIcon name="add" className="text-lg" />
@@ -181,21 +199,82 @@ export function AlertsDesktopView({
       {activeTab === 'history' ? (
         <NotificationHistoryTab key={historyStatus ?? 'default'} channels={channels} initialStatus={historyStatus} />
       ) : activeTab === 'channels' ? (
-        <ChannelsTable
-          channels={channels}
-          channelHealth={channelHealth}
-          isLoading={isLoading}
-          togglingIds={togglingIds}
-          onAdd={onAddChannel}
-          onEdit={onEditChannel}
-          onDelete={onDeleteChannel}
-          onToggle={onToggleChannel}
-          onTest={onTestChannel}
-        />
+        <>
+          {channelFormOpen && (
+            <div ref={channelFormRef} className="mb-5 scroll-mt-4 rounded-xl border border-primary/40 bg-white dark:bg-bg-surface-dark overflow-hidden">
+              <div className="flex items-center justify-between gap-4 px-6 py-3 border-b border-slate-200 dark:border-ui-border-dark">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  {channelFormTarget
+                    ? t('alerts.modal.editTitle', { defaultValue: '채널 편집' })
+                    : t('alerts.addChannel')}
+                </h3>
+                <ChannelFormActions
+                  isSubmitting={channelSubmitting}
+                  isEdit={!!channelFormTarget}
+                  onCancel={closeChannelForm}
+                />
+              </div>
+              <ChannelForm
+                channel={channelFormTarget}
+                onSuccess={onChannelsChanged}
+                onCancel={closeChannelForm}
+                onSubmittingChange={setChannelSubmitting}
+              />
+              <div className="flex justify-end border-t border-slate-200 dark:border-ui-border-dark px-6 py-3">
+                <ChannelFormActions
+                  isSubmitting={channelSubmitting}
+                  isEdit={!!channelFormTarget}
+                  onCancel={closeChannelForm}
+                />
+              </div>
+            </div>
+          )}
+          <ChannelsTable
+            channels={channels}
+            channelHealth={channelHealth}
+            isLoading={isLoading}
+            togglingIds={togglingIds}
+            onAdd={() => openChannelForm()}
+            onEdit={openChannelForm}
+            onDelete={onDeleteChannel}
+            onToggle={onToggleChannel}
+            onTest={onTestChannel}
+          />
+        </>
       ) : (
         <AlertRulesTab addTrigger={rulesAddTrigger} />
       )}
     </>
+  );
+}
+
+function ChannelFormActions({ isSubmitting, isEdit, onCancel }: { isSubmitting: boolean; isEdit: boolean; onCancel: () => void }) {
+  const { t } = useTranslation(['alerts', 'common']);
+  return (
+    <div className="flex items-center gap-2 shrink-0">
+      <button
+        type="button"
+        onClick={onCancel}
+        className="px-4 py-2 text-sm font-bold border border-slate-200 dark:border-ui-border-dark rounded-lg text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors"
+      >
+        {t('common.cancel')}
+      </button>
+      <button
+        type="submit"
+        form="channel-form"
+        disabled={isSubmitting}
+        className="px-5 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-all shadow-sm active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
+      >
+        {isSubmitting ? (
+          <MaterialIcon name="sync" className="text-base animate-spin" />
+        ) : (
+          <>
+            <MaterialIcon name="check" className="text-sm" />
+            {isEdit ? t('common.save') : t('alerts.addChannel')}
+          </>
+        )}
+      </button>
+    </div>
   );
 }
 
