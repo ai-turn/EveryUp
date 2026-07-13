@@ -14,8 +14,8 @@ const METRICS_RETENTION_OPTIONS = ['7d', '30d', '90d', '1y'];
 const LOGS_RETENTION_OPTIONS = ['1d', '3d', '7d', '30d'];
 const COLLECT_INTERVAL_OPTIONS = [15, 30, 60, 300];
 
-// 스크롤스파이 대상 = 좌측 서브내비 항목. 계정/감사 카드는 내비에 넣지 않는다.
-const NAV_IDS = ['sec-ui', 'sec-data', 'sec-alert', 'sec-danger'] as const;
+// 스크롤스파이 대상 = 좌측 서브내비 항목. 지금은 '일반' 하나로 통일 — 섹션이 늘면 여기에 추가.
+const NAV_IDS = ['sec-ui'] as const;
 
 // ver2 프로토타입 오마주: 컴팩트 세그먼티드 (text-xs, 얇은 컨테이너).
 const segmentedButtonClass = (active: boolean) =>
@@ -97,10 +97,7 @@ export function SettingsDesktopView({
   };
 
   const navItems: [string, string][] = [
-    ['sec-ui', t('settings.interface.title')],
-    ['sec-data', t('settings.retention.title')],
-    ['sec-alert', t('settings.alertThreshold.title')],
-    ['sec-danger', t('settings.accountReset.title')],
+    ['sec-ui', t('settings.nav.general')],
   ];
 
   const collectOptions = COLLECT_INTERVAL_OPTIONS.includes(collectInterval)
