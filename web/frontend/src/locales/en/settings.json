@@ -125,7 +125,6 @@
       "shrinkWarning": "Shortening a retention period deletes data older than the new limit on the next cleanup cycle."
     },
     "nav": {
-      "menu": "Settings Menu",
       "general": "General"
     },
     "audit": {

@@ -208,7 +208,7 @@ export function SettingsMobileView({
       {/* Account Reset — ver2 프로토타입 오마주: 중립 카드 + 붉은 텍스트 액션 */}
       <SectionCard title={t('settings.accountReset.title')} subtitle={t('settings.accountReset.subtitle')}>
         <div className="flex items-center justify-between gap-4">
-          <p className="text-2xs text-slate-400 dark:text-text-dim-dark">
+          <p className="text-xs text-slate-400 dark:text-text-dim-dark">
             {env.useMock ? t('settings.accountReset.demoNotice') : t('settings.accountReset.confirmDesc')}
           </p>
           <button

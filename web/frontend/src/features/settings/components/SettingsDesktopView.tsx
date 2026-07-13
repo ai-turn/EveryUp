@@ -115,9 +115,6 @@ export function SettingsDesktopView({
       <div className="flex gap-10 items-start">
         {/* 좌측 서브내비 (lg+) — 스크롤스파이 */}
         <nav className="hidden lg:flex sticky top-2 w-44 shrink-0 flex-col gap-0.5">
-          <div className="px-3 pb-2 text-2xs font-bold tracking-wider text-slate-400 dark:text-text-dim-dark uppercase">
-            {t('settings.nav.menu')}
-          </div>
           {navItems.map(([id, label]) => {
             const on = active === id;
             return (
@@ -228,7 +225,7 @@ export function SettingsDesktopView({
                     </div>
                   </SettingRow>
 
-                  <p className="pt-3 text-2xs text-slate-400 dark:text-text-dim-dark">
+                  <p className="pt-3 text-xs text-slate-400 dark:text-text-dim-dark">
                     {t('settings.retention.shrinkWarning')}
                   </p>
                 </>
@@ -248,7 +245,7 @@ export function SettingsDesktopView({
           <section id="sec-danger" className="scroll-mt-4">
             <SectionCard title={t('settings.accountReset.title')} subtitle={t('settings.accountReset.subtitle')}>
               <div className="flex items-center justify-between gap-4">
-                <p className="text-2xs text-slate-400 dark:text-text-dim-dark">
+                <p className="text-xs text-slate-400 dark:text-text-dim-dark">
                   {env.useMock ? t('settings.accountReset.demoNotice') : t('settings.accountReset.confirmDesc')}
                 </p>
                 <button
@@ -262,9 +259,6 @@ export function SettingsDesktopView({
             </SectionCard>
           </section>
 
-          <div className="text-2xs text-slate-400 dark:text-text-dim-dark px-0.5 pt-1">
-            © 2026 EveryUp · All rights reserved.
-          </div>
         </div>
       </div>
 
