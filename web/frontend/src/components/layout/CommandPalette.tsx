@@ -55,7 +55,8 @@ export function CommandPalette() {
       })
       .catch(() => {});
     // autofocus after the overlay mounts
-    setTimeout(() => inputRef.current?.focus(), 0);
+    const focusId = setTimeout(() => inputRef.current?.focus(), 0);
+    return () => clearTimeout(focusId);
   }, [open]);
 
   const items: PaletteItem[] = useMemo(() => [
