@@ -107,13 +107,13 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range 
   const unit = selectedMeta?.unit ?? '';
 
   if (namesLoading) {
-    return <div className="h-64 bg-slate-100 dark:bg-ui-hover-dark rounded-xl animate-pulse" />;
+    return <div className="h-64 bg-ui-hover rounded-xl animate-pulse" />;
   }
 
   if (names.length === 0) {
     return (
-      <div className="p-8 rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark text-center">
-        <p className="text-sm text-slate-500 dark:text-text-muted-dark">
+      <div className="p-8 rounded-xl border border-ui-border bg-bg-surface text-center">
+        <p className="text-sm text-text-muted">
           {t('수신된 메트릭이 없습니다. 앱의 OpenTelemetry SDK가 메트릭을 보내면 여기에 표시됩니다.')}
         </p>
       </div>
@@ -125,9 +125,9 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range 
     <div className={`p-6 ${chartCardClass}`}>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-3 min-w-0">
-          <span className="font-mono text-sm font-semibold text-slate-900 dark:text-white truncate">{selected}</span>
+          <span className="font-mono text-sm font-semibold text-text-base truncate">{selected}</span>
           {selectedMeta && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark shrink-0">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-ui-hover text-text-muted shrink-0">
               {selectedMeta.metricType}{unit ? ` · ${unit}` : ''}
             </span>
           )}
@@ -135,9 +135,9 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range 
       </div>
 
       {pointsLoading ? (
-        <div className="h-64 bg-slate-100 dark:bg-ui-hover-dark rounded animate-pulse" />
+        <div className="h-64 bg-ui-hover rounded animate-pulse" />
       ) : chartData.length === 0 ? (
-        <div className="flex items-center justify-center h-64 text-slate-400 dark:text-text-dim-dark text-sm">
+        <div className="flex items-center justify-center h-64 text-text-dim text-sm">
           {t('데이터 없음')}
         </div>
       ) : (
@@ -177,7 +177,7 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range 
             />
           </div>
           {truncatedSeries > 0 && (
-            <p className="mt-2 text-xs text-slate-400 dark:text-text-dim-dark">
+            <p className="mt-2 text-xs text-text-dim">
               {t('속성 조합이 많아 상위 {count}개 시리즈만 표시합니다 (+{rest}개 생략)', {
                 count: MAX_SERIES,
                 rest: truncatedSeries,
@@ -190,15 +190,15 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range 
     </div>
 
       {/* All exported series — row click swaps the chart (ver2: 전체 시리즈) */}
-      <div className="p-6 rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark">
+      <div className="p-6 rounded-xl border border-ui-border bg-bg-surface">
         <div className="flex items-center gap-2 mb-2">
-          <h3 className="text-base font-bold text-slate-900 dark:text-white">{t('전체 시리즈')}</h3>
-          <span className="text-xs text-slate-400 dark:text-text-dim-dark">{t('행 클릭 → 차트 표시')}</span>
+          <h3 className="text-base font-bold text-text-base">{t('전체 시리즈')}</h3>
+          <span className="text-xs text-text-dim">{t('행 클릭 → 차트 표시')}</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark border-b border-slate-100 dark:border-ui-border-dark">
+              <tr className="text-left text-xs font-semibold uppercase tracking-wider text-text-muted border-b border-ui-border-soft">
                 <th className="py-1.5 pr-3 font-semibold">{t('시리즈')}</th>
                 <th className="py-1.5 pr-3 font-semibold">{t('타입')}</th>
                 <th className="py-1.5 pr-3 font-semibold">{t('단위')}</th>
@@ -212,18 +212,18 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range 
                   <tr
                     key={`${n.metricName}:${n.metricType}`}
                     onClick={() => setSelected(n.metricName)}
-                    className={`cursor-pointer border-b border-slate-50 dark:border-ui-border-dark/50 last:border-0 transition-colors ${
+                    className={`cursor-pointer border-b border-ui-border-soft/50 last:border-0 transition-colors ${
                       active
                         ? 'bg-primary/5 dark:bg-primary/10'
-                        : 'hover:bg-slate-50 dark:hover:bg-ui-hover-dark'
+                        : 'hover:bg-ui-hover-soft'
                     }`}
                   >
-                    <td className={`py-2 pr-3 font-mono text-xs ${active ? 'font-semibold text-primary' : 'text-slate-700 dark:text-text-secondary-dark'}`}>
+                    <td className={`py-2 pr-3 font-mono text-xs ${active ? 'font-semibold text-primary' : 'text-text-secondary'}`}>
                       {n.metricName}
                     </td>
-                    <td className="py-2 pr-3 text-xs text-slate-500 dark:text-text-muted-dark">{n.metricType}</td>
-                    <td className="py-2 pr-3 text-xs text-slate-500 dark:text-text-muted-dark">{n.unit || '—'}</td>
-                    <td className="py-2 text-right text-xs font-mono text-slate-400 dark:text-text-dim-dark whitespace-nowrap">
+                    <td className="py-2 pr-3 text-xs text-text-muted">{n.metricType}</td>
+                    <td className="py-2 pr-3 text-xs text-text-muted">{n.unit || '—'}</td>
+                    <td className="py-2 text-right text-xs font-mono text-text-dim whitespace-nowrap">
                       {new Date(n.lastAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </td>
                   </tr>

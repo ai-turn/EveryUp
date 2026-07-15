@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './MaterialIcon';
+import { Button } from './Button';
 
 type Variant = 'danger' | 'primary';
 
@@ -18,17 +19,15 @@ interface ConfirmDialogProps {
   isProcessing?: boolean;
 }
 
-const variantStyles: Record<Variant, { iconBg: string; iconText: string; button: string; defaultIcon: string }> = {
+const variantStyles: Record<Variant, { iconBg: string; iconText: string; defaultIcon: string }> = {
   danger: {
     iconBg: 'bg-red-100 dark:bg-red-900/20',
     iconText: 'text-red-600 dark:text-red-400',
-    button: 'bg-red-600 hover:bg-red-700',
     defaultIcon: 'warning',
   },
   primary: {
     iconBg: 'bg-primary/10',
     iconText: 'text-primary',
-    button: 'bg-primary hover:bg-primary/90',
     defaultIcon: 'help',
   },
 };
@@ -71,40 +70,42 @@ export function ConfirmDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
-        className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+        className="bg-bg-surface border border-ui-border rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-ui-border-dark flex items-center gap-3">
+        <div className="px-6 py-4 border-b border-ui-border flex items-center gap-3">
           <div className={`flex items-center justify-center w-10 h-10 rounded-full ${styles.iconBg}`}>
             <MaterialIcon name={icon ?? styles.defaultIcon} className={`${styles.iconText} text-xl`} />
           </div>
-          <h2 id="confirm-dialog-title" className="text-xl font-bold text-slate-900 dark:text-white">
+          <h2 id="confirm-dialog-title" className="text-xl font-bold text-text-base">
             {title}
           </h2>
         </div>
 
         <div className="p-6">
-          <div className="text-slate-600 dark:text-text-muted-dark mb-2">{message}</div>
+          <div className="text-text-muted mb-2">{message}</div>
           {description && (
-            <p className="text-sm text-slate-500 dark:text-text-dim-dark">{description}</p>
+            <p className="text-sm text-text-dim">{description}</p>
           )}
         </div>
 
         <div className="px-6 pb-6 flex gap-3">
-          <button
+          <Button
             ref={cancelRef}
             type="button"
+            variant="secondary"
             onClick={onClose}
             disabled={isProcessing}
-            className="flex-1 py-2 rounded-lg border border-slate-200 dark:border-ui-border-dark text-slate-600 dark:text-text-muted-dark font-bold hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-all disabled:opacity-50"
+            className="flex-1"
           >
             {cancelLabel ?? t('common.cancel')}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant={variant}
             onClick={onConfirm}
             disabled={isProcessing}
-            className={`flex-1 py-2 ${styles.button} text-white font-bold rounded-lg transition-all shadow-md active:scale-95 disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2`}
+            className="flex-1"
           >
             {isProcessing ? (
               <MaterialIcon name="sync" className="text-lg animate-spin" />
@@ -114,7 +115,7 @@ export function ConfirmDialog({
                 {confirmLabel ?? t('common.delete')}
               </>
             )}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

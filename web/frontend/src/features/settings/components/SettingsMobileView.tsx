@@ -58,8 +58,8 @@ export function SettingsMobileView({
     <div className="space-y-4">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-bold text-slate-900 dark:text-white">{t('settings.title')}</h1>
-        <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{t('settings.subtitle')}</p>
+        <h1 className="text-xl font-bold text-text-base">{t('settings.title')}</h1>
+        <p className="text-sm text-text-muted mt-0.5">{t('settings.subtitle')}</p>
       </div>
 
       {/* Account (ver2: 계정 · 인증) */}
@@ -69,9 +69,9 @@ export function SettingsMobileView({
       <SectionCard title={t('settings.interface.title')} subtitle={t('settings.interface.subtitle')}>
         {/* Language */}
         <div className="space-y-2">
-          <p className="text-sm font-medium text-slate-900 dark:text-white">{t('settings.interface.language')}</p>
-          <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('settings.interface.languageDesc')}</p>
-          <div className="flex gap-1 bg-slate-100 dark:bg-ui-hover-dark p-1 rounded-lg">
+          <p className="text-sm font-medium text-text-base">{t('settings.interface.language')}</p>
+          <p className="text-sm text-text-muted">{t('settings.interface.languageDesc')}</p>
+          <div className="flex gap-1 bg-ui-hover p-1 rounded-lg">
             {(['ko', 'en'] as const).map((lng) => (
               <button
                 key={lng}
@@ -79,7 +79,7 @@ export function SettingsMobileView({
                 className={`flex-1 cursor-pointer px-3 py-2 rounded-md text-sm font-semibold transition-all ${
                   currentLanguage.startsWith(lng)
                     ? 'bg-white dark:bg-ui-active-dark text-primary shadow-sm'
-                    : 'text-slate-500 dark:text-text-muted-dark'
+                    : 'text-text-muted'
                 }`}
               >
                 {lng === 'ko' ? '한국어' : 'English'}
@@ -88,13 +88,13 @@ export function SettingsMobileView({
           </div>
         </div>
 
-        <div className="border-t border-slate-100 dark:border-ui-border-dark my-3" />
+        <div className="border-t border-ui-border-soft my-3" />
 
         {/* Theme */}
         <div className="space-y-2">
-          <p className="text-sm font-medium text-slate-900 dark:text-white">{t('settings.interface.theme')}</p>
-          <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('settings.interface.themeDesc')}</p>
-          <div className="flex gap-1 bg-slate-100 dark:bg-ui-hover-dark p-1 rounded-lg">
+          <p className="text-sm font-medium text-text-base">{t('settings.interface.theme')}</p>
+          <p className="text-sm text-text-muted">{t('settings.interface.themeDesc')}</p>
+          <div className="flex gap-1 bg-ui-hover p-1 rounded-lg">
             {(['light', 'dark'] as const).map((t_) => (
               <button
                 key={t_}
@@ -102,7 +102,7 @@ export function SettingsMobileView({
                 className={`flex-1 cursor-pointer flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold transition-all ${
                   theme === t_
                     ? 'bg-white dark:bg-ui-active-dark text-primary shadow-sm'
-                    : 'text-slate-500 dark:text-text-muted-dark'
+                    : 'text-text-muted'
                 }`}
               >
                 <MaterialIcon name={t_ === 'light' ? 'light_mode' : 'dark_mode'} className="text-base" />
@@ -117,16 +117,16 @@ export function SettingsMobileView({
       <SectionCard title={t('settings.retention.title')} subtitle={t('settings.retention.subtitle')}>
         {backendLoading ? (
           <div className="space-y-3">
-            <div className="h-14 bg-slate-100 dark:bg-ui-hover-dark rounded-lg animate-pulse" />
-            <div className="h-14 bg-slate-100 dark:bg-ui-hover-dark rounded-lg animate-pulse" />
+            <div className="h-14 bg-ui-hover rounded-lg animate-pulse" />
+            <div className="h-14 bg-ui-hover rounded-lg animate-pulse" />
           </div>
         ) : (
           <>
             {/* Collect interval */}
             <div className="space-y-2">
-              <p className="text-sm font-medium text-slate-900 dark:text-white">{t('settings.retention.collect')}</p>
-              <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('settings.retention.collectDesc')}</p>
-              <div className="flex gap-1 flex-wrap bg-slate-100 dark:bg-ui-hover-dark p-1 rounded-lg">
+              <p className="text-sm font-medium text-text-base">{t('settings.retention.collect')}</p>
+              <p className="text-sm text-text-muted">{t('settings.retention.collectDesc')}</p>
+              <div className="flex gap-1 flex-wrap bg-ui-hover p-1 rounded-lg">
                 {(COLLECT_INTERVAL_OPTIONS.includes(collectInterval)
                   ? COLLECT_INTERVAL_OPTIONS
                   : [...COLLECT_INTERVAL_OPTIONS, collectInterval].sort((a, b) => a - b)
@@ -137,7 +137,7 @@ export function SettingsMobileView({
                     className={`flex-1 cursor-pointer px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${
                       collectInterval === sec
                         ? 'bg-white dark:bg-ui-active-dark text-primary shadow-sm'
-                        : 'text-slate-500 dark:text-text-muted-dark'
+                        : 'text-text-muted'
                     }`}
                   >
                     {intervalLabel(sec, currentLanguage)}
@@ -146,13 +146,13 @@ export function SettingsMobileView({
               </div>
             </div>
 
-            <div className="border-t border-slate-100 dark:border-ui-border-dark my-3" />
+            <div className="border-t border-ui-border-soft my-3" />
 
             {/* Metrics */}
             <div className="space-y-2">
-              <p className="text-sm font-medium text-slate-900 dark:text-white">{t('settings.retention.metrics')}</p>
-              <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('settings.retention.metricsDesc')}</p>
-              <div className="flex gap-1 flex-wrap bg-slate-100 dark:bg-ui-hover-dark p-1 rounded-lg">
+              <p className="text-sm font-medium text-text-base">{t('settings.retention.metrics')}</p>
+              <p className="text-sm text-text-muted">{t('settings.retention.metricsDesc')}</p>
+              <div className="flex gap-1 flex-wrap bg-ui-hover p-1 rounded-lg">
                 {METRICS_RETENTION_OPTIONS.map((opt) => (
                   <button
                     key={opt}
@@ -160,7 +160,7 @@ export function SettingsMobileView({
                     className={`flex-1 cursor-pointer px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${
                       metricsRetention === opt
                         ? 'bg-white dark:bg-ui-active-dark text-primary shadow-sm'
-                        : 'text-slate-500 dark:text-text-muted-dark'
+                        : 'text-text-muted'
                     }`}
                   >
                     {retentionLabel(opt, currentLanguage)}
@@ -169,13 +169,13 @@ export function SettingsMobileView({
               </div>
             </div>
 
-            <div className="border-t border-slate-100 dark:border-ui-border-dark my-3" />
+            <div className="border-t border-ui-border-soft my-3" />
 
             {/* Logs */}
             <div className="space-y-2">
-              <p className="text-sm font-medium text-slate-900 dark:text-white">{t('settings.retention.logs')}</p>
-              <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('settings.retention.logsDesc')}</p>
-              <div className="flex gap-1 flex-wrap bg-slate-100 dark:bg-ui-hover-dark p-1 rounded-lg">
+              <p className="text-sm font-medium text-text-base">{t('settings.retention.logs')}</p>
+              <p className="text-sm text-text-muted">{t('settings.retention.logsDesc')}</p>
+              <div className="flex gap-1 flex-wrap bg-ui-hover p-1 rounded-lg">
                 {LOGS_RETENTION_OPTIONS.map((opt) => (
                   <button
                     key={opt}
@@ -183,7 +183,7 @@ export function SettingsMobileView({
                     className={`flex-1 cursor-pointer px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${
                       logsRetention === opt
                         ? 'bg-white dark:bg-ui-active-dark text-primary shadow-sm'
-                        : 'text-slate-500 dark:text-text-muted-dark'
+                        : 'text-text-muted'
                     }`}
                   >
                     {retentionLabel(opt, currentLanguage)}
@@ -192,7 +192,7 @@ export function SettingsMobileView({
               </div>
             </div>
 
-            <p className="mt-3 text-xs text-slate-400 dark:text-text-dim-dark">
+            <p className="mt-3 text-xs text-text-dim">
               {t('settings.retention.shrinkWarning')}
             </p>
           </>
@@ -208,7 +208,7 @@ export function SettingsMobileView({
       {/* Account Reset — ver2 프로토타입 오마주: 중립 카드 + 붉은 텍스트 액션 */}
       <SectionCard title={t('settings.accountReset.title')} subtitle={t('settings.accountReset.subtitle')}>
         <div className="flex items-center justify-between gap-4">
-          <p className="text-xs text-slate-400 dark:text-text-dim-dark">
+          <p className="text-xs text-text-dim">
             {env.useMock ? t('settings.accountReset.demoNotice') : t('settings.accountReset.confirmDesc')}
           </p>
           <button

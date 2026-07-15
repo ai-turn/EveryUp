@@ -22,7 +22,7 @@ export function RadialGauge({
 
   return (
     <div className={`flex flex-col items-center justify-center gap-4 p-8 ${chartCardClass}`}>
-      <p className="text-slate-500 dark:text-text-muted-dark text-sm font-bold uppercase tracking-widest">
+      <p className="text-text-muted text-sm font-bold uppercase tracking-widest">
         {label}
       </p>
       <div
@@ -32,12 +32,12 @@ export function RadialGauge({
         }}
       >
         <div className="absolute w-22.5 h-22.5 rounded-full bg-white dark:bg-chart-bg" />
-        <span className="relative z-10 text-slate-900 dark:text-white text-3xl font-bold">
+        <span className="relative z-10 text-text-base text-3xl font-bold">
           {percentage}%
         </span>
       </div>
       <div className="text-center">
-        <p className="text-slate-900 dark:text-white font-medium">{subtitle}</p>
+        <p className="text-text-base font-medium">{subtitle}</p>
         <p className={`${trendColor} text-sm font-bold`}>{trend}</p>
       </div>
     </div>

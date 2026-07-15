@@ -1,4 +1,5 @@
 import { MaterialIcon } from './MaterialIcon';
+import { Button } from './Button';
 
 interface EmptyStateProps {
   icon: string;
@@ -13,24 +14,21 @@ interface EmptyStateProps {
 export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4">
-      <div className="w-20 h-20 rounded-full bg-slate-100 dark:bg-ui-hover-dark flex items-center justify-center mb-6">
-        <MaterialIcon name={icon} className="text-4xl text-slate-400 dark:text-text-dim-dark" />
+      <div className="w-20 h-20 rounded-full bg-ui-hover flex items-center justify-center mb-6">
+        <MaterialIcon name={icon} className="text-4xl text-text-dim" />
       </div>
-      <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 text-center">
+      <h3 className="text-xl font-bold text-text-base mb-2 text-center">
         {title}
       </h3>
       {description && (
-        <p className="text-slate-500 dark:text-text-muted-dark text-center max-w-md mb-6">
+        <p className="text-text-muted text-center max-w-md mb-6">
           {description}
         </p>
       )}
       {action && (
-        <button
-          onClick={action.onClick}
-          className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 rounded-lg text-white text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
-        >
+        <Button onClick={action.onClick}>
           {action.label}
-        </button>
+        </Button>
       )}
     </div>
   );

@@ -79,7 +79,7 @@ export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey, ran
   const anyLatency = data.some((d) => d.hasLatency);
 
   if (loading) {
-    return <div className="h-56 bg-slate-100 dark:bg-ui-hover-dark rounded-xl animate-pulse" />;
+    return <div className="h-56 bg-ui-hover rounded-xl animate-pulse" />;
   }
   if (data.length === 0) {
     return null; // empty state is handled by the request list below
@@ -89,7 +89,7 @@ export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey, ran
     <div className={`p-6 ${chartCardClass}`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex flex-wrap items-center gap-3">
-          <h3 className="text-slate-900 dark:text-white font-bold text-base">{t('요청 추이')}</h3>
+          <h3 className="text-text-base font-bold text-base">{t('요청 추이')}</h3>
           <ChartLegend
             items={[
               { label: t('요청 수'), color: theme.primaryColor },
@@ -107,13 +107,13 @@ export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey, ran
         const total = summary.count2xx + summary.count3xx + summary.count4xx + summary.count5xx + summary.countOther;
         const classes = [
           { label: '2xx', count: summary.count2xx, bar: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400' },
-          { label: '3xx', count: summary.count3xx, bar: 'bg-slate-400', text: 'text-slate-500 dark:text-text-muted-dark' },
+          { label: '3xx', count: summary.count3xx, bar: 'bg-slate-400', text: 'text-text-muted' },
           { label: '4xx', count: summary.count4xx, bar: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400' },
           { label: '5xx', count: summary.count5xx, bar: 'bg-red-500', text: 'text-red-500' },
         ].filter((c) => c.count > 0);
         return (
           <div className="mb-4">
-            <div className="flex h-2 rounded-full overflow-hidden bg-slate-100 dark:bg-ui-hover-dark">
+            <div className="flex h-2 rounded-full overflow-hidden bg-ui-hover">
               {classes.map((c) => (
                 <div key={c.label} className={c.bar} style={{ width: `${(c.count / total) * 100}%` }} />
               ))}
@@ -125,7 +125,7 @@ export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey, ran
                 </span>
               ))}
               {summary.top5xxPath && (
-                <span className="text-slate-500 dark:text-text-muted-dark truncate">
+                <span className="text-text-muted truncate">
                   · {t('5xx 최다')}: <span className="font-mono font-semibold text-red-500">{summary.top5xxMethod} {summary.top5xxPath}</span> ×{summary.top5xxCount}
                 </span>
               )}

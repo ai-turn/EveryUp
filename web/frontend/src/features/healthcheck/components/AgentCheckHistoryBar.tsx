@@ -54,7 +54,7 @@ export function AgentCheckHistoryBar({ agentId, serviceKey, refreshKey, classNam
     <div className={`p-6 ${chartCardClass} ${className ?? 'mb-8'}`}>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-slate-900 dark:text-white font-bold text-lg">
+          <h3 className="text-text-base font-bold text-lg">
             {t('90일 업타임 히스토리')}
           </h3>
           {!loading && (
@@ -64,14 +64,14 @@ export function AgentCheckHistoryBar({ agentId, serviceKey, refreshKey, classNam
           )}
         </div>
         {!loading && incidentDays > 0 && (
-          <span className="text-xs text-slate-500 dark:text-text-muted-dark">
+          <span className="text-xs text-text-muted">
             {t('{count}일 장애', { count: incidentDays })}
           </span>
         )}
       </div>
 
       {loading ? (
-        <div className="h-8 bg-slate-100 dark:bg-ui-hover-dark rounded animate-pulse" />
+        <div className="h-8 bg-ui-hover rounded animate-pulse" />
       ) : (
         <>
           <div className="flex gap-px">
@@ -94,10 +94,10 @@ export function AgentCheckHistoryBar({ agentId, serviceKey, refreshKey, classNam
           </div>
 
           {/* 호버 상세를 라벨 줄 가운데 인라인 표시 — 카드 높이 고정(레이아웃 시프트 없음) */}
-          <div className="flex justify-between gap-3 text-xs text-slate-400 dark:text-text-dim-dark mt-2">
+          <div className="flex justify-between gap-3 text-xs text-text-dim mt-2">
             <span className="shrink-0">{t('90일 전')}</span>
             {hovered && (
-              <span className="truncate text-slate-700 dark:text-text-secondary-dark">
+              <span className="truncate text-text-secondary">
                 <span className="font-semibold">{hovered.date}</span>
                 {' — '}
                 {hovered.uptimePct.toFixed(1)}% {t('업타임')}

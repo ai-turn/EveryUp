@@ -33,30 +33,30 @@ export function SetupGuide({ type }: SetupGuideProps) {
     const tip = t(`alerts.guide.${type}.tip`);
 
     return (
-        <div className="rounded-lg border border-slate-200 dark:border-ui-border-dark overflow-hidden">
+        <div className="rounded-lg border border-ui-border overflow-hidden">
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-ui-hover-soft transition-colors"
             >
                 <MaterialIcon
                     name="help_outline"
                     className="text-base text-primary shrink-0"
                 />
-                <span className="text-sm font-semibold text-slate-600 dark:text-text-secondary-dark flex-1">
+                <span className="text-sm font-semibold text-text-secondary flex-1">
                     {t('alerts.guide.title')}
                 </span>
                 <MaterialIcon
                     name={isOpen ? 'expand_less' : 'expand_more'}
-                    className="text-base text-slate-400 dark:text-text-dim-dark shrink-0"
+                    className="text-base text-text-dim shrink-0"
                 />
             </button>
 
             {isOpen && (
-                <div className="px-3 pb-3 space-y-3 border-t border-slate-100 dark:border-ui-border-dark">
+                <div className="px-3 pb-3 space-y-3 border-t border-ui-border-soft">
                     <ol className="mt-3 space-y-2">
                         {steps.map((step, i) => (
-                            <li key={i} className="flex gap-2 text-sm text-slate-600 dark:text-text-secondary-dark">
+                            <li key={i} className="flex gap-2 text-sm text-text-secondary">
                                 <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
                                     {i + 1}
                                 </span>

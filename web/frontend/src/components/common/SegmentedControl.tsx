@@ -30,7 +30,7 @@ export function SegmentedControl<T extends string>({
     <div
       role="tablist"
       aria-label={ariaLabel}
-      className="inline-flex items-center gap-0.5 rounded-lg p-0.5 bg-slate-100 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark"
+      className="inline-flex items-center gap-0.5 rounded-lg p-0.5 bg-ui-hover border border-ui-border"
     >
       {options.map((o) => {
         const active = o.value === value;
@@ -42,8 +42,8 @@ export function SegmentedControl<T extends string>({
             onClick={() => onChange(o.value)}
             className={`${SIZES[size]} font-semibold rounded-md transition-colors ${
               active
-                ? 'bg-white dark:bg-ui-active-dark text-slate-900 dark:text-white shadow-sm'
-                : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-800 dark:hover:text-white'
+                ? 'bg-white dark:bg-ui-active-dark text-text-base shadow-sm'
+                : 'text-text-muted hover:text-text-base'
             }`}
           >
             {o.label}

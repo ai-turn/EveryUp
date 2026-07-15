@@ -48,15 +48,15 @@ function KpiCard({ label, value, unit, sub, tone }: {
   const valueColor =
     tone === 'danger' ? 'text-red-500'
     : tone === 'warn' ? 'text-amber-600 dark:text-amber-400'
-    : 'text-slate-900 dark:text-white';
+    : 'text-text-base';
   return (
-    <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-4">
-      <div className="text-xs text-slate-500 dark:text-text-muted-dark">{label}</div>
+    <div className="bg-bg-surface border border-ui-border rounded-xl p-4">
+      <div className="text-xs text-text-muted">{label}</div>
       <div className={`text-xl font-bold mt-1 font-mono ${valueColor}`}>
         {value}
-        {unit && <span className="text-xs font-medium text-slate-400 dark:text-text-dim-dark ml-0.5">{unit}</span>}
+        {unit && <span className="text-xs font-medium text-text-dim ml-0.5">{unit}</span>}
       </div>
-      {sub && <div className="text-2xs text-slate-400 dark:text-text-dim-dark mt-0.5">{sub}</div>}
+      {sub && <div className="text-2xs text-text-dim mt-0.5">{sub}</div>}
     </div>
   );
 }
@@ -93,41 +93,41 @@ function ServiceCard({ service, metric, onOpen }: {
   return (
     <div
       onClick={onOpen}
-      className="group bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-4 cursor-pointer hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 active:translate-y-0 flex flex-col gap-3"
+      className="group bg-bg-surface border border-ui-border rounded-xl p-4 cursor-pointer hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 active:translate-y-0 flex flex-col gap-3"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
           <span className={`h-2.5 w-2.5 rounded-full shrink-0 mt-0.5 ${service.healthy ? 'bg-emerald-500' : 'bg-red-500 animate-pulse'}`} />
           <div className="min-w-0">
-            <h3 className="font-semibold text-base text-slate-900 dark:text-white truncate leading-tight">{service.name}</h3>
-            <span className="text-xs text-slate-400 dark:text-text-dim-dark truncate block">{service.runtime ?? service.checkType}</span>
+            <h3 className="font-semibold text-base text-text-base truncate leading-tight">{service.name}</h3>
+            <span className="text-xs text-text-dim truncate block">{service.runtime ?? service.checkType}</span>
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {!service.healthy && (
             <span className="text-2xs font-bold text-red-600 bg-red-500/10 px-1.5 py-0.5 rounded">{t('장애')}</span>
           )}
-          <MaterialIcon name="chevron_right" className="text-base text-slate-300 dark:text-text-dim-dark group-hover:text-primary transition-colors" />
+          <MaterialIcon name="chevron_right" className="text-base text-text-dim group-hover:text-primary transition-colors" />
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-3 text-sm">
         <div className="min-w-0">
-          <div className="text-2xs text-slate-400 dark:text-text-dim-dark">{t('응답시간')}</div>
-          <div className="font-mono font-semibold text-slate-800 dark:text-white truncate">{service.lastLatency ?? '—'}</div>
+          <div className="text-2xs text-text-dim">{t('응답시간')}</div>
+          <div className="font-mono font-semibold text-text-base truncate">{service.lastLatency ?? '—'}</div>
         </div>
         <div className="min-w-0">
-          <div className="text-2xs text-slate-400 dark:text-text-dim-dark">{t('상태')}</div>
+          <div className="text-2xs text-text-dim">{t('상태')}</div>
           <div className={`font-mono font-semibold ${service.healthy ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
             {service.lastStatus ?? '—'}
           </div>
         </div>
         {metric && (
           <div className="min-w-0">
-            <div className="text-2xs text-slate-400 dark:text-text-dim-dark truncate" title={metric.metricName}>
+            <div className="text-2xs text-text-dim truncate" title={metric.metricName}>
               {metricLabel(metric.metricName)}
             </div>
-            <div className="font-mono font-semibold text-slate-800 dark:text-white truncate">
+            <div className="font-mono font-semibold text-text-base truncate">
               {formatMetricValue(metric.value, metric.unit)}
             </div>
           </div>
@@ -209,7 +209,7 @@ export function ProjectDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 gap-3 text-slate-500 dark:text-text-muted-dark">
+      <div className="flex items-center justify-center h-64 gap-3 text-text-muted">
         <MaterialIcon name="sync" className="text-2xl animate-spin" />
       </div>
     );
@@ -237,7 +237,7 @@ export function ProjectDetailPage() {
       {/* Back — mobile only; desktop navigates via the always-present sidebar */}
       <button
         onClick={() => navigate('/')}
-        className="lg:hidden flex items-center gap-1 text-sm text-slate-500 dark:text-text-muted-dark hover:text-slate-800 dark:hover:text-white transition-colors"
+        className="lg:hidden flex items-center gap-1 text-sm text-text-muted hover:text-text-base transition-colors"
       >
         <MaterialIcon name="arrow_back" className="text-base" />
         {t('프로젝트 목록')}
@@ -248,16 +248,16 @@ export function ProjectDetailPage() {
         <div className="space-y-1 min-w-0">
           <div className="flex items-center gap-2.5">
             <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${online ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white truncate">{agentName}</h1>
-            {agent?.version && <span className="text-xs text-slate-400 dark:text-text-dim-dark">v{agent.version}</span>}
+            <h1 className="text-2xl font-bold text-text-base truncate">{agentName}</h1>
+            {agent?.version && <span className="text-xs text-text-dim">v{agent.version}</span>}
           </div>
-          <p className="text-sm text-slate-500 dark:text-text-muted-dark flex items-center gap-1.5">
+          <p className="text-sm text-text-muted flex items-center gap-1.5">
             <span>{t('서비스')} {services.length}{t('개')}</span>
-            <span className="text-slate-300 dark:text-text-dim-dark">·</span>
+            <span className="text-text-dim">·</span>
             <span className="text-emerald-600 dark:text-emerald-400 font-medium">{healthy} {t('정상')}</span>
             {!allHealthy && (
               <>
-                <span className="text-slate-300 dark:text-text-dim-dark">·</span>
+                <span className="text-text-dim">·</span>
                 <span className="text-red-500 font-medium">{services.length - healthy} {t('장애')}</span>
               </>
             )}
@@ -267,7 +267,7 @@ export function ProjectDetailPage() {
           <button
             onClick={handleRefresh}
             title="새로고침"
-            className="p-2 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-ui-hover-dark transition-colors"
+            className="p-2 rounded-lg text-slate-400 hover:text-text-base hover:bg-ui-hover transition-colors"
           >
             <MaterialIcon name="refresh" className={`text-lg ${spinning ? 'animate-spin' : ''}`} />
           </button>
@@ -306,10 +306,10 @@ export function ProjectDetailPage() {
           className="w-full flex items-center gap-3 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/15 px-4 py-3 text-left hover:border-red-300 dark:hover:border-red-800 transition-colors"
         >
           <span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse shrink-0" />
-          <span className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+          <span className="text-sm font-semibold text-text-base truncate">
             {t('진행 중 장애')} — {banner.serviceName}
           </span>
-          <span className="text-xs text-slate-500 dark:text-text-muted-dark shrink-0">
+          <span className="text-xs text-text-muted shrink-0">
             {formatDuration(banner.durationSec)} {t('경과')}
             {activeIncidents.length > 1 && ` · +${activeIncidents.length - 1}`}
           </span>
@@ -348,8 +348,8 @@ export function ProjectDetailPage() {
       {/* Service health grid */}
       {services.length === 0 ? (
         <div className="py-16 text-center">
-          <MaterialIcon name="inventory_2" className="text-4xl text-slate-300 dark:text-text-dim-dark mb-2" />
-          <p className="text-sm text-slate-400 dark:text-text-muted-dark">{t('수집된 서비스가 없습니다')}</p>
+          <MaterialIcon name="inventory_2" className="text-4xl text-text-dim mb-2" />
+          <p className="text-sm text-text-dim">{t('수집된 서비스가 없습니다')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -378,10 +378,10 @@ export function ProjectDetailPage() {
       {services.length > 0 && agentId && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
           {/* Incident history */}
-          <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-4">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3">{t('장애 이력 · 30일')}</h3>
+          <div className="bg-bg-surface border border-ui-border rounded-xl p-4">
+              <h3 className="text-base font-bold text-text-base mb-3">{t('장애 이력 · 30일')}</h3>
               {incidents.length === 0 ? (
-                <p className="text-xs text-slate-400 dark:text-text-dim-dark py-4 text-center">{t('최근 30일간 장애가 없습니다')}</p>
+                <p className="text-xs text-text-dim py-4 text-center">{t('최근 30일간 장애가 없습니다')}</p>
               ) : (
                 <div className="space-y-2">
                   {incidents.slice(0, 5).map((inc, i) => (
@@ -391,13 +391,13 @@ export function ProjectDetailPage() {
                       className={`w-full flex items-start gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors ${
                         inc.active
                           ? 'border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/15 hover:border-red-300'
-                          : 'border-slate-200 dark:border-ui-border-dark hover:border-slate-300 dark:hover:border-ui-active-dark'
+                          : 'border-ui-border hover:border-slate-300 dark:hover:border-ui-active-dark'
                       }`}
                     >
                       <span className={`h-1.5 w-1.5 rounded-full mt-1.5 shrink-0 ${inc.active ? 'bg-red-500' : 'bg-emerald-500'}`} />
                       <span className="min-w-0 flex-1">
-                        <span className="block text-xs font-semibold text-slate-800 dark:text-white truncate">{inc.serviceName}</span>
-                        <span className="block text-2xs text-slate-400 dark:text-text-dim-dark mt-0.5">
+                        <span className="block text-xs font-semibold text-text-base truncate">{inc.serviceName}</span>
+                        <span className="block text-2xs text-text-dim mt-0.5">
                           {formatIncidentTime(inc.startedAt)} {t('시작')} · {formatDuration(inc.durationSec)}
                         </span>
                       </span>
@@ -411,15 +411,15 @@ export function ProjectDetailPage() {
             </div>
 
             {/* Event timeline */}
-            <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-4">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3">{t('타임라인')}</h3>
+            <div className="bg-bg-surface border border-ui-border rounded-xl p-4">
+              <h3 className="text-base font-bold text-text-base mb-3">{t('타임라인')}</h3>
               {events.length === 0 ? (
-                <p className="text-xs text-slate-400 dark:text-text-dim-dark py-4 text-center">{t('최근 이벤트가 없습니다')}</p>
+                <p className="text-xs text-text-dim py-4 text-center">{t('최근 이벤트가 없습니다')}</p>
               ) : (
                 <div className="space-y-0.5">
                   {events.map((e) => (
-                    <div key={e.id} className="flex items-baseline gap-2.5 py-1.5 border-b border-slate-50 dark:border-ui-border-dark/50 last:border-0">
-                      <span className="text-2xs font-mono text-slate-400 dark:text-text-dim-dark w-10 shrink-0">
+                    <div key={e.id} className="flex items-baseline gap-2.5 py-1.5 border-b border-ui-border-soft/50 last:border-0">
+                      <span className="text-2xs font-mono text-text-dim w-10 shrink-0">
                         {new Date(e.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                       <span className={`h-1.5 w-1.5 rounded-full shrink-0 translate-y-px ${
@@ -427,7 +427,7 @@ export function ProjectDetailPage() {
                         : e.type === 'status_change' ? 'bg-amber-500'
                         : 'bg-slate-300 dark:bg-ui-active-dark'
                       }`} />
-                      <span className="text-xs text-slate-600 dark:text-text-muted-dark min-w-0 truncate" title={e.message}>
+                      <span className="text-xs text-text-muted min-w-0 truncate" title={e.message}>
                         {e.message || e.type}
                       </span>
                     </div>

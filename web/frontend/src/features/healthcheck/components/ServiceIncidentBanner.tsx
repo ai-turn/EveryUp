@@ -3,7 +3,7 @@ import { useTranslate } from '@tolgee/react';
 import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
-import { MaterialIcon } from '../../../components/common';
+import { Button, MaterialIcon } from '../../../components/common';
 import type { AgentServiceFlat } from '../../../services/api';
 
 interface ServiceIncidentBannerProps {
@@ -44,13 +44,10 @@ export function ServiceIncidentBanner({ service, onInvestigate }: ServiceInciden
           {since && <span className="text-red-500/70 dark:text-red-300/60"> · {t('마지막 응답')} {since}</span>}
         </p>
       </div>
-      <button
-        onClick={onInvestigate}
-        className="shrink-0 inline-flex items-center gap-1 h-9 px-3.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-bold transition-colors"
-      >
+      <Button variant="danger" onClick={onInvestigate}>
         {t('로그 확인')}
         <MaterialIcon name="arrow_forward" className="text-base" />
-      </button>
+      </Button>
     </div>
   );
 }

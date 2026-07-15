@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
-import { MaterialIcon } from '../../../components/common';
+import { Button, MaterialIcon } from '../../../components/common';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { getChannelStyle, getChannelTypeLabel } from '../utils/channelMeta';
 import { ChannelHealthMeta } from './ChannelHealthMeta';
@@ -70,36 +70,33 @@ export function AlertsMobileView({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">{t('alerts.title')}</h1>
-          <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{t('alerts.subtitle')}</p>
+          <h1 className="text-xl font-bold text-text-base">{t('alerts.title')}</h1>
+          <p className="text-sm text-text-muted mt-0.5">{t('alerts.subtitle')}</p>
         </div>
         {activeTab === 'channels' && (
-          <button
-            onClick={onAddChannel}
-            className="flex items-center gap-1.5 px-3 py-2 bg-primary hover:bg-primary/90 rounded-lg text-sm font-semibold text-white transition-all cursor-pointer active:scale-95 shrink-0"
-          >
+          <Button size="sm" onClick={onAddChannel}>
             <MaterialIcon name="add" className="text-base" />
             {t('alerts.addChannel')}
-          </button>
+          </Button>
         )}
       </div>
 
       {/* Stats Summary */}
       {stats && (
         <div className="grid grid-cols-3 gap-2">
-          <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-3">
-            <p className="text-sm font-medium text-slate-500 dark:text-text-muted-dark truncate">
+          <div className="bg-bg-surface border border-ui-border rounded-xl p-3">
+            <p className="text-sm font-medium text-text-muted truncate">
               {t('alerts.history.stats.successRate', { defaultValue: 'Success' })}
             </p>
-            <p className="text-xl font-bold text-slate-900 dark:text-white">{stats.successRate.toFixed(0)}%</p>
+            <p className="text-xl font-bold text-text-base">{stats.successRate.toFixed(0)}%</p>
           </div>
-          <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-3">
+          <div className="bg-bg-surface border border-ui-border rounded-xl p-3">
             <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400 truncate">
               {t('alerts.history.stats.sent', { defaultValue: 'Sent' })}
             </p>
             <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{stats.totalSent}</p>
           </div>
-          <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-3">
+          <div className="bg-bg-surface border border-ui-border rounded-xl p-3">
             <p className="text-sm font-medium text-red-500 truncate">
               {t('alerts.history.stats.failed', { defaultValue: 'Failed' })}
             </p>
@@ -118,14 +115,14 @@ export function AlertsMobileView({
             onClick={() => setActiveTab(tab.key)}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-bold transition-all ${
               activeTab === tab.key
-                ? 'bg-white dark:bg-bg-surface-dark text-slate-900 dark:text-white shadow-sm'
-                : 'text-slate-500 dark:text-text-muted-dark'
+                ? 'bg-bg-surface text-text-base shadow-sm'
+                : 'text-text-muted'
             }`}
           >
             <MaterialIcon name={tab.icon} className="text-lg" />
             {tab.label}
             {tab.count !== undefined && (
-              <span className="text-xs bg-slate-200 dark:bg-ui-active-dark px-1.5 py-0.5 rounded-full">
+              <span className="text-xs bg-ui-active px-1.5 py-0.5 rounded-full">
                 {tab.count}
               </span>
             )}
@@ -138,12 +135,12 @@ export function AlertsMobileView({
         <div className="space-y-3">
           {isLoading ? (
             [1, 2].map(i => (
-              <div key={i} className="h-20 rounded-xl bg-slate-100 dark:bg-ui-hover-dark animate-pulse" />
+              <div key={i} className="h-20 rounded-xl bg-ui-hover animate-pulse" />
             ))
           ) : channels.length === 0 ? (
             <div className="py-8 text-center">
-              <MaterialIcon name="notifications_off" className="text-4xl text-slate-300 dark:text-text-dim-dark" />
-              <p className="text-sm text-slate-400 dark:text-text-muted-dark mt-2">
+              <MaterialIcon name="notifications_off" className="text-4xl text-text-dim" />
+              <p className="text-sm text-text-dim mt-2">
                 {t('alerts.noChannels')}
               </p>
               <button
@@ -159,7 +156,7 @@ export function AlertsMobileView({
               return (
                 <div
                   key={channel.id}
-                  className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-4"
+                  className="bg-bg-surface border border-ui-border rounded-xl p-4"
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${meta.bg} ${!channel.isEnabled ? 'opacity-50' : ''}`}>
@@ -167,9 +164,9 @@ export function AlertsMobileView({
                     </div>
                     <div className={`flex-1 min-w-0 ${!channel.isEnabled ? 'opacity-60' : ''}`}>
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{channel.name}</p>
+                        <p className="text-sm font-bold text-text-base truncate">{channel.name}</p>
                         {!channel.isEnabled && (
-                          <span className="px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider bg-slate-200 dark:bg-ui-active-dark text-slate-500 dark:text-text-muted-dark rounded-full shrink-0">
+                          <span className="px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider bg-ui-active text-text-muted rounded-full shrink-0">
                             {t('common.disabled', { defaultValue: 'Disabled' })}
                           </span>
                         )}
@@ -183,7 +180,7 @@ export function AlertsMobileView({
                       <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${channel.isEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
                     </button>
                   </div>
-                  <div className="mb-3 pb-3 border-b border-slate-100 dark:border-ui-border-dark/50">
+                  <div className="mb-3 pb-3 border-b border-ui-border-soft/50">
                     <ChannelHealthMeta health={channelHealth[channel.id]} compact />
                   </div>
                   <div className="flex gap-2">
@@ -196,7 +193,7 @@ export function AlertsMobileView({
                     </button>
                     <button
                       onClick={() => onEditChannel(channel)}
-                      className="flex items-center justify-center p-2 rounded-lg bg-slate-100 dark:bg-ui-hover-dark text-slate-500 active:scale-95 transition-transform"
+                      className="flex items-center justify-center p-2 rounded-lg bg-ui-hover text-slate-500 active:scale-95 transition-transform"
                     >
                       <MaterialIcon name="edit" className="text-base" />
                     </button>
@@ -219,12 +216,12 @@ export function AlertsMobileView({
         <div className="space-y-2">
           {rulesLoading ? (
             [1, 2].map(i => (
-              <div key={i} className="h-16 rounded-xl bg-slate-100 dark:bg-ui-hover-dark animate-pulse" />
+              <div key={i} className="h-16 rounded-xl bg-ui-hover animate-pulse" />
             ))
           ) : rules.length === 0 ? (
             <div className="py-8 text-center">
-              <MaterialIcon name="rule" className="text-4xl text-slate-300 dark:text-text-dim-dark" />
-              <p className="text-sm text-slate-400 dark:text-text-muted-dark mt-2">
+              <MaterialIcon name="rule" className="text-4xl text-text-dim" />
+              <p className="text-sm text-text-dim mt-2">
                 {t('alerts.rules.empty', { defaultValue: 'No alert rules configured' })}
               </p>
             </div>
@@ -234,7 +231,7 @@ export function AlertsMobileView({
               return (
                 <div
                   key={rule.id}
-                  className={`bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-4 ${!rule.isEnabled ? 'opacity-50' : ''}`}
+                  className={`bg-bg-surface border border-ui-border rounded-xl p-4 ${!rule.isEnabled ? 'opacity-50' : ''}`}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-9 h-9 rounded-lg ${sev.bg} flex items-center justify-center shrink-0`}>
@@ -243,8 +240,8 @@ export function AlertsMobileView({
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{rule.name}</p>
-                      <p className="text-sm text-slate-500 dark:text-text-muted-dark capitalize">
+                      <p className="text-sm font-bold text-text-base truncate">{rule.name}</p>
+                      <p className="text-sm text-text-muted capitalize">
                         {rule.severity} · {rule.metric} {rule.operator} {rule.threshold}
                       </p>
                     </div>
@@ -266,12 +263,12 @@ export function AlertsMobileView({
         <div className="space-y-2">
           {historyLoading ? (
             [1, 2, 3].map(i => (
-              <div key={i} className="h-16 rounded-xl bg-slate-100 dark:bg-ui-hover-dark animate-pulse" />
+              <div key={i} className="h-16 rounded-xl bg-ui-hover animate-pulse" />
             ))
           ) : history.length === 0 ? (
             <div className="py-8 text-center">
-              <MaterialIcon name="history" className="text-4xl text-slate-300 dark:text-text-dim-dark" />
-              <p className="text-sm text-slate-400 dark:text-text-muted-dark mt-2">
+              <MaterialIcon name="history" className="text-4xl text-text-dim" />
+              <p className="text-sm text-text-dim mt-2">
                 {t('alerts.history.empty', { defaultValue: 'No notification history' })}
               </p>
             </div>
@@ -281,22 +278,22 @@ export function AlertsMobileView({
               return (
                 <div
                   key={item.id}
-                  className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-3"
+                  className="bg-bg-surface border border-ui-border rounded-xl p-3"
                 >
                   <div className="flex items-start gap-3">
                     <MaterialIcon name={statusConf.icon} className={`text-lg mt-0.5 shrink-0 ${statusConf.color}`} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-800 dark:text-text-base-dark truncate">
+                      <p className="text-sm font-semibold text-text-base truncate">
                         {item.hostName || item.serviceName || item.channelName}
                       </p>
-                      <p className="text-sm text-slate-500 dark:text-text-muted-dark truncate mt-0.5">
+                      <p className="text-sm text-text-muted truncate mt-0.5">
                         {item.message}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-sm text-slate-400 dark:text-text-dim-dark">
+                        <span className="text-sm text-text-dim">
                           {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true, locale: dateLocale })}
                         </span>
-                        <span className="text-sm capitalize text-slate-400 dark:text-text-dim-dark">
+                        <span className="text-sm capitalize text-text-dim">
                           {item.channelType}
                         </span>
                       </div>

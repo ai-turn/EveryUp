@@ -45,10 +45,10 @@ export function AgentRealtimeMetrics({ agentId, serviceKey, refreshKey }: AgentR
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="flex flex-col gap-2 rounded-xl p-6 border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-chart-bg animate-pulse">
-            <div className="h-4 bg-slate-200 dark:bg-ui-active-dark rounded w-24" />
-            <div className="h-8 bg-slate-200 dark:bg-ui-active-dark rounded w-32 mt-2" />
-            <div className="h-3 bg-slate-200 dark:bg-ui-active-dark rounded w-20 mt-1" />
+          <div key={i} className="flex flex-col gap-2 rounded-xl p-6 border border-ui-border bg-white dark:bg-chart-bg animate-pulse">
+            <div className="h-4 bg-ui-active rounded w-24" />
+            <div className="h-8 bg-ui-active rounded w-32 mt-2" />
+            <div className="h-3 bg-ui-active rounded w-20 mt-1" />
           </div>
         ))}
       </div>
@@ -76,9 +76,9 @@ export function AgentRealtimeMetrics({ agentId, serviceKey, refreshKey }: AgentR
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       {/* Average latency */}
-      <div className="flex flex-col rounded-xl p-6 border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-chart-bg">
+      <div className="flex flex-col rounded-xl p-6 border border-ui-border bg-white dark:bg-chart-bg">
         <div className="flex items-center justify-between">
-          <p className="text-slate-500 dark:text-text-muted-dark text-sm font-medium">{t('평균 응답')}</p>
+          <p className="text-text-muted text-sm font-medium">{t('평균 응답')}</p>
           {latencyTrend !== null && latencyTrend !== 0 && (
             <span className={`text-2xs font-bold px-1.5 py-0.5 rounded ${
               latencyTrend < 0
@@ -89,7 +89,7 @@ export function AgentRealtimeMetrics({ agentId, serviceKey, refreshKey }: AgentR
             </span>
           )}
         </div>
-        <p className="text-slate-900 dark:text-white tracking-tight text-3xl font-bold tabular-nums mt-2">
+        <p className="text-text-base tracking-tight text-3xl font-bold tabular-nums mt-2">
           {hasData ? `${formatLatency(avgLatency)}ms` : '-'}
         </p>
         <p className="text-slate-400 dark:text-text-chart-dim text-xs mt-1">
@@ -98,14 +98,14 @@ export function AgentRealtimeMetrics({ agentId, serviceKey, refreshKey }: AgentR
       </div>
 
       {/* Uptime */}
-      <div className="flex flex-col rounded-xl p-6 border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-chart-bg">
+      <div className="flex flex-col rounded-xl p-6 border border-ui-border bg-white dark:bg-chart-bg">
         <div className="flex items-center justify-between">
-          <p className="text-slate-500 dark:text-text-muted-dark text-sm font-medium">{t('업타임')}</p>
+          <p className="text-text-muted text-sm font-medium">{t('업타임')}</p>
           {hasData && (
             <span className={`text-2xs font-bold px-1.5 py-0.5 rounded ${uptimePill.cls}`}>{uptimePill.label}</span>
           )}
         </div>
-        <p className={`tracking-tight text-3xl font-bold tabular-nums mt-2 ${hasData ? getUptimeTextClass(uptimePct) : 'text-slate-900 dark:text-white'}`}>
+        <p className={`tracking-tight text-3xl font-bold tabular-nums mt-2 ${hasData ? getUptimeTextClass(uptimePct) : 'text-text-base'}`}>
           {hasData ? `${uptimePct.toFixed(2)}%` : '-'}
         </p>
         <p className="text-slate-400 dark:text-text-chart-dim text-xs mt-1">
@@ -114,11 +114,11 @@ export function AgentRealtimeMetrics({ agentId, serviceKey, refreshKey }: AgentR
       </div>
 
       {/* Check count */}
-      <div className="flex flex-col rounded-xl p-6 border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-chart-bg">
+      <div className="flex flex-col rounded-xl p-6 border border-ui-border bg-white dark:bg-chart-bg">
         <div className="flex items-center justify-between">
-          <p className="text-slate-500 dark:text-text-muted-dark text-sm font-medium">{t('체크 횟수')}</p>
+          <p className="text-text-muted text-sm font-medium">{t('체크 횟수')}</p>
         </div>
-        <p className="text-slate-900 dark:text-white tracking-tight text-3xl font-bold tabular-nums mt-2">
+        <p className="text-text-base tracking-tight text-3xl font-bold tabular-nums mt-2">
           {String(totalChecks)}
         </p>
         <p className="text-slate-400 dark:text-text-chart-dim text-xs mt-1">{t('최근 24시간')}</p>

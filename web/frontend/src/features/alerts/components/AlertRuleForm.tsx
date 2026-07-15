@@ -90,14 +90,14 @@ function buildDefaultMessage(metric: RuleFormValues['metric'], operator: RuleFor
 
 function FormStep({ n, title, subtitle, children }: { n: number; title: string; subtitle?: string; children: ReactNode }) {
     return (
-        <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30">
+        <div className="bg-bg-surface border border-ui-border rounded-xl overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-slate-50/50 dark:bg-ui-hover-dark/30">
                 <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs font-mono shrink-0">
                     {n}
                 </span>
                 <div>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">{title}</p>
-                    {subtitle && <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{subtitle}</p>}
+                    <p className="text-sm font-bold text-text-base uppercase tracking-wider">{title}</p>
+                    {subtitle && <p className="text-sm text-text-muted mt-0.5">{subtitle}</p>}
                 </div>
             </div>
             <div className="p-5 space-y-5">{children}</div>
@@ -109,16 +109,16 @@ function Field({ label, hint, required, children }: { label: string; hint?: stri
     return (
         <div>
             <div className="flex items-center gap-1 mb-2">
-                <label className="text-sm font-bold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide">{label}</label>
+                <label className="text-sm font-bold text-text-muted uppercase tracking-wide">{label}</label>
                 {required && <span className="text-red-500 text-xs">*</span>}
             </div>
             {children}
-            {hint && <p className="text-sm text-slate-400 dark:text-text-dim-dark mt-1.5 italic">{hint}</p>}
+            {hint && <p className="text-sm text-text-dim mt-1.5 italic">{hint}</p>}
         </div>
     );
 }
 
-const inputCls = "w-full px-3.5 py-2.5 bg-slate-50 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark rounded-lg text-sm font-semibold outline-none focus:border-primary dark:text-white transition-colors";
+const inputCls = "w-full px-3.5 py-2.5 bg-ui-hover-soft border border-ui-border rounded-lg text-sm font-semibold outline-none focus:border-primary dark:text-white transition-colors";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -167,12 +167,12 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
     };
 
     return (
-        <form id="alert-rule-form" onSubmit={handleSubmit} className="px-6 py-6">
+        <form id="alert-rule-form" onSubmit={handleSubmit}>
             <div className="max-w-350 mx-auto grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
                 <div className="space-y-4 min-w-0">
                     <FormStep n={1} title={t('alerts.rules.systemRule')} subtitle={t('alerts.rules.systemRuleDesc')}>
-                        <div className="p-4 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-xl">
-                            <h3 className="font-bold text-slate-900 dark:text-white mb-1">{rule.name}</h3>
+                        <div className="p-4 bg-ui-hover-soft/50 rounded-xl">
+                            <h3 className="font-bold text-text-base mb-1">{rule.name}</h3>
                             <p className="text-sm text-slate-500">{t('alerts.rules.systemRuleDesc')}</p>
                         </div>
                     </FormStep>
@@ -193,7 +193,7 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
                                 <p className="text-sm text-slate-400">{t('alerts.rules.noChannels')}</p>
                             ) : channels.map(ch => (
                                 <button key={ch.id} type="button" onClick={() => handleToggleChannel(ch.id)}
-                                    className={`w-full flex items-center gap-3 px-3 py-2.5 border-2 rounded-xl transition-all ${selectedChannels.includes(ch.id) ? 'border-primary bg-primary/5 text-primary' : 'border-slate-100 dark:border-ui-border-dark text-slate-500'}`}>
+                                    className={`w-full flex items-center gap-3 px-3 py-2.5 border-2 rounded-xl transition-all ${selectedChannels.includes(ch.id) ? 'border-primary bg-primary/5 text-primary' : 'border-ui-border-soft text-slate-500'}`}>
                                     <ChannelIcon type={ch.type} size={16} className={getChannelStyle(ch.type).text} />
                                     <span className="text-sm font-bold flex-1 text-left">{ch.name}</span>
                                 </button>
@@ -207,34 +207,34 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
 
                 <div className="hidden lg:block">
                     <div className="sticky top-6 space-y-4">
-                        <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
-                            <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30">
+                        <div className="bg-bg-surface border border-ui-border rounded-xl overflow-hidden">
+                            <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-slate-50/50 dark:bg-ui-hover-dark/30">
                                 <MaterialIcon name="lock" className="text-base text-slate-400" />
                                 <div>
-                                    <p className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest">
+                                    <p className="text-sm font-bold text-text-base uppercase tracking-widest">
                                         {t('alerts.rules.systemRule')}
                                     </p>
-                                    <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">
+                                    <p className="text-sm text-text-muted mt-0.5">
                                         {t('alerts.rules.preview')}
                                     </p>
                                 </div>
                             </div>
                             <div className="p-5 space-y-4">
-                                <div className="rounded-xl bg-slate-50 dark:bg-ui-hover-dark/50 p-3">
+                                <div className="rounded-xl bg-ui-hover-soft/50 p-3">
                                     <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{t('alerts.rules.ruleName')}</p>
-                                    <p className="mt-1 truncate text-sm font-bold text-slate-900 dark:text-white">{rule.name}</p>
+                                    <p className="mt-1 truncate text-sm font-bold text-text-base">{rule.name}</p>
                                 </div>
-                                <div className="rounded-xl bg-slate-50 dark:bg-ui-hover-dark/50 p-3">
+                                <div className="rounded-xl bg-ui-hover-soft/50 p-3">
                                     <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{t('alerts.rules.notifyChannels')}</p>
-                                    <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white">
+                                    <p className="mt-1 text-sm font-bold text-text-base">
                                         {selectedChannels.length === 0
                                             ? t('alerts.rules.channelSummaryAll', { count: effectiveChannelCount })
                                             : t('alerts.rules.channelSummarySelected', { count: effectiveChannelCount })}
                                     </p>
                                 </div>
-                                <div className="rounded-xl bg-slate-50 dark:bg-ui-hover-dark/50 p-3">
+                                <div className="rounded-xl bg-ui-hover-soft/50 p-3">
                                     <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{t('alerts.rules.messageLabel')}</p>
-                                    <p className="mt-2 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                                    <p className="mt-2 text-sm leading-relaxed text-text-secondary">
                                         {message || 'Server has been started'}
                                     </p>
                                 </div>
@@ -433,7 +433,6 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
             onSubmit={handleSubmit(onSubmit, () => {
                 toast.error(t('alerts.rules.validationFailed', { defaultValue: '필수 항목을 확인해주세요' }));
             })}
-            className="px-6 py-6"
         >
             <div className="max-w-350 mx-auto grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
 
@@ -457,7 +456,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                         className={`flex-1 flex items-center gap-2 px-3 py-3 border-2 rounded-xl transition-all text-left ${
                                             watchedCategory === cat.value
                                                 ? 'border-primary bg-primary/10 text-primary'
-                                                : 'border-slate-100 dark:border-ui-border-dark text-slate-600 dark:text-text-muted-dark hover:border-slate-200 dark:hover:border-slate-600'
+                                                : 'border-ui-border-soft text-text-muted hover:border-slate-200 dark:hover:border-slate-600'
                                         }`}
                                     >
                                         <MaterialIcon name={cat.icon} className="text-base" />
@@ -532,7 +531,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                                 className={`px-3 py-2 rounded-lg text-sm font-bold border-2 transition-all ${
                                                     watchedMetric === m
                                                         ? 'border-primary bg-primary/10 text-primary'
-                                                        : 'border-slate-100 dark:border-ui-border-dark text-slate-500 hover:border-slate-200 dark:hover:border-slate-600'
+                                                        : 'border-ui-border-soft text-slate-500 hover:border-slate-200 dark:hover:border-slate-600'
                                                 }`}
                                             >
                                                 {m === 'log_level' ? t('alerts.rules.logLevel') : m === 'api_status_code' ? t('alerts.rules.apiStatusCode') : m.replace('_', ' ').toUpperCase()}
@@ -568,7 +567,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                         className={`flex items-center justify-center gap-1.5 p-3 border-2 rounded-xl transition-all text-sm font-bold ${
                                             conditionPreset === p.value
                                                 ? 'border-primary bg-primary/10 text-primary'
-                                                : 'border-slate-100 dark:border-ui-border-dark text-slate-500 hover:border-slate-200 dark:hover:border-slate-600'
+                                                : 'border-ui-border-soft text-slate-500 hover:border-slate-200 dark:hover:border-slate-600'
                                         }`}
                                     >
                                         <MaterialIcon name={p.icon} className="text-sm" />
@@ -619,7 +618,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                             className={inputCls + (thresholdUnit ? " rounded-r-none" : "")}
                                         />
                                         {thresholdUnit && (
-                                            <span className="px-3 py-2.5 bg-slate-100 dark:bg-ui-hover-dark border border-l-0 border-slate-200 dark:border-ui-border-dark rounded-r-lg text-sm font-semibold text-slate-500 dark:text-text-muted-dark font-mono">
+                                            <span className="px-3 py-2.5 bg-ui-hover border border-l-0 border-ui-border rounded-r-lg text-sm font-semibold text-text-muted font-mono">
                                                 {thresholdUnit}
                                             </span>
                                         )}
@@ -651,15 +650,15 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                         )}
 
                         {conditionPreset !== 'custom' && isEndpoint && (
-                            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-xl">
+                            <div className="flex items-center justify-between p-3 bg-ui-hover-soft/50 rounded-xl">
                                 <div>
-                                    <p className="text-sm font-bold text-slate-700 dark:text-white">{t('alerts.rules.consecutiveChecks')}</p>
+                                    <p className="text-sm font-bold text-text-base">{t('alerts.rules.consecutiveChecks')}</p>
                                     <p className="text-sm text-slate-400">{t('alerts.rules.consecutiveChecksHint')}</p>
                                 </div>
                                 <input
                                     type="number" min={1} max={20}
                                     {...register('duration', { valueAsNumber: true })}
-                                    className="w-16 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-lg px-2 py-1.5 text-sm font-mono font-semibold text-slate-900 dark:text-white focus:ring-1 focus:ring-primary text-right tabular-nums"
+                                    className="w-16 bg-bg-surface border border-ui-border rounded-lg px-2 py-1.5 text-sm font-mono font-semibold text-text-base focus:ring-1 focus:ring-primary text-right tabular-nums"
                                 />
                             </div>
                         )}
@@ -695,7 +694,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                         className={`py-2.5 text-sm font-bold rounded-xl border-2 transition-all flex items-center justify-center gap-2 uppercase tracking-wide ${
                                             watchedSeverity === s.value
                                                 ? s.active
-                                                : 'border-slate-100 dark:border-ui-border-dark text-slate-500 hover:border-slate-200 dark:hover:border-slate-600'
+                                                : 'border-ui-border-soft text-slate-500 hover:border-slate-200 dark:hover:border-slate-600'
                                         }`}
                                     >
                                         <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
@@ -720,7 +719,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                         className={`w-full flex items-center gap-3 px-3 py-2.5 border-2 rounded-xl transition-all ${
                                             watchedChannelIds.includes(ch.id)
                                                 ? 'border-primary bg-primary/5 text-primary'
-                                                : 'border-slate-100 dark:border-ui-border-dark text-slate-500 hover:border-slate-200 dark:hover:border-slate-600'
+                                                : 'border-ui-border-soft text-slate-500 hover:border-slate-200 dark:hover:border-slate-600'
                                         }`}
                                     >
                                         <ChannelIcon type={ch.type} size={16} className={getChannelStyle(ch.type).text} />
@@ -761,12 +760,12 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                     <div className="sticky top-6 space-y-4">
 
                         {/* Live preview card */}
-                        <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
-                            <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30">
+                        <div className="bg-bg-surface border border-ui-border rounded-xl overflow-hidden">
+                            <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-slate-50/50 dark:bg-ui-hover-dark/30">
                                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                                 <div>
-                                    <p className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest">{t('alerts.rules.livePreview', { defaultValue: '라이브 미리보기' })}</p>
-                                    <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{t('alerts.rules.livePreviewSub', { defaultValue: '입력값 변경 시 자동 갱신' })}</p>
+                                    <p className="text-sm font-bold text-text-base uppercase tracking-widest">{t('alerts.rules.livePreview', { defaultValue: '라이브 미리보기' })}</p>
+                                    <p className="text-sm text-text-muted mt-0.5">{t('alerts.rules.livePreviewSub', { defaultValue: '입력값 변경 시 자동 갱신' })}</p>
                                 </div>
                             </div>
                             <div className="p-5 space-y-5">
@@ -821,9 +820,9 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                                 <span className={`w-1.5 h-1.5 rounded-full ${severityClasses.dot}`} />
                                                 {watchedSeverity}
                                             </span>
-                                            <span className="text-sm text-slate-500 dark:text-text-muted-dark truncate">{watchedName || `<${t('alerts.rules.ruleName')}>`}</span>
+                                            <span className="text-sm text-text-muted truncate">{watchedName || `<${t('alerts.rules.ruleName')}>`}</span>
                                         </div>
-                                        <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                                        <p className="text-sm text-text-secondary leading-relaxed">
                                             {customMessage || buildDefaultMessage(watchedMetric, watchedOperator, watchedThreshold, watchedDuration)}
                                         </p>
                                     </div>
@@ -840,9 +839,9 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                         {channels.length === 0 ? (
                                             <p className="text-sm text-slate-400 italic">{t('alerts.rules.noChannels')}</p>
                                         ) : previewChannels.slice(0, 5).map(ch => (
-                                            <div key={ch.id} className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-lg">
+                                            <div key={ch.id} className="flex items-center gap-2 px-3 py-1.5 bg-ui-hover-soft/50 rounded-lg">
                                                 <ChannelIcon type={ch.type} size={14} className={getChannelStyle(ch.type).text} />
-                                                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex-1 truncate">{ch.name}</span>
+                                                <span className="text-sm font-semibold text-text-secondary flex-1 truncate">{ch.name}</span>
                                                 <span className="text-xs text-slate-400 uppercase font-mono">{ch.type}</span>
                                             </div>
                                         ))}

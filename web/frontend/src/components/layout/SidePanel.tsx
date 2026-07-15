@@ -36,7 +36,7 @@ export function SidePanel() {
                 ref={panelRef}
                 className={`
           fixed inset-y-0 right-0 z-50 ${widthClass}
-          bg-white dark:bg-bg-surface-dark border-l border-slate-200 dark:border-ui-border-dark
+          bg-bg-surface border-l border-ui-border
           shadow-2xl transform transition-transform duration-500 ease-in-out
           ${isOpen ? 'translate-x-0' : 'translate-x-full'}
           flex flex-col
@@ -46,16 +46,16 @@ export function SidePanel() {
                 }}
             >
                 {/* Header */}
-                <div className="flex-none flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark z-10 transition-colors duration-200">
+                <div className="flex-none flex items-center justify-between px-6 h-16 border-b border-ui-border bg-bg-surface z-10 transition-colors duration-200">
                     <div className="flex items-center gap-3 min-w-0">
-                        <MaterialIcon name="apps" className="text-slate-400 dark:text-text-muted-dark shrink-0" />
-                        <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight truncate">
+                        <MaterialIcon name="apps" className="text-text-dim shrink-0" />
+                        <h2 className="text-lg font-bold text-text-base tracking-tight truncate">
                             {title}
                         </h2>
                     </div>
                     <button
                         type="button"
-                        className="p-2 -mr-2 text-slate-400 hover:text-slate-600 dark:hover:text-text-base-dark rounded-lg hover:bg-slate-100 dark:hover:bg-ui-hover-dark transition-colors shrink-0"
+                        className="p-2 -mr-2 text-slate-400 hover:text-text-base rounded-lg hover:bg-ui-hover transition-colors shrink-0"
                         onClick={closePanel}
                     >
                         <MaterialIcon name="close" className="text-xl" />

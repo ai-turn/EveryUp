@@ -12,10 +12,10 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-slate-200 dark:border-ui-border-dark">
+    <footer className="border-t border-ui-border">
       {/* 본문 컨테이너(p-4 sm:px-6)와 동일 패딩 — full-bleed 콘텐츠와 좌우 정렬 유지 */}
       <div className="px-4 sm:px-6 py-3">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-400 dark:text-text-dim-dark">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-text-dim">
           <span>© {currentYear} EveryUp · {t('footer.rights')}</span>
 
           <div className="flex items-center gap-4">
@@ -23,7 +23,7 @@ export function Footer() {
               href="https://github.com/ai-turn/Monitoring"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 hover:text-slate-600 dark:hover:text-text-muted-dark transition-colors"
+              className="flex items-center gap-1 hover:text-text-muted transition-colors"
             >
               <GitHubIcon />
               <span>GitHub</span>
@@ -32,7 +32,7 @@ export function Footer() {
               href="https://github.com/ai-turn/Monitoring/issues"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-slate-600 dark:hover:text-text-muted-dark transition-colors"
+              className="hover:text-text-muted transition-colors"
             >
               {t('footer.bugReport')}
             </a>

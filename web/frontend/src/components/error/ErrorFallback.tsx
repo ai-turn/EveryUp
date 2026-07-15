@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { MaterialIcon } from '../common';
+import { Button, MaterialIcon } from '../common';
 
 interface ErrorFallbackProps {
   error: Error | null;
@@ -21,16 +21,16 @@ export function ErrorFallback({ error, onReset }: ErrorFallbackProps) {
           className="text-8xl text-red-500 mb-4"
         />
 
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+        <h1 className="text-2xl font-bold text-text-base mb-2">
           {t('errorFallback.title')}
         </h1>
 
-        <p className="text-slate-600 dark:text-text-muted-dark mb-4">
+        <p className="text-text-muted mb-4">
           {t('errorFallback.description')}
         </p>
 
         {import.meta.env.DEV && error && (
-          <pre className="text-left text-xs bg-slate-100 dark:bg-ui-hover-dark p-4 rounded-lg mb-4 overflow-auto max-h-32">
+          <pre className="text-left text-xs bg-ui-hover p-4 rounded-lg mb-4 overflow-auto max-h-32">
             {error.message}
           </pre>
         )}
@@ -38,16 +38,13 @@ export function ErrorFallback({ error, onReset }: ErrorFallbackProps) {
         <div className="flex gap-4 justify-center">
           <button
             onClick={onReset}
-            className="px-4 py-2 border border-slate-300 dark:border-ui-border-dark text-slate-700 dark:text-text-secondary-dark font-semibold rounded-lg hover:bg-slate-100 dark:hover:bg-ui-hover-dark transition-colors"
+            className="px-4 py-2 border border-ui-border text-text-secondary font-semibold rounded-lg hover:bg-ui-hover transition-colors"
           >
             {t('errorFallback.retry')}
           </button>
-          <button
-            onClick={handleGoHome}
-            className="px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors"
-          >
+          <Button onClick={handleGoHome}>
             {t('errorFallback.goHome')}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

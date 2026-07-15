@@ -40,15 +40,15 @@ export function AuditLogSection() {
   return (
     <SectionCard title={t('settings.audit.title')} subtitle={t('settings.audit.subtitle')}>
       {events.length === 0 ? (
-        <p className="text-sm text-slate-500 dark:text-text-muted-dark">{t('settings.audit.empty')}</p>
+        <p className="text-sm text-text-muted">{t('settings.audit.empty')}</p>
       ) : (
         <ul className="divide-y divide-slate-100 dark:divide-ui-border-dark">
           {events.map((event) => {
             const count = bodyCountOf(event.metadata);
             return (
               <li key={event.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 text-sm">
-                <span className="font-semibold text-slate-700 dark:text-text-secondary-dark">{event.username}</span>
-                <span className="min-w-0 flex-1 truncate text-slate-500 dark:text-text-muted-dark" title={event.traceId}>
+                <span className="font-semibold text-text-secondary">{event.username}</span>
+                <span className="min-w-0 flex-1 truncate text-text-muted" title={event.traceId}>
                   {t('settings.audit.viewedTrace', { trace: (event.traceId ?? '').slice(0, 12) })}
                 </span>
                 {typeof count === 'number' && (
@@ -56,7 +56,7 @@ export function AuditLogSection() {
                     {t('settings.audit.bodyCount', { count })}
                   </span>
                 )}
-                <span className="font-mono text-xs text-slate-400 dark:text-text-dim-dark">
+                <span className="font-mono text-xs text-text-dim">
                   {new Date(event.createdAt).toLocaleString()}
                 </span>
               </li>

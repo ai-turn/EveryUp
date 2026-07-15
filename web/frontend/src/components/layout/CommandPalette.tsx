@@ -110,21 +110,21 @@ export function CommandPalette() {
       onClick={() => setOpen(false)}
     >
       <div
-        className="w-full max-w-lg rounded-xl bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark shadow-2xl overflow-hidden"
+        className="w-full max-w-lg rounded-xl bg-bg-surface border border-ui-border shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search input */}
-        <div className="flex items-center gap-2.5 px-4 border-b border-slate-200 dark:border-ui-border-dark">
-          <MaterialIcon name="search" className="text-lg text-slate-400 dark:text-text-dim-dark shrink-0" />
+        <div className="flex items-center gap-2.5 px-4 border-b border-ui-border">
+          <MaterialIcon name="search" className="text-lg text-text-dim shrink-0" />
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => { setQuery(e.target.value); setIndex(0); }}
             onKeyDown={onInputKeyDown}
             placeholder={t('프로젝트, 서비스, 페이지 검색...')}
-            className="flex-1 py-3.5 text-sm bg-transparent outline-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-text-dim-dark"
+            className="flex-1 py-3.5 text-sm bg-transparent outline-none text-text-base placeholder-slate-400 dark:placeholder-text-dim-dark"
           />
-          <kbd className="shrink-0 px-1.5 py-0.5 rounded border border-slate-200 dark:border-ui-border-dark text-2xs font-semibold text-slate-400 dark:text-text-dim-dark">
+          <kbd className="shrink-0 px-1.5 py-0.5 rounded border border-ui-border text-2xs font-semibold text-text-dim">
             Esc
           </kbd>
         </div>
@@ -132,7 +132,7 @@ export function CommandPalette() {
         {/* Results */}
         <div ref={listRef} className="max-h-80 overflow-y-auto py-1.5">
           {filtered.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-400 dark:text-text-muted-dark">{t('검색 결과가 없습니다')}</p>
+            <p className="py-8 text-center text-sm text-text-dim">{t('검색 결과가 없습니다')}</p>
           ) : (
             filtered.map((item, i) => (
               <button
@@ -142,17 +142,17 @@ export function CommandPalette() {
                 className={`w-full flex items-center gap-2.5 px-4 py-2 text-left transition-colors ${
                   i === index
                     ? 'bg-primary/10 text-primary'
-                    : 'text-slate-700 dark:text-text-base-dark'
+                    : 'text-text-secondary'
                 }`}
               >
                 {item.icon ? (
-                  <MaterialIcon name={item.icon} className="text-base shrink-0 text-slate-400 dark:text-text-dim-dark" />
+                  <MaterialIcon name={item.icon} className="text-base shrink-0 text-text-dim" />
                 ) : (
                   <span className={`ml-1 mr-1 h-1.5 w-1.5 rounded-full shrink-0 ${item.healthy ? 'bg-emerald-500' : 'bg-red-500'}`} />
                 )}
                 <span className="text-sm font-medium truncate">{item.label}</span>
                 {item.meta && (
-                  <span className="ml-auto text-2xs text-slate-400 dark:text-text-dim-dark shrink-0">{item.meta}</span>
+                  <span className="ml-auto text-2xs text-text-dim shrink-0">{item.meta}</span>
                 )}
               </button>
             ))
@@ -160,7 +160,7 @@ export function CommandPalette() {
         </div>
 
         {/* Footer hint */}
-        <div className="flex items-center gap-3 px-4 py-2 border-t border-slate-200 dark:border-ui-border-dark text-2xs text-slate-400 dark:text-text-dim-dark">
+        <div className="flex items-center gap-3 px-4 py-2 border-t border-ui-border text-2xs text-text-dim">
           <span>↑↓ {t('이동')}</span>
           <span>Enter {t('열기')}</span>
         </div>

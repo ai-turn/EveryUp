@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../contexts/AuthContext'
 import { env } from '../../config/env'
-import { MaterialIcon } from '../../components/common'
+import { Button, MaterialIcon } from '../../components/common'
 import { IconHealthCheck } from '../../components/icons/SidebarIcons'
 
 export function LoginPage() {
@@ -75,7 +75,7 @@ export function LoginPage() {
   }
 
   const isSetup = needsSetup === true
-  const inputErrorClass = error ? 'border-red-500/50 focus:ring-red-500' : 'border-slate-200 dark:border-ui-border-dark focus:ring-primary'
+  const inputErrorClass = error ? 'border-red-500/50 focus:ring-red-500' : 'border-ui-border focus:ring-primary'
 
   return (
     <div className="min-h-screen bg-bg-main dark:bg-bg-main-dark flex items-center justify-center p-4">
@@ -86,10 +86,10 @@ export function LoginPage() {
             <IconHealthCheck size={24} className="text-primary" />
           </div>
           <div className="text-2xl font-bold text-primary tracking-tight mb-1">EveryUp</div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+          <h2 className="text-xl font-bold text-text-base">
             {isSetup ? t('login.setupTitle') : t('login.loginTitle')}
           </h2>
-          <p className="text-slate-500 dark:text-text-muted-dark text-sm mt-1">
+          <p className="text-text-muted text-sm mt-1">
             {isSetup ? t('login.setupSubtitle') : t('login.loginSubtitle')}
           </p>
         </div>
@@ -98,7 +98,7 @@ export function LoginPage() {
         <div className="w-[26rem] max-w-full">
           {/* relative wrapper — height equals card only, anchor for recovery panel */}
           <div className="relative">
-            <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl shadow-sm p-6 space-y-4">
+            <div className="bg-bg-surface border border-ui-border rounded-xl shadow-sm p-6 space-y-4">
               {error && (
                 <div className="flex items-start gap-2 text-red-500 dark:text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2.5">
                   <span className="w-4 h-5 shrink-0 inline-flex items-center justify-center">
@@ -119,7 +119,7 @@ export function LoginPage() {
 
               <form onSubmit={handleSubmit} className="space-y-3">
                 <div>
-                  <label htmlFor="login-username" className="block text-sm font-bold text-slate-500 dark:text-text-muted-dark uppercase tracking-wider mb-1.5">{t('login.username')}</label>
+                  <label htmlFor="login-username" className="block text-sm font-bold text-text-muted uppercase tracking-wider mb-1.5">{t('login.username')}</label>
                   <input
                     id="login-username"
                     type="text"
@@ -127,12 +127,12 @@ export function LoginPage() {
                     onChange={e => { setUsername(e.target.value); setError(''); }}
                     required
                     autoFocus
-                    className={`w-full bg-slate-50 dark:bg-ui-hover-dark border ${inputErrorClass} rounded-lg px-3 py-3 text-slate-900 dark:text-white text-sm placeholder-slate-400 outline-none focus:ring-2 focus:border-transparent transition-all`}
+                    className={`w-full bg-ui-hover-soft border ${inputErrorClass} rounded-lg px-3 py-3 text-text-base text-sm placeholder-slate-400 outline-none focus:ring-2 focus:border-transparent transition-all`}
                     placeholder="admin"
                   />
                 </div>
                 <div>
-                  <label htmlFor="login-password" className="block text-sm font-bold text-slate-500 dark:text-text-muted-dark uppercase tracking-wider mb-1.5">
+                  <label htmlFor="login-password" className="block text-sm font-bold text-text-muted uppercase tracking-wider mb-1.5">
                     {t('login.password')}{isSetup && ` (${t('login.passwordMinLength')})`}
                   </label>
                   <input
@@ -141,7 +141,7 @@ export function LoginPage() {
                     value={password}
                     onChange={e => { setPassword(e.target.value); setError(''); }}
                     required
-                    className={`w-full bg-slate-50 dark:bg-ui-hover-dark border ${inputErrorClass} rounded-lg px-3 py-3 text-slate-900 dark:text-white text-sm placeholder-slate-400 outline-none focus:ring-2 focus:border-transparent transition-all`}
+                    className={`w-full bg-ui-hover-soft border ${inputErrorClass} rounded-lg px-3 py-3 text-text-base text-sm placeholder-slate-400 outline-none focus:ring-2 focus:border-transparent transition-all`}
                     placeholder={isSetup ? t('login.passwordMinLength') : t('login.password')}
                   />
                 </div>
@@ -156,38 +156,34 @@ export function LoginPage() {
                     </button>
                   </div>
                 )}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg py-3 text-sm shadow-sm hover:shadow-md active:scale-95 transition-all mt-2"
-                >
+                <Button type="submit" size="lg" disabled={loading} className="w-full mt-2">
                   {loading && <MaterialIcon name="progress_activity" className="text-sm animate-spin" />}
                   {loading ? t('login.processing') : isSetup ? t('login.setupButton') : t('login.loginButton')}
-                </button>
+                </Button>
               </form>
             </div>
 
             {/* Recovery panel — outside card div, bottom-aligned with card border */}
             {!isSetup && showForgot && (
-              <div className="animate-slide-in-right absolute bottom-0 left-full ml-4 w-[26rem] bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl shadow-sm p-5 space-y-4">
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              <div className="animate-slide-in-right absolute bottom-0 left-full ml-4 w-[26rem] bg-bg-surface border border-ui-border rounded-xl shadow-sm p-5 space-y-4">
+                <p className="text-sm font-semibold text-text-secondary">
                   {t('login.forgotPassword')}
                 </p>
-                <p className="text-sm text-slate-500 dark:text-text-muted-dark">
+                <p className="text-sm text-text-muted">
                   {t('login.forgotPasswordDesc')}
                 </p>
 
                 {/* Method 1: Env var */}
                 <div className="space-y-1.5">
-                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  <p className="text-sm font-semibold text-text-secondary">
                     {t('login.recoveryMethod1Title')}
                   </p>
-                  <p className="text-sm text-slate-500 dark:text-text-muted-dark">
+                  <p className="text-sm text-text-muted">
                     {t('login.recoveryMethod1Desc')}
                   </p>
                   <div className="space-y-1">
-                    <p className="text-sm font-semibold text-slate-500 dark:text-text-muted-dark">① {t('login.recoveryMethod1Step1')}</p>
-                    <pre className="text-xs bg-slate-50 dark:bg-bg-main-dark border border-slate-200 dark:border-ui-border-dark rounded-lg p-2.5 overflow-x-auto text-slate-700 dark:text-slate-300 leading-relaxed">
+                    <p className="text-sm font-semibold text-text-muted">① {t('login.recoveryMethod1Step1')}</p>
+                    <pre className="text-xs bg-bg-main border border-ui-border rounded-lg p-2.5 overflow-x-auto text-text-secondary leading-relaxed">
 {`# docker-compose.yml
 environment:
   EVERYUP_ADMIN_USERNAME: admin
@@ -196,19 +192,19 @@ environment:
 docker compose restart`}
                     </pre>
                   </div>
-                  <p className="text-sm font-semibold text-slate-500 dark:text-text-muted-dark">② {t('login.recoveryMethod1Step2')}</p>
-                  <p className="text-sm font-semibold text-slate-500 dark:text-text-muted-dark">③ {t('login.recoveryMethod1Step3')}</p>
+                  <p className="text-sm font-semibold text-text-muted">② {t('login.recoveryMethod1Step2')}</p>
+                  <p className="text-sm font-semibold text-text-muted">③ {t('login.recoveryMethod1Step3')}</p>
                 </div>
 
                 {/* Method 2: Remove data volume */}
                 <div className="space-y-1.5">
-                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  <p className="text-sm font-semibold text-text-secondary">
                     {t('login.recoveryMethod2Title')}
                   </p>
-                  <p className="text-sm text-slate-500 dark:text-text-muted-dark">
+                  <p className="text-sm text-text-muted">
                     {t('login.recoveryMethod2Desc')}
                   </p>
-                  <pre className="text-xs bg-slate-50 dark:bg-bg-main-dark border border-slate-200 dark:border-ui-border-dark rounded-lg p-2.5 overflow-x-auto text-slate-700 dark:text-slate-300 leading-relaxed">
+                  <pre className="text-xs bg-bg-main border border-ui-border rounded-lg p-2.5 overflow-x-auto text-text-secondary leading-relaxed">
 {`# 컨테이너 중지 후 데이터 볼륨 삭제
 docker compose down
 docker volume rm everyup-data
@@ -223,7 +219,7 @@ docker compose up -d`}
                   href="https://github.com/ai-turn/everyup#readme"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-sm text-slate-400 dark:text-text-dim-dark hover:text-primary dark:hover:text-primary transition-colors"
+                  className="flex items-center gap-1.5 text-sm text-text-dim hover:text-primary dark:hover:text-primary transition-colors"
                 >
                   <MaterialIcon name="open_in_new" className="text-xs" />
                   GitHub README
@@ -232,7 +228,7 @@ docker compose up -d`}
             )}
           </div>{/* end relative wrapper */}
 
-          <p className="text-center text-slate-400 dark:text-text-dim-dark text-sm mt-4">
+          <p className="text-center text-text-dim text-sm mt-4">
             {t('login.hint')}
           </p>
         </div>

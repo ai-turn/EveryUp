@@ -22,7 +22,7 @@ export function ChannelHealthMeta({ health, compact = false }: Props) {
   const successRate = total > 0 ? Math.round((sent / total) * 100) : null;
   const rateColor =
     successRate === null
-      ? 'text-slate-400 dark:text-text-dim-dark'
+      ? 'text-text-dim'
       : successRate >= 95
       ? 'text-emerald-500'
       : successRate >= 80
@@ -33,7 +33,7 @@ export function ChannelHealthMeta({ health, compact = false }: Props) {
   const text = 'text-sm';
 
   return (
-    <div className={`flex items-center flex-wrap ${gap} ${text} text-slate-500 dark:text-text-muted-dark`}>
+    <div className={`flex items-center flex-wrap ${gap} ${text} text-text-muted`}>
       <span className="inline-flex items-center gap-1" title={t('alerts.health.lastSent', { defaultValue: 'Last sent' })}>
         <MaterialIcon name="schedule" className="text-sm" />
         {lastSentAt
@@ -44,11 +44,11 @@ export function ChannelHealthMeta({ health, compact = false }: Props) {
       {total > 0 ? (
         <span className={`inline-flex items-center gap-1 font-semibold ${rateColor}`} title={t('alerts.health.successRate7d', { defaultValue: '7d success rate' })}>
           <MaterialIcon name="check_circle" className="text-sm" />
-          {successRate}% <span className="font-normal text-slate-400 dark:text-text-dim-dark">({sent}/{total})</span>
+          {successRate}% <span className="font-normal text-text-dim">({sent}/{total})</span>
         </span>
       ) : (
         <span className="inline-flex items-center gap-1" title={t('alerts.health.noActivity', { defaultValue: 'No activity in last 7 days' })}>
-          <MaterialIcon name="check_circle" className="text-sm text-slate-400 dark:text-text-dim-dark" />
+          <MaterialIcon name="check_circle" className="text-sm text-text-dim" />
           {t('alerts.health.noActivityShort', { defaultValue: '—' })}
         </span>
       )}

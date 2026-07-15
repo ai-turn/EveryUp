@@ -40,7 +40,7 @@ export function MainLayout() {
 
           <div className="flex flex-1 overflow-hidden relative">
             {/* ver2: full-bleed content on a slate-50 canvas (white cards pop), 24px/20px padding */}
-            <main id="main-content" className="flex-1 flex flex-col overflow-hidden relative min-w-0 bg-slate-50 dark:bg-bg-main-dark transition-all duration-500 ease-in-out">
+            <main id="main-content" className="flex-1 flex flex-col overflow-hidden relative min-w-0 bg-bg-main transition-all duration-500 ease-in-out">
               <div className="flex-1 overflow-y-auto scroll-smooth [scrollbar-gutter:stable]">
                 <div className="flex flex-col min-h-full pb-safe-bottom lg:pb-0">
                   <div className="p-4 sm:px-6 sm:py-5 space-y-5 flex-1 w-full">

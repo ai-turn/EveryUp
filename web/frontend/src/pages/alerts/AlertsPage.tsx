@@ -189,7 +189,7 @@ export function AlertsPage() {
       message={
         <span>
           {t('alerts.deleteDialog.messagePrefix')}
-          <span className="font-bold text-slate-900 dark:text-white">{pendingDeleteChannel?.name}</span>
+          <span className="font-bold text-text-base">{pendingDeleteChannel?.name}</span>
           {t('alerts.deleteDialog.messageSuffix')}
         </span>
       }

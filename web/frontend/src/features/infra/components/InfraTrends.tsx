@@ -49,10 +49,10 @@ export function InfraTrends({ hostId, refreshKey = 0, range }: InfraTrendsProps)
     <>
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <h2 className="text-xl font-bold tracking-tight text-text-base">
             {t('infra.trends.title')}
           </h2>
-          <p className="mt-1 text-sm font-medium text-slate-500 dark:text-text-muted-dark">
+          <p className="mt-1 text-sm font-medium text-text-muted">
             {rangeLabel[range]}
           </p>
         </div>
@@ -103,11 +103,11 @@ function ChartCard({
   return (
     <section className={`overflow-hidden ${chartCardClass}`} aria-label={chart.title}>
       <div className="px-5 pb-1 pt-5">
-        <p className="truncate text-base font-bold text-slate-900 dark:text-white">{chart.title}</p>
+        <p className="truncate text-base font-bold text-text-base">{chart.title}</p>
       </div>
 
       {isEmpty ? (
-        <div className="flex h-60 flex-col items-center justify-center gap-2 text-slate-400 dark:text-text-dim-dark">
+        <div className="flex h-60 flex-col items-center justify-center gap-2 text-text-dim">
           <MaterialIcon name="show_chart" className="text-4xl opacity-30" />
           <p className="text-sm font-medium">
             {t('infra.trends.noActivity', { range: rangeLabel })}

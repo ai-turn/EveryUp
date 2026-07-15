@@ -39,7 +39,7 @@ function methodClass(method: string): string {
     case 'PUT':
     case 'PATCH':  return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
     case 'DELETE': return 'bg-red-500/10 text-red-600 dark:text-red-400';
-    default:       return 'bg-slate-500/10 text-slate-600 dark:text-slate-400';
+    default:       return 'bg-slate-500/10 text-text-muted';
   }
 }
 
@@ -47,7 +47,7 @@ function statusClass(code: number): string {
   if (code >= 500) return 'text-red-600 dark:text-red-400';
   if (code >= 400) return 'text-amber-600 dark:text-amber-400';
   if (code >= 200) return 'text-emerald-600 dark:text-emerald-400';
-  return 'text-slate-500 dark:text-text-muted-dark';
+  return 'text-text-muted';
 }
 
 function formatTime(ts: string) {
@@ -103,13 +103,13 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, range
       {!loading && requests.length > 0 && (
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: '전체', value: `${total.toLocaleString()}건`, color: 'text-slate-700 dark:text-text-base-dark' },
-            { label: '에러', value: `${errorCount}건`, color: errorCount > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-text-dim-dark' },
-            { label: '평균', value: `${avgMs}ms`, color: 'text-slate-700 dark:text-text-base-dark' },
+            { label: '전체', value: `${total.toLocaleString()}건`, color: 'text-text-secondary' },
+            { label: '에러', value: `${errorCount}건`, color: errorCount > 0 ? 'text-red-600 dark:text-red-400' : 'text-text-dim' },
+            { label: '평균', value: `${avgMs}ms`, color: 'text-text-secondary' },
           ].map(kpi => (
-            <div key={kpi.label} className="rounded-xl bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark px-4 py-3 text-center">
+            <div key={kpi.label} className="rounded-xl bg-bg-surface border border-ui-border px-4 py-3 text-center">
               <p className={`text-xl font-bold ${kpi.color}`}>{kpi.value}</p>
-              <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-0.5">{kpi.label}</p>
+              <p className="text-xs text-text-dim mt-0.5">{kpi.label}</p>
             </div>
           ))}
         </div>
@@ -126,7 +126,7 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, range
           className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
             errorsOnly
               ? 'bg-red-500 text-white'
-              : 'bg-slate-100 dark:bg-ui-hover-dark text-slate-600 dark:text-text-muted-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark'
+              : 'bg-ui-hover text-text-muted hover:bg-ui-active'
           }`}
         >
           <MaterialIcon name="error_outline" className="text-sm" />
@@ -145,7 +145,7 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, range
               value={inputValue}
               onChange={e => setInputValue(e.target.value)}
               placeholder="경로 검색..."
-              className="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg bg-slate-100 dark:bg-ui-hover-dark border border-transparent focus:border-primary dark:text-white placeholder-slate-400 dark:placeholder-text-dim-dark outline-none transition-colors"
+              className="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg bg-ui-hover border border-transparent focus:border-primary dark:text-white placeholder-slate-400 dark:placeholder-text-dim-dark outline-none transition-colors"
             />
           </div>
           {search && (
@@ -161,27 +161,27 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, range
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="h-12 rounded-xl bg-slate-100 dark:bg-ui-hover-dark animate-pulse" />
+            <div key={i} className="h-12 rounded-xl bg-ui-hover animate-pulse" />
           ))}
         </div>
       ) : requests.length === 0 ? (
         <div className="py-16 text-center">
-          <MaterialIcon name="http" className="text-4xl text-slate-300 dark:text-text-dim-dark mb-2" />
-          <p className="text-sm text-slate-400 dark:text-text-muted-dark">
+          <MaterialIcon name="http" className="text-4xl text-text-dim mb-2" />
+          <p className="text-sm text-text-dim">
             {search || errorsOnly || datePreset ? '조건에 맞는 요청이 없습니다' : '수집된 API 요청이 없습니다'}
           </p>
           {!search && !errorsOnly && !datePreset && (
-            <div className="mt-6 mx-auto max-w-md text-left p-4 rounded-xl bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark">
-              <p className="text-sm font-semibold text-slate-700 dark:text-text-base-dark mb-2">
+            <div className="mt-6 mx-auto max-w-md text-left p-4 rounded-xl bg-bg-surface border border-ui-border">
+              <p className="text-sm font-semibold text-text-secondary mb-2">
                 {runtime
                   ? `${runtimeLabel(runtime)} 서비스로 감지되었습니다. 트레이스를 수집하려면:`
                   : '트레이스를 수집하려면:'}
               </p>
-              <ul className="space-y-1.5 text-sm text-slate-500 dark:text-text-muted-dark">
+              <ul className="space-y-1.5 text-sm text-text-muted">
                 <li className="flex gap-2">
                   <span className="shrink-0 font-bold text-primary">1</span>
                   <span>
-                    에이전트 compose의 <code className="font-mono text-xs bg-slate-100 dark:bg-ui-hover-dark px-1 py-0.5 rounded">everyup-ebpf</code> 블록
+                    에이전트 compose의 <code className="font-mono text-xs bg-ui-hover px-1 py-0.5 rounded">everyup-ebpf</code> 블록
                     주석 해제 — 앱 수정 없이 경로·상태·지연시간 수집
                   </span>
                 </li>
@@ -199,14 +199,14 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, range
           )}
         </div>
       ) : (
-        <div className="divide-y divide-slate-100 dark:divide-ui-border-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
+        <div className="divide-y divide-slate-100 dark:divide-ui-border-dark border border-ui-border rounded-xl overflow-hidden">
           {requests.map(req => {
             const clickable = !!req.traceId;
             return (
               <div
                 key={req.id}
                 onClick={() => req.traceId && setActiveTraceId(req.traceId)}
-                className={`flex items-center gap-3 px-4 py-3 bg-white dark:bg-bg-surface-dark transition-colors ${clickable ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-ui-hover-dark' : ''}`}
+                className={`flex items-center gap-3 px-4 py-3 bg-bg-surface transition-colors ${clickable ? 'cursor-pointer hover:bg-ui-hover-soft' : ''}`}
               >
                 <span className={`shrink-0 px-1.5 py-0.5 rounded text-xs font-bold uppercase ${methodClass(req.method)}`}>
                   {req.method}
@@ -214,13 +214,13 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, range
                 <span className={`shrink-0 font-mono text-sm font-bold ${statusClass(req.statusCode)}`}>
                   {req.statusCode}
                 </span>
-                <span className="flex-1 min-w-0 text-sm text-slate-700 dark:text-text-base-dark truncate font-mono">
+                <span className="flex-1 min-w-0 text-sm text-text-secondary truncate font-mono">
                   {req.path}
                 </span>
-                <span className="shrink-0 text-xs text-slate-400 dark:text-text-dim-dark">{req.durationMs}ms</span>
-                <span className="shrink-0 text-xs text-slate-400 dark:text-text-dim-dark">{formatTime(req.createdAt)}</span>
+                <span className="shrink-0 text-xs text-text-dim">{req.durationMs}ms</span>
+                <span className="shrink-0 text-xs text-text-dim">{formatTime(req.createdAt)}</span>
                 {clickable && (
-                  <MaterialIcon name="timeline" className="shrink-0 text-base text-slate-300 dark:text-text-dim-dark" />
+                  <MaterialIcon name="timeline" className="shrink-0 text-base text-text-dim" />
                 )}
               </div>
             );

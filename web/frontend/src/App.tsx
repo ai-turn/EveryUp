@@ -18,11 +18,11 @@ const ChannelFormPage       = lazy(() => import('./pages/alerts/ChannelFormPage'
 function PageLoader() {
   return (
     <div className="flex-1 p-4 sm:p-6 md:p-8 space-y-4 animate-pulse">
-      <div className="h-8 bg-slate-200 dark:bg-ui-active-dark rounded-lg w-48" />
-      <div className="h-4 bg-slate-100 dark:bg-ui-hover-dark rounded w-72" />
+      <div className="h-8 bg-ui-active rounded-lg w-48" />
+      <div className="h-4 bg-ui-hover rounded w-72" />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
         {[1, 2, 3].map(i => (
-          <div key={i} className="h-40 bg-slate-100 dark:bg-ui-hover-dark rounded-xl" />
+          <div key={i} className="h-40 bg-ui-hover rounded-xl" />
         ))}
       </div>
     </div>
@@ -42,7 +42,7 @@ function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <NetworkStatusBanner />
-      <div className="bg-bg-main dark:bg-bg-main-dark text-slate-900 dark:text-text-base-dark transition-colors duration-200">
+      <div className="bg-bg-main dark:bg-bg-main-dark text-text-base transition-colors duration-200">
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* 데모 모드에서는 /login 접근 시 홈으로 리다이렉트 */}

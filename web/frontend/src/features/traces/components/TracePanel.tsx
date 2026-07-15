@@ -33,15 +33,15 @@ function spanKindBadge(kind: string): string {
     case 'CLIENT':   return 'bg-sky-500/10 text-sky-600 dark:text-sky-400';
     case 'PRODUCER':
     case 'CONSUMER': return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
-    case 'INTERNAL': return 'bg-slate-500/10 text-slate-600 dark:text-slate-400';
-    default:         return 'bg-slate-500/10 text-slate-600 dark:text-slate-400';
+    case 'INTERNAL': return 'bg-slate-500/10 text-text-muted';
+    default:         return 'bg-slate-500/10 text-text-muted';
   }
 }
 
 function statusBadge(code: string | undefined): string {
   if (code === 'ERROR') return 'bg-red-500/10 text-red-600 dark:text-red-400';
   if (code === 'OK')    return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
-  return 'bg-slate-500/10 text-slate-500 dark:text-slate-400';
+  return 'bg-slate-500/10 text-text-muted';
 }
 
 function logLevelBadge(level: string): string {
@@ -49,9 +49,9 @@ function logLevelBadge(level: string): string {
     case 'error': return 'bg-red-500/10 text-red-600 dark:text-red-400';
     case 'warn':  return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
     case 'info':  return 'bg-sky-500/10 text-sky-600 dark:text-sky-400';
-    case 'debug': return 'bg-slate-500/10 text-slate-500 dark:text-slate-400';
-    case 'trace': return 'bg-slate-500/10 text-slate-400 dark:text-slate-500';
-    default:      return 'bg-slate-500/10 text-slate-500 dark:text-slate-400';
+    case 'debug': return 'bg-slate-500/10 text-text-muted';
+    case 'trace': return 'bg-slate-500/10 text-text-dim';
+    default:      return 'bg-slate-500/10 text-text-muted';
   }
 }
 
@@ -295,28 +295,28 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="fixed inset-y-0 right-0 w-full sm:w-[560px] lg:w-[720px] bg-white dark:bg-bg-surface-dark border-l border-slate-200 dark:border-ui-border-dark shadow-2xl flex flex-col animate-slide-in-right"
+        className="fixed inset-y-0 right-0 w-full sm:w-[560px] lg:w-[720px] bg-bg-surface border-l border-ui-border shadow-2xl flex flex-col animate-slide-in-right"
       >
-        <div className="flex-none flex items-center gap-3 px-5 h-16 border-b border-slate-200 dark:border-ui-border-dark">
+        <div className="flex-none flex items-center gap-3 px-5 h-16 border-b border-ui-border">
           <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary shrink-0">
             <MaterialIcon name="timeline" className="text-lg" />
           </div>
-          <h3 className="text-base font-bold text-slate-900 dark:text-white shrink-0">{t('apiRequests.tracePanel.title')}</h3>
+          <h3 className="text-base font-bold text-text-base shrink-0">{t('apiRequests.tracePanel.title')}</h3>
           <code
-            className="flex-1 min-w-0 truncate text-xs font-mono text-slate-400 dark:text-text-dim-dark"
+            className="flex-1 min-w-0 truncate text-xs font-mono text-text-dim"
             title={traceId}
           >
             {traceId}
           </code>
           <CopyButton
             onCopy={() => copy(traceId)}
-            className="p-1 rounded hover:bg-slate-100 dark:hover:bg-ui-hover-dark text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer shrink-0"
+            className="p-1 rounded hover:bg-ui-hover text-slate-400 hover:text-text-secondary cursor-pointer shrink-0"
             title={t('apiRequests.tracePanel.copyTraceId')}
             iconClassName="text-sm"
           />
           <button
             onClick={onClose}
-            className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-ui-hover-dark text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer shrink-0"
+            className="p-1.5 rounded hover:bg-ui-hover text-slate-400 hover:text-text-secondary cursor-pointer shrink-0"
             aria-label={t('apiRequests.tracePanel.close')}
           >
             <MaterialIcon name="close" className="text-base" />
@@ -325,7 +325,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
 
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
           {loading && (
-            <div className="flex items-center justify-center py-10 text-sm text-slate-500 dark:text-text-muted-dark">
+            <div className="flex items-center justify-center py-10 text-sm text-text-muted">
               <MaterialIcon name="sync" className="text-base mr-2 animate-spin" />
               {t('apiRequests.tracePanel.loading')}
             </div>
@@ -339,14 +339,14 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
           )}
 
           {isEmpty && (
-            <div className="text-center py-10 text-sm text-slate-500 dark:text-text-muted-dark">
+            <div className="text-center py-10 text-sm text-text-muted">
               {t('apiRequests.tracePanel.empty')}
             </div>
           )}
 
           {!loading && !error && serviceId && (logs.length > 0 || apiRequests.length > 0) && (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-semibold text-slate-500 dark:text-text-muted-dark mr-1">
+              <span className="text-sm font-semibold text-text-muted mr-1">
                 {t('apiRequests.tracePanel.jumpTo')}
               </span>
               {logs.length > 0 && (
@@ -400,8 +400,8 @@ function PanelSectionHeader({ icon, title, count }: { icon: string; title: strin
   return (
     <div className="flex items-center gap-2 mb-2">
       <MaterialIcon name={icon} className="text-base text-primary" />
-      <h4 className="text-sm font-bold text-slate-900 dark:text-white">{title}</h4>
-      <span className="text-xs font-semibold text-slate-400 dark:text-text-dim-dark bg-slate-100 dark:bg-ui-active-dark px-2 py-0.5 rounded-md">
+      <h4 className="text-sm font-bold text-text-base">{title}</h4>
+      <span className="text-xs font-semibold text-text-dim bg-slate-100 dark:bg-ui-active-dark px-2 py-0.5 rounded-md">
         {count}
       </span>
     </div>
@@ -437,17 +437,17 @@ function SpanList({ spans, onCopy }: { spans: TraceSpan[]; onCopy: CopyFn }) {
           return (
             <li
               key={`${span.traceId}-${span.spanId}`}
-              className="px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-sm"
+              className="px-3 py-2 rounded-lg bg-ui-hover-soft border border-ui-border-soft text-sm"
             >
               <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
                 <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold shrink-0 ${spanKindBadge(span.kind)}`}>
                   {span.kind}
                 </span>
-                <span className="font-mono text-slate-700 dark:text-text-base-dark truncate flex-1 min-w-0" title={span.name}>
+                <span className="font-mono text-text-secondary truncate flex-1 min-w-0" title={span.name}>
                   {span.name || '(unnamed)'}
                 </span>
                 {span.serviceName && (
-                  <span className="text-slate-500 dark:text-text-muted-dark shrink-0">
+                  <span className="text-text-muted shrink-0">
                     {span.serviceName}
                   </span>
                 )}
@@ -456,7 +456,7 @@ function SpanList({ spans, onCopy }: { spans: TraceSpan[]; onCopy: CopyFn }) {
                     {span.statusCode}
                   </span>
                 )}
-                <span className="text-slate-500 dark:text-text-muted-dark font-mono shrink-0">
+                <span className="text-text-muted font-mono shrink-0">
                   {formatDuration(span.durationMs)}
                 </span>
                 {copyButton(() => onCopy(formatSpanCopy(span)), t('apiRequests.tracePanel.copySpan'))}
@@ -480,12 +480,12 @@ function HeaderRows({ label, headers }: { label: string; headers: HeaderEntry[] 
   if (headers.length === 0) return null;
   return (
     <div>
-      <p className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-text-dim-dark">{label}</p>
+      <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-dim">{label}</p>
       <dl className="space-y-0.5">
         {headers.map((h) => (
           <div key={h.name} className="flex gap-2 font-mono text-xs">
-            <dt className="shrink-0 text-slate-500 dark:text-text-muted-dark">{h.name}:</dt>
-            <dd className={`min-w-0 break-all ${h.value === '***' ? 'text-amber-600 dark:text-amber-400' : 'text-slate-700 dark:text-text-base-dark'}`}>
+            <dt className="shrink-0 text-text-muted">{h.name}:</dt>
+            <dd className={`min-w-0 break-all ${h.value === '***' ? 'text-amber-600 dark:text-amber-400' : 'text-text-secondary'}`}>
               {h.value}
             </dd>
           </div>
@@ -508,9 +508,9 @@ function CapturedHeadersList({ items, onCopy }: { items: CapturedHeaders[]; onCo
           >
             <div className="mb-2 flex flex-wrap items-center gap-2">
               {item.serviceName && (
-                <span className="text-slate-500 dark:text-text-muted-dark">{item.serviceName}</span>
+                <span className="text-text-muted">{item.serviceName}</span>
               )}
-              <span className="min-w-0 flex-1 truncate font-mono text-slate-500 dark:text-text-muted-dark" title={item.spanName}>
+              <span className="min-w-0 flex-1 truncate font-mono text-text-muted" title={item.spanName}>
                 {item.spanName}
               </span>
               {copyButton(() => onCopy(formatCapturedHeadersCopy(item)), t('apiRequests.tracePanel.copyHeaders'))}
@@ -536,8 +536,8 @@ function RestrictedBodyNotice({ count }: { count: number }) {
       <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm dark:border-ui-border-dark dark:bg-ui-hover-dark">
         <MaterialIcon name="lock" className="text-lg text-amber-500 shrink-0" />
         <div>
-          <p className="font-semibold text-slate-700 dark:text-text-base-dark">{t('apiRequests.tracePanel.adminOnly')}</p>
-          <p className="text-slate-500 dark:text-text-muted-dark">
+          <p className="font-semibold text-text-secondary">{t('apiRequests.tracePanel.adminOnly')}</p>
+          <p className="text-text-muted">
             {t('apiRequests.tracePanel.adminOnlyDesc')}
           </p>
         </div>
@@ -551,7 +551,7 @@ function CapturedBodyList({ items, onCopy }: { items: CapturedBody[]; onCopy: Co
   return (
     <section>
       <PanelSectionHeader icon="data_object" title={t('apiRequests.tracePanel.capturedBodies')} count={items.length} />
-      <p className="mb-2 flex items-center gap-1.5 text-xs text-slate-400 dark:text-text-dim-dark">
+      <p className="mb-2 flex items-center gap-1.5 text-xs text-text-dim">
         <MaterialIcon name="policy" className="text-sm" />
         {t('apiRequests.tracePanel.auditNotice')}
       </p>
@@ -566,15 +566,15 @@ function CapturedBodyList({ items, onCopy }: { items: CapturedBody[]; onCopy: Co
                 {t(`apiRequests.tracePanel.${item.label.toLowerCase()}`)}
               </span>
               {item.serviceName && (
-                <span className="text-slate-500 dark:text-text-muted-dark">
+                <span className="text-text-muted">
                   {item.serviceName}
                 </span>
               )}
-              <span className="min-w-0 flex-1 truncate font-mono text-slate-500 dark:text-text-muted-dark" title={item.spanName}>
+              <span className="min-w-0 flex-1 truncate font-mono text-text-muted" title={item.spanName}>
                 {item.spanName}
               </span>
               {typeof item.size === 'number' && (
-                <span className="font-mono text-xs text-slate-400 dark:text-text-dim-dark">
+                <span className="font-mono text-xs text-text-dim">
                   {item.size}B
                 </span>
               )}
@@ -602,12 +602,12 @@ function ApiRequestList({ items, onCopy }: { items: ApiRequest[]; onCopy: CopyFn
         {items.map((req) => (
           <li
             key={req.id}
-            className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-sm sm:flex-nowrap"
+            className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-lg bg-ui-hover-soft border border-ui-border-soft text-sm sm:flex-nowrap"
           >
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold bg-slate-200 dark:bg-ui-active-dark text-slate-700 dark:text-text-base-dark shrink-0">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold bg-ui-active text-text-secondary shrink-0">
               {req.method}
             </span>
-            <span className="font-mono text-slate-700 dark:text-text-base-dark truncate flex-1 min-w-0" title={req.path}>
+            <span className="font-mono text-text-secondary truncate flex-1 min-w-0" title={req.path}>
               {req.path}
             </span>
             <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold shrink-0 ${
@@ -617,7 +617,7 @@ function ApiRequestList({ items, onCopy }: { items: ApiRequest[]; onCopy: CopyFn
             }`}>
               {req.statusCode}
             </span>
-            <span className="text-slate-500 dark:text-text-muted-dark font-mono shrink-0">
+            <span className="text-text-muted font-mono shrink-0">
               {formatDuration(req.durationMs)}
             </span>
             {copyButton(() => onCopy(formatApiRequestCopy(req)), t('apiRequests.tracePanel.copyApiRequest'))}
@@ -637,15 +637,15 @@ function LogList({ logs, onCopy }: { logs: LogEntry[]; onCopy: CopyFn }) {
         {logs.map((log) => (
           <li
             key={log.id}
-            className="flex items-start gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark border border-slate-100 dark:border-ui-border-dark text-sm"
+            className="flex items-start gap-2 px-3 py-2 rounded-lg bg-ui-hover-soft border border-ui-border-soft text-sm"
           >
             <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold shrink-0 ${logLevelBadge(log.level)}`}>
               {log.level.toUpperCase()}
             </span>
-            <span className="text-slate-500 dark:text-text-muted-dark font-mono shrink-0 mt-0.5">
+            <span className="text-text-muted font-mono shrink-0 mt-0.5">
               {formatTime(log.createdAt)}
             </span>
-            <span className="text-slate-700 dark:text-text-base-dark break-all flex-1 min-w-0">
+            <span className="text-text-secondary break-all flex-1 min-w-0">
               {log.message}
             </span>
             {copyButton(() => onCopy(formatLogCopy(log)), t('apiRequests.tracePanel.copyLog'))}

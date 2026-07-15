@@ -59,11 +59,11 @@ function ContainerMeta({ service }: { service: AgentServiceFlat }) {
   const uptime = formatUptime(service.startedAt);
   const restarts = service.restartCount ?? 0;
   return (
-    <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-400 dark:text-text-dim-dark min-w-0">
+    <div className="flex items-center gap-2 mt-1.5 text-xs text-text-dim min-w-0">
       <span className="font-mono truncate">{service.image}</span>
       {restarts > 0 && (
         <>
-          <span className="text-slate-300 dark:text-text-dim-dark shrink-0">·</span>
+          <span className="text-text-dim shrink-0">·</span>
           <span className={`shrink-0 ${restarts >= 3 ? 'text-amber-600 dark:text-amber-400 font-medium' : ''}`}>
             재시작 {restarts}회
           </span>
@@ -71,7 +71,7 @@ function ContainerMeta({ service }: { service: AgentServiceFlat }) {
       )}
       {uptime && (
         <>
-          <span className="text-slate-300 dark:text-text-dim-dark shrink-0">·</span>
+          <span className="text-text-dim shrink-0">·</span>
           <span className="shrink-0">업타임 {uptime}</span>
         </>
       )}
@@ -85,7 +85,7 @@ function RefreshButton({ onRefresh }: { onRefresh: () => void }) {
     <button
       onClick={handleRefresh}
       title="새로고침"
-      className="p-2 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-ui-hover-dark transition-colors"
+      className="p-2 rounded-lg text-slate-400 hover:text-text-base hover:bg-ui-hover transition-colors"
     >
       <MaterialIcon name="refresh" className={`text-lg ${spinning ? 'animate-spin' : ''}`} />
     </button>
@@ -102,12 +102,12 @@ function DesktopLayout(props: LayoutProps) {
         <div className="flex items-center gap-2.5">
           <Link
             to={`/projects/${agentId}`}
-            className="text-sm text-slate-500 dark:text-text-muted-dark hover:text-primary transition-colors shrink-0"
+            className="text-sm text-text-muted hover:text-primary transition-colors shrink-0"
           >
             {service.agentName}
           </Link>
-          <span className="text-slate-300 dark:text-text-dim-dark">/</span>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white truncate">{service.name}</h1>
+          <span className="text-text-dim">/</span>
+          <h1 className="text-2xl font-bold text-text-base truncate">{service.name}</h1>
           <StatusBadge healthy={service.healthy} />
           <div className="ml-auto flex items-center gap-2">
             <TimeRangePicker value={range} onChange={onRangeChange} />
@@ -139,7 +139,7 @@ function MobileLayout(props: LayoutProps) {
       <div className="flex items-center justify-between">
         <button
           onClick={() => navigate('/')}
-          className="flex items-center gap-1 text-slate-500 dark:text-text-muted-dark active:opacity-60 transition-opacity cursor-pointer"
+          className="flex items-center gap-1 text-text-muted active:opacity-60 transition-opacity cursor-pointer"
         >
           <MaterialIcon name="arrow_back" className="text-lg" />
           <span className="text-sm font-medium">{tc('common.backToList')}</span>

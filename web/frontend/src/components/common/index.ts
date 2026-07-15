@@ -1,3 +1,4 @@
+export { Button } from './Button';
 export { PageHeader } from './PageHeader';
 export { MaterialIcon } from './MaterialIcon';
 export { CopyButton } from './CopyButton';

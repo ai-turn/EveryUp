@@ -1,12 +1,13 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { getErrorMessage } from '../../../utils/errors';
-import { MaterialIcon, EmptyState, ConfirmDialog, Toggle, SegmentedControl } from '../../../components/common';
+import { Button, MaterialIcon, EmptyState, ConfirmDialog, Toggle, SegmentedControl } from '../../../components/common';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { api, type AlertRule, type NotificationChannel, type AgentServiceFlat, type ConnectedAgent } from '../../../services/api';
 import { getChannelStyle } from '../utils/channelMeta';
 import { AlertRuleForm } from './AlertRuleForm';
+import { FormSidePanel } from './FormSidePanel';
 import { formatDistanceToNow } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
 
@@ -170,18 +171,11 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Inline rule form (replaces the /alerts/rules/new|edit page navigation)
+  // Rule form — right slide-over panel
   const [formOpen, setFormOpen] = useState(false);
   const [formRule, setFormRule] = useState<AlertRule | undefined>(undefined);
   const [formLoading, setFormLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const formRef = useRef<HTMLDivElement>(null);
-
-  // The form opens above the table — bring it into view (edit from a long list
-  // would otherwise appear to do nothing).
-  useEffect(() => {
-    if (formOpen) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [formOpen]);
 
   // Filters
   const [categoryFilter, setCategoryFilter] = useState<CategoryKey>('all');
@@ -312,18 +306,13 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
   // targets the form via form="alert-rule-form" (same wiring as the old page).
   const formActions = (
     <div className="flex items-center gap-2 shrink-0">
-      <button
-        type="button"
-        onClick={closeForm}
-        className="px-4 py-2 text-sm font-bold border border-slate-200 dark:border-ui-border-dark rounded-lg text-slate-600 dark:text-text-muted-dark hover:bg-slate-50 dark:hover:bg-ui-hover-dark transition-colors"
-      >
+      <Button type="button" variant="secondary" onClick={closeForm}>
         {t('common.cancel')}
-      </button>
-      <button
+      </Button>
+      <Button
         type="submit"
         form="alert-rule-form"
         disabled={formLoading || isSubmitting}
-        className="px-5 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-all shadow-sm active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
       >
         {isSubmitting ? (
           <MaterialIcon name="sync" className="text-base animate-spin" />
@@ -333,40 +322,35 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
             {formRule ? t('common.save') : t('alerts.rules.create')}
           </>
         )}
-      </button>
+      </Button>
     </div>
   );
 
-  const inlineForm = formOpen ? (
-    <div ref={formRef} className="mb-5 scroll-mt-4 rounded-xl border border-primary/40 bg-white dark:bg-bg-surface-dark overflow-hidden">
-      <div className="flex items-center justify-between gap-4 px-6 py-3 border-b border-slate-200 dark:border-ui-border-dark">
-        <h3 className="text-base font-bold text-slate-900 dark:text-white">
-          {formRule
-            ? t('alerts.rules.editTitle', { defaultValue: '규칙 편집' })
-            : t('alerts.rules.newTitle', { defaultValue: '새 알림 규칙' })}
-        </h3>
-        {formActions}
-      </div>
+  const formPanel = (
+    <FormSidePanel
+      open={formOpen}
+      icon="rule"
+      title={formRule
+        ? t('alerts.rules.editTitle', { defaultValue: '규칙 편집' })
+        : t('alerts.rules.newTitle', { defaultValue: '새 알림 규칙' })}
+      onClose={closeForm}
+      footer={formActions}
+    >
       {formLoading ? (
         <div className="flex min-h-40 items-center justify-center">
           <MaterialIcon name="sync" className="text-3xl text-primary animate-spin" />
         </div>
       ) : (
-        <>
-          <AlertRuleForm
-            rule={formRule}
-            channels={channels}
-            onSuccess={onFormSuccess}
-            onCancel={closeForm}
-            onSubmittingChange={setIsSubmitting}
-          />
-          <div className="flex justify-end border-t border-slate-200 dark:border-ui-border-dark px-6 py-3">
-            {formActions}
-          </div>
-        </>
+        <AlertRuleForm
+          rule={formRule}
+          channels={channels}
+          onSuccess={onFormSuccess}
+          onCancel={closeForm}
+          onSubmittingChange={setIsSubmitting}
+        />
       )}
-    </div>
-  ) : null;
+    </FormSidePanel>
+  );
 
   if (isLoading) {
     return (
@@ -380,23 +364,21 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
   if (rules.length === 0) {
     return (
       <>
-        {inlineForm}
-        {!formOpen && (
-          <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl">
-            <EmptyState
-              icon="rule"
-              title={t('alerts.rules.noRules')}
-              action={{ label: t('alerts.rules.addRule'), onClick: handleAddRule }}
-            />
-          </div>
-        )}
+        {formPanel}
+        <div className="bg-bg-surface border border-ui-border rounded-xl">
+          <EmptyState
+            icon="rule"
+            title={t('alerts.rules.noRules')}
+            action={{ label: t('alerts.rules.addRule'), onClick: handleAddRule }}
+          />
+        </div>
       </>
     );
   }
 
   return (
     <>
-      {inlineForm}
+      {formPanel}
       {/* Filter bar — category pills + severity/enabled + search */}
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <SegmentedControl
@@ -416,7 +398,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
         <select
           value={severityFilter}
           onChange={e => setSeverityFilter(e.target.value as typeof severityFilter)}
-          className="px-2 py-1.5 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-md text-sm font-medium text-slate-700 dark:text-text-muted-dark cursor-pointer"
+          className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm font-medium text-text-secondary cursor-pointer"
         >
           <option value="all">{t('alerts.rules.severityAll', { defaultValue: 'All severity' })}</option>
           <option value="critical">Critical</option>
@@ -427,7 +409,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
         <select
           value={enabledFilter}
           onChange={e => setEnabledFilter(e.target.value as typeof enabledFilter)}
-          className="px-2 py-1.5 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-md text-sm font-medium text-slate-700 dark:text-text-muted-dark cursor-pointer"
+          className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm font-medium text-text-secondary cursor-pointer"
         >
           <option value="all">{t('alerts.rules.enabledAll', { defaultValue: 'All states' })}</option>
           <option value="on">{t('alerts.rules.enabledOn', { defaultValue: 'Enabled' })}</option>
@@ -441,7 +423,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder={t('alerts.rules.searchPlaceholder', { defaultValue: 'Name or target…' })}
-            className="w-full pl-7 pr-7 py-1.5 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-md text-sm outline-none focus:ring-1 focus:ring-primary dark:text-white"
+            className="w-full pl-7 pr-7 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm outline-none focus:ring-1 focus:ring-primary dark:text-white"
           />
           {searchQuery && (
             <button
@@ -456,24 +438,24 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
+      <div className="bg-bg-surface border border-ui-border rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1180px] table-fixed text-sm">
             <thead>
-              <tr className="bg-slate-50 dark:bg-bg-surface-dark/50 border-b border-slate-200 dark:border-ui-border-dark">
+              <tr className="bg-slate-50 dark:bg-bg-surface-dark/50 border-b border-ui-border">
                 <SortableTH className="w-[260px]" label={t('alerts.rules.colName', { defaultValue: 'Rule' })} active={sortKey === 'name'} dir={sortDir} onClick={() => onSort('name')} />
                 <SortableTH className="w-[110px]" label={t('alerts.rules.colSeverity', { defaultValue: 'Severity' })} active={sortKey === 'severity'} dir={sortDir} onClick={() => onSort('severity')} />
                 <SortableTH className="w-[200px]" label={t('alerts.rules.colTarget', { defaultValue: 'Target' })} active={sortKey === 'target'} dir={sortDir} onClick={() => onSort('target')} />
-                <th className="w-[250px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <th className="w-[250px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">
                   {t('alerts.rules.colTrigger', { defaultValue: 'Trigger' })}
                 </th>
-                <th className="w-[120px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <th className="w-[120px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">
                   {t('alerts.rules.colChannels', { defaultValue: 'Channels' })}
                 </th>
-                <th className="w-[120px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <th className="w-[120px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">
                   {t('alerts.rules.colLastFired', { defaultValue: 'Last fired' })}
                 </th>
-                <th className="w-[120px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+                <th className="w-[120px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-text-muted">
                   {t('alerts.rules.colActions', { defaultValue: 'Actions' })}
                 </th>
               </tr>
@@ -481,7 +463,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
             <tbody>
               {filteredRules.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-10 text-center text-sm text-slate-500 dark:text-text-muted-dark">
+                  <td colSpan={7} className="p-10 text-center text-sm text-text-muted">
                     {t('alerts.rules.noFilterResults', { defaultValue: 'No rules match your filters' })}{' · '}
                     <button onClick={clearFilters} className="text-primary hover:underline font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded">
                       {t('common.clearFilters', { defaultValue: 'Clear filters' })}
@@ -498,14 +480,14 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                     >
                       <td className="px-4 py-2.5 align-middle">
                         <div className="flex min-w-0 items-center gap-2">
-                          <span className={`truncate font-semibold ${rule.isEnabled ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-text-muted-dark'}`}>
+                          <span className={`truncate font-semibold ${rule.isEnabled ? 'text-text-base' : 'text-text-muted'}`}>
                             {rule.name}
                           </span>
                           {rule.isSystem && (
                             <MaterialIcon name="lock" className="shrink-0 text-sm text-slate-400" />
                           )}
                         </div>
-                        <p className="truncate text-2xs text-slate-400 dark:text-text-dim-dark">
+                        <p className="truncate text-2xs text-text-dim">
                           {rule.isSystem
                             ? t('alerts.rules.systemRuleNote', { defaultValue: '시스템 기본 규칙 · 삭제 불가, 채널만 변경 가능' })
                             : categoryLabel(cat, t)}
@@ -525,17 +507,17 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                         </span>
                       </td>
                       <td className="px-4 py-2.5 align-middle text-sm">
-                        <p className="truncate text-slate-700 dark:text-text-muted-dark" title={evaluationSummary(rule, t)}>
+                        <p className="truncate text-text-secondary" title={evaluationSummary(rule, t)}>
                           {compactTrigger(rule, t)}
                         </p>
                       </td>
                       <td className="px-4 py-2.5 align-middle">
                         <ChannelAvatars rule={rule} channels={channels} />
                       </td>
-                      <td className="px-4 py-2.5 align-middle text-sm text-slate-600 dark:text-text-muted-dark whitespace-nowrap">
+                      <td className="px-4 py-2.5 align-middle text-sm text-text-muted whitespace-nowrap">
                         {rule.lastTriggeredAt
                           ? formatDistanceToNow(new Date(rule.lastTriggeredAt), { addSuffix: true, locale: dateLocale })
-                          : <span className="text-slate-400 dark:text-text-dim-dark">—</span>}
+                          : <span className="text-text-dim">—</span>}
                       </td>
                       <td className="px-4 py-2 text-right align-middle whitespace-nowrap">
                         <div className="inline-flex items-center justify-end gap-1">
@@ -547,7 +529,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                           />
                           <button
                             onClick={() => handleEdit(rule)}
-                            className="p-1 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-ui-hover-dark rounded transition-all"
+                            className="p-1 text-slate-500 hover:text-text-base hover:bg-ui-hover rounded transition-all"
                             title={t('common.edit', { defaultValue: 'Edit' })}
                           >
                             <MaterialIcon name="edit" className="text-base" />
@@ -559,7 +541,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                             disabled={rule.isSystem || isDeleting}
                             className={`p-1 rounded transition-all ${
                               rule.isSystem
-                                ? 'cursor-not-allowed text-slate-300 dark:text-text-dim-dark'
+                                ? 'cursor-not-allowed text-text-dim'
                                 : 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50'
                             }`}
                             title={rule.isSystem
@@ -597,8 +579,8 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
 
 function SortableTH({ label, active, dir, onClick, className = '' }: { label: string; active: boolean; dir: SortDir; onClick: () => void; className?: string }) {
   return (
-    <th className={`cursor-pointer select-none px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark ${className}`} onClick={onClick}>
-      <span className={`inline-flex items-center gap-1 ${active ? 'text-slate-900 dark:text-white' : ''}`}>
+    <th className={`cursor-pointer select-none px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted ${className}`} onClick={onClick}>
+      <span className={`inline-flex items-center gap-1 ${active ? 'text-text-base' : ''}`}>
         {label}
         <span className={active ? 'opacity-100' : 'opacity-30'}>{active && dir === 'desc' ? '↓' : '↑'}</span>
       </span>
@@ -620,7 +602,7 @@ function ChannelAvatars({ rule, channels }: { rule: AlertRule; channels: Notific
 
   if (ruleChannels.length === 0) {
     return (
-      <span className="inline-flex max-w-full items-center gap-1.5 text-sm font-medium text-slate-400 dark:text-text-dim-dark">
+      <span className="inline-flex max-w-full items-center gap-1.5 text-sm font-medium text-text-dim">
         <MaterialIcon name="notifications_off" className="shrink-0 text-base" />
         <span className="truncate">{t('alerts.rules.noChannels')}</span>
       </span>

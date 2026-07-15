@@ -15,10 +15,10 @@ interface InfoChipProps {
 
 function InfoChip({ icon, label, value }: InfoChipProps) {
   return (
-    <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark">
-      <MaterialIcon name={icon} className="text-lg text-slate-500 dark:text-text-muted-dark" />
-      <span className="text-sm text-slate-500 dark:text-text-muted-dark">{label}</span>
-      <span className="text-sm font-semibold text-slate-900 dark:text-white">{value}</span>
+    <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-bg-surface border border-ui-border">
+      <MaterialIcon name={icon} className="text-lg text-text-muted" />
+      <span className="text-sm text-text-muted">{label}</span>
+      <span className="text-sm font-semibold text-text-base">{value}</span>
     </div>
   );
 }
@@ -58,7 +58,7 @@ export function AgentIdentity({ service, showName = true }: { service: AgentServ
     <div className="mb-8">
       {showName && (
         <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{service.name}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-text-base">{service.name}</h1>
           <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${cfg.bg} border ${cfg.border}`}>
             <span className="relative flex h-2 w-2">
               {service.healthy && (

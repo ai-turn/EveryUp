@@ -10,16 +10,16 @@ export function NotFoundPage() {
       {/* 404 아이콘 */}
       <MaterialIcon
         name="sentiment_dissatisfied"
-        className="text-8xl text-slate-300 dark:text-text-dim-dark mb-4"
+        className="text-8xl text-text-dim mb-4"
       />
 
       {/* 404 텍스트 */}
-      <h1 className="text-6xl font-bold text-slate-900 dark:text-white mb-2">
+      <h1 className="text-6xl font-bold text-text-base mb-2">
         {t('notfound.title')}
       </h1>
 
       {/* 설명 */}
-      <p className="text-xl text-slate-600 dark:text-text-muted-dark mb-8">
+      <p className="text-xl text-text-muted mb-8">
         {t('notfound.subtitle')}
       </p>
 

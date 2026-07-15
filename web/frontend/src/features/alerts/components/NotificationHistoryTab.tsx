@@ -131,7 +131,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [history, i18n.language]);
 
-  const thClass = 'px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-text-muted-dark uppercase tracking-wider';
+  const thClass = 'px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider';
 
   return (
     <div className="space-y-3">
@@ -152,7 +152,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
         <select
           value={typeFilter}
           onChange={e => setTypeFilter(e.target.value)}
-          className="px-2 py-1.5 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-md text-sm font-medium text-slate-700 dark:text-text-muted-dark cursor-pointer"
+          className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm font-medium text-text-secondary cursor-pointer"
         >
           <option value="all">{t('alerts.history.typeAllOption')}</option>
           <option value="resource">{t('alerts.history.typeResource')}</option>
@@ -166,7 +166,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
         <select
           value={channelFilter}
           onChange={e => setChannelFilter(e.target.value)}
-          className="px-2 py-1.5 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-md text-sm font-medium text-slate-700 dark:text-text-muted-dark cursor-pointer"
+          className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm font-medium text-text-secondary cursor-pointer"
         >
           <option value="all">{t('alerts.history.channelAll')}</option>
           {channels.map(ch => (
@@ -177,7 +177,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
         <select
           value={periodDays}
           onChange={e => setPeriodDays(Number(e.target.value) as PeriodDays)}
-          className="px-2 py-1.5 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-md text-sm font-medium text-slate-700 dark:text-text-muted-dark cursor-pointer"
+          className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm font-medium text-text-secondary cursor-pointer"
         >
           <option value={1}>{t('alerts.history.period24h')}</option>
           <option value={7}>{t('alerts.history.period7d')}</option>
@@ -191,7 +191,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={t('alerts.history.searchPlaceholder')}
-            className="w-full pl-7 pr-7 py-1.5 bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-md text-sm outline-none focus:ring-1 focus:ring-primary dark:text-white"
+            className="w-full pl-7 pr-7 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm outline-none focus:ring-1 focus:ring-primary dark:text-white"
           />
           {search && (
             <button
@@ -206,11 +206,11 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
       </div>
 
       {/* History Table */}
-      <div className="bg-white dark:bg-bg-surface-dark rounded-xl border border-slate-200 dark:border-ui-border-dark overflow-hidden">
+      <div className="bg-bg-surface rounded-xl border border-ui-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[960px] table-fixed">
-            <thead className="bg-slate-50 dark:bg-ui-hover-dark/40">
-              <tr className="border-b border-slate-200 dark:border-ui-border-dark">
+            <thead className="bg-ui-hover-soft/40">
+              <tr className="border-b border-ui-border">
                 <th className={`${thClass} w-[110px]`}>{t('alerts.history.status')}</th>
                 <th className={`${thClass} w-[120px]`}>{t('alerts.history.type')}</th>
                 <th className={`${thClass} w-[190px]`}>{t('alerts.history.channel')}</th>
@@ -222,14 +222,14 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500 dark:text-text-muted-dark">
+                  <td colSpan={6} className="px-6 py-12 text-center text-text-muted">
                     <MaterialIcon name="sync" className="text-4xl animate-spin mx-auto mb-2" />
                     <p>{t('alerts.history.loading')}</p>
                   </td>
                 </tr>
               ) : history.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400 dark:text-text-muted-dark">
+                  <td colSpan={6} className="px-6 py-12 text-center text-text-dim">
                     <MaterialIcon name="inbox" className="text-4xl mx-auto mb-2" />
                     <p className="text-sm">{t('alerts.history.empty')}</p>
                   </td>
@@ -239,7 +239,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
                   if (row.kind === 'group') {
                     return (
                       <tr key={`g-${row.key}`}>
-                        <td colSpan={6} className="px-4 py-1.5 border-t border-slate-100 dark:border-ui-border-dark/50 bg-slate-50 dark:bg-ui-hover-dark/30 text-2xs font-bold text-slate-500 dark:text-text-muted-dark">
+                        <td colSpan={6} className="px-4 py-1.5 border-t border-ui-border-soft/50 bg-ui-hover-soft/30 text-2xs font-bold text-text-muted">
                           {row.label}
                         </td>
                       </tr>
@@ -253,10 +253,10 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
                   return (
                     <tr
                       key={item.id}
-                      className={`border-t border-slate-100 dark:border-ui-border-dark/50 transition-colors ${
+                      className={`border-t border-ui-border-soft/50 transition-colors ${
                         failed
                           ? 'bg-red-50/60 dark:bg-red-900/10 hover:bg-red-50 dark:hover:bg-red-900/15'
-                          : 'hover:bg-slate-50 dark:hover:bg-ui-hover-dark/40'
+                          : 'hover:bg-ui-hover-soft/40'
                       }`}
                     >
                       <td className="px-4 py-3">
@@ -265,7 +265,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
                           {item.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-700 dark:text-text-muted-dark">
+                      <td className="px-4 py-3 text-sm text-text-secondary">
                         {typeLabel(item.alertType)}
                       </td>
                       <td className="px-4 py-3">
@@ -273,11 +273,11 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
                           <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${channelStyle.bg}`}>
                             <ChannelIcon type={item.channelType} size={13} className={channelStyle.text} />
                           </div>
-                          <span className="truncate text-sm text-slate-700 dark:text-text-muted-dark">{item.channelName}</span>
+                          <span className="truncate text-sm text-text-secondary">{item.channelName}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <p className="truncate text-sm text-slate-900 dark:text-white">{item.message}</p>
+                        <p className="truncate text-sm text-text-base">{item.message}</p>
                         {item.errorMessage && (
                           <p className="mt-0.5 truncate text-2xs text-red-600 dark:text-red-400">
                             {item.errorMessage}
@@ -292,9 +292,9 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right text-sm text-slate-600 dark:text-text-muted-dark whitespace-nowrap">
+                      <td className="px-4 py-3 text-right text-sm text-text-muted whitespace-nowrap">
                         {formatDistanceToNow(created, { addSuffix: true, locale: dateLocale })}
-                        <span className="text-slate-400 dark:text-text-dim-dark"> · {format(created, 'HH:mm')}</span>
+                        <span className="text-text-dim"> · {format(created, 'HH:mm')}</span>
                       </td>
                     </tr>
                   );
@@ -306,8 +306,8 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
 
         {/* Pagination */}
         {!loading && total > 0 && (
-          <div className="flex items-center justify-between border-t border-slate-200 dark:border-ui-border-dark bg-slate-50/60 dark:bg-ui-hover-dark/20 px-4 py-2.5">
-            <p className="text-xs text-slate-500 dark:text-text-muted-dark">
+          <div className="flex items-center justify-between border-t border-ui-border bg-slate-50/60 dark:bg-ui-hover-dark/20 px-4 py-2.5">
+            <p className="text-xs text-text-muted">
               {t('alerts.history.pagination', {
                 start: (page - 1) * PAGE_SIZE + 1,
                 end: Math.min(page * PAGE_SIZE, total),
@@ -318,14 +318,14 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 dark:border-ui-border-dark text-sm text-slate-600 dark:text-text-muted-dark hover:bg-slate-100 dark:hover:bg-ui-hover-dark disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex h-7 w-7 items-center justify-center rounded-md border border-ui-border text-sm text-text-muted hover:bg-ui-hover disabled:opacity-40 disabled:cursor-not-allowed"
                 aria-label={t('common.previous', { defaultValue: 'Previous' })}
               >
                 ‹
               </button>
               {pageItems(page, totalPages).map((p, i) =>
                 p === null ? (
-                  <span key={`e-${i}`} className="px-1 text-sm text-slate-400 dark:text-text-dim-dark">…</span>
+                  <span key={`e-${i}`} className="px-1 text-sm text-text-dim">…</span>
                 ) : (
                   <button
                     key={p}
@@ -333,7 +333,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
                     className={`flex h-7 min-w-7 items-center justify-center rounded-md px-1 text-xs font-semibold ${
                       p === page
                         ? 'bg-primary text-white'
-                        : 'border border-slate-200 dark:border-ui-border-dark text-slate-600 dark:text-text-muted-dark hover:bg-slate-100 dark:hover:bg-ui-hover-dark'
+                        : 'border border-ui-border text-text-muted hover:bg-ui-hover'
                     }`}
                   >
                     {p}
@@ -343,7 +343,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 dark:border-ui-border-dark text-sm text-slate-600 dark:text-text-muted-dark hover:bg-slate-100 dark:hover:bg-ui-hover-dark disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex h-7 w-7 items-center justify-center rounded-md border border-ui-border text-sm text-text-muted hover:bg-ui-hover disabled:opacity-40 disabled:cursor-not-allowed"
                 aria-label={t('common.next', { defaultValue: 'Next' })}
               >
                 ›

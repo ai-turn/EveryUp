@@ -9,6 +9,11 @@
 /* Tailwind v4 Variant Setup */
 @variant dark (.dark &);
 
+/* ─────────────────────────────────────────────────────────────
+   토큰 규약: 시맨틱 토큰(--color-text-muted 등)은 **라이트 값**을 담고,
+   .dark 블록에서 대응 -dark 값으로 재할당된다.
+   → 컴포넌트는 `text-text-muted` 하나만 쓴다. `dark:` 이중 작성 금지.
+   ───────────────────────────────────────────────────────────── */
 @theme {
   /* 1. Primary: 다크모드에서 조금 더 화사한 블루 채택 */
   --color-primary: #3b76c9;
@@ -18,26 +23,32 @@
   /* 2. Backgrounds */
   --color-bg-main: #fbfcfe;
   --color-bg-main-dark: #0d1117;   /* GitHub Dark 수준 — 눈 피로 감소 */
-  --color-bg-surface: #f0f5fc;
+  --color-bg-surface: #ffffff;      /* 라이트 카드 표면 = 흰색 */
   --color-bg-surface-dark: #161b22; /* bg와 충분한 명도차 확보 */
 
   /* 3. UI Components */
-  --color-ui-border: #d0def2;
+  --color-ui-border: #e2e8f0;       /* 기본 헤어라인 (≈ slate-200) */
   --color-ui-border-dark: #30363d;
-  --color-ui-hover: #e4edf9;
+  --color-ui-border-soft: #f1f5f9;  /* 카드 내부 행 구분선 (≈ slate-100) */
+  --color-ui-border-soft-dark: #30363d; /* 다크는 헤어라인 1단계뿐 */
+  --color-ui-hover: #f1f5f9;        /* ≈ slate-100 */
   --color-ui-hover-dark: #1f2937;
+  --color-ui-hover-soft: #f8fafc;   /* 옅은 내부 채움 (≈ slate-50) */
+  --color-ui-hover-soft-dark: #1f2937;
+  --color-ui-active: #e2e8f0;       /* toggle/active 상태 bg (≈ slate-200) */
   --color-ui-active-dark: #374151;  /* toggle/active 상태 bg (≈ slate-700) */
 
-  /* 4. Text Colors: 대비(Contrast) 최적화 */
-  --color-text-base: #0b0f14;
-  --color-text-base-dark: #f0f4f8;
+  /* 4. Text Colors: 4단 위계 — base > secondary > muted > dim */
+  --color-text-base: #0f172a;       /* 제목·강조 (≈ slate-900) */
+  --color-text-base-dark: #ffffff;
 
-  --color-text-secondary-dark: #cbd5e1; /* base와 muted 사이 (≈ slate-300) */
+  --color-text-secondary: #334155;  /* 본문 (≈ slate-700) */
+  --color-text-secondary-dark: #cbd5e1;
 
-  --color-text-muted: #4b6a8e;
+  --color-text-muted: #64748b;      /* 보조 텍스트 (≈ slate-500) */
   --color-text-muted-dark: #94a3b8;
 
-  --color-text-dim: #88a8c8;
+  --color-text-dim: #94a3b8;        /* 메타·플레이스홀더 (≈ slate-400) */
   --color-text-dim-dark: #6b7280;   /* WCAG AA 대비비 충족 (was #484f58) */
 
   /* 5. Status: 다크모드 가독성을 고려한 미세 조정 */
@@ -76,14 +87,23 @@
 }
 
 .dark {
-  /* --color-primary 오버라이드: bg-primary / text-primary / ring-primary 등 모든 Tailwind primary 유틸리티에 자동 반영 */
+  /* 시맨틱 토큰 재할당: bg-primary / text-text-muted / border-ui-border 등
+     모든 Tailwind 유틸리티에 자동 반영 → 컴포넌트에 dark: 접두 불필요 */
   --color-primary: var(--color-primary-dark);
 
-  --app-bg: var(--color-bg-main-dark);
-  --app-text: var(--color-text-base-dark);
-  --app-text-muted: var(--color-text-muted-dark);
-  --card-bg: var(--color-bg-surface-dark);
-  --border-color: var(--color-ui-border-dark);
+  --color-bg-main: var(--color-bg-main-dark);
+  --color-bg-surface: var(--color-bg-surface-dark);
+
+  --color-ui-border: var(--color-ui-border-dark);
+  --color-ui-border-soft: var(--color-ui-border-soft-dark);
+  --color-ui-hover: var(--color-ui-hover-dark);
+  --color-ui-hover-soft: var(--color-ui-hover-soft-dark);
+  --color-ui-active: var(--color-ui-active-dark);
+
+  --color-text-base: var(--color-text-base-dark);
+  --color-text-secondary: var(--color-text-secondary-dark);
+  --color-text-muted: var(--color-text-muted-dark);
+  --color-text-dim: var(--color-text-dim-dark);
 
   /* Toast Dark */
   --toast-bg: #161b22;
@@ -110,6 +130,13 @@ body {
   :focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
+  }
+
+  /* Recharts 3 accessibilityLayer가 svg를 포커스 가능하게 만들어 클릭 시
+     브라우저 기본 링(Windows Chrome=검정)이 뜬다. 마우스 클릭만 숨기고
+     키보드 포커스(:focus-visible)는 위 primary 링을 유지한다. */
+  .recharts-surface:focus:not(:focus-visible) {
+    outline: none;
   }
 }
 

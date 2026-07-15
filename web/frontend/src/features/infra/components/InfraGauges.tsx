@@ -43,7 +43,7 @@ function VitalGaugeCard({ gauge }: { gauge: GaugeData }) {
     <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-ui-border-dark dark:bg-bg-surface-dark">
       {/* 상단: 레이블 + 추세 배지 */}
       <div className="flex items-center justify-between gap-2">
-        <p className="truncate text-2xs font-bold uppercase tracking-wider text-slate-500 dark:text-text-muted-dark">
+        <p className="truncate text-2xs font-bold uppercase tracking-wider text-text-muted">
           {gauge.label}
         </p>
         {gauge.trend && (
@@ -56,22 +56,22 @@ function VitalGaugeCard({ gauge }: { gauge: GaugeData }) {
 
       {/* 값 + 단위 + 상태 pill */}
       <div className="mt-3 flex items-baseline gap-1.5">
-        <span className="text-2xl font-extrabold tracking-tight tabular-nums text-slate-900 dark:text-white">
+        <span className="text-2xl font-extrabold tracking-tight tabular-nums text-text-base">
           {displayValue}
         </span>
-        <span className="text-sm font-bold text-slate-400 dark:text-text-dim-dark">{displayUnit}</span>
+        <span className="text-sm font-bold text-text-dim">{displayUnit}</span>
         <span className={`ml-auto shrink-0 rounded-full px-2 py-0.5 text-2xs font-bold ${tone.soft} ${tone.text}`}>
           {t(`infra.detail.loadStates.${getGaugeState(pct)}`)}
         </span>
       </div>
 
       {/* 가로 프로그레스 바 */}
-      <div className="my-3 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-ui-hover-dark">
+      <div className="my-3 h-1.5 overflow-hidden rounded-full bg-ui-hover">
         <div className={`h-full rounded-full ${tone.bar} transition-all duration-700`} style={{ width: `${pct}%` }} />
       </div>
 
       {/* 부가 설명 */}
-      <p className="truncate text-2xs text-slate-400 dark:text-text-dim-dark">{gauge.subtitle}</p>
+      <p className="truncate text-2xs text-text-dim">{gauge.subtitle}</p>
     </article>
   );
 }
@@ -105,5 +105,5 @@ function getTrendTone(trendType: GaugeData['trendType']) {
   if (trendType === 'down') {
     return { icon: 'arrow_downward', text: 'text-emerald-600 dark:text-emerald-400', soft: 'bg-emerald-50 dark:bg-emerald-500/10' };
   }
-  return { icon: 'remove', text: 'text-slate-500 dark:text-text-muted-dark', soft: 'bg-slate-100 dark:bg-ui-hover-dark' };
+  return { icon: 'remove', text: 'text-text-muted', soft: 'bg-ui-hover' };
 }

@@ -148,7 +148,7 @@ export function ProcessTable({ hostId, refreshKey = 0 }: { hostId: string; refre
     <div>
       {/* 헤더 */}
       <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+        <h2 className="text-xl font-bold tracking-tight text-text-base">
           프로세스
         </h2>
 
@@ -161,7 +161,7 @@ export function ProcessTable({ hostId, refreshKey = 0 }: { hostId: string; refre
               placeholder="이름으로 검색..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 pr-3 py-1.5 text-sm bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-lg outline-none focus:ring-2 focus:ring-primary/50 dark:text-white dark:placeholder-text-muted-dark w-36"
+              className="pl-8 pr-3 py-1.5 text-sm bg-bg-surface border border-ui-border rounded-lg outline-none focus:ring-2 focus:ring-primary/50 dark:text-white dark:placeholder-text-muted-dark w-36"
             />
           </div>
 
@@ -172,7 +172,7 @@ export function ProcessTable({ hostId, refreshKey = 0 }: { hostId: string; refre
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-bold border transition-colors ${
               groupByName
                 ? 'bg-primary/10 border-primary/20 text-primary'
-                : 'bg-white dark:bg-bg-surface-dark border-slate-200 dark:border-ui-border-dark text-slate-500 dark:text-text-muted-dark'
+                : 'bg-bg-surface border-ui-border text-text-muted'
             }`}
           >
             <MaterialIcon name="folder_copy" className="text-sm" />
@@ -180,7 +180,7 @@ export function ProcessTable({ hostId, refreshKey = 0 }: { hostId: string; refre
           </button>
 
           {/* Top-N */}
-          <div className="flex bg-slate-100 dark:bg-ui-hover-dark rounded-lg p-0.5">
+          <div className="flex bg-ui-hover rounded-lg p-0.5">
             {([5, 10, 20] as const).map((n) => (
               <button
                 key={n}
@@ -188,8 +188,8 @@ export function ProcessTable({ hostId, refreshKey = 0 }: { hostId: string; refre
                 onClick={() => setTopN(n)}
                 className={`px-2.5 py-1 text-sm font-bold rounded-md transition-colors ${
                   topN === n
-                    ? 'bg-white dark:bg-bg-surface-dark text-slate-900 dark:text-white shadow-sm'
-                    : 'text-slate-500 dark:text-text-muted-dark'
+                    ? 'bg-bg-surface text-text-base shadow-sm'
+                    : 'text-text-muted'
                 }`}
               >
                 {n}
@@ -200,23 +200,23 @@ export function ProcessTable({ hostId, refreshKey = 0 }: { hostId: string; refre
       </div>
 
       {/* 요약 바 */}
-      <div className="mb-3 flex items-center gap-4 px-3 py-2 rounded-lg bg-slate-50 dark:bg-ui-hover-dark/40 border border-slate-100 dark:border-ui-border-dark/50 text-sm flex-wrap">
-        <span className="text-slate-400 dark:text-text-dim-dark">전체 {list.length}개 프로세스</span>
+      <div className="mb-3 flex items-center gap-4 px-3 py-2 rounded-lg bg-ui-hover-soft/40 border border-ui-border-soft/50 text-sm flex-wrap">
+        <span className="text-text-dim">전체 {list.length}개 프로세스</span>
         <div className="flex items-center gap-1">
-          <span className="text-slate-400 dark:text-text-dim-dark">CPU 합계</span>
-          <span className="font-bold tabular-nums text-slate-700 dark:text-text-base-dark">{totalCpuPct.toFixed(1)}%</span>
+          <span className="text-text-dim">CPU 합계</span>
+          <span className="font-bold tabular-nums text-text-secondary">{totalCpuPct.toFixed(1)}%</span>
         </div>
         <div className="flex items-center gap-1">
-          <span className="text-slate-400 dark:text-text-dim-dark">메모리 합계</span>
-          <span className="font-bold tabular-nums text-slate-700 dark:text-text-base-dark">{formatMemMB(totalMemMB)}</span>
+          <span className="text-text-dim">메모리 합계</span>
+          <span className="font-bold tabular-nums text-text-secondary">{formatMemMB(totalMemMB)}</span>
         </div>
       </div>
 
       {/* 테이블 */}
-      <div className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark overflow-hidden shadow-sm">
+      <div className="rounded-xl border border-ui-border bg-bg-surface overflow-hidden shadow-sm">
         {/* 컬럼 헤더 */}
         <div
-          className="grid gap-3 px-4 py-2.5 bg-slate-50/70 dark:bg-ui-hover-dark/50 border-b border-slate-100 dark:border-ui-border-dark text-sm font-semibold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide"
+          className="grid gap-3 px-4 py-2.5 bg-slate-50/70 dark:bg-ui-hover-dark/50 border-b border-ui-border-soft text-sm font-semibold text-text-muted uppercase tracking-wide"
           style={{ gridTemplateColumns: COL }}
         >
           <span>프로세스</span>
@@ -280,7 +280,7 @@ function SortHeader({
     <button
       type="button"
       onClick={() => onSort(col)}
-      className={`flex items-center gap-0.5 cursor-pointer transition-colors hover:text-slate-900 dark:hover:text-white ${
+      className={`flex items-center gap-0.5 cursor-pointer transition-colors hover:text-text-base ${
         active ? 'text-primary font-bold' : ''
       }`}
     >
@@ -292,7 +292,7 @@ function SortHeader({
 
 function EmptyRow({ search }: { search: string }) {
   return (
-    <div className="py-10 text-center text-sm text-slate-400 dark:text-text-muted-dark">
+    <div className="py-10 text-center text-sm text-text-dim">
       {search ? `"${search}" 검색 결과 없음` : '프로세스 없음'}
     </div>
   );
@@ -330,7 +330,7 @@ function GroupRow({
             <MaterialIcon name={group.icon} className="text-sm text-primary" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-bold text-slate-800 dark:text-text-base-dark truncate">{group.name}</p>
+            <p className="text-sm font-bold text-text-base truncate">{group.name}</p>
           </div>
           {multiProc && (
             <span className="shrink-0 text-xs font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
@@ -366,14 +366,14 @@ function GroupRow({
       {expanded && multiProc && group.procs.map((proc) => (
         <div
           key={proc.id}
-          className="grid gap-3 px-4 py-2 items-center bg-slate-50/40 dark:bg-ui-hover-dark/20 border-t border-slate-50 dark:border-ui-border-dark/20"
+          className="grid gap-3 px-4 py-2 items-center bg-slate-50/40 dark:bg-ui-hover-dark/20 border-t border-ui-border-soft/20"
           style={{ gridTemplateColumns: COL }}
         >
           {/* 들여쓰기 */}
           <div className="flex items-center gap-2.5 min-w-0 pl-8">
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-slate-600 dark:text-text-muted-dark truncate">{proc.name}</p>
-              <p className="text-xs font-mono text-slate-400 dark:text-text-dim-dark">PID {proc.pid}</p>
+              <p className="text-sm font-semibold text-text-muted truncate">{proc.name}</p>
+              <p className="text-xs font-mono text-text-dim">PID {proc.pid}</p>
             </div>
           </div>
           <MetricBar value={parseCpuPct(proc.cpu)} pct={Math.min(parseCpuPct(proc.cpu) / cpuCoreCount, 100)} unit="%" active={sortBy === 'cpu'} isCpu dim />
@@ -410,8 +410,8 @@ function FlatRow({
           <MaterialIcon name={proc.icon} className="text-sm text-primary" />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-bold text-slate-800 dark:text-text-base-dark truncate">{proc.name}</p>
-          <p className="text-xs font-mono text-slate-400 dark:text-text-dim-dark">PID {proc.pid}</p>
+          <p className="text-sm font-bold text-text-base truncate">{proc.name}</p>
+          <p className="text-xs font-mono text-text-dim">PID {proc.pid}</p>
         </div>
       </div>
 
@@ -447,18 +447,18 @@ function MetricBar({
     clamped >= 80 ? 'text-red-600 dark:text-red-400' :
     clamped >= 60 ? 'text-amber-600 dark:text-amber-400' :
     isCpu && value >= 15 ? 'text-lime-600 dark:text-lime-400' :
-    'text-slate-700 dark:text-text-base-dark';
+    'text-text-secondary';
 
   const label = formatFn ? formatFn(value) : `${value.toFixed(1)}${unit}`;
 
   return (
     <div className={dim ? 'opacity-70' : ''}>
       <div className="flex items-center justify-between mb-1 gap-2">
-        <span className={`text-sm font-bold tabular-nums ${active ? textColor : 'text-slate-500 dark:text-text-muted-dark'}`}>
+        <span className={`text-sm font-bold tabular-nums ${active ? textColor : 'text-text-muted'}`}>
           {label}
         </span>
       </div>
-      <div className={`rounded-full bg-slate-100 dark:bg-ui-hover-dark overflow-hidden ${active ? 'h-2' : 'h-1 opacity-60'}`}>
+      <div className={`rounded-full bg-ui-hover overflow-hidden ${active ? 'h-2' : 'h-1 opacity-60'}`}>
         <div
           className={`h-full rounded-full ${active ? barColor : 'bg-slate-300 dark:bg-ui-hover-dark'}`}
           style={{ width: `${clamped}%` }}
@@ -472,7 +472,7 @@ function StatusDot({ status }: { status: Process['status'] }) {
   return (
     <div className="flex items-center gap-1.5">
       <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[status]}`} />
-      <span className="text-sm text-slate-500 dark:text-text-muted-dark font-medium">
+      <span className="text-sm text-text-muted font-medium">
         {STATUS_LABEL[status]}
       </span>
     </div>
@@ -505,13 +505,13 @@ function ActionMenu({
       <button
         type="button"
         onClick={() => onMenuToggle(isOpen ? null : id)}
-        className="w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-ui-hover-dark transition-colors"
+        className="w-6 h-6 flex items-center justify-center rounded text-slate-400 hover:text-text-base hover:bg-ui-hover transition-colors"
       >
         <MaterialIcon name="more_vert" className="text-sm" />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-7 z-20 w-32 rounded-lg border border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-surface-dark shadow-lg py-1">
+        <div className="absolute right-0 top-7 z-20 w-32 rounded-lg border border-ui-border bg-bg-surface shadow-lg py-1">
           <button
             type="button"
             onClick={() => onMenuToggle(null)}

@@ -84,14 +84,14 @@ const CHANNEL_META: Record<ChannelType, {
 
 function FormStep({ n, title, subtitle, children }: { n: number; title: string; subtitle?: string; children: ReactNode }) {
     return (
-        <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30">
+        <div className="bg-bg-surface border border-ui-border rounded-xl overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-slate-50/50 dark:bg-ui-hover-dark/30">
                 <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs font-mono shrink-0">
                     {n}
                 </span>
                 <div>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">{title}</p>
-                    {subtitle && <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{subtitle}</p>}
+                    <p className="text-sm font-bold text-text-base uppercase tracking-wider">{title}</p>
+                    {subtitle && <p className="text-sm text-text-muted mt-0.5">{subtitle}</p>}
                 </div>
             </div>
             <div className="p-5 space-y-5">{children}</div>
@@ -105,17 +105,17 @@ function Field({ label, hint, required, children, error }: {
     return (
         <div>
             <div className="flex items-center gap-1 mb-2">
-                <label className="text-sm font-bold text-slate-500 dark:text-text-muted-dark uppercase tracking-wide">{label}</label>
+                <label className="text-sm font-bold text-text-muted uppercase tracking-wide">{label}</label>
                 {required && <span className="text-red-500 text-xs">*</span>}
             </div>
             {children}
             {error && <p className="text-sm text-red-500 font-medium mt-1">{error}</p>}
-            {hint && !error && <p className="text-sm text-slate-400 dark:text-text-dim-dark mt-1.5 italic">{hint}</p>}
+            {hint && !error && <p className="text-sm text-text-dim mt-1.5 italic">{hint}</p>}
         </div>
     );
 }
 
-const inputCls = "w-full px-3.5 py-2.5 bg-slate-50 dark:bg-ui-hover-dark border border-slate-200 dark:border-ui-border-dark rounded-lg text-sm font-semibold outline-none focus:border-primary dark:text-white transition-colors";
+const inputCls = "w-full px-3.5 py-2.5 bg-ui-hover-soft border border-ui-border rounded-lg text-sm font-semibold outline-none focus:border-primary dark:text-white transition-colors";
 const inputMonoCls = inputCls + " font-mono";
 
 // ─── Accurate preview components (matching real backend output) ───────────────
@@ -225,26 +225,26 @@ function SlackPreview({ name }: { name: string }) {
                 {/* Attachment with left colored border */}
                 <div className="border-l-4 border-success pl-2.5 space-y-1.5">
                     {/* Header section */}
-                    <p className="font-bold text-slate-800 dark:text-slate-100">
+                    <p className="font-bold text-text-base">
                         ✅ <span className="italic">Service healthy: Notification Test</span>
                     </p>
                     {/* Message section */}
-                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                    <p className="text-text-muted leading-relaxed">
                         This is a test notification. Your EVERYUP notification channel is connected correctly.
                     </p>
                     {/* Fields row */}
                     <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 pt-0.5">
                         <div>
-                            <p className="font-bold text-slate-700 dark:text-slate-300 text-xs">Service ID</p>
-                            <p className="text-slate-500 dark:text-slate-400">test</p>
+                            <p className="font-bold text-text-secondary text-xs">Service ID</p>
+                            <p className="text-text-muted">test</p>
                         </div>
                         <div>
-                            <p className="font-bold text-slate-700 dark:text-slate-300 text-xs">Status</p>
-                            <p className="text-slate-500 dark:text-slate-400">healthy</p>
+                            <p className="font-bold text-text-secondary text-xs">Status</p>
+                            <p className="text-text-muted">healthy</p>
                         </div>
                     </div>
                     {/* Context footer */}
-                    <p className="text-slate-400 dark:text-slate-500 text-xs pt-1">
+                    <p className="text-text-dim text-xs pt-1">
                         EVERYUP • {new Date().toISOString().slice(0, 10).replace(/-/g, '-')} {new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                     </p>
                 </div>
@@ -372,7 +372,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
     const maskToken = (v: string) => v.length > 8 ? v.slice(0, 6) + '••••' + v.slice(-4) : v ? '••••••' : '';
 
     return (
-        <form id="channel-form" onSubmit={handleSubmit(onSubmit)} className="px-6 py-6">
+        <form id="channel-form" onSubmit={handleSubmit(onSubmit)}>
             <div className="max-w-350 mx-auto grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
 
                 {/* ── Left: form steps ─────────────────────────────────── */}
@@ -391,12 +391,12 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                             className={`flex flex-col items-center gap-2.5 p-4 border-2 rounded-xl cursor-pointer transition-all ${
                                                 active
                                                     ? m.colorBg
-                                                    : 'border-slate-100 dark:border-ui-border-dark hover:border-slate-200 dark:hover:border-slate-600'
+                                                    : 'border-ui-border-soft hover:border-slate-200 dark:hover:border-slate-600'
                                             }`}
                                         >
                                             <input {...register('type')} type="radio" value={type} className="sr-only" />
-                                            <m.Icon size={26} className={active ? m.color : 'text-slate-400 dark:text-text-dim-dark'} />
-                                            <span className={`text-sm font-bold ${active ? m.color : 'text-slate-600 dark:text-text-muted-dark'}`}>{m.label}</span>
+                                            <m.Icon size={26} className={active ? m.color : 'text-text-dim'} />
+                                            <span className={`text-sm font-bold ${active ? m.color : 'text-text-muted'}`}>{m.label}</span>
                                             <span className="text-sm font-semibold uppercase tracking-wider text-slate-400">{m.sub}</span>
                                         </label>
                                     );
@@ -470,22 +470,22 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                     <div className="sticky top-6 space-y-4">
 
                         {/* Channel preview card */}
-                        <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
-                            <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30">
+                        <div className="bg-bg-surface border border-ui-border rounded-xl overflow-hidden">
+                            <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-slate-50/50 dark:bg-ui-hover-dark/30">
                                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                                 <div>
-                                    <p className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest">{t('alerts.modal.previewTitle', { defaultValue: '채널 미리보기' })}</p>
-                                    <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{t('alerts.modal.previewSub', { defaultValue: '실제 전송 메시지 형식' })}</p>
+                                    <p className="text-sm font-bold text-text-base uppercase tracking-widest">{t('alerts.modal.previewTitle', { defaultValue: '채널 미리보기' })}</p>
+                                    <p className="text-sm text-text-muted mt-0.5">{t('alerts.modal.previewSub', { defaultValue: '실제 전송 메시지 형식' })}</p>
                                 </div>
                             </div>
                             <div className="p-5 space-y-4">
                                 {/* Identity */}
-                                <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-xl">
+                                <div className="flex items-center gap-3 p-3 bg-ui-hover-soft/50 rounded-xl">
                                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border-2 ${meta.colorBg}`}>
                                         <meta.Icon size={20} className={meta.color} />
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                                        <p className="text-sm font-bold text-text-base truncate">
                                             {watchedName || <span className="text-slate-400 font-normal italic">{t('alerts.modal.noName', { defaultValue: '채널 이름 미입력' })}</span>}
                                         </p>
                                         <p className={`text-sm font-semibold ${meta.color}`}>{meta.label}</p>
@@ -496,26 +496,26 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                 <div className="space-y-1.5 text-sm">
                                     {watchedType === 'telegram' ? (
                                         <>
-                                            <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-lg">
+                                            <div className="flex items-center justify-between px-3 py-2 bg-ui-hover-soft/50 rounded-lg">
                                                 <span className="text-slate-400 font-mono uppercase text-xs tracking-wide">Bot Token</span>
-                                                <span className="font-mono text-slate-600 dark:text-slate-400">
-                                                    {watchedBotToken ? maskToken(watchedBotToken) : <span className="text-slate-300 dark:text-slate-600 italic">{t('alerts.modal.notEntered', { defaultValue: '미입력' })}</span>}
+                                                <span className="font-mono text-text-muted">
+                                                    {watchedBotToken ? maskToken(watchedBotToken) : <span className="text-text-dim italic">{t('alerts.modal.notEntered', { defaultValue: '미입력' })}</span>}
                                                 </span>
                                             </div>
-                                            <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-lg">
+                                            <div className="flex items-center justify-between px-3 py-2 bg-ui-hover-soft/50 rounded-lg">
                                                 <span className="text-slate-400 font-mono uppercase text-xs tracking-wide">Chat ID</span>
-                                                <span className="font-mono text-slate-600 dark:text-slate-400">
-                                                    {watchedChatId || <span className="text-slate-300 dark:text-slate-600 italic">{t('alerts.modal.notEntered', { defaultValue: '미입력' })}</span>}
+                                                <span className="font-mono text-text-muted">
+                                                    {watchedChatId || <span className="text-text-dim italic">{t('alerts.modal.notEntered', { defaultValue: '미입력' })}</span>}
                                                 </span>
                                             </div>
                                         </>
                                     ) : (
-                                        <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-ui-hover-dark/50 rounded-lg gap-3">
+                                        <div className="flex items-center justify-between px-3 py-2 bg-ui-hover-soft/50 rounded-lg gap-3">
                                             <span className="text-slate-400 font-mono uppercase text-xs tracking-wide shrink-0">Webhook</span>
-                                            <span className="font-mono text-slate-600 dark:text-slate-400 truncate text-right">
+                                            <span className="font-mono text-text-muted truncate text-right">
                                                 {watchedWebhook
                                                     ? watchedWebhook.replace(/^https?:\/\//, '').slice(0, 32) + (watchedWebhook.length > 40 ? '…' : '')
-                                                    : <span className="text-slate-300 dark:text-slate-600 italic">{t('alerts.modal.notEntered', { defaultValue: '미입력' })}</span>}
+                                                    : <span className="text-text-dim italic">{t('alerts.modal.notEntered', { defaultValue: '미입력' })}</span>}
                                             </span>
                                         </div>
                                     )}
@@ -530,16 +530,16 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                         </div>
 
                         {/* Test send card */}
-                        <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
-                            <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 dark:border-ui-border-dark bg-slate-50/50 dark:bg-ui-hover-dark/30">
+                        <div className="bg-bg-surface border border-ui-border rounded-xl overflow-hidden">
+                            <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-slate-50/50 dark:bg-ui-hover-dark/30">
                                 <MaterialIcon name="send" className="text-base text-slate-400" />
                                 <div>
-                                    <p className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest">{t('alerts.modal.testTitle', { defaultValue: '테스트 전송' })}</p>
-                                    <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-0.5">{t('alerts.modal.testSub', { defaultValue: '실제 채널로 테스트 메시지 발송' })}</p>
+                                    <p className="text-sm font-bold text-text-base uppercase tracking-widest">{t('alerts.modal.testTitle', { defaultValue: '테스트 전송' })}</p>
+                                    <p className="text-sm text-text-muted mt-0.5">{t('alerts.modal.testSub', { defaultValue: '실제 채널로 테스트 메시지 발송' })}</p>
                                 </div>
                             </div>
                             <div className="p-5 space-y-3">
-                                <p className="text-sm text-slate-500 dark:text-text-muted-dark leading-relaxed">
+                                <p className="text-sm text-text-muted leading-relaxed">
                                     {t('alerts.modal.testDesc', { defaultValue: '현재 입력값으로 테스트 메시지를 보냅니다. 채널은 저장되지 않습니다.' })}
                                 </p>
 

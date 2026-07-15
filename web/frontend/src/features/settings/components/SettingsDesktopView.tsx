@@ -22,7 +22,7 @@ const segmentedButtonClass = (active: boolean) =>
   `cursor-pointer px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
     active
       ? 'bg-white dark:bg-ui-active-dark text-primary shadow-sm'
-      : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
+      : 'text-text-muted hover:text-text-secondary'
   }`;
 
 interface SettingsDesktopViewProps {
@@ -108,8 +108,8 @@ export function SettingsDesktopView({
     <div ref={rootRef}>
       {/* Page Header */}
       <div className="mb-5">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('settings.title')}</h1>
-        <p className="text-sm text-slate-500 dark:text-text-muted-dark mt-1">{t('settings.subtitle')}</p>
+        <h1 className="text-2xl font-bold text-text-base">{t('settings.title')}</h1>
+        <p className="text-sm text-text-muted mt-1">{t('settings.subtitle')}</p>
       </div>
 
       <div className="flex gap-10 items-start">
@@ -124,7 +124,7 @@ export function SettingsDesktopView({
                 className={`cursor-pointer text-left px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
                   on
                     ? 'bg-primary/10 text-primary'
-                    : 'text-slate-500 dark:text-text-muted-dark hover:bg-slate-100 dark:hover:bg-ui-hover-dark'
+                    : 'text-text-muted hover:bg-ui-hover'
                 }`}
               >
                 {label}
@@ -144,7 +144,7 @@ export function SettingsDesktopView({
           <section id="sec-ui" className="scroll-mt-4">
             <SectionCard title={t('settings.interface.title')} subtitle={t('settings.interface.subtitle')}>
               <SettingRow label={t('settings.interface.language')} description={t('settings.interface.languageDesc')}>
-                <div className="flex gap-1 bg-slate-100 dark:bg-ui-hover-dark p-0.5 rounded-lg">
+                <div className="flex gap-1 bg-ui-hover p-0.5 rounded-lg">
                   {(['ko', 'en'] as const).map((lng) => (
                     <button
                       key={lng}
@@ -158,7 +158,7 @@ export function SettingsDesktopView({
               </SettingRow>
 
               <SettingRow label={t('settings.interface.theme')} description={t('settings.interface.themeDesc')}>
-                <div className="flex gap-1 bg-slate-100 dark:bg-ui-hover-dark p-0.5 rounded-lg">
+                <div className="flex gap-1 bg-ui-hover p-0.5 rounded-lg">
                   {(['light', 'dark'] as const).map((t_) => (
                     <button
                       key={t_}
@@ -178,13 +178,13 @@ export function SettingsDesktopView({
             <SectionCard title={t('settings.retention.title')} subtitle={t('settings.retention.subtitle')}>
               {backendLoading ? (
                 <div className="space-y-3">
-                  <div className="h-10 bg-slate-100 dark:bg-ui-hover-dark rounded-lg animate-pulse" />
-                  <div className="h-10 bg-slate-100 dark:bg-ui-hover-dark rounded-lg animate-pulse" />
+                  <div className="h-10 bg-ui-hover rounded-lg animate-pulse" />
+                  <div className="h-10 bg-ui-hover rounded-lg animate-pulse" />
                 </div>
               ) : (
                 <>
                   <SettingRow label={t('settings.retention.collect')} description={t('settings.retention.collectDesc')}>
-                    <div className="flex gap-1 flex-wrap justify-end bg-slate-100 dark:bg-ui-hover-dark p-0.5 rounded-lg">
+                    <div className="flex gap-1 flex-wrap justify-end bg-ui-hover p-0.5 rounded-lg">
                       {collectOptions.map((sec) => (
                         <button
                           key={sec}
@@ -198,7 +198,7 @@ export function SettingsDesktopView({
                   </SettingRow>
 
                   <SettingRow label={t('settings.retention.metrics')} description={t('settings.retention.metricsDesc')}>
-                    <div className="flex gap-1 flex-wrap justify-end bg-slate-100 dark:bg-ui-hover-dark p-0.5 rounded-lg">
+                    <div className="flex gap-1 flex-wrap justify-end bg-ui-hover p-0.5 rounded-lg">
                       {METRICS_RETENTION_OPTIONS.map((opt) => (
                         <button
                           key={opt}
@@ -212,7 +212,7 @@ export function SettingsDesktopView({
                   </SettingRow>
 
                   <SettingRow label={t('settings.retention.logs')} description={t('settings.retention.logsDesc')}>
-                    <div className="flex gap-1 flex-wrap justify-end bg-slate-100 dark:bg-ui-hover-dark p-0.5 rounded-lg">
+                    <div className="flex gap-1 flex-wrap justify-end bg-ui-hover p-0.5 rounded-lg">
                       {LOGS_RETENTION_OPTIONS.map((opt) => (
                         <button
                           key={opt}
@@ -225,7 +225,7 @@ export function SettingsDesktopView({
                     </div>
                   </SettingRow>
 
-                  <p className="pt-3 text-xs text-slate-400 dark:text-text-dim-dark">
+                  <p className="pt-3 text-xs text-text-dim">
                     {t('settings.retention.shrinkWarning')}
                   </p>
                 </>
@@ -245,7 +245,7 @@ export function SettingsDesktopView({
           <section id="sec-danger" className="scroll-mt-4">
             <SectionCard title={t('settings.accountReset.title')} subtitle={t('settings.accountReset.subtitle')}>
               <div className="flex items-center justify-between gap-4">
-                <p className="text-xs text-slate-400 dark:text-text-dim-dark">
+                <p className="text-xs text-text-dim">
                   {env.useMock ? t('settings.accountReset.demoNotice') : t('settings.accountReset.confirmDesc')}
                 </p>
                 <button

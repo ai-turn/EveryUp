@@ -11,17 +11,17 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
     <div className="flex items-center gap-2">
       {items.map((item, index) => (
         <div key={index} className="flex items-center gap-2">
-          {index > 0 && <span className="text-slate-600 dark:text-text-dim-dark">/</span>}
+          {index > 0 && <span className="text-text-muted">/</span>}
           {item.href ? (
             <Link
               to={item.href}
-              className="flex items-center gap-1 text-slate-500 dark:text-text-muted-dark hover:text-slate-900 dark:hover:text-white transition-colors"
+              className="flex items-center gap-1 text-text-muted hover:text-text-base transition-colors"
             >
               {index === 0 && <MaterialIcon name="arrow_back" className="text-lg" />}
               <span className="text-sm font-medium">{item.label}</span>
             </Link>
           ) : (
-            <span className="text-slate-900 dark:text-white text-sm font-semibold">
+            <span className="text-text-base text-sm font-semibold">
               {item.label}
             </span>
           )}

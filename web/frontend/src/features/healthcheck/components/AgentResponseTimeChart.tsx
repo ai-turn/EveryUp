@@ -50,13 +50,13 @@ export function AgentResponseTimeChart({ agentId, serviceKey, refreshKey, range 
   return (
     <div className={`mb-8 p-6 ${chartCardClass}`}>
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-slate-900 dark:text-white font-bold text-lg">{t('응답 시간')}</h3>
+        <h3 className="text-text-base font-bold text-lg">{t('응답 시간')}</h3>
       </div>
 
       {loading ? (
-        <div className="h-48 bg-slate-100 dark:bg-ui-hover-dark rounded animate-pulse" />
+        <div className="h-48 bg-ui-hover rounded animate-pulse" />
       ) : chartData.length === 0 ? (
-        <div className="flex items-center justify-center h-48 text-slate-400 dark:text-text-dim-dark text-sm">
+        <div className="flex items-center justify-center h-48 text-text-dim text-sm">
           {t('데이터 없음')}
         </div>
       ) : (

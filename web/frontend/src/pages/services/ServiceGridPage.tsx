@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslate } from '@tolgee/react';
-import { ConfirmDialog, EmptyState, MaterialIcon } from '../../components/common';
+import { Button, ConfirmDialog, EmptyState, MaterialIcon } from '../../components/common';
 import { api, type AgentOverview, type AgentServiceFlat, type ConnectedAgent } from '../../services/api';
 import { PendingServiceCard } from '../../features/services/components/PendingServiceCard';
 import { AddServiceModal } from '../../features/services/components/AddServiceModal';
@@ -37,16 +37,16 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
   return (
     <div
       onClick={() => navigate(`/projects/${agentId}`)}
-      className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-4 cursor-pointer hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 active:translate-y-0 flex flex-col gap-3"
+      className="bg-bg-surface border border-ui-border rounded-xl p-4 cursor-pointer hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 active:translate-y-0 flex flex-col gap-3"
     >
       {/* Header: status + project name + controls */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
           <span className={`h-2.5 w-2.5 rounded-full shrink-0 mt-0.5 ${online ? 'bg-emerald-500' : 'bg-slate-400'}`} />
           <div className="min-w-0">
-            <h3 className="font-semibold text-base text-slate-900 dark:text-white truncate leading-tight">{agentName}</h3>
+            <h3 className="font-semibold text-base text-text-base truncate leading-tight">{agentName}</h3>
             {agent?.version && (
-              <span className="text-xs text-slate-400 dark:text-text-dim-dark">v{agent.version}</span>
+              <span className="text-xs text-text-dim">v{agent.version}</span>
             )}
           </div>
         </div>
@@ -72,7 +72,7 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
 
       {/* Summary: service count + health */}
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm text-slate-500 dark:text-text-muted-dark">{t('서비스 {count}개', { count: total })}</span>
+        <span className="text-sm text-text-muted">{t('서비스 {count}개', { count: total })}</span>
         <span className={`flex items-center gap-1 text-sm font-semibold ${allHealthy ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
           <MaterialIcon name={allHealthy ? 'check_circle' : 'cancel'} className="text-sm" />
           {healthy}/{total} {t('정상')}
@@ -90,25 +90,25 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
       {overview && (
         <div className="flex items-center gap-4 text-sm">
           <div>
-            <div className="text-2xs text-slate-400 dark:text-text-dim-dark">{t('가동률 30일')}</div>
-            <div className="font-mono font-semibold text-slate-800 dark:text-white">
+            <div className="text-2xs text-text-dim">{t('가동률 30일')}</div>
+            <div className="font-mono font-semibold text-text-base">
               {overview.uptimePct != null ? `${overview.uptimePct.toFixed(2)}%` : '—'}
             </div>
           </div>
           <div>
-            <div className="text-2xs text-slate-400 dark:text-text-dim-dark">{t('요청 24h')}</div>
-            <div className="font-mono font-semibold text-slate-800 dark:text-white">
+            <div className="text-2xs text-text-dim">{t('요청 24h')}</div>
+            <div className="font-mono font-semibold text-text-base">
               {overview.requests24h > 0
                 ? Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(overview.requests24h)
                 : '—'}
             </div>
           </div>
           <div>
-            <div className="text-2xs text-slate-400 dark:text-text-dim-dark">p95</div>
+            <div className="text-2xs text-text-dim">p95</div>
             <div className={`font-mono font-semibold ${
               overview.p95Ms != null && overview.p95Ms > 500
                 ? 'text-amber-600 dark:text-amber-400'
-                : 'text-slate-800 dark:text-white'
+                : 'text-text-base'
             }`}>
               {overview.p95Ms != null ? `${overview.p95Ms}ms` : '—'}
             </div>
@@ -117,10 +117,10 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
       )}
 
       {/* Divider */}
-      <div className="border-t border-slate-100 dark:border-ui-border-dark" />
+      <div className="border-t border-ui-border-soft" />
 
       {/* Footer: online state + drill-in hint */}
-      <div className="flex items-center justify-between gap-2 text-xs text-slate-400 dark:text-text-dim-dark">
+      <div className="flex items-center justify-between gap-2 text-xs text-text-dim">
         <span>{online ? t('온라인') : t('오프라인')}</span>
         <span className="flex items-center gap-0.5">
           {t('서비스 보기')}
@@ -226,32 +226,29 @@ export function ServiceGridPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('프로젝트')}</h1>
-          <p className="text-sm text-slate-500 dark:text-text-muted-dark">
+          <h1 className="text-2xl font-bold text-text-base">{t('프로젝트')}</h1>
+          <p className="text-sm text-text-muted">
             {t('연결된 프로젝트와 모니터링 서비스 현황')}
           </p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors shrink-0"
-        >
+        <Button onClick={() => setShowAddModal(true)}>
           <MaterialIcon name="add" className="text-base" />
           {t('프로젝트 추가')}
-        </button>
+        </Button>
       </div>
 
       {/* Search */}
       <div className="relative">
         <MaterialIcon
           name="search"
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-text-dim-dark text-lg pointer-events-none"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim text-lg pointer-events-none"
         />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t('서비스 또는 프로젝트 이름으로 검색')}
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-text-dim-dark focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow"
+          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-bg-surface border border-ui-border text-sm text-text-base placeholder-slate-400 dark:placeholder-text-dim-dark focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow"
         />
       </div>
 
@@ -259,7 +256,7 @@ export function ServiceGridPage() {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-44 rounded-xl bg-slate-100 dark:bg-ui-hover-dark animate-pulse" />
+            <div key={i} className="h-44 rounded-xl bg-ui-hover animate-pulse" />
           ))}
         </div>
       ) : services.length === 0 && agents.length === 0 ? (
@@ -270,7 +267,7 @@ export function ServiceGridPage() {
           action={{ label: t('프로젝트 추가'), onClick: () => setShowAddModal(true) }}
         />
       ) : groups.length === 0 && visiblePending.length === 0 ? (
-        <div className="py-16 text-center text-slate-400 dark:text-text-muted-dark text-sm">
+        <div className="py-16 text-center text-text-dim text-sm">
           {t('검색 결과가 없습니다')}
         </div>
       ) : (

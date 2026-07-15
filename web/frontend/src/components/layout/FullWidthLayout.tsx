@@ -6,9 +6,9 @@ export function FullWidthLayout() {
   return (
     <div className="min-h-screen">
       {/* Top Navigation */}
-      <header className="flex items-center justify-between whitespace-nowrap border-b border-slate-200 dark:border-ui-border-dark px-10 py-3 bg-white dark:bg-bg-main-dark">
+      <header className="flex items-center justify-between whitespace-nowrap border-b border-ui-border px-10 py-3 bg-white dark:bg-bg-main-dark">
         <div className="flex items-center gap-8">
-          <Link to="/" className="flex items-center gap-4 text-slate-900 dark:text-white">
+          <Link to="/" className="flex items-center gap-4 text-text-base">
             <div className="size-6 text-primary">
               <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
                 <path
@@ -31,25 +31,25 @@ export function FullWidthLayout() {
             </Link>
             <Link
               to="/services"
-              className="text-slate-500 dark:text-text-muted-dark text-sm font-medium leading-normal hover:text-slate-900 dark:hover:text-white"
+              className="text-text-muted text-sm font-medium leading-normal hover:text-text-base"
             >
               Services
             </Link>
             <Link
               to="/logs"
-              className="text-slate-500 dark:text-text-muted-dark text-sm font-medium leading-normal hover:text-slate-900 dark:hover:text-white"
+              className="text-text-muted text-sm font-medium leading-normal hover:text-text-base"
             >
               Logs
             </Link>
             <Link
               to="/alerts"
-              className="text-slate-500 dark:text-text-muted-dark text-sm font-medium leading-normal hover:text-slate-900 dark:hover:text-white"
+              className="text-text-muted text-sm font-medium leading-normal hover:text-text-base"
             >
               Alerts
             </Link>
             <Link
               to="/settings"
-              className="text-slate-500 dark:text-text-muted-dark text-sm font-medium leading-normal hover:text-slate-900 dark:hover:text-white"
+              className="text-text-muted text-sm font-medium leading-normal hover:text-text-base"
             >
               Settings
             </Link>
@@ -58,13 +58,13 @@ export function FullWidthLayout() {
         <div className="flex flex-1 justify-end gap-6 items-center">
           <div className="flex w-full max-w-64">
             <div className="flex w-full flex-1 items-stretch rounded-lg h-10">
-              <div className="text-slate-400 dark:text-text-muted-dark flex border-none bg-slate-100 dark:bg-bg-surface-dark items-center justify-center pl-4 rounded-l-lg">
+              <div className="text-text-dim flex border-none bg-slate-100 dark:bg-bg-surface-dark items-center justify-center pl-4 rounded-l-lg">
                 <MaterialIcon name="search" className="text-xl" />
               </div>
               <input
                 type="text"
                 placeholder="Quick search..."
-                className="flex w-full min-w-0 flex-1 rounded-lg text-slate-900 dark:text-white focus:outline-0 focus:ring-0 border-none bg-slate-100 dark:bg-bg-surface-dark h-full placeholder:text-slate-400 dark:placeholder:text-text-muted-dark px-4 rounded-l-none pl-2 text-base font-normal"
+                className="flex w-full min-w-0 flex-1 rounded-lg text-text-base focus:outline-0 focus:ring-0 border-none bg-slate-100 dark:bg-bg-surface-dark h-full placeholder:text-slate-400 dark:placeholder:text-text-muted-dark px-4 rounded-l-none pl-2 text-base font-normal"
               />
             </div>
           </div>
@@ -84,7 +84,7 @@ export function FullWidthLayout() {
       </main>
 
       {/* Footer */}
-      <footer className="max-w-[1200px] mx-auto mt-12 mb-12 px-6 pt-8 border-t border-slate-200 dark:border-ui-border-dark flex flex-col md:flex-row justify-between items-center text-slate-500 dark:text-text-dim-dark text-sm">
+      <footer className="max-w-[1200px] mx-auto mt-12 mb-12 px-6 pt-8 border-t border-ui-border flex flex-col md:flex-row justify-between items-center text-text-dim text-sm">
         <p>© 2023 DevMonitor Analytics Platform. All rights reserved.</p>
         <div className="flex gap-6 mt-4 md:mt-0">
           <span>System Status</span>

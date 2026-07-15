@@ -19,7 +19,7 @@ function relativeTime(iso: string): string {
 // gives the "it was created" feeling while making clear no data has arrived.
 export function PendingServiceCard({ agent, onDelete, onViewKey }: Props) {
   return (
-    <div className="bg-white dark:bg-bg-surface-dark border border-slate-200 dark:border-ui-border-dark rounded-xl p-4 flex flex-col gap-3">
+    <div className="bg-bg-surface border border-ui-border rounded-xl p-4 flex flex-col gap-3">
       {/* Header: status + name */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -27,7 +27,7 @@ export function PendingServiceCard({ agent, onDelete, onViewKey }: Props) {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-300 dark:bg-slate-600 opacity-75" />
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-slate-400" />
           </span>
-          <h3 className="font-semibold text-base text-slate-900 dark:text-white truncate leading-tight">
+          <h3 className="font-semibold text-base text-text-base truncate leading-tight">
             {agent.name}
           </h3>
         </div>
@@ -37,18 +37,18 @@ export function PendingServiceCard({ agent, onDelete, onViewKey }: Props) {
       </div>
 
       {/* No-data placeholder */}
-      <div className="flex flex-col items-center justify-center gap-1.5 py-4 rounded-lg border border-dashed border-slate-200 dark:border-ui-border-dark text-center">
-        <MaterialIcon name="cloud_off" className="text-2xl text-slate-300 dark:text-text-dim-dark" />
-        <p className="text-sm font-medium text-slate-500 dark:text-text-muted-dark">
+      <div className="flex flex-col items-center justify-center gap-1.5 py-4 rounded-lg border border-dashed border-ui-border text-center">
+        <MaterialIcon name="cloud_off" className="text-2xl text-text-dim" />
+        <p className="text-sm font-medium text-text-muted">
           아직 수신된 데이터가 없습니다
         </p>
-        <p className="text-xs text-slate-400 dark:text-text-dim-dark max-w-[15rem]">
+        <p className="text-xs text-text-dim max-w-[15rem]">
           API 키로 에이전트를 연결하면 데이터 수집이 시작됩니다
         </p>
       </div>
 
       {/* Footer: created time + delete */}
-      <div className="flex items-center justify-between gap-2 text-xs text-slate-400 dark:text-text-dim-dark">
+      <div className="flex items-center justify-between gap-2 text-xs text-text-dim">
         <span className="flex items-center gap-1 truncate">
           <MaterialIcon name="schedule" className="text-sm shrink-0" />
           <span className="truncate">생성 {relativeTime(agent.createdAt)}</span>

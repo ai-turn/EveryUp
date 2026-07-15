@@ -127,7 +127,7 @@ export function ChartStatsLegend({
   return (
     <table className="w-full text-2xs tabular-nums">
       <thead>
-        <tr className="text-slate-400 dark:text-text-dim-dark">
+        <tr className="text-text-dim">
           <th className="py-0.5 text-left font-semibold" />
           <th className="text-right font-semibold">Last</th>
           <th className="text-right font-semibold">Min</th>
@@ -144,7 +144,7 @@ export function ChartStatsLegend({
             ['avg', s.values.reduce((sum, v) => sum + v, 0) / s.values.length],
           ];
           return (
-            <tr key={s.label} className="text-slate-600 dark:text-text-secondary-dark">
+            <tr key={s.label} className="text-text-secondary">
               <td className="py-0.5">
                 <span className="inline-flex items-center gap-1.5 font-semibold">
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />
@@ -154,7 +154,7 @@ export function ChartStatsLegend({
               {stats.map(([key, v]) => (
                 <td key={key} className="text-right">
                   {valueFormatter(v)}
-                  <span className="ml-0.5 text-slate-400 dark:text-text-dim-dark">{unit}</span>
+                  <span className="ml-0.5 text-text-dim">{unit}</span>
                 </td>
               ))}
             </tr>
@@ -228,13 +228,13 @@ export function ChartTooltip({
       <div className="space-y-1.5">
         {rows.map((item) => (
           <div key={String(item.dataKey ?? item.name)} className="flex items-center justify-between gap-5">
-            <span className="inline-flex items-center gap-2 text-slate-500 dark:text-text-muted-dark">
+            <span className="inline-flex items-center gap-2 text-text-muted">
               <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
               {item.name}
             </span>
-            <span className="font-bold tabular-nums text-slate-900 dark:text-white">
+            <span className="font-bold tabular-nums text-text-base">
               {valueFormatter(Number(item.value) || 0)}
-              <span className="ml-0.5 text-xs font-semibold text-slate-400 dark:text-text-dim-dark">{unit}</span>
+              <span className="ml-0.5 text-xs font-semibold text-text-dim">{unit}</span>
             </span>
           </div>
         ))}

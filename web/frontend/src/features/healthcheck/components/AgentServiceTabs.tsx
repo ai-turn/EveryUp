@@ -35,7 +35,7 @@ const TABS: { key: DetailTab; labelKo: string }[] = [
 
 function TabBar({ active, onChange }: { active: DetailTab; onChange: (t: DetailTab) => void }) {
   return (
-    <div className="flex gap-1 border-b border-slate-200 dark:border-ui-border-dark mb-6">
+    <div className="flex gap-1 border-b border-ui-border mb-6">
       {TABS.map(tab => (
         <button
           key={tab.key}
@@ -43,7 +43,7 @@ function TabBar({ active, onChange }: { active: DetailTab; onChange: (t: DetailT
           className={`px-4 py-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px ${
             active === tab.key
               ? 'border-primary text-primary'
-              : 'border-transparent text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
+              : 'border-transparent text-text-muted hover:text-text-secondary'
           }`}
         >
           {tab.labelKo}

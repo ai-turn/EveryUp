@@ -3,7 +3,7 @@ import {
   ResponsiveContainer, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts';
-import { MaterialIcon, SegmentedControl, type GlobalTimeRange } from '../../../components/common';
+import { Button, MaterialIcon, SegmentedControl, type GlobalTimeRange } from '../../../components/common';
 import { ChartTooltip, chartCardClass, getChartTheme, gridProps, xAxisProps, yAxisProps } from '../../../components/charts';
 import { api, type LogEntry, type LogHistogramBucket, type LogLevel } from '../../../services/api';
 import { getErrorMessage } from '../../../utils/errors';
@@ -48,7 +48,7 @@ const LEVEL_STYLE: Record<string, string> = {
   warn:  'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
   info:  'bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400',
   debug: 'bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400',
-  trace: 'bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark',
+  trace: 'bg-ui-hover text-text-muted',
 };
 
 // Levels selectable for the OTLP ingest filter (what gets stored), in severity order.
@@ -82,7 +82,7 @@ function LogRow({ log, onOpenTrace }: { log: LogEntry; onOpenTrace: (traceId: st
 
   return (
     <div
-      className={`px-4 py-3 bg-white dark:bg-bg-surface-dark transition-colors ${hasMeta ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-ui-hover-dark' : ''}`}
+      className={`px-4 py-3 bg-bg-surface transition-colors ${hasMeta ? 'cursor-pointer hover:bg-ui-hover-soft' : ''}`}
       onClick={() => hasMeta && setExpanded(v => !v)}
     >
       <div className="flex items-start gap-3">
@@ -90,8 +90,8 @@ function LogRow({ log, onOpenTrace }: { log: LogEntry; onOpenTrace: (traceId: st
           {log.level}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm text-slate-800 dark:text-text-base-dark wrap-break-word">{log.message}</p>
-          <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-0.5">{formatTime(log.createdAt)}</p>
+          <p className="text-sm text-text-base wrap-break-word">{log.message}</p>
+          <p className="text-xs text-text-dim mt-0.5">{formatTime(log.createdAt)}</p>
         </div>
         {log.traceId && (
           <button
@@ -107,12 +107,12 @@ function LogRow({ log, onOpenTrace }: { log: LogEntry; onOpenTrace: (traceId: st
         {hasMeta && (
           <MaterialIcon
             name={expanded ? 'expand_less' : 'expand_more'}
-            className="text-base text-slate-400 dark:text-text-dim-dark shrink-0 mt-0.5"
+            className="text-base text-text-dim shrink-0 mt-0.5"
           />
         )}
       </div>
       {expanded && hasMeta && (
-        <pre className="mt-3 ml-11 text-xs font-mono text-slate-600 dark:text-text-muted-dark bg-slate-50 dark:bg-ui-hover-dark rounded-lg px-3 py-2.5 overflow-x-auto whitespace-pre-wrap break-all">
+        <pre className="mt-3 ml-11 text-xs font-mono text-text-muted bg-ui-hover-soft rounded-lg px-3 py-2.5 overflow-x-auto whitespace-pre-wrap break-all">
           {JSON.stringify(log.metadata, null, 2)}
         </pre>
       )}
@@ -227,7 +227,7 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: 
               value={inputValue}
               onChange={e => setInputValue(e.target.value)}
               placeholder="메시지 검색..."
-              className="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg bg-slate-100 dark:bg-ui-hover-dark border border-transparent focus:ring-2 focus:ring-primary/50 dark:text-white placeholder-slate-400 dark:placeholder-text-dim-dark outline-none transition-colors"
+              className="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg bg-ui-hover border border-transparent focus:ring-2 focus:ring-primary/50 dark:text-white placeholder-slate-400 dark:placeholder-text-dim-dark outline-none transition-colors"
             />
           </div>
           {search && (
@@ -246,7 +246,7 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: 
           className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${
             live
               ? 'bg-red-500/10 text-red-500'
-              : 'bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark'
+              : 'bg-ui-hover text-text-muted hover:bg-ui-active'
           }`}
         >
           <span className={`h-1.5 w-1.5 rounded-full ${live ? 'bg-red-500 animate-pulse' : 'bg-slate-400 dark:bg-text-dim-dark'}`} />
@@ -261,7 +261,7 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: 
           className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
             showSettings
               ? 'bg-primary/10 text-primary'
-              : 'bg-slate-100 dark:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark hover:bg-slate-200 dark:hover:bg-ui-active-dark'
+              : 'bg-ui-hover text-text-muted hover:bg-ui-active'
           }`}
         >
           <MaterialIcon name="tune" className="text-sm" />
@@ -271,10 +271,10 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: 
 
       {/* Ingest filter panel — controls which levels are STORED (vs. the view filter above) */}
       {showSettings && (
-        <div className="rounded-xl border border-slate-200 dark:border-ui-border-dark bg-slate-50 dark:bg-ui-hover-dark p-4 space-y-3">
+        <div className="rounded-xl border border-ui-border bg-ui-hover-soft p-4 space-y-3">
           <div>
-            <p className="text-sm font-semibold text-slate-800 dark:text-text-base-dark">수집할 로그 레벨</p>
-            <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-0.5">
+            <p className="text-sm font-semibold text-text-base">수집할 로그 레벨</p>
+            <p className="text-xs text-text-dim mt-0.5">
               선택한 레벨만 저장됩니다. 모두 해제하면 전체 저장. (앞으로 들어오는 로그에만 적용)
             </p>
           </div>
@@ -289,7 +289,7 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: 
                   className={`px-2.5 py-1 rounded-lg text-xs font-bold uppercase transition-colors ${
                     on
                       ? LEVEL_STYLE[l]
-                      : 'bg-white dark:bg-bg-surface-dark text-slate-400 dark:text-text-dim-dark border border-slate-200 dark:border-ui-border-dark opacity-60'
+                      : 'bg-bg-surface text-text-dim border border-ui-border opacity-60'
                   }`}
                 >
                   {l}
@@ -298,16 +298,11 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: 
             })}
           </div>
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={saveIngestFilter}
-              disabled={savingFilter}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
-            >
+            <Button type="button" size="sm" onClick={saveIngestFilter} disabled={savingFilter}>
               <MaterialIcon name="save" className="text-sm" />
               {savingFilter ? '저장 중...' : '저장'}
-            </button>
-            <span className="text-xs text-slate-400 dark:text-text-dim-dark">
+            </Button>
+            <span className="text-xs text-text-dim">
               {ingestLevels.length === 0 ? '전체 수집' : `${ingestLevels.length}개 레벨 수집`}
             </span>
           </div>
@@ -342,7 +337,7 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: 
 
       {/* Count */}
       {!loading && (
-        <p className="text-xs text-slate-400 dark:text-text-dim-dark">
+        <p className="text-xs text-text-dim">
           {total.toLocaleString()}건 중 {logs.length}건 표시
         </p>
       )}
@@ -351,18 +346,18 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: 
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="h-12 rounded-xl bg-slate-100 dark:bg-ui-hover-dark animate-pulse" />
+            <div key={i} className="h-12 rounded-xl bg-ui-hover animate-pulse" />
           ))}
         </div>
       ) : logs.length === 0 ? (
         <div className="py-16 text-center">
-          <MaterialIcon name="article" className="text-4xl text-slate-300 dark:text-text-dim-dark mb-2" />
-          <p className="text-sm text-slate-400 dark:text-text-muted-dark">
+          <MaterialIcon name="article" className="text-4xl text-text-dim mb-2" />
+          <p className="text-sm text-text-dim">
             {search || level || datePreset ? '조건에 맞는 로그가 없습니다' : '수집된 로그가 없습니다'}
           </p>
         </div>
       ) : (
-        <div className="divide-y divide-slate-100 dark:divide-ui-border-dark border border-slate-200 dark:border-ui-border-dark rounded-xl overflow-hidden">
+        <div className="divide-y divide-slate-100 dark:divide-ui-border-dark border border-ui-border rounded-xl overflow-hidden">
           {logs.map(log => <LogRow key={log.id} log={log} onOpenTrace={setActiveTraceId} />)}
         </div>
       )}

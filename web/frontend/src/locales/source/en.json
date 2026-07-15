@@ -206,5 +206,6 @@
   "프로젝트 추가": "Add Project",
   "'{name}' 프로젝트를 비활성화하시겠습니까?": "Deactivate project '{name}'?",
   "에이전트 연결이 차단되며 수집 데이터는 보존됩니다.": "The agent connection will be blocked; collected data is retained.",
-  "비활성화": "Deactivate"
+  "비활성화": "Deactivate",
+  "모든 데이터는 예시용 데이터이며, 실제 서버와 연결되어 있지 않습니다.": "All data is for demonstration purposes only and is not connected to a real server."
 }

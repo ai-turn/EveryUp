@@ -15,12 +15,12 @@ export function AccountSection() {
   return (
     <SectionCard title={t('settings.account.title')} subtitle={t('settings.account.subtitle')}>
       <div className="flex items-center gap-4">
-        <span className="w-10 h-10 rounded-full bg-slate-200 dark:bg-ui-active-dark flex items-center justify-center text-sm font-bold text-slate-600 dark:text-text-secondary-dark shrink-0">
+        <span className="w-10 h-10 rounded-full bg-ui-active flex items-center justify-center text-sm font-bold text-text-secondary shrink-0">
           {initials}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{user.username}</p>
-          <p className="text-xs text-slate-400 dark:text-text-dim-dark mt-0.5">
+          <p className="text-sm font-semibold text-text-base truncate">{user.username}</p>
+          <p className="text-xs text-text-dim mt-0.5">
             {t('settings.account.role')} {user.role} · {t('settings.account.session')}
           </p>
         </div>

@@ -28,11 +28,11 @@ export function Header() {
         `w-9 h-9 flex items-center justify-center rounded-lg transition-colors ${
             active
                 ? 'text-primary bg-primary/10'
-                : 'text-slate-500 dark:text-text-muted-dark hover:bg-slate-100 dark:hover:bg-ui-hover-dark hover:text-slate-700 dark:hover:text-white'
+                : 'text-text-muted hover:bg-ui-hover hover:text-text-base'
         }`;
 
     return (
-        <header className="h-14 lg:h-16 border-b border-slate-200 dark:border-ui-border-dark bg-white dark:bg-bg-main-dark shrink-0 transition-colors duration-200 z-30 relative">
+        <header className="h-14 lg:h-16 border-b border-ui-border bg-white dark:bg-bg-main-dark shrink-0 transition-colors duration-200 z-30 relative">
           <div className="h-full max-w-320 mx-auto flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
             {/* Left: Logo */}
             <Link to="/" className="flex items-center gap-2 group shrink-0 z-10 transition-transform active:scale-95">
@@ -40,7 +40,7 @@ export function Header() {
                     <img src={theme === 'dark' ? logoDark : logo} alt="Monitoring Logo" className="h-full w-full object-contain" />
                 </div>
                 <div className="flex flex-col">
-                    <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight leading-none group-hover:text-primary transition-colors">EveryUp</h1>
+                    <h1 className="text-lg font-bold text-text-base tracking-tight leading-none group-hover:text-primary transition-colors">EveryUp</h1>
                 </div>
             </Link>
 
@@ -51,7 +51,7 @@ export function Header() {
                     <button
                         onClick={toggleLanguage}
                         aria-label={i18n.language.startsWith('ko') ? 'Switch to English' : '한국어로 전환'}
-                        className="w-9 h-9 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-bg-surface-dark text-sm font-bold text-slate-600 dark:text-text-muted-dark active:scale-95 transition-all"
+                        className="w-9 h-9 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-bg-surface-dark text-sm font-bold text-text-muted active:scale-95 transition-all"
                     >
                         {i18n.language.startsWith('ko') ? 'EN' : 'KO'}
                     </button>
@@ -61,7 +61,7 @@ export function Header() {
                             onClick={() => changeLanguage('ko')}
                             className={`px-2.5 py-1.5 text-sm font-bold rounded-md transition-all ${i18n.language.startsWith('ko')
                                 ? 'bg-white dark:bg-ui-hover-dark text-primary shadow-sm'
-                                : 'text-slate-500 hover:text-slate-700 dark:text-text-muted-dark dark:hover:text-white'
+                                : 'text-slate-500 hover:text-text-secondary dark:hover:text-white'
                                 }`}
                         >
                             KO
@@ -70,7 +70,7 @@ export function Header() {
                             onClick={() => changeLanguage('en')}
                             className={`px-2 py-1 text-sm font-bold rounded-md transition-all ${i18n.language.startsWith('en')
                                 ? 'bg-white dark:bg-ui-hover-dark text-primary shadow-sm'
-                                : 'text-slate-500 hover:text-slate-700 dark:text-text-muted-dark dark:hover:text-white'
+                                : 'text-slate-500 hover:text-text-secondary dark:hover:text-white'
                                 }`}
                         >
                             EN
@@ -83,7 +83,7 @@ export function Header() {
                     {!isMobile && (
                         <button
                             onClick={toggleTheme}
-                            className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-white transition-colors"
+                            className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-ui-hover text-text-muted hover:text-text-base transition-colors"
                             aria-label="Toggle theme"
                         >
                             <MaterialIcon name={theme === 'light' ? 'dark_mode' : 'light_mode'} className="text-xl" />

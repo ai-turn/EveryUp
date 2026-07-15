@@ -22,20 +22,20 @@ export function FormPageShell({ title, subtitle, children, backTo }: FormPageShe
 
   return (
     <div
-      className="-m-4 sm:-m-6 md:-m-8 flex flex-col bg-white dark:bg-bg-surface-dark h-[calc(100dvh-3.5rem)] lg:h-[calc(100dvh-4rem)]"
+      className="-m-4 sm:-m-6 md:-m-8 flex flex-col bg-bg-surface h-[calc(100dvh-3.5rem)] lg:h-[calc(100dvh-4rem)]"
     >
-      <header className="flex-none flex items-center gap-3 h-16 border-b border-slate-200 dark:border-ui-border-dark px-4 sm:px-6">
+      <header className="flex-none flex items-center gap-3 h-16 border-b border-ui-border px-4 sm:px-6">
         <button
           type="button"
           onClick={handleBack}
           aria-label="Back"
-          className="p-2 -ml-2 rounded-lg hover:bg-slate-100 dark:hover:bg-ui-hover-dark text-slate-500 dark:text-text-muted-dark transition-colors"
+          className="p-2 -ml-2 rounded-lg hover:bg-ui-hover text-text-muted transition-colors"
         >
           <MaterialIcon name="arrow_back" />
         </button>
         <div className="min-w-0">
-          <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight truncate">{title}</h1>
-          {subtitle && <p className="text-sm text-slate-500 dark:text-text-muted-dark truncate">{subtitle}</p>}
+          <h1 className="text-lg font-bold text-text-base tracking-tight truncate">{title}</h1>
+          {subtitle && <p className="text-sm text-text-muted truncate">{subtitle}</p>}
         </div>
       </header>
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">{children}</div>

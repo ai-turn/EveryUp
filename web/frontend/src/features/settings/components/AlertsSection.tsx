@@ -18,13 +18,13 @@ export function AlertsSection({ value, loading, onChange }: {
   return (
     <SectionCard title={t('settings.alertThreshold.title')} subtitle={t('settings.alertThreshold.subtitle')}>
       {loading ? (
-        <div className="h-10 bg-slate-100 dark:bg-ui-hover-dark rounded-lg animate-pulse" />
+        <div className="h-10 bg-ui-hover rounded-lg animate-pulse" />
       ) : (
         <SettingRow
           label={t('settings.alertThreshold.consecutiveFailures')}
           description={t('settings.alertThreshold.consecutiveFailuresDesc')}
         >
-          <div className="flex gap-1 bg-slate-100 dark:bg-ui-hover-dark p-0.5 rounded-lg">
+          <div className="flex gap-1 bg-ui-hover p-0.5 rounded-lg">
             {options.map((n) => (
               <button
                 key={n}
@@ -32,7 +32,7 @@ export function AlertsSection({ value, loading, onChange }: {
                 className={`cursor-pointer px-2.5 py-1 rounded-md text-xs font-semibold font-mono transition-all ${
                   value === n
                     ? 'bg-white dark:bg-ui-active-dark text-primary shadow-sm'
-                    : 'text-slate-500 dark:text-text-muted-dark hover:text-slate-700 dark:hover:text-text-secondary-dark'
+                    : 'text-text-muted hover:text-text-secondary'
                 }`}
               >
                 {n}{t('settings.alertThreshold.times')}

@@ -15,12 +15,12 @@ const styleMap: Record<string, StatusStyle> = {
   unhealthy: { chip: 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20' },
   critical:  { chip: 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20' },
   error:     { chip: 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20' },
-  paused:    { chip: 'text-slate-500 dark:text-slate-400 bg-slate-500/10 border-slate-500/20' },
-  offline:   { chip: 'text-slate-500 dark:text-slate-400 bg-slate-500/10 border-slate-500/20' },
-  unknown:   { chip: 'text-slate-500 dark:text-slate-400 bg-slate-500/10 border-slate-500/20' },
+  paused:    { chip: 'text-text-muted bg-slate-500/10 border-slate-500/20' },
+  offline:   { chip: 'text-text-muted bg-slate-500/10 border-slate-500/20' },
+  unknown:   { chip: 'text-text-muted bg-slate-500/10 border-slate-500/20' },
 };
 
-const fallbackStyle: StatusStyle = { chip: 'text-slate-500 dark:text-slate-400 bg-slate-500/10 border-slate-500/20' };
+const fallbackStyle: StatusStyle = { chip: 'text-text-muted bg-slate-500/10 border-slate-500/20' };
 
 const labelMap: Record<string, string> = {
   healthy:   'common.healthy',
