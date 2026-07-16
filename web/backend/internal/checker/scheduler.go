@@ -140,24 +140,6 @@ func (s *Scheduler) AddService(svc *models.Service) {
 	go s.checkService(svc)
 }
 
-// RemoveService removes a service from the scheduler
-func (s *Scheduler) RemoveService(serviceID string) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if entryID, ok := s.entries[serviceID]; ok {
-		s.cron.Remove(entryID)
-		delete(s.entries, serviceID)
-		log.Printf("Removed service %s from scheduler", serviceID)
-	}
-}
-
-// UpdateService updates a service in the scheduler
-func (s *Scheduler) UpdateService(svc *models.Service) {
-	// AddService handles updates by removing existing entry
-	s.AddService(svc)
-}
-
 // syncServices syncs config-file services to the database on startup
 func (s *Scheduler) syncServices(services []config.ServiceConfig) error {
 	for _, svc := range services {

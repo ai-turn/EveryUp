@@ -1,7 +1,6 @@
 package checker
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/aiturn/everyup/internal/models"
@@ -70,29 +69,3 @@ func (s *Scheduler) checkService(svc *models.Service) {
 	}
 }
 
-// CheckNow performs an immediate check for a service and returns the result.
-func (s *Scheduler) CheckNow(serviceID string) (*CheckResult, error) {
-	service, err := s.serviceRepo.GetByID(serviceID)
-	if err != nil {
-		return nil, err
-	}
-	if service == nil {
-		return nil, fmt.Errorf("service not found: %s", serviceID)
-	}
-
-	s.checkService(service)
-
-	// Return the latest result
-	metrics, err := s.metricRepo.GetByServiceID(serviceID, 1)
-	if err != nil || len(metrics) == 0 {
-		return nil, fmt.Errorf("failed to get check result")
-	}
-
-	return &CheckResult{
-		Status:       metrics[0].Status,
-		ResponseTime: metrics[0].ResponseTime,
-		StatusCode:   metrics[0].StatusCode,
-		ErrorMessage: metrics[0].ErrorMessage,
-		CheckedAt:    metrics[0].CheckedAt,
-	}, nil
-}

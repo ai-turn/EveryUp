@@ -248,6 +248,9 @@ func migrate() error {
 	if err := migrateV40(); err != nil {
 		return fmt.Errorf("v40 migration failed: %w", err)
 	}
+	if err := migrateV41(); err != nil {
+		return fmt.Errorf("v41 migration failed: %w", err)
+	}
 
 	return nil
 }
@@ -947,7 +950,6 @@ func migrateV28() error {
 			`CREATE TABLE IF NOT EXISTS agents (
 				id           TEXT PRIMARY KEY,
 				name         TEXT NOT NULL,
-				mode         TEXT NOT NULL DEFAULT 'standalone',
 				version      TEXT NOT NULL DEFAULT '',
 				last_seen_at DATETIME NOT NULL,
 				created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1311,6 +1313,16 @@ func migrateV40() error {
 		if _, err := DB.Exec(stmt); err != nil && !strings.Contains(err.Error(), "duplicate column name") {
 			return err
 		}
+	}
+	return nil
+}
+
+// migrateV41 drops agents.mode — the standalone/proxy distinction died with
+// proxy mode (2026-06-30); every agent is the same passive collector.
+// Added: 2026-07-16
+func migrateV41() error {
+	if _, err := DB.Exec(`ALTER TABLE agents DROP COLUMN mode`); err != nil && !isNoSuchColumnError(err) {
+		return err
 	}
 	return nil
 }

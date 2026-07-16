@@ -10,15 +10,8 @@ import (
 const (
 	ErrCodeDatabase = "DATABASE_ERROR"
 	ErrCodeFetch    = "FETCH_ERROR"
-	ErrCodeCreate   = "CREATE_ERROR"
-	ErrCodeUpdate   = "UPDATE_ERROR"
 	ErrCodeDelete   = "DELETE_ERROR"
-	ErrCodeToggle   = "TOGGLE_ERROR"
 	ErrCodeSecret   = "SECRET_ERROR"
-	ErrCodeHash     = "HASH_ERROR"
-	ErrCodeToken    = "TOKEN_ERROR"
-	ErrCodeSend     = "SEND_ERROR"
-	ErrCodeQuery    = "QUERY_ERROR"
 
 	// Common request errors
 	ErrCodeInvalidRequest = "INVALID_REQUEST"

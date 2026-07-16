@@ -1,183 +1,206 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 	"time"
-
-	"github.com/spf13/viper"
 )
 
 // Config holds all configuration for the application
 type Config struct {
-	Server    ServerConfig    `mapstructure:"server"`
-	Database  DatabaseConfig  `mapstructure:"database"`
-	Services  []ServiceConfig `mapstructure:"services"`
-	System    SystemConfig    `mapstructure:"system"`
-	Alerts    AlertsConfig    `mapstructure:"alerts"`
-	Retention RetentionConfig `mapstructure:"retention"`
+	Server    ServerConfig    `json:"server"`
+	Database  DatabaseConfig  `json:"database"`
+	Services  []ServiceConfig `json:"services"`
+	System    SystemConfig    `json:"system"`
+	Alerts    AlertsConfig    `json:"alerts"`
+	Retention RetentionConfig `json:"retention"`
 }
 
 // SystemConfig holds system resource monitoring configuration
 type SystemConfig struct {
-	Enabled         bool          `mapstructure:"enabled"`
-	CollectInterval int           `mapstructure:"collectInterval"` // seconds
-	StoreInterval   int           `mapstructure:"storeInterval"`   // seconds
-	Logging         LoggingConfig `mapstructure:"logging"`
+	Enabled         bool          `json:"enabled"`
+	CollectInterval int           `json:"collectInterval"` // seconds
+	StoreInterval   int           `json:"storeInterval"`   // seconds
+	Logging         LoggingConfig `json:"logging"`
 }
 
 // LoggingConfig holds log ingestion configuration
 type LoggingConfig struct {
-	AllowedLevels []string `mapstructure:"allowedLevels"` // e.g. ["error", "warn"]
+	AllowedLevels []string `json:"allowedLevels"` // e.g. ["error", "warn"]
 }
 
 // ServerConfig holds server configuration
 type ServerConfig struct {
-	Host         string `mapstructure:"host"`
-	Port         int    `mapstructure:"port"`
-	Mode         string `mapstructure:"mode"`
-	AllowOrigins string `mapstructure:"allowOrigins"` // env: EVERYUP_SERVER_ALLOWORIGINS
+	Host         string `json:"host"`
+	Port         int    `json:"port"`
+	Mode         string `json:"mode"`
+	AllowOrigins string `json:"allowOrigins"` // env: EVERYUP_SERVER_ALLOWORIGINS
 }
 
 // DatabaseConfig holds database configuration
 type DatabaseConfig struct {
-	Type string `mapstructure:"type"`
-	Path string `mapstructure:"path"`
+	Path string `json:"path"`
 }
 
 // ServiceConfig holds service monitoring configuration
 type ServiceConfig struct {
-	ID             string            `mapstructure:"id"`
-	Name           string            `mapstructure:"name"`
-	Type           string            `mapstructure:"type"` // "http" or "tcp"
-	URL            string            `mapstructure:"url"`
-	Method         string            `mapstructure:"method"`
-	Host           string            `mapstructure:"host"`
-	Port           int               `mapstructure:"port"`
-	Interval       int               `mapstructure:"interval"` // seconds
-	Timeout        int               `mapstructure:"timeout"`  // milliseconds
-	ExpectedStatus int               `mapstructure:"expectedStatus"`
-	Headers        map[string]string `mapstructure:"headers"`
-	Tags           []string          `mapstructure:"tags"`
+	ID             string            `json:"id"`
+	Name           string            `json:"name"`
+	Type           string            `json:"type"` // "http" or "tcp"
+	URL            string            `json:"url"`
+	Method         string            `json:"method"`
+	Host           string            `json:"host"`
+	Port           int               `json:"port"`
+	Interval       int               `json:"interval"` // seconds
+	Timeout        int               `json:"timeout"`  // milliseconds
+	ExpectedStatus int               `json:"expectedStatus"`
+	Headers        map[string]string `json:"headers"`
+	Tags           []string          `json:"tags"`
 }
 
 // AlertsConfig holds alerting configuration
 type AlertsConfig struct {
-	Enabled             bool          `mapstructure:"enabled"`
-	ConsecutiveFailures int           `mapstructure:"consecutiveFailures"`
-	LogAlertCooldown    int           `mapstructure:"logAlertCooldown"` // minutes, dedup cooldown for log alerts
-	Channels            AlertChannels `mapstructure:"channels"`
-}
-
-// AlertChannels holds different alert channel configurations
-type AlertChannels struct {
-	Slack SlackConfig `mapstructure:"slack"`
-	Email EmailConfig `mapstructure:"email"`
-}
-
-// SlackConfig holds Slack configuration
-type SlackConfig struct {
-	Enabled    bool   `mapstructure:"enabled"`
-	WebhookURL string `mapstructure:"webhookUrl"`
-}
-
-// EmailConfig holds email configuration
-type EmailConfig struct {
-	Enabled    bool       `mapstructure:"enabled"`
-	SMTP       SMTPConfig `mapstructure:"smtp"`
-	Recipients []string   `mapstructure:"recipients"`
-}
-
-// SMTPConfig holds SMTP configuration
-type SMTPConfig struct {
-	Host     string `mapstructure:"host"`
-	Port     int    `mapstructure:"port"`
-	Username string `mapstructure:"username"`
-	Password string `mapstructure:"password"`
+	ConsecutiveFailures int `json:"consecutiveFailures"`
+	LogAlertCooldown    int `json:"logAlertCooldown"` // minutes, dedup cooldown for log alerts
 }
 
 // RetentionConfig holds data retention configuration
 type RetentionConfig struct {
-	Metrics         string `mapstructure:"metrics"`
-	Logs            string `mapstructure:"logs"`
-	SystemMetrics   string `mapstructure:"systemMetrics"`
-	ApiRequestsDays int    `mapstructure:"apiRequestsDays"`
-	BodyCaptureDays int    `mapstructure:"bodyCaptureDays"`
-	OtelMetricsDays int    `mapstructure:"otelMetricsDays"`
+	Metrics         string `json:"metrics"`
+	Logs            string `json:"logs"`
+	SystemMetrics   string `json:"systemMetrics"`
+	ApiRequestsDays int    `json:"apiRequestsDays"`
+	BodyCaptureDays int    `json:"bodyCaptureDays"`
+	OtelMetricsDays int    `json:"otelMetricsDays"`
 }
 
 // Global config instance
 var cfg *Config
-var viperInstance *viper.Viper
 
-// Load loads configuration from file and environment variables
+// configFilePath is the file Load resolved; UpdateSettings persists back to it.
+var configFilePath string
+
+// Load loads configuration from file and environment variables.
+// Precedence: env (EVERYUP_ prefix) > config file > defaults.
 func Load(configPath string) (*Config, error) {
-	viperInstance = viper.New()
-	v := viperInstance
-
-	// Set defaults
-	v.SetDefault("server.host", "0.0.0.0")
-	v.SetDefault("server.port", 3001)
-	v.SetDefault("server.mode", "production")
-	v.SetDefault("database.type", "sqlite")
-	v.SetDefault("database.path", "./data/monitoring.db")
-	v.SetDefault("alerts.enabled", false)
-	v.SetDefault("alerts.consecutiveFailures", 3)
-	v.SetDefault("alerts.logAlertCooldown", 5)
-	v.SetDefault("system.enabled", true)
-	v.SetDefault("system.collectInterval", 5)
-	v.SetDefault("system.storeInterval", 60)
-	v.SetDefault("system.logging.allowedLevels", []string{"error", "warn"})
-	v.SetDefault("retention.metrics", "7d")
-	v.SetDefault("retention.logs", "3d")
-	v.SetDefault("retention.systemMetrics", "7d")
-	v.SetDefault("retention.apiRequestsDays", 14)
-	v.SetDefault("retention.bodyCaptureDays", 7)
-
-	// Read config file
-	if configPath != "" {
-		v.SetConfigFile(configPath)
-	} else {
-		v.SetConfigName("config")
-		v.SetConfigType("json")
-		v.AddConfigPath(".")
-		v.AddConfigPath("./config")
+	c := &Config{
+		Server: ServerConfig{
+			Host: "0.0.0.0",
+			Port: 3001,
+			Mode: "production",
+		},
+		Database: DatabaseConfig{
+			Path: "./data/monitoring.db",
+		},
+		Alerts: AlertsConfig{
+			ConsecutiveFailures: 3,
+			LogAlertCooldown:    5,
+		},
+		System: SystemConfig{
+			Enabled:         true,
+			CollectInterval: 5,
+			StoreInterval:   60,
+			Logging:         LoggingConfig{AllowedLevels: []string{"error", "warn"}},
+		},
+		Retention: RetentionConfig{
+			Metrics:         "7d",
+			Logs:            "3d",
+			SystemMetrics:   "7d",
+			ApiRequestsDays: 14,
+			BodyCaptureDays: 7,
+		},
 	}
 
-	if err := v.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+	// Resolve config file: explicit path must exist; otherwise probe the same
+	// locations viper searched ("config.json" in "." and "./config").
+	configFilePath = ""
+	if configPath != "" {
+		configFilePath = configPath
+		data, err := os.ReadFile(configPath)
+		if err != nil {
 			return nil, fmt.Errorf("error reading config file: %w", err)
 		}
-		// Config file not found, use defaults
+		if err := json.Unmarshal(data, c); err != nil {
+			return nil, fmt.Errorf("error reading config file: %w", err)
+		}
+	} else {
+		for _, p := range []string{"config.json", "config/config.json"} {
+			data, err := os.ReadFile(p)
+			if err != nil {
+				continue // not found — keep probing, fall back to defaults
+			}
+			if err := json.Unmarshal(data, c); err != nil {
+				return nil, fmt.Errorf("error reading config file: %w", err)
+			}
+			configFilePath = p
+			break
+		}
 	}
 
-	// Environment variable overrides
-	v.SetEnvPrefix("EVERYUP")
-	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	v.AutomaticEnv()
-
-	cfg = &Config{}
-	if err := v.Unmarshal(cfg); err != nil {
-		return nil, fmt.Errorf("error unmarshaling config: %w", err)
+	// Environment variable overrides (EVERYUP_ prefix, "." → "_")
+	envStr("EVERYUP_SERVER_HOST", &c.Server.Host)
+	envInt("EVERYUP_SERVER_PORT", &c.Server.Port)
+	envStr("EVERYUP_SERVER_MODE", &c.Server.Mode)
+	envStr("EVERYUP_SERVER_ALLOWORIGINS", &c.Server.AllowOrigins)
+	envStr("EVERYUP_DATABASE_PATH", &c.Database.Path)
+	envInt("EVERYUP_ALERTS_CONSECUTIVEFAILURES", &c.Alerts.ConsecutiveFailures)
+	envInt("EVERYUP_ALERTS_LOGALERTCOOLDOWN", &c.Alerts.LogAlertCooldown)
+	envBool("EVERYUP_SYSTEM_ENABLED", &c.System.Enabled)
+	envInt("EVERYUP_SYSTEM_COLLECTINTERVAL", &c.System.CollectInterval)
+	envInt("EVERYUP_SYSTEM_STOREINTERVAL", &c.System.StoreInterval)
+	if v := os.Getenv("EVERYUP_SYSTEM_LOGGING_ALLOWEDLEVELS"); v != "" {
+		c.System.Logging.AllowedLevels = strings.Split(v, ",")
 	}
+	envStr("EVERYUP_RETENTION_METRICS", &c.Retention.Metrics)
+	envStr("EVERYUP_RETENTION_LOGS", &c.Retention.Logs)
+	envStr("EVERYUP_RETENTION_SYSTEMMETRICS", &c.Retention.SystemMetrics)
+	envInt("EVERYUP_RETENTION_APIREQUESTSDAYS", &c.Retention.ApiRequestsDays)
+	envInt("EVERYUP_RETENTION_BODYCAPTUREDAYS", &c.Retention.BodyCaptureDays)
+	envInt("EVERYUP_RETENTION_OTELMETRICSDAYS", &c.Retention.OtelMetricsDays)
 
 	// Set default values for services
-	for i := range cfg.Services {
-		if cfg.Services[i].Method == "" {
-			cfg.Services[i].Method = "GET"
+	for i := range c.Services {
+		if c.Services[i].Method == "" {
+			c.Services[i].Method = "GET"
 		}
-		if cfg.Services[i].Interval == 0 {
-			cfg.Services[i].Interval = 30
+		if c.Services[i].Interval == 0 {
+			c.Services[i].Interval = 30
 		}
-		if cfg.Services[i].Timeout == 0 {
-			cfg.Services[i].Timeout = 5000
+		if c.Services[i].Timeout == 0 {
+			c.Services[i].Timeout = 5000
 		}
-		if cfg.Services[i].ExpectedStatus == 0 {
-			cfg.Services[i].ExpectedStatus = 200
+		if c.Services[i].ExpectedStatus == 0 {
+			c.Services[i].ExpectedStatus = 200
 		}
 	}
 
+	cfg = c
 	return cfg, nil
+}
+
+func envStr(key string, dst *string) {
+	if v := os.Getenv(key); v != "" {
+		*dst = v
+	}
+}
+
+func envInt(key string, dst *int) {
+	if v := os.Getenv(key); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			*dst = n
+		}
+	}
+}
+
+func envBool(key string, dst *bool) {
+	if v := os.Getenv(key); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			*dst = b
+		}
+	}
 }
 
 // Get returns the global config instance
@@ -188,18 +211,22 @@ func Get() *Config {
 // UpdateSettings updates mutable config fields in memory and persists to config.json.
 // collectInterval is applied on next process start (collector/evaluator read it once).
 func UpdateSettings(consecutiveFailures int, metricsRetention, logsRetention string, collectInterval int) error {
-	if viperInstance == nil || cfg == nil {
+	if cfg == nil {
 		return fmt.Errorf("config not initialized")
 	}
-	viperInstance.Set("alerts.consecutiveFailures", consecutiveFailures)
-	viperInstance.Set("retention.metrics", metricsRetention)
-	viperInstance.Set("retention.logs", logsRetention)
-	viperInstance.Set("system.collectInterval", collectInterval)
 	cfg.Alerts.ConsecutiveFailures = consecutiveFailures
 	cfg.Retention.Metrics = metricsRetention
 	cfg.Retention.Logs = logsRetention
 	cfg.System.CollectInterval = collectInterval
-	return viperInstance.WriteConfig()
+
+	if configFilePath == "" {
+		return fmt.Errorf("no config file loaded; settings applied in memory only")
+	}
+	data, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(configFilePath, append(data, '\n'), 0644)
 }
 
 // GetRetentionDuration parses retention string to duration

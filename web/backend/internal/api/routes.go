@@ -58,7 +58,7 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	local.Post("/auth/reset", authHandler.Reset)
 
 	// Service endpoints (read-only — write paths removed in agent-only architecture)
-	serviceHandler := handlers.NewServiceHandler(scheduler)
+	serviceHandler := handlers.NewServiceHandler()
 	local.Get("/services", serviceHandler.GetAll)
 	local.Get("/services/:id", serviceHandler.GetByID)
 	apiRequestsHandler := handlers.NewApiRequestsHandler()

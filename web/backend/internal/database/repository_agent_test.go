@@ -15,7 +15,6 @@ func TestAgentRepositoryRoundTrip(t *testing.T) {
 	agent := models.Agent{
 		ID:         "agent-1",
 		Name:       "edge-agent",
-		Mode:       "standalone",
 		Version:    "dev",
 		LastSeenAt: time.Now().UTC().Truncate(time.Second),
 	}
@@ -54,14 +53,6 @@ func TestAgentRepositoryRoundTrip(t *testing.T) {
 	if len(agents) != 1 || agents[0].ID != agent.ID {
 		t.Fatalf("unexpected agents: %+v", agents)
 	}
-	found, ok, err := repo.FindAgentByNameMode(agent.Name, agent.Mode)
-	if err != nil {
-		t.Fatalf("FindAgentByNameMode returned error: %v", err)
-	}
-	if !ok || found.ID != agent.ID {
-		t.Fatalf("unexpected found agent: ok=%t agent=%+v", ok, found)
-	}
-
 	services, err := repo.GetServices(agent.ID)
 	if err != nil {
 		t.Fatalf("GetServices returned error: %v", err)
@@ -84,7 +75,7 @@ func TestAgentUptimeAndIncidents(t *testing.T) {
 	openTestDB(t)
 
 	repo := database.NewAgentRepository()
-	agent := models.Agent{ID: "agent-1", Name: "prod", Mode: "connected", LastSeenAt: time.Now()}
+	agent := models.Agent{ID: "agent-1", Name: "prod", LastSeenAt: time.Now()}
 	if err := repo.UpsertAgent(agent); err != nil {
 		t.Fatalf("UpsertAgent: %v", err)
 	}

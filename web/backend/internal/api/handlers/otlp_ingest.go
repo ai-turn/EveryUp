@@ -24,7 +24,6 @@ import (
 	commonpb "go.opentelemetry.io/proto/otlp/common/v1"
 	logspb "go.opentelemetry.io/proto/otlp/logs/v1"
 	metricspb "go.opentelemetry.io/proto/otlp/metrics/v1"
-	resourcepb "go.opentelemetry.io/proto/otlp/resource/v1"
 	tracepb "go.opentelemetry.io/proto/otlp/trace/v1"
 	"google.golang.org/protobuf/proto"
 )
@@ -785,5 +784,3 @@ func decodeGzipOTLP(body []byte) ([]byte, error) {
 	}
 	return decoded, nil
 }
-
-func _resourcePackageAnchor(_ *resourcepb.Resource) {}

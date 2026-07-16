@@ -259,13 +259,6 @@ func (r *ServiceRepository) Create(s *models.Service) error {
 	return err
 }
 
-// UpdateApiKey updates the api_key (SHA-256 hash) and api_key_masked fields of a service.
-func (r *ServiceRepository) UpdateApiKey(id, apiKeyHash, apiKeyMasked string) error {
-	_, err := DB.Exec(`UPDATE services SET api_key = ?, api_key_masked = ?, updated_at = ? WHERE id = ?`,
-		apiKeyHash, apiKeyMasked, time.Now(), id)
-	return err
-}
-
 // Update updates a service
 func (r *ServiceRepository) Update(s *models.Service) error {
 	var headersJSON, tagsJSON []byte
@@ -376,17 +369,6 @@ func (r *ServiceRepository) GetActive() ([]models.Service, error) {
 	return services, nil
 }
 
-// SetActive sets the is_active flag for a service
-func (r *ServiceRepository) SetActive(id string, isActive bool) error {
-	active := 0
-	if isActive {
-		active = 1
-	}
-	_, err := DB.Exec(`UPDATE services SET is_active = ?, updated_at = ? WHERE id = ?`,
-		active, time.Now(), id)
-	return err
-}
-
 // GetByApiKeyHash returns a service by its pre-hashed API key.
 // Includes log_level_filter so the ingest handler can apply per-service filtering.
 func (r *ServiceRepository) GetByApiKeyHash(apiKeyHash string) (*models.Service, error) {
@@ -446,69 +428,4 @@ func (r *ServiceRepository) GetByApiKeyHash(apiKeyHash string) (*models.Service,
 	s.ApiExcludePaths = unmarshalStringList(apiExcludePaths)
 
 	return &s, nil
-}
-
-// GetAllApiKeyMappings returns a map of api_key hash → service for cache warm-up.
-// Includes log_level_filter so the cached service can apply per-service filtering.
-func (r *ServiceRepository) GetAllApiKeyMappings() (map[string]*models.Service, error) {
-	rows, err := DB.Query(`
-		SELECT id, name, type, is_active, api_key, log_level_filter, api_exclude_paths
-		FROM services WHERE api_key != ''
-	`)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	result := make(map[string]*models.Service)
-	for rows.Next() {
-		var s models.Service
-		var isActive int
-		var apiKeyHash string
-		var logLevelFilter, apiExcludePaths sql.NullString
-		if err := rows.Scan(&s.ID, &s.Name, &s.Type, &isActive, &apiKeyHash, &logLevelFilter, &apiExcludePaths); err != nil {
-			return nil, err
-		}
-		s.IsActive = isActive == 1
-		s.LogLevelFilter = unmarshalLogLevelFilter(logLevelFilter)
-		s.ApiExcludePaths = unmarshalStringList(apiExcludePaths)
-		svc := s
-		result[apiKeyHash] = &svc
-	}
-	return result, nil
-}
-
-// Delete deletes a service
-func (r *ServiceRepository) Delete(id string) error {
-	_, err := DB.Exec("DELETE FROM services WHERE id = ?", id)
-	return err
-}
-
-// splitCommaList splits a comma-separated string into a slice.
-// An empty string returns nil.
-func splitCommaList(s string) []string {
-	if s == "" {
-		return nil
-	}
-	parts := strings.Split(s, ",")
-	result := make([]string, 0, len(parts))
-	for _, p := range parts {
-		if p != "" {
-			result = append(result, p)
-		}
-	}
-	if len(result) == 0 {
-		return nil
-	}
-	return result
-}
-
-// joinCommaList joins a slice into a comma-separated string for storage.
-// A nil or empty slice returns "" (empty string, not NULL), so that an explicit
-// "clear all" can be distinguished from a never-configured NULL column.
-func joinCommaList(items []string) string {
-	if len(items) == 0 {
-		return ""
-	}
-	return strings.Join(items, ",")
 }

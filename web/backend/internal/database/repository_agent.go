@@ -37,43 +37,25 @@ func (r *AgentRepository) UpsertAgent(agent models.Agent) error {
 		agent.LastSeenAt = now
 	}
 	_, err := DB.Exec(`
-INSERT INTO agents(id, name, mode, version, last_seen_at, created_at, updated_at)
-VALUES (?, ?, ?, ?, ?, ?, ?)
+INSERT INTO agents(id, name, version, last_seen_at, created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, ?)
 ON CONFLICT(id) DO UPDATE SET
 	name = excluded.name,
-	mode = excluded.mode,
 	version = excluded.version,
 	last_seen_at = excluded.last_seen_at,
 	updated_at = excluded.updated_at`,
-		agent.ID, agent.Name, agent.Mode, agent.Version, agent.LastSeenAt, now, now)
+		agent.ID, agent.Name, agent.Version, agent.LastSeenAt, now, now)
 	return err
-}
-
-func (r *AgentRepository) FindAgentByNameMode(name, mode string) (models.Agent, bool, error) {
-	var agent models.Agent
-	err := DB.QueryRow(`
-SELECT id, name, mode, version, COALESCE(status,'active'), last_seen_at, created_at, updated_at
-FROM agents
-WHERE name = ? AND mode = ?
-ORDER BY last_seen_at DESC
-LIMIT 1`, name, mode).Scan(&agent.ID, &agent.Name, &agent.Mode, &agent.Version, &agent.Status, &agent.LastSeenAt, &agent.CreatedAt, &agent.UpdatedAt)
-	if err == sql.ErrNoRows {
-		return models.Agent{}, false, nil
-	}
-	if err != nil {
-		return models.Agent{}, false, err
-	}
-	return agent, true, nil
 }
 
 // FindAgentByKeyHash looks up an active agent by SHA-256 hex of its API key.
 func (r *AgentRepository) FindAgentByKeyHash(hash string) (models.Agent, bool, error) {
 	var agent models.Agent
 	err := DB.QueryRow(`
-SELECT id, name, mode, version, COALESCE(status,'active'), last_seen_at, created_at, updated_at
+SELECT id, name, version, COALESCE(status,'active'), last_seen_at, created_at, updated_at
 FROM agents
 WHERE api_key_hash = ? AND COALESCE(status,'active') = 'active'
-LIMIT 1`, hash).Scan(&agent.ID, &agent.Name, &agent.Mode, &agent.Version, &agent.Status, &agent.LastSeenAt, &agent.CreatedAt, &agent.UpdatedAt)
+LIMIT 1`, hash).Scan(&agent.ID, &agent.Name, &agent.Version, &agent.Status, &agent.LastSeenAt, &agent.CreatedAt, &agent.UpdatedAt)
 	if err == sql.ErrNoRows {
 		return models.Agent{}, false, nil
 	}
@@ -88,9 +70,9 @@ LIMIT 1`, hash).Scan(&agent.ID, &agent.Name, &agent.Mode, &agent.Version, &agent
 func (r *AgentRepository) CreateAgent(agent models.Agent, keyHash, keyEnc string) error {
 	now := time.Now()
 	_, err := DB.Exec(`
-INSERT INTO agents(id, name, mode, version, api_key_hash, api_key_enc, status, last_seen_at, created_at, updated_at)
-VALUES (?, ?, ?, '', ?, ?, 'active', ?, ?, ?)`,
-		agent.ID, agent.Name, agent.Mode, keyHash, keyEnc, now, now, now)
+INSERT INTO agents(id, name, version, api_key_hash, api_key_enc, status, last_seen_at, created_at, updated_at)
+VALUES (?, ?, '', ?, ?, 'active', ?, ?, ?)`,
+		agent.ID, agent.Name, keyHash, keyEnc, now, now, now)
 	return err
 }
 
@@ -137,7 +119,7 @@ func (r *AgentRepository) DeactivateAgent(id string) error {
 }
 
 func (r *AgentRepository) GetAllAgents() ([]models.Agent, error) {
-	rows, err := DB.Query(`SELECT id, name, mode, version, COALESCE(status,'active'), last_seen_at, created_at, updated_at FROM agents WHERE COALESCE(status,'active') = 'active' ORDER BY last_seen_at DESC`)
+	rows, err := DB.Query(`SELECT id, name, version, COALESCE(status,'active'), last_seen_at, created_at, updated_at FROM agents WHERE COALESCE(status,'active') = 'active' ORDER BY last_seen_at DESC`)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +127,7 @@ func (r *AgentRepository) GetAllAgents() ([]models.Agent, error) {
 	agents := make([]models.Agent, 0)
 	for rows.Next() {
 		var agent models.Agent
-		if err := rows.Scan(&agent.ID, &agent.Name, &agent.Mode, &agent.Version, &agent.Status, &agent.LastSeenAt, &agent.CreatedAt, &agent.UpdatedAt); err != nil {
+		if err := rows.Scan(&agent.ID, &agent.Name, &agent.Version, &agent.Status, &agent.LastSeenAt, &agent.CreatedAt, &agent.UpdatedAt); err != nil {
 			return nil, err
 		}
 		agents = append(agents, agent)

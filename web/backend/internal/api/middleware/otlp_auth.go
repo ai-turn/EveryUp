@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"strings"
+
 	"github.com/aiturn/everyup/internal/crypto"
 	"github.com/aiturn/everyup/internal/database"
 	"github.com/aiturn/everyup/internal/models"
@@ -74,6 +76,20 @@ func OTLPAuth() fiber.Handler {
 		})
 		return c.Next()
 	}
+}
+
+func extractAPIKey(c *fiber.Ctx) (string, bool) {
+	if auth := c.Get("Authorization"); auth != "" {
+		parts := strings.SplitN(auth, " ", 2)
+		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+			return "", true
+		}
+		return strings.TrimSpace(parts[1]), true
+	}
+	if apiKey := strings.TrimSpace(c.Get("X-API-Key")); apiKey != "" {
+		return apiKey, true
+	}
+	return "", false
 }
 
 func otlpAuthError(c *fiber.Ctx, status int, code, message string) error {

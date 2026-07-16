@@ -48,7 +48,6 @@ type AgentOverview struct {
 type Agent struct {
 	ID         string    `json:"id"`
 	Name       string    `json:"name"`
-	Mode       string    `json:"mode"`
 	Version    string    `json:"version,omitempty"`
 	Status     string    `json:"status"`
 	LastSeenAt time.Time `json:"lastSeenAt"`

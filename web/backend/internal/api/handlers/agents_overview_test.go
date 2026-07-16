@@ -17,7 +17,7 @@ func TestAgentOverview(t *testing.T) {
 	token := ts.setupAdmin(t, "admin", "testpass123")
 
 	repo := database.NewAgentRepository()
-	agent := models.Agent{ID: "agent-ov", Name: "prod", Mode: "connected", LastSeenAt: time.Now()}
+	agent := models.Agent{ID: "agent-ov", Name: "prod", LastSeenAt: time.Now()}
 	if err := repo.UpsertAgent(agent); err != nil {
 		t.Fatalf("UpsertAgent: %v", err)
 	}

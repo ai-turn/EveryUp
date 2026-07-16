@@ -139,20 +139,6 @@ func (e *ServiceRuleEvaluator) EvaluateAgent(agentID, serviceKey, serviceName st
 	}
 }
 
-// ResetRule clears cached state for a rule (call on rule update/delete).
-func (e *ServiceRuleEvaluator) ResetRule(ruleID string) {
-	e.mu.Lock()
-	defer e.mu.Unlock()
-
-	for key := range e.wasAlerting {
-		if strings.HasPrefix(key, ruleID+":") || key == ruleID {
-			delete(e.wasAlerting, key)
-		}
-	}
-
-	e.stateRepo.DeleteByRule(ruleID)
-}
-
 // loadState is a no-op for service rules.
 // Service checks run frequently enough that breach counters reset safely on restart.
 func (e *ServiceRuleEvaluator) loadState() {

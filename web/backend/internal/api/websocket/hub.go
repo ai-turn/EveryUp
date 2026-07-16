@@ -91,13 +91,6 @@ func (h *Hub) GetBroadcastFunc() func(interface{}) {
 	return h.Broadcast
 }
 
-// ClientCount returns the number of connected clients
-func (h *Hub) ClientCount() int {
-	h.mu.RLock()
-	defer h.mu.RUnlock()
-	return len(h.clients)
-}
-
 // WebSocketUpgrade returns middleware to check if request can be upgraded.
 // It validates JWT from the ?token= query parameter or Authorization header.
 func WebSocketUpgrade() fiber.Handler {

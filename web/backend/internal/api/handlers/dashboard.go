@@ -31,16 +31,3 @@ func (h *DashboardHandler) GetTimeline(c *fiber.Ctx) error {
 		"data":    events,
 	})
 }
-
-// GetIncidents returns all incidents
-func (h *DashboardHandler) GetIncidents(c *fiber.Ctx) error {
-	incidents, err := h.incidentRepo.GetActive()
-	if err != nil {
-		return internalError(c, "DATABASE_ERROR", err)
-	}
-
-	return c.JSON(fiber.Map{
-		"success": true,
-		"data":    incidents,
-	})
-}

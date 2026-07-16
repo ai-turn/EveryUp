@@ -139,34 +139,6 @@ func (r *HostRepository) Update(h *models.Host) error {
 	return err
 }
 
-// SetLastError updates the last_error field for a host
-func (r *HostRepository) SetLastError(id string, lastError string) error {
-	_, err := DB.Exec(`UPDATE hosts SET last_error = ?, updated_at = ? WHERE id = ?`,
-		lastError, time.Now(), id)
-	return err
-}
-
-// Delete deletes a host and its associated metrics
-func (r *HostRepository) Delete(id string) error {
-	// Delete associated system metrics first
-	if _, err := DB.Exec("DELETE FROM system_metrics WHERE host_id = ?", id); err != nil {
-		return err
-	}
-	_, err := DB.Exec("DELETE FROM hosts WHERE id = ?", id)
-	return err
-}
-
-// SetActive sets the is_active flag for a host
-func (r *HostRepository) SetActive(id string, isActive bool) error {
-	active := 0
-	if isActive {
-		active = 1
-	}
-	_, err := DB.Exec(`UPDATE hosts SET is_active = ?, updated_at = ? WHERE id = ?`,
-		active, time.Now(), id)
-	return err
-}
-
 // scanHostFields scans host columns into a Host struct from a generic scanner.
 func scanHostFields(scan func(dest ...interface{}) error) (models.Host, error) {
 	var h models.Host

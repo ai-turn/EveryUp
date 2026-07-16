@@ -44,7 +44,6 @@ func (h *AgentHandler) SetEvaluators(rule *alerter.RuleEvaluator, svc *alerter.S
 
 type agentEnrollRequest struct {
 	AgentName string `json:"agentName"`
-	Mode      string `json:"mode"`
 	Version   string `json:"version"`
 }
 
@@ -134,7 +133,6 @@ func (h *AgentHandler) Enroll(c *fiber.Ctx) error {
 		_ = h.repo.UpsertAgent(models.Agent{
 			ID:         agent.ID,
 			Name:       agent.Name,
-			Mode:       agent.Mode,
 			Version:    req.Version,
 			LastSeenAt: time.Now(),
 		})
@@ -263,7 +261,6 @@ func (h *AgentHandler) Create(c *fiber.Ctx) error {
 	agent := models.Agent{
 		ID:   "agent_" + uuid.NewString(),
 		Name: req.Name,
-		Mode: "standalone",
 	}
 	if err := h.repo.CreateAgent(agent, hash, keyEnc); err != nil {
 		return internalError(c, "DATABASE_ERROR", err)

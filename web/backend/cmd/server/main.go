@@ -15,7 +15,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"github.com/aiturn/everyup/internal/alerter"
 	"github.com/aiturn/everyup/internal/api"
-	"github.com/aiturn/everyup/internal/api/middleware"
 	"github.com/aiturn/everyup/internal/api/websocket"
 	"github.com/aiturn/everyup/internal/checker"
 	"github.com/aiturn/everyup/internal/collector"
@@ -67,12 +66,6 @@ func main() {
 
 	// Initialize admin account from env vars (EVERYUP_ADMIN_USERNAME + EVERYUP_ADMIN_PASSWORD)
 	initAdminAccount(cfg)
-
-	// Warm up API key cache
-	serviceRepo := database.NewServiceRepository()
-	if err := middleware.WarmUpApiKeyCache(serviceRepo); err != nil {
-		log.Printf("Warning: API key cache warm-up failed: %v", err)
-	}
 
 	// Create Fiber app
 	app := fiber.New(fiber.Config{

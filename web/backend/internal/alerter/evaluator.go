@@ -186,23 +186,6 @@ func (e *RuleEvaluator) EvaluateAgent(agentID, agentName string, metric *models.
 	}
 }
 
-// ResetRule clears cached state for a rule (call on rule update/delete).
-func (e *RuleEvaluator) ResetRule(ruleID string) {
-	e.mu.Lock()
-	defer e.mu.Unlock()
-
-	for key := range e.breachCounts {
-		if strings.HasPrefix(key, ruleID+":") || key == ruleID {
-			delete(e.breachCounts, key)
-			delete(e.lastAlerted, key)
-			delete(e.wasAlerting, key)
-		}
-	}
-
-	// Also delete from database
-	e.stateRepo.DeleteByRule(ruleID)
-}
-
 // LoadState loads persisted state from database on startup
 func (e *RuleEvaluator) LoadState() {
 	states, err := e.stateRepo.GetAll()
