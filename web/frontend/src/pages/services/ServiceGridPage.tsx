@@ -307,7 +307,7 @@ export function ServiceGridPage() {
         onClose={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
         title={t('프로젝트 비활성화')}
-        message={t("'{name}' 프로젝트를 비활성화하시겠습니까?", { name: deleteTarget?.name ?? '' })}
+        message={t("{name} 프로젝트를 비활성화하시겠습니까?", { name: deleteTarget?.name ?? '' })}
         description={t('에이전트 연결이 차단되며 수집 데이터는 보존됩니다.')}
         confirmLabel={t('비활성화')}
       />
