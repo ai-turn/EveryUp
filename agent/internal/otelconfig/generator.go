@@ -13,11 +13,7 @@ type Options struct {
 	OutputPath string
 	ConfDir    string
 
-	HostMetricsEnabled  bool
-	DockerStatsEnabled  bool
-	FileLogEnabled      bool
-	FileLogInclude      []string
-	OTLPReceiverEnabled bool
+	FileLogInclude []string
 
 	WebOTLPEndpoint string
 	WebAPIKey       string
@@ -36,12 +32,6 @@ func (o Options) WithDefaults() Options {
 	if len(o.FileLogInclude) == 0 {
 		o.FileLogInclude = []string{"/var/lib/docker/containers/*/*.log"}
 	}
-	if !o.HostMetricsEnabled && !o.DockerStatsEnabled && !o.FileLogEnabled && !o.OTLPReceiverEnabled {
-		o.HostMetricsEnabled = true
-		o.DockerStatsEnabled = true
-		o.FileLogEnabled = true
-		o.OTLPReceiverEnabled = true
-	}
 	return o
 }
 
@@ -53,17 +43,14 @@ func Generate(o Options) string {
 	b.WriteString(o.ConfDir)
 	b.WriteString(".\n")
 	b.WriteString("receivers:\n")
-	if o.OTLPReceiverEnabled {
-		b.WriteString(`  otlp:
+	b.WriteString(`  otlp:
     protocols:
       grpc:
         endpoint: 0.0.0.0:4317
       http:
         endpoint: 0.0.0.0:4318
 `)
-	}
-	if o.HostMetricsEnabled {
-		b.WriteString(`  hostmetrics:
+	b.WriteString(`  hostmetrics:
     root_path: /hostfs
     collection_interval: 30s
     scrapers:
@@ -73,25 +60,20 @@ func Generate(o Options) string {
       filesystem:
       network:
 `)
-	}
-	if o.DockerStatsEnabled {
-		b.WriteString(`  docker_stats:
+	b.WriteString(`  docker_stats:
     endpoint: unix:///var/run/docker.sock
     collection_interval: 30s
 `)
+	b.WriteString("  filelog:\n")
+	b.WriteString("    include:\n")
+	for _, include := range o.FileLogInclude {
+		b.WriteString("      - ")
+		b.WriteString(quoteYAML(include))
+		b.WriteString("\n")
 	}
-	if o.FileLogEnabled {
-		b.WriteString("  filelog:\n")
-		b.WriteString("    include:\n")
-		for _, include := range o.FileLogInclude {
-			b.WriteString("      - ")
-			b.WriteString(quoteYAML(include))
-			b.WriteString("\n")
-		}
-		b.WriteString(`    start_at: end
+	b.WriteString(`    start_at: end
     include_file_path: true
 `)
-	}
 
 	b.WriteString("\nprocessors:\n")
 	b.WriteString(`  batch:
@@ -121,7 +103,6 @@ func Generate(o Options) string {
 		}
 	}
 
-	receivers := enabledReceivers(o)
 	exporters := []string{"debug"}
 	if strings.TrimSpace(o.WebOTLPEndpoint) != "" {
 		exporters = append(exporters, "otlphttp/everyup_web")
@@ -129,9 +110,9 @@ func Generate(o Options) string {
 
 	b.WriteString("\nservice:\n")
 	b.WriteString("  pipelines:\n")
-	b.WriteString(pipelineYAML("metrics", filterReceivers(receivers, "hostmetrics", "docker_stats"), exporters))
-	b.WriteString(pipelineYAML("logs", filterReceivers(receivers, "filelog", "otlp"), exporters))
-	b.WriteString(pipelineYAML("traces", filterReceivers(receivers, "otlp"), exporters))
+	b.WriteString(pipelineYAML("metrics", []string{"hostmetrics", "docker_stats"}, exporters))
+	b.WriteString(pipelineYAML("logs", []string{"filelog", "otlp"}, exporters))
+	b.WriteString(pipelineYAML("traces", []string{"otlp"}, exporters))
 
 	return b.String()
 }
@@ -164,41 +145,7 @@ func Validate(o Options) error {
 	return nil
 }
 
-func enabledReceivers(o Options) []string {
-	var receivers []string
-	if o.OTLPReceiverEnabled {
-		receivers = append(receivers, "otlp")
-	}
-	if o.HostMetricsEnabled {
-		receivers = append(receivers, "hostmetrics")
-	}
-	if o.DockerStatsEnabled {
-		receivers = append(receivers, "docker_stats")
-	}
-	if o.FileLogEnabled {
-		receivers = append(receivers, "filelog")
-	}
-	return receivers
-}
-
-func filterReceivers(receivers []string, allowed ...string) []string {
-	allowedSet := make(map[string]bool, len(allowed))
-	for _, item := range allowed {
-		allowedSet[item] = true
-	}
-	filtered := make([]string, 0, len(receivers))
-	for _, receiver := range receivers {
-		if allowedSet[receiver] {
-			filtered = append(filtered, receiver)
-		}
-	}
-	return filtered
-}
-
 func pipelineYAML(name string, receivers []string, exporters []string) string {
-	if len(receivers) == 0 {
-		return ""
-	}
 	var b strings.Builder
 	b.WriteString("    ")
 	b.WriteString(name)

@@ -25,7 +25,6 @@ import (
 type Agent struct {
 	cfg         config.Config
 	httpCheck   *checks.HTTPChecker
-	tcpCheck    *checks.TCPChecker
 	docker      *discovery.DockerClient
 	store       *state.Store
 	audit       *state.AuditLogger
@@ -51,20 +50,18 @@ type Agent struct {
 }
 
 type targetState struct {
-	lastAlertAt         time.Time
-	lastLogAlertAt      time.Time
-	lastResourceAlertAt time.Time
-	lastHostAlertAt     time.Time
-	lastDockerLogAt     time.Time
-	wasHealthy          bool
-	seenResult          bool
-	updatedAt           time.Time
-	serviceName         string
-	checkType           string
-	endpoint            string
-	lastError           string
-	lastStatus          int
-	lastLatency         string
+	lastAlertAt     time.Time
+	lastHostAlertAt time.Time
+	lastDockerLogAt time.Time
+	wasHealthy      bool
+	seenResult      bool
+	updatedAt       time.Time
+	serviceName     string
+	checkType       string
+	endpoint        string
+	lastError       string
+	lastStatus      int
+	lastLatency     string
 }
 
 // serviceStatus is a point-in-time view of one monitored target, synced to
@@ -118,7 +115,6 @@ func New(cfg config.Config) (*Agent, error) {
 	agent := &Agent{
 		cfg:             cfg,
 		httpCheck:       checks.NewHTTPChecker(cfg.HTTPTimeout),
-		tcpCheck:        checks.NewTCPChecker(cfg.HTTPTimeout),
 		docker:          docker,
 		store:           state.NewStore(filepath.Join(cfg.DataDir, "agent-state.json")),
 		audit:           state.NewAuditLogger(filepath.Join(cfg.DataDir, "audit.jsonl")),
@@ -233,7 +229,6 @@ func (a *Agent) enrollWeb(ctx context.Context) {
 	}
 	enrolled, err := a.web.Enroll(ctx, webclient.EnrollmentRequest{
 		AgentName: a.cfg.AgentName,
-		Mode:      "standalone",
 		Version:   "dev",
 	})
 	if err != nil {
@@ -369,11 +364,7 @@ func (a *Agent) writeOTelConfig() {
 		WebOTLPEndpoint: a.cfg.WebOTLPEndpoint,
 		// One project key: the same evup_svc_ key used for web sync also
 		// authenticates the generated collector's OTLP push.
-		WebAPIKey:           a.cfg.AgentAPIKey,
-		HostMetricsEnabled:  true,
-		DockerStatsEnabled:  true,
-		FileLogEnabled:      true,
-		OTLPReceiverEnabled: true,
+		WebAPIKey: a.cfg.AgentAPIKey,
 	})
 	if err != nil {
 		log.Printf("failed to generate OTel collector config: %v", err)
@@ -401,8 +392,6 @@ func (a *Agent) runChecks(ctx context.Context) {
 
 	for _, target := range targets {
 		a.runCheck(ctx, target)
-		a.runLogKeywordCheck(ctx, target)
-		a.runResourceThresholdCheck(ctx, target)
 	}
 	a.forwardDockerLogs(ctx, targets)
 	a.runHostResourceCheck(ctx)
@@ -529,11 +518,6 @@ func (a *Agent) runCheck(ctx context.Context, target discovery.Target) {
 		a.runDockerLivenessCheck(target)
 		return
 	}
-	if target.HealthType == "tcp" {
-		a.runTCPCheck(ctx, target)
-		return
-	}
-
 	result := a.httpCheck.Check(ctx, target.HealthURL)
 	log.Printf("health check: service=%s url=%s healthy=%t status=%d latency=%s error=%s",
 		target.ServiceName, result.URL, result.Healthy, result.StatusCode, result.Latency, result.Error)
@@ -560,39 +544,6 @@ func (a *Agent) runCheck(ctx context.Context, target discovery.Target) {
 			"url":        target.HealthURL,
 			"statusCode": result.StatusCode,
 			"latency":    result.Latency.String(),
-		})
-		lastAlertAt = now
-	}
-	a.setTargetResult(target, lastAlertAt, false, true, now)
-	a.saveState()
-}
-
-func (a *Agent) runTCPCheck(ctx context.Context, target discovery.Target) {
-	result := a.tcpCheck.Check(ctx, target.HealthURL)
-	log.Printf("tcp check: service=%s address=%s healthy=%t latency=%s error=%s",
-		target.ServiceName, result.Address, result.Healthy, result.Latency, result.Error)
-
-	now := time.Now()
-	state := a.observeTarget(target, result.Healthy, 0, result.Latency, result.Error)
-	if result.Healthy {
-		if state.seenResult && !state.wasHealthy {
-			a.auditEvent("recovery_sent", target.ServiceName, targetKey(target), "service recovered", map[string]interface{}{
-				"address": target.HealthURL,
-				"latency": result.Latency.String(),
-			})
-		}
-		a.setTargetResult(target, state.lastAlertAt, true, true, now)
-		a.saveState()
-		return
-	}
-
-	shouldAlert := !state.seenResult || state.wasHealthy || now.Sub(state.lastAlertAt) >= a.cfg.AlertCooldown
-	lastAlertAt := state.lastAlertAt
-	if shouldAlert {
-		body := fmt.Sprintf("%s failed: %s", result.Address, result.Error)
-		a.auditEvent("alert_sent", target.ServiceName, targetKey(target), body, map[string]interface{}{
-			"address": result.Address,
-			"latency": result.Latency.String(),
 		})
 		lastAlertAt = now
 	}
@@ -685,17 +636,15 @@ func (a *Agent) loadState() error {
 	}
 	for key, persisted := range snapshot.Targets {
 		a.states[key] = &targetState{
-			serviceName:         persisted.ServiceName,
-			checkType:           persisted.CheckType,
-			endpoint:            persisted.Endpoint,
-			lastAlertAt:         persisted.LastAlertAt,
-			lastLogAlertAt:      persisted.LastLogAlertAt,
-			lastResourceAlertAt: persisted.LastResourceAlertAt,
-			lastHostAlertAt:     persisted.LastHostAlertAt,
-			lastDockerLogAt:     persisted.LastDockerLogAt,
-			wasHealthy:          persisted.WasHealthy,
-			seenResult:          persisted.SeenResult,
-			updatedAt:           persisted.UpdatedAt,
+			serviceName:     persisted.ServiceName,
+			checkType:       persisted.CheckType,
+			endpoint:        persisted.Endpoint,
+			lastAlertAt:     persisted.LastAlertAt,
+			lastHostAlertAt: persisted.LastHostAlertAt,
+			lastDockerLogAt: persisted.LastDockerLogAt,
+			wasHealthy:      persisted.WasHealthy,
+			seenResult:      persisted.SeenResult,
+			updatedAt:       persisted.UpdatedAt,
 		}
 	}
 	log.Printf("loaded %d persisted target states", len(a.states))
@@ -711,56 +660,19 @@ func (a *Agent) saveState() {
 	}
 	for key, current := range a.states {
 		snapshot.Targets[key] = state.TargetState{
-			ServiceName:         current.serviceName,
-			CheckType:           current.checkType,
-			Endpoint:            current.endpoint,
-			LastAlertAt:         current.lastAlertAt,
-			LastLogAlertAt:      current.lastLogAlertAt,
-			LastResourceAlertAt: current.lastResourceAlertAt,
-			LastHostAlertAt:     current.lastHostAlertAt,
-			LastDockerLogAt:     current.lastDockerLogAt,
-			WasHealthy:          current.wasHealthy,
-			SeenResult:          current.seenResult,
-			UpdatedAt:           current.updatedAt,
+			ServiceName:     current.serviceName,
+			CheckType:       current.checkType,
+			Endpoint:        current.endpoint,
+			LastAlertAt:     current.lastAlertAt,
+			LastHostAlertAt: current.lastHostAlertAt,
+			LastDockerLogAt: current.lastDockerLogAt,
+			WasHealthy:      current.wasHealthy,
+			SeenResult:      current.seenResult,
+			UpdatedAt:       current.updatedAt,
 		}
 	}
 	if err := a.store.Save(snapshot); err != nil {
 		log.Printf("failed to save local state: %v", err)
-	}
-}
-
-func (a *Agent) runLogKeywordCheck(ctx context.Context, target discovery.Target) {
-	if a.docker == nil || target.ID == "" || strings.HasPrefix(target.ID, "env:") {
-		return
-	}
-	keywords := logKeywords(target.Labels)
-	if len(keywords) == 0 {
-		return
-	}
-	lines := logLineLimit(target.Labels)
-	logLines, err := a.docker.TailLogs(ctx, target.ID, lines)
-	if err != nil {
-		a.auditEvent("log_keyword_scan_failed", target.ServiceName, targetKey(target), err.Error(), map[string]interface{}{
-			"lines": lines,
-		})
-		return
-	}
-	keyword, line, ok := matchLogKeyword(logLines, keywords)
-	if !ok {
-		return
-	}
-
-	now := time.Now()
-	state := a.targetState(target)
-	if state.lastLogAlertAt.IsZero() || now.Sub(state.lastLogAlertAt) >= a.cfg.AlertCooldown {
-		body := fmt.Sprintf("Log keyword %q matched for %s:\n%s", keyword, target.ServiceName, trimText(line, 700))
-		a.auditEvent("alert_sent", target.ServiceName, targetKey(target), body, map[string]interface{}{
-			"source":  "log_keyword",
-			"keyword": keyword,
-			"line":    trimText(line, 700),
-		})
-		a.setLogAlertAt(target, now)
-		a.saveState()
 	}
 }
 
@@ -875,46 +787,6 @@ func (a *Agent) forwardDockerLogs(ctx context.Context, targets []discovery.Targe
 		}
 	}
 }
-func (a *Agent) runResourceThresholdCheck(ctx context.Context, target discovery.Target) {
-	if a.docker == nil || target.ID == "" || strings.HasPrefix(target.ID, "env:") {
-		return
-	}
-	cpuThreshold, memoryThreshold := resourceThresholds(target.Labels)
-	if cpuThreshold == 0 && memoryThreshold == 0 {
-		return
-	}
-	stats, err := a.docker.ContainerStats(ctx, target.ID)
-	if err != nil {
-		a.auditEvent("resource_threshold_scan_failed", target.ServiceName, targetKey(target), err.Error(), nil)
-		return
-	}
-	violations := make([]string, 0, 2)
-	if cpuThreshold > 0 && stats.CPUPercent >= cpuThreshold {
-		violations = append(violations, fmt.Sprintf("cpu %.1f%% >= %.1f%%", stats.CPUPercent, cpuThreshold))
-	}
-	if memoryThreshold > 0 && stats.MemoryPercent >= memoryThreshold {
-		violations = append(violations, fmt.Sprintf("memory %.1f%% >= %.1f%%", stats.MemoryPercent, memoryThreshold))
-	}
-	if len(violations) == 0 {
-		return
-	}
-
-	now := time.Now()
-	state := a.targetState(target)
-	if !state.lastResourceAlertAt.IsZero() && now.Sub(state.lastResourceAlertAt) < a.cfg.AlertCooldown {
-		return
-	}
-
-	body := fmt.Sprintf("Resource threshold exceeded for %s:\n%s", target.ServiceName, strings.Join(violations, "\n"))
-	a.auditEvent("alert_sent", target.ServiceName, targetKey(target), body, map[string]interface{}{
-		"source":        "resource_threshold",
-		"violations":    violations,
-		"cpuPercent":    stats.CPUPercent,
-		"memoryPercent": stats.MemoryPercent,
-	})
-	a.setResourceAlertAt(target, now)
-	a.saveState()
-}
 
 func (a *Agent) runHostResourceCheck(ctx context.Context) {
 	if a.hostAlertReader == nil {
@@ -997,18 +869,6 @@ func (a *Agent) setHostAlertAt(at time.Time) {
 	state.updatedAt = at
 }
 
-func (a *Agent) setLogAlertAt(target discovery.Target, at time.Time) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	key := targetKey(target)
-	state, ok := a.states[key]
-	if !ok {
-		state = &targetState{serviceName: target.ServiceName, checkType: target.HealthType, endpoint: target.HealthURL}
-		a.states[key] = state
-	}
-	state.lastLogAlertAt = at
-}
-
 func (a *Agent) setDockerLogAt(target discovery.Target, at time.Time) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -1019,17 +879,6 @@ func (a *Agent) setDockerLogAt(target discovery.Target, at time.Time) {
 		a.states[key] = state
 	}
 	state.lastDockerLogAt = at
-}
-func (a *Agent) setResourceAlertAt(target discovery.Target, at time.Time) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	key := targetKey(target)
-	state, ok := a.states[key]
-	if !ok {
-		state = &targetState{serviceName: target.ServiceName, checkType: target.HealthType, endpoint: target.HealthURL}
-		a.states[key] = state
-	}
-	state.lastResourceAlertAt = at
 }
 
 // snapshot returns the current per-target status list for syncing to EveryUp Web.
@@ -1104,56 +953,6 @@ func failureBody(result checks.HTTPResult) string {
 		return fmt.Sprintf("%s failed: %s", result.URL, result.Error)
 	}
 	return fmt.Sprintf("%s returned status %d in %s", result.URL, result.StatusCode, result.Latency.Round(time.Millisecond))
-}
-
-func logKeywords(labels map[string]string) []string {
-	return nil
-}
-
-func logLineLimit(labels map[string]string) int {
-	return 100
-}
-
-func resourceThresholds(labels map[string]string) (float64, float64) {
-	return 0, 0
-}
-
-func percentLabel(value string) float64 {
-	value = strings.TrimSpace(strings.TrimSuffix(value, "%"))
-	if value == "" {
-		return 0
-	}
-	var parsed float64
-	if _, err := fmt.Sscanf(value, "%f", &parsed); err != nil {
-		return 0
-	}
-	if parsed <= 0 {
-		return 0
-	}
-	if parsed > 100 {
-		return 100
-	}
-	return parsed
-}
-
-func matchLogKeyword(lines []string, keywords []string) (string, string, bool) {
-	loweredKeywords := make([]string, 0, len(keywords))
-	for _, keyword := range keywords {
-		keyword = strings.TrimSpace(keyword)
-		if keyword != "" {
-			loweredKeywords = append(loweredKeywords, strings.ToLower(keyword))
-		}
-	}
-	for i := len(lines) - 1; i >= 0; i-- {
-		line := lines[i]
-		loweredLine := strings.ToLower(line)
-		for idx, keyword := range loweredKeywords {
-			if strings.Contains(loweredLine, keyword) {
-				return keywords[idx], line, true
-			}
-		}
-	}
-	return "", "", false
 }
 
 // levelTokenRe matches a standalone log-level word. Word boundaries keep

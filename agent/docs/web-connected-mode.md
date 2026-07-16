@@ -65,7 +65,7 @@ The Agent syncs to these Web endpoints:
 | `POST /api/v1/agents/:agentId/events` | Flush local Agent events |
 | `POST /api/v1/agents/:agentId/metrics` | Send host metrics |
 | `POST /api/v1/otlp/v1/logs` | Forward Docker logs encoded by the Agent |
-| `POST /api/v1/otlp/v1/traces` | Forward proxy-generated or app-generated trace spans |
+| `POST /api/v1/otlp/v1/traces` | Forward trace spans (access-log synthesis, eBPF sidecar, or app OTel) |
 
 Authentication uses `Authorization: Bearer <EVERYUP_AGENT_API_KEY>`.
 

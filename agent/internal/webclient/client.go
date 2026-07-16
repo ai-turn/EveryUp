@@ -27,7 +27,6 @@ type Client struct {
 
 type EnrollmentRequest struct {
 	AgentName string `json:"agentName"`
-	Mode      string `json:"mode"`
 	Version   string `json:"version,omitempty"`
 }
 
@@ -233,11 +232,6 @@ func (c *Client) SendOTLPLogs(ctx context.Context, batches []OTLPLogBatch) error
 		return fmt.Errorf("encode OTLP logs: %w", err)
 	}
 	return c.SendOTLPProtobuf(ctx, "logs", data)
-}
-
-func (c *Client) postProtobuf(ctx context.Context, path string, data []byte) error {
-	_, err := c.postProtobufResponse(ctx, path, data)
-	return err
 }
 
 func (c *Client) postProtobufResponse(ctx context.Context, path string, data []byte) ([]byte, error) {

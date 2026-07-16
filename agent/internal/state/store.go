@@ -11,17 +11,15 @@ import (
 )
 
 type TargetState struct {
-	ServiceName         string    `json:"serviceName,omitempty"`
-	CheckType           string    `json:"checkType,omitempty"`
-	Endpoint            string    `json:"endpoint,omitempty"`
-	LastAlertAt         time.Time `json:"lastAlertAt,omitempty"`
-	LastLogAlertAt      time.Time `json:"lastLogAlertAt,omitempty"`
-	LastResourceAlertAt time.Time `json:"lastResourceAlertAt,omitempty"`
-	LastHostAlertAt     time.Time `json:"lastHostAlertAt,omitempty"`
-	LastDockerLogAt     time.Time `json:"lastDockerLogAt,omitempty"`
-	WasHealthy          bool      `json:"wasHealthy"`
-	SeenResult          bool      `json:"seenResult"`
-	UpdatedAt           time.Time `json:"updatedAt"`
+	ServiceName     string    `json:"serviceName,omitempty"`
+	CheckType       string    `json:"checkType,omitempty"`
+	Endpoint        string    `json:"endpoint,omitempty"`
+	LastAlertAt     time.Time `json:"lastAlertAt,omitempty"`
+	LastHostAlertAt time.Time `json:"lastHostAlertAt,omitempty"`
+	LastDockerLogAt time.Time `json:"lastDockerLogAt,omitempty"`
+	WasHealthy      bool      `json:"wasHealthy"`
+	SeenResult      bool      `json:"seenResult"`
+	UpdatedAt       time.Time `json:"updatedAt"`
 }
 
 type Snapshot struct {

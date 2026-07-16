@@ -187,14 +187,3 @@ func isProtobuf(contentType string) bool {
 	contentType = strings.ToLower(strings.TrimSpace(strings.Split(contentType, ";")[0]))
 	return contentType == "application/x-protobuf" || contentType == "application/protobuf"
 }
-
-func Port(addr string) string {
-	_, port, err := net.SplitHostPort(addr)
-	if err == nil {
-		return port
-	}
-	if strings.HasPrefix(addr, ":") {
-		return strings.TrimPrefix(addr, ":")
-	}
-	return ""
-}

@@ -61,29 +61,6 @@ func TestSplitDockerLogLinesStripsMultiplexHeaders(t *testing.T) {
 	}
 }
 
-func TestStatsFromDockerCalculatesCPUAndMemory(t *testing.T) {
-	var payload dockerStatsResponse
-	payload.CPUStats.CPUUsage.TotalUsage = 300
-	payload.PreCPUStats.CPUUsage.TotalUsage = 100
-	payload.CPUStats.SystemCPUUsage = 2000
-	payload.PreCPUStats.SystemCPUUsage = 1000
-	payload.CPUStats.OnlineCPUs = 2
-	payload.MemoryStats.Usage = 900
-	payload.MemoryStats.Stats.Cache = 100
-	payload.MemoryStats.Limit = 1000
-
-	stats := statsFromDocker(payload)
-	if stats.CPUPercent != 40 {
-		t.Fatalf("CPUPercent = %f, want 40", stats.CPUPercent)
-	}
-	if stats.MemoryUsageBytes != 800 {
-		t.Fatalf("MemoryUsageBytes = %d", stats.MemoryUsageBytes)
-	}
-	if stats.MemoryPercent != 80 {
-		t.Fatalf("MemoryPercent = %f", stats.MemoryPercent)
-	}
-}
-
 func TestNewDockerClientAcceptsTCPProxyPath(t *testing.T) {
 	client := NewDockerClient("tcp://docker-socket-proxy:2375", 0)
 	if client.socketPath != "tcp://docker-socket-proxy:2375" {

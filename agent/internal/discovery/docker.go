@@ -23,18 +23,10 @@ type Target struct {
 	ID          string // Docker container ID; the API handle for logs/stats; changes on recreation
 	Key         string // stable service identity, survives container recreation (see stableServiceKey)
 	ServiceName string
-	HealthType  string // "http" | "tcp" | "docker" (container-state liveness)
+	HealthType  string // "http" | "docker" (container-state liveness)
 	HealthURL   string
 	State       string // Docker container state ("running", "exited", etc.); docker liveness only
 	StatusText  string // Docker status line ("Up 2 hours", "Exited (137) 2m ago")
-	Labels      map[string]string
-}
-
-type ContainerStats struct {
-	CPUPercent       float64
-	MemoryUsageBytes uint64
-	MemoryLimitBytes uint64
-	MemoryPercent    float64
 }
 
 // ContainerMeta is per-container provenance for the service header: the image
@@ -51,40 +43,6 @@ type DockerLogLine struct {
 	Time    time.Time
 	Message string
 	Raw     string
-}
-
-func (c *DockerClient) TailLogs(ctx context.Context, containerID string, lines int) ([]string, error) {
-	containerID = strings.TrimSpace(containerID)
-	if containerID == "" {
-		return nil, fmt.Errorf("container ID is required")
-	}
-	if lines <= 0 {
-		lines = 50
-	}
-	if lines > 200 {
-		lines = 200
-	}
-
-	endpoint := fmt.Sprintf("http://docker/containers/%s/logs?stdout=1&stderr=1&timestamps=1&tail=%d", url.PathEscape(containerID), lines)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
-	if err != nil {
-		return nil, fmt.Errorf("create docker logs request: %w", err)
-	}
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("query docker logs: %w", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
-		return nil, fmt.Errorf("docker logs returned %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
-	}
-
-	data, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
-	if err != nil {
-		return nil, fmt.Errorf("read docker logs: %w", err)
-	}
-	return splitDockerLogLines(data), nil
 }
 
 func (c *DockerClient) LogsSince(ctx context.Context, containerID string, since time.Time, tail int) ([]DockerLogLine, error) {
@@ -130,31 +88,6 @@ func (c *DockerClient) LogsSince(ctx context.Context, containerID string, since 
 		return nil, fmt.Errorf("read docker logs: %w", err)
 	}
 	return parseDockerLogLines(data), nil
-}
-func (c *DockerClient) ContainerStats(ctx context.Context, containerID string) (ContainerStats, error) {
-	containerID = strings.TrimSpace(containerID)
-	if containerID == "" {
-		return ContainerStats{}, fmt.Errorf("container ID is required")
-	}
-	endpoint := fmt.Sprintf("http://docker/containers/%s/stats?stream=false", url.PathEscape(containerID))
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
-	if err != nil {
-		return ContainerStats{}, fmt.Errorf("create docker stats request: %w", err)
-	}
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return ContainerStats{}, fmt.Errorf("query docker stats: %w", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
-		return ContainerStats{}, fmt.Errorf("docker stats returned %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
-	}
-	var payload dockerStatsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
-		return ContainerStats{}, fmt.Errorf("decode docker stats: %w", err)
-	}
-	return statsFromDocker(payload), nil
 }
 
 // ContainerMetaMap returns container provenance keyed by stable service key
@@ -229,30 +162,6 @@ type dockerContainer struct {
 			IPAddress string `json:"IPAddress"`
 		} `json:"Networks"`
 	} `json:"NetworkSettings"`
-}
-
-type dockerStatsResponse struct {
-	CPUStats struct {
-		CPUUsage struct {
-			TotalUsage  uint64   `json:"total_usage"`
-			PercpuUsage []uint64 `json:"percpu_usage"`
-		} `json:"cpu_usage"`
-		SystemCPUUsage uint64 `json:"system_cpu_usage"`
-		OnlineCPUs     uint32 `json:"online_cpus"`
-	} `json:"cpu_stats"`
-	PreCPUStats struct {
-		CPUUsage struct {
-			TotalUsage uint64 `json:"total_usage"`
-		} `json:"cpu_usage"`
-		SystemCPUUsage uint64 `json:"system_cpu_usage"`
-	} `json:"precpu_stats"`
-	MemoryStats struct {
-		Usage uint64 `json:"usage"`
-		Limit uint64 `json:"limit"`
-		Stats struct {
-			Cache uint64 `json:"cache"`
-		} `json:"stats"`
-	} `json:"memory_stats"`
 }
 
 func NewDockerClient(socketPath string, timeout time.Duration) *DockerClient {
@@ -522,7 +431,6 @@ func TargetFromContainer(containerID, fallbackName string, labels map[string]str
 		Key:         stableServiceKey(containerID, fallbackName, labels),
 		ServiceName: serviceName,
 		HealthType:  "docker",
-		Labels:      copyLabels(labels),
 	}
 }
 
@@ -570,17 +478,6 @@ func shortID(id string) string {
 		return id
 	}
 	return id[:12]
-}
-
-func copyLabels(labels map[string]string) map[string]string {
-	if len(labels) == 0 {
-		return nil
-	}
-	copied := make(map[string]string, len(labels))
-	for key, value := range labels {
-		copied[key] = value
-	}
-	return copied
 }
 
 func splitDockerLogLines(data []byte) []string {
@@ -636,35 +533,4 @@ func stripDockerStreamHeaders(data []byte) []byte {
 	}
 	output.Write(data)
 	return output.Bytes()
-}
-
-func statsFromDocker(payload dockerStatsResponse) ContainerStats {
-	onlineCPUs := float64(payload.CPUStats.OnlineCPUs)
-	if onlineCPUs == 0 {
-		onlineCPUs = float64(len(payload.CPUStats.CPUUsage.PercpuUsage))
-	}
-	if onlineCPUs == 0 {
-		onlineCPUs = 1
-	}
-	cpuDelta := float64(payload.CPUStats.CPUUsage.TotalUsage - payload.PreCPUStats.CPUUsage.TotalUsage)
-	systemDelta := float64(payload.CPUStats.SystemCPUUsage - payload.PreCPUStats.SystemCPUUsage)
-	cpuPercent := 0.0
-	if cpuDelta > 0 && systemDelta > 0 {
-		cpuPercent = (cpuDelta / systemDelta) * onlineCPUs * 100
-	}
-
-	memoryUsage := payload.MemoryStats.Usage
-	if payload.MemoryStats.Stats.Cache > 0 && payload.MemoryStats.Stats.Cache < memoryUsage {
-		memoryUsage -= payload.MemoryStats.Stats.Cache
-	}
-	memoryPercent := 0.0
-	if payload.MemoryStats.Limit > 0 {
-		memoryPercent = (float64(memoryUsage) / float64(payload.MemoryStats.Limit)) * 100
-	}
-	return ContainerStats{
-		CPUPercent:       cpuPercent,
-		MemoryUsageBytes: memoryUsage,
-		MemoryLimitBytes: payload.MemoryStats.Limit,
-		MemoryPercent:    memoryPercent,
-	}
 }

@@ -54,33 +54,6 @@ func TestInferLogSeverity(t *testing.T) {
 	}
 }
 
-func TestMatchLogKeywordUsesNewestMatchingLine(t *testing.T) {
-	keyword, line, ok := matchLogKeyword([]string{
-		"2026-06-19T00:00:00Z ERROR old failure",
-		"2026-06-19T00:01:00Z info ok",
-		"2026-06-19T00:02:00Z panic latest failure",
-	}, []string{"ERROR", "panic"})
-	if !ok {
-		t.Fatal("expected keyword match")
-	}
-	if keyword != "panic" || line != "2026-06-19T00:02:00Z panic latest failure" {
-		t.Fatalf("keyword=%q line=%q", keyword, line)
-	}
-}
-
-func TestLogLineLimitUsesDefault(t *testing.T) {
-	if got := logLineLimit(nil); got != 100 {
-		t.Fatalf("logLineLimit = %d, want 100", got)
-	}
-}
-
-func TestResourceThresholdsDisabledByDefault(t *testing.T) {
-	cpu, memory := resourceThresholds(nil)
-	if cpu != 0 || memory != 0 {
-		t.Fatalf("thresholds = %f/%f, want disabled", cpu, memory)
-	}
-}
-
 func TestPruneStaleStatesDropsVanishedTargets(t *testing.T) {
 	a := &Agent{states: map[string]*targetState{
 		"env:demo-prod":  {serviceName: "demo-prod"},

@@ -37,10 +37,32 @@ generated collector config. Keep the generated config volume private.
 
 ## Compose
 
-Use [compose.example.yml](../compose.example.yml) as the starting point.
+Start from the standard [docker-compose.yml](../docker-compose.yml), add
+`EVERYUP_OTEL_CONFIG_ENABLED=true` to the agent environment, and add the
+collector service alongside it:
 
-```bash
-docker compose -f compose.example.yml up -d
+```yaml
+services:
+  # ... everyup-agent as in docker-compose.yml, plus:
+  #   EVERYUP_OTEL_CONFIG_ENABLED: "true"
+  # and the shared volume:
+  #   - everyup-generated-config:/etc/everyup/generated
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.110.0
+    restart: unless-stopped
+    command: ["--config=/etc/everyup/generated/otel-config.yaml"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/hostfs:ro
+      - everyup-generated-config:/etc/everyup/generated:ro
+      - ./everyup-conf.d:/etc/everyup/conf.d:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+
+volumes:
+  everyup-generated-config:
 ```
 
 ## Override directory
