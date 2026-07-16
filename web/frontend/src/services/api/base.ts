@@ -11,45 +11,39 @@ export interface ApiResponse<T> {
   };
 }
 
-export type RequestFn = <T>(endpoint: string, options?: RequestInit) => Promise<T>;
+export async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  if (env.useMock) return mockRouter<T>(endpoint, options?.method, options?.body);
 
-export function createRequestFn(): RequestFn {
-  const baseUrl = env.apiBaseUrl;
+  const response = await fetch(`${env.apiBaseUrl}${endpoint}`, {
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+    ...options,
+  });
 
-  return async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    if (env.useMock) return mockRouter<T>(endpoint, options?.method, options?.body);
+  if (response.status === 401) {
+    localStorage.removeItem('everyup_user');
+    window.location.href = '/login';
+    throw new ApiError('Unauthorized', 'UNAUTHORIZED', 401);
+  }
 
-    const response = await fetch(`${baseUrl}${endpoint}`, {
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers,
-      },
-      ...options,
-    });
+  // Parse JSON regardless of HTTP status to extract structured error codes
+  let json: ApiResponse<T>;
+  try {
+    json = await response.json();
+  } catch {
+    throw new ApiError(`HTTP Error: ${response.status}`, 'UNKNOWN_ERROR', response.status);
+  }
 
-    if (response.status === 401) {
-      localStorage.removeItem('everyup_user');
-      window.location.href = '/login';
-      throw new ApiError('Unauthorized', 'UNAUTHORIZED', 401);
-    }
+  if (!json.success) {
+    throw new ApiError(
+      json.error?.message || 'API Error',
+      json.error?.code || 'UNKNOWN_ERROR',
+      response.status,
+    );
+  }
 
-    // Parse JSON regardless of HTTP status to extract structured error codes
-    let json: ApiResponse<T>;
-    try {
-      json = await response.json();
-    } catch {
-      throw new ApiError(`HTTP Error: ${response.status}`, 'UNKNOWN_ERROR', response.status);
-    }
-
-    if (!json.success) {
-      throw new ApiError(
-        json.error?.message || 'API Error',
-        json.error?.code || 'UNKNOWN_ERROR',
-        response.status,
-      );
-    }
-
-    return json.data as T;
-  };
+  return json.data as T;
 }

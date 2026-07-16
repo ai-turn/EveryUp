@@ -4,7 +4,6 @@
 @import '@fontsource-variable/jetbrains-mono';
 
 @import "tailwindcss";
-@plugin "tailwindcss-animate";
 
 /* Tailwind v4 Variant Setup */
 @variant dark (.dark &);
@@ -216,6 +215,25 @@ body {
 
 .animate-slide-in-right {
   animation: slide-in-from-right 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* Dialog enter: ConfirmDialog 오버레이 페이드 + 다이얼로그 줌 */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out both;
+}
+
+@keyframes zoom-in-95 {
+  from { transform: scale(0.95); }
+  to { transform: scale(1); }
+}
+
+.animate-zoom-in {
+  animation: zoom-in-95 0.2s ease-out both;
 }
 
 /* Marquee: 모바일 DemoBanner 텍스트 스크롤 */

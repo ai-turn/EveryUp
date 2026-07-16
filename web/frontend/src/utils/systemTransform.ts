@@ -1,31 +1,6 @@
-import type { Host, SystemInfo, SystemMetricsHistory, SystemProcess } from '../services/api';
-import type { GaugeData, ChartData, Process, Resource } from '../types/infra';
+import type { SystemInfo, SystemMetricsHistory } from '../services/api';
+import type { GaugeData, ChartData, Resource } from '../types/infra';
 import { SERIES_HEX } from '../components/charts';
-
-// --- Host → Resource ---
-export function hostToResource(host: Host): Resource {
-  const statusMap: Record<string, Resource['status']> = {
-    online: 'healthy',
-    offline: 'critical',
-    unknown: 'warning',
-    error: 'error',
-  };
-  return {
-    id: host.id,
-    name: host.name,
-    type: (host.resourceCategory || 'server') as Resource['type'],
-    status: statusMap[host.status] || 'warning',
-    cluster: host.group,
-    ip: host.ip,
-    isActive: host.isActive,
-    isRemote: host.type === 'remote',
-  };
-}
-
-// --- Host[] → Resource[] ---
-export function hostsToResources(hosts: Host[]): Resource[] {
-  return hosts.map(hostToResource);
-}
 
 // --- SystemInfo → Resource[] (legacy, kept for backward compatibility) ---
 export function systemInfoToResources(info: SystemInfo): Resource[] {
@@ -195,41 +170,4 @@ export function historyToCharts(history: SystemMetricsHistory, currentInfo?: Sys
       ],
     },
   ];
-}
-
-// --- SystemProcess[] → Process[] ---
-const iconMap: Record<string, string> = {
-  postgres: 'terminal',
-  postgresql: 'terminal',
-  node: 'deployed_code',
-  nginx: 'language',
-  redis: 'database',
-  docker: 'deployed_code',
-  python: 'code',
-  java: 'coffee',
-  mysql: 'database',
-  mongod: 'database',
-};
-
-export function systemProcessesToProcesses(procs: SystemProcess[]): Process[] {
-  return procs.map((p, i) => {
-    const baseName = p.name.split(/[-_.]/)[0].toLowerCase();
-    const statusMap: Record<string, Process['status']> = {
-      running: 'RUNNING',
-      sleeping: 'IDLE',
-      stopped: 'STOPPED',
-      zombie: 'STOPPED',
-    };
-
-    return {
-      id: String(i + 1),
-      name: p.name,
-      icon: iconMap[baseName] || 'terminal',
-      pid: String(p.pid),
-      cpu: p.cpu.toFixed(1),
-      cpuHighlight: p.cpu >= 15,
-      memory: p.memory,
-      status: statusMap[p.status] || 'RUNNING',
-    };
-  });
 }

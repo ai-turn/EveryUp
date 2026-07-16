@@ -4,26 +4,14 @@
  * calls that bypass useDataFetch) return plausible data in demo/mock mode.
  */
 
-import { mockServices } from '../mocks/dashboard/services.mock';
-import { mockIncidents as mockDashboardIncidents } from '../mocks/dashboard/incidents.mock';
 import { mockLogEntries as allMockLogs, mockTraceIds } from '../mocks/logs/logs.mock';
-import { mockResponseTimeChartData } from '../mocks/healthcheck/charts.mock';
 import { mockGauges } from '../mocks/infra';
-import { mockResources } from '../mocks/infra/resourceList.mock';
 import { mockChannels } from '../mocks/alerts/channels.mock';
 
 import type {
-  TimelineItem,
-  Service,
-  MetricsSummary,
-  Metric,
-  UptimeData,
   LogEntry,
-  Incident,
-  Host,
   SystemInfo,
   SystemMetricsHistory,
-  SystemProcess,
   AlertRule,
   NotificationHistoryResponse,
   NotificationStats,
@@ -40,175 +28,7 @@ import type {
   OtelServiceMetric,
 } from './api';
 
-// ?? Dashboard ????????????????????????????????????????????????????????????????
-
-const mockTimeline: TimelineItem[] = mockDashboardIncidents.map((i) => ({
-  id: i.id,
-  type: i.type,
-  message: i.message,
-  time: i.time,
-  service: i.serviceName,
-}));
-
-// ?? Services ?????????????????????????????????????????????????????????????????
-
-const mockApiServices: Service[] = mockServices.map((s) => ({
-  id: s.id,
-  name: s.name,
-  type: 'http' as const,
-  interval: 60,
-  timeout: 10,
-  isActive: true,
-  status: s.status === 'healthy' ? 'healthy' : s.status === 'offline' ? 'unhealthy' : 'unknown',
-  uptime: parseFloat(s.uptime?.replace('%', '') ?? '99'),
-  responseTime: parseInt(s.latency?.replace('ms', '').replace(',', '') ?? '0', 10),
-  tags: [],
-  scheduleType: 'interval' as const,
-}));
-
-const mockLogServices: Service[] = [
-  {
-    id: '1',
-    name: 'API Gateway',
-    type: 'log' as const,
-    interval: 0,
-    timeout: 0,
-    isActive: true,
-    status: 'healthy',
-    uptime: 99.8,
-    responseTime: 0,
-    tags: ['prod'],
-    scheduleType: 'interval' as const,
-    logLevelFilter: ['error', 'warn'],
-  },
-  {
-    id: '2',
-    name: 'Auth Service',
-    type: 'log' as const,
-    interval: 0,
-    timeout: 0,
-    isActive: true,
-    status: 'unhealthy',
-    uptime: 98.5,
-    responseTime: 0,
-    tags: ['prod'],
-    scheduleType: 'interval' as const,
-    logLevelFilter: ['error'],
-  },
-  {
-    id: '5',
-    name: 'Payment Worker',
-    type: 'log' as const,
-    interval: 0,
-    timeout: 0,
-    isActive: true,
-    status: 'healthy',
-    uptime: 99.9,
-    responseTime: 0,
-    tags: ['prod'],
-    scheduleType: 'interval' as const,
-    logLevelFilter: ['error', 'warn', 'info', 'debug'],
-  },
-];
-
-// ?? Metrics ???????????????????????????????????????????????????????????????????
-
-const mockMetricsSummary: MetricsSummary = {
-  serviceId: '1',
-  totalChecks: 45200,
-  successfulChecks: 45191,
-  failedChecks: 9,
-  uptime: 99.98,
-  avgResponseTime: 124,
-  minResponseTime: 18,
-  maxResponseTime: 890,
-};
-
-const mockMetrics: Metric[] = mockResponseTimeChartData.map((rt, i) => ({
-  id: String(i + 1),
-  serviceId: '1',
-  status: 'success' as const,
-  responseTime: rt * 10,
-  statusCode: 200,
-  checkedAt: new Date(Date.now() - (23 - i) * 3600_000).toISOString(),
-}));
-
-const mockUptimeData: UptimeData = {
-  percentage: 99.98,
-  days: Array.from({ length: 90 }, (_, i) => ({
-    date: new Date(Date.now() - (89 - i) * 86_400_000).toISOString().slice(0, 10),
-    status: i === 42 || i === 77 ? ('partial' as const) : ('up' as const),
-    uptime: i === 42 || i === 77 ? 94 : 100,
-  })),
-};
-
-// ?? Logs ??????????????????????????????????????????????????????????????????????
-
-function filterLogs(endpoint: string, serviceId?: string): LogEntry[] {
-  const [, qs] = endpoint.split('?');
-  const params = new URLSearchParams(qs ?? '');
-  const level = params.get('level') ?? '';
-  const limit = parseInt(params.get('limit') ?? '200', 10);
-
-  let logs = allMockLogs;
-  if (serviceId) logs = logs.filter(l => l.serviceId === serviceId);
-  if (level && level !== 'all') logs = logs.filter(l => l.level === level);
-  return logs.slice(0, limit);
-}
-
-// ?? Incidents ?????????????????????????????????????????????????????????????????
-
-const mockIncidentList: Incident[] = [
-  {
-    id: '1',
-    serviceId: '2',
-    serviceName: 'Auth Service',
-    type: 'degraded',
-    message: 'Response time exceeded threshold',
-    startedAt: new Date(Date.now() - 3 * 3600_000).toISOString(),
-    resolvedAt: new Date(Date.now() - 2 * 3600_000).toISOString(),
-  },
-];
-
 // ?? Notifications ?????????????????????????????????????????????????????????????
-
-// ?? Hosts ?????????????????????????????????????????????????????????????????????
-
-const mockHosts: Host[] = mockResources.map((r) => ({
-  id: r.id,
-  name: r.name,
-  type: 'remote' as const,
-  resourceCategory: r.type,
-  ip: r.ip,
-  group: r.cluster,
-  isActive: r.status !== 'critical',
-  status: r.status === 'healthy' ? 'online' : r.status === 'critical' ? 'error' : 'unknown',
-  createdAt: new Date(Date.now() - 60 * 86_400_000).toISOString(),
-  updatedAt: new Date(Date.now() - 86_400_000).toISOString(),
-}));
-
-const mockHostSummaries = mockResources.map((r, index) => {
-  const isProblem = ['warning', 'critical', 'error'].includes(r.status);
-  const isRemote = index !== 1;
-  const lastSeenAt = new Date(Date.now() - (index + 1) * 90_000).toISOString();
-  return {
-    ...r,
-    connectionType: isRemote ? 'remote' : 'local',
-    isActive: r.status !== 'critical',
-    isRemote,
-    severity: r.status === 'critical' || r.status === 'error' ? 'critical' : r.status === 'warning' ? 'warning' : 'none',
-    statusReason: isProblem ? 'threshold_exceeded' : 'healthy',
-    lastSeenAt,
-    lastCollectedAt: lastSeenAt,
-    incidentSince: isProblem ? new Date(Date.now() - (index + 2) * 3600_000).toISOString() : undefined,
-    lastError: r.status === 'critical' ? 'Memory usage exceeded 90%' : undefined,
-    cpuUsage: r.status === 'critical' ? 91 : 42 + index * 7,
-    memoryUsage: r.status === 'warning' ? 83 : 51 + index * 6,
-    diskUsage: 38 + index * 5,
-    createdAt: new Date(Date.now() - 60 * 86_400_000).toISOString(),
-    updatedAt: new Date(Date.now() - 86_400_000).toISOString(),
-  };
-});
 
 // ?? System Resource Monitoring ????????????????????????????????????????????????
 
@@ -238,14 +58,6 @@ const mockSystemMetrics: SystemMetricsHistory = {
     netOut: 4 + Math.random() * 16,
   })),
 };
-
-const mockProcesses: SystemProcess[] = [
-  { pid: 1234, name: 'node', cpu: 12.4, memory: '512 MB', memoryBytes: 536_870_912, status: 'running' },
-  { pid: 5678, name: 'postgres', cpu: 8.1, memory: '1.2 GB', memoryBytes: 1_288_490_189, status: 'running' },
-  { pid: 9012, name: 'redis-server', cpu: 2.3, memory: '256 MB', memoryBytes: 268_435_456, status: 'running' },
-  { pid: 3456, name: 'nginx', cpu: 1.1, memory: '64 MB', memoryBytes: 67_108_864, status: 'running' },
-  { pid: 7890, name: 'prometheus', cpu: 3.7, memory: '384 MB', memoryBytes: 402_653_184, status: 'running' },
-];
 
 // ?? Alert Rules ???????????????????????????????????????????????????????????????
 
@@ -535,14 +347,14 @@ const mockTraceDetails: Record<string, TraceDetail> = {
 
 const mockAgents: ConnectedAgent[] = [
   {
-    id: 'agent_demo_01', name: 'prod-server', mode: 'connected', version: '0.3.0',
+    id: 'agent_demo_01', name: 'prod-server', version: '0.3.0',
     lastSeenAt: new Date(Date.now() - 15_000).toISOString(),
     createdAt: new Date(Date.now() - 30 * 86_400_000).toISOString(),
     updatedAt: new Date(Date.now() - 15_000).toISOString(),
   },
   {
     // Created but never connected — renders as a pending card in the main grid.
-    id: 'agent_demo_02', name: 'staging-api', mode: 'standalone',
+    id: 'agent_demo_02', name: 'staging-api',
     lastSeenAt: new Date(Date.now() - 90_000).toISOString(),
     createdAt: new Date(Date.now() - 90_000).toISOString(),
     updatedAt: new Date(Date.now() - 90_000).toISOString(),
@@ -748,7 +560,7 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
       } catch { /* keep default */ }
       const id = `agent_mock_${Date.now()}`;
       const now = new Date().toISOString();
-      mockAgents.push({ id, name, mode: 'standalone', lastSeenAt: now, createdAt: now, updatedAt: now });
+      mockAgents.push({ id, name, lastSeenAt: now, createdAt: now, updatedAt: now });
       return { id, name, apiKey: `evup_svc_${randomHex(24)}` } as T;
     }
     // POST /agents/:id/rotate-key — issue a fresh key
@@ -782,40 +594,6 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
     return null as T;
   }
 
-  if (endpoint === '/dashboard/timeline') return mockTimeline as T;
-
-  // /services/:id/metrics/summary
-  if (/^\/services\/[^/]+\/metrics\/summary$/.test(endpoint)) return mockMetricsSummary as T;
-  // /services/:id/metrics
-  if (/^\/services\/[^/]+\/metrics/.test(endpoint)) return mockMetrics as T;
-  // /services/:id/uptime
-  if (/^\/services\/[^/]+\/uptime/.test(endpoint)) return mockUptimeData as T;
-  // /services/:id/logs
-  const serviceLogsMatch = endpoint.match(/^\/services\/([^/?]+)\/logs/);
-  if (serviceLogsMatch) return filterLogs(endpoint, serviceLogsMatch[1]) as T;
-  // /services/:id/api-requests/:reqId
-  const apiReqDetailMatch = endpoint.match(/^\/services\/([^/]+)\/api-requests\/(\d+)/);
-  if (apiReqDetailMatch) {
-    const found = mockApiRequests.find(r => String(r.id) === apiReqDetailMatch[2]);
-    return (found ?? null) as T;
-  }
-  // /services/:id/api-requests
-  const apiReqListMatch = endpoint.match(/^\/services\/([^/]+)\/api-requests/);
-  if (apiReqListMatch) {
-    const [, qs] = endpoint.split('?');
-    const p = new URLSearchParams(qs ?? '');
-    let filtered = mockApiRequests.filter(r => r.serviceId === apiReqListMatch[1]);
-    const method = p.get('method');
-    if (method) filtered = filtered.filter(r => r.method === method.toUpperCase());
-    const minStatus = parseInt(p.get('minStatus') ?? '0');
-    const maxStatus = parseInt(p.get('maxStatus') ?? '0');
-    if (minStatus) filtered = filtered.filter(r => r.statusCode >= minStatus);
-    if (maxStatus) filtered = filtered.filter(r => r.statusCode <= maxStatus);
-    if (p.get('errorsOnly') === 'true') filtered = filtered.filter(r => r.isError);
-    const search = p.get('search') ?? '';
-    if (search) filtered = filtered.filter(r => r.path.includes(search) || (r.requestId ?? '').includes(search));
-    return { items: [...filtered], total: filtered.length } as unknown as T;
-  }
   // /traces/:traceId
   const traceMatch = endpoint.match(/^\/traces\/([^/?]+)/);
   if (traceMatch) {
@@ -827,13 +605,6 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
       apiRequests: [],
     }) as T;
   }
-  // /services/:id
-  if (/^\/services\/[^/?]+$/.test(endpoint)) return mockApiServices[0] as T;
-  // /services
-  if (endpoint.startsWith('/services')) return [...mockApiServices, ...mockLogServices] as T;
-
-  if (endpoint.startsWith('/logs')) return filterLogs(endpoint) as T;
-  if (endpoint.startsWith('/incidents')) return mockIncidentList as T;
 
   // /agents/services/all — must come before /agents/:id/services
   if (endpoint === '/agents/services/all') return mockAgentServicesFlat as T;
@@ -900,14 +671,6 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   if (/^\/hosts\/[^/]+\/system\/info$/.test(endpoint)) return mockSystemInfo as T;
   // /hosts/:id/system/metrics
   if (/^\/hosts\/[^/]+\/system\/metrics/.test(endpoint)) return mockSystemMetrics as T;
-  // /hosts/:id/system/processes
-  if (/^\/hosts\/[^/]+\/system\/processes/.test(endpoint)) return mockProcesses as T;
-  // /hosts/summary
-  if (endpoint === '/hosts/summary') return mockHostSummaries as T;
-  // /hosts/:id
-  if (/^\/hosts\/[^/]+$/.test(endpoint)) return mockHosts[0] as T;
-  // /hosts
-  if (endpoint.startsWith('/hosts')) return mockHosts as T;
 
   const alertRuleMatch = endpoint.match(/^\/alert-rules\/([^/?]+)$/);
   if (alertRuleMatch) {

@@ -1,3 +1,7 @@
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { formatDistanceToNow } from 'date-fns';
+import { ko, enUS } from 'date-fns/locale';
 import { MaterialIcon } from '../../../components/common';
 import type { ConnectedAgent } from '../../../services/api';
 
@@ -7,17 +11,14 @@ interface Props {
   onViewKey: () => void;
 }
 
-function relativeTime(iso: string): string {
-  const secs = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (secs < 60) return '방금';
-  if (secs < 3600) return `${Math.floor(secs / 60)}분 전`;
-  if (secs < 86400) return `${Math.floor(secs / 3600)}시간 전`;
-  return `${Math.floor(secs / 86400)}일 전`;
-}
-
 // Card for an agent that's been created but hasn't reported any service yet —
 // gives the "it was created" feeling while making clear no data has arrived.
 export function PendingServiceCard({ agent, onDelete, onViewKey }: Props) {
+  const { i18n } = useTranslation('common');
+  const dateLocale = useMemo(
+    () => (i18n.language.startsWith('ko') ? ko : enUS),
+    [i18n.language],
+  );
   return (
     <div className="bg-bg-surface border border-ui-border rounded-xl p-4 flex flex-col gap-3">
       {/* Header: status + name */}
@@ -51,7 +52,7 @@ export function PendingServiceCard({ agent, onDelete, onViewKey }: Props) {
       <div className="flex items-center justify-between gap-2 text-xs text-text-dim">
         <span className="flex items-center gap-1 truncate">
           <MaterialIcon name="schedule" className="text-sm shrink-0" />
-          <span className="truncate">생성 {relativeTime(agent.createdAt)}</span>
+          <span className="truncate">생성 {formatDistanceToNow(new Date(agent.createdAt), { addSuffix: true, locale: dateLocale })}</span>
         </span>
         <div className="flex items-center gap-0.5 -mr-1.5">
           <button

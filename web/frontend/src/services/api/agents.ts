@@ -1,10 +1,9 @@
 import type { LogEntry, ApiRequest } from './services';
-import type { RequestFn } from './base';
+import { request } from './base';
 
 export interface ConnectedAgent {
   id: string;
   name: string;
-  mode: string;
   version?: string;
   lastSeenAt: string;
   createdAt: string;
@@ -151,136 +150,134 @@ export interface OtelServiceMetric {
   value: number;
 }
 
-export function createAgentsApi(request: RequestFn) {
-  return {
-    createAgent: (name: string) =>
-      request<{ id: string; name: string; apiKey: string }>('/agents', {
-        method: 'POST',
-        body: JSON.stringify({ name }),
-      }),
-    deleteAgent: (agentId: string) =>
-      request<void>(`/agents/${agentId}`, { method: 'DELETE' }),
-    // Reveal the full API key. available=false for projects created before key storage existed.
-    getAgentKey: (agentId: string) =>
-      request<{ apiKey: string; available: boolean }>(`/agents/${agentId}/key`),
-    rotateAgentKey: (agentId: string) =>
-      request<{ apiKey: string }>(`/agents/${agentId}/rotate-key`, { method: 'POST' }),
-    getAgents: () => request<ConnectedAgent[]>('/agents'),
-    // Home project cards: per-agent KPI rollup in one call (no N+1).
-    getAgentsOverview: () => request<AgentOverview[]>('/agents/overview'),
-    getAgentServices: (agentId: string) => request<AgentServiceSnapshot[]>(`/agents/${agentId}/services`),
-    getAgentEvents: (agentId: string, limit = 100) =>
-      request<AgentEvent[]>(`/agents/${agentId}/events?limit=${limit}`),
-    // Healthcheck page — Agent-based
-    getAllAgentServicesFlat: () => request<AgentServiceFlat[]>('/agents/services/all'),
-    getAgentServiceHistory: (agentId: string, key: string, range = '24h') =>
-      request<ServiceHistoryPoint[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/history?range=${range}`),
-    getAgentServiceUptime: (agentId: string, key: string, days = 90) =>
-      request<ServiceUptimeDay[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/uptime?days=${days}`),
-    getAgentServiceKeyEvents: (agentId: string, key: string, limit = 50) =>
-      request<AgentEvent[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/events?limit=${limit}`),
-    getAgentServiceLogs: (
-      agentId: string, key: string,
-      params?: { level?: string; search?: string; from?: string; to?: string; limit?: number; offset?: number },
-    ) => {
-      const p = new URLSearchParams();
-      p.set('limit', String(params?.limit ?? 100));
-      if (params?.offset) p.set('offset', String(params.offset));
-      if (params?.level) p.set('level', params.level);
-      if (params?.search) p.set('search', params.search);
-      if (params?.from) p.set('from', params.from);
-      if (params?.to) p.set('to', params.to);
-      return request<{ data: LogEntry[]; total: number }>(`/agents/${agentId}/services/${encodeURIComponent(key)}/logs?${p}`);
-    },
-    // Per-level log counts bucketed over time (logs-tab volume histogram).
-    getAgentServiceLogHistogram: (
-      agentId: string, key: string,
-      params?: { level?: string; search?: string; from?: string; to?: string; bucketMins?: number },
-    ) => {
-      const p = new URLSearchParams();
-      if (params?.level) p.set('level', params.level);
-      if (params?.search) p.set('search', params.search);
-      if (params?.from) p.set('from', params.from);
-      if (params?.to) p.set('to', params.to);
-      if (params?.bucketMins) p.set('bucketMins', String(params.bucketMins));
-      return request<LogHistogramBucket[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/log-histogram?${p}`);
-    },
-    getAgentServiceRequests: (
-      agentId: string, key: string,
-      params?: { search?: string; errorsOnly?: boolean; from?: string; to?: string; limit?: number; offset?: number },
-    ) => {
-      const p = new URLSearchParams();
-      p.set('limit', String(params?.limit ?? 100));
-      if (params?.offset) p.set('offset', String(params.offset));
-      if (params?.search) p.set('search', params.search);
-      if (params?.errorsOnly) p.set('errorsOnly', 'true');
-      if (params?.from) p.set('from', params.from);
-      if (params?.to) p.set('to', params.to);
-      return request<{ data: ApiRequest[]; total: number }>(`/agents/${agentId}/services/${encodeURIComponent(key)}/requests?${p}`);
-    },
-    getAgentServiceRequestStats: (
-      agentId: string, key: string,
-      params?: { from?: string; to?: string; bucketMins?: number },
-    ) => {
-      const p = new URLSearchParams();
-      if (params?.from) p.set('from', params.from);
-      if (params?.to) p.set('to', params.to);
-      if (params?.bucketMins) p.set('bucketMins', String(params.bucketMins));
-      return request<ApiRequestStatBucket[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/request-stats?${p}`);
-    },
-    // Project-level Requests trend: rolls up all of an agent's services.
-    getAgentRequestStats: (
-      agentId: string,
-      params?: { from?: string; to?: string; bucketMins?: number },
-    ) => {
-      const p = new URLSearchParams();
-      if (params?.from) p.set('from', params.from);
-      if (params?.to) p.set('to', params.to);
-      if (params?.bucketMins) p.set('bucketMins', String(params.bucketMins));
-      return request<ApiRequestStatBucket[]>(`/agents/${agentId}/request-stats?${p}`);
-    },
-    // Status-class distribution + top 5xx endpoint. Omit key for the agent rollup.
-    getRequestStatusSummary: (
-      agentId: string, key?: string,
-      params?: { from?: string; to?: string },
-    ) => {
-      const p = new URLSearchParams();
-      if (params?.from) p.set('from', params.from);
-      if (params?.to) p.set('to', params.to);
-      const base = key
-        ? `/agents/${agentId}/services/${encodeURIComponent(key)}/request-status-summary`
-        : `/agents/${agentId}/request-status-summary`;
-      return request<ApiRequestStatusSummary>(`${base}?${p}`);
-    },
-    // Project-level uptime rollup across all of the agent's services.
-    getAgentUptime: (agentId: string, days = 90) =>
-      request<ServiceUptimeDay[]>(`/agents/${agentId}/uptime?days=${days}`),
-    // Unhealthy episodes derived from service history, newest first.
-    getAgentIncidents: (agentId: string, days = 30, limit = 20) =>
-      request<AgentIncident[]>(`/agents/${agentId}/incidents?days=${days}&limit=${limit}`),
-    // Each service's representative metric (latest value) for the project cards.
-    getAgentServiceMetrics: (agentId: string) =>
-      request<OtelServiceMetric[]>(`/agents/${agentId}/service-metrics`),
-    getAgentServiceOtelMetricNames: (agentId: string, key: string) =>
-      request<OtelMetricName[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/otel-metrics`),
-    getAgentServiceOtelMetricPoints: (
-      agentId: string, key: string,
-      params: { name: string; from?: string; to?: string; limit?: number },
-    ) => {
-      const p = new URLSearchParams();
-      p.set('name', params.name);
-      if (params.from) p.set('from', params.from);
-      if (params.to) p.set('to', params.to);
-      if (params.limit) p.set('limit', String(params.limit));
-      return request<OtelMetricPoint[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/otel-metrics/points?${p}`);
-    },
-    // Per-service OTLP ingest filter: which log levels are stored. [] = accept all.
-    getAgentServiceLogFilter: (agentId: string, key: string) =>
-      request<{ levels: string[] }>(`/agents/${agentId}/services/${encodeURIComponent(key)}/log-filter`),
-    setAgentServiceLogFilter: (agentId: string, key: string, levels: string[]) =>
-      request<{ levels: string[] }>(`/agents/${agentId}/services/${encodeURIComponent(key)}/log-filter`, {
-        method: 'PUT',
-        body: JSON.stringify({ levels }),
-      }),
-  };
-}
+export const agentsApi = {
+  createAgent: (name: string) =>
+    request<{ id: string; name: string; apiKey: string }>('/agents', {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    }),
+  deleteAgent: (agentId: string) =>
+    request<void>(`/agents/${agentId}`, { method: 'DELETE' }),
+  // Reveal the full API key. available=false for projects created before key storage existed.
+  getAgentKey: (agentId: string) =>
+    request<{ apiKey: string; available: boolean }>(`/agents/${agentId}/key`),
+  rotateAgentKey: (agentId: string) =>
+    request<{ apiKey: string }>(`/agents/${agentId}/rotate-key`, { method: 'POST' }),
+  getAgents: () => request<ConnectedAgent[]>('/agents'),
+  // Home project cards: per-agent KPI rollup in one call (no N+1).
+  getAgentsOverview: () => request<AgentOverview[]>('/agents/overview'),
+  getAgentServices: (agentId: string) => request<AgentServiceSnapshot[]>(`/agents/${agentId}/services`),
+  getAgentEvents: (agentId: string, limit = 100) =>
+    request<AgentEvent[]>(`/agents/${agentId}/events?limit=${limit}`),
+  // Healthcheck page — Agent-based
+  getAllAgentServicesFlat: () => request<AgentServiceFlat[]>('/agents/services/all'),
+  getAgentServiceHistory: (agentId: string, key: string, range = '24h') =>
+    request<ServiceHistoryPoint[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/history?range=${range}`),
+  getAgentServiceUptime: (agentId: string, key: string, days = 90) =>
+    request<ServiceUptimeDay[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/uptime?days=${days}`),
+  getAgentServiceKeyEvents: (agentId: string, key: string, limit = 50) =>
+    request<AgentEvent[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/events?limit=${limit}`),
+  getAgentServiceLogs: (
+    agentId: string, key: string,
+    params?: { level?: string; search?: string; from?: string; to?: string; limit?: number; offset?: number },
+  ) => {
+    const p = new URLSearchParams();
+    p.set('limit', String(params?.limit ?? 100));
+    if (params?.offset) p.set('offset', String(params.offset));
+    if (params?.level) p.set('level', params.level);
+    if (params?.search) p.set('search', params.search);
+    if (params?.from) p.set('from', params.from);
+    if (params?.to) p.set('to', params.to);
+    return request<{ data: LogEntry[]; total: number }>(`/agents/${agentId}/services/${encodeURIComponent(key)}/logs?${p}`);
+  },
+  // Per-level log counts bucketed over time (logs-tab volume histogram).
+  getAgentServiceLogHistogram: (
+    agentId: string, key: string,
+    params?: { level?: string; search?: string; from?: string; to?: string; bucketMins?: number },
+  ) => {
+    const p = new URLSearchParams();
+    if (params?.level) p.set('level', params.level);
+    if (params?.search) p.set('search', params.search);
+    if (params?.from) p.set('from', params.from);
+    if (params?.to) p.set('to', params.to);
+    if (params?.bucketMins) p.set('bucketMins', String(params.bucketMins));
+    return request<LogHistogramBucket[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/log-histogram?${p}`);
+  },
+  getAgentServiceRequests: (
+    agentId: string, key: string,
+    params?: { search?: string; errorsOnly?: boolean; from?: string; to?: string; limit?: number; offset?: number },
+  ) => {
+    const p = new URLSearchParams();
+    p.set('limit', String(params?.limit ?? 100));
+    if (params?.offset) p.set('offset', String(params.offset));
+    if (params?.search) p.set('search', params.search);
+    if (params?.errorsOnly) p.set('errorsOnly', 'true');
+    if (params?.from) p.set('from', params.from);
+    if (params?.to) p.set('to', params.to);
+    return request<{ data: ApiRequest[]; total: number }>(`/agents/${agentId}/services/${encodeURIComponent(key)}/requests?${p}`);
+  },
+  getAgentServiceRequestStats: (
+    agentId: string, key: string,
+    params?: { from?: string; to?: string; bucketMins?: number },
+  ) => {
+    const p = new URLSearchParams();
+    if (params?.from) p.set('from', params.from);
+    if (params?.to) p.set('to', params.to);
+    if (params?.bucketMins) p.set('bucketMins', String(params.bucketMins));
+    return request<ApiRequestStatBucket[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/request-stats?${p}`);
+  },
+  // Project-level Requests trend: rolls up all of an agent's services.
+  getAgentRequestStats: (
+    agentId: string,
+    params?: { from?: string; to?: string; bucketMins?: number },
+  ) => {
+    const p = new URLSearchParams();
+    if (params?.from) p.set('from', params.from);
+    if (params?.to) p.set('to', params.to);
+    if (params?.bucketMins) p.set('bucketMins', String(params.bucketMins));
+    return request<ApiRequestStatBucket[]>(`/agents/${agentId}/request-stats?${p}`);
+  },
+  // Status-class distribution + top 5xx endpoint. Omit key for the agent rollup.
+  getRequestStatusSummary: (
+    agentId: string, key?: string,
+    params?: { from?: string; to?: string },
+  ) => {
+    const p = new URLSearchParams();
+    if (params?.from) p.set('from', params.from);
+    if (params?.to) p.set('to', params.to);
+    const base = key
+      ? `/agents/${agentId}/services/${encodeURIComponent(key)}/request-status-summary`
+      : `/agents/${agentId}/request-status-summary`;
+    return request<ApiRequestStatusSummary>(`${base}?${p}`);
+  },
+  // Project-level uptime rollup across all of the agent's services.
+  getAgentUptime: (agentId: string, days = 90) =>
+    request<ServiceUptimeDay[]>(`/agents/${agentId}/uptime?days=${days}`),
+  // Unhealthy episodes derived from service history, newest first.
+  getAgentIncidents: (agentId: string, days = 30, limit = 20) =>
+    request<AgentIncident[]>(`/agents/${agentId}/incidents?days=${days}&limit=${limit}`),
+  // Each service's representative metric (latest value) for the project cards.
+  getAgentServiceMetrics: (agentId: string) =>
+    request<OtelServiceMetric[]>(`/agents/${agentId}/service-metrics`),
+  getAgentServiceOtelMetricNames: (agentId: string, key: string) =>
+    request<OtelMetricName[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/otel-metrics`),
+  getAgentServiceOtelMetricPoints: (
+    agentId: string, key: string,
+    params: { name: string; from?: string; to?: string; limit?: number },
+  ) => {
+    const p = new URLSearchParams();
+    p.set('name', params.name);
+    if (params.from) p.set('from', params.from);
+    if (params.to) p.set('to', params.to);
+    if (params.limit) p.set('limit', String(params.limit));
+    return request<OtelMetricPoint[]>(`/agents/${agentId}/services/${encodeURIComponent(key)}/otel-metrics/points?${p}`);
+  },
+  // Per-service OTLP ingest filter: which log levels are stored. [] = accept all.
+  getAgentServiceLogFilter: (agentId: string, key: string) =>
+    request<{ levels: string[] }>(`/agents/${agentId}/services/${encodeURIComponent(key)}/log-filter`),
+  setAgentServiceLogFilter: (agentId: string, key: string, levels: string[]) =>
+    request<{ levels: string[] }>(`/agents/${agentId}/services/${encodeURIComponent(key)}/log-filter`, {
+      method: 'PUT',
+      body: JSON.stringify({ levels }),
+    }),
+};

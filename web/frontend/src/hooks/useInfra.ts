@@ -1,13 +1,7 @@
 import { api } from '../services/api';
 import { useDataFetch } from './useDataFetch';
-import { mockGauges, mockCharts as mockTrendCharts, mockProcesses, mockHost } from '../mocks/infra';
-import { mockResources } from '../mocks/infra/resourceList.mock';
-import {
-  hostsToResources,
-  systemInfoToGauges,
-  historyToCharts,
-  systemProcessesToProcesses,
-} from '../utils/systemTransform';
+import { mockGauges, mockCharts as mockTrendCharts } from '../mocks/infra';
+import { systemInfoToGauges, historyToCharts } from '../utils/systemTransform';
 
 export function useMonitoringGauges(hostId: string, refreshKey = 0) {
   return useDataFetch(
@@ -25,14 +19,6 @@ export function useMonitoringGauges(hostId: string, refreshKey = 0) {
   );
 }
 
-export function useSystemInfo(hostId: string, refreshKey = 0) {
-  return useDataFetch(
-    null,
-    async () => api.getSystemInfo(hostId),
-    [hostId, refreshKey]
-  );
-}
-
 export function useMonitoringTrends(hostId: string, range: string = '6h', refreshKey = 0) {
   return useDataFetch(
     mockTrendCharts,
@@ -45,30 +31,4 @@ export function useMonitoringTrends(hostId: string, range: string = '6h', refres
     },
     [hostId, range, refreshKey]
   );
-}
-
-export function useMonitoringProcesses(hostId: string, refreshKey = 0) {
-  return useDataFetch(
-    mockProcesses,
-    async () => {
-      const procs = await api.getSystemProcesses(hostId, 20, 'cpu');
-      return systemProcessesToProcesses(procs);
-    },
-    [hostId, refreshKey]
-  );
-}
-
-export function useMonitoringResources() {
-  return useDataFetch(mockResources, async () => {
-    try {
-      return await api.getHostSummaries();
-    } catch {
-      const hosts = await api.getHosts();
-      return hostsToResources(hosts);
-    }
-  });
-}
-
-export function useHost(hostId: string) {
-  return useDataFetch(mockHost, async () => api.getHostById(hostId), [hostId]);
 }

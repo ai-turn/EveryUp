@@ -1,34 +1,6 @@
-import type { RequestFn } from './base';
-import type { Resource } from '../../types/infra';
+import { request } from './base';
 
 // --- Types ---
-
-export interface Host {
-  id: string;
-  name: string;
-  type: 'local' | 'remote';
-  resourceCategory?: 'server' | 'database' | 'container';
-  ip: string;
-  port?: number;
-  group: string;
-  isActive: boolean;
-  status: 'online' | 'offline' | 'unknown' | 'error';
-  description?: string;
-  lastError?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateHostData {
-  id: string;
-  name: string;
-  type: 'local' | 'remote';
-  resourceCategory?: 'server' | 'database' | 'container';
-  ip: string;
-  port?: number;
-  group?: string;
-  description?: string;
-}
 
 export interface SystemInfo {
   hostname: string;
@@ -59,50 +31,15 @@ export interface SystemMetricsHistory {
   points: SystemMetricPoint[];
 }
 
-export interface SystemProcess {
-  pid: number;
-  name: string;
-  cpu: number;
-  memory: string;
-  memoryBytes: number;
-  status: string;
-}
-
 // --- API ---
 
-export function createHostsApi(request: RequestFn) {
-  return {
-    // Hosts CRUD
-    getHosts: async () => {
-      const data = await request<Host[]>('/hosts');
-      return data || [];
-    },
+export const hostsApi = {
+  // System Resource Monitoring (host-scoped)
+  getSystemInfo: (hostId: string) =>
+    request<SystemInfo>(`/hosts/${hostId}/system/info`),
 
-    getHostSummaries: async () => {
-      const data = await request<Resource[]>('/hosts/summary');
-      return data || [];
-    },
-
-    getHostById: (id: string) =>
-      request<Host>(`/hosts/${id}`),
-
-    // System Resource Monitoring (host-scoped)
-    getSystemInfo: (hostId: string) =>
-      request<SystemInfo>(`/hosts/${hostId}/system/info`),
-
-    getSystemMetricsHistory: (hostId: string, range?: string) => {
-      const query = range ? `?range=${range}` : '';
-      return request<SystemMetricsHistory>(`/hosts/${hostId}/system/metrics${query}`);
-    },
-
-    getSystemProcesses: async (hostId: string, limit?: number, sort?: string) => {
-      const params = new URLSearchParams();
-      if (limit) params.set('limit', String(limit));
-      if (sort) params.set('sort', sort);
-      const query = params.toString() ? `?${params}` : '';
-      const data = await request<SystemProcess[]>(`/hosts/${hostId}/system/processes${query}`);
-      return data || [];
-    },
-
-  };
-}
+  getSystemMetricsHistory: (hostId: string, range?: string) => {
+    const query = range ? `?range=${range}` : '';
+    return request<SystemMetricsHistory>(`/hosts/${hostId}/system/metrics${query}`);
+  },
+};

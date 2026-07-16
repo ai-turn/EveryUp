@@ -1,4 +1,4 @@
-import type { RequestFn } from './base';
+import { request } from './base';
 
 // --- Alert Rule Types ---
 
@@ -168,120 +168,118 @@ export interface AppSettings {
 
 // --- API ---
 
-export function createAlertsApi(request: RequestFn) {
-  return {
-    // Alert Rules
-    getAlertRules: async () => {
-      const data = await request<AlertRule[]>('/alert-rules');
-      return data || [];
-    },
+export const alertsApi = {
+  // Alert Rules
+  getAlertRules: async () => {
+    const data = await request<AlertRule[]>('/alert-rules');
+    return data || [];
+  },
 
-    getAlertRuleById: (id: string) =>
-      request<AlertRule>(`/alert-rules/${id}`),
+  getAlertRuleById: (id: string) =>
+    request<AlertRule>(`/alert-rules/${id}`),
 
-    createAlertRule: (data: CreateAlertRuleData) =>
-      request<AlertRule>('/alert-rules', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
+  createAlertRule: (data: CreateAlertRuleData) =>
+    request<AlertRule>('/alert-rules', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 
-    updateAlertRule: (id: string, data: UpdateAlertRuleData) =>
-      request<AlertRule>(`/alert-rules/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      }),
+  updateAlertRule: (id: string, data: UpdateAlertRuleData) =>
+    request<AlertRule>(`/alert-rules/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
 
-    deleteAlertRule: (id: string) =>
-      request<void>(`/alert-rules/${id}`, { method: 'DELETE' }),
+  deleteAlertRule: (id: string) =>
+    request<void>(`/alert-rules/${id}`, { method: 'DELETE' }),
 
-    toggleAlertRule: (id: string) =>
-      request<{ id: string; isEnabled: boolean }>(`/alert-rules/${id}/toggle`, {
-        method: 'POST',
-      }),
+  toggleAlertRule: (id: string) =>
+    request<{ id: string; isEnabled: boolean }>(`/alert-rules/${id}/toggle`, {
+      method: 'POST',
+    }),
 
-    // Notification Channels
-    getNotificationChannels: async () => {
-      const data = await request<NotificationChannel[]>('/notifications');
-      return data || [];
-    },
+  // Notification Channels
+  getNotificationChannels: async () => {
+    const data = await request<NotificationChannel[]>('/notifications');
+    return data || [];
+  },
 
-    getNotificationChannelHealth: async (days = 7) => {
-      const data = await request<NotificationChannelHealth[]>(
-        `/notifications/health?days=${days}`,
-      );
-      return data || [];
-    },
+  getNotificationChannelHealth: async (days = 7) => {
+    const data = await request<NotificationChannelHealth[]>(
+      `/notifications/health?days=${days}`,
+    );
+    return data || [];
+  },
 
-    createNotificationChannel: (data: CreateNotificationChannelData) =>
-      request<NotificationChannel>('/notifications', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
+  createNotificationChannel: (data: CreateNotificationChannelData) =>
+    request<NotificationChannel>('/notifications', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 
-    updateNotificationChannel: (id: string, data: CreateNotificationChannelData) =>
-      request<NotificationChannel>(`/notifications/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      }),
+  updateNotificationChannel: (id: string, data: CreateNotificationChannelData) =>
+    request<NotificationChannel>(`/notifications/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
 
-    toggleNotificationChannel: (id: string) =>
-      request<{ id: string; isEnabled: boolean }>(`/notifications/${id}/toggle`, {
-        method: 'POST',
-      }),
+  toggleNotificationChannel: (id: string) =>
+    request<{ id: string; isEnabled: boolean }>(`/notifications/${id}/toggle`, {
+      method: 'POST',
+    }),
 
-    testNotificationChannel: (id: string) =>
-      request<{ message: string }>(`/notifications/${id}/test`, {
-        method: 'POST',
-      }),
+  testNotificationChannel: (id: string) =>
+    request<{ message: string }>(`/notifications/${id}/test`, {
+      method: 'POST',
+    }),
 
-    testNotificationChannelConfig: (data: CreateNotificationChannelData) =>
-      request<{ message: string }>('/notifications/test', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
+  testNotificationChannelConfig: (data: CreateNotificationChannelData) =>
+    request<{ message: string }>('/notifications/test', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 
-    deleteNotificationChannel: (id: string) =>
-      request<void>(`/notifications/${id}`, { method: 'DELETE' }),
+  deleteNotificationChannel: (id: string) =>
+    request<void>(`/notifications/${id}`, { method: 'DELETE' }),
 
-    // Notification History
-    getNotificationHistory: (filter?: NotificationHistoryFilter) => {
-      const params = new URLSearchParams();
-      if (filter?.channel_id) params.append('channel_id', filter.channel_id);
-      if (filter?.alert_type) params.append('alert_type', filter.alert_type);
-      if (filter?.status) params.append('status', filter.status);
-      if (filter?.q) params.append('q', filter.q);
-      if (filter?.from) params.append('from', filter.from);
-      if (filter?.to) params.append('to', filter.to);
-      if (filter?.limit) params.append('limit', filter.limit.toString());
-      if (filter?.offset) params.append('offset', filter.offset.toString());
+  // Notification History
+  getNotificationHistory: (filter?: NotificationHistoryFilter) => {
+    const params = new URLSearchParams();
+    if (filter?.channel_id) params.append('channel_id', filter.channel_id);
+    if (filter?.alert_type) params.append('alert_type', filter.alert_type);
+    if (filter?.status) params.append('status', filter.status);
+    if (filter?.q) params.append('q', filter.q);
+    if (filter?.from) params.append('from', filter.from);
+    if (filter?.to) params.append('to', filter.to);
+    if (filter?.limit) params.append('limit', filter.limit.toString());
+    if (filter?.offset) params.append('offset', filter.offset.toString());
 
-      const queryString = params.toString();
-      const endpoint = queryString
-        ? `/notification-history?${queryString}`
-        : '/notification-history';
-      return request<NotificationHistoryResponse>(endpoint);
-    },
+    const queryString = params.toString();
+    const endpoint = queryString
+      ? `/notification-history?${queryString}`
+      : '/notification-history';
+    return request<NotificationHistoryResponse>(endpoint);
+  },
 
-    getNotificationHistoryStats: (days: number = 7) =>
-      request<NotificationStats>(`/notification-history/stats?days=${days}`),
+  getNotificationHistoryStats: (days: number = 7) =>
+    request<NotificationStats>(`/notification-history/stats?days=${days}`),
 
-    getNotificationHistoryById: (id: number) =>
-      request<NotificationHistory>(`/notification-history/${id}`),
+  getNotificationHistoryById: (id: number) =>
+    request<NotificationHistory>(`/notification-history/${id}`),
 
-    cleanupNotificationHistory: (days: number = 30) =>
-      request<{ deleted: number }>(`/notification-history/cleanup?days=${days}`, {
-        method: 'DELETE',
-      }),
+  cleanupNotificationHistory: (days: number = 30) =>
+    request<{ deleted: number }>(`/notification-history/cleanup?days=${days}`, {
+      method: 'DELETE',
+    }),
 
-    // Settings
-    getSettings: () => request<AppSettings>('/settings'),
+  // Settings
+  getSettings: () => request<AppSettings>('/settings'),
 
-    updateSettings: (settings: Partial<AppSettings>) =>
-      request<AppSettings>('/settings', {
-        method: 'PUT',
-        body: JSON.stringify(settings),
-      }),
+  updateSettings: (settings: Partial<AppSettings>) =>
+    request<AppSettings>('/settings', {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+    }),
 
-    resetAccount: () => request<void>('/auth/reset', { method: 'POST' }),
-  };
-}
+  resetAccount: () => request<void>('/auth/reset', { method: 'POST' }),
+};

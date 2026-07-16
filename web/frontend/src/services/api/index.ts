@@ -1,64 +1,38 @@
-import { createRequestFn } from './base';
-import { createDashboardApi } from './dashboard';
-import { createServicesApi } from './services';
-import { createHostsApi } from './hosts';
-import { createAlertsApi } from './alerts';
-import { createAgentsApi } from './agents';
-
-const request = createRequestFn();
+import { servicesApi } from './services';
+import { hostsApi } from './hosts';
+import { alertsApi } from './alerts';
+import { agentsApi } from './agents';
 
 /**
  * 중앙 API 클라이언트 싱글톤.
  * 도메인별 구현은 각 파일을 참조:
- *   - dashboard.ts  : getDashboardTimeline
- *   - services.ts   : services CRUD, metrics, logs, incidents, health
- *   - hosts.ts      : hosts CRUD, system info
+ *   - services.ts   : traces, audit events
+ *   - hosts.ts      : system info, metrics history
  *   - alerts.ts     : alert rules, notification channels, history, settings
  */
 export const api = {
-  ...createDashboardApi(request),
-  ...createServicesApi(request),
-  ...createHostsApi(request),
-  ...createAlertsApi(request),
-  ...createAgentsApi(request),
+  ...servicesApi,
+  ...hostsApi,
+  ...alertsApi,
+  ...agentsApi,
 };
 
 // Re-export all types — 기존 import 경로 유지
-export type { ApiResponse, RequestFn } from './base';
-export type { TimelineItem } from './dashboard';
-export { LOG_LEVELS } from './services';
+export type { ApiResponse } from './base';
 export type {
-  Service,
-  CheckEntry,
-  HealthCheckKpiSummary,
-  Metric,
-  MetricsSummary,
-  MetricsParams,
-  UptimeData,
-  UptimeDay,
-  UptimeParams,
-  FailureWithService,
-  ServiceUptimeSummary,
   LogEntry,
   LogLevel,
-  LogsParams,
   LinkedRequest,
-  Incident,
-  HealthStatus,
   ApiRequest,
-  ApiRequestListParams,
-  ApiRequestListResponse,
   TraceSpan,
   TraceSpanEvent,
   TraceDetail,
   AuditEvent,
 } from './services';
 export type {
-  Host,
   SystemInfo,
   SystemMetricPoint,
   SystemMetricsHistory,
-  SystemProcess,
 } from './hosts';
 export type {
   ConnectedAgent,
