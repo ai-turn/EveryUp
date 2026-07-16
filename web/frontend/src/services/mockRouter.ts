@@ -5,7 +5,7 @@
  */
 
 import { mockLogEntries as allMockLogs, mockTraceIds } from '../mocks/logs/logs.mock';
-import { mockGauges } from '../mocks/infra';
+import { mockGauges } from '../mocks/infra/resources.mock';
 import { mockChannels } from '../mocks/alerts/channels.mock';
 
 import type {

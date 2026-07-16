@@ -56,6 +56,7 @@ export function PendingServiceCard({ agent, onDelete, onViewKey }: Props) {
         </span>
         <div className="flex items-center gap-0.5 -mr-1.5">
           <button
+            type="button"
             onClick={onViewKey}
             title="API 키 보기"
             className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
@@ -63,6 +64,7 @@ export function PendingServiceCard({ agent, onDelete, onViewKey }: Props) {
             <MaterialIcon name="key" className="text-base" />
           </button>
           <button
+            type="button"
             onClick={() => onDelete(agent.id)}
             title="프로젝트 비활성화"
             className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"

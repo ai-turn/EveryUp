@@ -1,6 +1,6 @@
 import type { SystemInfo, SystemMetricsHistory } from '../services/api';
 import type { GaugeData, ChartData, Resource } from '../types/infra';
-import { SERIES_HEX } from '../components/charts';
+import { SERIES_HEX } from '../components/charts/chartTheme';
 
 // --- SystemInfo → Resource[] (legacy, kept for backward compatibility) ---
 export function systemInfoToResources(info: SystemInfo): Resource[] {
