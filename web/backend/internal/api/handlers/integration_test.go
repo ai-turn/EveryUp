@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -175,6 +177,25 @@ func (ts *testServer) setupAdmin(t *testing.T, username, password string) string
 // authHeader returns Authorization header key-value pair for use with doRequest.
 func authHeader(token string) []string {
 	return []string{"Authorization", "Bearer " + token}
+}
+
+func revealAgentAPIKey(t *testing.T, ts *testServer, agentID string, auth ...string) string {
+	t.Helper()
+	_, result := ts.doRequest(t, "GET", "/api/v1/agents/"+agentID+"/key", nil, auth...)
+	if !result.Success {
+		t.Fatalf("reveal agent key failed: %v", result.Error)
+	}
+	var revealed struct {
+		APIKey    string `json:"apiKey"`
+		Available bool   `json:"available"`
+	}
+	if err := json.Unmarshal(result.Data, &revealed); err != nil {
+		t.Fatalf("decode revealed agent key: %v", err)
+	}
+	if !revealed.Available || revealed.APIKey == "" {
+		t.Fatalf("agent key unavailable: %+v", revealed)
+	}
+	return revealed.APIKey
 }
 
 // ??? Auth Flow Tests ???????????????????????????????????????????????
@@ -627,28 +648,34 @@ func TestAlertRule_CRUD(t *testing.T) {
 
 // ─── Agent (Project) API Key Tests ──────────────────────────────────
 
-// TestAgentApiKey_RevealAndRotate verifies a project's API key can be revealed
-// after creation and rotated to a new key (unlimited re-issue).
+// TestAgentApiKey_RevealAndRotate verifies project creation exposes a one-time
+// installer code rather than the API key, while explicit reveal and rotation
+// remain available to an authenticated administrator.
 func TestAgentApiKey_RevealAndRotate(t *testing.T) {
 	ts := setupTestServer(t)
 	token := ts.setupAdmin(t, "admin", "testpass123")
 	auth := authHeader(token)
 
-	// Create a project — the API key is returned once here.
+	// Create a project — only a short-lived installer code is returned.
 	_, createResult := ts.doRequest(t, "POST", "/api/v1/agents", map[string]string{"name": "payments"}, auth...)
 	if !createResult.Success {
 		t.Fatalf("create failed: %v", createResult.Error)
 	}
 	var created struct {
-		ID     string `json:"id"`
-		APIKey string `json:"apiKey"`
+		ID        string    `json:"id"`
+		JoinCode  string    `json:"joinCode"`
+		ExpiresAt time.Time `json:"expiresAt"`
+		APIKey    string    `json:"apiKey"`
 	}
 	json.Unmarshal(createResult.Data, &created)
-	if created.ID == "" || created.APIKey == "" {
-		t.Fatalf("expected id and apiKey, got %+v", created)
+	if created.ID == "" || created.JoinCode == "" || created.ExpiresAt.IsZero() {
+		t.Fatalf("expected id and join code, got %+v", created)
+	}
+	if created.APIKey != "" {
+		t.Fatal("create response must not expose the long-lived API key")
 	}
 
-	// Reveal — must return the SAME key, marked available.
+	// Explicit reveal remains available to the authenticated administrator.
 	_, keyResult := ts.doRequest(t, "GET", "/api/v1/agents/"+created.ID+"/key", nil, auth...)
 	if !keyResult.Success {
 		t.Fatalf("get key failed: %v", keyResult.Error)
@@ -661,8 +688,73 @@ func TestAgentApiKey_RevealAndRotate(t *testing.T) {
 	if !revealed.Available {
 		t.Error("expected available=true for a freshly created project")
 	}
-	if revealed.APIKey != created.APIKey {
-		t.Errorf("revealed key = %q, want %q (must match created key)", revealed.APIKey, created.APIKey)
+	if revealed.APIKey == "" {
+		t.Error("expected a non-empty revealed key")
+	}
+	originalAPIKey := revealed.APIKey
+
+	// The bootstrap script is public but contains no project secret.
+	scriptResp, err := ts.App.Test(httptest.NewRequest("GET", "/api/v1/agents/install.sh", nil))
+	if err != nil {
+		t.Fatalf("get installer script: %v", err)
+	}
+	scriptBody, _ := io.ReadAll(scriptResp.Body)
+	if scriptResp.StatusCode != http.StatusOK || !strings.Contains(string(scriptBody), "Exchanging the one-time EveryUp join code") || strings.Contains(string(scriptBody), originalAPIKey) {
+		t.Fatalf("unexpected installer script response: status=%d body=%q", scriptResp.StatusCode, string(scriptBody))
+	}
+
+	// Input validation runs before consumption, so a typo can be corrected with
+	// the same code instead of forcing a reissue.
+	badForm := url.Values{"baseUrl": {"not-a-url"}}
+	badReq := httptest.NewRequest("POST", "/api/v1/agents/join", strings.NewReader(badForm.Encode()))
+	badReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	badReq.Header.Set("Authorization", "Bearer "+created.JoinCode)
+	badResp, err := ts.App.Test(badReq)
+	if err != nil {
+		t.Fatalf("invalid base URL request: %v", err)
+	}
+	if badResp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("invalid base URL status=%d, want 400", badResp.StatusCode)
+	}
+
+	// Exchange succeeds once and returns a Compose bundle containing the key.
+	form := url.Values{"baseUrl": {"https://everyup.example.com"}}
+	joinReq := httptest.NewRequest("POST", "/api/v1/agents/join", strings.NewReader(form.Encode()))
+	joinReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	joinReq.Header.Set("Authorization", "Bearer "+created.JoinCode)
+	joinResp, err := ts.App.Test(joinReq)
+	if err != nil {
+		t.Fatalf("join request: %v", err)
+	}
+	joinBody, _ := io.ReadAll(joinResp.Body)
+	if joinResp.StatusCode != http.StatusOK || !strings.Contains(string(joinBody), originalAPIKey) || !strings.Contains(string(joinBody), "https://everyup.example.com") {
+		t.Fatalf("unexpected join response: status=%d body=%q", joinResp.StatusCode, string(joinBody))
+	}
+
+	secondReq := httptest.NewRequest("POST", "/api/v1/agents/join", strings.NewReader(form.Encode()))
+	secondReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	secondReq.Header.Set("Authorization", "Bearer "+created.JoinCode)
+	secondResp, err := ts.App.Test(secondReq)
+	if err != nil {
+		t.Fatalf("second join request: %v", err)
+	}
+	if secondResp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("second join status = %d, want 401", secondResp.StatusCode)
+	}
+
+	// An administrator can replace an expired/used code without rotating the
+	// long-lived Agent key.
+	_, reissueResult := ts.doRequest(t, "POST", "/api/v1/agents/"+created.ID+"/join-code", nil, auth...)
+	if !reissueResult.Success {
+		t.Fatalf("reissue join code failed: %v", reissueResult.Error)
+	}
+	var reissued struct {
+		JoinCode  string    `json:"joinCode"`
+		ExpiresAt time.Time `json:"expiresAt"`
+	}
+	json.Unmarshal(reissueResult.Data, &reissued)
+	if reissued.JoinCode == "" || reissued.JoinCode == created.JoinCode || reissued.ExpiresAt.IsZero() {
+		t.Fatalf("unexpected reissued join code: %+v", reissued)
 	}
 
 	// Rotate — returns a new, different key.
@@ -674,8 +766,8 @@ func TestAgentApiKey_RevealAndRotate(t *testing.T) {
 		APIKey string `json:"apiKey"`
 	}
 	json.Unmarshal(rotateResult.Data, &rotated)
-	if rotated.APIKey == "" || rotated.APIKey == created.APIKey {
-		t.Errorf("rotated key = %q, want a new key different from %q", rotated.APIKey, created.APIKey)
+	if rotated.APIKey == "" || rotated.APIKey == originalAPIKey {
+		t.Errorf("rotated key = %q, want a new key different from %q", rotated.APIKey, originalAPIKey)
 	}
 
 	// Reveal again — now returns the rotated key (rotation persisted).

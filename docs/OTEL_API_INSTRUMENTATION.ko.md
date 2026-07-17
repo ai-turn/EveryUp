@@ -10,16 +10,26 @@ OpenTelemetry로 계측해 수집하는 방법을 다룹니다.
 
 ## 가장 빠른 길 — 번들 계측 (Java, Node.js)
 
-Java와 Node.js는 코드를 한 줄도 안 써도 됩니다. Agent가 바로 쓸 수 있는
-OpenTelemetry 번들(Java agent jar + Node.js 부트스트랩)을 공유 볼륨에 실어 보냅니다:
+Java와 Node.js는 코드를 한 줄도 안 써도 됩니다. Agent 설치 과정에서
+`everyup-otel` CLI와 OpenTelemetry 번들(Java agent jar + Node.js 부트스트랩)을
+함께 준비합니다.
 
-1. 웹 UI에서 프로젝트를 열고 **OTel 계측 설정**을 실행하면, 감지된 런타임에 맞춘
-   `docker-compose.everyup.yml` override가 생성됩니다.
-2. 그 override로 앱을 한 번만 재시작합니다.
+1. 웹 UI에서 프로젝트를 열고 **상세 API 모니터링**을 선택합니다.
+2. 애플리케이션 Compose 경로를 입력하고 표시된 명령 한 줄을 서버에서 실행합니다.
 
-override가 exporter 엔드포인트와 헤더 캡처 env를 대신 설정해 줍니다. 바디는
-옵트인입니다(Node는 `EVERYUP_CAPTURE_BODIES=true`). 전체 안내는 agent README의
-"App Instrumentation" 참고.
+CLI는 원본 Compose를 수정하지 않고 옆에 `docker-compose.everyup.yml`을 생성합니다.
+선택한 서비스만 다시 만들고, 기존 `JAVA_TOOL_OPTIONS`/`NODE_OPTIONS`, 번들 볼륨,
+Agent 연결 네트워크와 컨테이너 health를 검증합니다. 검증 실패 시 직전 설정으로 자동
+복구합니다. 수동 확인과 복구도 가능합니다:
+
+```bash
+sudo everyup-otel status ./docker-compose.yml
+sudo everyup-otel verify ./docker-compose.yml
+sudo everyup-otel rollback ./docker-compose.yml
+```
+
+바디는 옵트인입니다(Node만 자동 지원). 전체 동작은 agent README의
+"App Instrumentation"을 참고하세요.
 
 아래 내용은 **다른 언어, 수동 SDK 설정, 또는 번들이 만들어 내는 스팬 계약을 이해**
 하려는 경우를 위한 것입니다.

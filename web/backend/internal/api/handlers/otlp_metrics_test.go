@@ -30,6 +30,7 @@ func TestOTLPIngest_MetricsStoredAndListed(t *testing.T) {
 	if err := json.Unmarshal(created.Data, &agent); err != nil {
 		t.Fatalf("decode agent: %v", err)
 	}
+	agent.APIKey = revealAgentAPIKey(t, ts, agent.ID, auth...)
 
 	const svcKey = "c-metrics"
 	const svcName = "checkout-api"

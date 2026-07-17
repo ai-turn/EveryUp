@@ -251,6 +251,12 @@ func migrate() error {
 	if err := migrateV41(); err != nil {
 		return fmt.Errorf("v41 migration failed: %w", err)
 	}
+	if err := migrateV42(); err != nil {
+		return fmt.Errorf("v42 migration failed: %w", err)
+	}
+	if err := migrateV43(); err != nil {
+		return fmt.Errorf("v43 migration failed: %w", err)
+	}
 
 	return nil
 }
@@ -1325,6 +1331,35 @@ func migrateV41() error {
 		return err
 	}
 	return nil
+}
+
+// migrateV42 stores the Agent's extensible per-feature compatibility report.
+// Added: 2026-07-17
+func migrateV42() error {
+	if _, err := DB.Exec(`ALTER TABLE agents ADD COLUMN capability_report TEXT NOT NULL DEFAULT '{}'`); err != nil && !strings.Contains(err.Error(), "duplicate column name") {
+		return err
+	}
+	return nil
+}
+
+// migrateV43 adds short-lived, single-use Agent installer credentials. Only a
+// SHA-256 hash is stored; the plaintext join code is returned to the browser.
+// Added: 2026-07-17
+func migrateV43() error {
+	return Transaction(func(tx *sql.Tx) error {
+		if _, err := tx.Exec(`CREATE TABLE IF NOT EXISTS agent_join_codes (
+			code_hash  TEXT PRIMARY KEY,
+			agent_id   TEXT NOT NULL,
+			expires_at DATETIME NOT NULL,
+			used_at    DATETIME,
+			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY(agent_id) REFERENCES agents(id) ON DELETE CASCADE
+		)`); err != nil {
+			return err
+		}
+		_, err := tx.Exec(`CREATE INDEX IF NOT EXISTS idx_agent_join_codes_agent ON agent_join_codes(agent_id, expires_at DESC)`)
+		return err
+	})
 }
 
 func ensureAPIRequestIndexes() error {

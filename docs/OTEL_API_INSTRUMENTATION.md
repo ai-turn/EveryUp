@@ -12,15 +12,27 @@ Web at `/api/v1/otlp/v1/traces`.
 
 ## Quickest path — the bundled instrumentation (Java, Node.js)
 
-For Java and Node.js you don't write any code. The Agent ships a ready-made
-OpenTelemetry bundle (Java agent jar + Node.js bootstrap) in a shared volume:
+For Java and Node.js you don't write any code. Agent installation also installs
+the `everyup-otel` helper and provides a ready-made OpenTelemetry bundle (Java
+agent jar + Node.js bootstrap).
 
-1. In the web UI, open a project and use the **OTel instrumentation** action to
-   generate a `docker-compose.everyup.yml` override for the runtimes it detected.
-2. Restart your app once with that override.
+1. In the web UI, open a project and choose **Detailed API monitoring**.
+2. Enter the application Compose path and run the displayed one-line command on
+   that server.
 
-The override sets the exporter endpoint and header-capture env vars for you.
-Bodies are opt-in (`EVERYUP_CAPTURE_BODIES=true` for Node). Full walkthrough:
+The helper leaves the original Compose file unchanged and writes
+`docker-compose.everyup.yml` beside it. It recreates only the selected services,
+preserves existing `JAVA_TOOL_OPTIONS`/`NODE_OPTIONS`, and verifies the bundle
+mount, Agent network, container health, and injected options. A failed check
+automatically restores the previous configuration. Manual controls are:
+
+```bash
+sudo everyup-otel status ./docker-compose.yml
+sudo everyup-otel verify ./docker-compose.yml
+sudo everyup-otel rollback ./docker-compose.yml
+```
+
+Bodies are opt-in and automatically supported for Node only. Full walkthrough:
 "App Instrumentation" in the agent README.
 
 Everything below is for **other languages, manual SDK setups, or understanding

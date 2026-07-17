@@ -3,7 +3,8 @@
 # API access-log summaries, events, and host metrics to EveryUp Web.
 # Notifications are configured in Web.
 #
-# Run without cloning the repo (only Docker required):
+# The Web UI now provides the preferred one-line, one-time-code installer.
+# For a manual installation (Docker Compose 2.23.1+ required):
 #   mkdir everyup-agent && cd everyup-agent
 #   curl -O https://raw.githubusercontent.com/ai-turn/everyup/main/agent/docker-compose.yml
 #   # edit this compose file: set EVERYUP_WEB_BASE_URL and EVERYUP_AGENT_API_KEY
@@ -18,10 +19,15 @@ services:
     #   context: .
     #   dockerfile: Dockerfile
     container_name: everyup-agent
+    networks:
+      everyup-monitoring: {}
     environment:
       EVERYUP_WEB_SYNC_ENABLED: "true"
       EVERYUP_WEB_BASE_URL: "http://your-everyup-web:3001"
       EVERYUP_AGENT_API_KEY: "evup_svc_replace_me"
+      # Keep this aligned with OBI's OTEL_EBPF_BPF_CONTEXT_PROPAGATION when
+      # enabling the advanced, kernel-dependent distributed trace option.
+      EVERYUP_EBPF_CONTEXT_PROPAGATION_ENABLED: "false"
       # TZ: "Asia/Seoul"  # agent log timestamps in your local time (default: UTC)
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro  # Docker auto-discovery/logs
@@ -34,28 +40,35 @@ services:
       # - everyup-instrumentation:/everyup-instrumentation
     restart: unless-stopped
 
-  # --- Optional: zero-code API tracing (eBPF) --------------------------------
-  # Adds real traces — method, path, status, and latency — for every service on
-  # this host, all languages including Go, HTTPS included, without touching your
-  # app containers. The agent matches spans to your services and drops anything
-  # it can't match, and pauses the access-log fallback for covered services so
-  # requests aren't counted twice.
-  # Requires: Linux kernel 5.8+ with BTF (most modern distros; Docker Desktop OK).
-  # To enable: uncomment this block, set BEYLA_OPEN_PORT to your app ports, then
-  # `docker compose up -d`.
-  # everyup-ebpf:
-  #   image: grafana/beyla:3
-  #   container_name: everyup-ebpf
-  #   restart: unless-stopped
-  #   privileged: true   # eBPF probe loading
-  #   pid: "host"        # see app processes on the host
-  #   environment:
-  #     BEYLA_OPEN_PORT: "80,3000,8080"  # ports your apps listen on (list or range, e.g. "8000-8999")
-  #     # Traces-only endpoint: Beyla's RED metrics would duplicate the span-derived stats.
-  #     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://everyup-agent:4318/v1/traces"
-  #     OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
-  #     # Required: marks spans so the agent attributes them to your services.
-  #     OTEL_RESOURCE_ATTRIBUTES: "everyup.source=ebpf"
+  # --- Automatic zero-code API tracing (OpenTelemetry eBPF Instrumentation) ---
+  # Discovers processes in Docker/OCI containers automatically. No app port
+  # list, app image change, or app restart is required. The regular Agent stays
+  # unprivileged; only this isolated observer receives the eBPF permissions.
+  # Requires Linux kernel 5.8+ with BTF. On an unsupported host this service may
+  # stop, while container health, logs, events, and host metrics keep working.
+  everyup-ebpf:
+    image: otel/ebpf-instrument:v0.7.1
+    container_name: everyup-ebpf
+    restart: "on-failure:5"
+    privileged: true   # load eBPF probes; kept separate from everyup-agent
+    pid: "host"        # observe application processes in the host PID namespace
+    networks:
+      everyup-monitoring: {}
+    depends_on:
+      everyup-agent:
+        condition: service_started
+    configs:
+      - source: everyup-obi-config
+        target: /etc/obi/config.yml
+        mode: 0444
+    environment:
+      OTEL_EBPF_CONFIG_PATH: "/etc/obi/config.yml"
+      # Traces only: EveryUp derives RED stats from spans, so exporting OBI
+      # metrics as well would count the same requests twice.
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://everyup-agent:4318/v1/traces"
+      OTEL_EXPORTER_OTLP_TRACES_PROTOCOL: "http/protobuf"
+      # Marks these resources for strict PID-to-Docker-service attribution.
+      OTEL_RESOURCE_ATTRIBUTES: "everyup.source=ebpf"
 
 volumes:
   everyup-agent-data:
@@ -64,3 +77,21 @@ volumes:
   # your app compose reference it as an external volume.
   # everyup-instrumentation:
   #   name: everyup-instrumentation
+
+networks:
+  everyup-monitoring:
+    name: everyup-monitoring
+
+# Kept inline so installation still needs only this one Compose file. OBI does
+# not receive the Docker socket: this preserves its host:PID instance identity,
+# which the Agent resolves against Docker without trusting executable names.
+configs:
+  everyup-obi-config:
+    content: |
+      discovery:
+        instrument:
+          - exe_path: "*"
+            containers_only: true
+        exclude_instrument:
+          - exe_path: "*everyup-agent*"
+        exclude_otel_instrumented_services: true

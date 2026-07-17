@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aiturn/everyup/agent/internal/capabilities"
 	"github.com/aiturn/everyup/agent/internal/state"
 	collectorlogspb "go.opentelemetry.io/proto/otlp/collector/logs/v1"
 	commonpb "go.opentelemetry.io/proto/otlp/common/v1"
@@ -40,10 +41,11 @@ type EventRequest struct {
 }
 
 type ServiceSnapshotRequest struct {
-	AgentID    string            `json:"agentId"`
-	AgentName  string            `json:"agentName"`
-	ObservedAt time.Time         `json:"observedAt"`
-	Services   []ServiceSnapshot `json:"services"`
+	AgentID      string              `json:"agentId"`
+	AgentName    string              `json:"agentName"`
+	ObservedAt   time.Time           `json:"observedAt"`
+	Services     []ServiceSnapshot   `json:"services"`
+	Capabilities capabilities.Report `json:"capabilities"`
 }
 
 type ServiceSnapshot struct {

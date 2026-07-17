@@ -22,7 +22,7 @@ func TestOTLPIngest_AgentKeyUnifiesLogsUnderService(t *testing.T) {
 	token := ts.setupAdmin(t, "admin", "testpass123")
 	auth := authHeader(token)
 
-	// Create a project via the UI path — this issues an evup_svc_ agent key.
+	// Create a project via the UI path, then explicitly reveal its ingestion key.
 	_, created := ts.doRequest(t, "POST", "/api/v1/agents", map[string]string{"name": "proj-1"}, auth...)
 	if !created.Success {
 		t.Fatalf("create agent failed: %v", created.Error)
@@ -34,9 +34,10 @@ func TestOTLPIngest_AgentKeyUnifiesLogsUnderService(t *testing.T) {
 	if err := json.Unmarshal(created.Data, &agent); err != nil {
 		t.Fatalf("decode agent: %v", err)
 	}
-	if agent.ID == "" || agent.APIKey == "" {
+	if agent.ID == "" {
 		t.Fatalf("missing agent id/key: %+v", agent)
 	}
+	agent.APIKey = revealAgentAPIKey(t, ts, agent.ID, auth...)
 
 	// Sync one service under the project (key != name, mirroring real discovery).
 	const svcKey = "container-abc"
@@ -105,6 +106,7 @@ func TestOTLPIngest_PerServiceLogFilter(t *testing.T) {
 	if err := json.Unmarshal(created.Data, &agent); err != nil {
 		t.Fatalf("decode agent: %v", err)
 	}
+	agent.APIKey = revealAgentAPIKey(t, ts, agent.ID, auth...)
 
 	const svcKey = "c-1"
 	const svcName = "billing-api"

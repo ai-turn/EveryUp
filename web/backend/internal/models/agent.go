@@ -46,13 +46,37 @@ type AgentOverview struct {
 }
 
 type Agent struct {
-	ID         string    `json:"id"`
-	Name       string    `json:"name"`
-	Version    string    `json:"version,omitempty"`
-	Status     string    `json:"status"`
-	LastSeenAt time.Time `json:"lastSeenAt"`
-	CreatedAt  time.Time `json:"createdAt"`
-	UpdatedAt  time.Time `json:"updatedAt"`
+	ID           string            `json:"id"`
+	Name         string            `json:"name"`
+	Version      string            `json:"version,omitempty"`
+	Status       string            `json:"status"`
+	LastSeenAt   time.Time         `json:"lastSeenAt"`
+	CreatedAt    time.Time         `json:"createdAt"`
+	UpdatedAt    time.Time         `json:"updatedAt"`
+	Capabilities *CapabilityReport `json:"capabilities,omitempty"`
+}
+
+type CapabilityStatus struct {
+	State  string `json:"state"`
+	Reason string `json:"reason,omitempty"`
+	Detail string `json:"detail,omitempty"`
+}
+
+type HostCompatibility struct {
+	OS            string `json:"os,omitempty"`
+	Arch          string `json:"arch,omitempty"`
+	KernelVersion string `json:"kernelVersion,omitempty"`
+	BTF           bool   `json:"btf"`
+	Lockdown      string `json:"lockdown,omitempty"`
+}
+
+type CapabilityReport struct {
+	CheckedAt           time.Time         `json:"checkedAt"`
+	Host                HostCompatibility `json:"host"`
+	ContainerMonitoring CapabilityStatus  `json:"containerMonitoring"`
+	HostMetrics         CapabilityStatus  `json:"hostMetrics"`
+	AutomaticTracing    CapabilityStatus  `json:"automaticTracing"`
+	ContextPropagation  CapabilityStatus  `json:"contextPropagation"`
 }
 
 type AgentService struct {

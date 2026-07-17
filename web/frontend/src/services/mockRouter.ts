@@ -351,6 +351,14 @@ const mockAgents: ConnectedAgent[] = [
     lastSeenAt: new Date(Date.now() - 15_000).toISOString(),
     createdAt: new Date(Date.now() - 30 * 86_400_000).toISOString(),
     updatedAt: new Date(Date.now() - 15_000).toISOString(),
+    capabilities: {
+      checkedAt: new Date(Date.now() - 20_000).toISOString(),
+      host: { os: 'linux', arch: 'amd64', kernelVersion: '6.8.0', btf: true, lockdown: 'none' },
+      containerMonitoring: { state: 'available' },
+      hostMetrics: { state: 'available' },
+      automaticTracing: { state: 'available' },
+      contextPropagation: { state: 'degraded', reason: 'not_enabled' },
+    },
   },
   {
     // Created but never connected — renders as a pending card in the main grid.
@@ -561,7 +569,19 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
       const id = `agent_mock_${Date.now()}`;
       const now = new Date().toISOString();
       mockAgents.push({ id, name, lastSeenAt: now, createdAt: now, updatedAt: now });
-      return { id, name, apiKey: `evup_svc_${randomHex(24)}` } as T;
+      return {
+        id,
+        name,
+        joinCode: `evup_join_${randomHex(16)}`,
+        expiresAt: new Date(Date.now() + 10 * 60_000).toISOString(),
+      } as T;
+    }
+    // POST /agents/:id/join-code — replace the short-lived installer code
+    if (method === 'POST' && /^\/agents\/[^/]+\/join-code$/.test(endpoint)) {
+      return {
+        joinCode: `evup_join_${randomHex(16)}`,
+        expiresAt: new Date(Date.now() + 10 * 60_000).toISOString(),
+      } as T;
     }
     // POST /agents/:id/rotate-key — issue a fresh key
     if (method === 'POST' && /^\/agents\/[^/]+\/rotate-key$/.test(endpoint)) {
@@ -653,7 +673,11 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   // /agents/:agentId/services/:key/events
   if (/^\/agents\/[^/]+\/services\/[^/]+\/events/.test(endpoint)) return mockAgentEvents as T;
   // /agents/:agentId/services
-  if (/^\/agents\/[^/]+\/services/.test(endpoint)) return mockAgentServicesFlat as T;
+  const agentServicesMatch = endpoint.match(/^\/agents\/([^/]+)\/services(?:\?|$)/);
+  if (agentServicesMatch) {
+    const requestedAgentId = decodeURIComponent(agentServicesMatch[1]);
+    return mockAgentServicesFlat.filter((service) => service.agentId === requestedAgentId) as T;
+  }
   // /agents/:agentId/events
   if (/^\/agents\/[^/]+\/events/.test(endpoint)) return mockAgentEvents as T;
   // /agents/:agentId/uptime — project-level rollup

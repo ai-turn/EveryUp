@@ -12,38 +12,29 @@ The Agent only collects and forwards data.
 
 ## Quick Start
 
-Add one `everyup-agent` service to the Docker Compose file on the server you want
-to monitor. You do not need to add EveryUp settings to each application service.
+Download the monitoring bundle on the Docker server you want to monitor. It
+contains the regular Agent and an isolated OBI eBPF observer. You do not need
+to add EveryUp settings to each application service. Docker Compose 2.23.1 or
+newer is required because the OBI configuration is embedded in the Compose file.
 
-```yaml
-services:
-  everyup-agent:
-    image: aiturn/everyup-agent:latest
-    container_name: everyup-agent
-    user: "0:0"
-    environment:
-      EVERYUP_WEB_SYNC_ENABLED: "true"
-      EVERYUP_WEB_BASE_URL: "http://your-everyup-web:3001"
-      EVERYUP_AGENT_API_KEY: "evup_svc_replace_me"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /:/hostfs:ro
-      - everyup-agent-data:/data
-    restart: unless-stopped
+In EveryUp Web, open **Services -> Add**, create a project, and run the one-line
+installation command shown there on the target server. The command contains a
+join code that expires after ten minutes and works once; the long-lived Agent
+key is exchanged directly between the target server and EveryUp Web.
 
-volumes:
-  everyup-agent-data:
-    driver: local
-```
+The installer validates Linux, Docker Engine, and Docker Compose before using
+the code. It stores the generated bundle in `/opt/everyup-agent/compose.yaml`,
+backs up an existing configuration, and starts both services automatically.
+If the code expires, issue a new one from the installation screen.
 
-Create the API key in EveryUp Web from **Services -> Add**, replace
-`EVERYUP_AGENT_API_KEY`, then start the Agent:
+The Agent should appear online in Web within about 30 seconds. The observer
+automatically discovers application processes running in Docker/OCI containers;
+there is no application port list to configure.
 
-```bash
-docker compose up -d everyup-agent
-```
-
-The Agent should appear online in Web within about 30 seconds.
+Web keeps the remaining setup visible as one guided flow: Agent connection,
+baseline collection, automatic API tracing, then optional Java/Node detailed
+instrumentation. Compatibility failures are shown on the relevant step without
+hiding the features that still work.
 
 ## What Works Without App Changes
 
@@ -54,6 +45,10 @@ With only the Agent service running, EveryUp can collect:
 - Docker stdout/stderr logs
 - API status codes (method, path, status) parsed from access logs
 - Host CPU, memory, disk, and network metrics
+
+The default monitoring bundle additionally collects HTTP/S and gRPC traces with
+real latency through the eBPF observer. If eBPF cannot run on the host, the Agent
+features above continue working independently.
 
 Your application containers do not need the EveryUp Web URL or Agent API key.
 
@@ -72,7 +67,8 @@ spans, which Web projects into the **API** tab. There is no latency in access
 logs, so duration is unknown; an app that emits no access logs simply shows no
 API rows while logs and metrics keep flowing.
 
-For real latency without touching your apps, enable the eBPF sidecar (below).
+For real latency without touching your apps, use the automatic eBPF observer
+included in the monitoring bundle (below).
 For request/response **headers and bodies**, instrument the app with
 OpenTelemetry pointed at the Agent's OTLP gateway (`http://everyup-agent:4318`).
 See [docs/OTEL_API_INSTRUMENTATION.md](../docs/OTEL_API_INSTRUMENTATION.md).
@@ -81,19 +77,19 @@ If logs are written only to files inside the container, Docker cannot show them
 and the Agent cannot collect them in compose-only mode. Configure the application
 or reverse proxy to write logs to stdout.
 
-## Zero-Code Tracing (eBPF, Optional)
+## Zero-Code Tracing (eBPF, Automatic)
 
-The compose file ships a commented `everyup-ebpf` service
-([Grafana Beyla](https://grafana.com/oss/beyla-ebpf/)). Uncomment it, set
-`BEYLA_OPEN_PORT` to the ports your apps listen on, and `docker compose up -d`
-— no app changes, no restarts of your services. It captures real SERVER spans
-(method, path, status, **latency**) for every listening process, all languages
-including Go, HTTPS included.
+The Compose bundle starts an `everyup-ebpf` service using
+[OpenTelemetry eBPF Instrumentation (OBI)](https://opentelemetry.io/docs/zero-code/obi/).
+It selects processes inside Docker/OCI containers automatically, with no app
+port configuration, app changes, or service restarts. It captures real SERVER
+spans (method, path, status, **latency**) across supported runtimes, including
+Go and HTTPS traffic.
 
-How it fits together: Beyla sends spans to the Agent's OTLP gateway, tagged
+How it fits together: OBI sends spans to the Agent's OTLP gateway, tagged
 `everyup.source=ebpf`. The Agent maps each span to a service by the
 instrumented process's PID (via Docker) and renames it accordingly; spans it
-cannot match — `docker-proxy`, host processes, the sidecar itself — are dropped
+cannot match — host processes, the observer itself, or stale PIDs — are dropped
 so they never appear as phantom services. Services covered by real spans stop
 receiving synthetic access-log spans automatically (no double counting).
 
@@ -101,51 +97,46 @@ Notes:
 
 - Requires a Linux kernel 5.8+ with BTF (`/sys/kernel/btf/vmlinux` exists).
   Docker Desktop's VM qualifies.
-- `privileged` + `pid: host` are inherent to eBPF instrumentation — the sidecar
-  reads process memory to trace requests. Skip this block if that is not
-  acceptable for your host; everything else keeps working.
-- eBPF sees sizes only, never payloads: headers and bodies still require
-  app-side OpenTelemetry (see above).
+- `privileged` + `pid: host` are required by this simple eBPF deployment. The
+  elevated observer is kept separate from the regular Agent. Remove it if that
+  is not acceptable for your host; everything else keeps working.
+- The default OBI policy does not capture headers or bodies. Use app-side
+  OpenTelemetry for the current EveryUp deep-inspection flow (see above).
 - A service freshly (re)started may drop its first seconds of spans until the
   Agent's next PID refresh (one check interval).
+- OBI is pinned to a tested release in the Compose file. Upgrade it only after
+  validating the target kernel and the PID attribution contract.
 
 ## App Instrumentation (Headers/Bodies, One Restart)
 
-eBPF (above) needs zero changes but only sees method/path/status/latency. For
-**headers and bodies** the app itself must be instrumented — still no code or
-Dockerfile changes, just env vars and one restart:
+The default eBPF policy above needs zero changes and captures
+method/path/status/latency. For
+**headers and bodies** the app itself must be instrumented. Java and Node.js
+still require no code or Dockerfile changes: the one-time Agent installer also
+installs `/usr/local/bin/everyup-otel`.
 
-1. In the agent compose, uncomment the `everyup-instrumentation` volume (two
-   marked lines) and `docker compose up -d`. The agent fills the volume with
-   the OTel Java agent and a Node.js bundle.
-2. Add an override next to **your app's** compose file and restart once:
+Open the project in Web, choose **Detailed API monitoring**, enter the path to
+the application's Compose file, and run the generated one-line command on that
+server. The helper:
 
-```yaml
-# docker-compose.everyup.yml — docker compose -f compose.yml -f docker-compose.everyup.yml up -d
-volumes:
-  everyup-instrumentation:
-    external: true
+- validates Linux, Docker, the base Compose file, target runtimes, and the
+  currently running containers before changing anything;
+- creates a shared `everyup-monitoring` network and populates the
+  `everyup-instrumentation` volume from the Agent image;
+- preserves existing `JAVA_TOOL_OPTIONS` or `NODE_OPTIONS` and writes a managed
+  `docker-compose.everyup.yml` next to the original Compose file;
+- recreates only the selected services, then checks health, injection options,
+  the read-only `/everyup` mount, and Agent network connectivity;
+- automatically restores and recreates the previous configuration if restart
+  or verification fails.
 
-services:
-  your-java-api:
-    volumes: ["everyup-instrumentation:/everyup:ro"]
-    environment:
-      JAVA_TOOL_OPTIONS: "-javaagent:/everyup/java/opentelemetry-javaagent.jar"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://everyup-agent:4318"
-      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
-      OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS: "content-type,user-agent,accept"
-      OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_RESPONSE_HEADERS: "content-type"
+The helper keeps rollback metadata in the app Compose directory's `.everyup`
+folder. You can inspect or revert the change later:
 
-  your-node-api:
-    volumes: ["everyup-instrumentation:/everyup:ro"]
-    environment:
-      NODE_OPTIONS: "--require /everyup/node/register.js"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://everyup-agent:4318"
-      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
-      OTEL_INSTRUMENTATION_HTTP_CAPTURE_HEADERS_SERVER_REQUEST: "content-type,user-agent,accept"
-      # Bodies (opt-in): masked and truncated inside the app before export.
-      # EVERYUP_CAPTURE_BODIES: "true"
-      # EVERYUP_BODY_MAX_BYTES: "8192"
+```bash
+sudo everyup-otel status ./compose.yml
+sudo everyup-otel verify ./compose.yml
+sudo everyup-otel rollback ./compose.yml
 ```
 
 Notes:
@@ -157,11 +148,10 @@ Notes:
   fields in `EVERYUP_MASKED_BODY_FIELDS` (password, token, ... by default)
   before anything leaves the app. Viewing bodies in the web UI is admin-only
   and audited.
-- The app and agent must share a Docker network for `everyup-agent:4318` to
-  resolve, or point the endpoint at a published gateway port instead.
-- The override **sets** `JAVA_TOOL_OPTIONS` / `NODE_OPTIONS`. If your app
-  already uses either variable, append the EveryUp flags to the existing value
-  instead of replacing it.
+- The helper attaches the app and Agent to the shared `everyup-monitoring`
+  network so `everyup-agent:4318` resolves without publishing an OTLP port.
+- Existing `JAVA_TOOL_OPTIONS` / `NODE_OPTIONS` values are retained and the
+  EveryUp option is appended once.
 - Java/Node versions: JVM 8+, Node 18+.
 
 ## Networking Notes

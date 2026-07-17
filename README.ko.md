@@ -50,12 +50,12 @@ EveryUp은 Docker로 실행 중인 서비스를 한곳에서 모니터링하는 
 | 🟢 | 📜 로그 | 컨테이너 stdout/stderr 수집 |
 | 🟢 | 🌐 API 상태 | access log에서 읽은 요청 상태코드(method·path·status) |
 | 🟢 | 🔔 알림 | Telegram·Discord·Slack 채널 |
-| 🔵 | ⚡ API latency·트레이스 | eBPF 사이드카 — 앱 수정 없음 |
+| 🔵 | ⚡ API latency·트레이스 | 자동 eBPF 관측기 — 앱 수정 없음 |
 | 🔵 | 🔍 API 헤더·바디 | OpenTelemetry 계측 — 앱 재시작 한 번 |
 
 ## 빠른 시작
 
-Web 1개와 Agent 1개를 Docker Compose로 실행하는 가장 작은 구성입니다.
+Web 1개와 모니터링 번들 1개를 Docker Compose로 실행하는 가장 작은 구성입니다.
 단일 서버라면 둘을 같은 서버에서 실행해도 됩니다. Compose 템플릿은
 [`web/docker-compose.yml`](web/docker-compose.yml)과
 [`agent/docker-compose.yml`](agent/docker-compose.yml)에 있습니다.
@@ -92,57 +92,52 @@ docker compose up -d
 
 `http://WEB_SERVER_IP:3001`을 열고 첫 관리자 계정을 만들면 완료입니다.
 
-### 2. Agent 키 만들기
+### 2. 일회용 Agent 설치 명령 만들기
 
-대시보드에서 **Services**를 열고 **Add Project**를 누릅니다. 생성 후 표시되는
-API 키(`evup_svc_...`)를 복사합니다.
+대시보드에서 **Services**를 열고 **Add Project**를 누릅니다. 프로젝트를 만들면
+10분 동안 한 번만 사용할 수 있는 설치 명령이 표시됩니다. 장기 API 키는
+브라우저에 표시되지 않고 설치 과정에서 대상 서버로 직접 전달됩니다.
 
-### 3. 모니터링할 서버에 Agent 추가
+### 3. 모니터링할 서버에 모니터링 번들 설치
 
-모니터링할 서버의 Compose 파일에 `everyup-agent` 서비스를 추가합니다. 앱
-컨테이너에는 아무 설정도 넣지 않습니다.
+번들 Compose 파일은 일반 Agent와 권한이 분리된 OBI eBPF 관측기를 함께
+실행합니다. 앱의 Compose 파일, 이미지, 포트, 컨테이너는 바꿀 필요가 없습니다.
+Docker Compose 2.23.1 이상이 필요합니다.
 
-```yaml
-services:
-  everyup-agent:
-    image: aiturn/everyup-agent:latest
-    container_name: everyup-agent
-    environment:
-      EVERYUP_WEB_SYNC_ENABLED: "true"
-      EVERYUP_WEB_BASE_URL: "http://WEB_SERVER_IP:3001"   # Agent 컨테이너에서 접근 가능한 Web 주소
-      EVERYUP_AGENT_API_KEY: "evup_svc_replace_me"        # 2단계에서 복사한 키
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /:/hostfs:ro
-      - everyup-agent-data:/data
-    restart: unless-stopped
+표시된 명령 한 줄을 대상 Linux Docker 서버에서 실행합니다. 설치기는 Docker와
+Compose 버전을 먼저 확인한 후 `/opt/everyup-agent`에 설정을 만들고 Agent와
+eBPF 관측기를 시작합니다. 기존 설정이 있으면 덮어쓰기 전에 백업합니다.
 
-volumes:
-  everyup-agent-data:
-```
-
-```bash
-docker compose up -d
-```
+연결 코드가 만료되거나 이미 사용됐다면 프로젝트 설치 화면에서 **새 코드**를
+눌러 다시 발급할 수 있습니다.
 
 약 30초 안에 Web에서 Agent가 online으로 표시되고, 그 서버의 컨테이너들이
-자동으로 나타납니다. 문제가 생기면 [트러블슈팅](#트러블슈팅)을 참고하세요.
+자동으로 나타납니다. eBPF 관측기도 컨테이너 프로세스를 자동으로 찾으므로
+포트 목록을 관리할 필요가 없습니다. 문제가 생기면
+[트러블슈팅](#트러블슈팅)을 참고하세요.
+
+프로젝트 화면의 **모니터링 설정 가이드**가 Agent 연결, 기본 수집, 자동 API 추적을
+순서대로 진단합니다. Java·Node.js 서비스가 발견되면 같은 가이드에서 선택 기능인
+헤더·바디 상세 계측까지 바로 이어서 설정할 수 있습니다.
 
 ## 선택 기능
 
-### eBPF 사이드카: API latency와 trace
+### 자동 eBPF 관측기: API latency와 trace
 
 기본 Agent는 access log에서 method, path, status를 읽습니다. 실제 latency와
-trace까지 보려면 Agent Compose에 포함된 `everyup-ebpf` 사이드카를 켭니다.
+trace까지 볼 수 있도록 번들 Compose가 `everyup-ebpf`를 자동으로 실행합니다.
+Docker/OCI 컨테이너에서 실행 중인 프로세스를 자동 발견하므로
+`BEYLA_OPEN_PORT`나 앱 포트 설정이 필요하지 않습니다.
 
-1. `agent/docker-compose.yml`에서 `everyup-ebpf` 서비스 주석을 해제합니다.
-2. `BEYLA_OPEN_PORT`에 앱이 listen하는 포트를 넣습니다. 예: `"80,3000,8080"`.
-3. `docker compose up -d`를 다시 실행합니다.
-
-앱 코드, Dockerfile, 앱 컨테이너를 바꾸지 않습니다. eBPF가 호스트의 프로세스를
-관찰해 trace를 만들고, Agent가 각 span을 해당 Docker 서비스에 연결합니다.
+앱 코드, Dockerfile, 앱 컨테이너를 바꾸지 않습니다. 실제 Linux 호스트에서는
+eBPF가 호스트 프로세스를 관찰해 trace를 만들고, Agent가 각 span을 해당 Docker
+서비스에 연결합니다. Docker Desktop에서는 PID 변환 제약으로 서비스 자동 연결이
+되지 않을 수 있으므로, 이 경우 앱 측 OpenTelemetry 계측을 사용하세요.
 Linux kernel 5.8+ 및 BTF가 필요합니다. 자세한 내용은
-[agent/README.md](agent/README.md)의 "Zero-Code Tracing"을 참고하세요.
+[agent/README.md](agent/README.md)의 "Zero-Code Tracing"을 참고하세요. eBPF
+관측기는 높은 권한이 필요하므로 허용할 수 없는 환경에서는 `everyup-ebpf`
+서비스를 제거할 수 있습니다. 이 경우에도 로그, 상태, 이벤트, 호스트 메트릭은
+계속 동작합니다.
 
 ### OpenTelemetry 계측: 요청/응답 헤더·바디
 
@@ -150,9 +145,11 @@ Linux kernel 5.8+ 및 BTF가 필요합니다. 자세한 내용은
 한 번 재시작해야 하지만, Java와 Node.js는 코드나 Dockerfile을 고치지 않고
 Compose override로 붙일 수 있습니다.
 
-웹 UI에서 프로젝트를 열고 **OTel 계측 설정**을 실행하면 감지된 Java/Node.js
-런타임에 맞춘 `docker-compose.everyup.yml`이 생성됩니다. 이 override로 앱을
-다시 띄우면 요청/응답 헤더와 실제 latency가 포함된 trace를 수집합니다.
+웹 UI에서 프로젝트를 열고 **상세 API 모니터링**을 실행한 뒤 표시된 명령 한 줄을
+애플리케이션 서버에서 실행합니다. `everyup-otel` CLI가 감지된 Java/Node.js 런타임에
+맞춘 `docker-compose.everyup.yml`을 만들고 선택한 서비스만 다시 띄웁니다. 적용 후
+주입 옵션, 공유 볼륨, Agent 네트워크와 컨테이너 상태를 검증하며 실패하면 직전 설정으로
+자동 복구합니다.
 
 요청/응답 바디 자동 캡처는 현재 Node.js에서 지원됩니다. 바디는 앱 안에서
 export 전에 마스킹되며, Web에서는 관리자만 볼 수 있고 열람 기록이 남습니다.
@@ -177,13 +174,13 @@ Java, Python, 수동 SDK는 마스킹된 body span event를 직접 추가할 수
 API 상태코드는 앱이나 프록시가 access log를 stdout/stderr로 남길 때 표시됩니다.
 access log가 없어도 컨테이너 상태, 일반 로그, 호스트 메트릭은 계속 수집됩니다.
 
-### 선택: eBPF 사이드카
+### 모니터링 번들의 자동 eBPF 관측기
 
 | 데이터 | 소스 |
 | --- | --- |
-| 실제 latency가 포함된 API trace | `everyup-ebpf` 사이드카(eBPF) |
+| 실제 latency가 포함된 API trace | `everyup-ebpf` 관측기(OBI/eBPF) |
 | method, path, status, duration | 호스트 프로세스 관찰 |
-| Go를 포함한 여러 언어와 HTTPS 서비스 | Grafana Beyla 기반 eBPF |
+| Go를 포함한 여러 언어와 HTTPS 서비스 | OpenTelemetry eBPF Instrumentation |
 
 ### 선택: 앱 측 OpenTelemetry 계측
 
@@ -201,8 +198,10 @@ access log가 없어도 컨테이너 상태, 일반 로그, 호스트 메트릭�
 있습니다. Compose 서비스명이나 호스트에서 접근 가능한 IP를 사용하세요.
 
 **Agent가 Docker 소켓을 읽지 못합니다.**
-권한 문제입니다. 가장 단순한 해결은 Agent 서비스에 `user: "0:0"`을 추가하는
-것입니다. 운영 환경에서 소켓 접근 권한을 좁히려면
+권한 문제입니다. 한 줄 설치기는 Docker 소켓의 group ID를 감지해
+`EVERYUP_DOCKER_GID`를 자동으로 기록합니다. 수동 배포라면 이 값을
+`stat -c '%g' /var/run/docker.sock` 결과로 설정하고 `group_add`에 추가하세요.
+`user: "0:0"`은 짧은 진단 용도로만 사용하세요. 운영 환경에서 소켓 접근 권한을 좁히려면
 [Docker socket proxy 가이드](agent/docs/docker-socket-proxy.md)를 사용하세요.
 
 **로그가 보이지 않습니다.**
@@ -261,3 +260,6 @@ cd web/backend && go test ./...     # 백엔드 테스트
 cd web/frontend && pnpm build       # 프론트엔드 빌드
 cd agent && go test ./...           # 에이전트 테스트
 ```
+
+계측 적용, 트래픽, 검증, 롤백 흐름을 시험할 수 있는 일회용 Node.js/Java 앱은
+[모니터링 대상 E2E fixture](e2e/monitoring-target/README.ko.md)를 참고하세요.

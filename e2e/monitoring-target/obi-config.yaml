@@ -1,0 +1,7 @@
+discovery:
+  instrument:
+    - exe_path: "*"
+      containers_only: true
+  exclude_instrument:
+    - exe_path: "*everyup-agent*"
+  exclude_otel_instrumented_services: true

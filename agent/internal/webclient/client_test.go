@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aiturn/everyup/agent/internal/capabilities"
 	"github.com/aiturn/everyup/agent/internal/state"
 	collectorlogspb "go.opentelemetry.io/proto/otlp/collector/logs/v1"
 	"google.golang.org/protobuf/proto"
@@ -34,6 +35,9 @@ func TestClientEnrollAndSendEvents(t *testing.T) {
 			}
 			if payload.AgentName != "agent" || len(payload.Services) != 1 || payload.Services[0].Name != "api" {
 				t.Fatalf("unexpected services payload: %+v", payload)
+			}
+			if payload.Capabilities.AutomaticTracing.State != capabilities.StateAvailable {
+				t.Fatalf("unexpected capabilities payload: %+v", payload.Capabilities)
 			}
 			sawServices = true
 			w.WriteHeader(http.StatusNoContent)
@@ -68,6 +72,10 @@ func TestClientEnrollAndSendEvents(t *testing.T) {
 			Healthy:   true,
 			Seen:      true,
 		}},
+		Capabilities: capabilities.Report{
+			CheckedAt:        time.Now(),
+			AutomaticTracing: capabilities.Status{State: capabilities.StateAvailable},
+		},
 	}); err != nil {
 		t.Fatalf("SendServices returned error: %v", err)
 	}

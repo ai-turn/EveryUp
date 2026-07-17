@@ -1,10 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslate } from '@tolgee/react';
-import { Button, ConfirmDialog, EmptyState, MaterialIcon } from '../../components/common';
+import { Button } from '../../components/common/Button';
+import { ConfirmDialog } from '../../components/common/ConfirmDialog';
+import { EmptyState } from '../../components/common/EmptyState';
+import { MaterialIcon } from '../../components/common/MaterialIcon';
 import { api, type AgentOverview, type AgentServiceFlat, type ConnectedAgent } from '../../services/api';
 import { PendingServiceCard } from '../../features/services/components/PendingServiceCard';
 import { AddServiceModal } from '../../features/services/components/AddServiceModal';
+import { InstrumentationOverrideModal } from '../../features/services/components/InstrumentationOverrideModal';
 import { ApiKeyModal } from '../../features/services/components/ApiKeyModal';
 import { getErrorMessage } from '../../utils/errors';
 import { toast } from 'react-hot-toast';
@@ -133,12 +137,15 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
 
 export function ServiceGridPage() {
   const { t } = useTranslate();
+  const navigate = useNavigate();
   const [services, setServices] = useState<AgentServiceFlat[]>([]);
   const [agents, setAgents] = useState<ConnectedAgent[]>([]);
   const [overview, setOverview] = useState<Record<string, AgentOverview>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [installModalAgent, setInstallModalAgent] = useState<{ id: string; name: string } | null>(null);
+  const [instrumentationAgentId, setInstrumentationAgentId] = useState<string | null>(null);
   const [keyModalAgent, setKeyModalAgent] = useState<{ id: string; name: string } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
@@ -290,6 +297,7 @@ export function ServiceGridPage() {
               agent={agent}
               onDelete={handleDelete}
               onViewKey={() => setKeyModalAgent({ id: agent.id, name: agent.name })}
+              onInstall={() => setInstallModalAgent({ id: agent.id, name: agent.name })}
             />
           ))}
         </div>
@@ -299,6 +307,37 @@ export function ServiceGridPage() {
         <AddServiceModal
           onClose={() => setShowAddModal(false)}
           onCreated={load}
+          onOpenProject={(id) => {
+            setShowAddModal(false);
+            navigate(`/projects/${id}`);
+          }}
+          onConfigureInstrumentation={(id) => {
+            setShowAddModal(false);
+            setInstrumentationAgentId(id);
+          }}
+        />
+      )}
+
+      {installModalAgent && (
+        <AddServiceModal
+          existingAgent={installModalAgent}
+          onClose={() => setInstallModalAgent(null)}
+          onCreated={load}
+          onOpenProject={(id) => {
+            setInstallModalAgent(null);
+            navigate(`/projects/${id}`);
+          }}
+          onConfigureInstrumentation={(id) => {
+            setInstallModalAgent(null);
+            setInstrumentationAgentId(id);
+          }}
+        />
+      )}
+
+      {instrumentationAgentId && (
+        <InstrumentationOverrideModal
+          agentId={instrumentationAgentId}
+          onClose={() => setInstrumentationAgentId(null)}
         />
       )}
 

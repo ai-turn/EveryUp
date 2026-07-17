@@ -18,7 +18,7 @@ COPY instrumentation/node/register.js ./
 
 # OTel Java agent: JAVA_TOOL_OPTIONS=-javaagent:... needs only this jar.
 FROM alpine:3.21 AS instrumentation-java
-ARG OTEL_JAVAAGENT_VERSION=2.12.0
+ARG OTEL_JAVAAGENT_VERSION=2.28.1
 RUN wget -q -O /opentelemetry-javaagent.jar \
     "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${OTEL_JAVAAGENT_VERSION}/opentelemetry-javaagent.jar"
 

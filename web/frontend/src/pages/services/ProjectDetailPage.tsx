@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslate } from '@tolgee/react';
 import { toast } from 'react-hot-toast';
-import { ConfirmDialog, MaterialIcon } from '../../components/common';
+import { ConfirmDialog } from '../../components/common/ConfirmDialog';
+import { MaterialIcon } from '../../components/common/MaterialIcon';
 import { useSpinAction } from '../../hooks/useSpinAction';
 import {
   api,
@@ -11,7 +12,9 @@ import {
   type OtelServiceMetric,
 } from '../../services/api';
 import { ApiKeyModal } from '../../features/services/components/ApiKeyModal';
+import { AddServiceModal } from '../../features/services/components/AddServiceModal';
 import { InstrumentationOverrideModal } from '../../features/services/components/InstrumentationOverrideModal';
+import { MonitoringSetupPanel } from '../../features/services/components/MonitoringSetupPanel';
 import { AgentServiceRequestTrends } from '../../features/healthcheck/components/AgentServiceRequestTrends';
 import { AgentCheckHistoryBar } from '../../features/healthcheck/components/AgentCheckHistoryBar';
 import { getErrorMessage } from '../../utils/errors';
@@ -152,6 +155,7 @@ export function ProjectDetailPage() {
   const [services, setServices] = useState<AgentServiceFlat[]>([]);
   const [loading, setLoading] = useState(true);
   const [showKey, setShowKey] = useState(false);
+  const [showInstall, setShowInstall] = useState(false);
   const [showInstrumentation, setShowInstrumentation] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
 
@@ -274,6 +278,13 @@ export function ProjectDetailPage() {
           {agent && (
             <>
               <button
+                onClick={() => setShowInstall(true)}
+                title="Agent 설치 또는 재설치"
+                className="p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
+              >
+                <MaterialIcon name="download" className="text-xl" />
+              </button>
+              <button
                 onClick={() => setShowKey(true)}
                 title="API 키 보기"
                 className="p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
@@ -298,6 +309,15 @@ export function ProjectDetailPage() {
           )}
         </div>
       </div>
+
+      {agent && (
+        <MonitoringSetupPanel
+          agent={agent}
+          services={services}
+          onInstall={() => setShowInstall(true)}
+          onInstrument={() => setShowInstrumentation(true)}
+        />
+      )}
 
       {/* Active incident banner */}
       {banner && (
@@ -386,6 +406,7 @@ export function ProjectDetailPage() {
                 <div className="space-y-2">
                   {incidents.slice(0, 5).map((inc, i) => (
                     <button
+                      type="button"
                       key={`${inc.key}-${inc.startedAt}-${i}`}
                       onClick={() => navigate(`/services/${agentId}/${encodeURIComponent(inc.key)}`)}
                       className={`w-full flex items-start gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors ${
@@ -450,6 +471,18 @@ export function ProjectDetailPage() {
 
       {showKey && agent && (
         <ApiKeyModal agentId={agent.id} agentName={agent.name} onClose={() => setShowKey(false)} onRotated={load} />
+      )}
+      {showInstall && agent && (
+        <AddServiceModal
+          existingAgent={{ id: agent.id, name: agent.name }}
+          onClose={() => setShowInstall(false)}
+          onCreated={load}
+          onOpenProject={() => setShowInstall(false)}
+          onConfigureInstrumentation={() => {
+            setShowInstall(false);
+            setShowInstrumentation(true);
+          }}
+        />
       )}
       {showInstrumentation && agent && (
         <InstrumentationOverrideModal agentId={agent.id} onClose={() => setShowInstrumentation(false)} />

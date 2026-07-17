@@ -76,6 +76,92 @@ VALUES (?, ?, '', ?, ?, 'active', ?, ?, ?)`,
 	return err
 }
 
+// CreateAgentWithJoinCode atomically creates a project and its initial
+// short-lived installer credential. The join code itself is never persisted.
+func (r *AgentRepository) CreateAgentWithJoinCode(agent models.Agent, keyHash, keyEnc, joinCodeHash string, expiresAt time.Time) error {
+	now := time.Now()
+	return Transaction(func(tx *sql.Tx) error {
+		if _, err := tx.Exec(`
+INSERT INTO agents(id, name, version, api_key_hash, api_key_enc, status, last_seen_at, created_at, updated_at)
+VALUES (?, ?, '', ?, ?, 'active', ?, ?, ?)`,
+			agent.ID, agent.Name, keyHash, keyEnc, now, now, now); err != nil {
+			return err
+		}
+		_, err := tx.Exec(`
+INSERT INTO agent_join_codes(code_hash, agent_id, expires_at, created_at)
+VALUES (?, ?, ?, ?)`, joinCodeHash, agent.ID, expiresAt, now)
+		return err
+	})
+}
+
+// IssueJoinCode replaces any still-unused code for an active Agent.
+func (r *AgentRepository) IssueJoinCode(agentID, joinCodeHash string, expiresAt time.Time) error {
+	return Transaction(func(tx *sql.Tx) error {
+		var exists int
+		if err := tx.QueryRow(`SELECT 1 FROM agents WHERE id = ? AND COALESCE(status, 'active') = 'active'`, agentID).Scan(&exists); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(`DELETE FROM agent_join_codes WHERE agent_id = ? AND used_at IS NULL`, agentID); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(`DELETE FROM agent_join_codes WHERE expires_at <= ?`, time.Now()); err != nil {
+			return err
+		}
+		_, err := tx.Exec(`
+INSERT INTO agent_join_codes(code_hash, agent_id, expires_at, created_at)
+VALUES (?, ?, ?, ?)`, joinCodeHash, agentID, expiresAt, time.Now())
+		return err
+	})
+}
+
+type AgentInstallCredential struct {
+	AgentID   string
+	AgentName string
+	KeyEnc    string
+}
+
+// ConsumeJoinCode atomically marks a valid code as used and returns the
+// encrypted long-lived Agent credential needed to build the local Compose
+// file. Concurrent or repeated exchanges can only succeed once.
+func (r *AgentRepository) ConsumeJoinCode(joinCodeHash string, now time.Time) (AgentInstallCredential, error) {
+	var credential AgentInstallCredential
+	err := Transaction(func(tx *sql.Tx) error {
+		result, err := tx.Exec(`
+UPDATE agent_join_codes
+SET used_at = ?
+WHERE code_hash = ?
+  AND used_at IS NULL
+  AND expires_at > ?
+  AND EXISTS (
+	SELECT 1 FROM agents
+	WHERE agents.id = agent_join_codes.agent_id
+	  AND COALESCE(agents.status, 'active') = 'active'
+  )`, now, joinCodeHash, now)
+		if err != nil {
+			return err
+		}
+		rows, err := result.RowsAffected()
+		if err != nil {
+			return err
+		}
+		if rows != 1 {
+			return sql.ErrNoRows
+		}
+
+		var keyEnc sql.NullString
+		if err := tx.QueryRow(`
+SELECT a.id, a.name, a.api_key_enc
+FROM agent_join_codes j
+JOIN agents a ON a.id = j.agent_id
+WHERE j.code_hash = ?`, joinCodeHash).Scan(&credential.AgentID, &credential.AgentName, &keyEnc); err != nil {
+			return err
+		}
+		credential.KeyEnc = keyEnc.String
+		return nil
+	})
+	return credential, err
+}
+
 // GetAgentKeyEnc returns the stored encrypted API key for an agent. found is
 // false when no agent row exists; enc is "" for agents created before key
 // storage was added (only the hash exists, so the key cannot be revealed).
@@ -119,7 +205,7 @@ func (r *AgentRepository) DeactivateAgent(id string) error {
 }
 
 func (r *AgentRepository) GetAllAgents() ([]models.Agent, error) {
-	rows, err := DB.Query(`SELECT id, name, version, COALESCE(status,'active'), last_seen_at, created_at, updated_at FROM agents WHERE COALESCE(status,'active') = 'active' ORDER BY last_seen_at DESC`)
+	rows, err := DB.Query(`SELECT id, name, version, COALESCE(status,'active'), last_seen_at, created_at, updated_at, COALESCE(capability_report, '{}') FROM agents WHERE COALESCE(status,'active') = 'active' ORDER BY last_seen_at DESC`)
 	if err != nil {
 		return nil, err
 	}
@@ -127,12 +213,38 @@ func (r *AgentRepository) GetAllAgents() ([]models.Agent, error) {
 	agents := make([]models.Agent, 0)
 	for rows.Next() {
 		var agent models.Agent
-		if err := rows.Scan(&agent.ID, &agent.Name, &agent.Version, &agent.Status, &agent.LastSeenAt, &agent.CreatedAt, &agent.UpdatedAt); err != nil {
+		var capabilityReport string
+		if err := rows.Scan(&agent.ID, &agent.Name, &agent.Version, &agent.Status, &agent.LastSeenAt, &agent.CreatedAt, &agent.UpdatedAt, &capabilityReport); err != nil {
 			return nil, err
+		}
+		var report models.CapabilityReport
+		if err := json.Unmarshal([]byte(capabilityReport), &report); err != nil {
+			return nil, fmt.Errorf("decode agent %s capability report: %w", agent.ID, err)
+		}
+		if !report.CheckedAt.IsZero() {
+			agent.Capabilities = &report
 		}
 		agents = append(agents, agent)
 	}
 	return agents, rows.Err()
+}
+
+// UpdateCapabilityReport persists diagnostics independently from the service
+// rows so older Agents that omit the report remain wire-compatible.
+func (r *AgentRepository) UpdateCapabilityReport(agentID string, report models.CapabilityReport) error {
+	data, err := json.Marshal(report)
+	if err != nil {
+		return err
+	}
+	result, err := DB.Exec(`UPDATE agents SET capability_report = ?, updated_at = ? WHERE id = ?`, string(data), time.Now(), agentID)
+	if err != nil {
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
 }
 
 func (r *AgentRepository) UpsertServices(agentID string, observedAt time.Time, services []models.AgentService) error {

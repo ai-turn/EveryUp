@@ -28,6 +28,27 @@ func AuthRateLimiter() fiber.Handler {
 	})
 }
 
+// AgentJoinRateLimiter protects the public one-time-code exchange endpoint.
+// A separate limiter prevents installer retries from consuming login attempts.
+func AgentJoinRateLimiter() fiber.Handler {
+	return limiter.New(limiter.Config{
+		Max:        10,
+		Expiration: time.Minute,
+		KeyGenerator: func(c *fiber.Ctx) string {
+			return c.IP()
+		},
+		LimitReached: func(c *fiber.Ctx) error {
+			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+				"success": false,
+				"error": fiber.Map{
+					"code":    "RATE_LIMITED",
+					"message": "Too many join attempts. Please try again later.",
+				},
+			})
+		},
+	})
+}
+
 // IngestRateLimiter returns a rate limiter for log/metric ingestion endpoints.
 // Limits to maxRequests per window per API key (via IP fallback).
 func IngestRateLimiter() fiber.Handler {

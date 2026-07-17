@@ -61,6 +61,11 @@ type Config struct {
 	HostMemoryPercent  float64
 	HostDiskPercent    float64
 
+	// Mirrors whether the optional OBI kernel context propagation feature is
+	// enabled in the deployment bundle, allowing diagnostics to report it
+	// independently from basic automatic tracing.
+	EBPFContextPropagationEnabled bool
+
 	// App-instrumentation bundle (OTel Java agent jar + Node register bundle),
 	// shipped in the image and copied to InstrumentationDir at startup when
 	// that directory exists (i.e. the shared volume is mounted).
@@ -103,12 +108,13 @@ func LoadFromEnv() (Config, error) {
 		HeartbeatToken:    strings.TrimSpace(os.Getenv("EVERYUP_HEARTBEAT_TOKEN")),
 		HeartbeatInterval: durationSeconds("EVERYUP_HEARTBEAT_INTERVAL_SECONDS", time.Minute),
 
-		HostMetricsEnabled: boolEnv("EVERYUP_HOST_METRICS_ENABLED", true),
-		HostMetricsRoot:    getEnv("EVERYUP_HOST_METRICS_ROOT", defaultHostMetricsRoot),
-		HostDiskPath:       getEnv("EVERYUP_HOST_DISK_PATH", defaultHostMetricsRoot),
-		HostCPUPercent:     percentEnv("EVERYUP_HOST_CPU_PERCENT", 0),
-		HostMemoryPercent:  percentEnv("EVERYUP_HOST_MEMORY_PERCENT", 0),
-		HostDiskPercent:    percentEnv("EVERYUP_HOST_DISK_PERCENT", 0),
+		HostMetricsEnabled:            boolEnv("EVERYUP_HOST_METRICS_ENABLED", true),
+		HostMetricsRoot:               getEnv("EVERYUP_HOST_METRICS_ROOT", defaultHostMetricsRoot),
+		HostDiskPath:                  getEnv("EVERYUP_HOST_DISK_PATH", defaultHostMetricsRoot),
+		HostCPUPercent:                percentEnv("EVERYUP_HOST_CPU_PERCENT", 0),
+		HostMemoryPercent:             percentEnv("EVERYUP_HOST_MEMORY_PERCENT", 0),
+		HostDiskPercent:               percentEnv("EVERYUP_HOST_DISK_PERCENT", 0),
+		EBPFContextPropagationEnabled: boolEnv("EVERYUP_EBPF_CONTEXT_PROPAGATION_ENABLED", false),
 
 		InstrumentationSrcDir: getEnv("EVERYUP_INSTRUMENTATION_SRC_DIR", "/opt/everyup/instrumentation"),
 		InstrumentationDir:    getEnv("EVERYUP_INSTRUMENTATION_DIR", "/everyup-instrumentation"),

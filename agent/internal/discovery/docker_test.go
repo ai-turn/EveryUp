@@ -1,6 +1,15 @@
 package discovery
 
-import "testing"
+import (
+	"io"
+	"net/http"
+	"strings"
+	"testing"
+)
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) { return f(req) }
 
 func TestTargetFromContainerUsesComposeServiceName(t *testing.T) {
 	target := TargetFromContainer("abcdef1234567890", "shop-api-1", map[string]string{
@@ -68,6 +77,19 @@ func TestNewDockerClientAcceptsTCPProxyPath(t *testing.T) {
 	}
 }
 
+func TestContainerStateByName(t *testing.T) {
+	client := NewDockerClient("tcp://unused", 0)
+	client.client.Transport = roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		body := io.NopCloser(strings.NewReader(`[{"Id":"1","Names":["/everyup-ebpf"],"State":"running"}]`))
+		return &http.Response{StatusCode: http.StatusOK, Body: body, Header: make(http.Header)}, nil
+	})
+
+	state, found, err := client.ContainerStateByName(t.Context(), "everyup-ebpf")
+	if err != nil || !found || state != "running" {
+		t.Fatalf("state=%q found=%t err=%v", state, found, err)
+	}
+}
+
 func TestParseDockerLogLinesWithTimestamp(t *testing.T) {
 	lines := parseDockerLogLines([]byte("2026-06-26T01:02:03.000000004Z hello world\nplain line\n"))
 	if len(lines) != 2 {
@@ -108,13 +130,13 @@ func TestDetectRuntime(t *testing.T) {
 		cmds  []string
 		want  string
 	}{
-		{"mycompany/api:1.2", []string{"java -jar /app.jar"}, "java"},                    // custom image, cmd wins
+		{"mycompany/api:1.2", []string{"java -jar /app.jar"}, "java"}, // custom image, cmd wins
 		{"mycompany/web:latest", []string{"sh -c start", "/usr/bin/node server.js"}, "node"},
 		{"backend:2", []string{"gunicorn app:app -w 4"}, "python"},
 		{"tool:1", []string{"/usr/local/bin/python3.12 -m http.server"}, "python"},
-		{"eclipse-temurin:17-jre", nil, "java"},                                          // image fallback
-		{"node:20-alpine", []string{"/whoami"}, "node"},                                  // unknown cmd -> image
-		{"traefik/whoami:latest", []string{"/whoami"}, ""},                               // Go binary: unknown, by design
+		{"eclipse-temurin:17-jre", nil, "java"},            // image fallback
+		{"node:20-alpine", []string{"/whoami"}, "node"},    // unknown cmd -> image
+		{"traefik/whoami:latest", []string{"/whoami"}, ""}, // Go binary: unknown, by design
 		{"python:3.12", nil, "python"},
 		{"mcr.microsoft.com/dotnet/aspnet:8.0", nil, "dotnet"},
 	}

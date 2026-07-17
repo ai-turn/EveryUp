@@ -44,6 +44,9 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	// outside the JWT browser session group.
 	agentHandler := handlers.NewAgentHandler()
 	agentHandler.SetEvaluators(ruleEvaluator, serviceEvaluator)
+	api.Get("/agents/install.sh", agentHandler.InstallScript)
+	api.Get("/agents/otel.sh", agentHandler.OTelScript)
+	api.Post("/agents/join", middleware.AgentJoinRateLimiter(), agentHandler.Join)
 	api.Post("/agents/enroll", agentHandler.Enroll)
 	api.Post("/agents/:agentId/services", agentHandler.SyncServices)
 	api.Post("/agents/:agentId/events", agentHandler.SyncEvents)
@@ -142,6 +145,7 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	local.Get("/agents/overview", agentHandler.GetOverview)
 	local.Get("/agents/:agentId/key", agentHandler.GetKey)
 	local.Post("/agents/:agentId/rotate-key", agentHandler.RotateKey)
+	local.Post("/agents/:agentId/join-code", agentHandler.IssueJoinCode)
 	local.Get("/agents/:agentId/services", agentHandler.GetServices)
 	local.Delete("/agents/:agentId/services/:key", agentHandler.DeleteService)
 	local.Get("/agents/:agentId/events", agentHandler.GetEvents)

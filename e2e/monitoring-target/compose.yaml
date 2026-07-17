@@ -1,0 +1,49 @@
+name: everyup-e2e
+
+services:
+  node-api:
+    build:
+      context: ./node
+    environment:
+      FIXTURE_NAME: node-api
+      NODE_OPTIONS: --trace-warnings
+    ports:
+      - "127.0.0.1:${NODE_PORT:-18080}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "NODE_OPTIONS= node -e \"fetch('http://127.0.0.1:8080/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    restart: unless-stopped
+
+  java-api:
+    build:
+      context: ./java
+    environment:
+      FIXTURE_NAME: java-api
+      JAVA_TOOL_OPTIONS: -Dfixture.baseline=true
+    ports:
+      - "127.0.0.1:${JAVA_PORT:-18081}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "JAVA_TOOL_OPTIONS= java -cp /app/app.jar FixtureHealthcheck"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    restart: unless-stopped
+
+  rollback-probe:
+    build:
+      context: ./node
+    environment:
+      FAIL_WHEN_INSTRUMENTED: "true"
+      FIXTURE_NAME: rollback-probe
+      NODE_OPTIONS: --trace-warnings
+    healthcheck:
+      test: ["CMD-SHELL", "NODE_OPTIONS= node -e \"fetch('http://127.0.0.1:8080/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    restart: unless-stopped

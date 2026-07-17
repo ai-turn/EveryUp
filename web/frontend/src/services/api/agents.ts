@@ -8,6 +8,35 @@ export interface ConnectedAgent {
   lastSeenAt: string;
   createdAt: string;
   updatedAt: string;
+  capabilities?: AgentCapabilityReport;
+}
+
+export type AgentCapabilityState = 'available' | 'degraded' | 'unavailable';
+
+export interface AgentCapabilityStatus {
+  state: AgentCapabilityState;
+  reason?: string;
+  detail?: string;
+}
+
+export interface AgentCapabilityReport {
+  checkedAt: string;
+  host: {
+    os?: string;
+    arch?: string;
+    kernelVersion?: string;
+    btf: boolean;
+    lockdown?: string;
+  };
+  containerMonitoring: AgentCapabilityStatus;
+  hostMetrics: AgentCapabilityStatus;
+  automaticTracing: AgentCapabilityStatus;
+  contextPropagation: AgentCapabilityStatus;
+}
+
+export interface AgentJoinCode {
+  joinCode: string;
+  expiresAt: string;
 }
 
 export interface AgentServiceSnapshot {
@@ -152,10 +181,12 @@ export interface OtelServiceMetric {
 
 export const agentsApi = {
   createAgent: (name: string) =>
-    request<{ id: string; name: string; apiKey: string }>('/agents', {
+    request<{ id: string; name: string } & AgentJoinCode>('/agents', {
       method: 'POST',
       body: JSON.stringify({ name }),
     }),
+  createAgentJoinCode: (agentId: string) =>
+    request<AgentJoinCode>(`/agents/${agentId}/join-code`, { method: 'POST' }),
   deleteAgent: (agentId: string) =>
     request<void>(`/agents/${agentId}`, { method: 'DELETE' }),
   // Reveal the full API key. available=false for projects created before key storage existed.

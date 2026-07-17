@@ -217,6 +217,25 @@ func (c *DockerClient) fetchContainers(ctx context.Context) ([]dockerContainer, 
 	return containers, nil
 }
 
+// ContainerStateByName returns the Docker state of a named container. It is
+// used by compatibility diagnostics to distinguish an unsupported host from a
+// compatible host whose isolated eBPF observer simply is not running.
+func (c *DockerClient) ContainerStateByName(ctx context.Context, name string) (state string, found bool, err error) {
+	containers, err := c.fetchContainers(ctx)
+	if err != nil {
+		return "", false, err
+	}
+	wanted := strings.TrimPrefix(strings.TrimSpace(name), "/")
+	for _, container := range containers {
+		for _, candidate := range container.Names {
+			if strings.TrimPrefix(candidate, "/") == wanted {
+				return container.State, true, nil
+			}
+		}
+	}
+	return "", false, nil
+}
+
 func (c *DockerClient) ListTargets(ctx context.Context) ([]Target, error) {
 	containers, err := c.fetchContainers(ctx)
 	if err != nil {

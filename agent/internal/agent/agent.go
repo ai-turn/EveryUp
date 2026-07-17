@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/aiturn/everyup/agent/internal/capabilities"
 	"github.com/aiturn/everyup/agent/internal/checks"
 	"github.com/aiturn/everyup/agent/internal/config"
 	"github.com/aiturn/everyup/agent/internal/discovery"
@@ -279,13 +280,34 @@ func (a *Agent) flushWebServices(ctx context.Context) {
 	// Container provenance (image/restart count/uptime) for the service header;
 	// best-effort, keyed by the same stable service key as the snapshot.
 	var meta map[string]discovery.ContainerMeta
+	dockerReachable := false
+	observerState := ""
+	observerFound := false
 	if a.docker != nil {
 		if m, err := a.docker.ContainerMetaMap(ctx); err != nil {
 			log.Printf("container meta collection failed: %v", err)
 		} else {
 			meta = m
+			dockerReachable = true
+		}
+		if state, found, err := a.docker.ContainerStateByName(ctx, "everyup-ebpf"); err != nil {
+			log.Printf("eBPF observer state collection failed: %v", err)
+		} else {
+			dockerReachable = true
+			observerState = state
+			observerFound = found
 		}
 	}
+	report := capabilities.Check(capabilities.Inputs{
+		HostRoot:                  a.cfg.HostMetricsRoot,
+		DockerEnabled:             a.cfg.DockerDiscoveryEnabled,
+		DockerReachable:           dockerReachable,
+		HostMetricsEnabled:        a.cfg.HostMetricsEnabled,
+		ObserverFound:             observerFound,
+		ObserverState:             observerState,
+		ContextPropagationEnabled: a.cfg.EBPFContextPropagationEnabled,
+		Now:                       snapshot.Now,
+	})
 	services := make([]webclient.ServiceSnapshot, 0, len(snapshot.Services))
 	for _, service := range snapshot.Services {
 		m := meta[service.Key]
@@ -309,10 +331,11 @@ func (a *Agent) flushWebServices(ctx context.Context) {
 	}
 
 	err := a.web.SendServices(ctx, webclient.ServiceSnapshotRequest{
-		AgentID:    a.webAgentID,
-		AgentName:  snapshot.AgentName,
-		ObservedAt: snapshot.Now,
-		Services:   services,
+		AgentID:      a.webAgentID,
+		AgentName:    snapshot.AgentName,
+		ObservedAt:   snapshot.Now,
+		Services:     services,
+		Capabilities: report,
 	})
 	if err != nil {
 		log.Printf("EveryUp Web service sync failed: %v", err)

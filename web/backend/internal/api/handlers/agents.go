@@ -52,10 +52,11 @@ type agentEnrollResponse struct {
 }
 
 type agentServicesRequest struct {
-	AgentID    string                `json:"agentId"`
-	AgentName  string                `json:"agentName"`
-	ObservedAt time.Time             `json:"observedAt"`
-	Services   []models.AgentService `json:"services"`
+	AgentID      string                  `json:"agentId"`
+	AgentName    string                  `json:"agentName"`
+	ObservedAt   time.Time               `json:"observedAt"`
+	Services     []models.AgentService   `json:"services"`
+	Capabilities models.CapabilityReport `json:"capabilities"`
 }
 
 type agentEventsRequest struct {
@@ -152,6 +153,13 @@ func (h *AgentHandler) SyncServices(c *fiber.Ctx) error {
 	if req.AgentID != "" && req.AgentID != agentID {
 		return agentBadRequest(c, "INVALID_REQUEST", "agentId mismatch")
 	}
+	// Older Agents do not send capabilities; keep the last known report rather
+	// than replacing it with a zero-value document during a rolling upgrade.
+	if !req.Capabilities.CheckedAt.IsZero() {
+		if err := h.repo.UpdateCapabilityReport(agentID, req.Capabilities); err != nil {
+			return internalError(c, "DATABASE_ERROR", err)
+		}
+	}
 	if err := h.repo.UpsertServices(agentID, req.ObservedAt, req.Services); err != nil {
 		return internalError(c, "DATABASE_ERROR", err)
 	}
@@ -236,7 +244,9 @@ func hashAgentKey(key string) string {
 	return hex.EncodeToString(sum[:])
 }
 
-// Create pre-registers a new service (agent) from the web UI and returns its API key once.
+// Create pre-registers a new service (agent) and returns a short-lived join
+// code. The long-lived API key stays server-side until the installer exchanges
+// that code, so it is not exposed in the initial browser flow.
 func (h *AgentHandler) Create(c *fiber.Ctx) error {
 	var req struct {
 		Name string `json:"name"`
@@ -262,16 +272,21 @@ func (h *AgentHandler) Create(c *fiber.Ctx) error {
 		ID:   "agent_" + uuid.NewString(),
 		Name: req.Name,
 	}
-	if err := h.repo.CreateAgent(agent, hash, keyEnc); err != nil {
+	joinCode, joinHash, expiresAt, err := newAgentJoinCode(time.Now())
+	if err != nil {
+		return internalError(c, "KEY_GENERATION_ERROR", err)
+	}
+	if err := h.repo.CreateAgentWithJoinCode(agent, hash, keyEnc, joinHash, expiresAt); err != nil {
 		return internalError(c, "DATABASE_ERROR", err)
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"success": true,
 		"data": fiber.Map{
-			"id":     agent.ID,
-			"name":   agent.Name,
-			"apiKey": plain, // returned once only
+			"id":        agent.ID,
+			"name":      agent.Name,
+			"joinCode":  joinCode,
+			"expiresAt": expiresAt,
 		},
 	})
 }

@@ -50,12 +50,12 @@ want to monitor. There is no large observability stack to set up.
 | 🟢 | 📜 Logs | Container stdout/stderr collection |
 | 🟢 | 🌐 API status | Request status codes (method, path, status) parsed from access logs |
 | 🟢 | 🔔 Notifications | Telegram, Discord, and Slack channels |
-| 🔵 | ⚡ API latency & traces | eBPF sidecar — no app changes |
+| 🔵 | ⚡ API latency & traces | Automatic eBPF observer — no app changes |
 | 🔵 | 🔍 API headers & bodies | OpenTelemetry instrumentation — one app restart |
 
 ## Quick Start
 
-This is the smallest setup: one Web and one Agent, both with Docker Compose.
+This is the smallest setup: one Web and one monitoring bundle, both with Docker Compose.
 On a single server you can run both side by side. Compose templates live in
 [`web/docker-compose.yml`](web/docker-compose.yml) and
 [`agent/docker-compose.yml`](agent/docker-compose.yml).
@@ -92,59 +92,55 @@ docker compose up -d
 
 Open `http://WEB_SERVER_IP:3001` and create the first admin account. Done.
 
-### 2. Create an Agent key
+### 2. Create a one-time Agent install command
 
-In the dashboard, open **Services** and click **Add Project**. Copy the API
-key (`evup_svc_...`) shown after creation.
+In the dashboard, open **Services** and click **Add Project**. The project flow
+shows an installation command containing a join code that expires after ten
+minutes and can only be used once. The long-lived API key is not displayed in
+this initial browser flow; it is delivered directly to the target server during
+installation.
 
-### 3. Add the Agent to the monitored server
+### 3. Install the monitoring bundle on the monitored server
 
-Add an `everyup-agent` service to the Compose file on the server you want to
-monitor. Your app containers need no configuration.
+The bundled Compose file starts the regular Agent plus an isolated OBI eBPF
+observer. Your application Compose file, images, ports, and containers do not
+need to be changed. Docker Compose 2.23.1 or newer is required.
 
-```yaml
-services:
-  everyup-agent:
-    image: aiturn/everyup-agent:latest
-    container_name: everyup-agent
-    environment:
-      EVERYUP_WEB_SYNC_ENABLED: "true"
-      EVERYUP_WEB_BASE_URL: "http://WEB_SERVER_IP:3001"   # Web address reachable from the Agent container
-      EVERYUP_AGENT_API_KEY: "evup_svc_replace_me"        # key from step 2
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /:/hostfs:ro
-      - everyup-agent-data:/data
-    restart: unless-stopped
+Run the displayed one-line command on the target Linux Docker server. The
+installer checks Docker and Compose first, writes the bundle under
+`/opt/everyup-agent`, backs up any previous configuration, and starts the Agent
+and eBPF observer.
 
-volumes:
-  everyup-agent-data:
-```
-
-```bash
-docker compose up -d
-```
+If the join code expires or has already been used, click **New code** in the
+project installation screen and copy the refreshed command.
 
 Within about 30 seconds the Agent shows as online in Web and the containers on
-that server appear automatically. If something goes wrong, see
+that server appear automatically. The eBPF observer also discovers container
+processes automatically; there is no port list to maintain. If something goes wrong, see
 [Troubleshooting](#troubleshooting).
+
+The project's **Monitoring setup guide** checks Agent connection, baseline
+collection, and automatic API tracing in order. When Java or Node.js services
+are discovered, the same guide continues into the optional detailed
+header/body instrumentation flow.
 
 ## Optional Features
 
-### eBPF sidecar: API latency and traces
+### Automatic eBPF observer: API latency and traces
 
 The default Agent reads method, path, and status from access logs. To see real
-latency and traces, enable the `everyup-ebpf` sidecar included in the Agent
-Compose file.
+latency and traces, the bundled Compose file starts `everyup-ebpf` automatically.
+It discovers processes running in Docker/OCI containers, so there is no
+`BEYLA_OPEN_PORT` or application port configuration.
 
-1. Uncomment the `everyup-ebpf` service in `agent/docker-compose.yml`.
-2. Set `BEYLA_OPEN_PORT` to the ports your apps listen on, e.g. `"80,3000,8080"`.
-3. Run `docker compose up -d` again.
-
-This does not change your app code, Dockerfile, or app containers. eBPF
-observes processes on the host to build traces, and the Agent attributes each
-span to the matching Docker service. Requires Linux kernel 5.8+ with BTF. See
-"Zero-Code Tracing" in [agent/README.md](agent/README.md) for details.
+This does not change your app code, Dockerfile, or app containers. On a native
+Linux host, eBPF observes host processes to build traces and the Agent
+attributes each span to the matching Docker service. Docker Desktop has the
+PID-translation limitation, so use app-side OpenTelemetry when automatic service
+attribution is unavailable. Requires Linux kernel 5.8+ with BTF. See
+"Zero-Code Tracing" in [agent/README.md](agent/README.md) for details. The
+observer needs elevated eBPF permissions; remove the `everyup-ebpf` service if
+that is not acceptable. Logs, health, events, and host metrics keep working.
 
 ### OpenTelemetry instrumentation: request/response headers and bodies
 
@@ -152,10 +148,12 @@ To diagnose why a request failed, use app-side OpenTelemetry instrumentation.
 It requires one app restart, but for Java and Node.js it attaches through a
 Compose override without touching your code or Dockerfile.
 
-In the web UI, open a project and run the **OTel instrumentation** action. It
+In the web UI, open a project, choose **Detailed API monitoring**, and run the
+displayed one-line command on the application server. The `everyup-otel` helper
 generates a `docker-compose.everyup.yml` tailored to the detected Java/Node.js
-runtimes. Restart your app with this override to collect request/response
-headers and traces with real latency.
+runtimes and recreates only those services. It verifies the injected options,
+shared volume, Agent network, and container state, automatically restoring the
+previous configuration if a check fails.
 
 Automatic body capture is currently available for Node.js. Bodies are masked
 inside the app before export, are admin-only in Web, and viewing is audited.
@@ -181,13 +179,13 @@ API status codes appear when the app or a proxy writes access logs to
 stdout/stderr. Without access logs, container state, regular logs, and host
 metrics are still collected.
 
-### Optional: eBPF sidecar
+### Automatic eBPF observer in the monitoring bundle
 
 | Data | Source |
 | --- | --- |
-| API traces with real latency | `everyup-ebpf` sidecar (eBPF) |
+| API traces with real latency | `everyup-ebpf` observer (OBI/eBPF) |
 | method, path, status, duration | Host process observation |
-| Many languages including Go, and HTTPS services | Grafana Beyla-based eBPF |
+| Many languages including Go, and HTTPS services | OpenTelemetry eBPF Instrumentation |
 
 ### Optional: app-side OpenTelemetry instrumentation
 
@@ -205,8 +203,11 @@ container. Even on the same server, `localhost` inside the container may point
 to the Agent itself, not Web. Use a Compose service name or a host-reachable IP.
 
 **The Agent cannot read the Docker socket.**
-This is a permission issue. The simplest fix is to add `user: "0:0"` to the
-Agent service. To narrow socket access in production, use the
+This is a permission issue. The one-line installer detects the Docker socket
+group ID and writes `EVERYUP_DOCKER_GID` automatically. For a manual deployment,
+set that value to `stat -c '%g' /var/run/docker.sock` and add it through
+`group_add`; use `user: "0:0"` only as a short-lived diagnostic fallback. To
+narrow socket access in production, use the
 [Docker socket proxy guide](agent/docs/docker-socket-proxy.md).
 
 **Logs are not showing up.**
@@ -267,3 +268,7 @@ cd web/backend && go test ./...     # backend tests
 cd web/frontend && pnpm build       # frontend build
 cd agent && go test ./...           # agent tests
 ```
+
+For a disposable Node.js and Java application that exercises instrumentation,
+traffic, verification, and rollback, see the
+[monitoring target E2E fixture](e2e/monitoring-target/README.md).

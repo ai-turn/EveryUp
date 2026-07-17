@@ -1,12 +1,60 @@
 package database_test
 
 import (
+	"database/sql"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/aiturn/everyup/internal/database"
 	"github.com/aiturn/everyup/internal/models"
 )
+
+func TestAgentJoinCodeCanOnlyBeConsumedOnce(t *testing.T) {
+	openTestDB(t)
+
+	repo := database.NewAgentRepository()
+	now := time.Now().UTC().Truncate(time.Second)
+	agent := models.Agent{ID: "agent-join", Name: "join-target"}
+	if err := repo.CreateAgentWithJoinCode(agent, "api-hash", "encrypted-api-key", "join-hash", now.Add(10*time.Minute)); err != nil {
+		t.Fatalf("CreateAgentWithJoinCode: %v", err)
+	}
+
+	credential, err := repo.ConsumeJoinCode("join-hash", now)
+	if err != nil {
+		t.Fatalf("ConsumeJoinCode: %v", err)
+	}
+	if credential.AgentID != agent.ID || credential.AgentName != agent.Name || credential.KeyEnc != "encrypted-api-key" {
+		t.Fatalf("unexpected credential: %+v", credential)
+	}
+	if _, err := repo.ConsumeJoinCode("join-hash", now); !errors.Is(err, sql.ErrNoRows) {
+		t.Fatalf("second ConsumeJoinCode error = %v, want sql.ErrNoRows", err)
+	}
+}
+
+func TestAgentJoinCodeExpiryAndReplacement(t *testing.T) {
+	openTestDB(t)
+
+	repo := database.NewAgentRepository()
+	now := time.Now().UTC().Truncate(time.Second)
+	agent := models.Agent{ID: "agent-expiry", Name: "expiry-target"}
+	if err := repo.CreateAgentWithJoinCode(agent, "api-hash-2", "encrypted-api-key", "expired-hash", now.Add(-time.Second)); err != nil {
+		t.Fatalf("CreateAgentWithJoinCode: %v", err)
+	}
+	if _, err := repo.ConsumeJoinCode("expired-hash", now); !errors.Is(err, sql.ErrNoRows) {
+		t.Fatalf("expired ConsumeJoinCode error = %v, want sql.ErrNoRows", err)
+	}
+
+	if err := repo.IssueJoinCode(agent.ID, "replacement-hash", now.Add(10*time.Minute)); err != nil {
+		t.Fatalf("IssueJoinCode: %v", err)
+	}
+	if _, err := repo.ConsumeJoinCode("replacement-hash", now); err != nil {
+		t.Fatalf("replacement ConsumeJoinCode: %v", err)
+	}
+	if err := repo.IssueJoinCode("missing-agent", "unused", now.Add(time.Minute)); !errors.Is(err, sql.ErrNoRows) {
+		t.Fatalf("missing agent IssueJoinCode error = %v, want sql.ErrNoRows", err)
+	}
+}
 
 func TestAgentRepositoryRoundTrip(t *testing.T) {
 	openTestDB(t)
@@ -34,6 +82,17 @@ func TestAgentRepositoryRoundTrip(t *testing.T) {
 	}}); err != nil {
 		t.Fatalf("UpsertServices returned error: %v", err)
 	}
+	report := models.CapabilityReport{
+		CheckedAt:           agent.LastSeenAt,
+		Host:                models.HostCompatibility{OS: "Ubuntu 24.04 LTS", Arch: "amd64", KernelVersion: "6.8.0", BTF: true, Lockdown: "none"},
+		ContainerMonitoring: models.CapabilityStatus{State: "available"},
+		HostMetrics:         models.CapabilityStatus{State: "available"},
+		AutomaticTracing:    models.CapabilityStatus{State: "degraded", Reason: "observer_not_running"},
+		ContextPropagation:  models.CapabilityStatus{State: "unavailable", Reason: "automatic_tracing_unavailable"},
+	}
+	if err := repo.UpdateCapabilityReport(agent.ID, report); err != nil {
+		t.Fatalf("UpdateCapabilityReport returned error: %v", err)
+	}
 
 	if err := repo.InsertEvents(agent.ID, []models.AgentEvent{{
 		Time:        agent.LastSeenAt,
@@ -52,6 +111,9 @@ func TestAgentRepositoryRoundTrip(t *testing.T) {
 	}
 	if len(agents) != 1 || agents[0].ID != agent.ID {
 		t.Fatalf("unexpected agents: %+v", agents)
+	}
+	if agents[0].Capabilities == nil || agents[0].Capabilities.Host.KernelVersion != "6.8.0" || agents[0].Capabilities.AutomaticTracing.Reason != "observer_not_running" {
+		t.Fatalf("unexpected capability report: %+v", agents[0].Capabilities)
 	}
 	services, err := repo.GetServices(agent.ID)
 	if err != nil {
