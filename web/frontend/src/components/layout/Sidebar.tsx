@@ -9,11 +9,6 @@ import { env } from '../../config/env';
 import logo from '../../assets/logo.png';
 import logoDark from '../../assets/logo-dark.png';
 
-// 2분 내 통신이면 온라인 (ServiceGridPage와 동일 기준)
-function agentOnline(agent: ConnectedAgent): boolean {
-  return Date.now() - new Date(agent.lastSeenAt).getTime() < 2 * 60 * 1000;
-}
-
 interface NavItemProps {
   to: string;
   icon: string;
@@ -78,8 +73,6 @@ export function Sidebar() {
 
   const currentAgent = agents.find(a => a.id === agentId) ?? null;
   const projectServices = agentId ? services.filter(s => s.agentId === agentId) : [];
-  const online = currentAgent ? agentOnline(currentAgent) : false;
-  const healthyCount = projectServices.filter(s => s.healthy).length;
 
   const isHome = location.pathname === '/';
   const isDash = !!projMatch;
@@ -150,21 +143,8 @@ export function Sidebar() {
         <NavItem to="/settings" icon="settings" label={t('환경설정')} active={isSettings} />
       </nav>
 
-      {/* 하단: 에이전트 상태 + 테마/언어 */}
+      {/* 하단: 테마/언어 */}
       <div className="p-3 shrink-0 flex flex-col gap-2">
-        {currentAgent && (
-          <div className="rounded-lg bg-bg-main border border-ui-border px-3 py-2.5">
-            <div className="flex items-center gap-1.5 text-2xs font-semibold text-text-base">
-              <span className={`h-1.5 w-1.5 rounded-full ${online ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-              <span className="truncate">
-                {currentAgent.version ? `Agent v${currentAgent.version}` : 'Agent'} · {online ? 'online' : 'offline'}
-              </span>
-            </div>
-            <div className="mt-1 text-2xs text-text-dim">
-              {t('서비스 {count}개', { count: projectServices.length })} · {t('정상')} {healthyCount}
-            </div>
-          </div>
-        )}
         <div className="flex items-center justify-between">
           <button
             onClick={toggleTheme}
