@@ -86,7 +86,7 @@ export function ApiKeyModal({ agentId, agentName, onClose, onRotated }: Props) {
                   <button onClick={handleCopy}
                     className={`shrink-0 flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
                       copied
-                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                         : 'bg-ui-hover text-text-secondary hover:bg-ui-active'
                     }`}>
                     <MaterialIcon name={copied ? 'check' : 'content_copy'} className="text-base" />
@@ -95,13 +95,13 @@ export function ApiKeyModal({ agentId, agentName, onClose, onRotated }: Props) {
               </div>
               <div className="space-y-1.5">
                 <p className="text-xs font-medium text-text-muted uppercase tracking-wider">에이전트 설정</p>
-                <pre className="px-3 py-2.5 rounded-xl bg-slate-900 dark:bg-black text-xs font-mono text-slate-100 overflow-x-auto">{`EVERYUP_AGENT_API_KEY=${apiKey}`}</pre>
+                <pre className="px-3 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-950 text-xs font-mono text-slate-100 overflow-x-auto">{`EVERYUP_AGENT_API_KEY=${apiKey}`}</pre>
               </div>
             </>
           ) : (
-            <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-ui-hover-soft border border-ui-border">
               <MaterialIcon name="info" className="text-amber-500 text-lg shrink-0 mt-0.5" />
-              <p className="text-sm text-amber-700 dark:text-amber-300">
+              <p className="text-sm text-text-muted">
                 이 프로젝트는 키 저장 기능 이전에 생성되어 기존 키를 조회할 수 없습니다. 재발급하면 새 키가 발급됩니다.
               </p>
             </div>

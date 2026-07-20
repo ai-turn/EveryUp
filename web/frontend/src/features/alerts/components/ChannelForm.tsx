@@ -563,21 +563,21 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                 </button>
 
                                 {testState === 'success' && (
-                                    <div className="flex items-start gap-2 px-3 py-2.5 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl">
+                                    <div className="flex items-start gap-2 px-3 py-2.5 bg-ui-hover-soft border border-ui-border rounded-xl">
                                         <MaterialIcon name="check_circle" className="text-base text-emerald-500 mt-0.5 shrink-0" />
                                         <div>
-                                            <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">{t('alerts.modal.testSuccess', { defaultValue: '발송 성공' })}</p>
-                                            <p className="text-sm text-emerald-600 dark:text-emerald-500 mt-0.5">{t('alerts.modal.testSuccessAt', { time: testTime, defaultValue: '{{time}}에 전송되었습니다' })}</p>
+                                            <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{t('alerts.modal.testSuccess', { defaultValue: '발송 성공' })}</p>
+                                            <p className="text-sm text-text-muted mt-0.5">{t('alerts.modal.testSuccessAt', { time: testTime, defaultValue: '{{time}}에 전송되었습니다' })}</p>
                                         </div>
                                     </div>
                                 )}
 
                                 {testState === 'error' && (
-                                    <div className="flex items-start gap-2 px-3 py-2.5 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl">
+                                    <div className="flex items-start gap-2 px-3 py-2.5 bg-ui-hover-soft border border-ui-border rounded-xl">
                                         <MaterialIcon name="error" className="text-base text-red-500 mt-0.5 shrink-0" />
                                         <div>
-                                            <p className="text-sm font-bold text-red-700 dark:text-red-400">{t('alerts.modal.testFailed', { defaultValue: '발송 실패' })}</p>
-                                            <p className="text-sm text-red-600 dark:text-red-500 mt-0.5">{testError}</p>
+                                            <p className="text-sm font-bold text-red-600 dark:text-red-400">{t('alerts.modal.testFailed', { defaultValue: '발송 실패' })}</p>
+                                            <p className="text-sm text-text-muted mt-0.5">{testError}</p>
                                         </div>
                                     </div>
                                 )}

@@ -323,7 +323,7 @@ export function ProjectDetailPage() {
       {banner && (
         <button
           onClick={() => navigate(`/services/${agentId}/${encodeURIComponent(banner.key)}`)}
-          className="w-full flex items-center gap-3 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/15 px-4 py-3 text-left hover:border-red-300 dark:hover:border-red-800 transition-colors"
+          className="w-full flex items-center gap-3 rounded-xl border border-ui-border bg-bg-surface px-4 py-3 text-left hover:bg-ui-hover-soft transition-colors"
         >
           <span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse shrink-0" />
           <span className="text-sm font-semibold text-text-base truncate">
@@ -409,11 +409,7 @@ export function ProjectDetailPage() {
                       type="button"
                       key={`${inc.key}-${inc.startedAt}-${i}`}
                       onClick={() => navigate(`/services/${agentId}/${encodeURIComponent(inc.key)}`)}
-                      className={`w-full flex items-start gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors ${
-                        inc.active
-                          ? 'border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/15 hover:border-red-300'
-                          : 'border-ui-border hover:border-slate-300 dark:hover:border-ui-active-dark'
-                      }`}
+                      className="w-full flex items-start gap-2.5 rounded-lg border border-ui-border px-3 py-2 text-left transition-colors hover:border-slate-300 dark:hover:border-ui-active-dark"
                     >
                       <span className={`h-1.5 w-1.5 rounded-full mt-1.5 shrink-0 ${inc.active ? 'bg-red-500' : 'bg-emerald-500'}`} />
                       <span className="min-w-0 flex-1">

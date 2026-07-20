@@ -101,7 +101,7 @@ function ProjectForm({
           value={name}
           onChange={event => onNameChange(event.target.value)}
           placeholder="예: my-api, payment-service"
-          className="w-full px-3 py-2.5 rounded-xl text-sm bg-ui-hover-soft border border-ui-border text-text-base placeholder-slate-400 dark:placeholder-text-dim-dark focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow"
+          className="w-full px-3 py-2.5 rounded-xl text-sm bg-ui-hover-soft border border-ui-border text-text-base placeholder:text-text-dim focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow"
         />
         <p className="text-xs text-text-dim">
           에이전트 Docker 이미지에 설정할 이름입니다
@@ -153,11 +153,11 @@ function AgentInstallCommand({
         <MaterialIcon name="expand_more" className="text-base text-text-dim transition-transform group-open:rotate-180" />
       </summary>
       <div className="space-y-4 border-t border-ui-border-soft p-4">
-        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20">
+        <div className="flex items-start gap-3 rounded-xl border border-ui-border bg-ui-hover-soft p-3">
           <MaterialIcon name="timer" className="mt-0.5 shrink-0 text-lg text-amber-500" />
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">일회용 연결 코드</p>
-            <p className="mt-0.5 text-xs text-amber-700/80 dark:text-amber-300/80">
+            <p className="text-sm font-semibold text-text-base">일회용 연결 코드</p>
+            <p className="mt-0.5 text-xs text-text-muted">
               {expiryLabel || '10분 후'}까지 한 번만 사용할 수 있습니다. 장기 API 키는 서버에 직접 저장됩니다.
             </p>
           </div>
@@ -165,7 +165,7 @@ function AgentInstallCommand({
             type="button"
             onClick={onRefreshCode}
             disabled={refreshingCode}
-            className="shrink-0 text-xs font-semibold text-amber-700 hover:underline disabled:opacity-50 dark:text-amber-300"
+            className="shrink-0 text-xs font-semibold text-primary hover:underline disabled:opacity-50"
           >
             {refreshingCode ? '발급 중' : '새 코드'}
           </button>
@@ -181,7 +181,7 @@ function AgentInstallCommand({
             value={webBaseUrl}
             onChange={(event) => onWebBaseUrlChange(event.target.value)}
             placeholder="예: http://192.168.0.10:3001"
-            className={`w-full rounded-xl border bg-ui-hover-soft px-3 py-2.5 text-sm text-text-base placeholder-slate-400 transition-shadow focus:outline-none focus:ring-2 focus:ring-primary/30 dark:placeholder-text-dim-dark ${webAddressMissing ? 'border-amber-300 dark:border-amber-700' : 'border-ui-border'}`}
+            className={`w-full rounded-xl border bg-ui-hover-soft px-3 py-2.5 text-sm text-text-base placeholder:text-text-dim transition-shadow focus:outline-none focus:ring-2 focus:ring-primary/30 ${webAddressMissing ? 'border-amber-400' : 'border-ui-border'}`}
           />
           <p className={`text-xs ${webAddressMissing ? 'text-amber-600 dark:text-amber-400' : 'text-text-dim'}`}>
             {webAddressMissing
@@ -206,7 +206,7 @@ function AgentInstallCommand({
               <span>복사</span>
             </CopyButton>
           </div>
-          <pre className="overflow-auto whitespace-pre-wrap break-all rounded-xl bg-slate-900 px-4 py-3 font-mono text-xs text-slate-100 dark:bg-black">
+          <pre className="overflow-auto whitespace-pre-wrap break-all rounded-xl bg-slate-900 px-4 py-3 font-mono text-xs text-slate-100 dark:bg-slate-950">
             {codeUnavailable ? '일회용 연결 코드를 발급하는 중입니다...' : installCommand}
           </pre>
         </div>
@@ -371,7 +371,7 @@ export function AddServiceModal({
           <h2 className="text-base font-semibold text-text-base">
             {step === 'form' ? '프로젝트 추가' : 'Agent 설치'}
           </h2>
-          <button type="button" onClick={onClose} aria-label="닫기" className="p-1 rounded-lg text-slate-400 hover:text-text-base transition-colors">
+          <button type="button" onClick={onClose} aria-label="닫기" className="p-1 rounded-lg text-text-dim hover:text-text-base transition-colors">
             <MaterialIcon name="close" className="text-xl" />
           </button>
         </div>
@@ -389,11 +389,11 @@ export function AddServiceModal({
         ) : (
           <div className="p-6 space-y-5 overflow-y-auto">
             {connected ? (
-              <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/20">
-                <MaterialIcon name="check_circle" className="mt-0.5 shrink-0 text-xl text-emerald-600 dark:text-emerald-400" />
+              <div className="flex items-start gap-3 rounded-xl border border-ui-border bg-ui-hover-soft p-4">
+                <MaterialIcon name="check_circle" className="mt-0.5 shrink-0 text-xl text-emerald-500" />
                 <div>
-                  <p className="text-sm font-bold text-emerald-800 dark:text-emerald-300">Agent 연결을 확인했습니다</p>
-                  <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-400">
+                  <p className="text-sm font-bold text-text-base">Agent 연결을 확인했습니다</p>
+                  <p className="mt-1 text-xs text-text-muted">
                     기능 호환성과 발견된 서비스를 자동으로 확인했습니다. 이 화면에서 선택 계측까지 이어서 설정할 수 있습니다.
                   </p>
                 </div>

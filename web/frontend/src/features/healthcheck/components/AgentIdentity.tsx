@@ -84,8 +84,8 @@ export function AgentIdentity({ service, showName = true }: { service: AgentServ
       </div>
 
       {!service.healthy && service.lastError && (
-        <div className="mt-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 text-sm text-red-700 dark:text-red-400">
-          <span className="font-semibold">{t('오류')}: </span>
+        <div className="mt-4 p-3 rounded-lg bg-ui-hover-soft border border-ui-border text-sm text-text-secondary">
+          <span className="font-semibold text-red-600 dark:text-red-400">{t('오류')}: </span>
           {service.lastError}
         </div>
       )}

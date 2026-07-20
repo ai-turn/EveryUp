@@ -166,12 +166,12 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
             </div>
           ) : (
             <>
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/20">
+              <div className="rounded-xl border border-ui-border bg-ui-hover-soft p-4">
                 <div className="flex items-start gap-2.5">
-                  <MaterialIcon name="verified_user" className="mt-0.5 shrink-0 text-lg text-emerald-600 dark:text-emerald-400" />
+                  <MaterialIcon name="verified_user" className="mt-0.5 shrink-0 text-lg text-emerald-500" />
                   <div>
-                    <p className="text-sm font-bold text-emerald-800 dark:text-emerald-300">원본 Compose는 수정하지 않습니다</p>
-                    <p className="mt-1 text-xs leading-relaxed text-emerald-700 dark:text-emerald-400">
+                    <p className="text-sm font-bold text-text-base">원본 Compose는 수정하지 않습니다</p>
+                    <p className="mt-1 text-xs leading-relaxed text-text-muted">
                       CLI가 별도 override를 만들고 선택한 서비스만 재시작합니다. 주입 옵션, 공유 볼륨, 네트워크와 컨테이너 상태를 확인하며 실패하면 직전 설정으로 자동 복구합니다.
                     </p>
                   </div>
@@ -222,7 +222,7 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
                     value={webBaseUrl}
                     onChange={(event) => setWebBaseUrl(event.target.value)}
                     placeholder="예: http://192.168.0.10:3001"
-                    className={`w-full rounded-lg border bg-ui-hover-soft px-3 py-2 text-sm text-text-base placeholder:text-text-dim focus:outline-none focus:ring-2 focus:ring-primary/30 ${webAddressMissing ? 'border-amber-300 dark:border-amber-700' : 'border-ui-border'}`}
+                    className={`w-full rounded-lg border bg-ui-hover-soft px-3 py-2 text-sm text-text-base placeholder:text-text-dim focus:outline-none focus:ring-2 focus:ring-primary/30 ${webAddressMissing ? 'border-amber-400' : 'border-ui-border'}`}
                   />
                   <p className={`text-xs ${webAddressMissing ? 'text-amber-600 dark:text-amber-400' : 'text-text-dim'}`}>
                     {webAddressMissing ? '애플리케이션 서버에서 접근 가능한 주소를 입력하세요.' : 'CLI를 최신 버전으로 내려받을 주소입니다.'}
@@ -238,7 +238,7 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
                     value={composePath}
                     onChange={(event) => setComposePath(event.target.value)}
                     placeholder="./docker-compose.yml"
-                    className={`w-full rounded-lg border bg-ui-hover-soft px-3 py-2 font-mono text-sm text-text-base placeholder:text-text-dim focus:outline-none focus:ring-2 focus:ring-primary/30 ${composePathMissing ? 'border-amber-300 dark:border-amber-700' : 'border-ui-border'}`}
+                    className={`w-full rounded-lg border bg-ui-hover-soft px-3 py-2 font-mono text-sm text-text-base placeholder:text-text-dim focus:outline-none focus:ring-2 focus:ring-primary/30 ${composePathMissing ? 'border-amber-400' : 'border-ui-border'}`}
                   />
                   <p className="text-xs text-text-dim">이 명령을 실행할 서버의 파일 경로입니다.</p>
                 </div>
