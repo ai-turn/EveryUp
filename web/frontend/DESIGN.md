@@ -202,9 +202,9 @@ bg-bg-surface border border-ui-border rounded-xl
 |----------|-------|------|
 | **`Button`** | `variant` `size` + 네이티브 button | 라벨 있는 액션 버튼의 **유일한** 진입점 |
 | **`Input`** | `invalid?` `warn?` `mono?` | 폼 입력 (§6) |
-| **`Select`** | `invalid?` | 폼 셀렉트 (§6) |
+| **`Select`** | 네이티브만 | 폼 셀렉트 (§6) |
 | **`SearchInput`** | `wrapperClassName?` | 아이콘 붙은 검색창 (§6) |
-| **`StatusBadge`** | `status: string` | 10개 상태 → 보더칩. i18n 라벨 포함 |
+| **`StatusBadge`** | `healthy: boolean` | 정상/장애 보더칩 (§5.1) |
 | **`Toggle`** | `checked` `onChange` `disabled` `title` | w-9 h-5, `role="switch"` |
 | **`SegmentedControl<T>`** | `options` `value` `onChange` `size` `ariaLabel` | 2~4지 배타 선택 |
 | **`TimeRangePicker`** | `value: GlobalTimeRange` `onChange` | `1h`\|`6h`\|`24h`. SegmentedControl 래퍼 |
@@ -404,7 +404,7 @@ text-sm font-medium text-text-secondary cursor-pointer
 
 2026-07-26 전수 스캔(`src/**/*.tsx` 76개). 규약 대비 이탈 목록.
 
-### B. 토큰 규약 이탈
+### A. 토큰 규약 이탈
 
 | 항목 | 건수 | 조치 |
 |------|------|------|
@@ -430,25 +430,33 @@ text-sm font-medium text-text-secondary cursor-pointer
 
 새 코드에서 판단이 서지 않으면 **"이 색이 사라지면 사용자가 대상의 건강을 오판하는가?"** 로 가른다. 그렇다면 `status-*`다.
 
-### C. 버그: 존재하지 않는 토큰
+### C. 오버레이 배경 농도 3종
 
-[`MonitoringSetupPanel.tsx:106`](src/features/services/components/MonitoringSetupPanel.tsx:106)의 `bg-bg-base/35` — 그런 토큰은 없다. Tailwind가 클래스를 생성하지 않아 **배경이 조용히 사라진다**. `bg-ui-hover-soft`가 의도로 보인다.
+ESC는 `useOverlay`로 공용화됐지만 배경 클래스는 6곳이 각자다.
 
-### D. 오버레이 배경 클래스 5종
+| 값 | 곳 |
+|----|-----|
+| `bg-black/40` | `CommandPalette` · `ApiKeyModal` · `AddServiceModal`(`backdrop:`) |
+| `bg-slate-900/60` | `ConfirmDialog` · `InstrumentationOverrideModal` |
+| `bg-slate-900/40` | `SidePanel` |
 
-배경 오버레이가 `bg-black/40` · `bg-slate-900/40` · `bg-slate-900/60` · `backdrop:bg-black/40`로 갈라져 있다. ESC는 `useOverlay`로 공용화됐지만 배경 클래스는 아직 각자다.
-→ 상수 하나로 묶을 것. 시각 변화가 생기므로(40% vs 60%) 어느 농도를 정본으로 할지 결정 필요.
+→ 상수 하나로 묶을 것. **어느 농도를 정본으로 할지 결정이 필요하다** — 40%와 60%는 눈에 띄게 다르고, 어느 쪽으로 통일하든 절반은 시각이 바뀐다.
 
-### E. 배지 크기 2계열
+### D. 배지 크기 2계열
 
 읽기 전용 배지가 `text-2xs`(상태칩·테이블)와 `text-xs`(로그 레벨·span kind) 두 계열이고, radius도 `rounded`/`rounded-md`/`rounded-full`이 섞여 있다.
 
 **의도적으로 통일하지 않았다** — 크기 차이는 대부분 밀도(테이블 셀 vs 폼 미리보기) 때문이고, 12곳을 강제로 맞추면 로그 레벨 배지가 작아지는 등 시각 손해가 확실한 반면 얻는 게 없다. 다만 **같은 severity 배지가 폼에선 `text-xs`, 테이블에선 `text-2xs`** 인 것은 진짜 이탈이라 정리 여지가 있다.
 
-### F. 접근성
+### E. 차트 시리즈 4개 초과 시 색만으로 구분 (§1.6)
 
-- **차트 시리즈 4개 초과 시 색만으로 구분** (§1.6) — 선 스타일(실선/파선/점선) 또는 직접 라벨이 필요하다. recharts `strokeDasharray`를 `lineProps`에 슬롯별로 넣는 방식이 유력하나, 기존 차트 전부의 시각이 바뀌므로 별도 결정이 필요하다.
-- 라이트 모드에서 warn/error는 적록색각이상 시 서로 근접한다(거리 6.7). 배지는 텍스트 라벨로 보완되지만, 색만 쓰는 자리에서는 두 상태를 나란히 두지 말 것.
+**정적 차트는 안전하다** — 인프라 4종·응답시간·요청추이는 시리즈가 1~2개로 고정이라 앞 슬롯만 쓴다.
+
+위험한 곳은 [`AgentServiceMetricsTab`](src/features/healthcheck/components/AgentServiceMetricsTab.tsx:164) 하나다. OTel 메트릭의 attribute 조합마다 시리즈가 생기고 `seriesColors[i % length]`로 순환하므로 **개수가 데이터에 달렸다.** 5개를 넘으면 색이 재사용되기까지 한다.
+
+→ 선 스타일(`strokeDasharray`)을 슬롯별로 넣거나 직접 라벨. `lineProps`에 넣으면 모든 차트가 영향을 받으므로 이 탭에만 적용할지 결정 필요.
+
+라이트 모드에서 warn/error는 적록색각이상 시 서로 근접한다(거리 6.7). 배지는 텍스트 라벨로 보완되지만, 색만 쓰는 자리에서는 두 상태를 나란히 두지 말 것.
 
 ### 해결됨 (2026-07-26)
 
@@ -469,5 +477,5 @@ text-sm font-medium text-text-secondary cursor-pointer
 
 ### 권장 순서
 
-1. **B** — 사이트별 확인이 필요해 자동화가 안 된다. 파일 단위로 나눠 처리
-2. **D** (배경 농도 결정 후 상수화) → **E** (severity 배지만)
+1. **A** — 사이트별 확인이 필요해 자동화가 안 된다. 파일 단위로 나눠 처리
+2. **C**(배경 농도 결정 후 상수화) → **E**(메트릭 탭) → **D**(severity 배지만)
