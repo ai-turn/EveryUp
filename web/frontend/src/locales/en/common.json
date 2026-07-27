@@ -1,90 +1,80 @@
 {
-    "common": {
-        "save": "Save",
-        "cancel": "Cancel",
-        "loading": "Loading...",
-        "error": "Error",
-        "delete": "Delete",
-        "deleting": "Deleting...",
-        "edit": "Edit",
-        "id": "Service ID",
-        "name": "Display Name",
-        "type": "Type",
-        "refresh": "Refresh",
-        "all": "All",
-        "online": "Online",
-        "offline": "Offline",
-        "live": "Live",
-        "copyToClipboard": "Copy to clipboard",
-        "pause": "Pause",
-        "paused": "Paused",
-        "resume": "Resume",
-        "healthy": "Healthy",
-        "degraded": "Degraded",
-        "never": "Never",
-        "warning": "Warning",
-        "critical": "Critical",
-        "saveChanges": "Save Changes",
-        "backToDashboard": "Back to Dashboard",
-        "today": "Today",
-        "daysAgo": "{{count}} days ago",
-        "unknown": "Unknown",
-        "previous": "Previous",
-        "next": "Next",
-        "expand": "Expand",
-        "collapse": "Collapse",
-        "status": "Status",
-        "viewMore": "Go to",
-        "showMore": "+{{count}} more",
-        "backToList": "Back to List",
-        "retry": "Retry",
-        "saved": "Saved",
-        "loadError": "Failed to load",
-        "none": "-",
-        "noData": "No data available",
-        "clearFilters": "Clear Filters",
-        "disabled": "Disabled",
-        "days": "days",
-        "relativeTime": {
-            "justNow": "Just now",
-            "minutesAgo": "{{count}}m ago",
-            "hoursAgo": "{{count}}h ago",
-            "daysAgo": "{{count}}d ago"
-        },
-        "overview": "Overview",
-        "deleting": "Deleting..."
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "edit": "Edit",
+    "id": "Service ID",
+    "name": "Display Name",
+    "type": "Type",
+    "refresh": "Refresh",
+    "all": "All",
+    "live": "Live",
+    "copyToClipboard": "Copy to clipboard",
+    "pause": "Pause",
+    "resume": "Resume",
+    "never": "Never",
+    "saveChanges": "Save Changes",
+    "backToDashboard": "Back to Dashboard",
+    "today": "Today",
+    "daysAgo": "{{count}} days ago",
+    "previous": "Previous",
+    "next": "Next",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "status": "Status",
+    "viewMore": "Go to",
+    "showMore": "+{{count}} more",
+    "backToList": "Back to List",
+    "retry": "Retry",
+    "saved": "Saved",
+    "loadError": "Failed to load",
+    "none": "-",
+    "noData": "No data available",
+    "clearFilters": "Clear Filters",
+    "disabled": "Disabled",
+    "days": "days",
+    "relativeTime": {
+      "justNow": "Just now",
+      "minutesAgo": "{{count}}m ago",
+      "hoursAgo": "{{count}}h ago",
+      "daysAgo": "{{count}}d ago"
     },
-    "nav": {
-        "dashboard": "Main",
-        "services": "Projects",
-        "logs": "Logs",
-        "alerts": "Alerts",
-        "monitoring": "Infrastructure",
-        "settings": "Settings"
-    },
-    "footer": {
-        "rights": "All rights reserved.",
-        "systemOperational": "All Systems Operational",
-        "bugReport": "Send Feedback"
-    },
-    "network": {
-        "disconnected": "Connection lost. Attempting to reconnect..."
-    },
-    "errorFallback": {
-        "title": "Something went wrong",
-        "description": "An unexpected error occurred. Please refresh the page or go back to the home page.",
-        "retry": "Try again",
-        "goHome": "Go Home"
-    },
-    "notfound": {
-        "title": "404",
-        "subtitle": "Page not found."
-    },
-    "notificationBell": {
-        "title": "Notifications",
-        "viewAll": "View all",
-        "markAllRead": "Mark all read",
-        "empty": "No notifications yet",
-        "unreadLabel": "unread"
-    }
+    "overview": "Overview"
+  },
+  "nav": {
+    "dashboard": "Main",
+    "services": "Projects",
+    "logs": "Logs",
+    "alerts": "Alerts",
+    "monitoring": "Infrastructure",
+    "settings": "Settings"
+  },
+  "footer": {
+    "rights": "All rights reserved.",
+    "systemOperational": "All Systems Operational",
+    "bugReport": "Send Feedback"
+  },
+  "network": {
+    "disconnected": "Connection lost. Attempting to reconnect..."
+  },
+  "errorFallback": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred. Please refresh the page or go back to the home page.",
+    "retry": "Try again",
+    "goHome": "Go Home"
+  },
+  "notfound": {
+    "title": "404",
+    "subtitle": "Page not found."
+  },
+  "notificationBell": {
+    "title": "Notifications",
+    "viewAll": "View all",
+    "markAllRead": "Mark all read",
+    "empty": "No notifications yet",
+    "unreadLabel": "unread"
+  }
 }

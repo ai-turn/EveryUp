@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useTranslate } from '@tolgee/react';
-import { MaterialIcon, TimeRangePicker, type GlobalTimeRange } from '../../../components/common';
+import { MaterialIcon, StatusBadge, TimeRangePicker, type GlobalTimeRange } from '../../../components/common';
 import { useSpinAction } from '../../../hooks/useSpinAction';
 import { useIsMobile } from '../../../hooks/useMediaQuery';
 import type { AgentServiceFlat } from '../../../services/api';
@@ -20,21 +19,6 @@ export interface AgentHealthCheckDetailViewProps {
 interface LayoutProps extends AgentHealthCheckDetailViewProps {
   range: GlobalTimeRange;
   onRangeChange: (r: GlobalTimeRange) => void;
-}
-
-function StatusBadge({ healthy }: { healthy: boolean }) {
-  const { t } = useTranslate();
-  return (
-    <span
-      className={`text-2xs font-bold px-1.5 py-0.5 rounded border ${
-        healthy
-          ? 'text-status-healthy bg-status-healthy/10 border-status-healthy/20'
-          : 'text-status-error bg-status-error/10 border-status-error/20'
-      }`}
-    >
-      {healthy ? t('정상') : t('장애')}
-    </span>
-  );
 }
 
 // Container uptime from an ISO start time; null when absent or the zero stamp.

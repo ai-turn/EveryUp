@@ -282,14 +282,18 @@ const theme = getChartTheme();
 
 ## 5. 상태 표현 문법
 
-### 5.1 배지
+### 5.1 배지 — `StatusBadge`
+
+```tsx
+<StatusBadge healthy={service.healthy} />
+```
 
 ```
 text-2xs font-bold px-1.5 py-0.5 rounded border
 text-status-{role}  bg-status-{role}/10  border-status-{role}/20
 ```
 
-> ⚠ `components/common/StatusBadge.tsx`가 이 문법의 참조 구현이지만 **현재 아무 데서도 import되지 않는다.** 실제로 렌더되는 상태 배지는 `AgentHealthCheckDetailView`가 파일 안에 따로 정의한 동명 로컬 컴포넌트다(둘 다 같은 토큰을 쓰도록 맞춰 두었다). §10-H 참조.
+`healthy` boolean 하나만 받는다. 실제로 렌더되는 상태가 정상/장애 둘뿐이라 그 이상은 지원하지 않는다 — 3단계 이상이 필요해지면 그때 union으로 넓힌다.
 
 **틴트 배경 + 같은 색 보더 + 진한 텍스트** 3종 세트가 배지 문법이다. 커스텀 배지가 필요해도 이 비율(`/10` 배경, `/20` 보더)을 유지한다. 4개 role 전부 양쪽 테마에서 AA를 넘는 것이 검증돼 있다(4.78~9.31).
 
@@ -446,13 +450,6 @@ text-sm font-medium text-text-secondary cursor-pointer
 - **차트 시리즈 4개 초과 시 색만으로 구분** (§1.6) — 선 스타일(실선/파선/점선) 또는 직접 라벨이 필요하다. recharts `strokeDasharray`를 `lineProps`에 슬롯별로 넣는 방식이 유력하나, 기존 차트 전부의 시각이 바뀌므로 별도 결정이 필요하다.
 - 라이트 모드에서 warn/error는 적록색각이상 시 서로 근접한다(거리 6.7). 배지는 텍스트 라벨로 보완되지만, 색만 쓰는 자리에서는 두 상태를 나란히 두지 말 것.
 
-### H. `StatusBadge`가 죽어 있고 로컬 중복이 렌더된다
-
-`components/common/StatusBadge.tsx`는 barrel로 export되지만 **import하는 곳이 0곳**이고, 실제 화면의 상태 배지는 `AgentHealthCheckDetailView.tsx:25`의 로컬 `StatusBadge`가 그린다. 커밋 `957d81f5` 이전부터 그랬다(react-doctor `unused-export`로 발견).
-
-두 구현이 지금은 같은 토큰·문법을 쓰지만 한쪽만 고치면 갈라진다.
-→ 로컬 구현을 지우고 공용 컴포넌트를 쓰거나, 공용 쪽을 삭제하고 로컬을 정본으로 승격. **어느 쪽이든 삭제가 따르므로 사용자 승인 필요.**
-
 ### 해결됨 (2026-07-26)
 
 - ~~색 접근성 — `text-dim` 라이트 2.56, 상태 배지 3종, 차트 시리즈 3색, 로그 레벨 3색이 WCAG 미달~~ → 전부 AA/1.4.11 통과. 브라우저에서 8/8 실측 확인
@@ -468,6 +465,7 @@ text-sm font-medium text-text-secondary cursor-pointer
 - ~~오버레이 4곳이 ESC 핸들러를 복사, 2곳은 ESC 없음~~ → `useOverlay` 훅으로 통합, 6곳 전부 ESC 동작(브라우저 검증)
 - ~~헤딩 등급 흔들림~~ → h1/h3 이탈 8건 정리. §2.3을 **컨테이너별 등급표**로 정정 — h2가 카드/모달/섹션에서 다른 것은 이탈이 아니라 정당한 차이였다
 - ~~`MainLayout` 주석이 `slate-50 canvas`라고 하나 실제는 `bg-bg-main`~~ → 주석 정정
+- ~~공용 `StatusBadge`가 미사용이고 `AgentHealthCheckDetailView`의 로컬 중복이 렌더됨~~ → 실제 쓰이던 구현을 공용으로 승격(56→26줄), 로컬 삭제. 쓰이지 않던 10상태 매핑과 그 전용 i18n 키 9개×2언어도 함께 제거
 
 ### 권장 순서
 
