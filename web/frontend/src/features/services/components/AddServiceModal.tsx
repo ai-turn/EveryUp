@@ -3,6 +3,7 @@ import { Button } from '../../../components/common/Button';
 import { CopyButton } from '../../../components/common/CopyButton';
 import { MaterialIcon } from '../../../components/common/MaterialIcon';
 import { Input } from '../../../components/common/Input';
+import { SCRIM_MODAL_DIALOG } from '../../../hooks/useOverlay';
 import { api, type AgentServiceSnapshot, type ConnectedAgent } from '../../../services/api';
 import { copyTextToClipboard } from '../../../hooks/useClipboardCopy';
 import { getErrorMessage } from '../../../utils/errors';
@@ -361,7 +362,7 @@ export function AddServiceModal({
   return (
     <dialog
       ref={dialogRef}
-      className="fixed inset-0 z-50 m-auto h-full max-h-none w-full max-w-none items-center justify-center bg-transparent p-4 backdrop:bg-black/40 backdrop:backdrop-blur-sm open:flex"
+      className={`fixed inset-0 z-50 m-auto h-full max-h-none w-full max-w-none items-center justify-center bg-transparent p-4 open:flex ${SCRIM_MODAL_DIALOG}`}
       aria-label={step === 'form' ? '프로젝트 추가' : 'Agent 설치 및 모니터링 설정'}
       onCancel={(event) => { event.preventDefault(); onClose(); }}
     >

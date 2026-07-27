@@ -360,9 +360,25 @@ text-sm font-medium text-text-secondary cursor-pointer
 | **모달** | 짧은 단일 작업 (API 키, 서비스 추가) | `features/services/*Modal` |
 | **사이드 패널** | 긴 폼·상세 (알림 규칙, 트레이스) | `FormSidePanel` / `SidePanel` / `TracePanel` |
 
-**공통 규약** — 배경 `bg-black/40 backdrop-blur-sm`, z-index `z-50`, 배경 클릭 닫기.
+**공통 규약** — z-index `z-50`(SidePanel만 `z-40`), 배경 클릭 닫기.
 
 **ESC 닫기는 [`useOverlay(open, onClose)`](src/hooks/useOverlay.ts)를 쓴다.** 직접 `keydown` 리스너를 달지 않는다 — 이전엔 4곳이 같은 effect를 복사해 두고 2곳은 아예 빠져 있었다.
+
+**배경(scrim)은 상수를 쓴다.** 같은 파일이 export한다.
+
+| 상수 | 값 | 쓰는 곳 |
+|------|-----|--------|
+| `SCRIM_MODAL` | `bg-slate-900/60 backdrop-blur-sm` | 모달·다이얼로그 |
+| `SCRIM_PANEL` | `bg-slate-900/40 backdrop-blur-sm` | 사이드패널·팔레트 |
+| `SCRIM_MODAL_DIALOG` | 위와 같은 값의 `backdrop:` 형태 | 네이티브 `<dialog>`의 `::backdrop` |
+
+**농도가 두 단인 이유** — 모달은 배경과 무관한 작업이라 맥락을 끊고, 사이드패널은 배경 목록을 보면서 상세를 확인하는 맥락이라 옅게 둔다.
+
+**Material Design 3(32%)이나 shadcn(80%)과 다른 이유는 blur를 같이 걸기 때문이다.** scrim만 쓰는 시스템은 배경 판독을 막으려 60~80%가 필요하지만, `backdrop-blur`가 이미 판독을 막으므로 scrim은 명도만 낮추면 된다 — 그 구간이 30~40%다.
+
+`bg-black`이 아니라 `slate-900`인 것도 의도다. 다크 배경(`#0d1117`) 위에서 순수 검정은 대비가 생기지 않아 구멍처럼 보이고, 앱 팔레트가 slate 계열이라 정합도 맞다.
+
+`SCRIM_MODAL_DIALOG`가 따로 있는 이유는 `backdrop:` 접두가 유틸리티마다 필요한데 Tailwind JIT가 런타임 조합을 못 읽기 때문이다. **값을 바꿀 때 둘을 함께 고칠 것.**
 
 스크롤 잠금은 넣지 않았다. 이 앱은 `body`가 아니라 `MainLayout` 내부 컨테이너가 스크롤하는 구조라 `body` overflow를 잠가도 효과가 없고, 브라우저에서 실제 스크롤 누출이 재현되지 않았다. 누출이 확인되면 그때 잠글 대상을 정한다.
 
@@ -430,25 +446,13 @@ text-sm font-medium text-text-secondary cursor-pointer
 
 새 코드에서 판단이 서지 않으면 **"이 색이 사라지면 사용자가 대상의 건강을 오판하는가?"** 로 가른다. 그렇다면 `status-*`다.
 
-### C. 오버레이 배경 농도 3종
-
-ESC는 `useOverlay`로 공용화됐지만 배경 클래스는 6곳이 각자다.
-
-| 값 | 곳 |
-|----|-----|
-| `bg-black/40` | `CommandPalette` · `ApiKeyModal` · `AddServiceModal`(`backdrop:`) |
-| `bg-slate-900/60` | `ConfirmDialog` · `InstrumentationOverrideModal` |
-| `bg-slate-900/40` | `SidePanel` |
-
-→ 상수 하나로 묶을 것. **어느 농도를 정본으로 할지 결정이 필요하다** — 40%와 60%는 눈에 띄게 다르고, 어느 쪽으로 통일하든 절반은 시각이 바뀐다.
-
-### D. 배지 크기 2계열
+### C. 배지 크기 2계열
 
 읽기 전용 배지가 `text-2xs`(상태칩·테이블)와 `text-xs`(로그 레벨·span kind) 두 계열이고, radius도 `rounded`/`rounded-md`/`rounded-full`이 섞여 있다.
 
 **의도적으로 통일하지 않았다** — 크기 차이는 대부분 밀도(테이블 셀 vs 폼 미리보기) 때문이고, 12곳을 강제로 맞추면 로그 레벨 배지가 작아지는 등 시각 손해가 확실한 반면 얻는 게 없다. 다만 **같은 severity 배지가 폼에선 `text-xs`, 테이블에선 `text-2xs`** 인 것은 진짜 이탈이라 정리 여지가 있다.
 
-### E. 차트 시리즈 4개 초과 시 색만으로 구분 (§1.6)
+### D. 차트 시리즈 4개 초과 시 색만으로 구분 (§1.6)
 
 **정적 차트는 안전하다** — 인프라 4종·응답시간·요청추이는 시리즈가 1~2개로 고정이라 앞 슬롯만 쓴다.
 
@@ -473,9 +477,10 @@ ESC는 `useOverlay`로 공용화됐지만 배경 클래스는 6곳이 각자다.
 - ~~오버레이 4곳이 ESC 핸들러를 복사, 2곳은 ESC 없음~~ → `useOverlay` 훅으로 통합, 6곳 전부 ESC 동작(브라우저 검증)
 - ~~헤딩 등급 흔들림~~ → h1/h3 이탈 8건 정리. §2.3을 **컨테이너별 등급표**로 정정 — h2가 카드/모달/섹션에서 다른 것은 이탈이 아니라 정당한 차이였다
 - ~~`MainLayout` 주석이 `slate-50 canvas`라고 하나 실제는 `bg-bg-main`~~ → 주석 정정
+- ~~오버레이 배경이 6곳 제각각(black/40·slate-900/60·slate-900/40·없음)~~ → `SCRIM_MODAL`/`SCRIM_PANEL` 2역할로 통일. TracePanel은 scrim이 아예 없어 신규 추가
 - ~~공용 `StatusBadge`가 미사용이고 `AgentHealthCheckDetailView`의 로컬 중복이 렌더됨~~ → 실제 쓰이던 구현을 공용으로 승격(56→26줄), 로컬 삭제. 쓰이지 않던 10상태 매핑과 그 전용 i18n 키 9개×2언어도 함께 제거
 
 ### 권장 순서
 
 1. **A** — 사이트별 확인이 필요해 자동화가 안 된다. 파일 단위로 나눠 처리
-2. **C**(배경 농도 결정 후 상수화) → **E**(메트릭 탭) → **D**(severity 배지만)
+2. **D**(메트릭 탭 시리즈) → **C**(severity 배지 한 쌍)

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslate } from '@tolgee/react';
 import { MaterialIcon } from '../common';
+import { SCRIM_PANEL } from '../../hooks/useOverlay';
 import { api, type AgentServiceFlat, type ConnectedAgent } from '../../services/api';
 
 // Fired by the sidebar search button; ⌘K/Ctrl+K toggles directly.
@@ -107,7 +108,7 @@ export function CommandPalette() {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center pt-[18vh] px-4"
+      className={`fixed inset-0 z-50 flex items-start justify-center pt-[18vh] px-4 ${SCRIM_PANEL}`}
       onClick={() => setOpen(false)}
     >
       <div

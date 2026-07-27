@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { MaterialIcon } from '../../../components/common';
-import { useOverlay } from '../../../hooks/useOverlay';
+import { useOverlay, SCRIM_PANEL } from '../../../hooks/useOverlay';
 
 interface FormSidePanelProps {
     open: boolean;
@@ -26,7 +26,7 @@ export function FormSidePanel({ open, icon, title, onClose, footer, children }: 
             aria-label={title}
             onClick={onClose}
         >
-            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" aria-hidden="true" />
+            <div className={`absolute inset-0 ${SCRIM_PANEL}`} aria-hidden="true" />
             <div
                 onClick={(e) => e.stopPropagation()}
                 className="fixed inset-y-0 right-0 w-full sm:w-[560px] lg:w-[820px] xl:w-[980px] bg-bg-surface border-l border-ui-border shadow-2xl flex flex-col animate-slide-in-right"

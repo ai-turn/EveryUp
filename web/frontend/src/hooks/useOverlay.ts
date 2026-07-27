@@ -1,5 +1,25 @@
 import { useEffect } from 'react';
 
+/* 오버레이 배경(scrim) — 역할별 2단.
+ *
+ * 농도가 Material Design 3(32%)이나 shadcn(80%)과 다른 이유는 **blur를 같이 걸기 때문**이다.
+ * scrim만 쓰는 시스템은 배경을 읽지 못하게 하려고 60~80%가 필요하지만, backdrop-blur가
+ * 판독을 이미 막으므로 scrim은 명도만 낮추면 된다 — 그 구간이 30~40%다.
+ *
+ * bg-black이 아니라 slate-900인 것도 의도다. 다크 배경(#0d1117) 위에서 순수 검정은
+ * 대비가 생기지 않아 구멍처럼 보이고, 앱 팔레트가 slate 계열이라 정합도 맞다. */
+
+/** 모달·다이얼로그 — 배경과 무관한 작업이라 맥락을 끊는다. */
+export const SCRIM_MODAL = 'bg-slate-900/60 backdrop-blur-sm';
+
+/** 사이드패널·팔레트 — 배경 목록을 보면서 상세를 확인하는 맥락이라 옅게. */
+export const SCRIM_PANEL = 'bg-slate-900/40 backdrop-blur-sm';
+
+/** 네이티브 `<dialog>`의 ::backdrop용 — SCRIM_MODAL과 같은 값이다.
+ *  유틸리티마다 `backdrop:` 접두가 필요하고 Tailwind JIT는 런타임 조합을 못 읽어서
+ *  문자열을 따로 둔다. 값을 바꿀 때 위와 함께 고칠 것. */
+export const SCRIM_MODAL_DIALOG = 'backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm';
+
 // 오버레이(모달·사이드패널·팔레트)의 ESC 닫기.
 // 이전엔 SidePanel/FormSidePanel/TracePanel/CommandPalette가 각자 같은 effect를 복사해 두고
 // ApiKeyModal·InstrumentationOverrideModal은 아예 빠져 있었다.

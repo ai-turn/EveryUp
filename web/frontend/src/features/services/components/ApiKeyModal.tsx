@@ -4,7 +4,7 @@ import { api } from '../../../services/api';
 import { copyTextToClipboard } from '../../../hooks/useClipboardCopy';
 import { getErrorMessage } from '../../../utils/errors';
 import { toast } from 'react-hot-toast';
-import { useOverlay } from '../../../hooks/useOverlay';
+import { useOverlay, SCRIM_MODAL } from '../../../hooks/useOverlay';
 
 interface Props {
   agentId: string;
@@ -62,7 +62,7 @@ export function ApiKeyModal({ agentId, agentName, onClose, onRotated }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${SCRIM_MODAL}`} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="w-full max-w-md bg-bg-surface rounded-2xl shadow-2xl border border-ui-border overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-ui-border-soft">

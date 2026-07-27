@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CopyButton, MaterialIcon } from '../../../components/common';
 import { useClipboardCopy } from '../../../hooks/useClipboardCopy';
-import { useOverlay } from '../../../hooks/useOverlay';
+import { useOverlay, SCRIM_PANEL } from '../../../hooks/useOverlay';
 import { getErrorMessage } from '../../../utils/errors';
 import { api, TraceDetail, TraceSpan, LogEntry, ApiRequest } from '../../../services/api';
 
@@ -282,7 +282,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50"
+      className={`fixed inset-0 z-50 ${SCRIM_PANEL}`}
       role="dialog"
       aria-modal="true"
       aria-label={t('apiRequests.tracePanel.ariaLabel')}

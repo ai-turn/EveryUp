@@ -6,7 +6,7 @@ import { Select } from '../../../components/common/Select';
 import { useClipboardCopy } from '../../../hooks/useClipboardCopy';
 import { api, type AgentServiceSnapshot } from '../../../services/api';
 import { runtimeLabel } from '../../healthcheck/runtimeLabels';
-import { useOverlay } from '../../../hooks/useOverlay';
+import { useOverlay, SCRIM_MODAL } from '../../../hooks/useOverlay';
 
 interface Props {
   agentId: string;
@@ -130,7 +130,7 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-stretch justify-center bg-slate-900/60 backdrop-blur-sm sm:items-center sm:p-4"
+      className={`fixed inset-0 z-50 flex items-stretch justify-center sm:items-center sm:p-4 ${SCRIM_MODAL}`}
       role="dialog"
       aria-modal="true"
       aria-label="OpenTelemetry 자동 적용"

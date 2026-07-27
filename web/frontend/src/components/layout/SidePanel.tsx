@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { MaterialIcon } from '../common';
 import { useSidePanel } from '../../contexts/SidePanelContext';
-import { useOverlay } from '../../hooks/useOverlay';
+import { useOverlay, SCRIM_PANEL } from '../../hooks/useOverlay';
 
 export function SidePanel() {
     const { isOpen, title, content, size, closePanel } = useSidePanel();
@@ -17,7 +17,7 @@ export function SidePanel() {
         <>
             {/* Mobile Backdrop - only visible/active on mobile when panel is open */}
             <div
-                className={`fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-opacity duration-500 lg:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                className={`fixed inset-0 z-40 transition-opacity duration-500 lg:hidden ${SCRIM_PANEL} ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
                     }`}
                 onClick={closePanel}
                 aria-hidden="true"

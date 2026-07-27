@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './MaterialIcon';
+import { SCRIM_MODAL_DIALOG } from '../../hooks/useOverlay';
 import { Button } from './Button';
 
 type Variant = 'danger' | 'primary';
@@ -72,7 +73,7 @@ export function ConfirmDialog({
         // ::backdrop clicks are delivered with the dialog itself as target.
         if (e.target === e.currentTarget && !isProcessing) onClose();
       }}
-      className="m-auto bg-bg-surface border border-ui-border rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-zoom-in backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm"
+      className={`m-auto bg-bg-surface border border-ui-border rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-zoom-in ${SCRIM_MODAL_DIALOG}`}
     >
       <div className="px-6 py-4 border-b border-ui-border flex items-center gap-3">
         <div className={`flex items-center justify-center w-10 h-10 rounded-full ${styles.iconBg}`}>
