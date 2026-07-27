@@ -83,12 +83,12 @@ function clampPercent(value: number) {
 // 부하 임계값: 85%+ 위험(red), 60%+ 주의(amber), 그 외 정상(green).
 function getGaugeTone(pct: number) {
   if (pct >= 85) {
-    return { bar: 'bg-red-500', text: 'text-red-600 dark:text-red-400', soft: 'bg-red-50 dark:bg-red-500/10' };
+    return { bar: 'bg-status-error', text: 'text-status-error', soft: 'bg-status-error/10' };
   }
   if (pct >= 60) {
-    return { bar: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400', soft: 'bg-amber-50 dark:bg-amber-500/10' };
+    return { bar: 'bg-status-warn', text: 'text-status-warn', soft: 'bg-status-warn/10' };
   }
-  return { bar: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400', soft: 'bg-emerald-50 dark:bg-emerald-500/10' };
+  return { bar: 'bg-status-healthy', text: 'text-status-healthy', soft: 'bg-status-healthy/10' };
 }
 
 function getGaugeState(pct: number) {
@@ -100,10 +100,10 @@ function getGaugeState(pct: number) {
 // 추세 배지는 부하 수준이 아니라 변화 '방향'으로 색을 정한다 (상승=주의, 하락=양호).
 function getTrendTone(trendType: GaugeData['trendType']) {
   if (trendType === 'up') {
-    return { icon: 'arrow_upward', text: 'text-amber-600 dark:text-amber-400', soft: 'bg-amber-50 dark:bg-amber-500/10' };
+    return { icon: 'arrow_upward', text: 'text-status-warn', soft: 'bg-status-warn/10' };
   }
   if (trendType === 'down') {
-    return { icon: 'arrow_downward', text: 'text-emerald-600 dark:text-emerald-400', soft: 'bg-emerald-50 dark:bg-emerald-500/10' };
+    return { icon: 'arrow_downward', text: 'text-status-healthy', soft: 'bg-status-healthy/10' };
   }
   return { icon: 'remove', text: 'text-text-muted', soft: 'bg-ui-hover' };
 }

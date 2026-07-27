@@ -4,6 +4,7 @@ import { api } from '../../../services/api';
 import { copyTextToClipboard } from '../../../hooks/useClipboardCopy';
 import { getErrorMessage } from '../../../utils/errors';
 import { toast } from 'react-hot-toast';
+import { useOverlay } from '../../../hooks/useOverlay';
 
 interface Props {
   agentId: string;
@@ -14,6 +15,7 @@ interface Props {
 
 // Shows a project's full API key (decrypted server-side) with copy + rotate.
 export function ApiKeyModal({ agentId, agentName, onClose, onRotated }: Props) {
+  useOverlay(true, onClose);
   const [loading, setLoading] = useState(true);
   const [apiKey, setApiKey] = useState('');
   const [available, setAvailable] = useState(false);
@@ -67,7 +69,8 @@ export function ApiKeyModal({ agentId, agentName, onClose, onRotated }: Props) {
           <h2 className="text-base font-semibold text-text-base truncate">
             {agentName} · API 키
           </h2>
-          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-text-base transition-colors">
+          <button onClick={onClose} aria-label="닫기" title="닫기"
+            className="p-1 rounded-lg text-slate-400 hover:text-text-base transition-colors">
             <MaterialIcon name="close" className="text-xl" />
           </button>
         </div>
@@ -83,7 +86,7 @@ export function ApiKeyModal({ agentId, agentName, onClose, onRotated }: Props) {
                   <code className="flex-1 px-3 py-2.5 rounded-xl bg-ui-hover-soft border border-ui-border text-xs font-mono text-text-base break-all">
                     {apiKey}
                   </code>
-                  <button onClick={handleCopy}
+                  <button onClick={handleCopy} aria-label="API 키 복사"
                     className={`shrink-0 flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
                       copied
                         ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'

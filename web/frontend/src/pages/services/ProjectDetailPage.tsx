@@ -49,8 +49,8 @@ function KpiCard({ label, value, unit, sub, tone }: {
   tone?: 'danger' | 'warn';
 }) {
   const valueColor =
-    tone === 'danger' ? 'text-red-500'
-    : tone === 'warn' ? 'text-amber-600 dark:text-amber-400'
+    tone === 'danger' ? 'text-status-error'
+    : tone === 'warn' ? 'text-status-warn'
     : 'text-text-base';
   return (
     <div className="bg-bg-surface border border-ui-border rounded-xl p-4">
@@ -100,15 +100,19 @@ function ServiceCard({ service, metric, onOpen }: {
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
-          <span className={`h-2.5 w-2.5 rounded-full shrink-0 mt-0.5 ${service.healthy ? 'bg-emerald-500' : 'bg-red-500 animate-pulse'}`} />
+          <span
+            role="img"
+            aria-label={service.healthy ? t('정상') : t('장애')}
+            className={`h-2.5 w-2.5 rounded-full shrink-0 mt-0.5 ${service.healthy ? 'bg-status-healthy' : 'bg-status-error animate-pulse'}`}
+          />
           <div className="min-w-0">
-            <h3 className="font-semibold text-base text-text-base truncate leading-tight">{service.name}</h3>
+            <h3 className="text-base font-bold text-text-base truncate leading-tight">{service.name}</h3>
             <span className="text-xs text-text-dim truncate block">{service.runtime ?? service.checkType}</span>
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {!service.healthy && (
-            <span className="text-2xs font-bold text-red-600 bg-red-500/10 px-1.5 py-0.5 rounded">{t('장애')}</span>
+            <span className="text-2xs font-bold text-status-error bg-status-error/10 px-1.5 py-0.5 rounded">{t('장애')}</span>
           )}
           <MaterialIcon name="chevron_right" className="text-base text-text-dim group-hover:text-primary transition-colors" />
         </div>
@@ -121,7 +125,7 @@ function ServiceCard({ service, metric, onOpen }: {
         </div>
         <div className="min-w-0">
           <div className="text-2xs text-text-dim">{t('상태')}</div>
-          <div className={`font-mono font-semibold ${service.healthy ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
+          <div className={`font-mono font-semibold ${service.healthy ? 'text-status-healthy' : 'text-status-error'}`}>
             {service.lastStatus ?? '—'}
           </div>
         </div>
@@ -138,7 +142,7 @@ function ServiceCard({ service, metric, onOpen }: {
       </div>
 
       {!service.healthy && service.lastError && (
-        <p className="text-xs text-red-500 dark:text-red-400 truncate -mt-1">{service.lastError}</p>
+        <p className="text-xs text-status-error truncate -mt-1">{service.lastError}</p>
       )}
     </div>
   );
@@ -251,18 +255,22 @@ export function ProjectDetailPage() {
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1 min-w-0">
           <div className="flex items-center gap-2.5">
-            <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${online ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+            <span
+              role="img"
+              aria-label={online ? t('온라인') : t('오프라인')}
+              className={`h-2.5 w-2.5 rounded-full shrink-0 ${online ? 'bg-status-healthy' : 'bg-status-idle'}`}
+            />
             <h1 className="text-2xl font-bold text-text-base truncate">{agentName}</h1>
             {agent?.version && <span className="text-xs text-text-dim">v{agent.version}</span>}
           </div>
           <p className="text-sm text-text-muted flex items-center gap-1.5">
             <span>{t('서비스')} {services.length}{t('개')}</span>
             <span className="text-text-dim">·</span>
-            <span className="text-emerald-600 dark:text-emerald-400 font-medium">{healthy} {t('정상')}</span>
+            <span className="text-status-healthy font-medium">{healthy} {t('정상')}</span>
             {!allHealthy && (
               <>
                 <span className="text-text-dim">·</span>
-                <span className="text-red-500 font-medium">{services.length - healthy} {t('장애')}</span>
+                <span className="text-status-error font-medium">{services.length - healthy} {t('장애')}</span>
               </>
             )}
           </p>
@@ -270,6 +278,7 @@ export function ProjectDetailPage() {
         <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={handleRefresh}
+            aria-label="새로고침"
             title="새로고침"
             className="p-2 rounded-lg text-slate-400 hover:text-text-base hover:bg-ui-hover transition-colors"
           >
@@ -279,6 +288,7 @@ export function ProjectDetailPage() {
             <>
               <button
                 onClick={() => setShowInstall(true)}
+                aria-label="Agent 설치 또는 재설치"
                 title="Agent 설치 또는 재설치"
                 className="p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
               >
@@ -286,6 +296,7 @@ export function ProjectDetailPage() {
               </button>
               <button
                 onClick={() => setShowKey(true)}
+                aria-label="API 키 보기"
                 title="API 키 보기"
                 className="p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
               >
@@ -293,6 +304,7 @@ export function ProjectDetailPage() {
               </button>
               <button
                 onClick={() => setShowInstrumentation(true)}
+                aria-label="OTel 계측 설정 (헤더·바디)"
                 title="OTel 계측 설정 (헤더·바디)"
                 className="p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
               >
@@ -300,6 +312,7 @@ export function ProjectDetailPage() {
               </button>
               <button
                 onClick={() => setDeleteConfirm(true)}
+                aria-label="프로젝트 비활성화"
                 title="프로젝트 비활성화"
                 className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
               >
@@ -325,7 +338,7 @@ export function ProjectDetailPage() {
           onClick={() => navigate(`/services/${agentId}/${encodeURIComponent(banner.key)}`)}
           className="w-full flex items-center gap-3 rounded-xl border border-ui-border bg-bg-surface px-4 py-3 text-left hover:bg-ui-hover-soft transition-colors"
         >
-          <span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse shrink-0" />
+          <span className="h-2.5 w-2.5 rounded-full bg-status-error animate-pulse shrink-0" />
           <span className="text-sm font-semibold text-text-base truncate">
             {t('진행 중 장애')} — {banner.serviceName}
           </span>
@@ -411,14 +424,14 @@ export function ProjectDetailPage() {
                       onClick={() => navigate(`/services/${agentId}/${encodeURIComponent(inc.key)}`)}
                       className="w-full flex items-start gap-2.5 rounded-lg border border-ui-border px-3 py-2 text-left transition-colors hover:border-slate-300 dark:hover:border-ui-active-dark"
                     >
-                      <span className={`h-1.5 w-1.5 rounded-full mt-1.5 shrink-0 ${inc.active ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                      <span className={`h-1.5 w-1.5 rounded-full mt-1.5 shrink-0 ${inc.active ? 'bg-status-error' : 'bg-status-healthy'}`} />
                       <span className="min-w-0 flex-1">
                         <span className="block text-xs font-semibold text-text-base truncate">{inc.serviceName}</span>
                         <span className="block text-2xs text-text-dim mt-0.5">
                           {formatIncidentTime(inc.startedAt)} {t('시작')} · {formatDuration(inc.durationSec)}
                         </span>
                       </span>
-                      <span className={`text-2xs font-bold shrink-0 ${inc.active ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                      <span className={`text-2xs font-bold shrink-0 ${inc.active ? 'text-status-error' : 'text-status-healthy'}`}>
                         {inc.active ? t('진행중') : t('해소')}
                       </span>
                     </button>

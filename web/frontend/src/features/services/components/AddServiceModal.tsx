@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '../../../components/common/Button';
 import { CopyButton } from '../../../components/common/CopyButton';
 import { MaterialIcon } from '../../../components/common/MaterialIcon';
+import { Input } from '../../../components/common/Input';
 import { api, type AgentServiceSnapshot, type ConnectedAgent } from '../../../services/api';
 import { copyTextToClipboard } from '../../../hooks/useClipboardCopy';
 import { getErrorMessage } from '../../../utils/errors';
@@ -96,12 +97,11 @@ function ProjectForm({
         <label className="text-sm font-medium text-text-secondary">
           프로젝트 이름
         </label>
-        <input
+        <Input
           type="text"
           value={name}
           onChange={event => onNameChange(event.target.value)}
           placeholder="예: my-api, payment-service"
-          className="w-full px-3 py-2.5 rounded-xl text-sm bg-ui-hover-soft border border-ui-border text-text-base placeholder:text-text-dim focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow"
         />
         <p className="text-xs text-text-dim">
           에이전트 Docker 이미지에 설정할 이름입니다
@@ -175,13 +175,13 @@ function AgentInstallCommand({
           <label htmlFor="agent-web-base-url" className="text-xs font-medium uppercase tracking-wider text-text-muted">
             Agent에서 접근할 EveryUp Web 주소
           </label>
-          <input
+          <Input
             id="agent-web-base-url"
             type="url"
             value={webBaseUrl}
             onChange={(event) => onWebBaseUrlChange(event.target.value)}
             placeholder="예: http://192.168.0.10:3001"
-            className={`w-full rounded-xl border bg-ui-hover-soft px-3 py-2.5 text-sm text-text-base placeholder:text-text-dim transition-shadow focus:outline-none focus:ring-2 focus:ring-primary/30 ${webAddressMissing ? 'border-amber-400' : 'border-ui-border'}`}
+            warn={webAddressMissing}
           />
           <p className={`text-xs ${webAddressMissing ? 'text-amber-600 dark:text-amber-400' : 'text-text-dim'}`}>
             {webAddressMissing

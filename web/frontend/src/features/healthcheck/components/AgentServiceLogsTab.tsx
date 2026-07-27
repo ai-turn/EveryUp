@@ -3,7 +3,7 @@ import {
   ResponsiveContainer, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts';
-import { Button, MaterialIcon, SegmentedControl, type GlobalTimeRange } from '../../../components/common';
+import { Button, MaterialIcon, SegmentedControl, SearchInput, type GlobalTimeRange } from '../../../components/common';
 import { ChartTooltip, chartCardClass, getChartTheme, gridProps, xAxisProps, yAxisProps } from '../../../components/charts';
 import { api, type LogEntry, type LogHistogramBucket, type LogLevel } from '../../../services/api';
 import { getErrorMessage } from '../../../utils/errors';
@@ -26,12 +26,13 @@ const RANGE_BUCKET: Record<GlobalTimeRange, { hours: number; bucketMins: number 
 };
 
 // Stacked-bar colors matching LEVEL_STYLE badge colors.
+// 600단계: 500단계는 흰 배경에서 warn 2.15 / info 2.77 / trace 2.56으로 WCAG 1.4.11(3:1) 미달이었다.
 const LEVEL_BAR: { key: keyof Omit<LogHistogramBucket, 'time'>; color: string; name: string }[] = [
-  { key: 'error', color: '#ef4444', name: 'ERROR' },
-  { key: 'warn',  color: '#f59e0b', name: 'WARN' },
-  { key: 'info',  color: '#0ea5e9', name: 'INFO' },
-  { key: 'debug', color: '#8b5cf6', name: 'DEBUG' },
-  { key: 'trace', color: '#94a3b8', name: 'TRACE' },
+  { key: 'error', color: '#dc2626', name: 'ERROR' },
+  { key: 'warn',  color: '#d97706', name: 'WARN' },
+  { key: 'info',  color: '#0284c7', name: 'INFO' },
+  { key: 'debug', color: '#7c3aed', name: 'DEBUG' },
+  { key: 'trace', color: '#64748b', name: 'TRACE' },
 ];
 
 const LOG_LEVELS: { value: LogLevel | ''; label: string }[] = [
@@ -43,11 +44,12 @@ const LOG_LEVELS: { value: LogLevel | ''; label: string }[] = [
   { value: 'trace', label: 'TRACE' },
 ];
 
+// 라이트 텍스트는 700단계 — 600은 자기 -100 배경 위에서 red 3.95 / sky 3.57로 AA 미달이었다.
 const LEVEL_STYLE: Record<string, string> = {
-  error: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
+  error: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
   warn:  'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
-  info:  'bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400',
-  debug: 'bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400',
+  info:  'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400',
+  debug: 'bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400',
   trace: 'bg-ui-hover text-text-muted',
 };
 
@@ -220,18 +222,15 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: 
 
         {/* Search */}
         <form onSubmit={handleSearchSubmit} className="flex-1 min-w-48 flex gap-1.5">
-          <div className="relative flex-1">
-            <MaterialIcon name="search" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none" />
-            <input
-              type="text"
-              value={inputValue}
-              onChange={e => setInputValue(e.target.value)}
-              placeholder="메시지 검색..."
-              className="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg bg-ui-hover border border-transparent focus:ring-2 focus:ring-primary/50 dark:text-white placeholder-slate-400 dark:placeholder-text-dim-dark outline-none transition-colors"
-            />
-          </div>
+          <SearchInput
+            wrapperClassName="flex-1"
+            value={inputValue}
+            onChange={e => setInputValue(e.target.value)}
+            placeholder="메시지 검색..."
+          />
           {search && (
             <button type="button" onClick={() => { setSearch(''); setInputValue(''); }}
+              aria-label="검색어 지우기" title="검색어 지우기"
               className="px-2 py-1.5 rounded-lg text-xs text-slate-500 hover:text-red-500 transition-colors">
               <MaterialIcon name="close" className="text-sm" />
             </button>
@@ -357,7 +356,7 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: 
           </p>
         </div>
       ) : (
-        <div className="divide-y divide-slate-100 dark:divide-ui-border-dark border border-ui-border rounded-xl overflow-hidden">
+        <div className="divide-y divide-ui-border-soft border border-ui-border rounded-xl overflow-hidden">
           {logs.map(log => <LogRow key={log.id} log={log} onOpenTrace={setActiveTraceId} />)}
         </div>
       )}

@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { MaterialIcon } from '../common';
 import { useSidePanel } from '../../contexts/SidePanelContext';
+import { useOverlay } from '../../hooks/useOverlay';
 
 export function SidePanel() {
     const { isOpen, title, content, size, closePanel } = useSidePanel();
@@ -10,16 +11,7 @@ export function SidePanel() {
             : 'w-full sm:w-[500px] lg:w-[600px]';
     const panelRef = useRef<HTMLDivElement>(null);
 
-    // Handle ESC key to close
-    useEffect(() => {
-        const handleEsc = (e: KeyboardEvent) => {
-            if (isOpen && e.key === 'Escape') {
-                closePanel();
-            }
-        };
-        window.addEventListener('keydown', handleEsc);
-        return () => window.removeEventListener('keydown', handleEsc);
-    }, [isOpen, closePanel]);
+    useOverlay(isOpen, closePanel);
 
     return (
         <>

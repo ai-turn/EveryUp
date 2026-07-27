@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MaterialIcon, SegmentedControl } from '../../../components/common';
+import { MaterialIcon, SegmentedControl, SearchInput } from '../../../components/common';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { api, NotificationChannel, NotificationHistory, NotificationStats } from '../../../services/api';
 import { getChannelStyle } from '../utils/channelMeta';
@@ -19,9 +19,9 @@ const SEVERITY_BADGE: Record<string, string> = {
 };
 
 const STATUS_META: Record<string, { dot: string; text: string }> = {
-  sent: { dot: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400' },
-  failed: { dot: 'bg-red-500', text: 'text-red-600 dark:text-red-400' },
-  pending: { dot: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400' },
+  sent: { dot: 'bg-status-healthy', text: 'text-status-healthy' },
+  failed: { dot: 'bg-status-error', text: 'text-status-error' },
+  pending: { dot: 'bg-status-warn', text: 'text-status-warn' },
 };
 
 // Pages to render: first, last, current±1, with null for ellipsis gaps.
@@ -185,13 +185,11 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
         </select>
 
         <div className="ml-auto relative w-64">
-          <MaterialIcon name="search" className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-base pointer-events-none" />
-          <input
-            type="text"
+          <SearchInput
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={t('alerts.history.searchPlaceholder')}
-            className="w-full pl-7 pr-7 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm outline-none focus:ring-1 focus:ring-primary dark:text-white"
+            className="pr-7"
           />
           {search && (
             <button

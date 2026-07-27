@@ -42,7 +42,7 @@ export function AuditLogSection() {
       {events.length === 0 ? (
         <p className="text-sm text-text-muted">{t('settings.audit.empty')}</p>
       ) : (
-        <ul className="divide-y divide-slate-100 dark:divide-ui-border-dark">
+        <ul className="divide-y divide-ui-border-soft">
           {events.map((event) => {
             const count = bodyCountOf(event.metadata);
             return (

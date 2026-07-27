@@ -34,7 +34,7 @@ export function AgentFailureHistory({ agentId, serviceKey, refreshKey }: AgentFa
 
   if (loading) {
     return (
-      <div className="mb-8 p-6 rounded-xl border border-ui-border bg-white dark:bg-chart-bg animate-pulse">
+      <div className="mb-8 p-6 rounded-xl border border-ui-border bg-bg-surface animate-pulse">
         <div className="h-5 bg-ui-active rounded w-40 mb-4" />
         {[1, 2].map((i) => (
           <div key={i} className="h-14 bg-ui-hover rounded-lg mb-3" />
@@ -46,8 +46,8 @@ export function AgentFailureHistory({ agentId, serviceKey, refreshKey }: AgentFa
   return (
     <div className="mb-8 p-6 rounded-xl border border-ui-border bg-bg-surface">
       <div className="flex items-center gap-3 mb-5">
-        <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-red-500/10 shrink-0">
-          <MaterialIcon name="history" className="text-lg text-red-500" />
+        <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-status-error/10 shrink-0">
+          <MaterialIcon name="history" className="text-lg text-status-error" />
         </div>
         <div>
           <h2 className="text-text-base text-xl font-bold tracking-tight">
@@ -61,8 +61,8 @@ export function AgentFailureHistory({ agentId, serviceKey, refreshKey }: AgentFa
 
       {events.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-10 gap-3">
-          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/10">
-            <MaterialIcon name="check_circle" className="text-2xl text-emerald-500" />
+          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-status-healthy/10">
+            <MaterialIcon name="check_circle" className="text-2xl text-status-healthy" />
           </div>
           <p className="text-text-muted text-sm">{t('장애 기록이 없습니다')}</p>
         </div>
@@ -77,7 +77,7 @@ export function AgentFailureHistory({ agentId, serviceKey, refreshKey }: AgentFa
               >
                 <MaterialIcon
                   name={isAlert ? 'error' : 'check_circle'}
-                  className={`text-xl shrink-0 mt-0.5 ${isAlert ? 'text-red-500' : 'text-emerald-500'}`}
+                  className={`text-xl shrink-0 mt-0.5 ${isAlert ? 'text-status-error' : 'text-status-healthy'}`}
                 />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-text-base truncate">

@@ -16,7 +16,6 @@
 @theme {
   /* 1. Primary: 다크모드에서 조금 더 화사한 블루 채택 */
   --color-primary: #3b76c9;
-  --color-primary-hover: #2563eb;
   --color-primary-dark: #3F6FDB;
 
   /* 2. Backgrounds */
@@ -44,23 +43,31 @@
   --color-text-secondary: #334155;  /* 본문 (≈ slate-700) */
   --color-text-secondary-dark: #cbd5e1;
 
-  --color-text-muted: #64748b;      /* 보조 텍스트 (≈ slate-500) */
+  --color-text-muted: #475569;      /* 보조 텍스트 (≈ slate-600) — 7.58:1 */
   --color-text-muted-dark: #94a3b8;
 
-  --color-text-dim: #94a3b8;        /* 메타·플레이스홀더 (≈ slate-400) */
+  /* dim은 slate-400(#94a3b8)이었으나 흰 배경 2.56:1로 AA(4.5) 미달이었다.
+     slate-500로 내려 4.76:1 확보 — 그만큼 muted도 한 칸 내려 4단 위계를 유지. */
+  --color-text-dim: #64748b;        /* 메타·플레이스홀더 (≈ slate-500) — 4.76:1 */
   --color-text-dim-dark: #6b7280;   /* WCAG AA 대비비 충족 (was #484f58) */
 
-  /* 5. Status: 다크모드 가독성을 고려한 미세 조정 */
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
+  /* 5. Status: 시맨틱 레이어. 컴포넌트는 primitive(emerald-600 등) 대신 이 토큰을 쓴다.
+     라이트는 700~800단계 — 11px bold 배지가 자기 /10 틴트 위에서 WCAG AA(4.5)를 넘겨야 한다.
+     다크 healthy만 emerald가 아닌 teal-300: emerald-400과 red-400은 적록색각이상에서
+     둘 다 흙빛으로 수렴해(거리 20.1) 구분이 안 됐다. teal로 밀어 45.5까지 벌렸다. */
+  --color-status-healthy: #047857;      /* emerald-700 */
+  --color-status-healthy-dark: #5eead4; /* teal-300 */
+  --color-status-warn: #92400e;         /* amber-800 */
+  --color-status-warn-dark: #fbbf24;    /* amber-400 */
+  --color-status-error: #b91c1c;        /* red-700 */
+  --color-status-error-dark: #f87171;   /* red-400 */
+  --color-status-idle: #475569;         /* slate-600 — offline·paused·unknown */
+  --color-status-idle-dark: #94a3b8;    /* slate-400 */
 
-  /* 6. Chart/Visualization tokens (모니터링·차트 컴포넌트 전용) */
-  --color-chart-bg: #131920;        /* chart container 배경 */
-  --color-chart-surface: #1c2433;   /* chart 내부 surface */
-  --color-chart-hover: #243040;     /* chart hover 상태 */
-  --color-chart-border: #2e3c4a;    /* chart border/divider */
-  --color-text-chart-dim: #6b7c8d;  /* chart dim 텍스트 */
+  /* 6. Chart tokens — 다크 그리드/툴팁 보더 전용. chartTheme.ts가 getCssVar로 읽는다.
+     chart-bg(#131920)는 bg-surface-dark(#161b22)와 대비 1.02로 사실상 같은 색이라 제거하고
+     bg-bg-surface로 통합했다. 쓰이지 않던 chart-surface/chart-hover/text-chart-dim도 함께 제거. */
+  --color-chart-border: #2e3c4a;
 
   /* 7. Font sizes: xs(12px) 미만 초소형 등급. 배지/메타/타임라인 라벨 전용 */
   --text-2xs: 0.6875rem;            /* 11px — text-2xs 유틸리티 생성 */
@@ -104,6 +111,11 @@
   --color-text-muted: var(--color-text-muted-dark);
   --color-text-dim: var(--color-text-dim-dark);
 
+  --color-status-healthy: var(--color-status-healthy-dark);
+  --color-status-warn: var(--color-status-warn-dark);
+  --color-status-error: var(--color-status-error-dark);
+  --color-status-idle: var(--color-status-idle-dark);
+
   /* Toast Dark */
   --toast-bg: #161b22;
   --toast-color: var(--color-text-base-dark);
@@ -139,47 +151,8 @@ body {
   }
 }
 
-/* Status Pulse: 계열색에 맞춰 미세 조정 */
-.status-pulse {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  position: relative;
-}
-
-.status-pulse::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: inherit;
-  animation: pulse-ring 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse-ring {
-  0% {
-    transform: scale(1);
-    opacity: 0.8;
-  }
-
-  50% {
-    transform: scale(2.4);
-    opacity: 0;
-  }
-
-  100% {
-    transform: scale(1);
-    opacity: 0;
-  }
-}
-
 /* Reduced Motion: 접근성 — 사용자의 모션 설정 존중 */
 @media (prefers-reduced-motion: reduce) {
-  .status-pulse::after {
-    animation: none;
-  }
-
   * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;

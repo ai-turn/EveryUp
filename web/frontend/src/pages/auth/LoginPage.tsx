@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../contexts/AuthContext'
 import { env } from '../../config/env'
-import { Button, MaterialIcon } from '../../components/common'
+import { Button, MaterialIcon, Input } from '../../components/common'
 import { IconHealthCheck } from '../../components/icons/SidebarIcons'
 
 export function LoginPage() {
@@ -75,7 +75,6 @@ export function LoginPage() {
   }
 
   const isSetup = needsSetup === true
-  const inputErrorClass = error ? 'border-red-500/50 focus:ring-red-500' : 'border-ui-border focus:ring-primary'
 
   return (
     <div className="min-h-screen bg-bg-main dark:bg-bg-main-dark flex items-center justify-center p-4">
@@ -120,14 +119,14 @@ export function LoginPage() {
               <form onSubmit={handleSubmit} className="space-y-3">
                 <div>
                   <label htmlFor="login-username" className="block text-sm font-bold text-text-muted uppercase tracking-wider mb-1.5">{t('login.username')}</label>
-                  <input
+                  <Input
                     id="login-username"
                     type="text"
                     value={username}
                     onChange={e => { setUsername(e.target.value); setError(''); }}
                     required
                     autoFocus
-                    className={`w-full bg-ui-hover-soft border ${inputErrorClass} rounded-lg px-3 py-3 text-text-base text-sm placeholder-slate-400 outline-none focus:ring-2 focus:border-transparent transition-all`}
+                    invalid={!!error}
                     placeholder="admin"
                   />
                 </div>
@@ -135,13 +134,13 @@ export function LoginPage() {
                   <label htmlFor="login-password" className="block text-sm font-bold text-text-muted uppercase tracking-wider mb-1.5">
                     {t('login.password')}{isSetup && ` (${t('login.passwordMinLength')})`}
                   </label>
-                  <input
+                  <Input
                     id="login-password"
                     type="password"
                     value={password}
                     onChange={e => { setPassword(e.target.value); setError(''); }}
                     required
-                    className={`w-full bg-ui-hover-soft border ${inputErrorClass} rounded-lg px-3 py-3 text-text-base text-sm placeholder-slate-400 outline-none focus:ring-2 focus:border-transparent transition-all`}
+                    invalid={!!error}
                     placeholder={isSetup ? t('login.passwordMinLength') : t('login.password')}
                   />
                 </div>

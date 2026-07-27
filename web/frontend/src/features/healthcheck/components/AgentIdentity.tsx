@@ -38,13 +38,13 @@ export function AgentIdentity({ service, showName = true }: { service: AgentServ
   const status = service.healthy ? 'healthy' : 'unhealthy';
   const statusConfig = {
     healthy: {
-      bg: 'bg-emerald-500/10', border: 'border-emerald-500/20',
-      text: 'text-emerald-500', dot: 'bg-emerald-500', ping: 'bg-emerald-400',
+      bg: 'bg-status-healthy/10', border: 'border-status-healthy/20',
+      text: 'text-status-healthy', dot: 'bg-status-healthy', ping: 'bg-status-healthy',
       label: t('정상'),
     },
     unhealthy: {
-      bg: 'bg-red-500/10', border: 'border-red-500/20',
-      text: 'text-red-500', dot: 'bg-red-500', ping: 'bg-red-400',
+      bg: 'bg-status-error/10', border: 'border-status-error/20',
+      text: 'text-status-error', dot: 'bg-status-error', ping: 'bg-status-error',
       label: t('장애'),
     },
   };
@@ -58,7 +58,7 @@ export function AgentIdentity({ service, showName = true }: { service: AgentServ
     <div className="mb-8">
       {showName && (
         <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-2xl sm:text-3xl font-bold text-text-base">{service.name}</h1>
+          <h1 className="text-2xl font-bold text-text-base">{service.name}</h1>
           <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${cfg.bg} border ${cfg.border}`}>
             <span className="relative flex h-2 w-2">
               {service.healthy && (
@@ -85,7 +85,7 @@ export function AgentIdentity({ service, showName = true }: { service: AgentServ
 
       {!service.healthy && service.lastError && (
         <div className="mt-4 p-3 rounded-lg bg-ui-hover-soft border border-ui-border text-sm text-text-secondary">
-          <span className="font-semibold text-red-600 dark:text-red-400">{t('오류')}: </span>
+          <span className="font-semibold text-status-error">{t('오류')}: </span>
           {service.lastError}
         </div>
       )}

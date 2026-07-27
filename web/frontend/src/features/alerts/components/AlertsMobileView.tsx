@@ -34,9 +34,9 @@ const severityColors: Record<string, { text: string; bg: string }> = {
 };
 
 const historyStatusConfig: Record<string, { icon: string; color: string }> = {
-  sent: { icon: 'check_circle', color: 'text-emerald-500' },
-  failed: { icon: 'error', color: 'text-red-500' },
-  pending: { icon: 'schedule', color: 'text-amber-500' },
+  sent: { icon: 'check_circle', color: 'text-status-healthy' },
+  failed: { icon: 'error', color: 'text-status-error' },
+  pending: { icon: 'schedule', color: 'text-status-warn' },
 };
 
 export function AlertsMobileView({
@@ -193,12 +193,14 @@ export function AlertsMobileView({
                     </button>
                     <button
                       onClick={() => onEditChannel(channel)}
+                      aria-label={t('alerts.channels.edit', { defaultValue: '채널 편집' })}
                       className="flex items-center justify-center p-2 rounded-lg bg-ui-hover text-slate-500 active:scale-95 transition-transform"
                     >
                       <MaterialIcon name="edit" className="text-base" />
                     </button>
                     <button
                       onClick={() => onDeleteChannel(channel.id)}
+                      aria-label={t('alerts.channels.delete', { defaultValue: '채널 삭제' })}
                       className="flex items-center justify-center p-2 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-500 active:scale-95 transition-transform"
                     >
                       <MaterialIcon name="delete" className="text-base" />

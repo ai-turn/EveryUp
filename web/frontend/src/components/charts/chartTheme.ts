@@ -26,14 +26,21 @@ function getCssVar(name: string): string {
  *       평면 10% 채움, 얕은 실선 그리드, semibold 11px 눈금,
  *       애니메이션 없음, 트렌드 차트 범례는 ChartStatsLegend(Last/Min/Max/Avg). */
 
-/** 시리즈 hex 단일 소스 — 정적 컨텍스트(데이터 변환 등)용. 컴포넌트에서는 getSeriesPalette 사용. */
+/* 시리즈 hex 단일 소스 — 정적 컨텍스트(데이터 변환 등)용. 컴포넌트에서는 getSeriesPalette 사용.
+ *
+ * 500단계였을 때 라이트 배경 대비가 emerald 2.54 / teal 2.49 / amber 2.15로 WCAG 1.4.11(3:1)
+ * 미달이었다 — 팔레트가 다크 배경만 보고 튜닝돼 있었다. 600단계로 내려 양쪽 다 통과시킨다.
+ *
+ * 적록색각이상 하에서 앞 3슬롯(primary/emerald/amber)은 서로 구분되지만 4슬롯째부터는
+ * 어떤 순서로 배열해도 충돌한다(primary/violet 16.0, emerald/teal 11.8, amber/red 12.8).
+ * 시리즈가 4개를 넘으면 색만으로 구분이 보장되지 않는다 — 선 스타일이나 직접 라벨 병행. */
 export const SERIES_HEX = {
   primary: '#3b76c9',
-  emerald: '#10b981',
-  amber: '#f59e0b',
-  violet: '#8b5cf6',
-  red: '#ef4444',
-  teal: '#14b8a6',
+  emerald: '#059669',
+  amber: '#d97706',
+  violet: '#7c3aed',
+  red: '#dc2626',
+  teal: '#0d9488',
 } as const;
 
 /** 다중 시리즈 순환 팔레트 — 첫 슬롯은 항상 브랜드 프라이머리. */
@@ -43,7 +50,7 @@ export function getSeriesPalette(theme: ChartTheme): string[] {
 
 /** 차트 카드 공통 클래스 — 패딩(p-4/p-6)은 소비처에서 붙인다. */
 export const chartCardClass =
-  'rounded-xl border border-slate-200 bg-white dark:border-ui-border-dark dark:bg-chart-bg';
+  'rounded-xl border border-ui-border bg-bg-surface';
 
 export function gridProps(theme: ChartTheme) {
   return { stroke: theme.gridColor, strokeOpacity: 0.55, vertical: false } as const;

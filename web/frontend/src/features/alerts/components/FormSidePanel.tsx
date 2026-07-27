@@ -1,5 +1,6 @@
-import { ReactNode, useEffect } from 'react';
+import { ReactNode } from 'react';
 import { MaterialIcon } from '../../../components/common';
+import { useOverlay } from '../../../hooks/useOverlay';
 
 interface FormSidePanelProps {
     open: boolean;
@@ -13,14 +14,7 @@ interface FormSidePanelProps {
 
 // 로그/API의 TracePanel과 같은 우측 슬라이드 오버레이 — 폼 전용으로 하단 액션 바가 고정된다.
 export function FormSidePanel({ open, icon, title, onClose, footer, children }: FormSidePanelProps) {
-    useEffect(() => {
-        if (!open) return;
-        const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
-        };
-        window.addEventListener('keydown', handleEsc);
-        return () => window.removeEventListener('keydown', handleEsc);
-    }, [open, onClose]);
+    useOverlay(open, onClose);
 
     if (!open) return null;
 

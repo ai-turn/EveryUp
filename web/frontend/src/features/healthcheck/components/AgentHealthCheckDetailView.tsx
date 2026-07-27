@@ -28,8 +28,8 @@ function StatusBadge({ healthy }: { healthy: boolean }) {
     <span
       className={`text-2xs font-bold px-1.5 py-0.5 rounded border ${
         healthy
-          ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
-          : 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20'
+          ? 'text-status-healthy bg-status-healthy/10 border-status-healthy/20'
+          : 'text-status-error bg-status-error/10 border-status-error/20'
       }`}
     >
       {healthy ? t('정상') : t('장애')}
@@ -64,7 +64,7 @@ function ContainerMeta({ service }: { service: AgentServiceFlat }) {
       {restarts > 0 && (
         <>
           <span className="text-text-dim shrink-0">·</span>
-          <span className={`shrink-0 ${restarts >= 3 ? 'text-amber-600 dark:text-amber-400 font-medium' : ''}`}>
+          <span className={`shrink-0 ${restarts >= 3 ? 'text-status-warn font-medium' : ''}`}>
             재시작 {restarts}회
           </span>
         </>
@@ -84,7 +84,7 @@ function RefreshButton({ onRefresh }: { onRefresh: () => void }) {
   return (
     <button
       onClick={handleRefresh}
-      title="새로고침"
+      aria-label="새로고침" title="새로고침"
       className="p-2 rounded-lg text-slate-400 hover:text-text-base hover:bg-ui-hover transition-colors"
     >
       <MaterialIcon name="refresh" className={`text-lg ${spinning ? 'animate-spin' : ''}`} />

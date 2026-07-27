@@ -82,18 +82,18 @@ function SetupStep({
   const appearance = {
     ready: {
       icon: 'check',
-      circle: 'bg-emerald-500 text-white',
-      badge: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+      circle: 'bg-status-healthy text-white',
+      badge: 'bg-status-healthy/10 text-status-healthy',
     },
     waiting: {
       icon: String(number),
       circle: 'bg-primary/10 text-primary',
-      badge: 'bg-slate-100 text-slate-500 dark:bg-ui-hover-dark dark:text-text-muted-dark',
+      badge: 'bg-status-idle/10 text-status-idle',
     },
     issue: {
       icon: 'priority_high',
-      circle: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
-      badge: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+      circle: 'bg-status-warn/15 text-status-warn',
+      badge: 'bg-status-warn/10 text-status-warn',
     },
     optional: {
       icon: String(number),
@@ -103,7 +103,7 @@ function SetupStep({
   }[state];
 
   return (
-    <div className="flex min-w-0 flex-col rounded-xl border border-ui-border-soft bg-bg-base/35 p-3">
+    <div className="flex min-w-0 flex-col rounded-xl border border-ui-border-soft bg-ui-hover-soft p-3">
       <div className="flex items-start gap-2.5">
         <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${appearance.circle}`}>
           {state === 'ready' || state === 'issue' ? (
@@ -121,7 +121,7 @@ function SetupStep({
         </div>
       </div>
       {detail && (
-        <p className={`mt-2 rounded-md px-2 py-1.5 text-2xs ${state === 'issue' ? 'bg-amber-500/5 text-amber-700 dark:text-amber-400' : 'bg-ui-hover-soft text-text-dim'}`}>
+        <p className={`mt-2 rounded-md px-2 py-1.5 text-2xs ${state === 'issue' ? 'bg-status-warn/5 text-status-warn' : 'bg-ui-hover-soft text-text-dim'}`}>
           {detail}
         </p>
       )}
@@ -170,7 +170,7 @@ export function MonitoringSetupPanel({ agent, services, onInstall, onInstrument,
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold text-text-base">모니터링 설정 가이드</h2>
-            <span className={`rounded-full px-2 py-0.5 text-2xs font-bold ${requiredComplete ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'bg-primary/10 text-primary'}`}>
+            <span className={`rounded-full px-2 py-0.5 text-2xs font-bold ${requiredComplete ? 'bg-status-healthy/10 text-status-healthy' : 'bg-primary/10 text-primary'}`}>
               필수 {requiredReady}/3
             </span>
           </div>

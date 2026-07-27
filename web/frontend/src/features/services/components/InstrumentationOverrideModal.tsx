@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { CopyButton } from '../../../components/common/CopyButton';
 import { MaterialIcon } from '../../../components/common/MaterialIcon';
+import { Input } from '../../../components/common/Input';
+import { Select } from '../../../components/common/Select';
 import { useClipboardCopy } from '../../../hooks/useClipboardCopy';
 import { api, type AgentServiceSnapshot } from '../../../services/api';
 import { runtimeLabel } from '../../healthcheck/runtimeLabels';
+import { useOverlay } from '../../../hooks/useOverlay';
 
 interface Props {
   agentId: string;
@@ -80,6 +83,7 @@ function CommandRow({
 }
 
 export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
+  useOverlay(true, onClose);
   const { copy } = useClipboardCopy();
   const [services, setServices] = useState<AgentServiceSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
@@ -199,16 +203,15 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
                     <label htmlFor="otel-compose-project" className="text-xs font-semibold text-text-muted">
                       Compose 프로젝트
                     </label>
-                    <select
+                    <Select
                       id="otel-compose-project"
                       value={selectedProject}
                       onChange={(event) => setComposeProject(event.target.value)}
-                      className="w-full rounded-lg border border-ui-border bg-ui-hover-soft px-3 py-2 text-sm text-text-base focus:outline-none focus:ring-2 focus:ring-primary/30"
                     >
                       {composeProjects.map((project) => (
                         <option key={project} value={project}>{project}</option>
                       ))}
-                    </select>
+                    </Select>
                     <p className="text-xs text-text-dim">한 번에 한 Compose 프로젝트씩 적용합니다.</p>
                   </div>
                 )}
@@ -216,13 +219,13 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
                   <label htmlFor="otel-web-base-url" className="text-xs font-semibold text-text-muted">
                     모니터링 서버 주소
                   </label>
-                  <input
+                  <Input
                     id="otel-web-base-url"
                     type="url"
                     value={webBaseUrl}
                     onChange={(event) => setWebBaseUrl(event.target.value)}
                     placeholder="예: http://192.168.0.10:3001"
-                    className={`w-full rounded-lg border bg-ui-hover-soft px-3 py-2 text-sm text-text-base placeholder:text-text-dim focus:outline-none focus:ring-2 focus:ring-primary/30 ${webAddressMissing ? 'border-amber-400' : 'border-ui-border'}`}
+                    warn={webAddressMissing}
                   />
                   <p className={`text-xs ${webAddressMissing ? 'text-amber-600 dark:text-amber-400' : 'text-text-dim'}`}>
                     {webAddressMissing ? '애플리케이션 서버에서 접근 가능한 주소를 입력하세요.' : 'CLI를 최신 버전으로 내려받을 주소입니다.'}
@@ -232,13 +235,13 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
                   <label htmlFor="otel-compose-path" className="text-xs font-semibold text-text-muted">
                     애플리케이션 Compose 경로
                   </label>
-                  <input
+                  <Input
                     id="otel-compose-path"
                     type="text"
                     value={composePath}
                     onChange={(event) => setComposePath(event.target.value)}
                     placeholder="./docker-compose.yml"
-                    className={`w-full rounded-lg border bg-ui-hover-soft px-3 py-2 font-mono text-sm text-text-base placeholder:text-text-dim focus:outline-none focus:ring-2 focus:ring-primary/30 ${composePathMissing ? 'border-amber-400' : 'border-ui-border'}`}
+                    mono warn={composePathMissing}
                   />
                   <p className="text-xs text-text-dim">이 명령을 실행할 서버의 파일 경로입니다.</p>
                 </div>

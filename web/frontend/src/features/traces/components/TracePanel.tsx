@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CopyButton, MaterialIcon } from '../../../components/common';
 import { useClipboardCopy } from '../../../hooks/useClipboardCopy';
+import { useOverlay } from '../../../hooks/useOverlay';
 import { getErrorMessage } from '../../../utils/errors';
 import { api, TraceDetail, TraceSpan, LogEntry, ApiRequest } from '../../../services/api';
 
@@ -39,8 +40,8 @@ function spanKindBadge(kind: string): string {
 }
 
 function statusBadge(code: string | undefined): string {
-  if (code === 'ERROR') return 'bg-red-500/10 text-red-600 dark:text-red-400';
-  if (code === 'OK')    return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
+  if (code === 'ERROR') return 'bg-status-error/10 text-status-error';
+  if (code === 'OK')    return 'bg-status-healthy/10 text-status-healthy';
   return 'bg-slate-500/10 text-text-muted';
 }
 
@@ -249,13 +250,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
     navigate(logServicePath(serviceId, tab, traceId));
   };
 
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [onClose]);
+  useOverlay(true, onClose);
 
   useEffect(() => {
     let cancelled = false;
@@ -333,7 +328,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
 
           {error && (
             <div className="flex items-start gap-2 px-3 py-2 bg-ui-hover-soft rounded-lg border border-ui-border">
-              <MaterialIcon name="error" className="text-sm text-red-500 shrink-0 mt-0.5" />
+              <MaterialIcon name="error" className="text-sm text-status-error shrink-0 mt-0.5" />
               <p className="text-sm text-text-secondary">{error}</p>
             </div>
           )}
@@ -410,7 +405,7 @@ function PanelSectionHeader({ icon, title, count }: { icon: string; title: strin
 
 // Solid bar color for the waterfall track — error wins, else by span kind.
 function spanBarColor(span: TraceSpan): string {
-  if (span.statusCode === 'ERROR') return 'bg-red-500';
+  if (span.statusCode === 'ERROR') return 'bg-status-error';
   switch (span.kind) {
     case 'SERVER':   return 'bg-emerald-500';
     case 'CLIENT':   return 'bg-sky-500';
@@ -612,8 +607,8 @@ function ApiRequestList({ items, onCopy }: { items: ApiRequest[]; onCopy: CopyFn
             </span>
             <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold shrink-0 ${
               req.isError
-                ? 'bg-red-500/10 text-red-600 dark:text-red-400'
-                : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                ? 'bg-status-error/10 text-status-error'
+                : 'bg-status-healthy/10 text-status-healthy'
             }`}>
               {req.statusCode}
             </span>

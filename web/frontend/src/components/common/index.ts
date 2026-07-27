@@ -1,4 +1,7 @@
 export { Button } from './Button';
+export { Input } from './Input';
+export { Select } from './Select';
+export { SearchInput } from './SearchInput';
 export { PageHeader } from './PageHeader';
 export { MaterialIcon } from './MaterialIcon';
 export { CopyButton } from './CopyButton';

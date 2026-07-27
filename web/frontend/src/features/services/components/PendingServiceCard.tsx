@@ -29,7 +29,7 @@ export function PendingServiceCard({ agent, onDelete, onViewKey, onInstall }: Pr
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-300 dark:bg-slate-600 opacity-75" />
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-slate-400" />
           </span>
-          <h3 className="font-semibold text-base text-text-base truncate leading-tight">
+          <h3 className="text-base font-bold text-text-base truncate leading-tight">
             {agent.name}
           </h3>
         </div>
@@ -80,7 +80,7 @@ export function PendingServiceCard({ agent, onDelete, onViewKey, onInstall }: Pr
           <button
             type="button"
             onClick={onViewKey}
-            title="API 키 보기"
+            aria-label="API 키 보기" title="API 키 보기"
             className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
           >
             <MaterialIcon name="key" className="text-base" />
@@ -88,7 +88,7 @@ export function PendingServiceCard({ agent, onDelete, onViewKey, onInstall }: Pr
           <button
             type="button"
             onClick={() => onDelete(agent.id)}
-            title="프로젝트 비활성화"
+            aria-label="프로젝트 비활성화" title="프로젝트 비활성화"
             className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
           >
             <MaterialIcon name="delete_outline" className="text-base" />

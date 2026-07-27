@@ -87,9 +87,9 @@ export function AlertsDesktopView({
   const successRate = stats ? Math.round(stats.successRate) : null;
   const totalNotifications = totalSent + totalFailed;
   const rateBarColor = successRate == null ? 'bg-slate-300'
-    : successRate >= 95 ? 'bg-emerald-500'
-    : successRate >= 80 ? 'bg-amber-500'
-    : 'bg-red-500';
+    : successRate >= 95 ? 'bg-status-healthy'
+    : successRate >= 80 ? 'bg-status-warn'
+    : 'bg-status-error';
 
   const tabs: { key: TabType; label: string; count?: number }[] = [
     { key: 'channels', label: t('alerts.channelsTitle'), count: channels.length },
@@ -112,7 +112,7 @@ export function AlertsDesktopView({
       </PageHeader>
 
       {/* KPI stat bar — one card, divider-separated cells */}
-      <div className="mb-5 grid grid-cols-5 divide-x divide-slate-100 dark:divide-ui-border-dark rounded-xl border border-ui-border bg-bg-surface py-3.5">
+      <div className="mb-5 grid grid-cols-5 divide-x divide-ui-border-soft rounded-xl border border-ui-border bg-bg-surface py-3.5">
         <div className="flex flex-col gap-0.5 px-5">
           <span className="text-2xs text-text-muted">{t('alerts.kpi.sent7d')}</span>
           <span className="text-xl font-extrabold tabular-nums text-text-base">{totalSent}</span>
@@ -140,7 +140,7 @@ export function AlertsDesktopView({
               {successRate != null ? `${successRate}%` : '—'}
             </span>
             {successRate != null && (
-              <span className="h-1 w-12 overflow-hidden rounded-full bg-slate-200 dark:bg-ui-hover-dark">
+              <span className="h-1 w-12 overflow-hidden rounded-full bg-ui-hover">
                 <span className={`block h-full ${rateBarColor}`} style={{ width: `${successRate}%` }} />
               </span>
             )}
@@ -276,7 +276,7 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
   if (isLoading) {
     return (
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-ui-border-dark dark:bg-bg-surface-dark">
-        <div className="divide-y divide-slate-100 dark:divide-ui-border-dark">
+        <div className="divide-y divide-ui-border-soft">
           {[1, 2, 3].map(i => (
             <div key={i} className="grid grid-cols-[minmax(220px,1.6fr)_90px_150px_110px_150px_180px] gap-4 px-4 py-3 animate-pulse">
               <div className="flex items-center gap-3">
@@ -324,7 +324,7 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
             <th className="w-[180px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-text-muted">{t('alerts.table.actions')}</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100 dark:divide-ui-border-dark">
+        <tbody className="divide-y divide-ui-border-soft">
           {channels.map(channel => {
             const style = getChannelStyle(channel.type);
             const health = channelHealth[channel.id];
@@ -392,14 +392,14 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
                     <button
                       onClick={() => onEdit(channel)}
                       className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-ui-hover-dark dark:hover:text-white"
-                      title={t('common.edit')}
+                      aria-label={t('common.edit')} title={t('common.edit')}
                     >
                       <MaterialIcon name="edit" className="text-base" />
                     </button>
                     <button
                       onClick={() => onDelete(channel.id)}
                       className="flex h-8 w-8 items-center justify-center rounded-md text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
-                      title={t('common.delete')}
+                      aria-label={t('common.delete')} title={t('common.delete')}
                     >
                       <MaterialIcon name="delete_outline" className="text-base" />
                     </button>

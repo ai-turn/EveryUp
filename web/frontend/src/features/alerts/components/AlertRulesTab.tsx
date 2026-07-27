@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { getErrorMessage } from '../../../utils/errors';
-import { Button, MaterialIcon, EmptyState, ConfirmDialog, Toggle, SegmentedControl } from '../../../components/common';
+import { Button, MaterialIcon, EmptyState, ConfirmDialog, Toggle, SegmentedControl, SearchInput } from '../../../components/common';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { api, type AlertRule, type NotificationChannel, type AgentServiceFlat, type ConnectedAgent } from '../../../services/api';
 import { getChannelStyle } from '../utils/channelMeta';
@@ -417,13 +417,11 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
         </select>
 
         <div className="ml-auto relative w-64">
-          <MaterialIcon name="search" className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-base pointer-events-none" />
-          <input
-            type="text"
+          <SearchInput
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder={t('alerts.rules.searchPlaceholder', { defaultValue: 'Name or target…' })}
-            className="w-full pl-7 pr-7 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm outline-none focus:ring-1 focus:ring-primary dark:text-white"
+            className="pr-7"
           />
           {searchQuery && (
             <button
@@ -530,7 +528,8 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                           <button
                             onClick={() => handleEdit(rule)}
                             className="p-1 text-slate-500 hover:text-text-base hover:bg-ui-hover rounded transition-all"
-                            title={t('common.edit', { defaultValue: 'Edit' })}
+                            aria-label={t('common.edit', { defaultValue: 'Edit' })}
+                          title={t('common.edit', { defaultValue: 'Edit' })}
                           >
                             <MaterialIcon name="edit" className="text-base" />
                           </button>
@@ -538,6 +537,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                             onClick={() => {
                               if (!rule.isSystem) setDeleteTargetId(rule.id);
                             }}
+                            aria-label={t('common.delete', { defaultValue: 'Delete' })}
                             disabled={rule.isSystem || isDeleting}
                             className={`p-1 rounded transition-all ${
                               rule.isSystem

@@ -54,7 +54,7 @@ export function AgentCheckHistoryBar({ agentId, serviceKey, refreshKey, classNam
     <div className={`p-6 ${chartCardClass} ${className ?? 'mb-8'}`}>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-text-base font-bold text-lg">
+          <h3 className="text-base font-bold text-text-base">
             {t('90일 업타임 히스토리')}
           </h3>
           {!loading && (
@@ -80,11 +80,11 @@ export function AgentCheckHistoryBar({ agentId, serviceKey, refreshKey, classNam
                   key={i}
                   className={`flex-1 h-8 rounded-sm cursor-default transition-opacity hover:opacity-75 ${
                     day === null
-                      ? 'bg-slate-200 dark:bg-ui-hover-dark'
+                      ? 'bg-ui-hover'
                       : day.uptimePct >= 99.5
-                        ? 'bg-emerald-500'
+                        ? 'bg-status-healthy'
                         : day.uptimePct >= 50
-                          ? 'bg-amber-500'
+                          ? 'bg-status-warn'
                           : 'bg-rose-500'
                   }`}
                   onMouseEnter={() => day && setHovered(day)}

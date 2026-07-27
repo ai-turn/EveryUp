@@ -130,7 +130,11 @@ export function Sidebar() {
                         : 'text-text-muted hover:bg-ui-hover hover:text-text-base'
                     }`}
                   >
-                    <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${s.healthy ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                    <span
+                      role="img"
+                      aria-label={s.healthy ? t('정상') : t('장애')}
+                      className={`h-1.5 w-1.5 rounded-full shrink-0 ${s.healthy ? 'bg-status-healthy' : 'bg-status-error'}`}
+                    />
                     <span className="truncate">{s.name}</span>
                   </Link>
                 ))}

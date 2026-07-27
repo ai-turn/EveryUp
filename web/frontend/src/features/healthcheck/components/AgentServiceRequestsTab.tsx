@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MaterialIcon, SegmentedControl, type GlobalTimeRange } from '../../../components/common';
+import { MaterialIcon, SegmentedControl, SearchInput, type GlobalTimeRange } from '../../../components/common';
 import { api, type ApiRequest } from '../../../services/api';
 import { getErrorMessage } from '../../../utils/errors';
 import { toast } from 'react-hot-toast';
@@ -44,9 +44,9 @@ function methodClass(method: string): string {
 }
 
 function statusClass(code: number): string {
-  if (code >= 500) return 'text-red-600 dark:text-red-400';
-  if (code >= 400) return 'text-amber-600 dark:text-amber-400';
-  if (code >= 200) return 'text-emerald-600 dark:text-emerald-400';
+  if (code >= 500) return 'text-status-error';
+  if (code >= 400) return 'text-status-warn';
+  if (code >= 200) return 'text-status-healthy';
   return 'text-text-muted';
 }
 
@@ -104,7 +104,7 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, range
         <div className="grid grid-cols-3 gap-3">
           {[
             { label: '전체', value: `${total.toLocaleString()}건`, color: 'text-text-secondary' },
-            { label: '에러', value: `${errorCount}건`, color: errorCount > 0 ? 'text-red-600 dark:text-red-400' : 'text-text-dim' },
+            { label: '에러', value: `${errorCount}건`, color: errorCount > 0 ? 'text-status-error' : 'text-text-dim' },
             { label: '평균', value: `${avgMs}ms`, color: 'text-text-secondary' },
           ].map(kpi => (
             <div key={kpi.label} className="rounded-xl bg-bg-surface border border-ui-border px-4 py-3 text-center">
@@ -138,18 +138,15 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, range
 
         {/* Path search */}
         <form onSubmit={handleSearchSubmit} className="flex-1 min-w-48 flex gap-1.5">
-          <div className="relative flex-1">
-            <MaterialIcon name="search" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none" />
-            <input
-              type="text"
-              value={inputValue}
-              onChange={e => setInputValue(e.target.value)}
-              placeholder="경로 검색..."
-              className="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg bg-ui-hover border border-transparent focus:border-primary dark:text-white placeholder-slate-400 dark:placeholder-text-dim-dark outline-none transition-colors"
-            />
-          </div>
+          <SearchInput
+            wrapperClassName="flex-1"
+            value={inputValue}
+            onChange={e => setInputValue(e.target.value)}
+            placeholder="경로 검색..."
+          />
           {search && (
             <button type="button" onClick={() => { setSearch(''); setInputValue(''); }}
+              aria-label="검색어 지우기" title="검색어 지우기"
               className="px-2 py-1.5 rounded-lg text-xs text-slate-500 hover:text-red-500 transition-colors">
               <MaterialIcon name="close" className="text-sm" />
             </button>
@@ -199,7 +196,7 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, range
           )}
         </div>
       ) : (
-        <div className="divide-y divide-slate-100 dark:divide-ui-border-dark border border-ui-border rounded-xl overflow-hidden">
+        <div className="divide-y divide-ui-border-soft border border-ui-border rounded-xl overflow-hidden">
           {requests.map(req => {
             const clickable = !!req.traceId;
             return (

@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { getErrorMessage } from '../../../utils/errors';
-import { MaterialIcon } from '../../../components/common';
+import { MaterialIcon, Input } from '../../../components/common';
 import { IconTelegram, IconDiscord, IconSlack } from '../../../components/icons/ChannelIcons';
 import {
     api,
@@ -115,8 +115,6 @@ function Field({ label, hint, required, children, error }: {
     );
 }
 
-const inputCls = "w-full px-3.5 py-2.5 bg-ui-hover-soft border border-ui-border rounded-lg text-sm font-semibold outline-none focus:border-primary dark:text-white transition-colors";
-const inputMonoCls = inputCls + " font-mono";
 
 // ─── Accurate preview components (matching real backend output) ───────────────
 
@@ -223,7 +221,7 @@ function SlackPreview({ name }: { name: string }) {
             {/* Message body */}
             <div className="bg-white dark:bg-[#1a1d21] px-3 py-2.5">
                 {/* Attachment with left colored border */}
-                <div className="border-l-4 border-success pl-2.5 space-y-1.5">
+                <div className="border-l-4 border-[#2eb67d] pl-2.5 space-y-1.5">
                     {/* Header section */}
                     <p className="font-bold text-text-base">
                         ✅ <span className="italic">Service healthy: Notification Test</span>
@@ -405,10 +403,10 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                         </Field>
 
                         <Field label={t('common.name')} required error={errors.name?.message ? t(errors.name.message) : undefined}>
-                            <input
+                            <Input
                                 {...register('name')}
                                 placeholder={t('alerts.modal.namePlaceholder')}
-                                className={inputCls + (errors.name ? ' border-red-500' : '')}
+                                invalid={!!errors.name}
                             />
                         </Field>
                     </FormStep>
@@ -423,10 +421,10 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                     error={errors.botToken?.message ? t(errors.botToken.message) : undefined}
                                     hint={t('alerts.modal.botTokenHint', { defaultValue: 'BotFather에서 발급받은 Bot Token' })}
                                 >
-                                    <input
+                                    <Input
                                         {...register('botToken')}
                                         placeholder={t('alerts.modal.botTokenPlaceholder')}
-                                        className={inputMonoCls + (errors.botToken ? ' border-red-500' : '')}
+                                        mono invalid={!!errors.botToken}
                                     />
                                 </Field>
                                 <Field
@@ -435,10 +433,10 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                     error={errors.chatId?.message ? t(errors.chatId.message) : undefined}
                                     hint={t('alerts.modal.chatIdHint', { defaultValue: '채팅방 또는 채널의 Chat ID' })}
                                 >
-                                    <input
+                                    <Input
                                         {...register('chatId')}
                                         placeholder={t('alerts.modal.chatIdPlaceholder')}
-                                        className={inputMonoCls}
+                                        mono
                                     />
                                 </Field>
                                 <SetupGuide type="telegram" />
@@ -451,12 +449,12 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                     error={errors.webhookUrl?.message ? t(errors.webhookUrl.message) : undefined}
                                     hint={watchedType === 'slack' ? 'Slack Incoming Webhooks URL' : 'Discord Channel Webhook URL'}
                                 >
-                                    <input
+                                    <Input
                                         {...register('webhookUrl')}
                                         placeholder={watchedType === 'slack'
                                             ? t('alerts.modal.slackWebhookUrlPlaceholder')
                                             : t('alerts.modal.webhookUrlPlaceholder')}
-                                        className={inputMonoCls + (errors.webhookUrl ? ' border-red-500' : '')}
+                                        mono invalid={!!errors.webhookUrl}
                                     />
                                 </Field>
                                 <SetupGuide type={watchedType} />

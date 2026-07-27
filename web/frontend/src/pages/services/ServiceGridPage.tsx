@@ -5,6 +5,7 @@ import { Button } from '../../components/common/Button';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { EmptyState } from '../../components/common/EmptyState';
 import { MaterialIcon } from '../../components/common/MaterialIcon';
+import { SearchInput } from '../../components/common/SearchInput';
 import { api, type AgentOverview, type AgentServiceFlat, type ConnectedAgent } from '../../services/api';
 import { PendingServiceCard } from '../../features/services/components/PendingServiceCard';
 import { AddServiceModal } from '../../features/services/components/AddServiceModal';
@@ -46,9 +47,9 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
       {/* Header: status + project name + controls */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
-          <span className={`h-2.5 w-2.5 rounded-full shrink-0 mt-0.5 ${online ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+          <span className={`h-2.5 w-2.5 rounded-full shrink-0 mt-0.5 ${online ? 'bg-status-healthy' : 'bg-status-idle'}`} />
           <div className="min-w-0">
-            <h3 className="font-semibold text-base text-text-base truncate leading-tight">{agentName}</h3>
+            <h3 className="text-base font-bold text-text-base truncate leading-tight">{agentName}</h3>
             {agent?.version && (
               <span className="text-xs text-text-dim">v{agent.version}</span>
             )}
@@ -58,13 +59,14 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
           <div className="flex items-center gap-0.5 shrink-0">
             <button
               onClick={(e) => { e.stopPropagation(); onViewKey(agent); }}
-              title={t('API 키 보기')}
+              aria-label={t('API 키 보기')} title={t('API 키 보기')}
               className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
             >
               <MaterialIcon name="key" className="text-base" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onDeleteAgent(agent.id); }}
+              aria-label={t('프로젝트 비활성화')}
               title={t('프로젝트 비활성화')}
               className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
             >
@@ -77,7 +79,7 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
       {/* Summary: service count + health */}
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm text-text-muted">{t('서비스 {count}개', { count: total })}</span>
-        <span className={`flex items-center gap-1 text-sm font-semibold ${allHealthy ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
+        <span className={`flex items-center gap-1 text-sm font-semibold ${allHealthy ? 'text-status-healthy' : 'text-status-error'}`}>
           <MaterialIcon name={allHealthy ? 'check_circle' : 'cancel'} className="text-sm" />
           {healthy}/{total} {t('정상')}
         </span>
@@ -85,7 +87,7 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
 
       {/* Failing services preview */}
       {down.length > 0 && (
-        <p className="text-xs text-red-500 dark:text-red-400 truncate -mt-1">
+        <p className="text-xs text-status-error truncate -mt-1">
           {t('장애')}: {down.map(s => s.name).join(', ')}
         </p>
       )}
@@ -111,7 +113,7 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
             <div className="text-2xs text-text-dim">p95</div>
             <div className={`font-mono font-semibold ${
               overview.p95Ms != null && overview.p95Ms > 500
-                ? 'text-amber-600 dark:text-amber-400'
+                ? 'text-status-warn'
                 : 'text-text-base'
             }`}>
               {overview.p95Ms != null ? `${overview.p95Ms}ms` : '—'}
@@ -245,19 +247,11 @@ export function ServiceGridPage() {
       </div>
 
       {/* Search */}
-      <div className="relative">
-        <MaterialIcon
-          name="search"
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim text-lg pointer-events-none"
-        />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={t('서비스 또는 프로젝트 이름으로 검색')}
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-bg-surface border border-ui-border text-sm text-text-base placeholder-slate-400 dark:placeholder-text-dim-dark focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow"
-        />
-      </div>
+      <SearchInput
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder={t('서비스 또는 프로젝트 이름으로 검색')}
+      />
 
       {/* Content */}
       {loading ? (

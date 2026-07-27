@@ -89,7 +89,7 @@ export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey, ran
     <div className={`p-6 ${chartCardClass}`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex flex-wrap items-center gap-3">
-          <h3 className="text-text-base font-bold text-base">{t('요청 추이')}</h3>
+          <h3 className="text-base font-bold text-text-base">{t('요청 추이')}</h3>
           <ChartLegend
             items={[
               { label: t('요청 수'), color: theme.primaryColor },
@@ -106,10 +106,10 @@ export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey, ran
       {summary && (summary.count2xx + summary.count3xx + summary.count4xx + summary.count5xx + summary.countOther) > 0 && (() => {
         const total = summary.count2xx + summary.count3xx + summary.count4xx + summary.count5xx + summary.countOther;
         const classes = [
-          { label: '2xx', count: summary.count2xx, bar: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400' },
+          { label: '2xx', count: summary.count2xx, bar: 'bg-status-healthy', text: 'text-status-healthy' },
           { label: '3xx', count: summary.count3xx, bar: 'bg-slate-400', text: 'text-text-muted' },
-          { label: '4xx', count: summary.count4xx, bar: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400' },
-          { label: '5xx', count: summary.count5xx, bar: 'bg-red-500', text: 'text-red-500' },
+          { label: '4xx', count: summary.count4xx, bar: 'bg-status-warn', text: 'text-status-warn' },
+          { label: '5xx', count: summary.count5xx, bar: 'bg-status-error', text: 'text-status-error' },
         ].filter((c) => c.count > 0);
         return (
           <div className="mb-4">
@@ -126,7 +126,7 @@ export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey, ran
               ))}
               {summary.top5xxPath && (
                 <span className="text-text-muted truncate">
-                  · {t('5xx 최다')}: <span className="font-mono font-semibold text-red-500">{summary.top5xxMethod} {summary.top5xxPath}</span> ×{summary.top5xxCount}
+                  · {t('5xx 최다')}: <span className="font-mono font-semibold text-status-error">{summary.top5xxMethod} {summary.top5xxPath}</span> ×{summary.top5xxCount}
                 </span>
               )}
             </div>

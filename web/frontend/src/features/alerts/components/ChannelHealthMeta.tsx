@@ -24,10 +24,10 @@ export function ChannelHealthMeta({ health, compact = false }: Props) {
     successRate === null
       ? 'text-text-dim'
       : successRate >= 95
-      ? 'text-emerald-500'
+      ? 'text-status-healthy'
       : successRate >= 80
-      ? 'text-amber-500'
-      : 'text-red-500';
+      ? 'text-status-warn'
+      : 'text-status-error';
 
   const gap = compact ? 'gap-3' : 'gap-4';
   const text = 'text-sm';

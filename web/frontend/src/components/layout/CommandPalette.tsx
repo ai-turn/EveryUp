@@ -149,7 +149,11 @@ export function CommandPalette() {
                 {item.icon ? (
                   <MaterialIcon name={item.icon} className="text-base shrink-0 text-text-dim" />
                 ) : (
-                  <span className={`ml-1 mr-1 h-1.5 w-1.5 rounded-full shrink-0 ${item.healthy ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                  <span
+                    role="img"
+                    aria-label={item.healthy ? t('정상') : t('장애')}
+                    className={`ml-1 mr-1 h-1.5 w-1.5 rounded-full shrink-0 ${item.healthy ? 'bg-status-healthy' : 'bg-status-error'}`}
+                  />
                 )}
                 <span className="text-sm font-medium truncate">{item.label}</span>
                 {item.meta && (

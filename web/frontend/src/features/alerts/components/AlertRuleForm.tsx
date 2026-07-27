@@ -5,7 +5,8 @@ import { z } from 'zod';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { getErrorMessage } from '../../../utils/errors';
-import { MaterialIcon } from '../../../components/common';
+import { MaterialIcon, Input, Select } from '../../../components/common';
+import { FIELD_SHELL } from '../../../components/common/Input';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { getChannelStyle } from '../utils/channelMeta';
 import {
@@ -118,7 +119,8 @@ function Field({ label, hint, required, children }: { label: string; hint?: stri
     );
 }
 
-const inputCls = "w-full px-3.5 py-2.5 bg-ui-hover-soft border border-ui-border rounded-lg text-sm font-semibold outline-none focus:border-primary dark:text-white transition-colors";
+// 텍스트영역 전용 셸 — Input과 같은 규격을 공유한다 (포커스 링은 전역 :focus-visible).
+const textareaCls = `${FIELD_SHELL} py-2.5 border-ui-border placeholder:text-text-dim`;
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -172,7 +174,7 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
                 <div className="space-y-4 min-w-0">
                     <FormStep n={1} title={t('alerts.rules.systemRule')} subtitle={t('alerts.rules.systemRuleDesc')}>
                         <div className="p-4 bg-ui-hover-soft/50 rounded-xl">
-                            <h3 className="font-bold text-text-base mb-1">{rule.name}</h3>
+                            <h3 className="text-base font-bold text-text-base mb-1">{rule.name}</h3>
                             <p className="text-sm text-slate-500">{t('alerts.rules.systemRuleDesc')}</p>
                         </div>
                     </FormStep>
@@ -183,7 +185,7 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
                             onChange={e => setMessage(e.target.value)}
                             rows={3}
                             placeholder="Server has been started"
-                            className={inputCls + " resize-none"}
+                            className={textareaCls + " resize-none"}
                         />
                     </FormStep>
 
@@ -473,14 +475,14 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                 hint={!watchedAgentId ? t('alerts.rules.targetHintAll', { defaultValue: '미선택 시 모든 대상에 적용됩니다' }) : null}
                             >
                                 {isEndpoint || isLog || isMetric ? (
-                                    <select
+                                    <Select
                                         value={watchedAgentId && watchedServiceKey ? `${watchedAgentId}:::${watchedServiceKey}` : ''}
                                         onChange={e => {
                                             const val = e.target.value;
                                             if (!val) { setValue('agentId', ''); setValue('serviceKey', ''); }
                                             else { const [aid, key] = val.split(':::'); setValue('agentId', aid); setValue('serviceKey', key); }
                                         }}
-                                        className={inputCls}
+
                                     >
                                         <option value="">{isLog ? t('alerts.rules.allLogServices') : isMetric ? t('alerts.rules.allMetricServices', { defaultValue: '모든 서비스' }) : t('alerts.rules.allHealthchecks')}</option>
                                         {agentServices.map(svc => (
@@ -488,30 +490,30 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                                 {svc.agentName} / {svc.name}
                                             </option>
                                         ))}
-                                    </select>
+                                    </Select>
                                 ) : (
-                                    <select
+                                    <Select
                                         value={watchedAgentId}
                                         onChange={e => { setValue('agentId', e.target.value); setValue('serviceKey', ''); }}
-                                        className={inputCls}
+
                                     >
                                         <option value="">{t('alerts.rules.allHosts')}</option>
                                         {agents.map(agent => (
                                             <option key={agent.id} value={agent.id}>{agent.name}</option>
                                         ))}
-                                    </select>
+                                    </Select>
                                 )}
                             </Field>
 
                             <Field label={t('alerts.rules.metric')} hint={isMetric && !watchedServiceKey ? t('alerts.rules.metricSuggestHint', { defaultValue: '서비스를 선택하면 수집된 메트릭이 제안됩니다' }) : null}>
                                 {isMetric ? (
                                     <>
-                                        <input
+                                        <Input
                                             list="otel-metric-names"
                                             value={watchedMetricName}
                                             onChange={e => setValue('metricName', e.target.value)}
                                             placeholder="e.g. jvm.memory.used"
-                                            className={inputCls}
+
                                         />
                                         <datalist id="otel-metric-names">
                                             {metricNameOptions.map(n => <option key={n} value={n} />)}
@@ -544,10 +546,10 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                         </div>
 
                         <Field label={t('alerts.rules.ruleName')} required>
-                            <input
+                            <Input
                                 {...register('name')}
                                 placeholder="e.g. High CPU usage alert"
-                                className={inputCls}
+
                             />
                         </Field>
                     </FormStep>
@@ -581,34 +583,34 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                         {conditionPreset === 'custom' && (
                             <div className="grid grid-cols-[auto_1fr_1fr] gap-3 items-end">
                                 <Field label={t('alerts.rules.operator')}>
-                                    <select
+                                    <Select
                                         {...register('operator')}
-                                        className={inputCls + " w-20"}
+                                        className="w-20"
                                     >
                                         <option value="gt">&gt;</option>
                                         <option value="gte">&ge;</option>
                                         <option value="lt">&lt;</option>
                                         <option value="lte">&le;</option>
                                         <option value="eq">=</option>
-                                    </select>
+                                    </Select>
                                 </Field>
                                 <Field label={t('alerts.rules.customInputThreshold')}>
                                     {watchedMetric === 'log_level' ? (
                                         // Log levels are stored numerically — expose them as named levels
-                                        <select
+                                        <Select
                                             value={watchedThreshold}
                                             onChange={e => setValue('threshold', Number(e.target.value))}
-                                            className={inputCls}
+
                                         >
                                             <option value={4}>ERROR (4)</option>
                                             <option value={3}>WARN (3)</option>
                                             <option value={2}>INFO (2)</option>
                                             <option value={1}>DEBUG (1)</option>
                                             <option value={0}>TRACE (0)</option>
-                                        </select>
+                                        </Select>
                                     ) : (
                                     <div className="flex">
-                                        <input
+                                        <Input
                                             type="number"
                                             value={customThreshold}
                                             onChange={e => {
@@ -616,7 +618,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                                 const n = parseFloat(e.target.value);
                                                 if (!isNaN(n)) setValue('threshold', n);
                                             }}
-                                            className={inputCls + (thresholdUnit ? " rounded-r-none" : "")}
+                                            className={thresholdUnit ? "rounded-r-none" : ""}
                                         />
                                         {thresholdUnit && (
                                             <span className="px-3 py-2.5 bg-ui-hover border border-l-0 border-ui-border rounded-r-lg text-sm font-semibold text-text-muted font-mono">
@@ -628,18 +630,18 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                 </Field>
                                 {isEndpoint ? (
                                     <Field label={t('alerts.rules.consecutiveChecks')}>
-                                        <input
+                                        <Input
                                             type="number" min={1} max={20}
                                             {...register('duration', { valueAsNumber: true })}
-                                            className={inputCls}
+
                                         />
                                     </Field>
                                 ) : !isLog ? (
                                     <Field label={t('alerts.rules.durationMin', { defaultValue: '지속 시간 (분)' })}>
-                                        <input
+                                        <Input
                                             type="number" min={1} max={60}
                                             {...register('duration', { valueAsNumber: true })}
-                                            className={inputCls}
+
                                         />
                                     </Field>
                                 ) : (
@@ -656,10 +658,10 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                     <p className="text-sm font-bold text-text-base">{t('alerts.rules.consecutiveChecks')}</p>
                                     <p className="text-sm text-slate-400">{t('alerts.rules.consecutiveChecksHint')}</p>
                                 </div>
-                                <input
+                                <Input
                                     type="number" min={1} max={20}
                                     {...register('duration', { valueAsNumber: true })}
-                                    className="w-16 bg-bg-surface border border-ui-border rounded-lg px-2 py-1.5 text-sm font-mono font-semibold text-text-base focus:ring-1 focus:ring-primary text-right tabular-nums"
+                                    className="w-16 text-right font-mono tabular-nums"
                                 />
                             </div>
                         )}
@@ -669,10 +671,10 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                 label={t('alerts.rules.cooldown', { defaultValue: '쿨다운 (초)' })}
                                 hint={t('alerts.rules.cooldownHint', { defaultValue: '동일 규칙은 이 시간 내 재발송하지 않음' })}
                             >
-                                <input
+                                <Input
                                     type="number" min={0} max={86400}
                                     {...register('cooldown', { valueAsNumber: true })}
-                                    className={inputCls}
+
                                 />
                             </Field>
                         )}
@@ -750,7 +752,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                 onChange={e => setCustomMessage(e.target.value)}
                                 rows={2}
                                 placeholder={buildDefaultMessage(watchedMetric, watchedOperator, watchedThreshold, watchedDuration)}
-                                className={inputCls + " resize-none"}
+                                className={textareaCls + " resize-none"}
                             />
                         </Field>
                     </FormStep>
