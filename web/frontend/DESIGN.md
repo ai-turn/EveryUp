@@ -282,12 +282,14 @@ const theme = getChartTheme();
 
 ## 5. 상태 표현 문법
 
-### 5.1 배지 — `StatusBadge`
+### 5.1 배지
 
 ```
 text-2xs font-bold px-1.5 py-0.5 rounded border
 text-status-{role}  bg-status-{role}/10  border-status-{role}/20
 ```
+
+> ⚠ `components/common/StatusBadge.tsx`가 이 문법의 참조 구현이지만 **현재 아무 데서도 import되지 않는다.** 실제로 렌더되는 상태 배지는 `AgentHealthCheckDetailView`가 파일 안에 따로 정의한 동명 로컬 컴포넌트다(둘 다 같은 토큰을 쓰도록 맞춰 두었다). §10-H 참조.
 
 **틴트 배경 + 같은 색 보더 + 진한 텍스트** 3종 세트가 배지 문법이다. 커스텀 배지가 필요해도 이 비율(`/10` 배경, `/20` 보더)을 유지한다. 4개 role 전부 양쪽 테마에서 AA를 넘는 것이 검증돼 있다(4.78~9.31).
 
@@ -443,6 +445,13 @@ text-sm font-medium text-text-secondary cursor-pointer
 
 - **차트 시리즈 4개 초과 시 색만으로 구분** (§1.6) — 선 스타일(실선/파선/점선) 또는 직접 라벨이 필요하다. recharts `strokeDasharray`를 `lineProps`에 슬롯별로 넣는 방식이 유력하나, 기존 차트 전부의 시각이 바뀌므로 별도 결정이 필요하다.
 - 라이트 모드에서 warn/error는 적록색각이상 시 서로 근접한다(거리 6.7). 배지는 텍스트 라벨로 보완되지만, 색만 쓰는 자리에서는 두 상태를 나란히 두지 말 것.
+
+### H. `StatusBadge`가 죽어 있고 로컬 중복이 렌더된다
+
+`components/common/StatusBadge.tsx`는 barrel로 export되지만 **import하는 곳이 0곳**이고, 실제 화면의 상태 배지는 `AgentHealthCheckDetailView.tsx:25`의 로컬 `StatusBadge`가 그린다. 커밋 `957d81f5` 이전부터 그랬다(react-doctor `unused-export`로 발견).
+
+두 구현이 지금은 같은 토큰·문법을 쓰지만 한쪽만 고치면 갈라진다.
+→ 로컬 구현을 지우고 공용 컴포넌트를 쓰거나, 공용 쪽을 삭제하고 로컬을 정본으로 승격. **어느 쪽이든 삭제가 따르므로 사용자 승인 필요.**
 
 ### 해결됨 (2026-07-26)
 
