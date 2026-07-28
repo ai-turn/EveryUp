@@ -102,7 +102,13 @@ primary #3b76c9 → emerald #059669 → amber #d97706 → violet #7c3aed → red
 
 **600단계인 이유** — 500단계일 때 라이트 배경에서 emerald 2.54 / teal 2.49 / amber 2.15로 WCAG 1.4.11(3:1)에 미달했다. 팔레트가 Grafana를 참고하면서 다크 배경만 보고 튜닝된 결과였다. 600으로 내려 양쪽 테마 모두 3:1을 넘긴다.
 
-**⚠ 4개를 넘는 시리즈는 색만으로 구분되지 않는다.** 적록색각이상에서 앞 3슬롯(primary/emerald/amber)은 안전하지만 4슬롯째부터는 어떤 순서로 배열해도 충돌한다(primary/violet 16.0, emerald/teal 11.8, amber/red 12.8). 6색이 (a)색각 구분 (b)라이트 3:1 (c)다크 3:1을 동시에 만족하는 조합은 존재하지 않는다 — Okabe-Ito 정통 8색조차 라이트에서 orange 2.25, skyblue 2.31로 떨어진다. 시리즈가 4개를 넘으면 **선 스타일(실선/파선/점선)이나 직접 라벨을 병행**해야 한다.
+**⚠ 4개를 넘는 시리즈는 색만으로 구분되지 않는다.** 적록색각이상에서 앞 3슬롯(primary/emerald/amber)은 안전하지만 4슬롯째부터는 어떤 순서로 배열해도 충돌한다(primary/violet 16.0, emerald/teal 11.8, amber/red 12.8). 6색이 (a)색각 구분 (b)라이트 3:1 (c)다크 3:1을 동시에 만족하는 조합은 존재하지 않는다 — Okabe-Ito 정통 8색조차 라이트에서 orange 2.25, skyblue 2.31로 떨어진다. 시리즈가 4개를 넘으면 **선 스타일을 병행**한다 — `getSeriesDash(i)`가 4슬롯째부터 `strokeDasharray`를 돌려준다(앞 3슬롯은 `undefined`라 실선 유지). 시리즈 개수가 데이터에 달린 차트에서 쓴다:
+
+```tsx
+<Line {...lineProps(colors[i % colors.length])} strokeDasharray={getSeriesDash(i)} />
+```
+
+시리즈가 1~3개로 고정된 차트는 넣지 않아도 된다 — 어차피 `undefined`를 받으므로 모습이 같다.
 
 ### 1.7 하드코딩이 허용되는 유일한 경우
 
@@ -464,21 +470,19 @@ text-sm font-medium text-text-secondary cursor-pointer
 
 새 코드에서 판단이 서지 않으면 **"이 색이 사라지면 사용자가 대상의 건강을 오판하는가?"** 로 가른다. 그렇다면 `status-*`다.
 
-### C. 배지 크기 2계열
+### C. `Field` 라벨이 입력과 연결돼 있지 않다
 
-읽기 전용 배지가 `text-2xs`(상태칩·테이블)와 `text-xs`(로그 레벨·span kind) 두 계열이고, radius도 `rounded`/`rounded-md`/`rounded-full`이 섞여 있다.
+[`FormLayout.tsx:37`](src/features/alerts/components/FormLayout.tsx:37)의 `<label>`에 `htmlFor`가 없다. 지금은 어떤 입력과도 연결되지 않아 스크린리더가 라벨을 읽어주지 못한다(react-doctor `label-has-associated-control`).
 
-**의도적으로 통일하지 않았다** — 크기 차이는 대부분 밀도(테이블 셀 vs 폼 미리보기) 때문이고, 12곳을 강제로 맞추면 로그 레벨 배지가 작아지는 등 시각 손해가 확실한 반면 얻는 게 없다. 다만 **같은 severity 배지가 폼에선 `text-xs`, 테이블에선 `text-2xs`** 인 것은 진짜 이탈이라 정리 여지가 있다.
+**`<label>`로 자식을 감싸는 방식은 쓸 수 없다.** `Field`의 자식이 단일 입력만이 아니라 버튼 그리드(카테고리·프리셋·심각도·채널타입)이기도 한데, `<button>`은 labelable 요소라 라벨 클릭이 첫 버튼을 눌러버린다.
 
-### D. 차트 시리즈 4개 초과 시 색만으로 구분 (§1.6)
+→ `htmlFor?: string`를 받아 있을 때만 `<label>`, 없으면 `<span>`으로 렌더하고, 단일 입력 호출부(약 10곳)에 id를 배선한다. 버튼 그리드 쪽은 `<label>`이 아니라 `role="group"` + `aria-label`이 맞다.
 
-**정적 차트는 안전하다** — 인프라 4종·응답시간·요청추이는 시리즈가 1~2개로 고정이라 앞 슬롯만 쓴다.
+### 배지 크기 — 정리하지 않기로 함
 
-위험한 곳은 [`AgentServiceMetricsTab`](src/features/healthcheck/components/AgentServiceMetricsTab.tsx:164) 하나다. OTel 메트릭의 attribute 조합마다 시리즈가 생기고 `seriesColors[i % length]`로 순환하므로 **개수가 데이터에 달렸다.** 5개를 넘으면 색이 재사용되기까지 한다.
+읽기 전용 배지가 `text-2xs`(상태칩·테이블)와 `text-xs`(로그 레벨·span kind) 두 계열이다. 크기 차이가 밀도(테이블 셀 vs 목록 스캔) 때문이라 강제로 맞추면 로그 레벨 배지가 작아지는 손해만 확실하다.
 
-→ 선 스타일(`strokeDasharray`)을 슬롯별로 넣거나 직접 라벨. `lineProps`에 넣으면 모든 차트가 영향을 받으므로 이 탭에만 적용할지 결정 필요.
-
-라이트 모드에서 warn/error는 적록색각이상 시 서로 근접한다(거리 6.7). 배지는 텍스트 라벨로 보완되지만, 색만 쓰는 자리에서는 두 상태를 나란히 두지 말 것.
+> 이전에 "같은 severity 배지가 폼과 테이블에서 등급이 다르다"고 적었던 것은 **오진이었다.** 폼 쪽은 배지가 아니라 알림이 어떻게 보일지 보여주는 미리보기 카드(틴트 배경 + 점 + 보더)로, 목적과 형태가 다른 물건이다. 실제 중복이던 `SEVERITY_BADGE` 상수는 `SeverityBadge` 컴포넌트로 통합했다.
 
 ### 해결됨 (2026-07-26)
 
@@ -495,10 +499,12 @@ text-sm font-medium text-text-secondary cursor-pointer
 - ~~오버레이 4곳이 ESC 핸들러를 복사, 2곳은 ESC 없음~~ → `useOverlay` 훅으로 통합, 6곳 전부 ESC 동작(브라우저 검증)
 - ~~헤딩 등급 흔들림~~ → h1/h3 이탈 8건 정리. §2.3을 **컨테이너별 등급표**로 정정 — h2가 카드/모달/섹션에서 다른 것은 이탈이 아니라 정당한 차이였다
 - ~~`MainLayout` 주석이 `slate-50 canvas`라고 하나 실제는 `bg-bg-main`~~ → 주석 정정
+- ~~차트 시리즈 4개 초과 시 색만으로 구분~~ → `getSeriesDash(i)` 신설, `AgentServiceMetricsTab`에 적용. 앞 3슬롯은 실선 유지라 1~3시리즈 차트의 모습은 그대로
+- ~~`SEVERITY_BADGE` 상수가 두 파일에 md5 동일하게 중복~~ → `SeverityBadge` 컴포넌트로 통합
 - ~~오버레이 배경이 6곳 제각각(black/40·slate-900/60·slate-900/40·없음)~~ → `SCRIM_MODAL`/`SCRIM_PANEL` 2역할로 통일. TracePanel은 scrim이 아예 없어 신규 추가
 - ~~공용 `StatusBadge`가 미사용이고 `AgentHealthCheckDetailView`의 로컬 중복이 렌더됨~~ → 실제 쓰이던 구현을 공용으로 승격(56→26줄), 로컬 삭제. 쓰이지 않던 10상태 매핑과 그 전용 i18n 키 9개×2언어도 함께 제거
 
 ### 권장 순서
 
 1. **A** — 사이트별 확인이 필요해 자동화가 안 된다. 파일 단위로 나눠 처리
-2. **D**(메트릭 탭 시리즈) → **C**(severity 배지 한 쌍)
+2. **C** (`Field` htmlFor 배선 — 호출부 10곳)

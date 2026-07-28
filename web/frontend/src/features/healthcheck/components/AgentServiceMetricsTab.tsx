@@ -7,7 +7,7 @@ import {
 import type { GlobalTimeRange } from '../../../components/common';
 import {
   ChartStatsLegend, ChartTooltip, chartCardClass, formatAxisValue, getChartTheme,
-  getSeriesPalette, gridProps, lineProps, tooltipCursor, xAxisProps, yAxisProps,
+  getSeriesPalette, getSeriesDash, gridProps, lineProps, tooltipCursor, xAxisProps, yAxisProps,
 } from '../../../components/charts';
 import { api, type OtelMetricName, type OtelMetricPoint } from '../../../services/api';
 
@@ -161,7 +161,7 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range 
                 )}
               />
               {seriesKeys.map((key, i) => (
-                <Line key={key} {...lineProps(seriesColors[i % seriesColors.length])} dataKey={key} />
+                <Line key={key} {...lineProps(seriesColors[i % seriesColors.length])} strokeDasharray={getSeriesDash(i)} dataKey={key} />
               ))}
             </ComposedChart>
           </ResponsiveContainer>

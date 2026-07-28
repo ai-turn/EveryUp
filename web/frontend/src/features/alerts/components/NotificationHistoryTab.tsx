@@ -4,6 +4,7 @@ import { MaterialIcon, SegmentedControl, SearchInput } from '../../../components
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { api, NotificationChannel, NotificationHistory, NotificationStats } from '../../../services/api';
 import { getChannelStyle } from '../utils/channelMeta';
+import { SeverityBadge } from './SeverityBadge';
 import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
 
@@ -11,12 +12,6 @@ const PAGE_SIZE = 25;
 
 type StatusFilter = 'all' | 'sent' | 'failed';
 type PeriodDays = 1 | 7 | 30;
-
-const SEVERITY_BADGE: Record<string, string> = {
-  critical: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400',
-  warning: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
-  info: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-400',
-};
 
 const STATUS_META: Record<string, { dot: string; text: string }> = {
   sent: { dot: 'bg-status-healthy', text: 'text-status-healthy' },
@@ -285,9 +280,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
                       </td>
                       <td className="px-4 py-3">
                         {item.severity && (
-                          <span className={`inline-flex rounded-md px-2 py-0.5 text-2xs font-bold uppercase tracking-wide ${SEVERITY_BADGE[item.severity] ?? SEVERITY_BADGE.info}`}>
-                            {item.severity}
-                          </span>
+                          <SeverityBadge severity={item.severity} label={item.severity} />
                         )}
                       </td>
                       <td className="px-4 py-3 text-right text-sm text-text-muted whitespace-nowrap">

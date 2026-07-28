@@ -8,14 +8,9 @@ import { api, type AlertRule, type NotificationChannel, type AgentServiceFlat, t
 import { getChannelStyle } from '../utils/channelMeta';
 import { AlertRuleForm } from './AlertRuleForm';
 import { FormSidePanel } from './FormSidePanel';
+import { SeverityBadge } from './SeverityBadge';
 import { formatDistanceToNow } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
-
-const SEVERITY_BADGE: Record<string, string> = {
-  critical: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400',
-  warning: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
-  info: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-400',
-};
 
 const SEVERITY_ORDER: Record<string, number> = { critical: 0, warning: 1, info: 2 };
 
@@ -492,9 +487,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                         </p>
                       </td>
                       <td className="px-4 py-2.5 align-middle">
-                        <span className={`inline-flex rounded-md px-2 py-0.5 text-2xs font-bold uppercase tracking-wide ${SEVERITY_BADGE[rule.severity] ?? SEVERITY_BADGE.info}`}>
-                          {severityLabel(rule.severity, t)}
-                        </span>
+                        <SeverityBadge severity={rule.severity} label={severityLabel(rule.severity, t)} />
                       </td>
                       <td className="px-4 py-2.5 align-middle">
                         <span

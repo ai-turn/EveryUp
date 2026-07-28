@@ -48,6 +48,15 @@ export function getSeriesPalette(theme: ChartTheme): string[] {
   return [theme.primaryColor, SERIES_HEX.emerald, SERIES_HEX.amber, SERIES_HEX.violet, SERIES_HEX.red, SERIES_HEX.teal];
 }
 
+/* 4슬롯째부터 선 스타일을 달리한다 — 그 지점부터 색만으로는 구분이 보장되지 않기 때문이다(위 주석).
+ * 앞 3슬롯은 적록색각이상에서도 서로 구분되므로 실선을 유지해, 시리즈가 1~3개인 대다수 차트의
+ * 모습은 그대로 둔다. 시리즈 개수가 데이터에 달린 차트에서만 4번째 이후가 파선으로 갈린다. */
+const DASH_PATTERNS = ['6 3', '2 2', '8 3 2 3'] as const;
+
+export function getSeriesDash(index: number): string | undefined {
+  return index < 3 ? undefined : DASH_PATTERNS[(index - 3) % DASH_PATTERNS.length];
+}
+
 /** 차트 카드 공통 클래스 — 패딩(p-4/p-6)은 소비처에서 붙인다. */
 export const chartCardClass =
   'rounded-xl border border-ui-border bg-bg-surface';
