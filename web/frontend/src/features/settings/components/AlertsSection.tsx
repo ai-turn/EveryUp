@@ -31,7 +31,7 @@ export function AlertsSection({ value, loading, onChange }: {
                 onClick={() => onChange(n)}
                 className={`cursor-pointer px-2.5 py-1 rounded-md text-xs font-semibold font-mono transition-all ${
                   value === n
-                    ? 'bg-white dark:bg-ui-active-dark text-primary shadow-sm'
+                    ? 'bg-ui-raised text-primary shadow-sm'
                     : 'text-text-muted hover:text-text-secondary'
                 }`}
               >

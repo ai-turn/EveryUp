@@ -42,7 +42,7 @@ export function SegmentedControl<T extends string>({
             onClick={() => onChange(o.value)}
             className={`${SIZES[size]} font-semibold rounded-md transition-colors ${
               active
-                ? 'bg-white dark:bg-ui-active-dark text-text-base shadow-sm'
+                ? 'bg-ui-raised text-text-base shadow-sm'
                 : 'text-text-muted hover:text-text-base'
             }`}
           >

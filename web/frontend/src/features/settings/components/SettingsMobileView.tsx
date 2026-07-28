@@ -78,7 +78,7 @@ export function SettingsMobileView({
                 onClick={() => onLanguageChange(lng)}
                 className={`flex-1 cursor-pointer px-3 py-2 rounded-md text-sm font-semibold transition-all ${
                   currentLanguage.startsWith(lng)
-                    ? 'bg-white dark:bg-ui-active-dark text-primary shadow-sm'
+                    ? 'bg-ui-raised text-primary shadow-sm'
                     : 'text-text-muted'
                 }`}
               >
@@ -101,7 +101,7 @@ export function SettingsMobileView({
                 onClick={() => onThemeChange(t_)}
                 className={`flex-1 cursor-pointer flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold transition-all ${
                   theme === t_
-                    ? 'bg-white dark:bg-ui-active-dark text-primary shadow-sm'
+                    ? 'bg-ui-raised text-primary shadow-sm'
                     : 'text-text-muted'
                 }`}
               >
@@ -136,7 +136,7 @@ export function SettingsMobileView({
                     onClick={() => onCollectIntervalChange(sec)}
                     className={`flex-1 cursor-pointer px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${
                       collectInterval === sec
-                        ? 'bg-white dark:bg-ui-active-dark text-primary shadow-sm'
+                        ? 'bg-ui-raised text-primary shadow-sm'
                         : 'text-text-muted'
                     }`}
                   >
@@ -159,7 +159,7 @@ export function SettingsMobileView({
                     onClick={() => onMetricsRetentionChange(opt)}
                     className={`flex-1 cursor-pointer px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${
                       metricsRetention === opt
-                        ? 'bg-white dark:bg-ui-active-dark text-primary shadow-sm'
+                        ? 'bg-ui-raised text-primary shadow-sm'
                         : 'text-text-muted'
                     }`}
                   >
@@ -182,7 +182,7 @@ export function SettingsMobileView({
                     onClick={() => onLogsRetentionChange(opt)}
                     className={`flex-1 cursor-pointer px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${
                       logsRetention === opt
-                        ? 'bg-white dark:bg-ui-active-dark text-primary shadow-sm'
+                        ? 'bg-ui-raised text-primary shadow-sm'
                         : 'text-text-muted'
                     }`}
                   >

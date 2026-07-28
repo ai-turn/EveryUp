@@ -68,7 +68,7 @@ export function LoginPage() {
   // Still loading setup status
   if (needsSetup === null && !error) {
     return (
-      <div className="min-h-screen bg-bg-main dark:bg-bg-main-dark flex items-center justify-center">
+      <div className="min-h-screen bg-bg-main flex items-center justify-center">
         <MaterialIcon name="progress_activity" className="text-4xl text-primary animate-spin" />
       </div>
     )
@@ -77,7 +77,7 @@ export function LoginPage() {
   const isSetup = needsSetup === true
 
   return (
-    <div className="min-h-screen bg-bg-main dark:bg-bg-main-dark flex items-center justify-center p-4">
+    <div className="min-h-screen bg-bg-main flex items-center justify-center p-4">
       <div>
         {/* Logo / Title */}
         <div className="text-center mb-8 w-[26rem] max-w-full">

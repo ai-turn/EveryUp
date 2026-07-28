@@ -12,7 +12,7 @@ export function MainLayout() {
   const { isOpen: isPanelOpen } = useSidePanel();
 
   return (
-    <div className="flex flex-col h-dvh overflow-hidden bg-bg-main dark:bg-bg-main-dark">
+    <div className="flex flex-col h-dvh overflow-hidden bg-bg-main">
       {/* Skip to main content (accessibility) */}
       <a
         href="#main-content"

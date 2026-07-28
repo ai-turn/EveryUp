@@ -33,8 +33,14 @@
   --color-ui-hover-dark: #1f2937;
   --color-ui-hover-soft: #f8fafc;   /* 옅은 내부 채움 (≈ slate-50) */
   --color-ui-hover-soft-dark: #1f2937;
-  --color-ui-active: #e2e8f0;       /* toggle/active 상태 bg (≈ slate-200) */
-  --color-ui-active-dark: #374151;  /* toggle/active 상태 bg (≈ slate-700) */
+  --color-ui-active: #e2e8f0;       /* 눌린 표면 — 스켈레톤·칩·hover (≈ slate-200) */
+  --color-ui-active-dark: #374151;  /* (≈ slate-700) */
+
+  /* 떠오른 표면 — 세그먼티드 컨트롤의 선택된 세그먼트처럼 ui-hover 트랙 **위로**
+     솟아 보여야 하는 자리. ui-active와 다크값은 같지만 라이트가 흰색이라 역할이 다르다:
+     ui-active(#e2e8f0)는 트랙보다 눌려 보이고, 이쪽은 떠 보여야 한다. */
+  --color-ui-raised: #ffffff;
+  --color-ui-raised-dark: #374151;
 
   /* 4. Text Colors: 4단 위계 — base > secondary > muted > dim */
   --color-text-base: #0f172a;       /* 제목·강조 (≈ slate-900) */
@@ -105,6 +111,7 @@
   --color-ui-hover: var(--color-ui-hover-dark);
   --color-ui-hover-soft: var(--color-ui-hover-soft-dark);
   --color-ui-active: var(--color-ui-active-dark);
+  --color-ui-raised: var(--color-ui-raised-dark);
 
   --color-text-base: var(--color-text-base-dark);
   --color-text-secondary: var(--color-text-secondary-dark);

@@ -42,7 +42,7 @@ function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <NetworkStatusBanner />
-      <div className="bg-bg-main dark:bg-bg-main-dark text-text-base transition-colors duration-200">
+      <div className="bg-bg-main text-text-base transition-colors duration-200">
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* 데모 모드에서는 /login 접근 시 홈으로 리다이렉트 */}

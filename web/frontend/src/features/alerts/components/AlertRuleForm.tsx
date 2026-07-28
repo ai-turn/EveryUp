@@ -1,10 +1,11 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { getErrorMessage } from '../../../utils/errors';
+import { FormStep, Field } from './FormLayout';
 import { MaterialIcon, Input, Select } from '../../../components/common';
 import { FIELD_SHELL } from '../../../components/common/Input';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
@@ -88,36 +89,6 @@ function buildDefaultMessage(metric: RuleFormValues['metric'], operator: RuleFor
 }
 
 // ─── Layout primitives ────────────────────────────────────────────────────────
-
-function FormStep({ n, title, subtitle, children }: { n: number; title: string; subtitle?: string; children: ReactNode }) {
-    return (
-        <div className="bg-bg-surface border border-ui-border rounded-xl overflow-hidden">
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-slate-50/50 dark:bg-ui-hover-dark/30">
-                <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs font-mono shrink-0">
-                    {n}
-                </span>
-                <div>
-                    <p className="text-sm font-bold text-text-base uppercase tracking-wider">{title}</p>
-                    {subtitle && <p className="text-sm text-text-muted mt-0.5">{subtitle}</p>}
-                </div>
-            </div>
-            <div className="p-5 space-y-5">{children}</div>
-        </div>
-    );
-}
-
-function Field({ label, hint, required, children }: { label: string; hint?: string | null; required?: boolean; children: ReactNode }) {
-    return (
-        <div>
-            <div className="flex items-center gap-1 mb-2">
-                <label className="text-sm font-bold text-text-muted uppercase tracking-wide">{label}</label>
-                {required && <span className="text-red-500 text-xs">*</span>}
-            </div>
-            {children}
-            {hint && <p className="text-sm text-text-dim mt-1.5 italic">{hint}</p>}
-        </div>
-    );
-}
 
 // 텍스트영역 전용 셸 — Input과 같은 규격을 공유한다 (포커스 링은 전역 :focus-visible).
 const textareaCls = `${FIELD_SHELL} py-2.5 border-ui-border placeholder:text-text-dim`;
