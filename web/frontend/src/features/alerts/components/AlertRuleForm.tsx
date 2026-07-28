@@ -182,7 +182,7 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
                     {/* top-0: 패널 스크롤 영역 기준이라 0이어야 좌측 카드 시작선과 정렬 (실측 검증) */}
                     <div className="sticky top-0 space-y-4">
                         <div className="bg-bg-surface border border-ui-border rounded-xl overflow-hidden">
-                            <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-slate-50/50 dark:bg-ui-hover-dark/30">
+                            <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-ui-hover-soft/50">
                                 <MaterialIcon name="lock" className="text-base text-slate-400" />
                                 <div>
                                     <p className="text-sm font-bold text-text-base uppercase tracking-widest">
@@ -736,7 +736,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
 
                         {/* Live preview card */}
                         <div className="bg-bg-surface border border-ui-border rounded-xl overflow-hidden">
-                            <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-slate-50/50 dark:bg-ui-hover-dark/30">
+                            <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-ui-hover-soft/50">
                                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                                 <div>
                                     <p className="text-sm font-bold text-text-base uppercase tracking-widest">{t('alerts.rules.livePreview', { defaultValue: '라이브 미리보기' })}</p>

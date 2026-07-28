@@ -436,7 +436,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
 
                         {/* Channel preview card */}
                         <div className="bg-bg-surface border border-ui-border rounded-xl overflow-hidden">
-                            <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-slate-50/50 dark:bg-ui-hover-dark/30">
+                            <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-ui-hover-soft/50">
                                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                                 <div>
                                     <p className="text-sm font-bold text-text-base uppercase tracking-widest">{t('alerts.modal.previewTitle', { defaultValue: '채널 미리보기' })}</p>
@@ -496,7 +496,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
 
                         {/* Test send card */}
                         <div className="bg-bg-surface border border-ui-border rounded-xl overflow-hidden">
-                            <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-slate-50/50 dark:bg-ui-hover-dark/30">
+                            <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-ui-hover-soft/50">
                                 <MaterialIcon name="send" className="text-base text-slate-400" />
                                 <div>
                                     <p className="text-sm font-bold text-text-base uppercase tracking-widest">{t('alerts.modal.testTitle', { defaultValue: '테스트 전송' })}</p>

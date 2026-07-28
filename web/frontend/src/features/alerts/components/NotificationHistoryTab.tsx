@@ -304,7 +304,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
 
         {/* Pagination */}
         {!loading && total > 0 && (
-          <div className="flex items-center justify-between border-t border-ui-border bg-slate-50/60 dark:bg-ui-hover-dark/20 px-4 py-2.5">
+          <div className="flex items-center justify-between border-t border-ui-border bg-ui-hover-soft/60 px-4 py-2.5">
             <p className="text-xs text-text-muted">
               {t('alerts.history.pagination', {
                 start: (page - 1) * PAGE_SIZE + 1,

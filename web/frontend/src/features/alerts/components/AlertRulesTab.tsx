@@ -474,7 +474,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                   return (
                     <tr
                       key={rule.id}
-                      className={`border-t border-slate-100 transition-colors hover:bg-slate-50 dark:border-ui-border-dark/50 dark:hover:bg-ui-hover-dark/40 ${!rule.isEnabled ? 'bg-slate-50/70 dark:bg-ui-hover-dark/20' : ''}`}
+                      className={`border-t border-slate-100 transition-colors hover:bg-slate-50 dark:border-ui-border-dark/50 dark:hover:bg-ui-hover-dark/40 ${!rule.isEnabled ? 'bg-ui-hover-soft/60' : ''}`}
                     >
                       <td className="px-4 py-2.5 align-middle">
                         <div className="flex min-w-0 items-center gap-2">

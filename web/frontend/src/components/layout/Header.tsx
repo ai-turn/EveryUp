@@ -32,7 +32,7 @@ export function Header() {
         }`;
 
     return (
-        <header className="h-14 lg:h-16 border-b border-ui-border bg-white dark:bg-bg-main-dark shrink-0 transition-colors duration-200 z-30 relative">
+        <header className="h-14 lg:h-16 border-b border-ui-border bg-bg-surface shrink-0 transition-colors duration-200 z-30 relative">
           <div className="h-full max-w-320 mx-auto flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
             {/* Left: Logo */}
             <Link to="/" className="flex items-center gap-2 group shrink-0 z-10 transition-transform active:scale-95">

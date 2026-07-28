@@ -47,9 +47,9 @@ export function ChannelFormPage() {
     : t('alerts.addChannel', { defaultValue: '채널 추가' });
 
   return (
-    <div className="-m-4 sm:-m-6 md:-m-8 flex flex-col bg-white dark:bg-bg-main-dark h-[calc(100dvh-3.5rem)] lg:h-[calc(100dvh-4rem)]">
+    <div className="-m-4 sm:-m-6 md:-m-8 flex flex-col bg-bg-main h-[calc(100dvh-3.5rem)] lg:h-[calc(100dvh-4rem)]">
       {/* Page header */}
-      <header className="flex-none border-b border-ui-border px-6 py-3 bg-white dark:bg-bg-main-dark">
+      <header className="flex-none border-b border-ui-border px-6 py-3 bg-bg-surface">
         <nav className="flex items-center gap-1 text-sm text-text-muted mb-2">
           <button
             type="button"

@@ -275,7 +275,7 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
 
   if (isLoading) {
     return (
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-ui-border-dark dark:bg-bg-surface-dark">
+      <div className="overflow-hidden rounded-xl border border-ui-border bg-bg-surface">
         <div className="divide-y divide-ui-border-soft">
           {[1, 2, 3].map(i => (
             <div key={i} className="grid grid-cols-[minmax(220px,1.6fr)_90px_150px_110px_150px_180px] gap-4 px-4 py-3 animate-pulse">
@@ -300,7 +300,7 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
 
   if (channels.length === 0) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white dark:border-ui-border-dark dark:bg-bg-surface-dark">
+      <div className="rounded-xl border border-ui-border bg-bg-surface">
         <EmptyState
           icon="notifications_off"
           title={t('alerts.noChannels')}
@@ -312,7 +312,7 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-ui-border-dark dark:bg-bg-surface-dark">
+    <div className="overflow-x-auto rounded-xl border border-ui-border bg-bg-surface">
       <table className="w-full min-w-[960px] table-fixed">
         <thead className="bg-ui-hover-soft/40">
           <tr className="border-b border-ui-border">
