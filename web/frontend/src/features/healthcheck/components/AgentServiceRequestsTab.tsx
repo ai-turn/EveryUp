@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { MaterialIcon, SegmentedControl, SearchInput, type GlobalTimeRange } from '../../../components/common';
 import { api, type ApiRequest } from '../../../services/api';
 import { getErrorMessage } from '../../../utils/errors';
+import { activatable } from '../../../utils/a11y';
 import { toast } from 'react-hot-toast';
 import { TracePanel } from '../../traces/components/TracePanel';
 import { runtimeLabel } from '../runtimeLabels';
@@ -202,7 +203,7 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, range
             return (
               <div
                 key={req.id}
-                onClick={() => req.traceId && setActiveTraceId(req.traceId)}
+                {...activatable(() => setActiveTraceId(req.traceId!), clickable)}
                 className={`flex items-center gap-3 px-4 py-3 bg-bg-surface transition-colors ${clickable ? 'cursor-pointer hover:bg-ui-hover-soft' : ''}`}
               >
                 <span className={`shrink-0 px-1.5 py-0.5 rounded text-xs font-bold uppercase ${methodClass(req.method)}`}>

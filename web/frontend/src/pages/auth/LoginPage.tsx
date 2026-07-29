@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../contexts/AuthContext'
 import { env } from '../../config/env'
@@ -32,9 +32,10 @@ export function LoginPage() {
       .catch(() => setError(t('login.error.network')))
   }, [])
 
+  // 렌더 중에 navigate()를 부르면 렌더 단계 부작용이라 내비게이션 루프를 만들 수 있다.
+  // 리다이렉트를 렌더 결과로 표현하는 것이 react-router가 의도한 방식이다.
   if (isAuthenticated) {
-    navigate(from, { replace: true })
-    return null
+    return <Navigate to={from} replace />
   }
 
   async function handleSubmit(e: React.FormEvent) {

@@ -7,6 +7,7 @@ import { Button, MaterialIcon, SegmentedControl, SearchInput, type GlobalTimeRan
 import { ChartTooltip, chartCardClass, getChartTheme, gridProps, xAxisProps, yAxisProps } from '../../../components/charts';
 import { api, type LogEntry, type LogHistogramBucket, type LogLevel } from '../../../services/api';
 import { getErrorMessage } from '../../../utils/errors';
+import { activatable } from '../../../utils/a11y';
 import { toast } from 'react-hot-toast';
 import { TracePanel } from '../../traces/components/TracePanel';
 
@@ -80,12 +81,14 @@ function formatTime(ts: string) {
 
 function LogRow({ log, onOpenTrace }: { log: LogEntry; onOpenTrace: (traceId: string) => void }) {
   const [expanded, setExpanded] = useState(false);
-  const hasMeta = log.metadata && Object.keys(log.metadata).length > 0;
+  // !! 필수 — undefined면 activatable의 기본 파라미터가 발동해 비활성 행까지 버튼이 된다.
+  const hasMeta = !!log.metadata && Object.keys(log.metadata).length > 0;
 
   return (
     <div
       className={`px-4 py-3 bg-bg-surface transition-colors ${hasMeta ? 'cursor-pointer hover:bg-ui-hover-soft' : ''}`}
-      onClick={() => hasMeta && setExpanded(v => !v)}
+      {...activatable(() => setExpanded(v => !v), hasMeta)}
+      aria-expanded={hasMeta ? expanded : undefined}
     >
       <div className="flex items-start gap-3">
         <span className={`mt-0.5 shrink-0 px-1.5 py-0.5 rounded text-xs font-bold uppercase ${LEVEL_STYLE[log.level] ?? LEVEL_STYLE.info}`}>

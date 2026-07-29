@@ -18,6 +18,7 @@ import { MonitoringSetupPanel } from '../../features/services/components/Monitor
 import { AgentServiceRequestTrends } from '../../features/healthcheck/components/AgentServiceRequestTrends';
 import { AgentCheckHistoryBar } from '../../features/healthcheck/components/AgentCheckHistoryBar';
 import { getErrorMessage } from '../../utils/errors';
+import { activatable } from '../../utils/a11y';
 
 function agentOnline(agent: ConnectedAgent): boolean {
   return Date.now() - new Date(agent.lastSeenAt).getTime() < 2 * 60 * 1000;
@@ -95,7 +96,8 @@ function ServiceCard({ service, metric, onOpen }: {
   const { t } = useTranslate();
   return (
     <div
-      onClick={onOpen}
+      {...activatable(onOpen)}
+      aria-label={service.name}
       className="group bg-bg-surface border border-ui-border rounded-xl p-4 cursor-pointer hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 active:translate-y-0 flex flex-col gap-3"
     >
       <div className="flex items-start justify-between gap-2">

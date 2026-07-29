@@ -12,6 +12,7 @@ import { AddServiceModal } from '../../features/services/components/AddServiceMo
 import { InstrumentationOverrideModal } from '../../features/services/components/InstrumentationOverrideModal';
 import { ApiKeyModal } from '../../features/services/components/ApiKeyModal';
 import { getErrorMessage } from '../../utils/errors';
+import { activatable } from '../../utils/a11y';
 import { toast } from 'react-hot-toast';
 
 function agentOnline(agent: ConnectedAgent): boolean {
@@ -41,7 +42,8 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
 
   return (
     <div
-      onClick={() => navigate(`/projects/${agentId}`)}
+      {...activatable(() => navigate(`/projects/${agentId}`))}
+      aria-label={agentName}
       className="bg-bg-surface border border-ui-border rounded-xl p-4 cursor-pointer hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 active:translate-y-0 flex flex-col gap-3"
     >
       {/* Header: status + project name + controls */}

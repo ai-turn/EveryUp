@@ -25,8 +25,14 @@ export function useDataFetch<T>(
   const [data, setData] = useState<T | null>(env.useMock ? mockData : null);
   const [loading, setLoading] = useState(!env.useMock);
   const [error, setError] = useState<Error | null>(null);
+  // latest-ref: fetchFn을 deps에 넣지 않고도 최신 클로저를 쓰기 위한 것.
+  // 갱신을 렌더 중에 하면 안 된다 — React가 렌더를 버릴 수 있어 커밋되지 않은
+  // 클로저가 ref에 남는다. 커밋 이후에 쓰고, 아래 fetch effect보다 먼저 선언해
+  // deps가 바뀐 커밋에서도 fetch가 최신 fn을 보게 한다.
   const fetchFnRef = useRef(fetchFn);
-  fetchFnRef.current = fetchFn;
+  useEffect(() => {
+    fetchFnRef.current = fetchFn;
+  });
 
   const initialLoadDone = useRef(false);
 
