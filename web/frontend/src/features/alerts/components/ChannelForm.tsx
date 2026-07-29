@@ -369,8 +369,9 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                             </div>
                         </Field>
 
-                        <Field label={t('common.name')} required error={errors.name?.message ? t(errors.name.message) : undefined}>
+                        <Field htmlFor="channel-name" label={t('common.name')} required error={errors.name?.message ? t(errors.name.message) : undefined}>
                             <Input
+                                id="channel-name"
                                 {...register('name')}
                                 placeholder={t('alerts.modal.namePlaceholder')}
                                 invalid={!!errors.name}
@@ -383,24 +384,28 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                         {watchedType === 'telegram' ? (
                             <>
                                 <Field
+                                    htmlFor="channel-bot-token"
                                     label={t('alerts.modal.botToken')}
                                     required
                                     error={errors.botToken?.message ? t(errors.botToken.message) : undefined}
                                     hint={t('alerts.modal.botTokenHint', { defaultValue: 'BotFather에서 발급받은 Bot Token' })}
                                 >
                                     <Input
+                                        id="channel-bot-token"
                                         {...register('botToken')}
                                         placeholder={t('alerts.modal.botTokenPlaceholder')}
                                         mono invalid={!!errors.botToken}
                                     />
                                 </Field>
                                 <Field
+                                    htmlFor="channel-chat-id"
                                     label={t('alerts.modal.chatId')}
                                     required
                                     error={errors.chatId?.message ? t(errors.chatId.message) : undefined}
                                     hint={t('alerts.modal.chatIdHint', { defaultValue: '채팅방 또는 채널의 Chat ID' })}
                                 >
                                     <Input
+                                        id="channel-chat-id"
                                         {...register('chatId')}
                                         placeholder={t('alerts.modal.chatIdPlaceholder')}
                                         mono
@@ -411,12 +416,14 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                         ) : (
                             <>
                                 <Field
+                                    htmlFor="channel-webhook-url"
                                     label={t('alerts.modal.webhookUrl')}
                                     required
                                     error={errors.webhookUrl?.message ? t(errors.webhookUrl.message) : undefined}
                                     hint={watchedType === 'slack' ? 'Slack Incoming Webhooks URL' : 'Discord Channel Webhook URL'}
                                 >
                                     <Input
+                                        id="channel-webhook-url"
                                         {...register('webhookUrl')}
                                         placeholder={watchedType === 'slack'
                                             ? t('alerts.modal.slackWebhookUrlPlaceholder')

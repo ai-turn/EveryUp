@@ -27,14 +27,27 @@ export function FormStep({ n, title, subtitle, children }: {
     );
 }
 
-/** 라벨 + 입력 + 에러/힌트 한 묶음. error가 있으면 hint는 숨긴다. */
-export function Field({ label, hint, required, children, error }: {
-    label: string; hint?: string | null; required?: boolean; error?: string; children: ReactNode;
+/** 라벨 + 입력 + 에러/힌트 한 묶음. error가 있으면 hint는 숨긴다.
+ *
+ * `htmlFor`를 주면 `<label>`로, 없으면 `<span>`으로 렌더한다.
+ * 자식이 단일 입력이 아니라 버튼 그리드(카테고리·심각도·채널타입)인 경우가 있어
+ * 무조건 `<label>`을 쓰면 안 된다 — `<button>`은 labelable이라 라벨 클릭이 첫 버튼을
+ * 눌러버리고, 연결할 컨트롤이 없는 `<label>`은 스크린리더에 아무것도 주지 못한다.
+ * 그런 자리는 `<span>` 캡션이 맞고, 그룹 자체에 `role="group"` + `aria-label`을 단다. */
+export function Field({ label, hint, required, children, error, htmlFor }: {
+    label: string; hint?: string | null; required?: boolean; error?: string;
+    children: ReactNode; htmlFor?: string;
 }) {
+    const LabelTag = htmlFor ? 'label' : 'span';
     return (
         <div>
             <div className="flex items-center gap-1 mb-2">
-                <label className="text-sm font-bold text-text-muted uppercase tracking-wide">{label}</label>
+                <LabelTag
+                    {...(htmlFor ? { htmlFor } : {})}
+                    className="text-sm font-bold text-text-muted uppercase tracking-wide"
+                >
+                    {label}
+                </LabelTag>
                 {required && <span className="text-red-500 text-xs">*</span>}
             </div>
             {children}

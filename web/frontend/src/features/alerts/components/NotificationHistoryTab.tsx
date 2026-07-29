@@ -145,6 +145,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
         />
 
         <select
+          aria-label={t('alerts.history.typeAllOption')}
           value={typeFilter}
           onChange={e => setTypeFilter(e.target.value)}
           className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm font-medium text-text-secondary cursor-pointer"
@@ -159,6 +160,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
         </select>
 
         <select
+          aria-label={t('alerts.history.channelAll')}
           value={channelFilter}
           onChange={e => setChannelFilter(e.target.value)}
           className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm font-medium text-text-secondary cursor-pointer"
@@ -170,6 +172,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
         </select>
 
         <select
+          aria-label={t('alerts.history.period7d')}
           value={periodDays}
           onChange={e => setPeriodDays(Number(e.target.value) as PeriodDays)}
           className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm font-medium text-text-secondary cursor-pointer"

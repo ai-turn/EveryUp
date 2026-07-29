@@ -391,6 +391,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
         />
 
         <select
+          aria-label={t('alerts.rules.severityAll', { defaultValue: 'All severity' })}
           value={severityFilter}
           onChange={e => setSeverityFilter(e.target.value as typeof severityFilter)}
           className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm font-medium text-text-secondary cursor-pointer"
@@ -402,6 +403,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
         </select>
 
         <select
+          aria-label={t('alerts.rules.enabledAll', { defaultValue: 'All states' })}
           value={enabledFilter}
           onChange={e => setEnabledFilter(e.target.value as typeof enabledFilter)}
           className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm font-medium text-text-secondary cursor-pointer"
@@ -572,11 +574,18 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
 
 function SortableTH({ label, active, dir, onClick, className = '' }: { label: string; active: boolean; dir: SortDir; onClick: () => void; className?: string }) {
   return (
-    <th className={`cursor-pointer select-none px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted ${className}`} onClick={onClick}>
-      <span className={`inline-flex items-center gap-1 ${active ? 'text-text-base' : ''}`}>
+    <th
+      aria-sort={active ? (dir === 'desc' ? 'descending' : 'ascending') : 'none'}
+      className={`select-none px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted ${className}`}
+    >
+      <button
+        type="button"
+        onClick={onClick}
+        className={`inline-flex cursor-pointer items-center gap-1 uppercase tracking-wider ${active ? 'text-text-base' : ''}`}
+      >
         {label}
         <span className={active ? 'opacity-100' : 'opacity-30'}>{active && dir === 'desc' ? '↓' : '↑'}</span>
-      </span>
+      </button>
     </th>
   );
 }

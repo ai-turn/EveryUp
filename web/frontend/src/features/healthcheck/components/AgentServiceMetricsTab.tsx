@@ -211,7 +211,15 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range 
                 return (
                   <tr
                     key={`${n.metricName}:${n.metricType}`}
+                    tabIndex={0}
+                    aria-current={active || undefined}
                     onClick={() => setSelected(n.metricName)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelected(n.metricName);
+                      }
+                    }}
                     className={`cursor-pointer border-b border-ui-border-soft/50 last:border-0 transition-colors ${
                       active
                         ? 'bg-primary/5 dark:bg-primary/10'
