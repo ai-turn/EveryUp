@@ -399,6 +399,9 @@ text-sm font-medium text-text-secondary cursor-pointer
 - **Skip link** `MainLayout`의 `#main-content` 스킵 링크
 - **아이콘 전용 버튼**은 `aria-label` 필수 — `MaterialIcon`이 `aria-hidden="true"`라 아이콘만으로는 스크린리더에 아무것도 읽히지 않는다. `title`은 툴팁일 뿐 대체 텍스트가 아니므로 **둘 다** 준다. `<span className="sr-only">`로 라벨을 넣는 것도 동등하게 유효하다
 - **색만으로 정보를 전달하지 않는다** (WCAG 1.4.1) — 상태 점은 §5.2, 4개 초과 차트 시리즈는 §1.6 참조
+- **클릭되는 것은 키보드로도 되어야 한다** — `<div onClick>`은 탭으로 도달할 수 없다. 네이티브 `<button>`/`<a>`로 바꿀 수 없는 자리(카드 안에 버튼이 중첩)는 [`activatable()`](src/utils/a11y.ts). **`<tr>`·`<th>`에는 쓰지 말 것** — `role="button"`이 테이블 시맨틱을 덮어써 행·열 관계를 잃는다. 정렬 헤더는 `<th>` 안에 `<button>` + `aria-sort`, 선택 가능한 행은 `tabIndex` + 키핸들러만.
+- **폼 컨트롤에는 접근 가능한 이름을 준다** — 라벨이 붙는 자리는 `<label htmlFor>`, 툴바 필터 셀렉트처럼 시각 라벨이 없는 자리는 `aria-label`. `Field`는 `htmlFor`를 줄 때만 `<label>`로 렌더한다(§6) — 자식이 버튼 그리드면 `<label>`이 첫 버튼을 눌러버리므로 `<span>` 캡션 + 그룹에 `role="group"`이 맞다.
+- **렌더 중 부작용 금지** — 렌더 본문에서 `navigate()`를 부르거나 ref를 갱신하지 않는다. React가 렌더를 버릴 수 있어 커밋되지 않은 상태가 샌다. 리다이렉트는 `<Navigate>`, ref 갱신은 effect에서.
 - **Toggle** `role="switch"` + `aria-checked`
 - **`prefers-reduced-motion`** 전역 처리됨 (모든 애니메이션 0.01ms)
 - **대비** `text-text-dim`의 다크 값이 `#6b7280`인 것은 WCAG AA 충족을 위한 조정 결과다. 더 어둡게 내리지 않는다
@@ -470,13 +473,11 @@ text-sm font-medium text-text-secondary cursor-pointer
 
 새 코드에서 판단이 서지 않으면 **"이 색이 사라지면 사용자가 대상의 건강을 오판하는가?"** 로 가른다. 그렇다면 `status-*`다.
 
-### C. `Field` 라벨이 입력과 연결돼 있지 않다
+### C. `Field` htmlFor 배선 잔여 — `AlertRuleForm`
 
-[`FormLayout.tsx:37`](src/features/alerts/components/FormLayout.tsx:37)의 `<label>`에 `htmlFor`가 없다. 지금은 어떤 입력과도 연결되지 않아 스크린리더가 라벨을 읽어주지 못한다(react-doctor `label-has-associated-control`).
+`Field`의 `htmlFor` 옵트인과 채널 폼 4필드 배선은 끝났다. `AlertRuleForm`의 단일 입력 Field들(규칙명·연산자·임계값·지속시간·쿨다운 등 약 7곳)이 남았다 — 채널 폼과 같은 방식으로 `htmlFor` + `id`를 짝지으면 된다.
 
-**`<label>`로 자식을 감싸는 방식은 쓸 수 없다.** `Field`의 자식이 단일 입력만이 아니라 버튼 그리드(카테고리·프리셋·심각도·채널타입)이기도 한데, `<button>`은 labelable 요소라 라벨 클릭이 첫 버튼을 눌러버린다.
-
-→ `htmlFor?: string`를 받아 있을 때만 `<label>`, 없으면 `<span>`으로 렌더하고, 단일 입력 호출부(약 10곳)에 id를 배선한다. 버튼 그리드 쪽은 `<label>`이 아니라 `role="group"` + `aria-label`이 맞다.
+버튼 그리드 Field(카테고리·프리셋·심각도)는 `<label>` 대상이 아니다. 그룹 자체에 `role="group"` + `aria-label`을 다는 것이 맞고, 이건 `Field`가 아니라 호출부 마크업 변경이라 별도 판단이 필요하다.
 
 ### 배지 크기 — 정리하지 않기로 함
 
@@ -499,6 +500,10 @@ text-sm font-medium text-text-secondary cursor-pointer
 - ~~오버레이 4곳이 ESC 핸들러를 복사, 2곳은 ESC 없음~~ → `useOverlay` 훅으로 통합, 6곳 전부 ESC 동작(브라우저 검증)
 - ~~헤딩 등급 흔들림~~ → h1/h3 이탈 8건 정리. §2.3을 **컨테이너별 등급표**로 정정 — h2가 카드/모달/섹션에서 다른 것은 이탈이 아니라 정당한 차이였다
 - ~~`MainLayout` 주석이 `slate-50 canvas`라고 하나 실제는 `bg-bg-main`~~ → 주석 정정
+- ~~렌더 중 부작용 2건 (useDataFetch의 ref 갱신, LoginPage의 navigate)~~ → effect로 이동 / `<Navigate>`로 교체
+- ~~카드·행이 `<div onClick>`이라 키보드로 진입 불가~~ → `activatable()` 4곳. Enter/Space 진입 실측
+- ~~필터 셀렉트 5개·토글 1개에 접근 가능한 이름 없음~~ → `aria-label`, 토글은 `role="switch"`
+- ~~테이블 정렬·행 선택이 키보드로 불가~~ → `<th>` 안 `<button>` + `aria-sort`, 행은 `tabIndex`+키핸들러
 - ~~차트 시리즈 4개 초과 시 색만으로 구분~~ → `getSeriesDash(i)` 신설, `AgentServiceMetricsTab`에 적용. 앞 3슬롯은 실선 유지라 1~3시리즈 차트의 모습은 그대로
 - ~~`SEVERITY_BADGE` 상수가 두 파일에 md5 동일하게 중복~~ → `SeverityBadge` 컴포넌트로 통합
 - ~~오버레이 배경이 6곳 제각각(black/40·slate-900/60·slate-900/40·없음)~~ → `SCRIM_MODAL`/`SCRIM_PANEL` 2역할로 통일. TracePanel은 scrim이 아예 없어 신규 추가
