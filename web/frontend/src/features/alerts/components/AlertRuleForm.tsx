@@ -152,6 +152,7 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
 
                     <FormStep n={2} title={t('alerts.rules.messageLabel')} subtitle={t('alerts.rules.messageSubtitle', { defaultValue: '알림 발송 시 사용될 메시지' })}>
                         <textarea
+                            aria-label={t('alerts.rules.messageLabel')}
                             value={message}
                             onChange={e => setMessage(e.target.value)}
                             rows={3}
@@ -442,11 +443,13 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
 
                         <div className="grid grid-cols-2 gap-4">
                             <Field
+                                htmlFor="rule-target"
                                 label={t('alerts.rules.target')}
                                 hint={!watchedAgentId ? t('alerts.rules.targetHintAll', { defaultValue: '미선택 시 모든 대상에 적용됩니다' }) : null}
                             >
                                 {isEndpoint || isLog || isMetric ? (
                                     <Select
+                                        id="rule-target"
                                         value={watchedAgentId && watchedServiceKey ? `${watchedAgentId}:::${watchedServiceKey}` : ''}
                                         onChange={e => {
                                             const val = e.target.value;
@@ -464,6 +467,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                     </Select>
                                 ) : (
                                     <Select
+                                        id="rule-target"
                                         value={watchedAgentId}
                                         onChange={e => { setValue('agentId', e.target.value); setValue('serviceKey', ''); }}
 
@@ -476,10 +480,11 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                 )}
                             </Field>
 
-                            <Field label={t('alerts.rules.metric')} hint={isMetric && !watchedServiceKey ? t('alerts.rules.metricSuggestHint', { defaultValue: '서비스를 선택하면 수집된 메트릭이 제안됩니다' }) : null}>
+                            <Field htmlFor={isMetric ? 'rule-metric' : undefined} label={t('alerts.rules.metric')} hint={isMetric && !watchedServiceKey ? t('alerts.rules.metricSuggestHint', { defaultValue: '서비스를 선택하면 수집된 메트릭이 제안됩니다' }) : null}>
                                 {isMetric ? (
                                     <>
                                         <Input
+                                            id="rule-metric"
                                             list="otel-metric-names"
                                             value={watchedMetricName}
                                             onChange={e => setValue('metricName', e.target.value)}
@@ -516,8 +521,9 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                             </Field>
                         </div>
 
-                        <Field label={t('alerts.rules.ruleName')} required>
+                        <Field htmlFor="rule-name" label={t('alerts.rules.ruleName')} required>
                             <Input
+                                id="rule-name"
                                 {...register('name')}
                                 placeholder="e.g. High CPU usage alert"
 
@@ -553,8 +559,9 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
 
                         {conditionPreset === 'custom' && (
                             <div className="grid grid-cols-[auto_1fr_1fr] gap-3 items-end">
-                                <Field label={t('alerts.rules.operator')}>
+                                <Field htmlFor="rule-operator" label={t('alerts.rules.operator')}>
                                     <Select
+                                        id="rule-operator"
                                         {...register('operator')}
                                         className="w-20"
                                     >
@@ -565,10 +572,11 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                         <option value="eq">=</option>
                                     </Select>
                                 </Field>
-                                <Field label={t('alerts.rules.customInputThreshold')}>
+                                <Field htmlFor="rule-threshold-unit" label={t('alerts.rules.customInputThreshold')}>
                                     {watchedMetric === 'log_level' ? (
                                         // Log levels are stored numerically — expose them as named levels
                                         <Select
+                                            id="rule-threshold-unit"
                                             value={watchedThreshold}
                                             onChange={e => setValue('threshold', Number(e.target.value))}
 
@@ -582,6 +590,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                     ) : (
                                     <div className="flex">
                                         <Input
+                                            id="rule-threshold-unit"
                                             type="number"
                                             value={customThreshold}
                                             onChange={e => {
@@ -600,16 +609,18 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                     )}
                                 </Field>
                                 {isEndpoint ? (
-                                    <Field label={t('alerts.rules.consecutiveChecks')}>
+                                    <Field htmlFor="rule-consecutive" label={t('alerts.rules.consecutiveChecks')}>
                                         <Input
+                                            id="rule-consecutive"
                                             type="number" min={1} max={20}
                                             {...register('duration', { valueAsNumber: true })}
 
                                         />
                                     </Field>
                                 ) : !isLog ? (
-                                    <Field label={t('alerts.rules.durationMin', { defaultValue: '지속 시간 (분)' })}>
+                                    <Field htmlFor="rule-duration" label={t('alerts.rules.durationMin', { defaultValue: '지속 시간 (분)' })}>
                                         <Input
+                                            id="rule-duration"
                                             type="number" min={1} max={60}
                                             {...register('duration', { valueAsNumber: true })}
 
@@ -639,10 +650,12 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
 
                         {!isEndpoint && !isLog && (
                             <Field
+                                htmlFor="rule-cooldown"
                                 label={t('alerts.rules.cooldown', { defaultValue: '쿨다운 (초)' })}
                                 hint={t('alerts.rules.cooldownHint', { defaultValue: '동일 규칙은 이 시간 내 재발송하지 않음' })}
                             >
                                 <Input
+                                    id="rule-cooldown"
                                     type="number" min={0} max={86400}
                                     {...register('cooldown', { valueAsNumber: true })}
 
@@ -705,6 +718,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                         </Field>
 
                         <Field
+                            htmlFor="rule-message"
                             label={t('alerts.rules.messageLabel')}
                             hint={t('alerts.rules.messageOverridesHint') + ' · ' + t('alerts.rules.messageVarsHint', {
                                 vars: (isApiStatus
@@ -719,6 +733,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                             })}
                         >
                             <textarea
+                                id="rule-message"
                                 value={customMessage}
                                 onChange={e => setCustomMessage(e.target.value)}
                                 rows={2}

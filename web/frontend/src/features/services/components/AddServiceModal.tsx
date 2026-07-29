@@ -95,10 +95,11 @@ function ProjectForm({
   return (
     <form onSubmit={onSubmit} className="p-6 space-y-5">
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-text-secondary">
+        <label htmlFor="new-project-name" className="text-sm font-medium text-text-secondary">
           프로젝트 이름
         </label>
         <Input
+          id="new-project-name"
           type="text"
           value={name}
           onChange={event => onNameChange(event.target.value)}

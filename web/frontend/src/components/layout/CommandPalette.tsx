@@ -109,6 +109,7 @@ export function CommandPalette() {
   return (
     <div
       className={`fixed inset-0 z-50 flex items-start justify-center pt-[18vh] px-4 ${SCRIM_PANEL}`}
+      role="presentation"
       onClick={() => setOpen(false)}
     >
       <div
