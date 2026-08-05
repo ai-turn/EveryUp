@@ -7,10 +7,6 @@ import App from './App.tsx'
 import { ErrorBoundary } from './components/error/index.ts'
 import { AppProviders } from './components/AppProviders.tsx'
 
-const cssVars = getComputedStyle(document.documentElement);
-const colorSuccess = cssVars.getPropertyValue('--color-success').trim() || '#10b981';
-const colorError   = cssVars.getPropertyValue('--color-error').trim()   || '#ef4444';
-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
@@ -27,14 +23,14 @@ createRoot(document.getElementById('root')!).render(
             },
             success: {
               iconTheme: {
-                primary: colorSuccess,
+                primary: 'var(--color-status-healthy)',
                 secondary: '#fff',
               },
             },
             error: {
               duration: 5000,
               iconTheme: {
-                primary: colorError,
+                primary: 'var(--color-status-error)',
                 secondary: '#fff',
               },
             },

@@ -282,7 +282,7 @@ export function ProjectDetailPage() {
             onClick={handleRefresh}
             aria-label="새로고침"
             title="새로고침"
-            className="p-2 rounded-lg text-slate-400 hover:text-text-base hover:bg-ui-hover transition-colors"
+            className="h-10 w-10 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-text-base hover:bg-ui-hover transition-colors"
           >
             <MaterialIcon name="refresh" className={`text-lg ${spinning ? 'animate-spin' : ''}`} />
           </button>
@@ -292,7 +292,7 @@ export function ProjectDetailPage() {
                 onClick={() => setShowInstall(true)}
                 aria-label="Agent 설치 또는 재설치"
                 title="Agent 설치 또는 재설치"
-                className="p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
+                className="h-10 w-10 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
               >
                 <MaterialIcon name="download" className="text-xl" />
               </button>
@@ -300,7 +300,7 @@ export function ProjectDetailPage() {
                 onClick={() => setShowKey(true)}
                 aria-label="API 키 보기"
                 title="API 키 보기"
-                className="p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
+                className="h-10 w-10 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
               >
                 <MaterialIcon name="key" className="text-xl" />
               </button>
@@ -308,7 +308,7 @@ export function ProjectDetailPage() {
                 onClick={() => setShowInstrumentation(true)}
                 aria-label="OTel 계측 설정 (헤더·바디)"
                 title="OTel 계측 설정 (헤더·바디)"
-                className="p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
+                className="h-10 w-10 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
               >
                 <MaterialIcon name="integration_instructions" className="text-xl" />
               </button>
@@ -316,7 +316,7 @@ export function ProjectDetailPage() {
                 onClick={() => setDeleteConfirm(true)}
                 aria-label="프로젝트 비활성화"
                 title="프로젝트 비활성화"
-                className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                className="h-10 w-10 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
               >
                 <MaterialIcon name="delete_outline" className="text-xl" />
               </button>

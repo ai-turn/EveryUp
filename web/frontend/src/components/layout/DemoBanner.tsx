@@ -24,13 +24,12 @@ export function DemoBanner() {
           </span>
           {isMobile ? (
             <div className="overflow-hidden min-w-0">
-              <p
-                className="text-sm text-slate-300 whitespace-nowrap inline-block"
-                style={{ animation: 'marquee 15s linear infinite' }}
-              >
+              <p className="text-sm text-slate-300 whitespace-nowrap inline-block [animation:marquee_15s_linear_infinite] motion-reduce:whitespace-normal motion-reduce:[animation:none]">
                 {bannerText}
-                <span className="mx-8" />
-                {bannerText}
+                <span aria-hidden="true" className="motion-reduce:hidden">
+                  <span className="mx-8" />
+                  {bannerText}
+                </span>
               </p>
             </div>
           ) : (

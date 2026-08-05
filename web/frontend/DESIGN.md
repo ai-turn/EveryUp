@@ -161,7 +161,7 @@ primary #3b76c9 → emerald #059669 → amber #d97706 → violet #7c3aed → red
 
 ### 2.4 굵기
 
-`font-bold`(제목·배지·수치) / `font-semibold`(버튼·레이블·테이블 헤더) / 기본(본문). `font-medium`은 쓰지 않는다.
+`font-bold`(제목·배지·수치) / `font-semibold`(버튼·테이블 헤더·강조 레이블) / `font-medium`(내비 항목·설정/KPI 캡션·필터 셀렉트 등 보조 레이블 — §6) / 기본(본문). 이 4단을 넘기지 않는다.
 
 ---
 
@@ -473,9 +473,9 @@ text-sm font-medium text-text-secondary cursor-pointer
 
 새 코드에서 판단이 서지 않으면 **"이 색이 사라지면 사용자가 대상의 건강을 오판하는가?"** 로 가른다. 그렇다면 `status-*`다.
 
-### C. `Field` htmlFor 배선 잔여 — `AlertRuleForm`
+### C. `Field` htmlFor 배선 — 완료 (2026-08-05)
 
-`Field`의 `htmlFor` 옵트인과 채널 폼 4필드 배선은 끝났다. `AlertRuleForm`의 단일 입력 Field들(규칙명·연산자·임계값·지속시간·쿨다운 등 약 7곳)이 남았다 — 채널 폼과 같은 방식으로 `htmlFor` + `id`를 짝지으면 된다.
+`AlertRuleForm`의 단일 입력 Field들(규칙명·연산자·임계값·지속시간·쿨다운 등)까지 `htmlFor` + `id` 배선을 마쳤다. raw Field 라벨 잔여 0건.
 
 버튼 그리드 Field(카테고리·프리셋·심각도)는 `<label>` 대상이 아니다. 그룹 자체에 `role="group"` + `aria-label`을 다는 것이 맞고, 이건 `Field`가 아니라 호출부 마크업 변경이라 별도 판단이 필요하다.
 
@@ -484,6 +484,14 @@ text-sm font-medium text-text-secondary cursor-pointer
 읽기 전용 배지가 `text-2xs`(상태칩·테이블)와 `text-xs`(로그 레벨·span kind) 두 계열이다. 크기 차이가 밀도(테이블 셀 vs 목록 스캔) 때문이라 강제로 맞추면 로그 레벨 배지가 작아지는 손해만 확실하다.
 
 > 이전에 "같은 severity 배지가 폼과 테이블에서 등급이 다르다"고 적었던 것은 **오진이었다.** 폼 쪽은 배지가 아니라 알림이 어떻게 보일지 보여주는 미리보기 카드(틴트 배경 + 점 + 보더)로, 목적과 형태가 다른 물건이다. 실제 중복이던 `SEVERITY_BADGE` 상수는 `SeverityBadge` 컴포넌트로 통합했다.
+
+### 해결됨 (2026-08-05) — 기술 감사 후속
+
+- ~~토스트 아이콘 색이 제거된 토큰(`--color-success`/`--color-error`)을 읽어 하드코딩 hex로 폴백~~ → `var(--color-status-healthy/error)`로 교체(테마 반응). `main.tsx`의 죽은 `getComputedStyle` 스냅샷 3줄 제거
+- ~~모달 컨테이너 3곳이 `rounded-2xl`(§3.2 위반)~~ → `rounded-xl` (`ApiKeyModal`·`AddServiceModal`·`ConfirmDialog`)
+- ~~알림 전송 성공/실패 색이 primitive + `dark:` 짝(§10.B 건강 축 오분류)~~ → `AlertsMobileView`를 `text-status-healthy/error`로 토큰화
+- ~~카드·상세 헤더 아이콘 버튼 터치 타깃 28~36px~~ → `h-10 w-10`(40px)로 확대, 컨테이너 gap 조정 (`ServiceGridPage`·`PendingServiceCard`·`ProjectDetailPage`). WCAG 2.5.8 AA(24px)는 이전에도 충족, 밀도 유지 위해 44px 대신 40px
+- ~~전역 reduced-motion `0.01ms` 킬이 `DemoBanner` 마퀴를 잘라 안내가 잘림~~ → `motion-reduce:`에서 마퀴 정지 + 줄바꿈 + 중복 사본 숨김
 
 ### 해결됨 (2026-07-26)
 
@@ -512,4 +520,3 @@ text-sm font-medium text-text-secondary cursor-pointer
 ### 권장 순서
 
 1. **A** — 사이트별 확인이 필요해 자동화가 안 된다. 파일 단위로 나눠 처리
-2. **C** (`Field` htmlFor 배선 — 호출부 10곳)

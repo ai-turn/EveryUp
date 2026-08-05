@@ -91,16 +91,16 @@ export function AlertsMobileView({
             <p className="text-xl font-bold text-text-base">{stats.successRate.toFixed(0)}%</p>
           </div>
           <div className="bg-bg-surface border border-ui-border rounded-xl p-3">
-            <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400 truncate">
+            <p className="text-sm font-medium text-status-healthy truncate">
               {t('alerts.history.stats.sent', { defaultValue: 'Sent' })}
             </p>
-            <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{stats.totalSent}</p>
+            <p className="text-xl font-bold text-status-healthy">{stats.totalSent}</p>
           </div>
           <div className="bg-bg-surface border border-ui-border rounded-xl p-3">
-            <p className="text-sm font-medium text-red-500 truncate">
+            <p className="text-sm font-medium text-status-error truncate">
               {t('alerts.history.stats.failed', { defaultValue: 'Failed' })}
             </p>
-            <p className="text-xl font-bold text-red-500">{stats.totalFailed}</p>
+            <p className="text-xl font-bold text-status-error">{stats.totalFailed}</p>
           </div>
         </div>
       )}

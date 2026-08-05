@@ -58,11 +58,11 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
           </div>
         </div>
         {agent && (
-          <div className="flex items-center gap-0.5 shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
             <button
               onClick={(e) => { e.stopPropagation(); onViewKey(agent); }}
               aria-label={t('API 키 보기')} title={t('API 키 보기')}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
+              className="h-10 w-10 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
             >
               <MaterialIcon name="key" className="text-base" />
             </button>
@@ -70,7 +70,7 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
               onClick={(e) => { e.stopPropagation(); onDeleteAgent(agent.id); }}
               aria-label={t('프로젝트 비활성화')}
               title={t('프로젝트 비활성화')}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              className="h-10 w-10 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
             >
               <MaterialIcon name="delete_outline" className="text-base" />
             </button>

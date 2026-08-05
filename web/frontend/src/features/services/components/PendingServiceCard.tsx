@@ -76,12 +76,12 @@ export function PendingServiceCard({ agent, onDelete, onViewKey, onInstall }: Pr
           <MaterialIcon name="schedule" className="text-sm shrink-0" />
           <span className="truncate">생성 {formatDistanceToNow(new Date(agent.createdAt), { addSuffix: true, locale: dateLocale })}</span>
         </span>
-        <div className="flex items-center gap-0.5 -mr-1.5">
+        <div className="flex items-center gap-1 -mr-1.5">
           <button
             type="button"
             onClick={onViewKey}
             aria-label="API 키 보기" title="API 키 보기"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
+            className="h-10 w-10 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
           >
             <MaterialIcon name="key" className="text-base" />
           </button>
@@ -89,7 +89,7 @@ export function PendingServiceCard({ agent, onDelete, onViewKey, onInstall }: Pr
             type="button"
             onClick={() => onDelete(agent.id)}
             aria-label="프로젝트 비활성화" title="프로젝트 비활성화"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            className="h-10 w-10 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
           >
             <MaterialIcon name="delete_outline" className="text-base" />
           </button>

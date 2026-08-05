@@ -367,7 +367,7 @@ export function AddServiceModal({
       aria-label={step === 'form' ? '프로젝트 추가' : 'Agent 설치 및 모니터링 설정'}
       onCancel={(event) => { event.preventDefault(); onClose(); }}
     >
-      <div className={`w-full ${step === 'install' ? 'max-w-2xl' : 'max-w-md'} max-h-[92vh] bg-bg-surface rounded-2xl shadow-2xl border border-ui-border overflow-hidden flex flex-col`}>
+      <div className={`w-full ${step === 'install' ? 'max-w-2xl' : 'max-w-md'} max-h-[92vh] bg-bg-surface rounded-xl shadow-2xl border border-ui-border overflow-hidden flex flex-col`}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-ui-border-soft">
           <h2 className="text-base font-semibold text-text-base">
