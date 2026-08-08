@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useParams } from 'react-router-dom';
 import { MainLayout } from './components/layout';
 import { NetworkStatusBanner } from './components/feedback/NetworkStatusBanner';
 import { useAuth } from './contexts/AuthContext';
@@ -14,6 +14,13 @@ const SettingsPage          = lazy(() => import('./pages/settings/SettingsPage')
 const NotFoundPage          = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const LoginPage             = lazy(() => import('./pages/auth/LoginPage').then(m => ({ default: m.LoginPage })));
 const ChannelFormPage       = lazy(() => import('./pages/alerts/ChannelFormPage').then(m => ({ default: m.ChannelFormPage })));
+const AgentServiceCapabilityPage = lazy(() => import('./pages/capabilities/AgentServiceCapabilityPage').then(m => ({ default: m.AgentServiceCapabilityPage })));
+const LogsPage              = lazy(() => import('./pages/capabilities/LogsPage').then(m => ({ default: m.LogsPage })));
+const ApiPage               = lazy(() => import('./pages/capabilities/ApiPage').then(m => ({ default: m.ApiPage })));
+const MetricsPage           = lazy(() => import('./pages/capabilities/MetricsPage').then(m => ({ default: m.MetricsPage })));
+const InfrastructurePage    = lazy(() => import('./pages/capabilities/InfrastructurePage').then(m => ({ default: m.InfrastructurePage })));
+const MorePage              = lazy(() => import('./pages/capabilities/MorePage').then(m => ({ default: m.MorePage })));
+const ProjectsPage          = lazy(() => import('./pages/projects/ProjectsPage').then(m => ({ default: m.ProjectsPage })));
 
 function PageLoader() {
   return (
@@ -38,6 +45,11 @@ function ProtectedRoute() {
     : <Navigate to="/login" replace state={{ from: location.pathname }} />;
 }
 
+function LegacyAgentProjectRoute() {
+  const { agentId } = useParams();
+  return <Navigate to={`/agents/${agentId ?? ''}`} replace />;
+}
+
 function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
@@ -50,8 +62,17 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route element={<MainLayout />}>
                 <Route index element={<ServiceGridPage />} />
-                <Route path="/services" element={<Navigate to="/" replace />} />
-                <Route path="/projects/:agentId" element={<ProjectDetailPage />} />
+                <Route path="/agents" element={<Navigate to="/" replace />} />
+                <Route path="/services" element={<Navigate to="/uptime" replace />} />
+                <Route path="/uptime" element={<AgentServiceCapabilityPage />} />
+                <Route path="/logs" element={<LogsPage />} />
+                <Route path="/infrastructure" element={<InfrastructurePage />} />
+                <Route path="/api" element={<ApiPage />} />
+                <Route path="/metrics" element={<MetricsPage />} />
+                <Route path="/more" element={<MorePage />} />
+                <Route path="/projects" element={<ProjectsPage />} />
+                <Route path="/agents/:agentId" element={<ProjectDetailPage />} />
+                <Route path="/projects/:agentId" element={<LegacyAgentProjectRoute />} />
                 <Route path="/services/:agentId/:key" element={<HealthCheckDetailPage />} />
                 <Route path="/alerts" element={<AlertsPage />} />
                 <Route path="/alerts/channels/new" element={<ChannelFormPage />} />

@@ -5,7 +5,7 @@ import { MaterialIcon, StatusBadge, TimeRangePicker, type GlobalTimeRange } from
 import { useSpinAction } from '../../../hooks/useSpinAction';
 import { useIsMobile } from '../../../hooks/useMediaQuery';
 import type { AgentServiceFlat } from '../../../services/api';
-import { AgentServiceTabs } from './AgentServiceTabs';
+import { AgentServiceTabs, type DetailTab } from './AgentServiceTabs';
 
 export interface AgentHealthCheckDetailViewProps {
   service: AgentServiceFlat;
@@ -13,6 +13,7 @@ export interface AgentHealthCheckDetailViewProps {
   serviceKey: string;
   refreshKey: number;
   onRefresh: () => void;
+  initialTab?: DetailTab;
 }
 
 // Internal: layouts receive the shared chart time range from the wrapper below.
@@ -77,7 +78,7 @@ function RefreshButton({ onRefresh }: { onRefresh: () => void }) {
 }
 
 function DesktopLayout(props: LayoutProps) {
-  const { service, agentId, serviceKey, refreshKey, onRefresh, range, onRangeChange } = props;
+  const { service, agentId, serviceKey, refreshKey, onRefresh, range, onRangeChange, initialTab } = props;
 
   return (
     <>
@@ -85,7 +86,7 @@ function DesktopLayout(props: LayoutProps) {
       <div className="mb-6">
         <div className="flex items-center gap-2.5">
           <Link
-            to={`/projects/${agentId}`}
+            to={`/agents/${agentId}`}
             className="text-sm text-text-muted hover:text-primary transition-colors shrink-0"
           >
             {service.agentName}
@@ -101,13 +102,14 @@ function DesktopLayout(props: LayoutProps) {
         <ContainerMeta service={service} />
       </div>
       <AgentServiceTabs
-        key={serviceKey}
+        key={`${serviceKey}:${initialTab ?? 'health'}`}
         service={service}
         agentId={agentId}
         serviceKey={serviceKey}
         refreshKey={refreshKey}
         range={range}
         showServiceName={false}
+        initialTab={initialTab}
       />
     </>
   );
@@ -116,7 +118,7 @@ function DesktopLayout(props: LayoutProps) {
 function MobileLayout(props: LayoutProps) {
   const { t: tc } = useTranslation('common');
   const navigate = useNavigate();
-  const { service, agentId, serviceKey, refreshKey, onRefresh, range, onRangeChange } = props;
+  const { service, agentId, serviceKey, refreshKey, onRefresh, range, onRangeChange, initialTab } = props;
 
   return (
     <div className="space-y-4">
@@ -134,7 +136,7 @@ function MobileLayout(props: LayoutProps) {
         </div>
       </div>
       <ContainerMeta service={service} />
-      <AgentServiceTabs key={serviceKey} service={service} agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} range={range} />
+      <AgentServiceTabs key={`${serviceKey}:${initialTab ?? 'health'}`} service={service} agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} range={range} initialTab={initialTab} />
     </div>
   );
 }

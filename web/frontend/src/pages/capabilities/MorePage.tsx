@@ -1,0 +1,27 @@
+import { Link } from 'react-router-dom';
+import { useTranslate } from '@tolgee/react';
+import { MaterialIcon, PageHeader } from '../../components/common';
+
+const LINKS = [
+  { to: '/projects', icon: 'folder_open', title: 'Projects', description: 'Agent와 독립 업타임 대상을 논리적으로 묶습니다.' },
+  { to: '/api', icon: 'api', title: 'API', description: '요청 상태와 오류를 확인합니다.' },
+  { to: '/metrics', icon: 'monitoring', title: '메트릭', description: 'OpenTelemetry 메트릭을 확인합니다.' },
+  { to: '/alerts', icon: 'notifications', title: '알림', description: '알림 규칙과 채널을 관리합니다.' },
+  { to: '/settings', icon: 'settings', title: '설정', description: 'EveryUp 환경을 설정합니다.' },
+] as const;
+
+export function MorePage() {
+  const { t } = useTranslate();
+  return (
+    <div>
+      <PageHeader title={t('더보기')} subtitle={t('추가 모니터링 기능과 설정으로 이동합니다.')} />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {LINKS.map((link) => <Link key={link.to} to={link.to} className="flex items-center gap-3 rounded-xl border border-ui-border bg-bg-surface p-4 transition-colors hover:border-primary/40 hover:bg-ui-hover-soft">
+          <MaterialIcon name={link.icon} className="text-xl text-primary" />
+          <div className="min-w-0"><h2 className="text-base font-bold text-text-base">{t(link.title)}</h2><p className="text-sm text-text-muted">{t(link.description)}</p></div>
+          <MaterialIcon name="chevron_right" className="ml-auto text-lg text-text-dim" />
+        </Link>)}
+      </div>
+    </div>
+  );
+}

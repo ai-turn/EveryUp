@@ -30,11 +30,17 @@ export function AgentResponseTimeChart({ agentId, serviceKey, refreshKey, range 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    api.getAgentServiceHistory(agentId, serviceKey, range)
-      .then(setPoints)
-      .catch(() => setPoints([]))
-      .finally(() => setLoading(false));
+    const load = async () => {
+      setLoading(true);
+      try {
+        setPoints(await api.getAgentServiceHistory(agentId, serviceKey, range));
+      } catch {
+        setPoints([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
   }, [agentId, serviceKey, range, refreshKey]);
 
   const theme = getChartTheme();

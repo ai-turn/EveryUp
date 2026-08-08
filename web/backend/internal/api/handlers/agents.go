@@ -249,7 +249,8 @@ func hashAgentKey(key string) string {
 // that code, so it is not exposed in the initial browser flow.
 func (h *AgentHandler) Create(c *fiber.Ctx) error {
 	var req struct {
-		Name string `json:"name"`
+		Name    string              `json:"name"`
+		Profile models.AgentProfile `json:"profile"`
 	}
 	if err := c.BodyParser(&req); err != nil {
 		return agentBadRequest(c, "INVALID_REQUEST", "invalid request body")
@@ -257,6 +258,10 @@ func (h *AgentHandler) Create(c *fiber.Ctx) error {
 	req.Name = strings.TrimSpace(req.Name)
 	if req.Name == "" {
 		return agentBadRequest(c, "VALIDATION_ERROR", "name is required")
+	}
+	profile, err := normalizeAgentProfile(req.Profile)
+	if err != nil {
+		return agentBadRequest(c, "VALIDATION_ERROR", err.Error())
 	}
 
 	plain, hash, err := generateAgentKey()
@@ -269,8 +274,9 @@ func (h *AgentHandler) Create(c *fiber.Ctx) error {
 	}
 
 	agent := models.Agent{
-		ID:   "agent_" + uuid.NewString(),
-		Name: req.Name,
+		ID:      "agent_" + uuid.NewString(),
+		Name:    req.Name,
+		Profile: profile,
 	}
 	joinCode, joinHash, expiresAt, err := newAgentJoinCode(time.Now())
 	if err != nil {
@@ -285,10 +291,57 @@ func (h *AgentHandler) Create(c *fiber.Ctx) error {
 		"data": fiber.Map{
 			"id":        agent.ID,
 			"name":      agent.Name,
+			"profile":   agent.Profile,
 			"joinCode":  joinCode,
 			"expiresAt": expiresAt,
 		},
 	})
+}
+
+func normalizeAgentProfile(profile models.AgentProfile) (models.AgentProfile, error) {
+	switch profile.Kind {
+	case "", models.AgentProfileAllInOne:
+		return models.DefaultAgentProfile(), nil
+	case models.AgentProfileBasic:
+		return models.AgentProfile{
+			Kind:         models.AgentProfileBasic,
+			Capabilities: []string{models.AgentCapabilityUptime, models.AgentCapabilityLogs},
+		}, nil
+	case models.AgentProfileCustom:
+		requested := make(map[string]bool, len(profile.Capabilities))
+		for _, capability := range profile.Capabilities {
+			capability = strings.TrimSpace(capability)
+			switch capability {
+			case models.AgentCapabilityUptime, models.AgentCapabilityLogs, models.AgentCapabilityInfrastructure, models.AgentCapabilityAPI, models.AgentCapabilityMetrics:
+				requested[capability] = true
+			default:
+				return models.AgentProfile{}, fmt.Errorf("unsupported capability: %s", capability)
+			}
+		}
+		if len(requested) == 0 {
+			return models.AgentProfile{}, fmt.Errorf("select at least one capability")
+		}
+		// Docker target discovery is the shared identity source for logs and
+		// eBPF trace attribution, so it is an effective prerequisite.
+		if requested[models.AgentCapabilityLogs] || requested[models.AgentCapabilityAPI] {
+			requested[models.AgentCapabilityUptime] = true
+		}
+		effective := make([]string, 0, len(requested))
+		for _, capability := range []string{
+			models.AgentCapabilityUptime,
+			models.AgentCapabilityLogs,
+			models.AgentCapabilityInfrastructure,
+			models.AgentCapabilityAPI,
+			models.AgentCapabilityMetrics,
+		} {
+			if requested[capability] {
+				effective = append(effective, capability)
+			}
+		}
+		return models.AgentProfile{Kind: models.AgentProfileCustom, Capabilities: effective}, nil
+	default:
+		return models.AgentProfile{}, fmt.Errorf("unsupported profile: %s", profile.Kind)
+	}
 }
 
 // Delete deactivates an agent (service), revoking its API key without deleting data.

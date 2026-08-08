@@ -42,7 +42,7 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
 
   return (
     <div
-      {...activatable(() => navigate(`/projects/${agentId}`))}
+      {...activatable(() => navigate(`/agents/${agentId}`))}
       aria-label={agentName}
       className="bg-bg-surface border border-ui-border rounded-xl p-4 cursor-pointer hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 active:translate-y-0 flex flex-col gap-3"
     >
@@ -68,8 +68,8 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onDeleteAgent(agent.id); }}
-              aria-label={t('프로젝트 비활성화')}
-              title={t('프로젝트 비활성화')}
+              aria-label={t('에이전트 비활성화')}
+              title={t('에이전트 비활성화')}
               className="h-10 w-10 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
             >
               <MaterialIcon name="delete_outline" className="text-base" />
@@ -187,7 +187,7 @@ export function ServiceGridPage() {
     if (!deleteTarget) return;
     try {
       await api.deleteAgent(deleteTarget.id);
-      toast.success(t('프로젝트가 비활성화됐습니다'));
+      toast.success(t('에이전트가 비활성화됐습니다'));
       load();
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -237,14 +237,14 @@ export function ServiceGridPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-text-base">{t('프로젝트')}</h1>
+          <h1 className="text-2xl font-bold text-text-base">{t('에이전트')}</h1>
           <p className="text-sm text-text-muted">
-            {t('연결된 프로젝트와 모니터링 서비스 현황')}
+            {t('연결된 에이전트와 모니터링 서비스 현황')}
           </p>
         </div>
         <Button onClick={() => setShowAddModal(true)}>
           <MaterialIcon name="add" className="text-base" />
-          {t('프로젝트 추가')}
+          {t('에이전트 추가')}
         </Button>
       </div>
 
@@ -252,7 +252,7 @@ export function ServiceGridPage() {
       <SearchInput
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder={t('서비스 또는 프로젝트 이름으로 검색')}
+        placeholder={t('서비스 또는 에이전트 이름으로 검색')}
       />
 
       {/* Content */}
@@ -265,9 +265,9 @@ export function ServiceGridPage() {
       ) : services.length === 0 && agents.length === 0 ? (
         <EmptyState
           icon="sensors"
-          title={t('아직 프로젝트가 없습니다')}
-          description={t('프로젝트를 추가하고 API 키로 에이전트를 연결하세요')}
-          action={{ label: t('프로젝트 추가'), onClick: () => setShowAddModal(true) }}
+          title={t('아직 에이전트가 없습니다')}
+          description={t('에이전트를 추가하고 API 키로 연결하세요')}
+          action={{ label: t('에이전트 추가'), onClick: () => setShowAddModal(true) }}
         />
       ) : groups.length === 0 && visiblePending.length === 0 ? (
         <div className="py-16 text-center text-text-dim text-sm">
@@ -305,7 +305,7 @@ export function ServiceGridPage() {
           onCreated={load}
           onOpenProject={(id) => {
             setShowAddModal(false);
-            navigate(`/projects/${id}`);
+            navigate(`/agents/${id}`);
           }}
           onConfigureInstrumentation={(id) => {
             setShowAddModal(false);
@@ -321,7 +321,7 @@ export function ServiceGridPage() {
           onCreated={load}
           onOpenProject={(id) => {
             setInstallModalAgent(null);
-            navigate(`/projects/${id}`);
+            navigate(`/agents/${id}`);
           }}
           onConfigureInstrumentation={(id) => {
             setInstallModalAgent(null);
@@ -341,8 +341,8 @@ export function ServiceGridPage() {
         isOpen={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
-        title={t('프로젝트 비활성화')}
-        message={t("{name} 프로젝트를 비활성화하시겠습니까?", { name: deleteTarget?.name ?? '' })}
+        title={t('에이전트 비활성화')}
+        message={t("{name} 에이전트를 비활성화하시겠습니까?", { name: deleteTarget?.name ?? '' })}
         description={t('에이전트 연결이 차단되며 수집 데이터는 보존됩니다.')}
         confirmLabel={t('비활성화')}
       />

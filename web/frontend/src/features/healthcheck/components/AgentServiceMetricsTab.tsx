@@ -53,27 +53,38 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range 
   const [pointsLoading, setPointsLoading] = useState(false);
 
   useEffect(() => {
-    setNamesLoading(true);
-    api.getAgentServiceOtelMetricNames(agentId, serviceKey)
-      .then((list) => {
+    const loadNames = async () => {
+      setNamesLoading(true);
+      try {
+        const list = await api.getAgentServiceOtelMetricNames(agentId, serviceKey);
         setNames(list);
         setSelected((prev) => prev || list[0]?.metricName || '');
-      })
-      .catch(() => setNames([]))
-      .finally(() => setNamesLoading(false));
+      } catch {
+        setNames([]);
+      } finally {
+        setNamesLoading(false);
+      }
+    };
+    void loadNames();
   }, [agentId, serviceKey, refreshKey]);
 
   useEffect(() => {
     if (!selected) return;
-    const hours = RANGE_HOURS[range];
-    setPointsLoading(true);
-    api.getAgentServiceOtelMetricPoints(agentId, serviceKey, {
-      name: selected,
-      from: new Date(Date.now() - hours * 3600 * 1000).toISOString(),
-    })
-      .then(setPoints)
-      .catch(() => setPoints([]))
-      .finally(() => setPointsLoading(false));
+    const loadPoints = async () => {
+      const hours = RANGE_HOURS[range];
+      setPointsLoading(true);
+      try {
+        setPoints(await api.getAgentServiceOtelMetricPoints(agentId, serviceKey, {
+          name: selected,
+          from: new Date(Date.now() - hours * 3600 * 1000).toISOString(),
+        }));
+      } catch {
+        setPoints([]);
+      } finally {
+        setPointsLoading(false);
+      }
+    };
+    void loadPoints();
   }, [agentId, serviceKey, selected, range, refreshKey]);
 
   const selectedMeta = names.find((n) => n.metricName === selected);

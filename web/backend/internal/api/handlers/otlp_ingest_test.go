@@ -14,6 +14,7 @@ import (
 	commonpb "go.opentelemetry.io/proto/otlp/common/v1"
 	logspb "go.opentelemetry.io/proto/otlp/logs/v1"
 	tracepb "go.opentelemetry.io/proto/otlp/trace/v1"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestSeverityNumberToLevel(t *testing.T) {
@@ -186,9 +187,9 @@ func TestSpanToAPIRequestOnlyProjectsHTTPServerSpans(t *testing.T) {
 		t.Fatalf("trace/span correlation missing: %+v", req)
 	}
 
-	clientSpan := *serverSpan
+	clientSpan := proto.Clone(serverSpan).(*tracepb.Span)
 	clientSpan.Kind = tracepb.Span_SPAN_KIND_CLIENT
-	if _, ok := spanToAPIRequest(service.ID, "", "checkout-api", service.ApiExcludePaths, &clientSpan); ok {
+	if _, ok := spanToAPIRequest(service.ID, "", "checkout-api", service.ApiExcludePaths, clientSpan); ok {
 		t.Fatal("client span should not project to api_requests")
 	}
 }

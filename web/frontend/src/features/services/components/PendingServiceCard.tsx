@@ -42,7 +42,7 @@ export function PendingServiceCard({ agent, onDelete, onViewKey, onInstall }: Pr
       <div className="rounded-lg border border-dashed border-ui-border p-3">
         <div className="mb-3 grid grid-cols-3 gap-1">
           {[
-            { label: '프로젝트', complete: true },
+            { label: '에이전트', complete: true },
             { label: 'Agent', complete: false },
             { label: '기능 확인', complete: false },
           ].map((step, index) => (
@@ -88,7 +88,7 @@ export function PendingServiceCard({ agent, onDelete, onViewKey, onInstall }: Pr
           <button
             type="button"
             onClick={() => onDelete(agent.id)}
-            aria-label="프로젝트 비활성화" title="프로젝트 비활성화"
+            aria-label="에이전트 비활성화" title="에이전트 비활성화"
             className="h-10 w-10 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
           >
             <MaterialIcon name="delete_outline" className="text-base" />

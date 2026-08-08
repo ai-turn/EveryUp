@@ -69,10 +69,14 @@ LIMIT 1`, hash).Scan(&agent.ID, &agent.Name, &agent.Version, &agent.Status, &age
 // and the AES-encrypted key (so it can be revealed later in the UI).
 func (r *AgentRepository) CreateAgent(agent models.Agent, keyHash, keyEnc string) error {
 	now := time.Now()
-	_, err := DB.Exec(`
-INSERT INTO agents(id, name, version, api_key_hash, api_key_enc, status, last_seen_at, created_at, updated_at)
-VALUES (?, ?, '', ?, ?, 'active', ?, ?, ?)`,
-		agent.ID, agent.Name, keyHash, keyEnc, now, now, now)
+	profile, err := encodeAgentProfile(agent.Profile)
+	if err != nil {
+		return err
+	}
+	_, err = DB.Exec(`
+INSERT INTO agents(id, name, version, api_key_hash, api_key_enc, status, profile_kind, profile_capabilities, last_seen_at, created_at, updated_at)
+VALUES (?, ?, '', ?, ?, 'active', ?, ?, ?, ?, ?)`,
+		agent.ID, agent.Name, keyHash, keyEnc, profile.Kind, profile.Capabilities, now, now, now)
 	return err
 }
 
@@ -80,11 +84,15 @@ VALUES (?, ?, '', ?, ?, 'active', ?, ?, ?)`,
 // short-lived installer credential. The join code itself is never persisted.
 func (r *AgentRepository) CreateAgentWithJoinCode(agent models.Agent, keyHash, keyEnc, joinCodeHash string, expiresAt time.Time) error {
 	now := time.Now()
+	profile, err := encodeAgentProfile(agent.Profile)
+	if err != nil {
+		return err
+	}
 	return Transaction(func(tx *sql.Tx) error {
 		if _, err := tx.Exec(`
-INSERT INTO agents(id, name, version, api_key_hash, api_key_enc, status, last_seen_at, created_at, updated_at)
-VALUES (?, ?, '', ?, ?, 'active', ?, ?, ?)`,
-			agent.ID, agent.Name, keyHash, keyEnc, now, now, now); err != nil {
+INSERT INTO agents(id, name, version, api_key_hash, api_key_enc, status, profile_kind, profile_capabilities, last_seen_at, created_at, updated_at)
+VALUES (?, ?, '', ?, ?, 'active', ?, ?, ?, ?, ?)`,
+			agent.ID, agent.Name, keyHash, keyEnc, profile.Kind, profile.Capabilities, now, now, now); err != nil {
 			return err
 		}
 		_, err := tx.Exec(`
@@ -118,6 +126,7 @@ type AgentInstallCredential struct {
 	AgentID   string
 	AgentName string
 	KeyEnc    string
+	Profile   models.AgentProfile
 }
 
 // ConsumeJoinCode atomically marks a valid code as used and returns the
@@ -149,14 +158,20 @@ WHERE code_hash = ?
 		}
 
 		var keyEnc sql.NullString
+		var profileCapabilities string
 		if err := tx.QueryRow(`
-SELECT a.id, a.name, a.api_key_enc
+SELECT a.id, a.name, a.api_key_enc, COALESCE(a.profile_kind, 'all-in-one'), COALESCE(a.profile_capabilities, '[]')
 FROM agent_join_codes j
 JOIN agents a ON a.id = j.agent_id
-WHERE j.code_hash = ?`, joinCodeHash).Scan(&credential.AgentID, &credential.AgentName, &keyEnc); err != nil {
+WHERE j.code_hash = ?`, joinCodeHash).Scan(&credential.AgentID, &credential.AgentName, &keyEnc, &credential.Profile.Kind, &profileCapabilities); err != nil {
 			return err
 		}
 		credential.KeyEnc = keyEnc.String
+		profile, err := decodeAgentProfile(credential.Profile.Kind, profileCapabilities)
+		if err != nil {
+			return err
+		}
+		credential.Profile = profile
 		return nil
 	})
 	return credential, err
@@ -205,7 +220,7 @@ func (r *AgentRepository) DeactivateAgent(id string) error {
 }
 
 func (r *AgentRepository) GetAllAgents() ([]models.Agent, error) {
-	rows, err := DB.Query(`SELECT id, name, version, COALESCE(status,'active'), last_seen_at, created_at, updated_at, COALESCE(capability_report, '{}') FROM agents WHERE COALESCE(status,'active') = 'active' ORDER BY last_seen_at DESC`)
+	rows, err := DB.Query(`SELECT id, name, COALESCE(project_id, ''), version, COALESCE(status,'active'), last_seen_at, created_at, updated_at, COALESCE(profile_kind, 'all-in-one'), COALESCE(profile_capabilities, '[]'), COALESCE(capability_report, '{}') FROM agents WHERE COALESCE(status,'active') = 'active' ORDER BY last_seen_at DESC`)
 	if err != nil {
 		return nil, err
 	}
@@ -213,10 +228,15 @@ func (r *AgentRepository) GetAllAgents() ([]models.Agent, error) {
 	agents := make([]models.Agent, 0)
 	for rows.Next() {
 		var agent models.Agent
-		var capabilityReport string
-		if err := rows.Scan(&agent.ID, &agent.Name, &agent.Version, &agent.Status, &agent.LastSeenAt, &agent.CreatedAt, &agent.UpdatedAt, &capabilityReport); err != nil {
+		var capabilityReport, profileCapabilities string
+		if err := rows.Scan(&agent.ID, &agent.Name, &agent.ProjectID, &agent.Version, &agent.Status, &agent.LastSeenAt, &agent.CreatedAt, &agent.UpdatedAt, &agent.Profile.Kind, &profileCapabilities, &capabilityReport); err != nil {
 			return nil, err
 		}
+		profile, err := decodeAgentProfile(agent.Profile.Kind, profileCapabilities)
+		if err != nil {
+			return nil, fmt.Errorf("decode agent %s profile: %w", agent.ID, err)
+		}
+		agent.Profile = profile
 		var report models.CapabilityReport
 		if err := json.Unmarshal([]byte(capabilityReport), &report); err != nil {
 			return nil, fmt.Errorf("decode agent %s capability report: %w", agent.ID, err)
@@ -227,6 +247,35 @@ func (r *AgentRepository) GetAllAgents() ([]models.Agent, error) {
 		agents = append(agents, agent)
 	}
 	return agents, rows.Err()
+}
+
+type storedAgentProfile struct {
+	Kind         string
+	Capabilities string
+}
+
+func encodeAgentProfile(profile models.AgentProfile) (storedAgentProfile, error) {
+	if profile.Kind == "" {
+		profile = models.DefaultAgentProfile()
+	}
+	data, err := json.Marshal(profile.Capabilities)
+	if err != nil {
+		return storedAgentProfile{}, err
+	}
+	return storedAgentProfile{Kind: profile.Kind, Capabilities: string(data)}, nil
+}
+
+func decodeAgentProfile(kind, capabilities string) (models.AgentProfile, error) {
+	if kind == "" || kind == models.AgentProfileAllInOne {
+		if capabilities == "" || capabilities == "[]" {
+			return models.DefaultAgentProfile(), nil
+		}
+	}
+	var enabled []string
+	if err := json.Unmarshal([]byte(capabilities), &enabled); err != nil {
+		return models.AgentProfile{}, err
+	}
+	return models.AgentProfile{Kind: kind, Capabilities: enabled}, nil
 }
 
 // UpdateCapabilityReport persists diagnostics independently from the service

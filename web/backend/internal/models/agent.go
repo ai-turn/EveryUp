@@ -2,6 +2,47 @@ package models
 
 import "time"
 
+const (
+	AgentProfileAllInOne = "all-in-one"
+	AgentProfileBasic    = "basic"
+	AgentProfileCustom   = "custom"
+
+	AgentCapabilityUptime         = "uptime"
+	AgentCapabilityLogs           = "logs"
+	AgentCapabilityInfrastructure = "infrastructure"
+	AgentCapabilityAPI            = "api"
+	AgentCapabilityMetrics        = "metrics"
+)
+
+// AgentProfile controls the collection privileges in the generated
+// installation bundle. Capabilities is the effective set used on re-install.
+type AgentProfile struct {
+	Kind         string   `json:"kind"`
+	Capabilities []string `json:"capabilities"`
+}
+
+func DefaultAgentProfile() AgentProfile {
+	return AgentProfile{
+		Kind: AgentProfileAllInOne,
+		Capabilities: []string{
+			AgentCapabilityUptime,
+			AgentCapabilityLogs,
+			AgentCapabilityInfrastructure,
+			AgentCapabilityAPI,
+			AgentCapabilityMetrics,
+		},
+	}
+}
+
+func (p AgentProfile) Has(capability string) bool {
+	for _, enabled := range p.Capabilities {
+		if enabled == capability {
+			return true
+		}
+	}
+	return false
+}
+
 // AgentServiceFlat joins AgentService with the parent Agent name for list views.
 type AgentServiceFlat struct {
 	AgentService
@@ -48,11 +89,13 @@ type AgentOverview struct {
 type Agent struct {
 	ID           string            `json:"id"`
 	Name         string            `json:"name"`
+	ProjectID    string            `json:"projectId,omitempty"`
 	Version      string            `json:"version,omitempty"`
 	Status       string            `json:"status"`
 	LastSeenAt   time.Time         `json:"lastSeenAt"`
 	CreatedAt    time.Time         `json:"createdAt"`
 	UpdatedAt    time.Time         `json:"updatedAt"`
+	Profile      AgentProfile      `json:"profile"`
 	Capabilities *CapabilityReport `json:"capabilities,omitempty"`
 }
 

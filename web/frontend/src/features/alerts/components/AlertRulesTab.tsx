@@ -207,7 +207,6 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
 
   useEffect(() => {
     if (addTrigger) handleAddRule();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [addTrigger]);
 
   const handleToggle = async (id: string) => {

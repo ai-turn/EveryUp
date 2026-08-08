@@ -254,19 +254,19 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
-    api
-      .getTrace(traceId)
-      .then((d) => {
-        if (!cancelled) setData(d);
-      })
-      .catch((e) => {
-        if (!cancelled) setError(getErrorMessage(e));
-      })
-      .finally(() => {
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const trace = await api.getTrace(traceId);
+        if (!cancelled) setData(trace);
+      } catch (error) {
+        if (!cancelled) setError(getErrorMessage(error));
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    };
+    void load();
     return () => {
       cancelled = true;
     };

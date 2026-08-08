@@ -1,6 +1,7 @@
 package checker
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"time"
@@ -25,9 +26,18 @@ func (c *TCPChecker) Check(config *models.TCPConfig) *CheckResult {
 	address := net.JoinHostPort(config.Host, fmt.Sprintf("%d", config.Port))
 	timeout := time.Duration(config.Timeout) * time.Millisecond
 
-	// Attempt connection
+	if err := ValidateHostForSSRF(config.Host); err != nil {
+		result.Status = models.CheckStatusFailure
+		result.ErrorMessage = fmt.Sprintf("TCP target blocked: %v", err)
+		return result
+	}
+
+	// Attempt connection through the SSRF-safe dialer, which resolves again at
+	// connect time to protect against DNS rebinding.
 	startTime := time.Now()
-	conn, err := net.DialTimeout("tcp", address, timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	conn, err := safeDialContext()(ctx, "tcp", address)
 	result.ResponseTime = int(time.Since(startTime).Milliseconds())
 
 	if err != nil {

@@ -1,10 +1,25 @@
 import { MaterialIcon } from '../../../components/common/MaterialIcon';
 import type {
-  AgentCapabilityState,
+	AgentCollectionCapability,
+	AgentCapabilityState,
   AgentCapabilityStatus,
   AgentServiceSnapshot,
   ConnectedAgent,
 } from '../../../services/api';
+
+const PROFILE_CAPABILITIES: { capability: AgentCollectionCapability; label: string }[] = [
+  { capability: 'uptime', label: '업타임' },
+  { capability: 'logs', label: '로그' },
+  { capability: 'infrastructure', label: '인프라' },
+  { capability: 'api', label: 'API' },
+  { capability: 'metrics', label: '메트릭' },
+];
+
+const profileLabels = {
+  'all-in-one': '전체 수집',
+  basic: '기본 수집',
+  custom: '사용자 지정',
+} as const;
 
 const capabilityReasons: Record<string, string> = {
   disabled: '설정에서 꺼져 있습니다',
@@ -141,18 +156,39 @@ function SetupStep({
 
 export function MonitoringSetupPanel({ agent, services, onInstall, onInstrument, compact = false, className = '' }: Props) {
   const report = agent.capabilities;
+  const profile = agent.profile;
+  const enabledCapabilities = profile?.capabilities.length
+    ? profile.capabilities
+    : PROFILE_CAPABILITIES.map((item) => item.capability);
+  const enabledCapabilityLabels = PROFILE_CAPABILITIES
+    .filter((item) => enabledCapabilities.includes(item.capability))
+    .map((item) => item.label);
+  const unavailableCapabilityLabels = PROFILE_CAPABILITIES
+    .filter((item) => !enabledCapabilities.includes(item.capability))
+    .map((item) => item.label);
   const connected = Boolean(agent.version || report || services.length > 0);
-  const basicState = combineCapabilityState([
-    report?.containerMonitoring.state,
-    report?.hostMetrics.state,
-  ]);
-  const tracingState = capabilityState(report?.automaticTracing);
+  const containerCollectionEnabled = enabledCapabilities.includes('uptime') || enabledCapabilities.includes('logs');
+  const infrastructureEnabled = enabledCapabilities.includes('infrastructure');
+  const apiEnabled = enabledCapabilities.includes('api');
+  const basicState = containerCollectionEnabled || infrastructureEnabled
+    ? combineCapabilityState([
+      ...(containerCollectionEnabled ? [report?.containerMonitoring.state] : []),
+      ...(infrastructureEnabled ? [report?.hostMetrics.state] : []),
+    ])
+    : 'optional';
+  const tracingState = apiEnabled ? capabilityState(report?.automaticTracing) : 'optional';
   const injectable = services.filter((service) => service.runtime === 'java' || service.runtime === 'node');
+  const requiredTotal = 1 + Number(containerCollectionEnabled || infrastructureEnabled) + Number(apiEnabled);
   const requiredReady = Number(connected) + Number(basicState === 'ready') + Number(tracingState === 'ready');
-  const requiredComplete = requiredReady === 3;
-  const basicProblem = [report?.containerMonitoring, report?.hostMetrics]
+  const requiredComplete = requiredReady === requiredTotal;
+  const basicProblem = [
+    ...(containerCollectionEnabled ? [report?.containerMonitoring] : []),
+    ...(infrastructureEnabled ? [report?.hostMetrics] : []),
+  ]
     .find((status) => status && status.state !== 'available');
-  const basicIssue = capabilityDetail(basicProblem);
+  const basicIssue = basicState === 'optional'
+    ? '현재 프로필에서 수집하지 않습니다.'
+    : capabilityDetail(basicProblem);
   const traceDetail = capabilityDetail(report?.automaticTracing);
   const propagation = report?.contextPropagation;
   const propagationDetail = propagation
@@ -163,6 +199,16 @@ export function MonitoringSetupPanel({ agent, services, onInstall, onInstrument,
       .filter(Boolean)
       .join(' · ')
     : '';
+  const basicTitle = containerCollectionEnabled && infrastructureEnabled
+    ? '컨테이너·로그·호스트'
+    : containerCollectionEnabled ? '컨테이너·로그'
+    : infrastructureEnabled ? '호스트 인프라'
+    : '기본 수집';
+  const basicDescription = containerCollectionEnabled && infrastructureEnabled
+    ? '컨테이너 상태, stdout 로그와 호스트 메트릭을 수집합니다.'
+    : containerCollectionEnabled ? '컨테이너 상태와 stdout 로그를 수집합니다.'
+    : infrastructureEnabled ? '호스트 CPU·메모리·디스크를 수집합니다.'
+    : '이 프로필에서는 별도 기본 수집기를 시작하지 않습니다.';
 
   return (
     <section className={`rounded-xl border border-ui-border bg-bg-surface p-4 ${className}`}>
@@ -171,13 +217,17 @@ export function MonitoringSetupPanel({ agent, services, onInstall, onInstrument,
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold text-text-base">모니터링 설정 가이드</h2>
             <span className={`rounded-full px-2 py-0.5 text-2xs font-bold ${requiredComplete ? 'bg-status-healthy/10 text-status-healthy' : 'bg-primary/10 text-primary'}`}>
-              필수 {requiredReady}/3
+              필수 {requiredReady}/{requiredTotal}
             </span>
           </div>
           <p className="mt-0.5 text-xs text-text-muted">
             {requiredComplete
               ? '기본 모니터링 설정이 완료됐습니다. 필요할 때 상세 계측을 추가하세요.'
               : '위에서 아래 순서로 확인하면 별도 앱 수정 없이 기본 모니터링을 시작할 수 있습니다.'}
+          </p>
+          <p className="mt-2 text-2xs text-text-dim">
+            수집 프로필: {profileLabels[profile?.kind ?? 'all-in-one']} · 사용 {enabledCapabilityLabels.join(', ')}
+            {unavailableCapabilityLabels.length > 0 && ` · 미선택 ${unavailableCapabilityLabels.join(', ')}`}
           </p>
         </div>
         {report && (
@@ -203,10 +253,10 @@ export function MonitoringSetupPanel({ agent, services, onInstall, onInstrument,
         />
         <SetupStep
           number={2}
-          title="컨테이너·로그·호스트"
-          description="컨테이너 상태, stdout 로그와 호스트 메트릭을 수집합니다."
+          title={basicTitle}
+          description={basicDescription}
           state={basicState}
-          stateLabel={basicState === 'ready' ? '완료' : basicState === 'issue' ? '확인 필요' : '진단 중'}
+          stateLabel={basicState === 'optional' ? '미선택' : basicState === 'ready' ? '완료' : basicState === 'issue' ? '확인 필요' : '진단 중'}
           detail={basicIssue}
         />
         <SetupStep
@@ -214,8 +264,8 @@ export function MonitoringSetupPanel({ agent, services, onInstall, onInstrument,
           title="자동 API 추적"
           description="eBPF Observer로 코드 변경 없이 지연시간과 트레이스를 수집합니다."
           state={tracingState}
-          stateLabel={capabilityLabel(report?.automaticTracing)}
-          detail={traceDetail || propagationDetail}
+          stateLabel={tracingState === 'optional' ? '미선택' : capabilityLabel(report?.automaticTracing)}
+          detail={tracingState === 'optional' ? '현재 프로필에서 수집하지 않습니다.' : traceDetail || propagationDetail}
         />
         <SetupStep
           number={4}

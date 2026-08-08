@@ -4,11 +4,21 @@ import { request } from './base';
 export interface ConnectedAgent {
   id: string;
   name: string;
+  projectId?: string;
   version?: string;
   lastSeenAt: string;
   createdAt: string;
   updatedAt: string;
+  profile?: AgentProfile;
   capabilities?: AgentCapabilityReport;
+}
+
+export type AgentProfileKind = 'all-in-one' | 'basic' | 'custom';
+export type AgentCollectionCapability = 'uptime' | 'logs' | 'infrastructure' | 'api' | 'metrics';
+
+export interface AgentProfile {
+  kind: AgentProfileKind;
+  capabilities: AgentCollectionCapability[];
 }
 
 export type AgentCapabilityState = 'available' | 'degraded' | 'unavailable';
@@ -180,10 +190,10 @@ export interface OtelServiceMetric {
 }
 
 export const agentsApi = {
-  createAgent: (name: string) =>
-    request<{ id: string; name: string } & AgentJoinCode>('/agents', {
+  createAgent: (name: string, profile: AgentProfile) =>
+    request<{ id: string; name: string; profile: AgentProfile } & AgentJoinCode>('/agents', {
       method: 'POST',
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, profile }),
     }),
   createAgentJoinCode: (agentId: string) =>
     request<AgentJoinCode>(`/agents/${agentId}/join-code`, { method: 'POST' }),

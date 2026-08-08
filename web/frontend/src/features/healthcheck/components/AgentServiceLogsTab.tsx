@@ -10,6 +10,7 @@ import { getErrorMessage } from '../../../utils/errors';
 import { activatable } from '../../../utils/a11y';
 import { toast } from 'react-hot-toast';
 import { TracePanel } from '../../traces/components/TracePanel';
+import { LEVEL_STYLE } from '../logLevelStyle';
 
 interface Props {
   agentId: string;
@@ -46,14 +47,6 @@ const LOG_LEVELS: { value: LogLevel | ''; label: string }[] = [
 ];
 
 // 라이트 텍스트는 700단계 — 600은 자기 -100 배경 위에서 red 3.95 / sky 3.57로 AA 미달이었다.
-const LEVEL_STYLE: Record<string, string> = {
-  error: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
-  warn:  'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
-  info:  'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400',
-  debug: 'bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400',
-  trace: 'bg-ui-hover text-text-muted',
-};
-
 // Levels selectable for the OTLP ingest filter (what gets stored), in severity order.
 const INGEST_LEVELS: LogLevel[] = ['error', 'warn', 'info', 'debug', 'trace'];
 

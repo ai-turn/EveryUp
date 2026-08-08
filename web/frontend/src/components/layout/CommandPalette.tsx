@@ -28,27 +28,35 @@ export function CommandPalette() {
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
+  const showPalette = () => {
+    setQuery('');
+    setIndex(0);
+    setOpen(true);
+  };
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        setOpen((v) => !v);
+        if (open) {
+          setOpen(false);
+        } else {
+          showPalette();
+        }
       }
     };
-    const onOpen = () => setOpen(true);
+    const onOpen = () => showPalette();
     window.addEventListener('keydown', onKey);
     window.addEventListener(OPEN_PALETTE_EVENT, onOpen);
     return () => {
       window.removeEventListener('keydown', onKey);
       window.removeEventListener(OPEN_PALETTE_EVENT, onOpen);
     };
-  }, []);
+  }, [open]);
 
   // Fresh data on every open; palette renders fine with none (pages only).
   useEffect(() => {
     if (!open) return;
-    setQuery('');
-    setIndex(0);
     Promise.all([api.getAgents(), api.getAllAgentServicesFlat()])
       .then(([agts, svcs]) => {
         setAgents(agts ?? []);
@@ -61,11 +69,16 @@ export function CommandPalette() {
   }, [open]);
 
   const items: PaletteItem[] = useMemo(() => [
-    { id: 'page-home', icon: 'grid_view', label: t('프로젝트'), meta: t('홈'), to: '/' },
+    { id: 'page-uptime', icon: 'monitor_heart', label: t('업타임'), to: '/uptime' },
+    { id: 'page-logs', icon: 'article', label: t('로그'), to: '/logs' },
+    { id: 'page-infrastructure', icon: 'memory', label: t('인프라'), to: '/infrastructure' },
+    { id: 'page-api', icon: 'api', label: 'API', to: '/api' },
+    { id: 'page-metrics', icon: 'monitoring', label: t('메트릭'), to: '/metrics' },
+    { id: 'page-home', icon: 'grid_view', label: t('에이전트'), meta: t('홈'), to: '/' },
     { id: 'page-alerts', icon: 'notifications', label: t('알림'), to: '/alerts' },
     { id: 'page-settings', icon: 'settings', label: t('환경설정'), to: '/settings' },
     ...agents.map((a) => ({
-      id: `proj-${a.id}`, icon: 'folder_open', label: a.name, meta: t('프로젝트'), to: `/projects/${a.id}`,
+      id: `agent-${a.id}`, icon: 'folder_open', label: a.name, meta: t('에이전트'), to: `/agents/${a.id}`,
     })),
     ...services.map((s) => ({
       id: `svc-${s.agentId}-${s.key}`, icon: '', label: s.name, meta: s.agentName,
@@ -124,7 +137,7 @@ export function CommandPalette() {
             value={query}
             onChange={(e) => { setQuery(e.target.value); setIndex(0); }}
             onKeyDown={onInputKeyDown}
-            placeholder={t('프로젝트, 서비스, 페이지 검색...')}
+            placeholder={t('에이전트, 서비스, 페이지 검색...')}
             className="flex-1 py-3.5 text-sm bg-transparent outline-none text-text-base placeholder-slate-400 dark:placeholder-text-dim-dark"
           />
           <kbd className="shrink-0 px-1.5 py-0.5 rounded border border-ui-border text-2xs font-semibold text-text-dim">

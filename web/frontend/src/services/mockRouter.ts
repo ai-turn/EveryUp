@@ -25,7 +25,11 @@ import type {
   ServiceUptimeDay,
   AgentIncident,
   AgentOverview,
+  AgentProfile,
+  AgentCollectionCapability,
   OtelServiceMetric,
+  UptimeMonitor,
+  Project,
 } from './api';
 
 // ?? Notifications ?????????????????????????????????????????????????????????????
@@ -351,6 +355,7 @@ const mockAgents: ConnectedAgent[] = [
     lastSeenAt: new Date(Date.now() - 15_000).toISOString(),
     createdAt: new Date(Date.now() - 30 * 86_400_000).toISOString(),
     updatedAt: new Date(Date.now() - 15_000).toISOString(),
+    profile: { kind: 'all-in-one', capabilities: ['uptime', 'logs', 'infrastructure', 'api', 'metrics'] },
     capabilities: {
       checkedAt: new Date(Date.now() - 20_000).toISOString(),
       host: { os: 'linux', arch: 'amd64', kernelVersion: '6.8.0', btf: true, lockdown: 'none' },
@@ -366,6 +371,7 @@ const mockAgents: ConnectedAgent[] = [
     lastSeenAt: new Date(Date.now() - 90_000).toISOString(),
     createdAt: new Date(Date.now() - 90_000).toISOString(),
     updatedAt: new Date(Date.now() - 90_000).toISOString(),
+    profile: { kind: 'basic', capabilities: ['uptime', 'logs'] },
   },
 ];
 
@@ -548,6 +554,28 @@ const mockAppSettings: AppSettings = {
   system: { collectInterval: 30 },
 };
 
+const mockUptimeMonitors: UptimeMonitor[] = [
+  {
+    id: 'uptime_mock_store', name: 'Storefront', type: 'http', isActive: true,
+    url: 'https://store.example.com/health', method: 'GET', expectedStatus: 200,
+    timeout: 5000, interval: 30, status: 'healthy', responseTime: 128,
+    uptime: 99.98, lastCheckAt: new Date(nowAgent - 18_000).toISOString(),
+  },
+  {
+    id: 'uptime_mock_redis', name: 'Redis TCP', type: 'tcp', isActive: false,
+    url: 'cache.example.com', port: 6379, method: 'GET', expectedStatus: 200,
+    timeout: 3000, interval: 60, status: 'unknown',
+  },
+];
+
+const mockProjects: Project[] = [
+  {
+    id: 'project_mock_production', name: 'Production', description: '고객 서비스',
+    agentCount: 0, monitorCount: 0,
+    createdAt: new Date(nowAgent - 7 * 86_400_000).toISOString(), updatedAt: new Date(nowAgent).toISOString(),
+  },
+];
+
 // ?? Router ????????????????????????????????????????????????????????????????????
 
 function randomHex(bytes: number): string {
@@ -556,22 +584,115 @@ function randomHex(bytes: number): string {
   return s;
 }
 
+function normalizeMockAgentProfile(profile?: Partial<AgentProfile>): AgentProfile {
+  const allCapabilities: AgentCollectionCapability[] = ['uptime', 'logs', 'infrastructure', 'api', 'metrics'];
+  if (profile?.kind === 'basic') {
+    return { kind: 'basic', capabilities: ['uptime', 'logs'] };
+  }
+  if (profile?.kind !== 'custom') {
+    return { kind: 'all-in-one', capabilities: allCapabilities };
+  }
+
+  const selected = new Set(profile.capabilities ?? []);
+  if (selected.has('logs') || selected.has('api')) selected.add('uptime');
+  return {
+    kind: 'custom',
+    capabilities: allCapabilities.filter((capability) => selected.has(capability)),
+  };
+}
+
 export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit | null): T {
   // Mutations in mock mode: mutate the in-memory fixtures so flows feel real.
   if (method !== 'GET') {
+    const projectMatch = endpoint.match(/^\/projects\/([^/]+)$/);
+    const projectMemberMatch = endpoint.match(/^\/projects\/([^/]+)\/(agents|monitors)\/([^/]+)$/);
+    if (method === 'POST' && endpoint === '/projects') {
+      const parsed = JSON.parse(typeof body === 'string' ? body : '{}') as Partial<Project>;
+      const now = new Date().toISOString();
+      const project: Project = { id: `project_mock_${Date.now()}`, name: String(parsed.name ?? '새 Project'), description: parsed.description, agentCount: 0, monitorCount: 0, createdAt: now, updatedAt: now };
+      mockProjects.push(project);
+      return project as T;
+    }
+    if (method === 'PUT' && projectMemberMatch) {
+      const [, projectId, kind, memberId] = projectMemberMatch;
+      if (kind === 'agents') {
+        const agent = mockAgents.find(({ id }) => id === memberId);
+        if (agent) agent.projectId = projectId;
+      } else {
+        const monitor = mockUptimeMonitors.find(({ id }) => id === memberId);
+        if (monitor) monitor.projectId = projectId;
+      }
+      return undefined as T;
+    }
+    if (method === 'DELETE' && projectMemberMatch) {
+      const [, , kind, memberId] = projectMemberMatch;
+      if (kind === 'agents') {
+        const agent = mockAgents.find(({ id }) => id === memberId);
+        if (agent) delete agent.projectId;
+      } else {
+        const monitor = mockUptimeMonitors.find(({ id }) => id === memberId);
+        if (monitor) delete monitor.projectId;
+      }
+      return undefined as T;
+    }
+    if (method === 'PUT' && projectMatch) {
+      const project = mockProjects.find(({ id }) => id === projectMatch[1]);
+      if (project) Object.assign(project, JSON.parse(typeof body === 'string' ? body : '{}'), { updatedAt: new Date().toISOString() });
+      return project as T;
+    }
+    if (method === 'DELETE' && projectMatch) {
+      const index = mockProjects.findIndex(({ id }) => id === projectMatch[1]);
+      if (index !== -1) mockProjects.splice(index, 1);
+      mockAgents.forEach((agent) => { if (agent.projectId === projectMatch[1]) delete agent.projectId; });
+      mockUptimeMonitors.forEach((monitor) => { if (monitor.projectId === projectMatch[1]) delete monitor.projectId; });
+      return undefined as T;
+    }
+    const uptimeMatch = endpoint.match(/^\/services\/([^/]+)$/);
+    if (method === 'POST' && endpoint === '/services') {
+      const parsed = JSON.parse(typeof body === 'string' ? body : '{}') as Partial<UptimeMonitor>;
+      const monitor: UptimeMonitor = {
+        id: `uptime_mock_${Date.now()}`,
+        name: String(parsed.name ?? '새 업타임'),
+        type: parsed.type === 'tcp' ? 'tcp' : 'http',
+        isActive: parsed.isActive ?? true,
+        url: String(parsed.url ?? parsed.host ?? ''),
+        port: parsed.port,
+        method: String(parsed.method ?? 'GET'),
+        expectedStatus: Number(parsed.expectedStatus ?? 200),
+        timeout: Number(parsed.timeout ?? 5000),
+        interval: Number(parsed.interval ?? 30),
+        status: 'unknown',
+      };
+      mockUptimeMonitors.push(monitor);
+      return monitor as T;
+    }
+    if (method === 'PUT' && uptimeMatch) {
+      const monitor = mockUptimeMonitors.find(({ id }) => id === uptimeMatch[1]);
+      if (monitor) Object.assign(monitor, JSON.parse(typeof body === 'string' ? body : '{}'));
+      return monitor as T;
+    }
+    if (method === 'DELETE' && uptimeMatch) {
+      const index = mockUptimeMonitors.findIndex(({ id }) => id === uptimeMatch[1]);
+      if (index !== -1) mockUptimeMonitors.splice(index, 1);
+      return undefined as T;
+    }
     // POST /agents — create a pending agent (no services yet → pending card)
     if (method === 'POST' && endpoint === '/agents') {
       let name = 'new-service';
+      let profile: AgentProfile;
       try {
-        const parsed = JSON.parse(typeof body === 'string' ? body : '{}');
+        const parsed = JSON.parse(typeof body === 'string' ? body : '{}') as { name?: unknown; profile?: AgentProfile };
         if (parsed?.name) name = String(parsed.name);
+        profile = normalizeMockAgentProfile(parsed.profile);
       } catch { /* keep default */ }
+      profile ??= normalizeMockAgentProfile();
       const id = `agent_mock_${Date.now()}`;
       const now = new Date().toISOString();
-      mockAgents.push({ id, name, lastSeenAt: now, createdAt: now, updatedAt: now });
+      mockAgents.push({ id, name, profile, lastSeenAt: now, createdAt: now, updatedAt: now });
       return {
         id,
         name,
+        profile,
         joinCode: `evup_join_${randomHex(16)}`,
         expiresAt: new Date(Date.now() + 10 * 60_000).toISOString(),
       } as T;
@@ -615,6 +736,12 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   }
 
   // /traces/:traceId
+  if (endpoint === '/projects') return mockProjects.map((project) => ({
+    ...project,
+    agentCount: mockAgents.filter((agent) => agent.projectId === project.id).length,
+    monitorCount: mockUptimeMonitors.filter((monitor) => monitor.projectId === project.id).length,
+  })) as T;
+  if (endpoint === '/services?type=http,tcp') return mockUptimeMonitors as T;
   const traceMatch = endpoint.match(/^\/traces\/([^/?]+)/);
   if (traceMatch) {
     const traceId = decodeURIComponent(traceMatch[1]);

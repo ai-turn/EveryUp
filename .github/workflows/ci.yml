@@ -1,0 +1,49 @@
+name: Verify
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: web/backend/go.mod
+      - name: Test and vet backend
+        working-directory: web/backend
+        run: |
+          go test ./...
+          go vet ./...
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+        with:
+          version: 10.27.0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Install, lint, and build frontend
+        run: |
+          pnpm --dir web/frontend install --frozen-lockfile
+          pnpm --dir web/frontend lint
+          pnpm --dir web/frontend build
+
+  compose-profile-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: web/backend/go.mod
+      - name: Validate generated all-in-one, basic, and custom compose profiles
+        working-directory: web/backend
+        run: go test ./internal/api/handlers -run 'TestBuildAgentComposePassesDockerComposeValidation|TestBuildAgentComposeOmitsUnselectedPrivileges|TestAgentCustomProfileControlsJoinBundle' -v

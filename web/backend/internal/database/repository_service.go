@@ -64,7 +64,7 @@ func marshalStringList(list []string) string {
 // Example: GetAll("http", "tcp") returns only http and tcp services.
 // Call with no arguments to return all services.
 func (r *ServiceRepository) GetAll(typeFilter ...string) ([]models.Service, error) {
-	query := `SELECT id, name, type, is_active, url, port, method, headers, body,
+	query := `SELECT id, name, COALESCE(project_id, ''), type, is_active, url, port, method, headers, body,
 		       expected_status, interval, timeout, tags, schedule_type, cron_expression,
 		       api_key_masked, log_level_filter, api_exclude_paths, created_at, updated_at
 		FROM services`
@@ -93,7 +93,7 @@ func (r *ServiceRepository) GetAll(typeFilter ...string) ([]models.Service, erro
 		var url, method, headers, body, tags, scheduleType, cronExpression sql.NullString
 		var port, expectedStatus, interval, timeout sql.NullInt64
 		var apiKeyMasked, logLevelFilter, apiExcludePaths sql.NullString
-		if err := rows.Scan(&s.ID, &s.Name, &s.Type, &isActive, &url, &port, &method, &headers, &body,
+		if err := rows.Scan(&s.ID, &s.Name, &s.ProjectID, &s.Type, &isActive, &url, &port, &method, &headers, &body,
 			&expectedStatus, &interval, &timeout, &tags, &scheduleType, &cronExpression,
 			&apiKeyMasked, &logLevelFilter, &apiExcludePaths, &s.CreatedAt, &s.UpdatedAt); err != nil {
 			return nil, err
@@ -154,11 +154,11 @@ func (r *ServiceRepository) GetByID(id string) (*models.Service, error) {
 	var apiKeyHash, apiKeyMasked, logLevelFilter, apiExcludePaths sql.NullString
 
 	err := DB.QueryRow(`
-		SELECT id, name, type, is_active, url, port, method, headers, body,
+		SELECT id, name, COALESCE(project_id, ''), type, is_active, url, port, method, headers, body,
 		       expected_status, interval, timeout, tags, schedule_type, cron_expression,
 		       api_key, api_key_masked, log_level_filter, api_exclude_paths, created_at, updated_at
 		FROM services WHERE id = ?
-	`, id).Scan(&s.ID, &s.Name, &s.Type, &isActive, &url, &port, &method, &headers, &body,
+	`, id).Scan(&s.ID, &s.Name, &s.ProjectID, &s.Type, &isActive, &url, &port, &method, &headers, &body,
 		&expectedStatus, &interval, &timeout, &tags, &scheduleType, &cronExpression,
 		&apiKeyHash, &apiKeyMasked, &logLevelFilter, &apiExcludePaths, &s.CreatedAt, &s.UpdatedAt)
 
@@ -299,6 +299,23 @@ func (r *ServiceRepository) Update(s *models.Service) error {
 		s.ExpectedStatus, s.Interval, s.Timeout, string(tagsJSON), scheduleType, s.CronExpression,
 		marshalLogLevelFilter(s.LogLevelFilter), marshalStringList(s.ApiExcludePaths), s.UpdatedAt, s.ID)
 	return err
+}
+
+// Delete removes a configured monitor and its persisted check history through
+// the services foreign-key relationship.
+func (r *ServiceRepository) Delete(id string) error {
+	result, err := DB.Exec(`DELETE FROM services WHERE id = ?`, id)
+	if err != nil {
+		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
 }
 
 // GetActive returns all active services (is_active = 1)
