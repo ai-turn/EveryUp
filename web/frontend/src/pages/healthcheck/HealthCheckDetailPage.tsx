@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslate } from '@tolgee/react';
 import { useTranslation } from 'react-i18next';
 import { Button, MaterialIcon } from '../../components/common';
@@ -9,6 +9,7 @@ import { AgentHealthCheckDetailView } from '../../features/healthcheck/component
 
 export function HealthCheckDetailPage() {
   const { agentId, key } = useParams<{ agentId: string; key: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t } = useTranslate();
   const { t: tc } = useTranslation('common');
@@ -16,6 +17,10 @@ export function HealthCheckDetailPage() {
   const [service, setService] = useState<AgentServiceFlat | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const selectedTab = searchParams.get('tab');
+  const initialTab = selectedTab === 'logs' || selectedTab === 'requests' || selectedTab === 'metrics' || selectedTab === 'infra'
+    ? selectedTab
+    : 'health';
 
   const fetchService = useCallback(async () => {
     if (!agentId || !key) return;
@@ -69,6 +74,7 @@ export function HealthCheckDetailPage() {
       serviceKey={decodeURIComponent(key!)}
       refreshKey={refreshKey}
       onRefresh={refresh}
+      initialTab={initialTab}
     />
   );
 }

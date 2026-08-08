@@ -29,6 +29,10 @@ export async function request<T>(endpoint: string, options?: RequestInit): Promi
     throw new ApiError('Unauthorized', 'UNAUTHORIZED', 401);
   }
 
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   // Parse JSON regardless of HTTP status to extract structured error codes
   let json: ApiResponse<T>;
   try {

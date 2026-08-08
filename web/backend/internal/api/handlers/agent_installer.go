@@ -11,6 +11,7 @@ import (
 	"time"
 
 	appcrypto "github.com/aiturn/everyup/internal/crypto"
+	"github.com/aiturn/everyup/internal/models"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -85,7 +86,7 @@ func (h *AgentHandler) Join(c *fiber.Ctx) error {
 
 	c.Set(fiber.HeaderContentType, "application/yaml; charset=utf-8")
 	c.Set(fiber.HeaderCacheControl, "no-store")
-	return c.SendString(buildAgentCompose(baseURL, credential.AgentName, apiKey))
+	return c.SendString(buildAgentCompose(baseURL, credential.AgentName, apiKey, credential.Profile))
 }
 
 func invalidJoinCode(c *fiber.Ctx) error {
@@ -110,14 +111,28 @@ func normalizeAgentBaseURL(value string) (string, error) {
 	return value, nil
 }
 
-func buildAgentCompose(baseURL, agentName, apiKey string) string {
+func buildAgentCompose(baseURL, agentName, apiKey string, profile models.AgentProfile) string {
+	if profile.Kind == "" {
+		profile = models.DefaultAgentProfile()
+	}
 	quote := strconv.Quote
-	return `services:
+	docker := profile.Has(models.AgentCapabilityUptime)
+	hostfs := profile.Has(models.AgentCapabilityInfrastructure) || profile.Has(models.AgentCapabilityAPI)
+	gateway := profile.Has(models.AgentCapabilityAPI) || profile.Has(models.AgentCapabilityMetrics)
+	automaticTracing := profile.Has(models.AgentCapabilityAPI)
+
+	var compose strings.Builder
+	compose.WriteString(`services:
   everyup-agent:
     image: aiturn/everyup-agent:latest
     container_name: everyup-agent
-    group_add:
+`)
+	if docker {
+		compose.WriteString(`    group_add:
       - "${EVERYUP_DOCKER_GID:-0}"
+`)
+	}
+	compose.WriteString(`
     networks:
       everyup-monitoring: {}
     environment:
@@ -126,13 +141,27 @@ func buildAgentCompose(baseURL, agentName, apiKey string) string {
       EVERYUP_WEB_BASE_URL: ` + quote(baseURL) + `
       EVERYUP_AGENT_API_KEY: ` + quote(apiKey) + `
       EVERYUP_EXCLUDE: "everyup-ebpf"
+      EVERYUP_DOCKER_DISCOVERY_ENABLED: "` + strconv.FormatBool(docker) + `"
+      EVERYUP_DOCKER_LOGS_ENABLED: "` + strconv.FormatBool(profile.Has(models.AgentCapabilityLogs)) + `"
+      EVERYUP_HOST_METRICS_ENABLED: "` + strconv.FormatBool(profile.Has(models.AgentCapabilityInfrastructure)) + `"
+      EVERYUP_TELEMETRY_GATEWAY_ENABLED: "` + strconv.FormatBool(gateway) + `"
       EVERYUP_EBPF_CONTEXT_PROPAGATION_ENABLED: "false"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /:/hostfs:ro
-      - everyup-agent-data:/data
+`)
+	if docker {
+		compose.WriteString(`      - /var/run/docker.sock:/var/run/docker.sock:ro
+`)
+	}
+	if hostfs {
+		compose.WriteString(`      - /:/hostfs:ro
+`)
+	}
+	compose.WriteString(`      - everyup-agent-data:/data
     restart: unless-stopped
+`)
 
+	if automaticTracing {
+		compose.WriteString(`
   everyup-ebpf:
     image: otel/ebpf-instrument:v0.7.1
     container_name: everyup-ebpf
@@ -154,14 +183,19 @@ func buildAgentCompose(baseURL, agentName, apiKey string) string {
       OTEL_EXPORTER_OTLP_TRACES_PROTOCOL: "http/protobuf"
       OTEL_RESOURCE_ATTRIBUTES: "everyup.source=ebpf"
 
-volumes:
+`)
+	}
+
+	compose.WriteString(`volumes:
   everyup-agent-data:
     driver: local
 
 networks:
   everyup-monitoring:
     name: everyup-monitoring
-
+`)
+	if automaticTracing {
+		compose.WriteString(`
 configs:
   everyup-obi-config:
     content: |
@@ -172,7 +206,9 @@ configs:
         exclude_instrument:
           - exe_path: "*everyup-agent*"
         exclude_otel_instrumented_services: true
-`
+`)
+	}
+	return compose.String()
 }
 
 const agentInstallerScript = `#!/bin/sh

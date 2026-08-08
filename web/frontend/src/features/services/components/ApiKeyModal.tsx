@@ -46,7 +46,7 @@ export function ApiKeyModal({ agentId, agentName, onClose, onRotated }: Props) {
   };
 
   const handleRotate = async () => {
-    if (!confirm(`'${agentName}' 프로젝트의 API 키를 재발급하시겠습니까?\n기존 키는 즉시 무효화되며, 에이전트 설정을 새 키로 교체해야 합니다.`)) return;
+    if (!confirm(`'${agentName}' 에이전트의 API 키를 재발급하시겠습니까?\n기존 키는 즉시 무효화되며, 에이전트 설정을 새 키로 교체해야 합니다.`)) return;
     setRotating(true);
     try {
       const res = await api.rotateAgentKey(agentId);
@@ -105,7 +105,7 @@ export function ApiKeyModal({ agentId, agentName, onClose, onRotated }: Props) {
             <div className="flex items-start gap-3 p-4 rounded-xl bg-ui-hover-soft border border-ui-border">
               <MaterialIcon name="info" className="text-amber-500 text-lg shrink-0 mt-0.5" />
               <p className="text-sm text-text-muted">
-                이 프로젝트는 키 저장 기능 이전에 생성되어 기존 키를 조회할 수 없습니다. 재발급하면 새 키가 발급됩니다.
+                이 에이전트는 키 저장 기능 이전에 생성되어 기존 키를 조회할 수 없습니다. 재발급하면 새 키가 발급됩니다.
               </p>
             </div>
           )}

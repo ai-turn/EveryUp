@@ -1,46 +1,33 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useTranslate } from '@tolgee/react';
 import { MaterialIcon } from '../common';
 
-// Same icons as the desktop sidebar (grid_view/notifications/settings).
-const navItems: { icon: string; labelKey: string; href: string }[] = [
-  { icon: 'grid_view',     labelKey: 'nav.services', href: '/' },
-  { icon: 'notifications', labelKey: 'nav.alerts',   href: '/alerts' },
-  { icon: 'settings',      labelKey: 'nav.settings', href: '/settings' },
+const navItems = [
+  { icon: 'grid_view', label: '에이전트', href: '/' },
+  { icon: 'monitor_heart', label: '업타임', href: '/uptime' },
+  { icon: 'article', label: '로그', href: '/logs' },
+  { icon: 'memory', label: '인프라', href: '/infrastructure' },
+  { icon: 'apps', label: '더보기', href: '/more' },
 ];
 
 export function BottomNavMobile() {
   const location = useLocation();
-  const { t } = useTranslation('common');
+  const { t } = useTranslate();
 
   function isActive(href: string) {
-    return href === '/'
-      ? location.pathname === '/' || location.pathname.startsWith('/services')
-      : location.pathname.startsWith(href);
+    if (href === '/') {
+      return location.pathname === '/' || location.pathname.startsWith('/agents') || location.pathname.startsWith('/projects') || location.pathname.startsWith('/services');
+    }
+    return location.pathname.startsWith(href);
   }
 
   return (
-    <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-bg-surface border-t border-ui-border flex items-stretch"
-      style={{ height: 'calc(4rem + env(safe-area-inset-bottom, 0px))', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-    >
+    <nav className="fixed bottom-0 left-0 right-0 z-30 flex items-stretch border-t border-ui-border bg-bg-surface lg:hidden" style={{ height: 'calc(4rem + env(safe-area-inset-bottom, 0px))', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
       {navItems.map((item) => (
-        <Link
-          key={item.href}
-          to={item.href}
-          className={`
-            flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors relative
-            ${isActive(item.href)
-              ? 'text-primary'
-              : 'text-text-dim'
-            }
-          `}
-        >
+        <Link key={item.href} to={item.href} className={`relative flex flex-1 flex-col items-center justify-center gap-0.5 transition-colors ${isActive(item.href) ? 'text-primary' : 'text-text-dim'}`}>
           <MaterialIcon name={item.icon} className="text-2xl" />
-          <span className="text-sm font-medium whitespace-nowrap">{t(item.labelKey)}</span>
-          {isActive(item.href) && (
-            <span className="absolute top-1.5 w-1 h-1 rounded-full bg-primary" />
-          )}
+          <span className="whitespace-nowrap text-sm font-medium">{t(item.label)}</span>
+          {isActive(item.href) && <span className="absolute top-1.5 h-1 w-1 rounded-full bg-primary" />}
         </Link>
       ))}
     </nav>

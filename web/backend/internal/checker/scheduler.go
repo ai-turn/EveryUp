@@ -140,6 +140,18 @@ func (s *Scheduler) AddService(svc *models.Service) {
 	go s.checkService(svc)
 }
 
+// RemoveService removes an in-memory schedule after its persisted monitor is
+// paused or deleted. A running check remains safe because it re-reads the row.
+func (s *Scheduler) RemoveService(serviceID string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if entryID, ok := s.entries[serviceID]; ok {
+		s.cron.Remove(entryID)
+		delete(s.entries, serviceID)
+	}
+	delete(s.failureCounts, serviceID)
+}
+
 // syncServices syncs config-file services to the database on startup
 func (s *Scheduler) syncServices(services []config.ServiceConfig) error {
 	for _, svc := range services {

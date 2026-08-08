@@ -23,7 +23,7 @@ export interface ServiceTabsProps {
   showServiceName?: boolean;
 }
 
-type DetailTab = 'health' | 'logs' | 'requests' | 'metrics' | 'infra';
+export type DetailTab = 'health' | 'logs' | 'requests' | 'metrics' | 'infra';
 
 const TABS: { key: DetailTab; labelKo: string }[] = [
   { key: 'health',   labelKo: '헬스체크' },
@@ -76,8 +76,8 @@ function TabContent({ tab, service, agentId, serviceKey, refreshKey, range, show
 // Tab bar + content for a single agent service. Reused by the full-page service
 // detail and the project master-detail view. Resets to the health tab when the
 // selected service changes (key={serviceKey} at the call site).
-export function AgentServiceTabs(props: ServiceTabsProps) {
-  const [activeTab, setActiveTab] = useState<DetailTab>('health');
+export function AgentServiceTabs({ initialTab = 'health', ...props }: ServiceTabsProps & { initialTab?: DetailTab }) {
+  const [activeTab, setActiveTab] = useState<DetailTab>(initialTab);
   return (
     <>
       <ServiceIncidentBanner service={props.service} onInvestigate={() => setActiveTab('logs')} />

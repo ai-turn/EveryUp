@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/aiturn/everyup/internal/models"
 )
 
 func TestNewAgentJoinCodeShapeAndTTL(t *testing.T) {
@@ -28,7 +30,7 @@ func TestBuildAgentComposePassesDockerComposeValidation(t *testing.T) {
 	if err != nil {
 		t.Skip("docker CLI is not installed")
 	}
-	compose := buildAgentCompose("https://everyup.example.com", "edge \"east\"", "evup_svc_test")
+	compose := buildAgentCompose("https://everyup.example.com", "edge \"east\"", "evup_svc_test", models.DefaultAgentProfile())
 	path := filepath.Join(t.TempDir(), "compose.yaml")
 	if err := os.WriteFile(path, []byte(compose), 0o600); err != nil {
 		t.Fatal(err)
@@ -41,7 +43,7 @@ func TestBuildAgentComposePassesDockerComposeValidation(t *testing.T) {
 }
 
 func TestAgentBundleIncludesSharedMonitoringNetwork(t *testing.T) {
-	compose := buildAgentCompose("https://everyup.example.com", "edge", "evup_svc_test")
+	compose := buildAgentCompose("https://everyup.example.com", "edge", "evup_svc_test", models.DefaultAgentProfile())
 	for _, expected := range []string{
 		"everyup-monitoring:",
 		"name: everyup-monitoring",
@@ -53,6 +55,50 @@ func TestAgentBundleIncludesSharedMonitoringNetwork(t *testing.T) {
 	}
 	if !strings.Contains(agentInstallerScript, "/usr/local/bin/everyup-otel") {
 		t.Fatal("installer does not install the OTel helper")
+	}
+}
+
+func TestBuildAgentComposeOmitsUnselectedPrivileges(t *testing.T) {
+	profile := models.AgentProfile{
+		Kind:         models.AgentProfileBasic,
+		Capabilities: []string{models.AgentCapabilityUptime, models.AgentCapabilityLogs},
+	}
+	compose := buildAgentCompose("https://everyup.example.com", "edge", "evup_svc_test", profile)
+	for _, unwanted := range []string{"everyup-ebpf:", "privileged: true", "pid: \"host\"", "- /:/hostfs:ro"} {
+		if strings.Contains(compose, unwanted) {
+			t.Fatalf("basic Compose must omit %q", unwanted)
+		}
+	}
+	for _, expected := range []string{
+		"EVERYUP_DOCKER_DISCOVERY_ENABLED: \"true\"",
+		"EVERYUP_DOCKER_LOGS_ENABLED: \"true\"",
+		"EVERYUP_HOST_METRICS_ENABLED: \"false\"",
+		"EVERYUP_TELEMETRY_GATEWAY_ENABLED: \"false\"",
+		"group_add:",
+		"- /var/run/docker.sock:/var/run/docker.sock:ro",
+	} {
+		if !strings.Contains(compose, expected) {
+			t.Fatalf("basic Compose is missing %q", expected)
+		}
+	}
+}
+
+func TestNormalizeAgentProfileAddsDockerDiscoveryPrerequisites(t *testing.T) {
+	profile, err := normalizeAgentProfile(models.AgentProfile{
+		Kind:         models.AgentProfileCustom,
+		Capabilities: []string{models.AgentCapabilityLogs, models.AgentCapabilityMetrics},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !profile.Has(models.AgentCapabilityUptime) || !profile.Has(models.AgentCapabilityLogs) || !profile.Has(models.AgentCapabilityMetrics) {
+		t.Fatalf("unexpected effective profile: %+v", profile)
+	}
+	if profile.Has(models.AgentCapabilityInfrastructure) || profile.Has(models.AgentCapabilityAPI) {
+		t.Fatalf("profile gained unrelated capabilities: %+v", profile)
+	}
+	if _, err := normalizeAgentProfile(models.AgentProfile{Kind: models.AgentProfileCustom}); err == nil {
+		t.Fatal("empty custom profile must be rejected")
 	}
 }
 

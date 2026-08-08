@@ -37,6 +37,7 @@ const (
 type Service struct {
 	ID             string            `json:"id"`
 	Name           string            `json:"name"`
+	ProjectID      string            `json:"projectId,omitempty"`
 	Type           ServiceType       `json:"type"`
 	IsActive       bool              `json:"isActive"`
 	URL            string            `json:"url,omitempty"`
@@ -52,7 +53,7 @@ type Service struct {
 	UpdatedAt      time.Time         `json:"updatedAt"`
 
 	// Schedule configuration
-	ScheduleType   ScheduleType `json:"scheduleType"`           // "interval" or "cron"
+	ScheduleType   ScheduleType `json:"scheduleType"`             // "interval" or "cron"
 	CronExpression string       `json:"cronExpression,omitempty"` // For cron type
 
 	// API Key for log ingestion
@@ -180,26 +181,26 @@ func (r *ServiceCreateRequest) ToService() *Service {
 
 	now := time.Now()
 	return &Service{
-		ID:             r.ID,
-		Name:           r.Name,
-		Type:           r.Type,
-		IsActive:       isActive,
-		URL:            url,
-		Port:           r.Port,
-		Method:         method,
-		Headers:        r.Headers,
-		Body:           r.Body,
-		ExpectedStatus: expectedStatus,
-		Timeout:        timeout,
-		Interval:       interval,
-		Tags:           r.Tags,
-		ScheduleType:   scheduleType,
-		CronExpression: r.CronExpression,
+		ID:              r.ID,
+		Name:            r.Name,
+		Type:            r.Type,
+		IsActive:        isActive,
+		URL:             url,
+		Port:            r.Port,
+		Method:          method,
+		Headers:         r.Headers,
+		Body:            r.Body,
+		ExpectedStatus:  expectedStatus,
+		Timeout:         timeout,
+		Interval:        interval,
+		Tags:            r.Tags,
+		ScheduleType:    scheduleType,
+		CronExpression:  r.CronExpression,
 		LogLevelFilter:  logLevelFilter,
 		ApiExcludePaths: r.ApiExcludePaths,
 		CreatedAt:       now,
-		UpdatedAt:      now,
-		Status:         StatusUnknown,
+		UpdatedAt:       now,
+		Status:          StatusUnknown,
 	}
 }
 

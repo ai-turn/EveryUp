@@ -257,6 +257,12 @@ func migrate() error {
 	if err := migrateV43(); err != nil {
 		return fmt.Errorf("v43 migration failed: %w", err)
 	}
+	if err := migrateV44(); err != nil {
+		return fmt.Errorf("v44 migration failed: %w", err)
+	}
+	if err := migrateV45(); err != nil {
+		return fmt.Errorf("v45 migration failed: %w", err)
+	}
 
 	return nil
 }
@@ -1359,6 +1365,57 @@ func migrateV43() error {
 		}
 		_, err := tx.Exec(`CREATE INDEX IF NOT EXISTS idx_agent_join_codes_agent ON agent_join_codes(agent_id, expires_at DESC)`)
 		return err
+	})
+}
+
+// migrateV44 stores the intended Agent collection scope separately from its
+// observed capability report. Existing rows remain all-in-one by default.
+// Added: 2026-08-08
+func migrateV44() error {
+	for _, statement := range []string{
+		`ALTER TABLE agents ADD COLUMN profile_kind TEXT NOT NULL DEFAULT 'all-in-one'`,
+		`ALTER TABLE agents ADD COLUMN profile_capabilities TEXT NOT NULL DEFAULT '[]'`,
+	} {
+		if _, err := DB.Exec(statement); err != nil && !strings.Contains(err.Error(), "duplicate column name") {
+			return err
+		}
+	}
+	return nil
+}
+
+// migrateV45 adds optional Project grouping. Existing Agents and configured
+// monitors remain unassigned so the migration does not silently redefine the
+// user's current topology.
+// Added: 2026-08-08
+func migrateV45() error {
+	return Transaction(func(tx *sql.Tx) error {
+		if _, err := tx.Exec(`CREATE TABLE IF NOT EXISTS projects (
+				id TEXT PRIMARY KEY,
+				name TEXT NOT NULL,
+				description TEXT NOT NULL DEFAULT '',
+				created_at DATETIME NOT NULL,
+				updated_at DATETIME NOT NULL
+			)`); err != nil {
+			return err
+		}
+		for _, statement := range []string{
+			`ALTER TABLE agents ADD COLUMN project_id TEXT`,
+			`ALTER TABLE services ADD COLUMN project_id TEXT`,
+		} {
+			if _, err := tx.Exec(statement); err != nil && !strings.Contains(err.Error(), "duplicate column name") {
+				return err
+			}
+		}
+		for _, statement := range []string{
+			`CREATE UNIQUE INDEX IF NOT EXISTS idx_projects_name ON projects(name)`,
+			`CREATE INDEX IF NOT EXISTS idx_agents_project_id ON agents(project_id)`,
+			`CREATE INDEX IF NOT EXISTS idx_services_project_id ON services(project_id)`,
+		} {
+			if _, err := tx.Exec(statement); err != nil {
+				return err
+			}
+		}
+		return nil
 	})
 }
 

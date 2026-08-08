@@ -30,7 +30,7 @@ export function LoginPage() {
         if (json.success) setNeedsSetup(json.data.needs_setup)
       })
       .catch(() => setError(t('login.error.network')))
-  }, [])
+  }, [t])
 
   // 렌더 중에 navigate()를 부르면 렌더 단계 부작용이라 내비게이션 루프를 만들 수 있다.
   // 리다이렉트를 렌더 결과로 표현하는 것이 react-router가 의도한 방식이다.

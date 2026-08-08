@@ -2,6 +2,7 @@ import { servicesApi } from './services';
 import { hostsApi } from './hosts';
 import { alertsApi } from './alerts';
 import { agentsApi } from './agents';
+import { projectsApi } from './projects';
 
 /**
  * 중앙 API 클라이언트 싱글톤.
@@ -15,6 +16,7 @@ export const api = {
   ...hostsApi,
   ...alertsApi,
   ...agentsApi,
+  ...projectsApi,
 };
 
 // Re-export all types — 기존 import 경로 유지
@@ -28,6 +30,10 @@ export type {
   TraceSpanEvent,
   TraceDetail,
   AuditEvent,
+  UptimeMonitor,
+  UptimeMonitorInput,
+  UptimeMonitorType,
+  UptimeMonitorStatus,
 } from './services';
 export type {
   SystemInfo,
@@ -72,3 +78,4 @@ export type {
   NotificationStats,
   AppSettings,
 } from './alerts';
+export type { Project, ProjectInput } from './projects';

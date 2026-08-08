@@ -15,6 +15,7 @@ export interface LinkedRequest {
 export interface LogEntry {
   id: number;
   serviceId: string;
+  agentId?: string;
   serviceName?: string;
   level: LogLevel;
   message: string;
@@ -89,9 +90,61 @@ export interface AuditEvent {
   createdAt: string;
 }
 
+export type UptimeMonitorType = 'http' | 'tcp';
+export type UptimeMonitorStatus = 'healthy' | 'unhealthy' | 'unknown';
+
+export interface UptimeMonitor {
+  id: string;
+  name: string;
+  projectId?: string;
+  type: UptimeMonitorType;
+  isActive: boolean;
+  url: string;
+  port?: number;
+  method: string;
+  expectedStatus: number;
+  timeout: number;
+  interval: number;
+  status: UptimeMonitorStatus;
+  lastCheckAt?: string;
+  uptime?: number;
+  responseTime?: number;
+}
+
+export interface UptimeMonitorInput {
+  name: string;
+  type: UptimeMonitorType;
+  url?: string;
+  host?: string;
+  port?: number;
+  method?: string;
+  expectedStatus?: number;
+  timeout?: number;
+  interval?: number;
+  isActive?: boolean;
+}
+
 // --- API ---
 
 export const servicesApi = {
+  getUptimeMonitors: () => request<UptimeMonitor[]>('/services?type=http,tcp'),
+
+  createUptimeMonitor: (data: UptimeMonitorInput) =>
+    request<UptimeMonitor>('/services', { method: 'POST', body: JSON.stringify(data) }),
+
+  updateUptimeMonitor: (id: string, data: UptimeMonitorInput) =>
+    request<UptimeMonitor>(`/services/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+
+  deleteUptimeMonitor: (id: string) =>
+    request<void>(`/services/${id}`, { method: 'DELETE' }),
+
+  getLogs: (params?: { limit?: number; level?: LogLevel }) => {
+    const query = new URLSearchParams();
+    query.set('limit', String(params?.limit ?? 100));
+    if (params?.level) query.set('level', params.level);
+    return request<LogEntry[]>(`/logs?${query}`);
+  },
+
   getTrace: (traceId: string) =>
     request<TraceDetail>(`/traces/${traceId}`),
 

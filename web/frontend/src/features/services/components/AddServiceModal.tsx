@@ -3,8 +3,17 @@ import { Button } from '../../../components/common/Button';
 import { CopyButton } from '../../../components/common/CopyButton';
 import { MaterialIcon } from '../../../components/common/MaterialIcon';
 import { Input } from '../../../components/common/Input';
+import { SegmentedControl } from '../../../components/common/SegmentedControl';
+import { Toggle } from '../../../components/common/Toggle';
 import { SCRIM_MODAL_DIALOG } from '../../../hooks/useOverlay';
-import { api, type AgentServiceSnapshot, type ConnectedAgent } from '../../../services/api';
+import {
+  api,
+  type AgentCollectionCapability,
+  type AgentProfile,
+  type AgentProfileKind,
+  type AgentServiceSnapshot,
+  type ConnectedAgent,
+} from '../../../services/api';
 import { copyTextToClipboard } from '../../../hooks/useClipboardCopy';
 import { getErrorMessage } from '../../../utils/errors';
 import { toast } from 'react-hot-toast';
@@ -13,6 +22,7 @@ import { MonitoringSetupPanel } from './MonitoringSetupPanel';
 interface Props {
   onClose: () => void;
   onCreated: () => void;
+  initialProfile?: AgentProfile;
   existingAgent?: { id: string; name: string };
   onOpenProject?: (agentId: string) => void;
   onConfigureInstrumentation?: (agentId: string) => void;
@@ -22,7 +32,7 @@ type Step = 'form' | 'install';
 
 function SetupProgress({ step, connected, diagnosed }: { step: Step; connected: boolean; diagnosed: boolean }) {
   const steps = [
-    { label: '프로젝트', complete: step === 'install', active: step === 'form' },
+    { label: '에이전트', complete: step === 'install', active: step === 'form' },
     { label: 'Agent', complete: connected, active: step === 'install' && !connected },
     { label: '기능 확인', complete: diagnosed, active: connected && !diagnosed },
     { label: '상세 계측', complete: false, active: diagnosed },
@@ -79,24 +89,58 @@ async function copyInstallCommand(text: string): Promise<boolean> {
   }
 }
 
-function ProjectForm({
+const PROFILE_OPTIONS: { label: string; value: AgentProfileKind }[] = [
+  { label: '전체', value: 'all-in-one' },
+  { label: '기본', value: 'basic' },
+  { label: '사용자 지정', value: 'custom' },
+];
+
+const CAPABILITY_OPTIONS: { capability: AgentCollectionCapability; label: string; description: string }[] = [
+  { capability: 'uptime', label: '업타임', description: 'Docker 서비스 상태와 헬스체크를 수집합니다.' },
+  { capability: 'logs', label: '로그', description: 'Docker stdout·stderr 로그를 읽습니다.' },
+  { capability: 'infrastructure', label: '인프라', description: '호스트 CPU·메모리·디스크를 수집합니다.' },
+  { capability: 'api', label: 'API', description: 'privileged eBPF Observer로 요청 추적을 수집합니다.' },
+  { capability: 'metrics', label: '메트릭', description: 'OTLP 메트릭을 수신할 수 있게 합니다.' },
+];
+
+function AgentForm({
   name,
   submitting,
+  profileKind,
+  customCapabilities,
   onNameChange,
+  onProfileKindChange,
+  onCustomCapabilitiesChange,
   onClose,
   onSubmit,
 }: {
   name: string;
   submitting: boolean;
+  profileKind: AgentProfileKind;
+  customCapabilities: AgentCollectionCapability[];
   onNameChange: (name: string) => void;
+  onProfileKindChange: (profile: AgentProfileKind) => void;
+  onCustomCapabilitiesChange: (capabilities: AgentCollectionCapability[]) => void;
   onClose: () => void;
   onSubmit: (event: React.FormEvent) => void;
 }) {
+
+  const toggleCapability = (capability: AgentCollectionCapability, enabled: boolean) => {
+    const next = new Set(customCapabilities);
+    if (enabled) next.add(capability);
+    else next.delete(capability);
+    if (capability === 'logs' || capability === 'api') next.add('uptime');
+    onCustomCapabilitiesChange(CAPABILITY_OPTIONS
+      .map((option) => option.capability)
+      .filter((option) => next.has(option)));
+  };
+  const uptimeRequired = customCapabilities.includes('logs') || customCapabilities.includes('api');
+
   return (
     <form onSubmit={onSubmit} className="p-6 space-y-5">
       <div className="space-y-1.5">
         <label htmlFor="new-project-name" className="text-sm font-medium text-text-secondary">
-          프로젝트 이름
+          에이전트 이름
         </label>
         <Input
           id="new-project-name"
@@ -109,11 +153,53 @@ function ProjectForm({
           에이전트 Docker 이미지에 설정할 이름입니다
         </p>
       </div>
+      <div className="space-y-2">
+        <div>
+          <span className="text-sm font-medium text-text-secondary">수집 범위</span>
+          <p className="mt-0.5 text-xs text-text-muted">필요한 권한과 수집기만 설치합니다.</p>
+        </div>
+        <SegmentedControl
+          options={PROFILE_OPTIONS}
+          value={profileKind}
+          onChange={onProfileKindChange}
+          size="md"
+          ariaLabel="에이전트 수집 프로필"
+        />
+        {profileKind === 'all-in-one' && (
+          <p className="text-xs text-text-muted">업타임, 로그, 인프라, API, 메트릭을 한 번에 수집합니다.</p>
+        )}
+        {profileKind === 'basic' && (
+          <p className="text-xs text-text-muted">업타임과 로그만 수집합니다. Docker socket은 읽기 전용으로 사용합니다.</p>
+        )}
+        {profileKind === 'custom' && (
+          <div role="group" aria-label="사용자 지정 수집 기능" className="divide-y divide-ui-border rounded-xl border border-ui-border">
+            {CAPABILITY_OPTIONS.map((option) => {
+              const checked = customCapabilities.includes(option.capability);
+              const disabled = option.capability === 'uptime' && uptimeRequired;
+              return (
+                <div key={option.capability} className="flex items-center gap-3 px-3 py-2.5">
+                  <Toggle
+                    checked={checked}
+                    onChange={(enabled) => toggleCapability(option.capability, enabled)}
+                    disabled={disabled}
+                    ariaLabel={`${option.label} 수집 ${checked ? '사용' : '사용 안 함'}`}
+                    title={disabled ? '로그 또는 API 추적에 필요합니다' : undefined}
+                  />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-text-base">{option.label}</p>
+                    <p className="text-xs text-text-muted">{option.description}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
       <div className="flex gap-2 pt-1">
         <Button type="button" variant="secondary" onClick={onClose} className="flex-1">
           취소
         </Button>
-        <Button type="submit" disabled={!name.trim() || submitting} className="flex-1">
+        <Button type="submit" disabled={!name.trim() || submitting || (profileKind === 'custom' && customCapabilities.length === 0)} className="flex-1">
           {submitting ? '생성 중...' : '생성'}
         </Button>
       </div>
@@ -234,12 +320,20 @@ function AgentInstallCommand({
 export function AddServiceModal({
   onClose,
   onCreated,
+  initialProfile,
   existingAgent,
   onOpenProject,
   onConfigureInstrumentation,
 }: Props) {
   const [step, setStep] = useState<Step>(existingAgent ? 'install' : 'form');
   const [name, setName] = useState(existingAgent?.name ?? '');
+  const [profileKind, setProfileKind] = useState<AgentProfileKind>(initialProfile?.kind ?? 'all-in-one');
+  const [customCapabilities, setCustomCapabilities] = useState<AgentCollectionCapability[]>(() => {
+    const capabilities = initialProfile?.capabilities ?? ['uptime'];
+    const set = new Set(capabilities);
+    if (set.has('logs') || set.has('api')) set.add('uptime');
+    return CAPABILITY_OPTIONS.map((option) => option.capability).filter((capability) => set.has(capability));
+  });
   const [submitting, setSubmitting] = useState(false);
   const [refreshingCode, setRefreshingCode] = useState(Boolean(existingAgent));
   const [agentId, setAgentId] = useState(existingAgent?.id ?? '');
@@ -320,7 +414,11 @@ export function AddServiceModal({
     if (!trimmed) return;
     setSubmitting(true);
     try {
-      const res = await api.createAgent(trimmed);
+      const profile: AgentProfile = {
+        kind: profileKind,
+        capabilities: profileKind === 'custom' ? customCapabilities : [],
+      };
+      const res = await api.createAgent(trimmed, profile);
       setAgentId(res.id);
       setJoinCode(res.joinCode);
       setExpiresAt(res.expiresAt);
@@ -364,14 +462,14 @@ export function AddServiceModal({
     <dialog
       ref={dialogRef}
       className={`fixed inset-0 z-50 m-auto h-full max-h-none w-full max-w-none items-center justify-center bg-transparent p-4 open:flex ${SCRIM_MODAL_DIALOG}`}
-      aria-label={step === 'form' ? '프로젝트 추가' : 'Agent 설치 및 모니터링 설정'}
+      aria-label={step === 'form' ? '에이전트 추가' : 'Agent 설치 및 모니터링 설정'}
       onCancel={(event) => { event.preventDefault(); onClose(); }}
     >
       <div className={`w-full ${step === 'install' ? 'max-w-2xl' : 'max-w-md'} max-h-[92vh] bg-bg-surface rounded-xl shadow-2xl border border-ui-border overflow-hidden flex flex-col`}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-ui-border-soft">
           <h2 className="text-base font-semibold text-text-base">
-            {step === 'form' ? '프로젝트 추가' : 'Agent 설치'}
+            {step === 'form' ? '에이전트 추가' : 'Agent 설치'}
           </h2>
           <button type="button" onClick={onClose} aria-label="닫기" className="p-1 rounded-lg text-text-dim hover:text-text-base transition-colors">
             <MaterialIcon name="close" className="text-xl" />
@@ -381,10 +479,14 @@ export function AddServiceModal({
         <SetupProgress step={step} connected={connected} diagnosed={diagnosed} />
 
         {step === 'form' ? (
-          <ProjectForm
+          <AgentForm
             name={name}
             submitting={submitting}
+            profileKind={profileKind}
+            customCapabilities={customCapabilities}
             onNameChange={setName}
+            onProfileKindChange={setProfileKind}
+            onCustomCapabilitiesChange={setCustomCapabilities}
             onClose={onClose}
             onSubmit={handleCreate}
           />
@@ -461,7 +563,7 @@ export function AddServiceModal({
                     onClick={() => onOpenProject ? onOpenProject(agentId) : onClose()}
                     className="flex-1"
                   >
-                    {onOpenProject ? '프로젝트 열기' : '완료'}
+                    {onOpenProject ? '에이전트 열기' : '완료'}
                   </Button>
                 </>
               ) : (

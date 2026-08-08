@@ -46,21 +46,29 @@ export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey, ran
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const r = RANGES.find((x) => x.value === range)!;
-    const from = new Date(Date.now() - r.hours * 3600 * 1000).toISOString();
-    const params = { from, bucketMins: r.bucketMins };
-    setLoading(true);
-    const fetchStats = serviceKey
-      ? api.getAgentServiceRequestStats(agentId, serviceKey, params)
-      : api.getAgentRequestStats(agentId, params);
-    fetchStats
-      .then((b) => setBuckets(b ?? []))
-      .catch(() => setBuckets([]))
-      .finally(() => setLoading(false));
-    // Non-critical — the strip hides itself when the summary is missing.
-    api.getRequestStatusSummary(agentId, serviceKey, { from })
-      .then((s) => setSummary(s))
-      .catch(() => setSummary(null));
+    const load = async () => {
+      const r = RANGES.find((x) => x.value === range)!;
+      const from = new Date(Date.now() - r.hours * 3600 * 1000).toISOString();
+      const params = { from, bucketMins: r.bucketMins };
+      setLoading(true);
+      const fetchStats = serviceKey
+        ? api.getAgentServiceRequestStats(agentId, serviceKey, params)
+        : api.getAgentRequestStats(agentId, params);
+      try {
+        setBuckets((await fetchStats) ?? []);
+      } catch {
+        setBuckets([]);
+      } finally {
+        setLoading(false);
+      }
+      // Non-critical — the strip hides itself when the summary is missing.
+      try {
+        setSummary(await api.getRequestStatusSummary(agentId, serviceKey, { from }));
+      } catch {
+        setSummary(null);
+      }
+    };
+    void load();
   }, [agentId, serviceKey, range, refreshKey]);
 
   const theme = getChartTheme();

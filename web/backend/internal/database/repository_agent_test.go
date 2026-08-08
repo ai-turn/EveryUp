@@ -15,7 +15,11 @@ func TestAgentJoinCodeCanOnlyBeConsumedOnce(t *testing.T) {
 
 	repo := database.NewAgentRepository()
 	now := time.Now().UTC().Truncate(time.Second)
-	agent := models.Agent{ID: "agent-join", Name: "join-target"}
+	agent := models.Agent{
+		ID:      "agent-join",
+		Name:    "join-target",
+		Profile: models.AgentProfile{Kind: models.AgentProfileBasic, Capabilities: []string{models.AgentCapabilityUptime, models.AgentCapabilityLogs}},
+	}
 	if err := repo.CreateAgentWithJoinCode(agent, "api-hash", "encrypted-api-key", "join-hash", now.Add(10*time.Minute)); err != nil {
 		t.Fatalf("CreateAgentWithJoinCode: %v", err)
 	}
@@ -26,6 +30,9 @@ func TestAgentJoinCodeCanOnlyBeConsumedOnce(t *testing.T) {
 	}
 	if credential.AgentID != agent.ID || credential.AgentName != agent.Name || credential.KeyEnc != "encrypted-api-key" {
 		t.Fatalf("unexpected credential: %+v", credential)
+	}
+	if credential.Profile.Kind != models.AgentProfileBasic || !credential.Profile.Has(models.AgentCapabilityLogs) || credential.Profile.Has(models.AgentCapabilityAPI) {
+		t.Fatalf("unexpected credential profile: %+v", credential.Profile)
 	}
 	if _, err := repo.ConsumeJoinCode("join-hash", now); !errors.Is(err, sql.ErrNoRows) {
 		t.Fatalf("second ConsumeJoinCode error = %v, want sql.ErrNoRows", err)
@@ -114,6 +121,9 @@ func TestAgentRepositoryRoundTrip(t *testing.T) {
 	}
 	if agents[0].Capabilities == nil || agents[0].Capabilities.Host.KernelVersion != "6.8.0" || agents[0].Capabilities.AutomaticTracing.Reason != "observer_not_running" {
 		t.Fatalf("unexpected capability report: %+v", agents[0].Capabilities)
+	}
+	if agents[0].Profile.Kind != models.AgentProfileAllInOne || !agents[0].Profile.Has(models.AgentCapabilityAPI) {
+		t.Fatalf("existing Agent must retain the default all-in-one profile: %+v", agents[0].Profile)
 	}
 	services, err := repo.GetServices(agent.ID)
 	if err != nil {
