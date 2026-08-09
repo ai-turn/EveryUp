@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslate } from '@tolgee/react';
 import { toast } from 'react-hot-toast';
 import {
@@ -7,6 +6,7 @@ import {
 } from '../../components/common';
 import { UptimeMonitorDialog } from '../../features/uptime/components/UptimeMonitorDialog';
 import { UptimeMonitorStatusBadge } from '../../features/uptime/components/UptimeMonitorStatusBadge';
+import { UptimeTargetCard } from '../../features/uptime/components/UptimeTargetCard';
 import { api, type AgentServiceFlat, type UptimeMonitor, type UptimeMonitorInput } from '../../services/api';
 import { getErrorMessage } from '../../utils/errors';
 
@@ -116,22 +116,27 @@ export function AgentServiceCapabilityPage() {
               <div className="mb-3 flex items-center gap-2"><MaterialIcon name="public" className="text-lg text-primary" /><h2 className="text-base font-bold text-text-base">{t('직접 추가한 업타임')}</h2></div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {filteredMonitors.map((monitor) => (
-                  <article key={monitor.id} className="flex min-h-36 flex-col gap-3 rounded-xl border border-ui-border bg-bg-surface p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0"><h3 className="truncate text-base font-bold text-text-base">{monitor.name}</h3><p className="mt-1 text-xs text-text-muted">{t('Agent 없이 설정한 HTTP/TCP 모니터')}</p></div>
-                      <UptimeMonitorStatusBadge monitor={monitor} />
-                    </div>
-                    <p className="truncate font-mono text-xs text-text-dim">{monitor.type === 'tcp' ? `${monitor.url}:${monitor.port}` : monitor.url}</p>
-                    <div className="mt-auto flex items-center justify-between gap-2 text-xs text-text-muted"><span>{monitor.type.toUpperCase()} · {monitor.interval}{t('초')}</span><span>{monitor.isActive ? t('활성') : t('일시정지')}</span></div>
-                    <div className="flex gap-2 border-t border-ui-border pt-3">
-                      <Link to={`/uptime/${monitor.id}`} className="flex h-8 flex-1 items-center justify-center gap-1 rounded-lg border border-ui-border bg-bg-surface px-3 text-sm font-semibold text-text-secondary transition-colors hover:bg-ui-hover">
-                        {t('상세 보기')}<MaterialIcon name="arrow_forward" className="text-sm" />
-                      </Link>
-                      <Button variant="secondary" size="sm" onClick={() => void setActive(monitor)}>{t(monitor.isActive ? '일시정지' : '재개')}</Button>
-                      <Button variant="ghost" size="sm" aria-label={t('업타임 수정')} onClick={() => setEditing(monitor)}><MaterialIcon name="edit" /></Button>
-                      <Button variant="ghost" size="sm" aria-label={t('업타임 삭제')} onClick={() => setDeleting(monitor)}><MaterialIcon name="delete" className="text-status-error" /></Button>
-                    </div>
-                  </article>
+                  <UptimeTargetCard
+                    key={monitor.id}
+                    to={`/uptime/${monitor.id}`}
+                    title={monitor.name}
+                    subtitle={t('Agent 없이 설정한 HTTP/TCP 모니터')}
+                    status={<UptimeMonitorStatusBadge monitor={monitor} />}
+                    endpoint={monitor.type === 'tcp' ? `${monitor.url}:${monitor.port}` : monitor.url}
+                    meta={(
+                      <div className="flex items-center justify-between gap-2 text-xs text-text-muted">
+                        <span>{monitor.type.toUpperCase()} · {monitor.interval}{t('초')}</span>
+                        <span>{monitor.isActive ? t('활성') : t('일시정지')}</span>
+                      </div>
+                    )}
+                    actions={(
+                      <>
+                        <Button className="flex-1" variant="secondary" size="sm" onClick={() => void setActive(monitor)}>{t(monitor.isActive ? '일시정지' : '재개')}</Button>
+                        <Button variant="ghost" size="sm" aria-label={t('업타임 수정')} onClick={() => setEditing(monitor)}><MaterialIcon name="edit" /></Button>
+                        <Button variant="ghost" size="sm" aria-label={t('업타임 삭제')} onClick={() => setDeleting(monitor)}><MaterialIcon name="delete" className="text-status-error" /></Button>
+                      </>
+                    )}
+                  />
                 ))}
               </div>
             </section>
@@ -141,11 +146,14 @@ export function AgentServiceCapabilityPage() {
               <div className="mb-3 flex items-center gap-2"><MaterialIcon name="smart_toy" className="text-lg text-primary" /><h2 className="text-base font-bold text-text-base">{t('Agent 발견 서비스')}</h2></div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {filteredAgentServices.map((service) => (
-                  <Link key={`${service.agentId}:${service.key}`} to={`/services/${service.agentId}/${encodeURIComponent(service.key)}?tab=health`} className="group flex min-h-36 flex-col gap-3 rounded-xl border border-ui-border bg-bg-surface p-4 transition-colors hover:border-primary/40 hover:bg-ui-hover-soft">
-                    <div className="flex items-start justify-between gap-3"><div className="min-w-0"><h3 className="truncate text-base font-bold text-text-base">{service.name}</h3><p className="mt-1 truncate text-xs text-text-muted">{service.agentName}</p></div><StatusBadge healthy={service.healthy} /></div>
-                    <p className="truncate font-mono text-xs text-text-dim">{service.endpoint || service.key}</p>
-                    <span className="mt-auto flex items-center gap-1 text-xs font-semibold text-primary">{t('상세 보기')}<MaterialIcon name="arrow_forward" className="text-sm transition-transform group-hover:translate-x-0.5" /></span>
-                  </Link>
+                  <UptimeTargetCard
+                    key={`${service.agentId}:${service.key}`}
+                    to={`/services/${service.agentId}/${encodeURIComponent(service.key)}?tab=health`}
+                    title={service.name}
+                    subtitle={service.agentName}
+                    status={<StatusBadge healthy={service.healthy} />}
+                    endpoint={service.endpoint || service.key}
+                  />
                 ))}
               </div>
             </section>
