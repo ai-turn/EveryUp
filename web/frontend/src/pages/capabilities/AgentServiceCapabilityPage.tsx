@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslate } from '@tolgee/react';
 import { toast } from 'react-hot-toast';
 import {
-  Button, ConfirmDialog, EmptyState, MaterialIcon, PageHeader, SearchInput, StatusBadge,
+  Button, EmptyState, MaterialIcon, PageHeader, SearchInput, StatusBadge,
 } from '../../components/common';
 import { UptimeMonitorDialog } from '../../features/uptime/components/UptimeMonitorDialog';
 import { UptimeMonitorStatusBadge } from '../../features/uptime/components/UptimeMonitorStatusBadge';
@@ -28,9 +28,7 @@ export function AgentServiceCapabilityPage() {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [editing, setEditing] = useState<UptimeMonitor | null | undefined>(undefined);
-  const [deleting, setDeleting] = useState<UptimeMonitor | null>(null);
-  const [processingDelete, setProcessingDelete] = useState(false);
+  const [adding, setAdding] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -61,8 +59,7 @@ export function AgentServiceCapabilityPage() {
     || monitor.url.toLowerCase().includes(normalizedQuery)), [monitors, normalizedQuery]);
 
   const saveMonitor = async (input: UptimeMonitorInput) => {
-    if (editing) await api.updateUptimeMonitor(editing.id, { ...input, isActive: editing.isActive });
-    else await api.createUptimeMonitor(input);
+    await api.createUptimeMonitor(input);
     await load();
   };
 
@@ -80,20 +77,6 @@ export function AgentServiceCapabilityPage() {
     }
   };
 
-  const deleteMonitor = async () => {
-    if (!deleting) return;
-    setProcessingDelete(true);
-    try {
-      await api.deleteUptimeMonitor(deleting.id);
-      setDeleting(null);
-      await load();
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    } finally {
-      setProcessingDelete(false);
-    }
-  };
-
   const empty = filteredAgentServices.length === 0 && filteredMonitors.length === 0;
 
   return (
@@ -101,7 +84,7 @@ export function AgentServiceCapabilityPage() {
       <PageHeader title={t('업타임')} subtitle={t('Agent가 발견한 서비스와 직접 추가한 업타임 모니터를 확인합니다.')}>
         <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
           <SearchInput value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t('서비스 또는 대상 검색')} aria-label={t('서비스 또는 대상 검색')} wrapperClassName="w-full sm:w-72" />
-          <Button onClick={() => setEditing(null)}><MaterialIcon name="add" />{t('업타임 추가')}</Button>
+          <Button onClick={() => setAdding(true)}><MaterialIcon name="add" />{t('업타임 추가')}</Button>
         </div>
       </PageHeader>
 
@@ -121,21 +104,9 @@ export function AgentServiceCapabilityPage() {
                     to={`/uptime/${monitor.id}`}
                     title={monitor.name}
                     subtitle={t('Agent 없이 설정한 HTTP/TCP 모니터')}
-                    status={<UptimeMonitorStatusBadge monitor={monitor} />}
+                    status={<UptimeMonitorStatusBadge monitor={monitor} onToggle={() => void setActive(monitor)} />}
                     endpoint={monitor.type === 'tcp' ? `${monitor.url}:${monitor.port}` : monitor.url}
-                    meta={(
-                      <div className="flex items-center justify-between gap-2 text-xs text-text-muted">
-                        <span>{monitor.type.toUpperCase()} · {monitor.interval}{t('초')}</span>
-                        <span>{monitor.isActive ? t('활성') : t('일시정지')}</span>
-                      </div>
-                    )}
-                    actions={(
-                      <>
-                        <Button className="flex-1" variant="secondary" size="sm" onClick={() => void setActive(monitor)}>{t(monitor.isActive ? '일시정지' : '재개')}</Button>
-                        <Button variant="ghost" size="sm" aria-label={t('업타임 수정')} onClick={() => setEditing(monitor)}><MaterialIcon name="edit" /></Button>
-                        <Button variant="ghost" size="sm" aria-label={t('업타임 삭제')} onClick={() => setDeleting(monitor)}><MaterialIcon name="delete" className="text-status-error" /></Button>
-                      </>
-                    )}
+                    meta={<p className="text-xs text-text-muted">{monitor.type.toUpperCase()} · {monitor.interval}{t('초')}</p>}
                   />
                 ))}
               </div>
@@ -161,8 +132,7 @@ export function AgentServiceCapabilityPage() {
         </div>
       )}
 
-      {editing !== undefined && <UptimeMonitorDialog monitor={editing} onClose={() => setEditing(undefined)} onSave={saveMonitor} />}
-      <ConfirmDialog isOpen={Boolean(deleting)} onClose={() => setDeleting(null)} onConfirm={() => void deleteMonitor()} title={t('업타임을 삭제할까요?')} message={t('삭제하면 수집된 상태와 체크 기록도 함께 삭제됩니다.')} confirmLabel={t('삭제')} isProcessing={processingDelete} />
+      {adding && <UptimeMonitorDialog monitor={null} onClose={() => setAdding(false)} onSave={saveMonitor} />}
     </div>
   );
 }
