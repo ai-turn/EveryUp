@@ -11,6 +11,8 @@ interface MetricRow extends OtelServiceMetric {
   service?: AgentServiceFlat;
 }
 
+const METRIC_SKELETONS = ['metric-1', 'metric-2', 'metric-3', 'metric-4', 'metric-5', 'metric-6'];
+
 function formatMetric(value: number, unit?: string) {
   const formatted = Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 2 }).format(value);
   return unit ? `${formatted} ${unit}` : formatted;
@@ -43,32 +45,38 @@ export function MetricsPage() {
       <PageHeader title={t('메트릭')} subtitle={t('메트릭 프로필 Agent의 OTLP 게이트웨이로 수집된 서비스별 대표 메트릭입니다.')}>
         <CapabilityAgentSetup capability="metrics" />
       </PageHeader>
-      {loading ? <div className="h-72 animate-pulse rounded-xl border border-ui-border bg-bg-surface" /> : error ? (
+      {loading ? <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {METRIC_SKELETONS.map((item) => <div key={item} className="h-44 animate-pulse rounded-xl border border-ui-border bg-bg-surface" />)}
+      </div> : error ? (
         <EmptyState icon="error_outline" title={t('메트릭을 불러오지 못했습니다')} description={error} />
       ) : metrics.length === 0 ? (
         <EmptyState icon="monitoring" title={t('아직 수집된 메트릭이 없습니다')} description={t('메트릭 Agent를 연결한 뒤 OTLP 게이트웨이로 메트릭을 전송하면 여기에 표시됩니다.')} />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-ui-border bg-bg-surface">
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left">
-              <thead className="border-b border-ui-border bg-ui-hover-soft"><tr>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-muted">{t('서비스')}</th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-muted">{t('Agent')}</th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-muted">{t('메트릭')}</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-text-muted">{t('현재 값')}</th>
-              </tr></thead>
-              <tbody className="divide-y divide-ui-border-soft">
-                {metrics.map((metric, index) => <tr key={`${metric.agent.id}:${metric.serviceName}:${metric.metricName}:${index}`} className="hover:bg-ui-hover-soft">
-                  <td className="px-4 py-3 text-sm font-medium text-text-base">
-                    {metric.service ? <Link to={`/services/${metric.service.agentId}/${encodeURIComponent(metric.service.key)}?tab=metrics`} className="hover:text-primary">{metric.serviceName}</Link> : metric.serviceName}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-text-muted">{metric.agent.name}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-text-secondary">{metric.metricName}</td>
-                  <td className="px-4 py-3 text-right font-mono text-sm font-semibold text-text-base">{formatMetric(metric.value, metric.unit)}</td>
-                </tr>)}
-              </tbody>
-            </table>
-          </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {metrics.map((metric) => {
+            const key = `${metric.agent.id}:${metric.serviceName}:${metric.metricName}:${metric.metricType}`;
+            const content = <>
+              <div className="flex items-start justify-between gap-3">
+                <h2 className="min-w-0 truncate text-base font-bold text-text-base group-hover:text-primary">{metric.serviceName}</h2>
+                <span className="shrink-0 text-xs text-text-muted">{metric.agent.name}</span>
+              </div>
+              <p className="mt-4 break-all font-mono text-xs text-text-muted">{metric.metricName}</p>
+              <div className="mt-6 flex items-end justify-between gap-3">
+                <span className="text-xs font-medium text-text-muted">{t('현재 값')}</span>
+                <span className="font-mono text-2xl font-bold tabular-nums text-text-base">{formatMetric(metric.value, metric.unit)}</span>
+              </div>
+            </>;
+
+            return metric.service ? (
+              <Link key={key} to={`/services/${metric.service.agentId}/${encodeURIComponent(metric.service.key)}?tab=metrics`} className="group rounded-xl border border-ui-border bg-bg-surface p-4 transition-colors hover:border-primary/40 hover:bg-ui-hover-soft">
+                {content}
+              </Link>
+            ) : (
+              <article key={key} className="rounded-xl border border-ui-border bg-bg-surface p-4">
+                {content}
+              </article>
+            );
+          })}
         </div>
       )}
     </div>
