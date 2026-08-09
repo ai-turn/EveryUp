@@ -201,6 +201,12 @@ bg-bg-surface border border-ui-border rounded-xl
 
 `shadow-sm`(선택된 세그먼트) / `shadow-lg`(오버레이·툴팁)만. 카드에는 그림자를 쓰지 않는다 — 경계는 보더가 담당한다.
 
+### 3.6 클릭 가능한 카드 hover
+
+`.card-interactive` **하나만** 쓴다 (`index.css` 정의). 2px 들어올림 + 보더 `primary/40` + 배경 `ui-hover-soft`, 150ms. 터치 기기 제외(`hover: hover`), `:active`에서 원위치, 모션 최소화 설정에서는 들어올림 생략.
+
+카드마다 `hover:-translate-y-*`·`hover:shadow-md`·`transition-all`을 직접 조합하지 않는다 — 메뉴별로 hover가 제각각이 된 원인이었다. 클릭 가능한 **행**(테이블·로그)은 카드가 아니므로 `hover:bg-ui-hover-soft` 채움만 쓴다.
+
 ---
 
 ## 4. 컴포넌트 카탈로그

@@ -50,7 +50,7 @@ export function InfrastructurePage() {
         <EmptyState icon="memory" title={t('표시할 인프라가 없습니다')} description={t('인프라 Agent를 연결하면 호스트 리소스가 여기에 표시됩니다.')} />
       ) : (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {rows.map(({ agent, info }) => <Link key={agent.id} to={`/agents/${agent.id}`} className="rounded-xl border border-ui-border bg-bg-surface p-4 transition-colors hover:border-primary/40 hover:bg-ui-hover-soft">
+          {rows.map(({ agent, info }) => <Link key={agent.id} to={`/agents/${agent.id}`} className="card-interactive rounded-xl border border-ui-border bg-bg-surface p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-2.5"><MaterialIcon name="memory" className="text-lg text-primary" /><div className="min-w-0"><h2 className="truncate text-base font-bold text-text-base">{agent.name}</h2><p className="truncate text-xs text-text-muted">{info?.hostname || t('호스트 정보 대기 중')}</p></div></div>
               <StatusBadge healthy={agentOnline(agent)} />

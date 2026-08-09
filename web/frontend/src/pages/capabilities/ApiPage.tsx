@@ -55,7 +55,7 @@ export function ApiPage() {
             const total = summary.count2xx + summary.count3xx + summary.count4xx + summary.count5xx + summary.countOther;
             const hasErrors = summary.count5xx > 0;
             return (
-              <Link key={agent.id} to={`/agents/${agent.id}`} className="group rounded-xl border border-ui-border bg-bg-surface p-4 transition-colors hover:border-primary/40 hover:bg-ui-hover-soft">
+              <Link key={agent.id} to={`/agents/${agent.id}`} className="card-interactive group rounded-xl border border-ui-border bg-bg-surface p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-2.5">
                     <MaterialIcon name="api" className="text-lg text-primary" />

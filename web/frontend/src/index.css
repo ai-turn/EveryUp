@@ -172,6 +172,35 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* 클릭 가능한 카드 hover (정본) — 상세는 DESIGN.md §3.6.
+   Tailwind hover: 변형과 동일하게 (hover: hover) 안에 둬서 터치 기기에
+   hover가 눌러붙지 않게 한다. */
+@layer utilities {
+  .card-interactive {
+    transition-property: translate, border-color, background-color;
+    transition-duration: 150ms;
+  }
+
+  @media (hover: hover) {
+    .card-interactive:hover {
+      translate: 0 -2px;
+      border-color: color-mix(in oklab, var(--color-primary) 40%, transparent);
+      background-color: var(--color-ui-hover-soft);
+    }
+  }
+
+  .card-interactive:active {
+    translate: none;
+  }
+
+  /* 모션 최소화 설정에서는 들어올림만 뺀다 — 색 변화는 hover 피드백으로 남긴다 */
+  @media (prefers-reduced-motion: reduce) {
+    .card-interactive:hover {
+      translate: none;
+    }
+  }
+}
+
 /* Safe Area: 모바일 브라우저 하단바 + BottomNav 겹침 방지 */
 @layer utilities {
   .pb-safe-bottom {

@@ -44,7 +44,7 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
     <div
       {...activatable(() => navigate(`/agents/${agentId}`))}
       aria-label={agentName}
-      className="bg-bg-surface border border-ui-border rounded-xl p-4 cursor-pointer hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 active:translate-y-0 flex flex-col gap-3"
+      className="card-interactive bg-bg-surface border border-ui-border rounded-xl p-4 cursor-pointer flex flex-col gap-3"
     >
       {/* Header: status + project name + controls */}
       <div className="flex items-start justify-between gap-2">

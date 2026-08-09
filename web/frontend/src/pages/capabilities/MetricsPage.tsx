@@ -68,7 +68,7 @@ export function MetricsPage() {
             </>;
 
             return metric.service ? (
-              <Link key={key} to={`/services/${metric.service.agentId}/${encodeURIComponent(metric.service.key)}?tab=metrics`} className="group rounded-xl border border-ui-border bg-bg-surface p-4 transition-colors hover:border-primary/40 hover:bg-ui-hover-soft">
+              <Link key={key} to={`/services/${metric.service.agentId}/${encodeURIComponent(metric.service.key)}?tab=metrics`} className="card-interactive group rounded-xl border border-ui-border bg-bg-surface p-4">
                 {content}
               </Link>
             ) : (

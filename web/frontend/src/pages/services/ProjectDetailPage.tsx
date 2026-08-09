@@ -98,7 +98,7 @@ function ServiceCard({ service, metric, onOpen }: {
     <div
       {...activatable(onOpen)}
       aria-label={service.name}
-      className="group bg-bg-surface border border-ui-border rounded-xl p-4 cursor-pointer hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 active:translate-y-0 flex flex-col gap-3"
+      className="card-interactive group bg-bg-surface border border-ui-border rounded-xl p-4 cursor-pointer flex flex-col gap-3"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">

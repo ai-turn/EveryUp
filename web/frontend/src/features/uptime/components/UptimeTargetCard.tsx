@@ -15,7 +15,7 @@ export function UptimeTargetCard({
 }: UptimeTargetCardProps) {
   return (
     // ponytail: stretched link — 카드 전체가 링크지만 상태 토글은 <a> 밖에 둔다
-    <article className="relative flex min-h-36 flex-col gap-3 rounded-xl border border-ui-border bg-bg-surface p-4 transition duration-150 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-ui-hover-soft">
+    <article className="card-interactive relative flex min-h-36 flex-col gap-3 rounded-xl border border-ui-border bg-bg-surface p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="truncate text-base font-bold text-text-base">
