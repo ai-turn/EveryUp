@@ -223,6 +223,7 @@ export function UptimeMonitorDetailPage() {
       navigate('/uptime');
     } catch (actionError) {
       toast.error(getErrorMessage(actionError));
+    } finally {
       setProcessing(false);
     }
   };
