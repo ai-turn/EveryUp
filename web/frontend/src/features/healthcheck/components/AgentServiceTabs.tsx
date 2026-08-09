@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { type GlobalTimeRange } from '../../../components/common';
 import type { AgentServiceFlat } from '../../../services/api';
 import { AgentIdentity } from './AgentIdentity';
-import { AgentRealtimeMetrics } from './AgentRealtimeMetrics';
-import { AgentCheckHistoryBar } from './AgentCheckHistoryBar';
+import { AgentUptimeOverview } from './AgentUptimeOverview';
 import { AgentResponseTimeChart } from './AgentResponseTimeChart';
 import { AgentFailureHistory } from './AgentFailureHistory';
 import { AgentServiceLogsTab } from './AgentServiceLogsTab';
@@ -57,8 +56,7 @@ function HealthContent({ service, agentId, serviceKey, refreshKey, range, showSe
   return (
     <>
       <AgentIdentity service={service} showName={showServiceName} />
-      <AgentRealtimeMetrics agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
-      <AgentCheckHistoryBar agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
+      <AgentUptimeOverview agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
       <AgentResponseTimeChart agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} range={range} />
       <AgentFailureHistory agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} />
     </>

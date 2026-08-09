@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslate } from '@tolgee/react';
 import { toast } from 'react-hot-toast';
@@ -11,6 +11,7 @@ import {
   gridProps, lineProps, tooltipCursor, xAxisProps, yAxisProps,
 } from '../../components/charts';
 import { UptimeMonitorDialog } from '../../features/uptime/components/UptimeMonitorDialog';
+import { UptimeOverview } from '../../features/uptime/components/UptimeOverview';
 import { UptimeMonitorStatusBadge } from '../../features/uptime/components/UptimeMonitorStatusBadge';
 import {
   api, type UptimeMonitor, type UptimeMonitorHistory, type UptimeMonitorInput,
@@ -67,79 +68,6 @@ function ResponseTimeChart({ metrics }: { metrics: UptimeMonitorMetric[] }) {
           </div>
         </>
       )}
-    </div>
-  );
-}
-
-function UptimeOverview({
-  summary, history, lastCheck,
-}: {
-  summary: UptimeMonitorSummary | null;
-  history: UptimeMonitorHistory | null;
-  lastCheck: string;
-}) {
-  const { t } = useTranslate();
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const slots = useMemo(() => {
-    const result: (UptimeMonitorHistory['days'][number] | null)[] = Array(HISTORY_DAYS).fill(null);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    history?.days.forEach((day) => {
-      const diff = Math.floor((today.getTime() - new Date(`${day.date}T00:00:00`).getTime()) / 86_400_000);
-      const index = HISTORY_DAYS - 1 - diff;
-      if (index >= 0 && index < HISTORY_DAYS) result[index] = day;
-    });
-    return result;
-  }, [history]);
-  const hovered = hoveredIndex === null ? null : slots[hoveredIndex];
-
-  return (
-    <div className={`p-6 ${chartCardClass}`}>
-      <div className="mb-5 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <h2 className="text-base font-bold text-text-base">{t('업타임 현황')}</h2>
-          <p className="mt-1 text-xs text-text-muted">{t('최근 30일 요약과 90일 상태 변화')}</p>
-        </div>
-        <dl className="grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-4">
-          <div>
-            <dt className="text-xs font-medium text-text-muted">{t('30일 업타임')}</dt>
-            <dd className="mt-1 font-mono text-2xl font-bold tabular-nums text-text-base">
-              {summary ? `${summary.uptime.toFixed(2)}%` : '—'}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs font-medium text-text-muted">{t('90일 업타임')}</dt>
-            <dd className="mt-1 font-mono text-base font-bold tabular-nums text-text-base">
-              {history && history.days.length > 0 ? `${history.percentage.toFixed(2)}%` : '—'}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs font-medium text-text-muted">{t('30일 실패')}</dt>
-            <dd className="mt-1 font-mono text-base font-bold tabular-nums text-text-base">
-              {summary ? t('{count}회', { count: summary.failedChecks.toLocaleString() }) : '—'}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs font-medium text-text-muted">{t('마지막 확인')}</dt>
-            <dd className="mt-1 text-sm font-semibold text-text-secondary">{lastCheck}</dd>
-          </div>
-        </dl>
-      </div>
-      <div className="flex gap-px" role="img" aria-label={t('최근 90일 일별 업타임 상태')}>
-        {slots.map((day, index) => (
-          <div
-            key={index}
-            className={`h-8 flex-1 rounded-sm ${day === null ? 'bg-ui-hover' : day.status === 'up' ? 'bg-status-healthy' : day.status === 'partial' ? 'bg-status-warn' : 'bg-status-error'}`}
-            onMouseEnter={() => setHoveredIndex(index)}
-            onMouseLeave={() => setHoveredIndex(null)}
-          />
-        ))}
-      </div>
-      <div className="mt-2 flex justify-between gap-3 text-xs text-text-dim">
-        <span className="shrink-0">{t('90일 전')}</span>
-        {hovered && <span className="truncate text-text-secondary">{hovered.date} — {hovered.uptime.toFixed(1)}% {t('업타임')}</span>}
-        <span className="shrink-0">{t('오늘')}</span>
-      </div>
     </div>
   );
 }
@@ -288,7 +216,15 @@ export function UptimeMonitorDetailPage() {
         </div>
       </div>
 
-      <UptimeOverview summary={summary} history={history} lastCheck={lastCheck} />
+      <UptimeOverview
+        stats={[
+          { label: t('30일 업타임'), value: summary ? `${summary.uptime.toFixed(2)}%` : '—' },
+          { label: t('90일 업타임'), value: history && history.days.length > 0 ? `${history.percentage.toFixed(2)}%` : '—' },
+          { label: t('30일 실패'), value: summary ? t('{count}회', { count: summary.failedChecks.toLocaleString() }) : '—' },
+          { label: t('마지막 확인'), value: lastCheck },
+        ]}
+        days={(history?.days ?? []).map((day) => ({ date: day.date, uptime: day.uptime }))}
+      />
       <ResponseTimeChart metrics={metrics} />
       <RecentChecks metrics={metrics} />
 

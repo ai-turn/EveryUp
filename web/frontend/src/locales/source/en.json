@@ -1,6 +1,10 @@
 {
   "업타임 현황": "Uptime overview",
-  "최근 30일 요약과 90일 상태 변화": "30-day summary and 90-day status history",
+  "요약 지표와 90일 상태 변화": "Summary metrics and 90-day status history",
+  "24시간 업타임": "24-hour uptime",
+  "24시간 체크": "Checks in 24 hours",
+  "90일 장애": "Incident days in 90 days",
+  "{count}일": "{count} days",
   "30일 업타임": "30-day uptime",
   "90일 업타임": "90-day uptime",
   "30일 실패": "Failures in 30 days",

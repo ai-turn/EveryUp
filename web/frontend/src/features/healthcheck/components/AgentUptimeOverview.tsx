@@ -1,28 +1,38 @@
 import { useEffect, useState } from 'react';
 import { useTranslate } from '@tolgee/react';
 import { UptimeOverview } from '../../uptime/components/UptimeOverview';
-import { api, type ServiceUptimeDay } from '../../../services/api';
+import { api, type ServiceHistoryPoint, type ServiceUptimeDay } from '../../../services/api';
 
-interface AgentCheckHistoryBarProps {
+interface AgentUptimeOverviewProps {
   agentId: string;
+  serviceKey: string;
   refreshKey?: number;
-  className?: string;
 }
 
 const HISTORY_DAYS = 90;
 
-export function AgentCheckHistoryBar({ agentId, refreshKey, className }: AgentCheckHistoryBarProps) {
+export function AgentUptimeOverview({ agentId, serviceKey, refreshKey }: AgentUptimeOverviewProps) {
   const { t } = useTranslate();
+  const [points, setPoints] = useState<ServiceHistoryPoint[]>([]);
   const [days, setDays] = useState<ServiceUptimeDay[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.getAgentUptime(agentId, HISTORY_DAYS)
-      .then(setDays)
-      .catch(() => setDays([]))
+    Promise.all([
+      api.getAgentServiceHistory(agentId, serviceKey, '24h').catch(() => []),
+      api.getAgentServiceUptime(agentId, serviceKey, HISTORY_DAYS).catch(() => []),
+    ])
+      .then(([historyPoints, uptimeDays]) => {
+        setPoints(historyPoints);
+        setDays(uptimeDays);
+      })
       .finally(() => setLoading(false));
-  }, [agentId, refreshKey]);
+  }, [agentId, serviceKey, refreshKey]);
 
+  const totalChecks = points.reduce((sum, point) => sum + point.total, 0);
+  const uptime24h = points.length > 0
+    ? points.reduce((sum, point) => sum + point.uptimePct, 0) / points.length
+    : null;
   const uptime90d = days.length > 0
     ? days.reduce((sum, day) => sum + day.uptimePct, 0) / days.length
     : null;
@@ -30,10 +40,12 @@ export function AgentCheckHistoryBar({ agentId, refreshKey, className }: AgentCh
 
   return (
     <UptimeOverview
-      className={className}
+      className="mb-8"
       loading={loading}
       stats={[
+        { label: t('24시간 업타임'), value: uptime24h === null ? '—' : `${uptime24h.toFixed(2)}%` },
         { label: t('90일 업타임'), value: uptime90d === null ? '—' : `${uptime90d.toFixed(2)}%` },
+        { label: t('24시간 체크'), value: loading ? '—' : totalChecks.toLocaleString() },
         { label: t('90일 장애'), value: loading ? '—' : t('{count}일', { count: incidentDays }) },
       ]}
       days={days.map((day) => ({
