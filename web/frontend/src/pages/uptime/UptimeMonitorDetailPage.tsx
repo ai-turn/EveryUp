@@ -20,17 +20,6 @@ import { getErrorMessage } from '../../utils/errors';
 
 const HISTORY_DAYS = 90;
 
-function KpiCard({ label, value, unit, compact = false }: { label: string; value: string; unit?: string; compact?: boolean }) {
-  return (
-    <div className="rounded-xl border border-ui-border bg-bg-surface p-4">
-      <p className="text-xs font-medium text-text-muted">{label}</p>
-      <p className={`mt-2 font-mono font-bold tabular-nums text-text-base ${compact ? 'text-base' : 'text-2xl'}`}>
-        {value}{unit && <span className="ml-1 text-sm font-semibold text-text-muted">{unit}</span>}
-      </p>
-    </div>
-  );
-}
-
 function ResponseTimeChart({ metrics }: { metrics: UptimeMonitorMetric[] }) {
   const { t } = useTranslate();
   const theme = getChartTheme();
@@ -82,7 +71,13 @@ function ResponseTimeChart({ metrics }: { metrics: UptimeMonitorMetric[] }) {
   );
 }
 
-function UptimeHistoryBar({ history }: { history: UptimeMonitorHistory | null }) {
+function UptimeOverview({
+  summary, history, lastCheck,
+}: {
+  summary: UptimeMonitorSummary | null;
+  history: UptimeMonitorHistory | null;
+  lastCheck: string;
+}) {
   const { t } = useTranslate();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const slots = useMemo(() => {
@@ -100,15 +95,37 @@ function UptimeHistoryBar({ history }: { history: UptimeMonitorHistory | null })
 
   return (
     <div className={`p-6 ${chartCardClass}`}>
-      <div className="mb-4 flex items-start justify-between gap-3">
+      <div className="mb-5 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h2 className="text-base font-bold text-text-base">{t('90일 업타임 히스토리')}</h2>
-          <p className="mt-0.5 font-mono text-sm font-semibold text-status-healthy">
-            {history && history.days.length > 0 ? `${history.percentage.toFixed(2)}%` : '—'}
-          </p>
+          <h2 className="text-base font-bold text-text-base">{t('업타임 현황')}</h2>
+          <p className="mt-1 text-xs text-text-muted">{t('최근 30일 요약과 90일 상태 변화')}</p>
         </div>
+        <dl className="grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-4">
+          <div>
+            <dt className="text-xs font-medium text-text-muted">{t('30일 업타임')}</dt>
+            <dd className="mt-1 font-mono text-2xl font-bold tabular-nums text-text-base">
+              {summary ? `${summary.uptime.toFixed(2)}%` : '—'}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs font-medium text-text-muted">{t('90일 업타임')}</dt>
+            <dd className="mt-1 font-mono text-base font-bold tabular-nums text-text-base">
+              {history && history.days.length > 0 ? `${history.percentage.toFixed(2)}%` : '—'}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs font-medium text-text-muted">{t('30일 실패')}</dt>
+            <dd className="mt-1 font-mono text-base font-bold tabular-nums text-text-base">
+              {summary ? t('{count}회', { count: summary.failedChecks.toLocaleString() }) : '—'}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs font-medium text-text-muted">{t('마지막 확인')}</dt>
+            <dd className="mt-1 text-sm font-semibold text-text-secondary">{lastCheck}</dd>
+          </div>
+        </dl>
       </div>
-      <div className="flex gap-px">
+      <div className="flex gap-px" role="img" aria-label={t('최근 90일 일별 업타임 상태')}>
         {slots.map((day, index) => (
           <div
             key={index}
@@ -271,15 +288,8 @@ export function UptimeMonitorDetailPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KpiCard label={t('30일 업타임')} value={summary ? summary.uptime.toFixed(2) : '—'} unit={summary ? '%' : undefined} />
-        <KpiCard label={t('평균 응답 시간')} value={summary ? Math.round(summary.avgResponseTime).toString() : '—'} unit={summary ? 'ms' : undefined} />
-        <KpiCard label={t('30일 실패')} value={summary ? summary.failedChecks.toLocaleString() : '—'} unit={summary ? t('회') : undefined} />
-        <KpiCard label={t('마지막 확인')} value={lastCheck} compact />
-      </div>
-
+      <UptimeOverview summary={summary} history={history} lastCheck={lastCheck} />
       <ResponseTimeChart metrics={metrics} />
-      <UptimeHistoryBar history={history} />
       <RecentChecks metrics={metrics} />
 
       {editing && <UptimeMonitorDialog monitor={monitor} onClose={() => setEditing(false)} onSave={updateMonitor} />}
