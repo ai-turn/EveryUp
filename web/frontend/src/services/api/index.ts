@@ -34,6 +34,10 @@ export type {
   UptimeMonitorInput,
   UptimeMonitorType,
   UptimeMonitorStatus,
+  UptimeMonitorMetric,
+  UptimeMonitorSummary,
+  UptimeMonitorDay,
+  UptimeMonitorHistory,
 } from './services';
 export type {
   SystemInfo,

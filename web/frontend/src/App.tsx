@@ -15,6 +15,7 @@ const NotFoundPage          = lazy(() => import('./pages/NotFoundPage').then(m =
 const LoginPage             = lazy(() => import('./pages/auth/LoginPage').then(m => ({ default: m.LoginPage })));
 const ChannelFormPage       = lazy(() => import('./pages/alerts/ChannelFormPage').then(m => ({ default: m.ChannelFormPage })));
 const AgentServiceCapabilityPage = lazy(() => import('./pages/capabilities/AgentServiceCapabilityPage').then(m => ({ default: m.AgentServiceCapabilityPage })));
+const UptimeMonitorDetailPage = lazy(() => import('./pages/uptime/UptimeMonitorDetailPage').then(m => ({ default: m.UptimeMonitorDetailPage })));
 const LogsPage              = lazy(() => import('./pages/capabilities/LogsPage').then(m => ({ default: m.LogsPage })));
 const ApiPage               = lazy(() => import('./pages/capabilities/ApiPage').then(m => ({ default: m.ApiPage })));
 const MetricsPage           = lazy(() => import('./pages/capabilities/MetricsPage').then(m => ({ default: m.MetricsPage })));
@@ -65,6 +66,7 @@ function App() {
                 <Route path="/agents" element={<Navigate to="/" replace />} />
                 <Route path="/services" element={<Navigate to="/uptime" replace />} />
                 <Route path="/uptime" element={<AgentServiceCapabilityPage />} />
+                <Route path="/uptime/:monitorId" element={<UptimeMonitorDetailPage />} />
                 <Route path="/logs" element={<LogsPage />} />
                 <Route path="/infrastructure" element={<InfrastructurePage />} />
                 <Route path="/api" element={<ApiPage />} />

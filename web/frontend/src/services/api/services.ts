@@ -124,10 +124,54 @@ export interface UptimeMonitorInput {
   isActive?: boolean;
 }
 
+export interface UptimeMonitorMetric {
+  id: number;
+  serviceId: string;
+  status: 'success' | 'failure';
+  responseTime: number;
+  statusCode?: number;
+  errorMessage?: string;
+  checkedAt: string;
+}
+
+export interface UptimeMonitorSummary {
+  serviceId: string;
+  totalChecks: number;
+  successfulChecks: number;
+  failedChecks: number;
+  uptime: number;
+  avgResponseTime: number;
+  minResponseTime: number;
+  maxResponseTime: number;
+}
+
+export interface UptimeMonitorDay {
+  date: string;
+  status: 'up' | 'partial' | 'down';
+  uptime: number;
+}
+
+export interface UptimeMonitorHistory {
+  percentage: number;
+  days: UptimeMonitorDay[];
+}
+
 // --- API ---
 
 export const servicesApi = {
   getUptimeMonitors: () => request<UptimeMonitor[]>('/services?type=http,tcp'),
+
+  getUptimeMonitor: (id: string) =>
+    request<UptimeMonitor>(`/services/${id}`),
+
+  getUptimeMonitorMetrics: (id: string, limit = 100) =>
+    request<UptimeMonitorMetric[]>(`/services/${id}/metrics?limit=${limit}`),
+
+  getUptimeMonitorSummary: (id: string, duration = '30d') =>
+    request<UptimeMonitorSummary | null>(`/services/${id}/metrics/summary?duration=${duration}`),
+
+  getUptimeMonitorHistory: (id: string, days = 90) =>
+    request<UptimeMonitorHistory>(`/services/${id}/uptime?days=${days}`),
 
   createUptimeMonitor: (data: UptimeMonitorInput) =>
     request<UptimeMonitor>('/services', { method: 'POST', body: JSON.stringify(data) }),

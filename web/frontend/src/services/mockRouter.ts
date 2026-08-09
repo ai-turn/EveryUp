@@ -29,6 +29,9 @@ import type {
   AgentCollectionCapability,
   OtelServiceMetric,
   UptimeMonitor,
+  UptimeMonitorMetric,
+  UptimeMonitorSummary,
+  UptimeMonitorHistory,
   Project,
 } from './api';
 
@@ -568,6 +571,39 @@ const mockUptimeMonitors: UptimeMonitor[] = [
   },
 ];
 
+const mockUptimeMetrics: UptimeMonitorMetric[] = Array.from({ length: 72 }, (_, index) => {
+  const failed = index === 17 || index === 18;
+  return {
+    id: 10_000 + index,
+    serviceId: 'uptime_mock_store',
+    status: failed ? 'failure' : 'success',
+    responseTime: failed ? 5000 : Math.round(105 + 28 * Math.sin(index / 5) + (index % 7) * 3),
+    statusCode: failed ? 503 : 200,
+    errorMessage: failed ? 'upstream timeout' : undefined,
+    checkedAt: new Date(nowAgent - index * 30 * 60_000).toISOString(),
+  };
+});
+
+const mockUptimeSummary: UptimeMonitorSummary = {
+  serviceId: 'uptime_mock_store',
+  totalChecks: 86_400,
+  successfulChecks: 86_383,
+  failedChecks: 17,
+  uptime: 99.98,
+  avgResponseTime: 128,
+  minResponseTime: 82,
+  maxResponseTime: 5000,
+};
+
+const mockUptimeHistory: UptimeMonitorHistory = {
+  percentage: 99.98,
+  days: Array.from({ length: 90 }, (_, index) => {
+    const date = new Date(nowAgent - index * 86_400_000).toISOString().slice(0, 10);
+    const uptime = index === 12 ? 96.4 : index === 37 ? 99.2 : 100;
+    return { date, uptime, status: uptime === 100 ? 'up' as const : uptime >= 50 ? 'partial' as const : 'down' as const };
+  }),
+};
+
 const mockProjects: Project[] = [
   {
     id: 'project_mock_production', name: 'Production', description: '고객 서비스',
@@ -742,6 +778,14 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
     monitorCount: mockUptimeMonitors.filter((monitor) => monitor.projectId === project.id).length,
   })) as T;
   if (endpoint === '/services?type=http,tcp') return mockUptimeMonitors as T;
+  const uptimeSummaryMatch = endpoint.match(/^\/services\/([^/]+)\/metrics\/summary(?:\?|$)/);
+  if (uptimeSummaryMatch) return (uptimeSummaryMatch[1] === 'uptime_mock_store' ? mockUptimeSummary : null) as T;
+  const uptimeMetricsMatch = endpoint.match(/^\/services\/([^/]+)\/metrics(?:\?|$)/);
+  if (uptimeMetricsMatch) return (uptimeMetricsMatch[1] === 'uptime_mock_store' ? mockUptimeMetrics : []) as T;
+  const uptimeHistoryMatch = endpoint.match(/^\/services\/([^/]+)\/uptime(?:\?|$)/);
+  if (uptimeHistoryMatch) return (uptimeHistoryMatch[1] === 'uptime_mock_store' ? mockUptimeHistory : { percentage: 100, days: [] }) as T;
+  const uptimeDetailMatch = endpoint.match(/^\/services\/([^/?]+)$/);
+  if (uptimeDetailMatch) return (mockUptimeMonitors.find(({ id }) => id === uptimeDetailMatch[1]) ?? null) as T;
   const traceMatch = endpoint.match(/^\/traces\/([^/?]+)/);
   if (traceMatch) {
     const traceId = decodeURIComponent(traceMatch[1]);
