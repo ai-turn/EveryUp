@@ -46,6 +46,13 @@ export type {
 } from './hosts';
 export type {
   ConnectedAgent,
+  AgentProfileKind,
+  AgentCollectionCapability,
+  AgentProfile,
+  AgentCapabilityState,
+  AgentCapabilityStatus,
+  AgentCapabilityReport,
+  AgentJoinCode,
   AgentServiceSnapshot,
   AgentServiceFlat,
   AgentEvent,

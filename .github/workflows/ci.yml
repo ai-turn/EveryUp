@@ -31,10 +31,11 @@ jobs:
           node-version: 22
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
-      - name: Install, lint, and build frontend
+      - name: Install, lint, typecheck, and build frontend
         run: |
           pnpm --dir web/frontend install --frozen-lockfile
           pnpm --dir web/frontend lint
+          pnpm --dir web/frontend typecheck
           pnpm --dir web/frontend build
 
   compose-profile-smoke:

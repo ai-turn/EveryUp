@@ -29,6 +29,7 @@ import type {
   AgentCollectionCapability,
   OtelServiceMetric,
   UptimeMonitor,
+  UptimeMonitorInput,
   UptimeMonitorMetric,
   UptimeMonitorSummary,
   UptimeMonitorHistory,
@@ -685,7 +686,7 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
     }
     const uptimeMatch = endpoint.match(/^\/services\/([^/]+)$/);
     if (method === 'POST' && endpoint === '/services') {
-      const parsed = JSON.parse(typeof body === 'string' ? body : '{}') as Partial<UptimeMonitor>;
+      const parsed = JSON.parse(typeof body === 'string' ? body : '{}') as Partial<UptimeMonitorInput>;
       const monitor: UptimeMonitor = {
         id: `uptime_mock_${Date.now()}`,
         name: String(parsed.name ?? '새 업타임'),
