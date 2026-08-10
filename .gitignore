@@ -13,12 +13,19 @@ _tmp_*
 /backend/
 /frontend/
 
-# Claude Code
+# Claude Code / agent instructions
 .claude/
 CLAUDE.md
+AGENTS.md
 
-# Agent skills
+# Agent skills (installed trees + their lock — maintainer tooling, not build deps)
 .agent/
+.agents/
+skills-lock.json
+
+# Agent-local workspace: markdown issue tracker and the conventions describing it
+.scratch/
+docs/agents/
 
 # Environment variables
 .env
