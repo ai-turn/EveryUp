@@ -25,13 +25,11 @@ interface ProjectCardProps {
   agentName: string;
   services: AgentServiceFlat[];
   overview?: AgentOverview;
-  onDeleteAgent: (id: string) => void;
-  onViewKey: (agent: ConnectedAgent) => void;
 }
 
 // One project (= one agent = one docker-compose host) rendered as a single card.
 // Clicking drills into the project detail page that lists its internal services.
-function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAgent, onViewKey }: ProjectCardProps) {
+function ProjectCard({ agentId, agent, agentName, services, overview }: ProjectCardProps) {
   const navigate = useNavigate();
   const { t } = useTranslate();
   const online = agent ? agentOnline(agent) : true;
@@ -46,36 +44,10 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
       aria-label={agentName}
       className="card-interactive bg-bg-surface border border-ui-border rounded-xl p-4 cursor-pointer flex flex-col gap-3"
     >
-      {/* Header: status + project name + controls */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <span className={`h-2.5 w-2.5 rounded-full shrink-0 mt-0.5 ${online ? 'bg-status-healthy' : 'bg-status-idle'}`} />
-          <div className="min-w-0">
-            <h3 className="text-base font-bold text-text-base truncate leading-tight">{agentName}</h3>
-            {agent?.version && (
-              <span className="text-xs text-text-dim">v{agent.version}</span>
-            )}
-          </div>
-        </div>
-        {agent && (
-          <div className="flex items-center gap-1 shrink-0">
-            <button
-              onClick={(e) => { e.stopPropagation(); onViewKey(agent); }}
-              aria-label={t('API 키 보기')} title={t('API 키 보기')}
-              className="h-10 w-10 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
-            >
-              <MaterialIcon name="key" className="text-base" />
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); onDeleteAgent(agent.id); }}
-              aria-label={t('에이전트 비활성화')}
-              title={t('에이전트 비활성화')}
-              className="h-10 w-10 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-            >
-              <MaterialIcon name="delete_outline" className="text-base" />
-            </button>
-          </div>
-        )}
+      {/* Header: status + project name */}
+      <div className="flex items-center gap-2.5 min-w-0">
+        <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${online ? 'bg-status-healthy' : 'bg-status-idle'}`} />
+        <h3 className="text-base font-bold text-text-base truncate leading-tight">{agentName}</h3>
       </div>
 
       {/* Summary: service count + health */}
@@ -123,18 +95,6 @@ function ProjectCard({ agentId, agent, agentName, services, overview, onDeleteAg
           </div>
         </div>
       )}
-
-      {/* Divider */}
-      <div className="border-t border-ui-border-soft" />
-
-      {/* Footer: online state + drill-in hint */}
-      <div className="flex items-center justify-between gap-2 text-xs text-text-dim">
-        <span>{online ? t('온라인') : t('오프라인')}</span>
-        <span className="flex items-center gap-0.5">
-          {t('서비스 보기')}
-          <MaterialIcon name="chevron_right" className="text-sm" />
-        </span>
-      </div>
     </div>
   );
 }
@@ -283,8 +243,6 @@ export function ServiceGridPage() {
               agentName={g.agentName}
               services={g.services}
               overview={overview[g.agentId]}
-              onDeleteAgent={handleDelete}
-              onViewKey={(a) => setKeyModalAgent({ id: a.id, name: a.name })}
             />
           ))}
           {visiblePending.map((agent) => (
