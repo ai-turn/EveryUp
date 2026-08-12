@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslate } from '@tolgee/react';
 import {
   ResponsiveContainer, ComposedChart, Line,
@@ -6,45 +6,50 @@ import {
 } from 'recharts';
 import type { GlobalTimeRange } from '../../../components/common';
 import {
-  ChartStatsLegend, ChartTooltip, chartCardClass, formatAxisValue, getChartTheme,
+  CHART_INITIAL_DIMENSION, ChartStatsLegend, ChartTooltip, chartCardClass, formatAxisValue, getChartTheme,
   getSeriesPalette, getSeriesDash, gridProps, lineProps, tooltipCursor, xAxisProps, yAxisProps,
 } from '../../../components/charts';
 import { api, type OtelMetricName, type OtelMetricPoint } from '../../../services/api';
 
-// 팔레트 크기와 동일 — 초과 시리즈는 표에서만 노출.
 const MAX_SERIES = 6;
-
 const RANGE_HOURS: Record<GlobalTimeRange, number> = { '1h': 1, '6h': 6, '24h': 24 };
 
-interface Props {
-  agentId: string;
-  serviceKey: string;
+type MetricSource =
+  | { kind: 'agent'; agentId: string; serviceKey: string }
+  | { kind: 'direct'; observedServiceId: string };
+
+interface CommonProps {
   refreshKey?: number;
-  /** Shared chart range from the page-header picker. */
   range: GlobalTimeRange;
 }
 
-// OTel semconv bytes unit ("By") formatted as KB/MB/GB; other units defer to
-// the shared axis formatter.
-function formatMetricValue(v: number, unit: string): string {
-  if (unit === 'By') {
-    const abs = Math.abs(v);
-    if (abs >= 1024 ** 3) return `${(v / 1024 ** 3).toFixed(1)}GB`;
-    if (abs >= 1024 ** 2) return `${(v / 1024 ** 2).toFixed(1)}MB`;
-    if (abs >= 1024) return `${(v / 1024).toFixed(1)}KB`;
-    return `${Math.round(v)}B`;
-  }
-  return formatAxisValue(v, unit);
+interface AgentProps extends CommonProps {
+  agentId: string;
+  serviceKey: string;
 }
 
-// Compact "k=v, k=v" label for one attribute set; empty attrs share one series.
+interface DirectProps extends CommonProps {
+  observedServiceId: string;
+}
+
+function formatMetricValue(value: number, unit: string): string {
+  if (unit === 'By') {
+    const absolute = Math.abs(value);
+    if (absolute >= 1024 ** 3) return `${(value / 1024 ** 3).toFixed(1)}GB`;
+    if (absolute >= 1024 ** 2) return `${(value / 1024 ** 2).toFixed(1)}MB`;
+    if (absolute >= 1024) return `${(value / 1024).toFixed(1)}KB`;
+    return `${Math.round(value)}B`;
+  }
+  return formatAxisValue(value, unit);
+}
+
 function seriesLabel(attributes?: Record<string, unknown>): string {
   const entries = Object.entries(attributes ?? {});
   if (entries.length === 0) return '';
-  return entries.map(([k, v]) => `${k.split('.').pop()}=${String(v)}`).join(', ');
+  return entries.map(([key, value]) => `${key.split('.').pop()}=${String(value)}`).join(', ');
 }
 
-export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range }: Props) {
+function ServiceMetricsPanel({ source, refreshKey, range }: CommonProps & { source: MetricSource }) {
   const { t } = useTranslate();
   const [names, setNames] = useState<OtelMetricName[]>([]);
   const [namesLoading, setNamesLoading] = useState(true);
@@ -52,32 +57,38 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range 
   const [points, setPoints] = useState<OtelMetricPoint[]>([]);
   const [pointsLoading, setPointsLoading] = useState(false);
 
+  const agentId = source.kind === 'agent' ? source.agentId : '';
+  const serviceKey = source.kind === 'agent' ? source.serviceKey : '';
+  const observedServiceId = source.kind === 'direct' ? source.observedServiceId : '';
+
   useEffect(() => {
     const loadNames = async () => {
       setNamesLoading(true);
       try {
-        const list = await api.getAgentServiceOtelMetricNames(agentId, serviceKey);
+        const list = source.kind === 'agent'
+          ? await api.getAgentServiceOtelMetricNames(agentId, serviceKey)
+          : await api.getObservedServiceOtelMetricNames(observedServiceId);
         setNames(list);
-        setSelected((prev) => prev || list[0]?.metricName || '');
+        setSelected(previous => list.some(item => item.metricName === previous) ? previous : (list[0]?.metricName ?? ''));
       } catch {
         setNames([]);
+        setSelected('');
       } finally {
         setNamesLoading(false);
       }
     };
     void loadNames();
-  }, [agentId, serviceKey, refreshKey]);
+  }, [source.kind, agentId, serviceKey, observedServiceId, refreshKey]);
 
   useEffect(() => {
     if (!selected) return;
     const loadPoints = async () => {
-      const hours = RANGE_HOURS[range];
       setPointsLoading(true);
+      const from = new Date(Date.now() - RANGE_HOURS[range] * 3_600_000).toISOString();
       try {
-        setPoints(await api.getAgentServiceOtelMetricPoints(agentId, serviceKey, {
-          name: selected,
-          from: new Date(Date.now() - hours * 3600 * 1000).toISOString(),
-        }));
+        setPoints(source.kind === 'agent'
+          ? await api.getAgentServiceOtelMetricPoints(agentId, serviceKey, { name: selected, from })
+          : await api.getObservedServiceOtelMetricPoints(observedServiceId, { name: selected, from }));
       } catch {
         setPoints([]);
       } finally {
@@ -85,30 +96,28 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range 
       }
     };
     void loadPoints();
-  }, [agentId, serviceKey, selected, range, refreshKey]);
+  }, [source.kind, agentId, serviceKey, observedServiceId, selected, range, refreshKey]);
 
-  const selectedMeta = names.find((n) => n.metricName === selected);
-
-  // Pivot points into one row per timestamp with one column per attribute set.
+  const selectedMeta = names.find(item => item.metricName === selected);
   const { chartData, seriesKeys, truncatedSeries } = useMemo(() => {
     const keys: string[] = [];
-    for (const p of points) {
-      const label = seriesLabel(p.attributes);
+    for (const point of points) {
+      const label = seriesLabel(point.attributes);
       if (!keys.includes(label)) keys.push(label);
     }
     const kept = keys.slice(0, MAX_SERIES);
     const rows = new Map<string, Record<string, number | string>>();
-    for (const p of points) {
-      const label = seriesLabel(p.attributes);
+    for (const point of points) {
+      const label = seriesLabel(point.attributes);
       if (!kept.includes(label)) continue;
-      const timeLabel = new Date(p.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const row = rows.get(p.createdAt) ?? { timeLabel };
-      row[label || 'value'] = p.value;
-      rows.set(p.createdAt, row);
+      const timeLabel = new Date(point.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const row = rows.get(point.createdAt) ?? { timeLabel };
+      row[label || 'value'] = point.value;
+      rows.set(point.createdAt, row);
     }
     return {
       chartData: [...rows.values()],
-      seriesKeys: kept.map((k) => k || 'value'),
+      seriesKeys: kept.map(key => key || 'value'),
       truncatedSeries: keys.length - kept.length,
     };
   }, [points]);
@@ -117,134 +126,106 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range 
   const seriesColors = getSeriesPalette(theme);
   const unit = selectedMeta?.unit ?? '';
 
-  if (namesLoading) {
-    return <div className="h-64 bg-ui-hover rounded-xl animate-pulse" />;
-  }
-
+  if (namesLoading) return <div className="h-64 animate-pulse rounded-xl bg-ui-hover" />;
   if (names.length === 0) {
     return (
-      <div className="p-8 rounded-xl border border-ui-border bg-bg-surface text-center">
-        <p className="text-sm text-text-muted">
-          {t('수신된 메트릭이 없습니다. 앱의 OpenTelemetry SDK가 메트릭을 보내면 여기에 표시됩니다.')}
-        </p>
+      <div className="rounded-xl border border-ui-border bg-bg-surface p-8 text-center">
+        <p className="text-sm text-text-muted">{t('수신한 메트릭이 없습니다. OpenTelemetry SDK가 메트릭을 보내면 여기에 표시됩니다.')}</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-    <div className={`p-6 ${chartCardClass}`}>
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <div className="flex items-center gap-3 min-w-0">
-          <span className="font-mono text-sm font-semibold text-text-base truncate">{selected}</span>
+      <div className={`p-6 ${chartCardClass}`}>
+        <div className="mb-6 flex min-w-0 flex-wrap items-center gap-3">
+          <span className="truncate font-mono text-sm font-semibold text-text-base">{selected}</span>
           {selectedMeta && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-ui-hover text-text-muted shrink-0">
+            <span className="shrink-0 rounded-full bg-ui-hover px-2 py-0.5 text-xs text-text-muted">
               {selectedMeta.metricType}{unit ? ` · ${unit}` : ''}
             </span>
           )}
         </div>
+
+        {pointsLoading ? (
+          <div className="h-64 animate-pulse rounded bg-ui-hover" />
+        ) : chartData.length === 0 ? (
+          <div className="flex h-64 items-center justify-center text-sm text-text-dim">{t('데이터 없음')}</div>
+        ) : (
+          <>
+            <ResponsiveContainer width="100%" height={256} initialDimension={CHART_INITIAL_DIMENSION}>
+              <ComposedChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid {...gridProps(theme)} />
+                <XAxis dataKey="timeLabel" {...xAxisProps(theme)} />
+                <YAxis {...yAxisProps(theme, 64)} tickFormatter={value => formatMetricValue(value, unit)} />
+                <Tooltip
+                  cursor={tooltipCursor(theme)}
+                  content={({ active, label, payload }) => (
+                    <ChartTooltip
+                      active={active}
+                      label={label}
+                      payload={payload as import('../../../components/charts').TooltipPayloadItem[]}
+                      unit={unit === 'By' ? '' : unit}
+                      theme={theme}
+                      valueFormatter={value => unit === 'By' ? formatMetricValue(value, unit) : String(Math.round(value * 100) / 100)}
+                    />
+                  )}
+                />
+                {seriesKeys.map((key, index) => (
+                  <Line key={key} {...lineProps(seriesColors[index % seriesColors.length])} strokeDasharray={getSeriesDash(index)} dataKey={key} />
+                ))}
+              </ComposedChart>
+            </ResponsiveContainer>
+            <div className="mt-2">
+              <ChartStatsLegend
+                series={seriesKeys.map((key, index) => ({
+                  label: key,
+                  color: seriesColors[index % seriesColors.length],
+                  values: chartData.map(row => Number(row[key])),
+                }))}
+                unit={unit === 'By' ? '' : unit}
+                valueFormatter={value => unit === 'By' ? formatMetricValue(value, unit) : String(Math.round(value * 100) / 100)}
+              />
+            </div>
+            {truncatedSeries > 0 && <p className="mt-2 text-xs text-text-dim">{t(`속성 조합이 많아 상위 ${MAX_SERIES}개 시리즈만 표시합니다. (+${truncatedSeries}개 생략)`)}</p>}
+          </>
+        )}
       </div>
 
-      {pointsLoading ? (
-        <div className="h-64 bg-ui-hover rounded animate-pulse" />
-      ) : chartData.length === 0 ? (
-        <div className="flex items-center justify-center h-64 text-text-dim text-sm">
-          {t('데이터 없음')}
-        </div>
-      ) : (
-        <>
-          <ResponsiveContainer width="100%" height={256}>
-            <ComposedChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid {...gridProps(theme)} />
-              <XAxis dataKey="timeLabel" {...xAxisProps(theme)} />
-              <YAxis {...yAxisProps(theme, 64)} tickFormatter={(v) => formatMetricValue(v, unit)} />
-              <Tooltip
-                cursor={tooltipCursor(theme)}
-                content={({ active, label, payload }) => (
-                  <ChartTooltip
-                    active={active}
-                    label={label}
-                    payload={payload as import('../../../components/charts').TooltipPayloadItem[]}
-                    unit={unit === 'By' ? '' : unit}
-                    theme={theme}
-                    valueFormatter={(v) => (unit === 'By' ? formatMetricValue(v, unit) : String(Math.round(v * 100) / 100))}
-                  />
-                )}
-              />
-              {seriesKeys.map((key, i) => (
-                <Line key={key} {...lineProps(seriesColors[i % seriesColors.length])} strokeDasharray={getSeriesDash(i)} dataKey={key} />
-              ))}
-            </ComposedChart>
-          </ResponsiveContainer>
-          <div className="mt-2">
-            <ChartStatsLegend
-              series={seriesKeys.map((key, i) => ({
-                label: key,
-                color: seriesColors[i % seriesColors.length],
-                values: chartData.map((row) => Number(row[key])),
-              }))}
-              unit={unit === 'By' ? '' : unit}
-              valueFormatter={(v) => (unit === 'By' ? formatMetricValue(v, unit) : String(Math.round(v * 100) / 100))}
-            />
-          </div>
-          {truncatedSeries > 0 && (
-            <p className="mt-2 text-xs text-text-dim">
-              {t('속성 조합이 많아 상위 {count}개 시리즈만 표시합니다 (+{rest}개 생략)', {
-                count: MAX_SERIES,
-                rest: truncatedSeries,
-              })}
-            </p>
-          )}
-        </>
-      )}
-
-    </div>
-
-      {/* All exported series — row click swaps the chart (ver2: 전체 시리즈) */}
-      <div className="p-6 rounded-xl border border-ui-border bg-bg-surface">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="rounded-xl border border-ui-border bg-bg-surface p-6">
+        <div className="mb-2 flex items-center gap-2">
           <h3 className="text-base font-bold text-text-base">{t('전체 시리즈')}</h3>
-          <span className="text-xs text-text-dim">{t('행 클릭 → 차트 표시')}</span>
+          <span className="text-xs text-text-dim">{t('행을 선택해 차트에 표시')}</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs font-semibold uppercase tracking-wider text-text-muted border-b border-ui-border-soft">
-                <th className="py-1.5 pr-3 font-semibold">{t('시리즈')}</th>
-                <th className="py-1.5 pr-3 font-semibold">{t('타입')}</th>
-                <th className="py-1.5 pr-3 font-semibold">{t('단위')}</th>
-                <th className="py-1.5 text-right font-semibold">{t('마지막 수신')}</th>
-              </tr>
-            </thead>
+            <thead><tr className="border-b border-ui-border-soft text-left text-xs font-semibold uppercase tracking-wider text-text-muted">
+              <th className="py-1.5 pr-3 font-semibold">{t('시리즈')}</th>
+              <th className="py-1.5 pr-3 font-semibold">{t('유형')}</th>
+              <th className="py-1.5 pr-3 font-semibold">{t('단위')}</th>
+              <th className="py-1.5 text-right font-semibold">{t('마지막 수신')}</th>
+            </tr></thead>
             <tbody>
-              {names.map((n) => {
-                const active = n.metricName === selected;
+              {names.map(name => {
+                const active = name.metricName === selected;
                 return (
                   <tr
-                    key={`${n.metricName}:${n.metricType}`}
+                    key={`${name.metricName}:${name.metricType}`}
                     tabIndex={0}
                     aria-current={active || undefined}
-                    onClick={() => setSelected(n.metricName)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        setSelected(n.metricName);
+                    onClick={() => setSelected(name.metricName)}
+                    onKeyDown={event => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setSelected(name.metricName);
                       }
                     }}
-                    className={`cursor-pointer border-b border-ui-border-soft/50 last:border-0 transition-colors ${
-                      active
-                        ? 'bg-primary/5 dark:bg-primary/10'
-                        : 'hover:bg-ui-hover-soft'
-                    }`}
+                    className={`cursor-pointer border-b border-ui-border-soft/50 transition-colors last:border-0 ${active ? 'bg-primary/5' : 'hover:bg-ui-hover-soft'}`}
                   >
-                    <td className={`py-2 pr-3 font-mono text-xs ${active ? 'font-semibold text-primary' : 'text-text-secondary'}`}>
-                      {n.metricName}
-                    </td>
-                    <td className="py-2 pr-3 text-xs text-text-muted">{n.metricType}</td>
-                    <td className="py-2 pr-3 text-xs text-text-muted">{n.unit || '—'}</td>
-                    <td className="py-2 text-right text-xs font-mono text-text-dim whitespace-nowrap">
-                      {new Date(n.lastAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </td>
+                    <td className={`py-2 pr-3 font-mono text-xs ${active ? 'font-semibold text-primary' : 'text-text-secondary'}`}>{name.metricName}</td>
+                    <td className="py-2 pr-3 text-xs text-text-muted">{name.metricType}</td>
+                    <td className="py-2 pr-3 text-xs text-text-muted">{name.unit || '—'}</td>
+                    <td className="whitespace-nowrap py-2 text-right font-mono text-xs text-text-dim">{new Date(name.lastAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                   </tr>
                 );
               })}
@@ -254,4 +235,12 @@ export function AgentServiceMetricsTab({ agentId, serviceKey, refreshKey, range 
       </div>
     </div>
   );
+}
+
+export function AgentServiceMetricsTab({ agentId, serviceKey, ...common }: AgentProps) {
+  return <ServiceMetricsPanel {...common} source={{ kind: 'agent', agentId, serviceKey }} />;
+}
+
+export function DirectServiceMetricsTab({ observedServiceId, ...common }: DirectProps) {
+  return <ServiceMetricsPanel {...common} source={{ kind: 'direct', observedServiceId }} />;
 }

@@ -15,7 +15,9 @@ func (r *ProjectRepository) GetAll() ([]models.Project, error) {
 	rows, err := DB.Query(`
 		SELECT p.id, p.name, p.description, p.created_at, p.updated_at,
 			(SELECT COUNT(*) FROM agents a WHERE a.project_id = p.id AND COALESCE(a.status, 'active') = 'active'),
-			(SELECT COUNT(*) FROM services s WHERE s.project_id = p.id AND s.type IN ('http', 'tcp'))
+			(SELECT COUNT(*) FROM services s WHERE s.project_id = p.id AND s.type IN ('http', 'tcp')),
+			(SELECT COUNT(*) FROM observed_services os WHERE os.project_id = p.id),
+			(SELECT COUNT(*) FROM hosts h WHERE h.project_id = p.id AND h.collector_type = 'otel-collector')
 		FROM projects p ORDER BY p.name`)
 	if err != nil {
 		return nil, err
@@ -24,7 +26,7 @@ func (r *ProjectRepository) GetAll() ([]models.Project, error) {
 	projects := make([]models.Project, 0)
 	for rows.Next() {
 		var project models.Project
-		if err := rows.Scan(&project.ID, &project.Name, &project.Description, &project.CreatedAt, &project.UpdatedAt, &project.AgentCount, &project.MonitorCount); err != nil {
+		if err := rows.Scan(&project.ID, &project.Name, &project.Description, &project.CreatedAt, &project.UpdatedAt, &project.AgentCount, &project.MonitorCount, &project.ObservedServiceCount, &project.InfrastructureResourceCount); err != nil {
 			return nil, err
 		}
 		projects = append(projects, project)
@@ -80,7 +82,13 @@ func (r *ProjectRepository) Delete(id string) error {
 		if _, err := tx.Exec(`UPDATE agents SET project_id = NULL WHERE project_id = ?`, id); err != nil {
 			return err
 		}
-		_, err = tx.Exec(`UPDATE services SET project_id = NULL WHERE project_id = ?`, id)
+		if _, err = tx.Exec(`UPDATE services SET project_id = NULL WHERE project_id = ?`, id); err != nil {
+			return err
+		}
+		if _, err = tx.Exec(`UPDATE observed_services SET project_id = NULL WHERE project_id = ?`, id); err != nil {
+			return err
+		}
+		_, err = tx.Exec(`UPDATE hosts SET project_id = NULL WHERE project_id = ?`, id)
 		return err
 	})
 }

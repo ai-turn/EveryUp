@@ -38,7 +38,7 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	api.Post("/auth/logout", authHandler.Logout)
 
 	// Ingest routes are registered before the JWT group and isolated by prefix.
-	apiroutes.RegisterIngestRoutes(api)
+	apiroutes.RegisterIngestRoutes(api, ruleEvaluator)
 
 	// Agent connected-mode sync routes use their own bearer token and stay
 	// outside the JWT browser session group.
@@ -77,6 +77,26 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	local.Delete("/projects/:projectId/agents/:agentId", projectHandler.UnassignAgent)
 	local.Put("/projects/:projectId/monitors/:monitorId", projectHandler.AssignMonitor)
 	local.Delete("/projects/:projectId/monitors/:monitorId", projectHandler.UnassignMonitor)
+	observedServiceHandler := handlers.NewObservedServiceHandler()
+	local.Get("/observed-services", observedServiceHandler.GetAll)
+	local.Post("/observed-services", observedServiceHandler.Create)
+	local.Get("/observed-services/service-metrics", observedServiceHandler.GetServiceMetrics)
+	local.Get("/observed-services/:id", observedServiceHandler.GetByID)
+	local.Put("/observed-services/:id", observedServiceHandler.Update)
+	local.Delete("/observed-services/:id", observedServiceHandler.Delete)
+	local.Post("/observed-services/:id/rotate-key", observedServiceHandler.RotateKey)
+	local.Post("/observed-services/:id/revoke-key", observedServiceHandler.RevokeKey)
+	local.Get("/observed-services/:id/logs", observedServiceHandler.GetLogs)
+	local.Get("/observed-services/:id/log-histogram", observedServiceHandler.GetLogHistogram)
+	local.Get("/observed-services/:id/log-filter", observedServiceHandler.GetLogFilter)
+	local.Put("/observed-services/:id/log-filter", observedServiceHandler.SetLogFilter)
+	local.Get("/observed-services/:id/otel-metrics", observedServiceHandler.GetOtelMetricNames)
+	local.Get("/observed-services/:id/otel-metrics/points", observedServiceHandler.GetOtelMetricPoints)
+	local.Get("/observed-services/:id/requests", observedServiceHandler.GetRequests)
+	local.Get("/observed-services/:id/request-stats", observedServiceHandler.GetRequestStats)
+	local.Get("/observed-services/:id/request-status-summary", observedServiceHandler.GetRequestStatusSummary)
+	local.Get("/observed-services/:id/api-exclusions", observedServiceHandler.GetApiExclusions)
+	local.Put("/observed-services/:id/api-exclusions", observedServiceHandler.SetApiExclusions)
 	apiRequestsHandler := handlers.NewApiRequestsHandler()
 	local.Get("/services/:id/api-requests", apiRequestsHandler.List)
 	local.Get("/services/:id/api-requests/:reqId", apiRequestsHandler.GetByID)
@@ -123,6 +143,16 @@ func SetupRoutes(app *fiber.App, scheduler *checker.Scheduler, collectorMgr *col
 	local.Get("/hosts/:hostId/system/info", systemHandler.GetInfo)
 	local.Get("/hosts/:hostId/system/metrics", systemHandler.GetMetricsHistory)
 	local.Get("/hosts/:hostId/system/processes", systemHandler.GetProcesses)
+
+	// Agent and standard OpenTelemetry Collector infrastructure resources.
+	infrastructureHandler := handlers.NewInfrastructureResourceHandler()
+	local.Get("/infrastructure-resources", infrastructureHandler.GetAll)
+	local.Post("/infrastructure-resources", infrastructureHandler.Create)
+	local.Get("/infrastructure-resources/:id", infrastructureHandler.GetByID)
+	local.Put("/infrastructure-resources/:id", infrastructureHandler.Update)
+	local.Post("/infrastructure-resources/:id/rotate-key", infrastructureHandler.RotateKey)
+	local.Post("/infrastructure-resources/:id/revoke-key", infrastructureHandler.RevokeKey)
+	local.Delete("/infrastructure-resources/:id", infrastructureHandler.Delete)
 
 	// Notifications
 	notificationHandler := handlers.NewNotificationHandler()

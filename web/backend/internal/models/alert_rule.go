@@ -54,6 +54,7 @@ type AlertRule struct {
 	Type       AlertRuleType `json:"type"`
 	AgentID    *string       `json:"agentId"`
 	ServiceKey *string       `json:"serviceKey"`
+	ServiceID  *string       `json:"serviceId"`
 	Metric     AlertMetric   `json:"metric"`
 	MetricName string        `json:"metricName,omitempty"` // OTLP metric name when Metric == otel_metric
 	Operator   AlertOperator `json:"operator"`
@@ -78,6 +79,7 @@ type AlertRuleCreateRequest struct {
 	Type       AlertRuleType `json:"type"`
 	AgentID    *string       `json:"agentId"`
 	ServiceKey *string       `json:"serviceKey"`
+	ServiceID  *string       `json:"serviceId"`
 	Metric     AlertMetric   `json:"metric"`
 	MetricName string        `json:"metricName"`
 	Operator   AlertOperator `json:"operator"`
@@ -115,6 +117,7 @@ func (r *AlertRuleCreateRequest) ToAlertRule(id string) *AlertRule {
 		Type:       r.Type,
 		AgentID:    r.AgentID,
 		ServiceKey: r.ServiceKey,
+		ServiceID:  r.ServiceID,
 		Metric:     r.Metric,
 		MetricName: r.MetricName,
 		Operator:   r.Operator,
@@ -135,6 +138,7 @@ type AlertRuleUpdateRequest struct {
 	Name       *string        `json:"name"`
 	AgentID    *string        `json:"agentId"`
 	ServiceKey *string        `json:"serviceKey"`
+	ServiceID  *string        `json:"serviceId"`
 	Metric     *AlertMetric   `json:"metric"`
 	MetricName *string        `json:"metricName"`
 	Operator   *AlertOperator `json:"operator"`

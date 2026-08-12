@@ -36,35 +36,43 @@ type OTLPIngestHandler struct {
 	reqRepo           *database.ApiRequestRepository
 	agentRepo         *database.AgentRepository
 	metricRepo        *database.OtelMetricRepository
+	systemMetricRepo  *database.SystemMetricRepository
 	ruleRepo          *database.AlertRuleRepository
 	alertManager      *alerter.Manager
+	ruleEvaluator     *alerter.RuleEvaluator
 }
 
 // NewOTLPIngestHandler creates an OTLP ingest handler.
-func NewOTLPIngestHandler() *OTLPIngestHandler {
-	return &OTLPIngestHandler{
+func NewOTLPIngestHandler(evaluators ...*alerter.RuleEvaluator) *OTLPIngestHandler {
+	handler := &OTLPIngestHandler{
 		logHandler:        NewLogIngestHandler(),
 		apiRequestHandler: NewApiRequestsHandler(),
 		spanRepo:          database.NewSpanRepository(),
 		reqRepo:           database.NewApiRequestRepository(),
 		agentRepo:         database.NewAgentRepository(),
 		metricRepo:        database.NewOtelMetricRepository(),
+		systemMetricRepo:  database.NewSystemMetricRepository(),
 		ruleRepo:          database.NewAlertRuleRepository(),
 		alertManager:      alerter.NewManager(),
 	}
+	if len(evaluators) > 0 {
+		handler.ruleEvaluator = evaluators[0]
+	}
+	return handler
 }
 
 // evaluateOtelMetricAlerts checks each stored metric point against enabled
-// otel_metric threshold rules for the agent and dispatches on breach. Instant
+// otel_metric threshold rules for its direct or Agent service and dispatches on breach. Instant
 // per-datapoint evaluation, mirroring api_status alerts; dedup/cooldown in the
 // manager collapses repeats per (rule, service, metric, attribute series).
 func (h *OTLPIngestHandler) evaluateOtelMetricAlerts(principal *middleware.IngestPrincipal, rows []models.OtelMetric) {
-	if principal.AgentID == "" || len(rows) == 0 {
+	if len(rows) == 0 {
 		return
 	}
-	rules, err := h.ruleRepo.GetEnabledOtelMetricRules(principal.AgentID)
+	serviceName := rows[0].ServiceName
+	rules, err := h.ruleRepo.GetEnabledOtelMetricRules(principal.ServiceID, principal.AgentID, serviceName)
 	if err != nil {
-		log.Printf("[OTLP] failed to load metric alert rules for %s: %v", principal.AgentID, err)
+		log.Printf("[OTLP] failed to load metric alert rules for %s: %v", serviceName, err)
 		return
 	}
 	if len(rules) == 0 {
@@ -79,7 +87,7 @@ func (h *OTLPIngestHandler) evaluateOtelMetricAlerts(principal *middleware.Inges
 				continue
 			}
 			h.alertManager.DispatchOtelMetricAlertForRule(
-				rule, principal.AgentID, row.ServiceName, row.MetricName, string(row.Attributes), row.Value)
+				rule, principal.ServiceID, principal.AgentID, row.ServiceName, row.MetricName, string(row.Attributes), row.Value)
 		}
 	}
 }
@@ -120,10 +128,7 @@ func (h *OTLPIngestHandler) IngestLogs(c *fiber.Ctx) error {
 	for _, resourceLogs := range req.ResourceLogs {
 		resourceMap := attrsToMap(resourceLogs.GetResource().GetAttributes())
 		resourceJSON := mustJSON(resourceMap)
-		serviceName := firstString(resourceMap, "service.name")
-		if serviceName == "" {
-			serviceName = principal.Name
-		}
+		serviceName := principal.ResolveServiceName(firstString(resourceMap, "service.name"))
 
 		// Resolve the ingest-time level filter and a stable seed for alert dedup.
 		// Agents filter per-service (agent_services.log_level_filter) and key dedup
@@ -167,7 +172,7 @@ func (h *OTLPIngestHandler) IngestLogs(c *fiber.Ctx) error {
 					failed++
 					continue
 				}
-				h.logHandler.triggerAlertIfNeeded(alertSeed, serviceName, logEntry, entry.Metadata)
+				h.logHandler.triggerAlertIfNeeded(principal.ServiceID, principal.AgentID, serviceName, logEntry, entry.Metadata)
 				processed++
 			}
 		}
@@ -219,10 +224,7 @@ func (h *OTLPIngestHandler) IngestTraces(c *fiber.Ctx) error {
 	for _, resourceSpans := range req.ResourceSpans {
 		resourceMap := attrsToMap(resourceSpans.GetResource().GetAttributes())
 		resourceJSON := mustJSON(resourceMap)
-		serviceName := firstString(resourceMap, "service.name")
-		if serviceName == "" {
-			serviceName = principal.Name
-		}
+		serviceName := principal.ResolveServiceName(firstString(resourceMap, "service.name"))
 
 		for _, scopeSpans := range resourceSpans.ScopeSpans {
 			for _, span := range scopeSpans.Spans {
@@ -248,11 +250,8 @@ func (h *OTLPIngestHandler) IngestTraces(c *fiber.Ctx) error {
 		return internalError(c, ErrCodeDatabase, err)
 	}
 	if insertedRequests > 0 {
-		alertSeed := principal.ServiceID
-		if principal.AgentID != "" {
-			alertSeed = principal.AgentID
-		}
-		h.apiRequestHandler.evaluateApiRequestAlerts(alertSeed, requests)
+		h.apiRequestHandler.evaluateApiRequestAlerts(
+			principal.ServiceID, principal.AgentID, requests[0].ServiceName, requests)
 	}
 
 	respBody, err := proto.Marshal(&collectortracepb.ExportTraceServiceResponse{})
@@ -295,14 +294,33 @@ func (h *OTLPIngestHandler) IngestMetrics(c *fiber.Ctx) error {
 		})
 	}
 
+	if principal.InfrastructureResourceID != "" {
+		metric, recognized := projectInfrastructureMetric(&req, principal.InfrastructureResourceID)
+		if recognized > 0 {
+			if previous, err := h.systemMetricRepo.GetLatestByHost(principal.InfrastructureResourceID); err == nil && previous != nil {
+				fillMissingInfrastructureValues(metric, previous)
+			}
+			if err := h.systemMetricRepo.Create(metric); err != nil {
+				return internalError(c, ErrCodeDatabase, err)
+			}
+			if h.ruleEvaluator != nil {
+				go h.ruleEvaluator.EvaluateAgent(principal.InfrastructureResourceID, principal.Name, metric)
+			}
+		}
+		respBody, err := proto.Marshal(&collectormetricspb.ExportMetricsServiceResponse{})
+		if err != nil {
+			return err
+		}
+		c.Set(fiber.HeaderContentType, "application/x-protobuf")
+		c.Set("X-EveryUp-Infrastructure-Metrics", strconv.Itoa(recognized))
+		return c.Status(fiber.StatusOK).Send(respBody)
+	}
+
 	var rows []models.OtelMetric
 	skipped := 0
 	for _, resourceMetrics := range req.ResourceMetrics {
 		resourceMap := attrsToMap(resourceMetrics.GetResource().GetAttributes())
-		serviceName := firstString(resourceMap, "service.name")
-		if serviceName == "" {
-			serviceName = principal.Name
-		}
+		serviceName := principal.ResolveServiceName(firstString(resourceMap, "service.name"))
 
 		for _, scopeMetrics := range resourceMetrics.ScopeMetrics {
 			for _, metric := range scopeMetrics.Metrics {

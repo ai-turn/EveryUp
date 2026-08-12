@@ -13,6 +13,7 @@ export interface AlertRule {
   type: AlertRuleType;
   agentId?: string | null;
   serviceKey?: string | null;
+  serviceId?: string | null;
   metric: AlertMetric;
   metricName?: string;
   operator: AlertOperator;
@@ -34,6 +35,7 @@ export interface CreateAlertRuleData {
   type: AlertRuleType;
   agentId?: string | null;
   serviceKey?: string | null;
+  serviceId?: string | null;
   metric: AlertMetric;
   metricName?: string;
   operator?: AlertOperator;
@@ -50,6 +52,7 @@ export interface UpdateAlertRuleData {
   name?: string;
   agentId?: string | null;
   serviceKey?: string | null;
+  serviceId?: string | null;
   metric?: AlertMetric;
   metricName?: string;
   operator?: AlertOperator;

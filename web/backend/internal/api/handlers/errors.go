@@ -14,11 +14,13 @@ const (
 	ErrCodeSecret   = "SECRET_ERROR"
 
 	// Common request errors
-	ErrCodeInvalidRequest = "INVALID_REQUEST"
-	ErrCodeInvalidInput   = "INVALID_INPUT"
-	ErrCodeValidation     = "VALIDATION_ERROR"
-	ErrCodeNotFound       = "NOT_FOUND"
-	ErrCodeForbidden      = "FORBIDDEN"
+	ErrCodeInvalidRequest          = "INVALID_REQUEST"
+	ErrCodeInvalidInput            = "INVALID_INPUT"
+	ErrCodeValidation              = "VALIDATION_ERROR"
+	ErrCodeNotFound                = "NOT_FOUND"
+	ErrCodeForbidden               = "FORBIDDEN"
+	ErrCodeProjectNotFound         = "PROJECT_NOT_FOUND"
+	ErrCodeObservedServiceNotFound = "OBSERVED_SERVICE_NOT_FOUND"
 
 	// Settings errors
 	ErrCodeConfigUnavailable = "CONFIG_UNAVAILABLE"

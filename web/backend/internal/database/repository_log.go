@@ -177,6 +177,10 @@ func (r *LogRepository) Histogram(filter models.LogFilter, bucketMins int) ([]mo
 	}
 	query := "SELECT l.level, l.created_at FROM logs l LEFT JOIN services s ON s.id = l.service_id WHERE 1=1"
 	args := []interface{}{}
+	if filter.ServiceID != "" {
+		query += " AND l.service_id = ?"
+		args = append(args, filter.ServiceID)
+	}
 	if filter.AgentID != "" {
 		query += " AND l.agent_id = ?"
 		args = append(args, filter.AgentID)

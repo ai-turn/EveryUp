@@ -1,22 +1,21 @@
 package routes
 
 import (
+	"github.com/aiturn/everyup/internal/alerter"
 	"github.com/aiturn/everyup/internal/api/handlers"
 	"github.com/aiturn/everyup/internal/api/middleware"
+	"github.com/aiturn/everyup/internal/models"
 	"github.com/gofiber/fiber/v2"
 )
 
 // RegisterIngestRoutes registers API-key authenticated ingest endpoints.
-func RegisterIngestRoutes(api fiber.Router) {
-	logIngestMiddleware := []fiber.Handler{
-		middleware.IngestRateLimiter(),
-		middleware.OTLPAuth(),
-	}
-	otlpIngestHandler := handlers.NewOTLPIngestHandler()
+func RegisterIngestRoutes(api fiber.Router, ruleEvaluator *alerter.RuleEvaluator) {
+	rateLimiter := middleware.IngestRateLimiter()
+	otlpIngestHandler := handlers.NewOTLPIngestHandler(ruleEvaluator)
 
-	api.Post("/otlp/v1/logs", append(logIngestMiddleware, otlpBodyLimit(), otlpIngestHandler.IngestLogs)...)
-	api.Post("/otlp/v1/traces", append(logIngestMiddleware, otlpBodyLimit(), otlpIngestHandler.IngestTraces)...)
-	api.Post("/otlp/v1/metrics", append(logIngestMiddleware, otlpBodyLimit(), otlpIngestHandler.IngestMetrics)...)
+	api.Post("/otlp/v1/logs", rateLimiter, middleware.OTLPAuth(models.TelemetrySignalLogs), otlpBodyLimit(), otlpIngestHandler.IngestLogs)
+	api.Post("/otlp/v1/traces", rateLimiter, middleware.OTLPAuth(models.TelemetrySignalTraces), otlpBodyLimit(), otlpIngestHandler.IngestTraces)
+	api.Post("/otlp/v1/metrics", rateLimiter, middleware.OTLPAuth(models.TelemetrySignalMetrics), otlpBodyLimit(), otlpIngestHandler.IngestMetrics)
 }
 
 func otlpBodyLimit() fiber.Handler {

@@ -6,6 +6,8 @@ export interface Project {
   description?: string;
   agentCount: number;
   monitorCount: number;
+  observedServiceCount: number;
+  infrastructureResourceCount: number;
   createdAt: string;
   updatedAt: string;
 }

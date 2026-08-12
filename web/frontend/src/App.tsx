@@ -17,9 +17,13 @@ const ChannelFormPage       = lazy(() => import('./pages/alerts/ChannelFormPage'
 const AgentServiceCapabilityPage = lazy(() => import('./pages/capabilities/AgentServiceCapabilityPage').then(m => ({ default: m.AgentServiceCapabilityPage })));
 const UptimeMonitorDetailPage = lazy(() => import('./pages/uptime/UptimeMonitorDetailPage').then(m => ({ default: m.UptimeMonitorDetailPage })));
 const LogsPage              = lazy(() => import('./pages/capabilities/LogsPage').then(m => ({ default: m.LogsPage })));
+const DirectLogsDetailPage  = lazy(() => import('./pages/capabilities/DirectLogsDetailPage').then(m => ({ default: m.DirectLogsDetailPage })));
 const ApiPage               = lazy(() => import('./pages/capabilities/ApiPage').then(m => ({ default: m.ApiPage })));
+const DirectApiDetailPage   = lazy(() => import('./pages/capabilities/DirectApiDetailPage').then(m => ({ default: m.DirectApiDetailPage })));
 const MetricsPage           = lazy(() => import('./pages/capabilities/MetricsPage').then(m => ({ default: m.MetricsPage })));
+const DirectMetricsDetailPage = lazy(() => import('./pages/capabilities/DirectMetricsDetailPage').then(m => ({ default: m.DirectMetricsDetailPage })));
 const InfrastructurePage    = lazy(() => import('./pages/capabilities/InfrastructurePage').then(m => ({ default: m.InfrastructurePage })));
+const DirectInfrastructureDetailPage = lazy(() => import('./pages/capabilities/DirectInfrastructureDetailPage').then(m => ({ default: m.DirectInfrastructureDetailPage })));
 const MorePage              = lazy(() => import('./pages/capabilities/MorePage').then(m => ({ default: m.MorePage })));
 const ProjectsPage          = lazy(() => import('./pages/projects/ProjectsPage').then(m => ({ default: m.ProjectsPage })));
 
@@ -68,9 +72,13 @@ function App() {
                 <Route path="/uptime" element={<AgentServiceCapabilityPage />} />
                 <Route path="/uptime/:monitorId" element={<UptimeMonitorDetailPage />} />
                 <Route path="/logs" element={<LogsPage />} />
+                <Route path="/logs/:serviceId" element={<DirectLogsDetailPage />} />
                 <Route path="/infrastructure" element={<InfrastructurePage />} />
+                <Route path="/infrastructure/:resourceId" element={<DirectInfrastructureDetailPage />} />
                 <Route path="/api" element={<ApiPage />} />
+                <Route path="/api/:serviceId" element={<DirectApiDetailPage />} />
                 <Route path="/metrics" element={<MetricsPage />} />
+                <Route path="/metrics/:serviceId" element={<DirectMetricsDetailPage />} />
                 <Route path="/more" element={<MorePage />} />
                 <Route path="/projects" element={<ProjectsPage />} />
                 <Route path="/agents/:agentId" element={<ProjectDetailPage />} />

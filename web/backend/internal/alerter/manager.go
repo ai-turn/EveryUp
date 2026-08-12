@@ -157,8 +157,12 @@ func (m *Manager) DispatchLogAlertForRule(rule models.AlertRule, serviceID, serv
 // the rule's channels. The breach check (value vs rule.Threshold) is done at
 // the call site. seriesKey identifies the attribute series so distinct series
 // (e.g. per route) dedup independently.
-func (m *Manager) DispatchOtelMetricAlertForRule(rule models.AlertRule, agentID, serviceName, metricName, seriesKey string, value float64) {
-	fpKey := rule.ID + ":" + agentID + ":" + serviceName
+func (m *Manager) DispatchOtelMetricAlertForRule(rule models.AlertRule, serviceID, agentID, serviceName, metricName, seriesKey string, value float64) {
+	targetID := agentID
+	if serviceID != "" {
+		targetID = serviceID
+	}
+	fpKey := rule.ID + ":" + targetID + ":" + serviceName
 	fingerprint := GenerateFingerprint(fpKey, metricName, seriesKey)
 	if !m.dedup.ShouldAlert(fingerprint) {
 		log.Printf("Dedup: suppressed duplicate metric alert for %s/%s [%s=%.2f]", serviceName, metricName, seriesKey, value)
@@ -190,6 +194,7 @@ func (m *Manager) DispatchOtelMetricAlertForRule(rule models.AlertRule, agentID,
 			"metricName": metricName,
 			"series":     seriesKey,
 			"agentId":    agentID,
+			"serviceId":  serviceID,
 		},
 	}
 	m.DispatchToChannels(notification, rule.ChannelIDs)
@@ -233,10 +238,10 @@ func (m *Manager) DispatchApiRequestAlertForRule(rule models.AlertRule, serviceI
 		Threshold:   rule.Threshold,
 		Severity:    string(rule.Severity),
 		Metadata: map[string]interface{}{
-			"method":      method,
-			"path":        path,
-			"statusCode":  statusCode,
-			"durationMs":  durationMs,
+			"method":     method,
+			"path":       path,
+			"statusCode": statusCode,
+			"durationMs": durationMs,
 		},
 	}
 

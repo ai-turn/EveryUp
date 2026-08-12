@@ -31,6 +31,32 @@ export interface SystemMetricsHistory {
   points: SystemMetricPoint[];
 }
 
+export type InfrastructureAdapter = 'everyup-agent' | 'otel-collector';
+
+export interface InfrastructureResource {
+  id: string;
+  name: string;
+  projectId?: string;
+  adapter: InfrastructureAdapter;
+  isActive: boolean;
+  apiKeyMasked?: string;
+  lastSeenAt?: string;
+  cpuUsage?: number;
+  memoryUsage?: number;
+  diskUsage?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InfrastructureResourceInput {
+  name: string;
+  projectId?: string;
+}
+
+export interface InfrastructureResourceSetup extends InfrastructureResource {
+  apiKey: string;
+}
+
 // --- API ---
 
 export const hostsApi = {
@@ -42,4 +68,25 @@ export const hostsApi = {
     const query = range ? `?range=${range}` : '';
     return request<SystemMetricsHistory>(`/hosts/${hostId}/system/metrics${query}`);
   },
+
+  getInfrastructureResources: () =>
+    request<InfrastructureResource[]>('/infrastructure-resources'),
+
+  getInfrastructureResource: (id: string) =>
+    request<InfrastructureResource>(`/infrastructure-resources/${id}`),
+
+  createInfrastructureResource: (data: InfrastructureResourceInput) =>
+    request<InfrastructureResourceSetup>('/infrastructure-resources', { method: 'POST', body: JSON.stringify(data) }),
+
+  updateInfrastructureResource: (id: string, data: InfrastructureResourceInput) =>
+    request<InfrastructureResource>(`/infrastructure-resources/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+
+  rotateInfrastructureResourceKey: (id: string) =>
+    request<InfrastructureResourceSetup>(`/infrastructure-resources/${id}/rotate-key`, { method: 'POST' }),
+
+  revokeInfrastructureResourceKey: (id: string) =>
+    request<InfrastructureResource>(`/infrastructure-resources/${id}/revoke-key`, { method: 'POST' }),
+
+  deleteInfrastructureResource: (id: string) =>
+    request<void>(`/infrastructure-resources/${id}`, { method: 'DELETE' }),
 };

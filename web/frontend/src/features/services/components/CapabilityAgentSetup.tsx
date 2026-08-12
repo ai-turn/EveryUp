@@ -7,15 +7,16 @@ import { AddServiceModal } from './AddServiceModal';
 interface CapabilityAgentSetupProps {
   capability: AgentCollectionCapability;
   onCreated?: () => void;
+  buttonVariant?: 'primary' | 'secondary' | 'ghost';
 }
 
-export function CapabilityAgentSetup({ capability, onCreated }: CapabilityAgentSetupProps) {
+export function CapabilityAgentSetup({ capability, onCreated, buttonVariant = 'primary' }: CapabilityAgentSetupProps) {
   const { t } = useTranslate();
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>
+      <Button variant={buttonVariant} onClick={() => setOpen(true)}>
         <MaterialIcon name="add" />
         {t('Agent 연결')}
       </Button>

@@ -4,6 +4,15 @@ import { request } from './base';
 
 export type LogLevel = 'error' | 'warn' | 'info' | 'debug' | 'trace';
 
+export interface LogHistogramBucket {
+  time: string;
+  error: number;
+  warn: number;
+  info: number;
+  debug: number;
+  trace: number;
+}
+
 export interface LinkedRequest {
   id: number;
   method: string;

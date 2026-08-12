@@ -4,7 +4,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts';
 import { Button, MaterialIcon, SegmentedControl, SearchInput, type GlobalTimeRange } from '../../../components/common';
-import { ChartTooltip, chartCardClass, getChartTheme, gridProps, xAxisProps, yAxisProps } from '../../../components/charts';
+import { CHART_INITIAL_DIMENSION, ChartTooltip, chartCardClass, getChartTheme, gridProps, xAxisProps, yAxisProps } from '../../../components/charts';
 import { api, type LogEntry, type LogHistogramBucket, type LogLevel } from '../../../services/api';
 import { getErrorMessage } from '../../../utils/errors';
 import { activatable } from '../../../utils/a11y';
@@ -12,13 +12,25 @@ import { toast } from 'react-hot-toast';
 import { TracePanel } from '../../traces/components/TracePanel';
 import { LEVEL_STYLE } from '../logLevelStyle';
 
-interface Props {
-  agentId: string;
-  serviceKey: string;
+interface BaseProps {
   refreshKey: number;
   /** Shared chart range from the page-header picker (drives the volume histogram). */
   range: GlobalTimeRange;
 }
+
+interface AgentSourceProps extends BaseProps {
+  agentId: string;
+  serviceKey: string;
+  observedServiceId?: never;
+}
+
+interface DirectSourceProps extends BaseProps {
+  observedServiceId: string;
+  agentId?: never;
+  serviceKey?: never;
+}
+
+type Props = AgentSourceProps | DirectSourceProps;
 
 // Histogram window/bucket per header range — same widths as the request trends chart.
 const RANGE_BUCKET: Record<GlobalTimeRange, { hours: number; bucketMins: number }> = {
@@ -118,7 +130,11 @@ function LogRow({ log, onOpenTrace }: { log: LogEntry; onOpenTrace: (traceId: st
   );
 }
 
-export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: Props) {
+function ServiceLogsPanel(props: Props) {
+  const { refreshKey, range } = props;
+  const directServiceId = 'observedServiceId' in props ? props.observedServiceId : undefined;
+  const agentId = 'agentId' in props ? props.agentId : undefined;
+  const serviceKey = 'serviceKey' in props ? props.serviceKey : undefined;
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [activeTraceId, setActiveTraceId] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
@@ -136,10 +152,13 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: 
   const [savingFilter, setSavingFilter] = useState(false);
 
   useEffect(() => {
-    api.getAgentServiceLogFilter(agentId, serviceKey)
+    const request = directServiceId
+      ? api.getObservedServiceLogFilter(directServiceId)
+      : api.getAgentServiceLogFilter(agentId!, serviceKey!);
+    request
       .then(r => setIngestLevels(r?.levels ?? []))
       .catch(() => {});
-  }, [agentId, serviceKey]);
+  }, [agentId, directServiceId, serviceKey]);
 
   const toggleIngestLevel = (l: string) =>
     setIngestLevels(cur => (cur.includes(l) ? cur.filter(x => x !== l) : [...cur, l]));
@@ -147,7 +166,9 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: 
   const saveIngestFilter = async () => {
     setSavingFilter(true);
     try {
-      const r = await api.setAgentServiceLogFilter(agentId, serviceKey, ingestLevels);
+      const r = directServiceId
+        ? await api.setObservedServiceLogFilter(directServiceId, ingestLevels as LogLevel[])
+        : await api.setAgentServiceLogFilter(agentId!, serviceKey!, ingestLevels);
       setIngestLevels(r?.levels ?? []);
       toast.success('수집 설정을 저장했습니다');
     } catch (err) {
@@ -160,11 +181,14 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: 
   const fetch = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const res = await api.getAgentServiceLogs(agentId, serviceKey, {
+      const params = {
         level: level || undefined,
         search: search || undefined,
         from: toISOFrom(datePreset),
-      });
+      };
+      const res = directServiceId
+        ? await api.getObservedServiceLogs(directServiceId, params)
+        : await api.getAgentServiceLogs(agentId!, serviceKey!, params);
       setLogs(res?.data ?? []);
       setTotal(res?.total ?? 0);
     } catch (err) {
@@ -172,22 +196,26 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: 
     } finally {
       setLoading(false);
     }
-  }, [agentId, serviceKey, refreshKey, level, search, datePreset]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [agentId, directServiceId, serviceKey, refreshKey, level, search, datePreset]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { fetch(); }, [fetch]);
 
   // Volume histogram — follows the header range and the level/search view filters.
   const fetchHistogram = useCallback(() => {
     const r = RANGE_BUCKET[range];
-    api.getAgentServiceLogHistogram(agentId, serviceKey, {
+    const params = {
       level: level || undefined,
       search: search || undefined,
       from: new Date(Date.now() - r.hours * 3600 * 1000).toISOString(),
       bucketMins: r.bucketMins,
-    })
+    };
+    const request = directServiceId
+      ? api.getObservedServiceLogHistogram(directServiceId, params)
+      : api.getAgentServiceLogHistogram(agentId!, serviceKey!, params);
+    request
       .then((b) => setHistogram(b ?? []))
       .catch(() => setHistogram([]));
-  }, [agentId, serviceKey, level, search, range, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [agentId, directServiceId, serviceKey, level, search, range, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { fetchHistogram(); }, [fetchHistogram]);
 
@@ -313,7 +341,7 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: 
         }));
         return (
           <div className={`p-4 ${chartCardClass}`}>
-            <ResponsiveContainer width="100%" height={110}>
+            <ResponsiveContainer width="100%" height={110} initialDimension={CHART_INITIAL_DIMENSION}>
               <BarChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid {...gridProps(theme)} />
                 <XAxis dataKey="timeLabel" {...xAxisProps(theme)} />
@@ -361,4 +389,12 @@ export function AgentServiceLogsTab({ agentId, serviceKey, refreshKey, range }: 
       )}
     </div>
   );
+}
+
+export function AgentServiceLogsTab(props: AgentSourceProps) {
+  return <ServiceLogsPanel {...props} />;
+}
+
+export function DirectServiceLogsTab(props: DirectSourceProps) {
+  return <ServiceLogsPanel {...props} />;
 }

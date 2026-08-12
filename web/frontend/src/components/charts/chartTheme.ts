@@ -14,6 +14,10 @@ export interface TooltipPayloadItem {
   value?: number | string;
 }
 
+// Recharts otherwise renders once with its -1×-1 sentinel before the first
+// ResizeObserver callback, which produces a console warning in lazy routes.
+export const CHART_INITIAL_DIMENSION = { width: 1, height: 1 } as const;
+
 function getCssVar(name: string): string {
   if (typeof document === 'undefined') return '';
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();

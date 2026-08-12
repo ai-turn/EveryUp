@@ -1,10 +1,13 @@
 package middleware
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/aiturn/everyup/internal/crypto"
 	"github.com/aiturn/everyup/internal/database"
+	"github.com/aiturn/everyup/internal/directtelemetry"
+	"github.com/aiturn/everyup/internal/infrastructure"
 	"github.com/aiturn/everyup/internal/models"
 	"github.com/gofiber/fiber/v2"
 )
@@ -14,20 +17,34 @@ import (
 // agent (the unified path — one key for health, infra, logs and traces) or a
 // legacy log-only service created before the agent-only architecture.
 type IngestPrincipal struct {
-	AgentID         string            // non-empty for connected-agent (project) keys
-	ServiceID       string            // non-empty for legacy log-service keys
-	Name            string            // fallback service name (agent or service name)
-	ApiExcludePaths []string          // legacy services only
-	LogLevelFilter  []models.LogLevel // legacy services only; agents filter per-service at ingest
+	AgentID                  string            // non-empty for connected-agent (project) keys
+	ServiceID                string            // non-empty for legacy log-service keys
+	Name                     string            // fallback service name (agent or service name)
+	Direct                   bool              // true when one credential is bound to one Observed Service
+	InfrastructureResourceID string            // standard OTel Collector hostmetrics target
+	ApiExcludePaths          []string          // direct and legacy services
+	LogLevelFilter           []models.LogLevel // legacy services only; agents filter per-service at ingest
+}
+
+// ResolveServiceName prevents a direct credential from creating additional
+// targets through a payload-controlled service.name. Agent and legacy keys keep
+// their historical multi-service/fallback behaviour.
+func (p *IngestPrincipal) ResolveServiceName(resourceName string) string {
+	if p.Direct || resourceName == "" {
+		return p.Name
+	}
+	return resourceName
 }
 
 // OTLPAuth authenticates OTLP ingest with the project API key. It accepts the
 // connected-agent key (agents table, evup_svc_) first — the primary path — and
 // falls back to a legacy log-service key (services table, everyup_) so existing
 // deployments keep working. The resolved IngestPrincipal is stored in Locals.
-func OTLPAuth() fiber.Handler {
+func OTLPAuth(signal models.TelemetrySignal) fiber.Handler {
 	agentRepo := database.NewAgentRepository()
 	serviceRepo := database.NewServiceRepository()
+	directManager := directtelemetry.NewManager()
+	infrastructureManager := infrastructure.NewManager()
 
 	return func(c *fiber.Ctx) error {
 		apiKey, ok := extractAPIKey(c)
@@ -53,7 +70,52 @@ func OTLPAuth() fiber.Handler {
 			return c.Next()
 		}
 
-		// 2. Legacy log-service key.
+		// 2. Direct Observed Service key with per-signal authorization.
+		directService, err := directManager.AuthorizeHash(hash, signal)
+		if err != nil {
+			switch {
+			case errors.Is(err, directtelemetry.ErrInactive):
+				return otlpAuthError(c, 403, "FORBIDDEN", "Direct telemetry connection is inactive")
+			case errors.Is(err, directtelemetry.ErrSignalDenied):
+				return otlpAuthError(c, 403, "FORBIDDEN", "API key is not allowed for this telemetry signal")
+			default:
+				return otlpAuthError(c, 500, "INTERNAL_ERROR", "Failed to validate API key")
+			}
+		}
+		if directService != nil {
+			c.Locals("ingestPrincipal", &IngestPrincipal{
+				ServiceID:       directService.ID,
+				Name:            directService.Name,
+				Direct:          true,
+				ApiExcludePaths: directService.ApiExcludePaths,
+				LogLevelFilter:  directService.LogLevelFilter,
+			})
+			return c.Next()
+		}
+
+		// 3. Standard OpenTelemetry Collector hostmetrics credential. It is
+		// deliberately metrics-only and projects into the shared infrastructure
+		// resource history instead of the application metrics store.
+		infrastructureResource, err := infrastructureManager.AuthorizeHash(hash, signal)
+		if err != nil {
+			switch {
+			case errors.Is(err, infrastructure.ErrInactive):
+				return otlpAuthError(c, 403, "FORBIDDEN", "Infrastructure collector connection is inactive")
+			case errors.Is(err, infrastructure.ErrSignalDenied):
+				return otlpAuthError(c, 403, "FORBIDDEN", "Infrastructure collector key only accepts metrics")
+			default:
+				return otlpAuthError(c, 500, "INTERNAL_ERROR", "Failed to validate API key")
+			}
+		}
+		if infrastructureResource != nil {
+			c.Locals("ingestPrincipal", &IngestPrincipal{
+				InfrastructureResourceID: infrastructureResource.ID,
+				Name:                     infrastructureResource.Name,
+			})
+			return c.Next()
+		}
+
+		// 4. Legacy log-service key.
 		service, err := serviceRepo.GetByApiKeyHash(hash)
 		if err != nil {
 			return otlpAuthError(c, 500, "INTERNAL_ERROR", "Failed to validate API key")

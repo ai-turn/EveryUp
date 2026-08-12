@@ -1,13 +1,24 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslate } from '@tolgee/react';
-import { EmptyState, MaterialIcon, PageHeader, StatusBadge } from '../../components/common';
-import { api, type ApiRequestStatusSummary, type ConnectedAgent } from '../../services/api';
-import { getErrorMessage } from '../../utils/errors';
+import { Button, EmptyState, MaterialIcon, PageHeader, StatusBadge } from '../../components/common';
+import { DirectApiSetupDialog } from '../../features/api/components/DirectApiSetupDialog';
 import { CapabilityAgentSetup } from '../../features/services/components/CapabilityAgentSetup';
+import {
+  api,
+  type ApiRequestStatusSummary,
+  type ConnectedAgent,
+  type ObservedService,
+} from '../../services/api';
+import { getErrorMessage } from '../../utils/errors';
 
 interface AgentApiSummary {
   agent: ConnectedAgent;
+  summary: ApiRequestStatusSummary;
+}
+
+interface DirectApiSummary {
+  service: ObservedService;
   summary: ApiRequestStatusSummary;
 }
 
@@ -15,63 +26,144 @@ function agentOnline(agent: ConnectedAgent) {
   return Date.now() - new Date(agent.lastSeenAt).getTime() < 2 * 60 * 1000;
 }
 
+function totalRequests(summary: ApiRequestStatusSummary) {
+  return summary.count2xx + summary.count3xx + summary.count4xx + summary.count5xx + summary.countOther;
+}
+
+function ApiCard({
+  name,
+  source,
+  active,
+  summary,
+  to,
+}: {
+  name: string;
+  source: string;
+  active: boolean;
+  summary: ApiRequestStatusSummary;
+  to: string;
+}) {
+  const { t } = useTranslate();
+  const total = totalRequests(summary);
+  const hasErrors = summary.count5xx > 0;
+  return (
+    <Link to={to} className="card-interactive group rounded-xl border border-ui-border bg-bg-surface p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <MaterialIcon name="api" className="text-lg text-primary" />
+          <div className="min-w-0">
+            <h2 className="truncate text-base font-bold text-text-base group-hover:text-primary">{name}</h2>
+            <p className="mt-0.5 truncate text-xs text-text-muted">{source}</p>
+          </div>
+        </div>
+        <StatusBadge healthy={active} />
+      </div>
+      <div className="mt-5 grid grid-cols-2 gap-3">
+        <div><p className="text-2xs text-text-dim">{t('요청')}</p><p className="font-mono text-lg font-bold text-text-base">{total.toLocaleString()}</p></div>
+        <div><p className="text-2xs text-text-dim">5xx</p><p className={`font-mono text-lg font-bold ${hasErrors ? 'text-status-error' : 'text-text-base'}`}>{summary.count5xx.toLocaleString()}</p></div>
+      </div>
+      {summary.top5xxPath ? (
+        <p className="mt-4 truncate font-mono text-xs text-text-muted">{summary.top5xxMethod} {summary.top5xxPath}</p>
+      ) : (
+        <p className="mt-4 text-xs text-text-dim">{total > 0 ? t('아직 오류 요청이 없습니다') : t('첫 trace 수신을 기다리는 중입니다.')}</p>
+      )}
+    </Link>
+  );
+}
+
 export function ApiPage() {
   const { t } = useTranslate();
-  const [rows, setRows] = useState<AgentApiSummary[]>([]);
+  const navigate = useNavigate();
+  const [agentRows, setAgentRows] = useState<AgentApiSummary[]>([]);
+  const [directRows, setDirectRows] = useState<DirectApiSummary[]>([]);
+  const [showDirectSetup, setShowDirectSetup] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
-    api.getAgents()
-      .then(async (agents) => {
-        const summaries = await Promise.all(agents.map(async (agent) => ({
-          agent,
-          summary: await api.getRequestStatusSummary(agent.id),
-        })));
-        if (alive) setRows(summaries);
+    Promise.all([api.getAgents(), api.getObservedServices('traces')])
+      .then(async ([agents, services]) => {
+        const [agentSummaries, directSummaries] = await Promise.all([
+          Promise.all(agents.map(async agent => ({
+            agent,
+            summary: await api.getRequestStatusSummary(agent.id),
+          }))),
+          Promise.all(services.map(async service => ({
+            service,
+            summary: await api.getObservedServiceRequestStatusSummary(service.id),
+          }))),
+        ]);
+        if (!alive) return;
+        setAgentRows(agentSummaries);
+        setDirectRows(directSummaries);
       })
-      .catch((requestError) => { if (alive) setError(getErrorMessage(requestError)); })
+      .catch(requestError => { if (alive) setError(getErrorMessage(requestError)); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, []);
 
+  const isEmpty = directRows.length === 0 && agentRows.length === 0;
+
   return (
     <div>
-      <PageHeader title="API" subtitle={t('API 프로필 Agent의 요청 상태와 오류 추이를 확인합니다.')}>
-        <CapabilityAgentSetup capability="api" />
+      <PageHeader title="API" subtitle={t('Agent 또는 직접 OpenTelemetry 연결에서 수집한 API 요청과 오류 추이입니다.')}>
+        <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
+          <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />{t('API 직접 추가')}</Button>
+          <CapabilityAgentSetup capability="api" buttonVariant="secondary" />
+        </div>
       </PageHeader>
       {loading ? (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {[0, 1, 2].map((item) => <div key={item} className="h-40 animate-pulse rounded-xl border border-ui-border bg-bg-surface" />)}
+          {[0, 1, 2].map(item => <div key={item} className="h-40 animate-pulse rounded-xl border border-ui-border bg-bg-surface" />)}
         </div>
       ) : error ? (
         <EmptyState icon="error_outline" title={t('API 데이터를 불러오지 못했습니다')} description={error} />
-      ) : rows.length === 0 ? (
-        <EmptyState icon="api" title={t('표시할 API 대상이 없습니다')} description={t('API Agent를 연결하면 관측 대상이 여기에 표시됩니다.')} />
+      ) : isEmpty ? (
+        <EmptyState icon="api" title={t('표시할 API 대상이 없습니다')} description={t('API 직접 연결 또는 API 수집 Agent를 추가해 주세요.')} />
       ) : (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {rows.map(({ agent, summary }) => {
-            const total = summary.count2xx + summary.count3xx + summary.count4xx + summary.count5xx + summary.countOther;
-            const hasErrors = summary.count5xx > 0;
-            return (
-              <Link key={agent.id} to={`/agents/${agent.id}`} className="card-interactive group rounded-xl border border-ui-border bg-bg-surface p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-2.5">
-                    <MaterialIcon name="api" className="text-lg text-primary" />
-                    <h2 className="truncate text-base font-bold text-text-base">{agent.name}</h2>
-                  </div>
-                  <StatusBadge healthy={agentOnline(agent)} />
+        <div className="space-y-7">
+          {directRows.length > 0 && (
+            <section>
+              <div className="mb-3 flex items-end justify-between gap-3">
+                <div>
+                  <h2 className="text-base font-bold text-text-base">{t('직접 연결 서비스')}</h2>
+                  <p className="mt-0.5 text-xs text-text-muted">{t('Agent 없이 애플리케이션이 전송하는 OTLP traces를 받습니다.')}</p>
                 </div>
-                <div className="mt-5 grid grid-cols-2 gap-3">
-                  <div><p className="text-2xs text-text-dim">{t('요청')}</p><p className="font-mono text-lg font-bold text-text-base">{total.toLocaleString()}</p></div>
-                  <div><p className="text-2xs text-text-dim">5xx</p><p className={`font-mono text-lg font-bold ${hasErrors ? 'text-status-error' : 'text-text-base'}`}>{summary.count5xx.toLocaleString()}</p></div>
+                <span className="font-mono text-xs text-text-dim">{directRows.length}</span>
+              </div>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {directRows.map(({ service, summary }) => (
+                  <ApiCard key={service.id} name={service.name} source={t('Direct')} active={service.isActive} summary={summary} to={`/api/${service.id}`} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {agentRows.length > 0 && (
+            <section>
+              <div className="mb-3 flex items-end justify-between gap-3">
+                <div>
+                  <h2 className="text-base font-bold text-text-base">{t('Agent 서비스')}</h2>
+                  <p className="mt-0.5 text-xs text-text-muted">{t('EveryUp Agent가 발견하고 전달한 API 요청입니다.')}</p>
                 </div>
-                {summary.top5xxPath ? <p className="mt-4 truncate font-mono text-xs text-text-muted">{summary.top5xxMethod} {summary.top5xxPath}</p> : <p className="mt-4 text-xs text-text-dim">{t('아직 오류 요청이 없습니다')}</p>}
-              </Link>
-            );
-          })}
+                <span className="font-mono text-xs text-text-dim">{agentRows.length}</span>
+              </div>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {agentRows.map(({ agent, summary }) => (
+                  <ApiCard key={agent.id} name={agent.name} source={t('Agent')} active={agentOnline(agent)} summary={summary} to={`/agents/${agent.id}`} />
+                ))}
+              </div>
+            </section>
+          )}
         </div>
+      )}
+
+      {showDirectSetup && (
+        <DirectApiSetupDialog
+          onClose={() => setShowDirectSetup(false)}
+          onCreated={service => navigate(`/api/${service.id}`)}
+        />
       )}
     </div>
   );

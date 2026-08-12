@@ -1,12 +1,19 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslate } from '@tolgee/react';
-import { EmptyState, PageHeader } from '../../components/common';
-import { api, type AgentServiceFlat, type ConnectedAgent, type OtelServiceMetric } from '../../services/api';
-import { getErrorMessage } from '../../utils/errors';
+import { Button, EmptyState, MaterialIcon, PageHeader } from '../../components/common';
+import { DirectMetricsSetupDialog } from '../../features/metrics/components/DirectMetricsSetupDialog';
 import { CapabilityAgentSetup } from '../../features/services/components/CapabilityAgentSetup';
+import {
+  api,
+  type AgentServiceFlat,
+  type ConnectedAgent,
+  type ObservedService,
+  type OtelServiceMetric,
+} from '../../services/api';
+import { getErrorMessage } from '../../utils/errors';
 
-interface MetricRow extends OtelServiceMetric {
+interface AgentMetricRow extends OtelServiceMetric {
   agent: ConnectedAgent;
   service?: AgentServiceFlat;
 }
@@ -14,70 +21,175 @@ interface MetricRow extends OtelServiceMetric {
 const METRIC_SKELETONS = ['metric-1', 'metric-2', 'metric-3', 'metric-4', 'metric-5', 'metric-6'];
 
 function formatMetric(value: number, unit?: string) {
+  if (unit === 'By') {
+    if (Math.abs(value) >= 1024 ** 3) return `${(value / 1024 ** 3).toFixed(1)} GB`;
+    if (Math.abs(value) >= 1024 ** 2) return `${(value / 1024 ** 2).toFixed(1)} MB`;
+    if (Math.abs(value) >= 1024) return `${(value / 1024).toFixed(1)} KB`;
+  }
   const formatted = Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 2 }).format(value);
   return unit ? `${formatted} ${unit}` : formatted;
 }
 
+function MetricCard({
+  name,
+  source,
+  metric,
+  to,
+  active = true,
+}: {
+  name: string;
+  source: string;
+  metric?: OtelServiceMetric;
+  to: string;
+  active?: boolean;
+}) {
+  const { t } = useTranslate();
+  return (
+    <Link to={to} className="card-interactive group rounded-xl border border-ui-border bg-bg-surface p-4">
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="min-w-0 truncate text-base font-bold text-text-base group-hover:text-primary">{name}</h2>
+        <span className="flex shrink-0 items-center gap-1.5 text-xs text-text-muted">
+          <span className={`h-2 w-2 rounded-full ${active ? 'bg-status-healthy' : 'bg-status-error'}`} aria-hidden="true" />
+          {source}
+        </span>
+      </div>
+      {metric ? (
+        <>
+          <p className="mt-4 break-all font-mono text-xs text-text-muted">{metric.metricName}</p>
+          <div className="mt-6 flex items-end justify-between gap-3">
+            <span className="text-xs font-medium text-text-muted">{t('현재 값')}</span>
+            <span className="font-mono text-2xl font-bold tabular-nums text-text-base">{formatMetric(metric.value, metric.unit)}</span>
+          </div>
+        </>
+      ) : (
+        <div className="mt-6 rounded-lg bg-ui-hover-soft px-3 py-4 text-sm text-text-muted">{t('첫 메트릭 수신을 기다리는 중입니다.')}</div>
+      )}
+    </Link>
+  );
+}
+
 export function MetricsPage() {
   const { t } = useTranslate();
-  const [metrics, setMetrics] = useState<MetricRow[]>([]);
+  const navigate = useNavigate();
+  const [agentMetrics, setAgentMetrics] = useState<AgentMetricRow[]>([]);
+  const [directServices, setDirectServices] = useState<ObservedService[]>([]);
+  const [directMetrics, setDirectMetrics] = useState<OtelServiceMetric[]>([]);
+  const [showDirectSetup, setShowDirectSetup] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
-    Promise.all([api.getAgents(), api.getAllAgentServicesFlat()])
-      .then(async ([agents, services]) => {
-        const servicesByName = new Map(services.map((service) => [`${service.agentId}:${service.name}`, service]));
-        const result = await Promise.all(agents.map(async (agent) => {
+    Promise.all([
+      api.getAgents(),
+      api.getAllAgentServicesFlat(),
+      api.getObservedServices('metrics'),
+      api.getObservedServiceMetrics(),
+    ])
+      .then(async ([agents, services, observedServices, observedMetrics]) => {
+        const servicesByName = new Map(services.map(service => [`${service.agentId}:${service.name}`, service]));
+        const rows = await Promise.all(agents.map(async agent => {
           const items = await api.getAgentServiceMetrics(agent.id);
-          return items.map((metric) => ({ ...metric, agent, service: servicesByName.get(`${agent.id}:${metric.serviceName}`) }));
+          return items.map(metric => ({
+            ...metric,
+            agent,
+            service: servicesByName.get(`${agent.id}:${metric.serviceName}`),
+          }));
         }));
-        if (alive) setMetrics(result.flat());
+        if (!alive) return;
+        setAgentMetrics(rows.flat());
+        setDirectServices(observedServices ?? []);
+        setDirectMetrics(observedMetrics ?? []);
       })
-      .catch((requestError) => { if (alive) setError(getErrorMessage(requestError)); })
+      .catch(requestError => { if (alive) setError(getErrorMessage(requestError)); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, []);
 
+  const directByService = useMemo(
+    () => new Map(directMetrics.map(metric => [metric.serviceId, metric])),
+    [directMetrics],
+  );
+  const visibleAgentMetrics = useMemo(
+    () => agentMetrics.filter(metric => metric.service),
+    [agentMetrics],
+  );
+
+  const isEmpty = directServices.length === 0 && visibleAgentMetrics.length === 0;
+
   return (
     <div>
-      <PageHeader title={t('메트릭')} subtitle={t('메트릭 프로필 Agent의 OTLP 게이트웨이로 수집된 서비스별 대표 메트릭입니다.')}>
-        <CapabilityAgentSetup capability="metrics" />
-      </PageHeader>
-      {loading ? <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {METRIC_SKELETONS.map((item) => <div key={item} className="h-44 animate-pulse rounded-xl border border-ui-border bg-bg-surface" />)}
-      </div> : error ? (
-        <EmptyState icon="error_outline" title={t('메트릭을 불러오지 못했습니다')} description={error} />
-      ) : metrics.length === 0 ? (
-        <EmptyState icon="monitoring" title={t('아직 수집된 메트릭이 없습니다')} description={t('메트릭 Agent를 연결한 뒤 OTLP 게이트웨이로 메트릭을 전송하면 여기에 표시됩니다.')} />
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {metrics.map((metric) => {
-            const key = `${metric.agent.id}:${metric.serviceName}:${metric.metricName}:${metric.metricType}`;
-            const content = <>
-              <div className="flex items-start justify-between gap-3">
-                <h2 className="min-w-0 truncate text-base font-bold text-text-base group-hover:text-primary">{metric.serviceName}</h2>
-                <span className="shrink-0 text-xs text-text-muted">{metric.agent.name}</span>
-              </div>
-              <p className="mt-4 break-all font-mono text-xs text-text-muted">{metric.metricName}</p>
-              <div className="mt-6 flex items-end justify-between gap-3">
-                <span className="text-xs font-medium text-text-muted">{t('현재 값')}</span>
-                <span className="font-mono text-2xl font-bold tabular-nums text-text-base">{formatMetric(metric.value, metric.unit)}</span>
-              </div>
-            </>;
-
-            return metric.service ? (
-              <Link key={key} to={`/services/${metric.service.agentId}/${encodeURIComponent(metric.service.key)}?tab=metrics`} className="card-interactive group rounded-xl border border-ui-border bg-bg-surface p-4">
-                {content}
-              </Link>
-            ) : (
-              <article key={key} className="rounded-xl border border-ui-border bg-bg-surface p-4">
-                {content}
-              </article>
-            );
-          })}
+      <PageHeader title={t('메트릭')} subtitle={t('Agent 또는 직접 OpenTelemetry 연결에서 수집한 서비스 메트릭입니다.')}>
+        <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
+          <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />{t('Metrics 직접 추가')}</Button>
+          <CapabilityAgentSetup capability="metrics" buttonVariant="secondary" />
         </div>
+      </PageHeader>
+
+      {loading ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {METRIC_SKELETONS.map(item => <div key={item} className="h-44 animate-pulse rounded-xl border border-ui-border bg-bg-surface" />)}
+        </div>
+      ) : error ? (
+        <EmptyState icon="error_outline" title={t('메트릭을 불러오지 못했습니다')} description={error} />
+      ) : isEmpty ? (
+        <EmptyState icon="monitoring" title={t('아직 연결된 메트릭 서비스가 없습니다')} description={t('Metrics 직접 연결 또는 메트릭 수집 Agent를 추가해 주세요.')} />
+      ) : (
+        <div className="space-y-7">
+          {directServices.length > 0 && (
+            <section>
+              <div className="mb-3 flex items-end justify-between gap-3">
+                <div>
+                  <h2 className="text-base font-bold text-text-base">{t('직접 연결 서비스')}</h2>
+                  <p className="mt-0.5 text-xs text-text-muted">{t('Agent 없이 OTLP Metrics를 받는 Observed Service입니다.')}</p>
+                </div>
+                <span className="font-mono text-xs text-text-dim">{directServices.length}</span>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {directServices.map(service => (
+                  <MetricCard
+                    key={service.id}
+                    name={service.name}
+                    source={t('Direct')}
+                    metric={directByService.get(service.id)}
+                    to={`/metrics/${service.id}`}
+                    active={service.isActive}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {visibleAgentMetrics.length > 0 && (
+            <section>
+              <div className="mb-3 flex items-end justify-between gap-3">
+                <div>
+                  <h2 className="text-base font-bold text-text-base">{t('Agent 서비스')}</h2>
+                  <p className="mt-0.5 text-xs text-text-muted">{t('EveryUp Agent가 발견하고 전달한 서비스 메트릭입니다.')}</p>
+                </div>
+                <span className="font-mono text-xs text-text-dim">{visibleAgentMetrics.length}</span>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {visibleAgentMetrics.map(metric => metric.service ? (
+                  <MetricCard
+                    key={`${metric.agent.id}:${metric.serviceName}:${metric.metricName}`}
+                    name={metric.serviceName}
+                    source={metric.agent.name}
+                    metric={metric}
+                    to={`/services/${metric.service.agentId}/${encodeURIComponent(metric.service.key)}?tab=metrics`}
+                  />
+                ) : null)}
+              </div>
+            </section>
+          )}
+        </div>
+      )}
+
+      {showDirectSetup && (
+        <DirectMetricsSetupDialog
+          onClose={() => setShowDirectSetup(false)}
+          onCreated={service => navigate(`/metrics/${service.id}`)}
+        />
       )}
     </div>
   );

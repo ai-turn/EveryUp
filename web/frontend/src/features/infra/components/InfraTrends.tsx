@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import { MaterialIcon, type GlobalTimeRange } from '../../../components/common';
 import {
-  ChartStatsLegend, ChartTooltip, areaProps, chartCardClass, formatAxisValue,
+  CHART_INITIAL_DIMENSION, ChartStatsLegend, ChartTooltip, areaProps, chartCardClass, formatAxisValue,
   getChartTheme, getYAxisMax, gridProps, lineProps, tooltipCursor, xAxisProps, yAxisProps,
 } from '../../../components/charts';
 import { useMonitoringTrends } from '../../../hooks/useInfra';
@@ -116,7 +116,7 @@ function ChartCard({
       ) : (
         <div className="px-2 pb-4 pt-1">
           <div className="h-60 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} initialDimension={CHART_INITIAL_DIMENSION}>
               <ComposedChart data={chart.data} margin={{ top: 16, right: 20, left: 0, bottom: 2 }}>
                 <CartesianGrid {...gridProps(theme)} />
 

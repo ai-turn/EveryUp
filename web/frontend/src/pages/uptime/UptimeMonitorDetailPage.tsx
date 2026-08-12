@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 import { Button, ConfirmDialog, MaterialIcon } from '../../components/common';
 import {
-  ChartStatsLegend, ChartTooltip, areaProps, chartCardClass, formatAxisValue, getChartTheme,
+  CHART_INITIAL_DIMENSION, ChartStatsLegend, ChartTooltip, areaProps, chartCardClass, formatAxisValue, getChartTheme,
   gridProps, lineProps, tooltipCursor, xAxisProps, yAxisProps,
 } from '../../components/charts';
 import { UptimeMonitorDialog } from '../../features/uptime/components/UptimeMonitorDialog';
@@ -37,7 +37,7 @@ function ResponseTimeChart({ metrics }: { metrics: UptimeMonitorMetric[] }) {
         <div className="flex h-48 items-center justify-center text-sm text-text-dim">{t('데이터 없음')}</div>
       ) : (
         <>
-          <ResponsiveContainer width="100%" height={192}>
+          <ResponsiveContainer width="100%" height={192} initialDimension={CHART_INITIAL_DIMENSION}>
             <ComposedChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid {...gridProps(theme)} />
               <XAxis dataKey="timeLabel" {...xAxisProps(theme)} />

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { getErrorMessage } from '../../../utils/errors';
 import { Button, MaterialIcon, EmptyState, ConfirmDialog, Toggle, SegmentedControl, SearchInput } from '../../../components/common';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
-import { api, type AlertRule, type NotificationChannel, type AgentServiceFlat, type ConnectedAgent } from '../../../services/api';
+import { api, type AlertRule, type NotificationChannel, type AgentServiceFlat, type ConnectedAgent, type InfrastructureResource, type ObservedService } from '../../../services/api';
 import { getChannelStyle } from '../utils/channelMeta';
 import { AlertRuleForm } from './AlertRuleForm';
 import { FormSidePanel } from './FormSidePanel';
@@ -45,15 +45,16 @@ function ruleCategory(rule: AlertRule): Exclude<CategoryKey, 'all'> {
   return 'resource';
 }
 
-function targetLabel(rule: AlertRule, agentServices: AgentServiceFlat[], agents: ConnectedAgent[], t: (k: string) => string): string {
+function targetLabel(rule: AlertRule, agentServices: AgentServiceFlat[], agents: ConnectedAgent[], directServices: ObservedService[], infrastructureResources: InfrastructureResource[], t: (k: string) => string): string {
   if (rule.type === 'service' || rule.type === 'log') {
+    if (rule.serviceId) return directServices.find(service => service.id === rule.serviceId)?.name ?? rule.serviceId;
     if (rule.agentId && rule.serviceKey) {
       const svc = agentServices.find(s => s.agentId === rule.agentId && s.key === rule.serviceKey);
       return svc ? `${svc.agentName} / ${svc.name}` : rule.serviceKey;
     }
     return rule.type === 'log' ? t('alerts.rules.allLogServices') : t('alerts.rules.allHealthchecks');
   }
-  if (rule.agentId) return agents.find(a => a.id === rule.agentId)?.name ?? rule.agentId;
+  if (rule.agentId) return infrastructureResources.find(resource => resource.id === rule.agentId)?.name ?? agents.find(a => a.id === rule.agentId)?.name ?? rule.agentId;
   return t('alerts.rules.allHosts');
 }
 
@@ -161,6 +162,8 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
   const [channels, setChannels] = useState<NotificationChannel[]>([]);
   const [agentServices, setAgentServices] = useState<AgentServiceFlat[]>([]);
   const [agents, setAgents] = useState<ConnectedAgent[]>([]);
+  const [directServices, setDirectServices] = useState<ObservedService[]>([]);
+  const [infrastructureResources, setInfrastructureResources] = useState<InfrastructureResource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
@@ -184,16 +187,20 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
 
   const loadData = async () => {
     try {
-      const [rulesData, channelsData, agentSvcs, agts] = await Promise.all([
+      const [rulesData, channelsData, agentSvcs, agts, directRows, infrastructureRows] = await Promise.all([
         api.getAlertRules(),
         api.getNotificationChannels(),
         api.getAllAgentServicesFlat(),
         api.getAgents(),
+        api.getObservedServices(),
+        api.getInfrastructureResources(),
       ]);
       setRules(rulesData);
       setChannels(channelsData);
       setAgentServices(agentSvcs ?? []);
       setAgents(agts ?? []);
+      setDirectServices(directRows ?? []);
+      setInfrastructureResources(infrastructureRows ?? []);
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
@@ -268,7 +275,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
       if (enabledFilter !== 'all' && (enabledFilter === 'on' ? !r.isEnabled : r.isEnabled)) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
-        const target = targetLabel(r, agentServices, agents, t).toLowerCase();
+        const target = targetLabel(r, agentServices, agents, directServices, infrastructureResources, t).toLowerCase();
         if (!r.name.toLowerCase().includes(q) && !target.includes(q)) return false;
       }
       return true;
@@ -278,11 +285,11 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
       let v = 0;
       if (sortKey === 'severity') v = SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity];
       else if (sortKey === 'name') v = a.name.localeCompare(b.name);
-      else if (sortKey === 'target') v = targetLabel(a, agentServices, agents, t).localeCompare(targetLabel(b, agentServices, agents, t));
+      else if (sortKey === 'target') v = targetLabel(a, agentServices, agents, directServices, infrastructureResources, t).localeCompare(targetLabel(b, agentServices, agents, directServices, infrastructureResources, t));
       else if (sortKey === 'category') v = ruleCategory(a).localeCompare(ruleCategory(b));
       return sortDir === 'asc' ? v : -v;
     });
-  }, [rules, categoryFilter, severityFilter, enabledFilter, searchQuery, sortKey, sortDir, agentServices, agents, t]);
+  }, [rules, categoryFilter, severityFilter, enabledFilter, searchQuery, sortKey, sortDir, agentServices, agents, directServices, infrastructureResources, t]);
 
   const onSort = (key: SortKey) => {
     if (sortKey === key) setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
@@ -493,9 +500,9 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                       <td className="px-4 py-2.5 align-middle">
                         <span
                           className="inline-block max-w-full truncate rounded-md bg-slate-100 px-2 py-0.5 font-mono text-xs text-slate-700 dark:bg-ui-hover-dark dark:text-text-base-dark"
-                          title={targetLabel(rule, agentServices, agents, t)}
+                          title={targetLabel(rule, agentServices, agents, directServices, infrastructureResources, t)}
                         >
-                          {targetLabel(rule, agentServices, agents, t)}
+                          {targetLabel(rule, agentServices, agents, directServices, infrastructureResources, t)}
                         </span>
                       </td>
                       <td className="px-4 py-2.5 align-middle text-sm">

@@ -5,7 +5,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts';
 import {
-  ChartLegend, ChartStatsLegend, ChartTooltip, SERIES_HEX, chartCardClass, formatAxisValue,
+  CHART_INITIAL_DIMENSION, ChartLegend, ChartStatsLegend, ChartTooltip, SERIES_HEX, chartCardClass, formatAxisValue,
   getChartTheme, gridProps, lineProps, tooltipCursor, xAxisProps, yAxisProps,
 } from '../../../components/charts';
 import { api, type ApiRequestStatBucket, type ApiRequestStatusSummary } from '../../../services/api';
@@ -19,14 +19,25 @@ const RANGES: { value: TimeRange; hours: number; bucketMins: number }[] = [
   { value: '24h', hours: 24, bucketMins: 30 },
 ];
 
-interface Props {
-  agentId: string;
-  /** Omit for a project-level rollup across all of the agent's services. */
-  serviceKey?: string;
+interface SharedProps {
   refreshKey?: number;
   /** Controlled range from the page-header picker; when set, own buttons hide. */
   range?: TimeRange;
 }
+
+interface AgentProps extends SharedProps {
+  agentId: string;
+  /** Omit for a project-level rollup across all of the agent's services. */
+  serviceKey?: string;
+}
+
+interface DirectProps extends SharedProps {
+  observedServiceId: string;
+}
+
+type RequestTrendSource =
+  | { kind: 'agent'; agentId: string; serviceKey?: string }
+  | { kind: 'direct'; observedServiceId: string };
 
 interface ChartPoint {
   timeLabel: string;
@@ -37,13 +48,21 @@ interface ChartPoint {
   hasLatency: boolean;
 }
 
-export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey, range: controlledRange }: Props) {
+function ServiceRequestTrends({
+  source,
+  refreshKey,
+  range: controlledRange,
+}: SharedProps & { source: RequestTrendSource }) {
   const { t } = useTranslate();
   const [localRange, setLocalRange] = useState<TimeRange>('6h');
   const range = controlledRange ?? localRange;
   const [buckets, setBuckets] = useState<ApiRequestStatBucket[]>([]);
   const [summary, setSummary] = useState<ApiRequestStatusSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const sourceKind = source.kind;
+  const agentId = source.kind === 'agent' ? source.agentId : '';
+  const serviceKey = source.kind === 'agent' ? source.serviceKey : undefined;
+  const observedServiceId = source.kind === 'direct' ? source.observedServiceId : '';
 
   useEffect(() => {
     const load = async () => {
@@ -51,9 +70,11 @@ export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey, ran
       const from = new Date(Date.now() - r.hours * 3600 * 1000).toISOString();
       const params = { from, bucketMins: r.bucketMins };
       setLoading(true);
-      const fetchStats = serviceKey
-        ? api.getAgentServiceRequestStats(agentId, serviceKey, params)
-        : api.getAgentRequestStats(agentId, params);
+      const fetchStats = sourceKind === 'direct'
+        ? api.getObservedServiceRequestStats(observedServiceId, params)
+        : serviceKey
+          ? api.getAgentServiceRequestStats(agentId, serviceKey, params)
+          : api.getAgentRequestStats(agentId, params);
       try {
         setBuckets((await fetchStats) ?? []);
       } catch {
@@ -63,13 +84,15 @@ export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey, ran
       }
       // Non-critical — the strip hides itself when the summary is missing.
       try {
-        setSummary(await api.getRequestStatusSummary(agentId, serviceKey, { from }));
+        setSummary(sourceKind === 'direct'
+          ? await api.getObservedServiceRequestStatusSummary(observedServiceId, { from })
+          : await api.getRequestStatusSummary(agentId, serviceKey, { from }));
       } catch {
         setSummary(null);
       }
     };
     void load();
-  }, [agentId, serviceKey, range, refreshKey]);
+  }, [agentId, observedServiceId, range, refreshKey, serviceKey, sourceKind]);
 
   const theme = getChartTheme();
 
@@ -145,7 +168,7 @@ export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey, ran
       {/* Latency percentiles (only when we have timed requests) */}
       {anyLatency && (
         <>
-          <ResponsiveContainer width="100%" height={160}>
+          <ResponsiveContainer width="100%" height={160} minWidth={0} initialDimension={CHART_INITIAL_DIMENSION}>
             <ComposedChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid {...gridProps(theme)} />
               <XAxis dataKey="timeLabel" {...xAxisProps(theme)} />
@@ -171,7 +194,7 @@ export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey, ran
       )}
 
       {/* Volume + error rate */}
-      <ResponsiveContainer width="100%" height={140}>
+      <ResponsiveContainer width="100%" height={140} minWidth={0} initialDimension={CHART_INITIAL_DIMENSION}>
         <ComposedChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <CartesianGrid {...gridProps(theme)} />
           <XAxis dataKey="timeLabel" {...xAxisProps(theme)} />
@@ -186,4 +209,12 @@ export function AgentServiceRequestTrends({ agentId, serviceKey, refreshKey, ran
       </ResponsiveContainer>
     </div>
   );
+}
+
+export function AgentServiceRequestTrends({ agentId, serviceKey, ...props }: AgentProps) {
+  return <ServiceRequestTrends {...props} source={{ kind: 'agent', agentId, serviceKey }} />;
+}
+
+export function DirectServiceRequestTrends({ observedServiceId, ...props }: DirectProps) {
+  return <ServiceRequestTrends {...props} source={{ kind: 'direct', observedServiceId }} />;
 }

@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 import type { GlobalTimeRange } from '../../../components/common';
 import {
-  ChartStatsLegend, ChartTooltip, areaProps, chartCardClass, formatAxisValue,
+  CHART_INITIAL_DIMENSION, ChartStatsLegend, ChartTooltip, areaProps, chartCardClass, formatAxisValue,
   getChartTheme, gridProps, lineProps, tooltipCursor, xAxisProps, yAxisProps,
 } from '../../../components/charts';
 import { api, type ServiceHistoryPoint } from '../../../services/api';
@@ -67,7 +67,7 @@ export function AgentResponseTimeChart({ agentId, serviceKey, refreshKey, range 
         </div>
       ) : (
         <>
-          <ResponsiveContainer width="100%" height={192}>
+          <ResponsiveContainer width="100%" height={192} initialDimension={CHART_INITIAL_DIMENSION}>
             <ComposedChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid {...gridProps(theme)} />
               <XAxis dataKey="timeLabel" {...xAxisProps(theme)} />

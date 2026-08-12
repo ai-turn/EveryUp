@@ -3,6 +3,7 @@ import { hostsApi } from './hosts';
 import { alertsApi } from './alerts';
 import { agentsApi } from './agents';
 import { projectsApi } from './projects';
+import { observedServicesApi } from './observedServices';
 
 /**
  * 중앙 API 클라이언트 싱글톤.
@@ -17,6 +18,7 @@ export const api = {
   ...alertsApi,
   ...agentsApi,
   ...projectsApi,
+  ...observedServicesApi,
 };
 
 // Re-export all types — 기존 import 경로 유지
@@ -24,6 +26,7 @@ export type { ApiResponse } from './base';
 export type {
   LogEntry,
   LogLevel,
+  LogHistogramBucket,
   LinkedRequest,
   ApiRequest,
   TraceSpan,
@@ -43,6 +46,10 @@ export type {
   SystemInfo,
   SystemMetricPoint,
   SystemMetricsHistory,
+  InfrastructureAdapter,
+  InfrastructureResource,
+  InfrastructureResourceInput,
+  InfrastructureResourceSetup,
 } from './hosts';
 export type {
   ConnectedAgent,
@@ -60,13 +67,14 @@ export type {
   ServiceUptimeDay,
   AgentIncident,
   AgentOverview,
+} from './agents';
+export type {
   ApiRequestStatBucket,
   ApiRequestStatusSummary,
-  LogHistogramBucket,
   OtelMetricName,
   OtelMetricPoint,
   OtelServiceMetric,
-} from './agents';
+} from './telemetry';
 export type {
   AlertRuleType,
   AlertMetric,
@@ -90,3 +98,12 @@ export type {
   AppSettings,
 } from './alerts';
 export type { Project, ProjectInput } from './projects';
+export type {
+  TelemetrySignal,
+  ObservedService,
+  ObservedServiceInput,
+  ObservedServiceSetup,
+  DirectLogQuery,
+  DirectMetricPointQuery,
+  DirectApiRequestQuery,
+} from './observedServices';

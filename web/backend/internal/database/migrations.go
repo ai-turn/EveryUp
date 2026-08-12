@@ -263,6 +263,18 @@ func migrate() error {
 	if err := migrateV45(); err != nil {
 		return fmt.Errorf("v45 migration failed: %w", err)
 	}
+	if err := migrateV46(); err != nil {
+		return fmt.Errorf("v46 migration failed: %w", err)
+	}
+	if err := migrateV47(); err != nil {
+		return fmt.Errorf("v47 migration failed: %w", err)
+	}
+	if err := migrateV48(); err != nil {
+		return fmt.Errorf("v48 migration failed: %w", err)
+	}
+	if err := migrateV49(); err != nil {
+		return fmt.Errorf("v49 migration failed: %w", err)
+	}
 
 	return nil
 }
@@ -1417,6 +1429,99 @@ func migrateV45() error {
 		}
 		return nil
 	})
+}
+
+// migrateV46 adds directly created Observed Services and their one-to-one,
+// signal-scoped OTLP connections. Existing Agent and legacy service identities
+// remain untouched and continue through compatibility adapters.
+// Added: 2026-08-11
+func migrateV46() error {
+	return Transaction(func(tx *sql.Tx) error {
+		statements := []string{
+			`CREATE TABLE IF NOT EXISTS observed_services (
+				id         TEXT PRIMARY KEY,
+				name       TEXT NOT NULL,
+				project_id TEXT,
+				created_at DATETIME NOT NULL,
+				updated_at DATETIME NOT NULL,
+				FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE SET NULL
+			)`,
+			`CREATE TABLE IF NOT EXISTS direct_telemetry_connections (
+				observed_service_id TEXT PRIMARY KEY,
+				api_key_hash        TEXT NOT NULL UNIQUE,
+				api_key_masked      TEXT NOT NULL,
+				signals             TEXT NOT NULL,
+				is_active           INTEGER NOT NULL DEFAULT 1,
+				last_seen_at        DATETIME,
+				created_at          DATETIME NOT NULL,
+				updated_at          DATETIME NOT NULL,
+				FOREIGN KEY(observed_service_id) REFERENCES observed_services(id) ON DELETE CASCADE
+			)`,
+			`CREATE INDEX IF NOT EXISTS idx_observed_services_project ON observed_services(project_id)`,
+			`CREATE UNIQUE INDEX IF NOT EXISTS idx_direct_telemetry_key_hash ON direct_telemetry_connections(api_key_hash)`,
+		}
+		for _, statement := range statements {
+			if _, err := tx.Exec(statement); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+// migrateV47 adds ingest-time log filtering to direct telemetry connections.
+// An empty JSON array means accept every level, matching the Agent service
+// filter contract. New direct targets receive the product default in Manager.
+// Added: 2026-08-11
+func migrateV47() error {
+	_, err := DB.Exec(`ALTER TABLE direct_telemetry_connections
+		ADD COLUMN log_level_filter TEXT NOT NULL DEFAULT '[]'`)
+	if err != nil && !strings.Contains(err.Error(), "duplicate column name: log_level_filter") {
+		return err
+	}
+	return nil
+}
+
+// migrateV48 adds request-projection exclusions to direct trace connections.
+// Values use the same exact-or-trailing-* prefix contract as legacy services.
+// Added: 2026-08-11
+func migrateV48() error {
+	_, err := DB.Exec(`ALTER TABLE direct_telemetry_connections
+		ADD COLUMN api_exclude_paths TEXT NOT NULL DEFAULT '[]'`)
+	if err != nil && !strings.Contains(err.Error(), "duplicate column name: api_exclude_paths") {
+		return err
+	}
+	return nil
+}
+
+// migrateV49 turns the existing host identity into a credentialed standard
+// OpenTelemetry Collector target. Agent-backed infrastructure remains in the
+// agents table and both adapters continue writing the shared system_metrics
+// history keyed by their resource ID.
+// Added: 2026-08-11
+func migrateV49() error {
+	columns := []string{
+		`ALTER TABLE hosts ADD COLUMN project_id TEXT`,
+		`ALTER TABLE hosts ADD COLUMN collector_type TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE hosts ADD COLUMN api_key_hash TEXT`,
+		`ALTER TABLE hosts ADD COLUMN api_key_masked TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE hosts ADD COLUMN last_seen_at DATETIME`,
+	}
+	for _, statement := range columns {
+		if _, err := DB.Exec(statement); err != nil && !strings.Contains(err.Error(), "duplicate column name") {
+			return err
+		}
+	}
+	for _, statement := range []string{
+		`CREATE INDEX IF NOT EXISTS idx_hosts_project ON hosts(project_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_hosts_collector_type ON hosts(collector_type)`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_hosts_api_key_hash ON hosts(api_key_hash) WHERE api_key_hash IS NOT NULL`,
+	} {
+		if _, err := DB.Exec(statement); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func ensureAPIRequestIndexes() error {

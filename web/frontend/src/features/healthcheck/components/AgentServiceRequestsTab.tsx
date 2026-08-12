@@ -6,17 +6,28 @@ import { activatable } from '../../../utils/a11y';
 import { toast } from 'react-hot-toast';
 import { TracePanel } from '../../traces/components/TracePanel';
 import { runtimeLabel } from '../runtimeLabels';
-import { AgentServiceRequestTrends } from './AgentServiceRequestTrends';
+import { AgentServiceRequestTrends, DirectServiceRequestTrends } from './AgentServiceRequestTrends';
 
-interface Props {
-  agentId: string;
-  serviceKey: string;
+interface SharedProps {
   refreshKey: number;
   /** Shared chart range from the page-header picker (trends chart only; the list keeps day presets). */
   range?: GlobalTimeRange;
+}
+
+interface AgentProps extends SharedProps {
+  agentId: string;
+  serviceKey: string;
   /** Agent-detected runtime — drives the setup hint in the empty state. */
   runtime?: string;
 }
+
+interface DirectProps extends SharedProps {
+  observedServiceId: string;
+}
+
+type RequestSource =
+  | { kind: 'agent'; agentId: string; serviceKey: string; runtime?: string }
+  | { kind: 'direct'; observedServiceId: string };
 
 type DatePreset = '1d' | '7d' | '30d' | '';
 
@@ -58,7 +69,11 @@ function formatTime(ts: string) {
   });
 }
 
-export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, range, runtime }: Props) {
+function ServiceRequestsPanel({
+  source,
+  refreshKey,
+  range,
+}: SharedProps & { source: RequestSource }) {
   const [requests, setRequests] = useState<ApiRequest[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -67,15 +82,24 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, range
   const [search, setSearch] = useState('');
   const [inputValue, setInputValue] = useState('');
   const [datePreset, setDatePreset] = useState<DatePreset>('');
+  const sourceKind = source.kind;
+  const agentId = source.kind === 'agent' ? source.agentId : '';
+  const serviceKey = source.kind === 'agent' ? source.serviceKey : '';
+  const observedServiceId = source.kind === 'direct' ? source.observedServiceId : '';
 
   const fetch = useCallback(async () => {
+    // The page-level refresh key intentionally invalidates this callback.
+    void refreshKey;
     setLoading(true);
     try {
-      const res = await api.getAgentServiceRequests(agentId, serviceKey, {
+      const params = {
         errorsOnly,
         search: search || undefined,
         from: toISOFrom(datePreset),
-      });
+      };
+      const res = sourceKind === 'direct'
+        ? await api.getObservedServiceRequests(observedServiceId, params)
+        : await api.getAgentServiceRequests(agentId, serviceKey, params);
       setRequests(res?.data ?? []);
       setTotal(res?.total ?? 0);
     } catch (err) {
@@ -83,7 +107,7 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, range
     } finally {
       setLoading(false);
     }
-  }, [agentId, serviceKey, refreshKey, errorsOnly, search, datePreset]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [agentId, datePreset, errorsOnly, observedServiceId, refreshKey, search, serviceKey, sourceKind]);
 
   useEffect(() => { fetch(); }, [fetch]);
 
@@ -117,7 +141,11 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, range
       )}
 
       {/* Trends — volume, error rate, and latency percentiles over time */}
-      <AgentServiceRequestTrends agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} range={range} />
+      {source.kind === 'direct' ? (
+        <DirectServiceRequestTrends observedServiceId={source.observedServiceId} refreshKey={refreshKey} range={range} />
+      ) : (
+        <AgentServiceRequestTrends agentId={source.agentId} serviceKey={source.serviceKey} refreshKey={refreshKey} range={range} />
+      )}
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
@@ -171,28 +199,37 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, range
           {!search && !errorsOnly && !datePreset && (
             <div className="mt-6 mx-auto max-w-md text-left p-4 rounded-xl bg-bg-surface border border-ui-border">
               <p className="text-sm font-semibold text-text-secondary mb-2">
-                {runtime
-                  ? `${runtimeLabel(runtime)} 서비스로 감지되었습니다. 트레이스를 수집하려면:`
-                  : '트레이스를 수집하려면:'}
+                {source.kind === 'agent' && source.runtime
+                  ? `${runtimeLabel(source.runtime)} 서비스로 감지되었습니다. 트레이스를 수집하려면:`
+                  : source.kind === 'direct'
+                    ? '애플리케이션 트레이스를 직접 수집하려면:'
+                    : '트레이스를 수집하려면:'}
               </p>
-              <ul className="space-y-1.5 text-sm text-text-muted">
-                <li className="flex gap-2">
-                  <span className="shrink-0 font-bold text-primary">1</span>
-                  <span>
-                    에이전트 compose의 <code className="font-mono text-xs bg-ui-hover px-1 py-0.5 rounded">everyup-ebpf</code> 블록
-                    주석 해제 — 앱 수정 없이 경로·상태·지연시간 수집
-                  </span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="shrink-0 font-bold text-primary">2</span>
-                  <span>
-                    헤더까지 필요하면 앱에 OpenTelemetry 연결
-                    {runtime === 'java' && ' — Java는 JAVA_TOOL_OPTIONS 환경변수만으로 가능'}
-                    {runtime === 'node' && ' — Node.js는 NODE_OPTIONS 환경변수만으로 가능'}
-                    {runtime === 'python' && ' — Python은 opentelemetry-instrument로 가능'}
-                  </span>
-                </li>
-              </ul>
+              {source.kind === 'direct' ? (
+                <ul className="space-y-1.5 text-sm text-text-muted">
+                  <li className="flex gap-2"><span className="shrink-0 font-bold text-primary">1</span><span>애플리케이션에 OpenTelemetry SDK 또는 자동 계측을 적용합니다.</span></li>
+                  <li className="flex gap-2"><span className="shrink-0 font-bold text-primary">2</span><span>설정 화면에서 발급한 OTLP endpoint와 Authorization 헤더로 traces를 전송합니다.</span></li>
+                </ul>
+              ) : (
+                <ul className="space-y-1.5 text-sm text-text-muted">
+                  <li className="flex gap-2">
+                    <span className="shrink-0 font-bold text-primary">1</span>
+                    <span>
+                      에이전트 compose의 <code className="font-mono text-xs bg-ui-hover px-1 py-0.5 rounded">everyup-ebpf</code> 블록
+                      주석 해제 — 앱 수정 없이 경로·상태·지연시간 수집
+                    </span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="shrink-0 font-bold text-primary">2</span>
+                    <span>
+                      헤더까지 필요하면 앱에 OpenTelemetry 연결
+                      {source.runtime === 'java' && ' — Java는 JAVA_TOOL_OPTIONS 환경변수만으로 가능'}
+                      {source.runtime === 'node' && ' — Node.js는 NODE_OPTIONS 환경변수만으로 가능'}
+                      {source.runtime === 'python' && ' — Python은 opentelemetry-instrument로 가능'}
+                    </span>
+                  </li>
+                </ul>
+              )}
             </div>
           )}
         </div>
@@ -230,4 +267,12 @@ export function AgentServiceRequestsTab({ agentId, serviceKey, refreshKey, range
       )}
     </div>
   );
+}
+
+export function AgentServiceRequestsTab({ agentId, serviceKey, runtime, ...props }: AgentProps) {
+  return <ServiceRequestsPanel {...props} source={{ kind: 'agent', agentId, serviceKey, runtime }} />;
+}
+
+export function DirectServiceRequestsTab({ observedServiceId, ...props }: DirectProps) {
+  return <ServiceRequestsPanel {...props} source={{ kind: 'direct', observedServiceId }} />;
 }

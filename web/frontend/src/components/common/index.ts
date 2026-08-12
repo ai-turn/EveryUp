@@ -1,5 +1,6 @@
 export { Button } from './Button';
 export { Input } from './Input';
+export { Textarea } from './Textarea';
 export { Select } from './Select';
 export { SearchInput } from './SearchInput';
 export { PageHeader } from './PageHeader';

@@ -34,6 +34,12 @@ import type {
   UptimeMonitorSummary,
   UptimeMonitorHistory,
   Project,
+  ObservedService,
+  ObservedServiceInput,
+  ObservedServiceSetup,
+  InfrastructureResource,
+  InfrastructureResourceInput,
+  InfrastructureResourceSetup,
 } from './api';
 
 // ?? Notifications ?????????????????????????????????????????????????????????????
@@ -70,6 +76,23 @@ const mockSystemMetrics: SystemMetricsHistory = {
 // ?? Alert Rules ???????????????????????????????????????????????????????????????
 
 const mockAlertRules: AlertRule[] = [
+  {
+    id: 'direct-infra-cpu',
+    name: 'Edge Collector CPU',
+    type: 'resource',
+    agentId: 'infra_mock_edge_01',
+    metric: 'cpu',
+    operator: 'gt',
+    threshold: 80,
+    duration: 5,
+    severity: 'warning',
+    isEnabled: true,
+    isSystem: false,
+    cooldown: 600,
+    channelIds: ['1'],
+    createdAt: new Date(Date.now() - 2 * 86_400_000).toISOString(),
+    updatedAt: new Date(Date.now() - 20 * 60_000).toISOString(),
+  },
   {
     id: '1',
     name: 'High CPU Usage',
@@ -608,8 +631,72 @@ const mockUptimeHistory: UptimeMonitorHistory = {
 const mockProjects: Project[] = [
   {
     id: 'project_mock_production', name: 'Production', description: '고객 서비스',
-    agentCount: 0, monitorCount: 0,
+    agentCount: 0, monitorCount: 0, observedServiceCount: 0,
+    infrastructureResourceCount: 0,
     createdAt: new Date(nowAgent - 7 * 86_400_000).toISOString(), updatedAt: new Date(nowAgent).toISOString(),
+  },
+];
+
+const mockObservedServices: ObservedService[] = [
+  {
+    id: 'observed_mock_checkout',
+    name: 'checkout-api',
+    projectId: 'project_mock_production',
+    signals: ['logs'],
+    logLevelFilter: ['error', 'warn', 'info'],
+    isActive: true,
+    apiKeyMasked: 'evup_****9f2a',
+    lastSeenAt: new Date(nowAgent - 25_000).toISOString(),
+    createdAt: new Date(nowAgent - 3 * 86_400_000).toISOString(),
+    updatedAt: new Date(nowAgent - 25_000).toISOString(),
+  },
+  {
+    id: 'observed_mock_catalog',
+    name: 'catalog-worker',
+    projectId: 'project_mock_production',
+    signals: ['metrics'],
+    isActive: true,
+    apiKeyMasked: 'evup_****c8d1',
+    lastSeenAt: new Date(nowAgent - 40_000).toISOString(),
+    createdAt: new Date(nowAgent - 2 * 86_400_000).toISOString(),
+    updatedAt: new Date(nowAgent - 40_000).toISOString(),
+  },
+  {
+    id: 'observed_mock_payments',
+    name: 'payments-api',
+    projectId: 'project_mock_production',
+    signals: ['traces'],
+    isActive: true,
+    apiKeyMasked: 'evup_****a741',
+    lastSeenAt: new Date(nowAgent - 15_000).toISOString(),
+    createdAt: new Date(nowAgent - 5 * 86_400_000).toISOString(),
+    updatedAt: new Date(nowAgent - 15_000).toISOString(),
+  },
+];
+
+const mockDirectLogFilters = new Map<string, string[]>([
+  ['observed_mock_checkout', ['error', 'warn', 'info']],
+]);
+
+const mockDirectApiExclusions = new Map<string, string[]>([
+  ['observed_mock_checkout', ['/health*']],
+  ['observed_mock_payments', ['/health*', '/metrics*']],
+]);
+
+const mockInfrastructureResources: InfrastructureResource[] = [
+  {
+    id: 'infra_mock_edge_01',
+    name: 'edge-host-01',
+    projectId: 'project_mock_production',
+    adapter: 'otel-collector',
+    isActive: true,
+    apiKeyMasked: 'evup_****4e91',
+    lastSeenAt: new Date(nowAgent - 18_000).toISOString(),
+    cpuUsage: 67.4,
+    memoryUsage: 72.8,
+    diskUsage: 41.2,
+    createdAt: new Date(nowAgent - 4 * 86_400_000).toISOString(),
+    updatedAt: new Date(nowAgent - 18_000).toISOString(),
   },
 ];
 
@@ -643,10 +730,117 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   if (method !== 'GET') {
     const projectMatch = endpoint.match(/^\/projects\/([^/]+)$/);
     const projectMemberMatch = endpoint.match(/^\/projects\/([^/]+)\/(agents|monitors)\/([^/]+)$/);
+    const observedMatch = endpoint.match(/^\/observed-services\/([^/]+)$/);
+    const observedLogFilterMatch = endpoint.match(/^\/observed-services\/([^/]+)\/log-filter$/);
+    const observedApiExclusionsMatch = endpoint.match(/^\/observed-services\/([^/]+)\/api-exclusions$/);
+    const observedRotateMatch = endpoint.match(/^\/observed-services\/([^/]+)\/rotate-key$/);
+    const observedRevokeMatch = endpoint.match(/^\/observed-services\/([^/]+)\/revoke-key$/);
+    const infrastructureMatch = endpoint.match(/^\/infrastructure-resources\/([^/]+)$/);
+    const infrastructureRotateMatch = endpoint.match(/^\/infrastructure-resources\/([^/]+)\/rotate-key$/);
+    const infrastructureRevokeMatch = endpoint.match(/^\/infrastructure-resources\/([^/]+)\/revoke-key$/);
+    if (method === 'POST' && endpoint === '/infrastructure-resources') {
+      const parsed = JSON.parse(typeof body === 'string' ? body : '{}') as InfrastructureResourceInput;
+      const now = new Date().toISOString();
+      const resource: InfrastructureResourceSetup = {
+        id: `infra_mock_${Date.now()}`,
+        name: parsed.name,
+        projectId: parsed.projectId,
+        adapter: 'otel-collector',
+        isActive: true,
+        apiKeyMasked: 'everyup_ab.....demo',
+        apiKey: `everyup_${randomHex(32)}`,
+        createdAt: now,
+        updatedAt: now,
+      };
+      mockInfrastructureResources.push(resource);
+      return resource as T;
+    }
+    if (method === 'POST' && infrastructureRotateMatch) {
+      const resource = mockInfrastructureResources.find(row => row.id === infrastructureRotateMatch[1]);
+      if (!resource) return null as T;
+      resource.isActive = true;
+      resource.apiKeyMasked = 'everyup_ab.....new1';
+      return { ...resource, apiKey: `everyup_${randomHex(32)}` } as T;
+    }
+    if (method === 'POST' && infrastructureRevokeMatch) {
+      const resource = mockInfrastructureResources.find(row => row.id === infrastructureRevokeMatch[1]);
+      if (resource) resource.isActive = false;
+      return resource as T;
+    }
+    if (method === 'PUT' && infrastructureMatch) {
+      const resource = mockInfrastructureResources.find(row => row.id === infrastructureMatch[1]);
+      const parsed = JSON.parse(typeof body === 'string' ? body : '{}') as InfrastructureResourceInput;
+      if (resource) Object.assign(resource, parsed, { projectId: parsed.projectId || undefined, updatedAt: new Date().toISOString() });
+      return resource as T;
+    }
+    if (method === 'DELETE' && infrastructureMatch) {
+      const index = mockInfrastructureResources.findIndex(row => row.id === infrastructureMatch[1]);
+      if (index !== -1) mockInfrastructureResources.splice(index, 1);
+      return undefined as T;
+    }
+    if (method === 'POST' && endpoint === '/observed-services') {
+      const parsed = JSON.parse(typeof body === 'string' ? body : '{}') as ObservedServiceInput;
+      const now = new Date().toISOString();
+      const service: ObservedServiceSetup = {
+        id: `observed_mock_${Date.now()}`,
+        name: parsed.name,
+        projectId: parsed.projectId,
+        signals: parsed.signals,
+        logLevelFilter: ['error', 'warn', 'info'],
+        isActive: true,
+        apiKeyMasked: 'evup_****demo',
+        apiKey: `evup_direct_${randomHex(24)}`,
+        createdAt: now,
+        updatedAt: now,
+      };
+      mockObservedServices.push(service);
+      mockDirectLogFilters.set(service.id, ['error', 'warn', 'info']);
+      mockDirectApiExclusions.set(service.id, []);
+      return service as T;
+    }
+    if (method === 'POST' && observedRotateMatch) {
+      const service = mockObservedServices.find(row => row.id === observedRotateMatch[1]);
+      if (!service) return null as T;
+      service.isActive = true;
+      service.apiKeyMasked = 'evup_****new1';
+      return { ...service, apiKey: `evup_direct_${randomHex(24)}` } as T;
+    }
+    if (method === 'POST' && observedRevokeMatch) {
+      const service = mockObservedServices.find(row => row.id === observedRevokeMatch[1]);
+      if (service) service.isActive = false;
+      return service as T;
+    }
+    if (method === 'PUT' && observedLogFilterMatch) {
+      const parsed = JSON.parse(typeof body === 'string' ? body : '{}') as { levels?: string[] };
+      const levels = parsed.levels?.map(String) ?? [];
+      mockDirectLogFilters.set(observedLogFilterMatch[1], levels);
+      return { levels } as T;
+    }
+    if (method === 'PUT' && observedApiExclusionsMatch) {
+      const parsed = JSON.parse(typeof body === 'string' ? body : '{}') as { paths?: string[] };
+      const paths = parsed.paths?.map(String).filter(Boolean) ?? [];
+      mockDirectApiExclusions.set(observedApiExclusionsMatch[1], paths);
+      const service = mockObservedServices.find(row => row.id === observedApiExclusionsMatch[1]);
+      if (service) service.apiExcludePaths = paths;
+      return { paths } as T;
+    }
+    if (method === 'PUT' && observedMatch) {
+      const service = mockObservedServices.find(row => row.id === observedMatch[1]);
+      const parsed = JSON.parse(typeof body === 'string' ? body : '{}') as ObservedServiceInput;
+      if (service) Object.assign(service, parsed, { projectId: parsed.projectId || undefined, updatedAt: new Date().toISOString() });
+      return service as T;
+    }
+    if (method === 'DELETE' && observedMatch) {
+      const index = mockObservedServices.findIndex(row => row.id === observedMatch[1]);
+      if (index !== -1) mockObservedServices.splice(index, 1);
+      mockDirectLogFilters.delete(observedMatch[1]);
+      mockDirectApiExclusions.delete(observedMatch[1]);
+      return undefined as T;
+    }
     if (method === 'POST' && endpoint === '/projects') {
       const parsed = JSON.parse(typeof body === 'string' ? body : '{}') as Partial<Project>;
       const now = new Date().toISOString();
-      const project: Project = { id: `project_mock_${Date.now()}`, name: String(parsed.name ?? '새 Project'), description: parsed.description, agentCount: 0, monitorCount: 0, createdAt: now, updatedAt: now };
+      const project: Project = { id: `project_mock_${Date.now()}`, name: String(parsed.name ?? '새 Project'), description: parsed.description, agentCount: 0, monitorCount: 0, observedServiceCount: 0, infrastructureResourceCount: 0, createdAt: now, updatedAt: now };
       mockProjects.push(project);
       return project as T;
     }
@@ -682,6 +876,8 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
       if (index !== -1) mockProjects.splice(index, 1);
       mockAgents.forEach((agent) => { if (agent.projectId === projectMatch[1]) delete agent.projectId; });
       mockUptimeMonitors.forEach((monitor) => { if (monitor.projectId === projectMatch[1]) delete monitor.projectId; });
+      mockObservedServices.forEach((service) => { if (service.projectId === projectMatch[1]) delete service.projectId; });
+      mockInfrastructureResources.forEach((resource) => { if (resource.projectId === projectMatch[1]) delete resource.projectId; });
       return undefined as T;
     }
     const uptimeMatch = endpoint.match(/^\/services\/([^/]+)$/);
@@ -777,8 +973,80 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
     ...project,
     agentCount: mockAgents.filter((agent) => agent.projectId === project.id).length,
     monitorCount: mockUptimeMonitors.filter((monitor) => monitor.projectId === project.id).length,
+    observedServiceCount: mockObservedServices.filter((service) => service.projectId === project.id).length,
+    infrastructureResourceCount: mockInfrastructureResources.filter((resource) => resource.projectId === project.id).length,
   })) as T;
+  if (endpoint === '/infrastructure-resources') {
+    const agentResources: InfrastructureResource[] = mockAgents
+      .filter(agent => agent.profile?.capabilities.includes('infrastructure'))
+      .map(agent => ({
+        id: agent.id,
+        name: agent.name,
+        projectId: agent.projectId,
+        adapter: 'everyup-agent',
+        isActive: true,
+        lastSeenAt: agent.lastSeenAt,
+        cpuUsage: mockSystemInfo.cpu.usage,
+        memoryUsage: mockSystemInfo.memory.usage,
+        diskUsage: mockSystemInfo.disk.usage,
+        createdAt: agent.createdAt,
+        updatedAt: agent.updatedAt,
+      }));
+    return [...mockInfrastructureResources, ...agentResources] as T;
+  }
+  const infrastructureDetailMatch = endpoint.match(/^\/infrastructure-resources\/([^/?]+)$/);
+  if (infrastructureDetailMatch) return (mockInfrastructureResources.find(resource => resource.id === infrastructureDetailMatch[1]) ?? null) as T;
+  if (endpoint === '/observed-services/service-metrics') {
+    return mockObservedServices
+      .filter(service => service.signals.includes('metrics'))
+      .map(service => ({
+        serviceId: service.id,
+        serviceName: service.name,
+        metricName: 'jvm.memory.used',
+        metricType: 'gauge',
+        unit: 'By',
+        value: 312 * 1024 * 1024,
+      })) as T;
+  }
+  const observedLogsMatch = endpoint.match(/^\/observed-services\/([^/]+)\/logs(?:\?|$)/);
+  if (observedLogsMatch) {
+    const service = mockObservedServices.find(row => row.id === observedLogsMatch[1]);
+    const rows = allMockLogs.slice(0, 24).map(log => ({ ...log, serviceId: service?.id ?? observedLogsMatch[1], serviceName: service?.name ?? 'direct-service', agentId: undefined }));
+    return { data: rows, total: rows.length } as T;
+  }
+  if (/^\/observed-services\/[^/]+\/log-histogram/.test(endpoint)) return mockLogHistogram() as T;
+  const observedFilterMatch = endpoint.match(/^\/observed-services\/([^/]+)\/log-filter$/);
+  if (observedFilterMatch) return { levels: mockDirectLogFilters.get(observedFilterMatch[1]) ?? [] } as T;
+  if (/^\/observed-services\/[^/]+\/otel-metrics\/points/.test(endpoint)) return mockOtelMetricPoints(endpoint) as T;
+  if (/^\/observed-services\/[^/]+\/otel-metrics/.test(endpoint)) return mockOtelMetricNames as T;
+  const observedRequestsMatch = endpoint.match(/^\/observed-services\/([^/]+)\/requests(?:\?|$)/);
+  if (observedRequestsMatch) {
+    const service = mockObservedServices.find(row => row.id === observedRequestsMatch[1]);
+    const rows = mockAgentServiceRequests.map(requestRow => ({
+      ...requestRow,
+      serviceId: service?.id ?? observedRequestsMatch[1],
+      serviceName: service?.name ?? 'direct-service',
+      agentId: undefined,
+    }));
+    return { data: rows, total: rows.length } as T;
+  }
+  if (/^\/observed-services\/[^/]+\/request-stats/.test(endpoint)) return mockRequestStats() as T;
+  if (/^\/observed-services\/[^/]+\/request-status-summary/.test(endpoint)) {
+    return {
+      count2xx: 2394, count3xx: 96, count4xx: 89, count5xx: 21, countOther: 0,
+      top5xxMethod: 'POST', top5xxPath: '/api/v1/payments', top5xxCount: 14,
+    } as T;
+  }
+  const observedApiExclusionsMatch = endpoint.match(/^\/observed-services\/([^/]+)\/api-exclusions$/);
+  if (observedApiExclusionsMatch) return { paths: mockDirectApiExclusions.get(observedApiExclusionsMatch[1]) ?? [] } as T;
+  const observedDetailMatch = endpoint.match(/^\/observed-services\/([^/?]+)$/);
+  if (observedDetailMatch) return (mockObservedServices.find(service => service.id === observedDetailMatch[1]) ?? null) as T;
+  if (endpoint.startsWith('/observed-services')) {
+    const signal = new URLSearchParams(endpoint.split('?')[1] ?? '').get('signal');
+    return mockObservedServices.filter(service => !signal || service.signals.includes(signal as 'logs' | 'metrics' | 'traces')) as T;
+  }
   if (endpoint === '/services?type=http,tcp') return mockUptimeMonitors as T;
+  if (endpoint.startsWith('/logs?')) return allMockLogs as T;
   const uptimeSummaryMatch = endpoint.match(/^\/services\/([^/]+)\/metrics\/summary(?:\?|$)/);
   if (uptimeSummaryMatch) return (uptimeSummaryMatch[1] === 'uptime_mock_store' ? mockUptimeSummary : null) as T;
   const uptimeMetricsMatch = endpoint.match(/^\/services\/([^/]+)\/metrics(?:\?|$)/);

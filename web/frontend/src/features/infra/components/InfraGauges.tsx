@@ -40,7 +40,7 @@ function VitalGaugeCard({ gauge }: { gauge: GaugeData }) {
   const displayUnit = gauge.displayUnit ?? '%';
 
   return (
-    <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-ui-border-dark dark:bg-bg-surface-dark">
+    <article className="rounded-xl border border-ui-border bg-bg-surface p-4 shadow-sm">
       {/* 상단: 레이블 + 추세 배지 */}
       <div className="flex items-center justify-between gap-2">
         <p className="truncate text-2xs font-bold uppercase tracking-wider text-text-muted">

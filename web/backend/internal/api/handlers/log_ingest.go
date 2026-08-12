@@ -90,14 +90,19 @@ func (h *LogIngestHandler) processEntry(entry *models.LogIngestEntry, filter []m
 	}, nil
 }
 
-// triggerAlertIfNeeded dispatches alert for error/warn level logs. alertServiceID
-// is the dedup/identity seed (legacy service id, or agentID:serviceName for agents).
-func (h *LogIngestHandler) triggerAlertIfNeeded(alertServiceID, serviceName string, logEntry *models.Log, metadata map[string]interface{}) {
+// triggerAlertIfNeeded dispatches alert for error/warn level logs. Direct and
+// legacy services scope by serviceID; Agent services scope by agentID plus the
+// discovered service name.
+func (h *LogIngestHandler) triggerAlertIfNeeded(serviceID, agentID, serviceName string, logEntry *models.Log, metadata map[string]interface{}) {
 	if logEntry.Level != models.LogLevelError && logEntry.Level != models.LogLevelWarn {
 		return
 	}
 
-	rules, err := h.ruleRepo.GetEnabledLogRulesByServiceID(alertServiceID)
+	alertServiceID := serviceID
+	if agentID != "" {
+		alertServiceID = agentID + ":" + serviceName
+	}
+	rules, err := h.ruleRepo.GetEnabledLogRules(serviceID, agentID, serviceName)
 	if err != nil {
 		log.Printf("Failed to get log alert rules for %s: %v", serviceName, err)
 		return

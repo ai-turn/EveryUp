@@ -2,13 +2,14 @@ package database_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/aiturn/everyup/internal/database"
 	"github.com/aiturn/everyup/internal/models"
 )
 
-// GetEnabledOtelMetricRules must return global + this-agent otel_metric rules,
-// and exclude disabled rules, other metrics, and other agents' rules.
+// GetEnabledOtelMetricRules must return global + the exact direct/Agent service
+// rules, and exclude disabled rules, other metrics, and sibling targets.
 func TestGetEnabledOtelMetricRules_Scoping(t *testing.T) {
 	openTestDB(t)
 	repo := database.NewAlertRuleRepository()
@@ -32,7 +33,36 @@ func TestGetEnabledOtelMetricRules_Scoping(t *testing.T) {
 	mk("disabled", "disabled metric", &agentA, models.AlertMetricOtelMetric, "x", false)
 	mk("cpu", "cpu rule", &agentA, models.AlertMetricCPU, "", true)
 
-	rules, err := repo.GetEnabledOtelMetricRules(agentA)
+	if err := database.NewAgentRepository().UpsertAgent(models.Agent{ID: agentA, Name: "agent A"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.NewAgentRepository().UpsertServices(agentA, time.Now(), []models.AgentService{
+		{AgentID: agentA, Key: "checkout", Name: "checkout-api", CheckType: "http", Endpoint: "http://checkout"},
+		{AgentID: agentA, Key: "billing", Name: "billing-api", CheckType: "http", Endpoint: "http://billing"},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	checkoutKey := "checkout"
+	billingKey := "billing"
+	for _, scoped := range []struct {
+		id  string
+		key *string
+	}{
+		{id: "checkout-service", key: &checkoutKey},
+		{id: "billing-service", key: &billingKey},
+	} {
+		rule := &models.AlertRule{
+			ID: scoped.id, Name: scoped.id, Type: models.AlertRuleTypeService,
+			AgentID: &agentA, ServiceKey: scoped.key,
+			Metric: models.AlertMetricOtelMetric, MetricName: "gc.pause", Operator: models.AlertOperatorGT,
+			Threshold: 1, Duration: 1, Severity: models.AlertSeverityWarning, IsEnabled: true,
+		}
+		if err := repo.Create(rule); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	rules, err := repo.GetEnabledOtelMetricRules("", agentA, "checkout-api")
 	if err != nil {
 		t.Fatalf("GetEnabledOtelMetricRules: %v", err)
 	}
@@ -40,10 +70,10 @@ func TestGetEnabledOtelMetricRules_Scoping(t *testing.T) {
 	for _, r := range rules {
 		got[r.ID] = true
 	}
-	if !got["global"] || !got["agentA"] {
-		t.Fatalf("want global + agentA rules, got %v", got)
+	if !got["global"] || !got["agentA"] || !got["checkout-service"] {
+		t.Fatalf("want global + agentA + checkout service rules, got %v", got)
 	}
-	if got["agentB"] || got["disabled"] || got["cpu"] {
+	if got["agentB"] || got["billing-service"] || got["disabled"] || got["cpu"] {
 		t.Fatalf("scoping leaked non-matching rules: %v", got)
 	}
 	// metricName round-trips through the query.

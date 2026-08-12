@@ -16,6 +16,8 @@ import {
     type NotificationChannel,
     type AgentServiceFlat,
     type ConnectedAgent,
+    type ObservedService,
+    type InfrastructureResource,
 } from '../../../services/api';
 
 const ruleSchema = z.object({
@@ -25,6 +27,7 @@ const ruleSchema = z.object({
     metricName: z.string().optional(),
     agentId: z.string().optional(),
     serviceKey: z.string().optional(),
+    serviceId: z.string().optional(),
     operator: z.enum(['gt', 'gte', 'lt', 'lte', 'eq']),
     threshold: z.number().min(0),
     duration: z.number().min(1).max(60),
@@ -229,6 +232,8 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
     const isEdit = !!rule;
     const [agentServices, setAgentServices] = useState<AgentServiceFlat[]>([]);
     const [agents, setAgents] = useState<ConnectedAgent[]>([]);
+    const [directServices, setDirectServices] = useState<ObservedService[]>([]);
+    const [infrastructureResources, setInfrastructureResources] = useState<InfrastructureResource[]>([]);
     const [conditionPreset, setConditionPreset] = useState<ConditionPreset>('error');
     const [customMessage, setCustomMessage] = useState('');
     const [customThreshold, setCustomThreshold] = useState('');
@@ -238,7 +243,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
         mode: 'onBlur',
         defaultValues: {
             name: '', ruleCategory: 'endpoint', metric: 'http_status',
-            agentId: '', serviceKey: '', operator: 'gte', threshold: 400,
+            agentId: '', serviceKey: '', serviceId: '', operator: 'gte', threshold: 400,
             duration: 1, severity: 'warning', cooldown: 300, channelIds: [],
         },
     });
@@ -251,6 +256,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
     const watchedCooldown  = watch('cooldown');
     const watchedAgentId   = watch('agentId') ?? '';
     const watchedServiceKey = watch('serviceKey') ?? '';
+    const watchedServiceId = watch('serviceId') ?? '';
     const watchedChannelIds = watch('channelIds');
     const watchedSeverity  = watch('severity');
     const watchedName      = watch('name');
@@ -258,6 +264,8 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
     useEffect(() => {
         api.getAllAgentServicesFlat().then(svcs => setAgentServices(svcs ?? [])).catch(() => { });
         api.getAgents().then(agts => setAgents(agts ?? [])).catch(() => { });
+        api.getObservedServices().then(rows => setDirectServices(rows ?? [])).catch(() => { });
+        api.getInfrastructureResources().then(rows => setInfrastructureResources(rows ?? [])).catch(() => { });
     }, []);
 
     useEffect(() => {
@@ -273,6 +281,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                 metricName: rule.metricName ?? '',
                 agentId: rule.agentId ?? '',
                 serviceKey: rule.serviceKey ?? '',
+                serviceId: rule.serviceId ?? '',
                 operator: rule.operator,
                 threshold: rule.threshold,
                 duration: rule.duration,
@@ -300,6 +309,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
         setValue('ruleCategory', cat);
         setValue('agentId', '');
         setValue('serviceKey', '');
+        setValue('serviceId', '');
         setValue('metricName', '');
         const newMetric: RuleFormValues['metric'] = cat === 'resource' ? 'cpu' : cat === 'log' ? 'log_level' : cat === 'metric' ? 'otel_metric' : 'http_status';
         setValue('metric', newMetric);
@@ -342,6 +352,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                 metricName: isMetric ? (data.metricName || '') : '',
                 agentId: data.agentId || null,
                 serviceKey: scoped ? (data.serviceKey || null) : null,
+                serviceId: scoped ? (data.serviceId || null) : null,
                 operator: data.operator,
                 threshold: data.threshold,
                 duration: data.duration,
@@ -386,11 +397,23 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
     }, [isMetric, watchedAgentId, watchedServiceKey]);
     const selectedAgentService = agentServices.find(s => s.agentId === watchedAgentId && s.key === watchedServiceKey);
     const selectedAgent = agents.find(a => a.id === watchedAgentId);
+    const selectedInfrastructureResource = infrastructureResources.find(resource => resource.id === watchedAgentId);
+    const directSignal = isMetric ? 'metrics' : isLog ? (isApiStatus ? 'traces' : 'logs') : null;
+    const availableDirectServices = directSignal
+        ? directServices.filter(service => service.signals.includes(directSignal))
+        : [];
+    const selectedDirectService = directServices.find(service => service.id === watchedServiceId);
     const targetLabel = isEndpoint || isLog
-        ? (watchedAgentId && watchedServiceKey
+        ? (selectedDirectService
+            ? selectedDirectService.name
+            : watchedAgentId && watchedServiceKey
             ? (selectedAgentService ? `${selectedAgentService.agentName} / ${selectedAgentService.name}` : watchedServiceKey)
             : (isLog ? t('alerts.rules.allLogServices') : t('alerts.rules.allHealthchecks')))
-        : (watchedAgentId ? (selectedAgent?.name ?? watchedAgentId) : t('alerts.rules.allHosts'));
+        : isMetric && selectedDirectService
+            ? selectedDirectService.name
+        : watchedCategory === 'resource' && watchedAgentId
+            ? (selectedInfrastructureResource?.name ?? selectedAgent?.name ?? watchedAgentId)
+            : (watchedAgentId ? (selectedAgent?.name ?? watchedAgentId) : t('alerts.rules.allHosts'));
 
     const previewChannels = watchedChannelIds.length === 0
         ? channels
@@ -450,11 +473,15 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                 {isEndpoint || isLog || isMetric ? (
                                     <Select
                                         id="rule-target"
-                                        value={watchedAgentId && watchedServiceKey ? `${watchedAgentId}:::${watchedServiceKey}` : ''}
+                                        value={watchedServiceId ? `direct:::${watchedServiceId}` : watchedAgentId && watchedServiceKey ? `${watchedAgentId}:::${watchedServiceKey}` : ''}
                                         onChange={e => {
                                             const val = e.target.value;
-                                            if (!val) { setValue('agentId', ''); setValue('serviceKey', ''); }
-                                            else { const [aid, key] = val.split(':::'); setValue('agentId', aid); setValue('serviceKey', key); }
+                                            if (!val) { setValue('agentId', ''); setValue('serviceKey', ''); setValue('serviceId', ''); }
+                                            else {
+                                                const [scope, key] = val.split(':::');
+                                                if (scope === 'direct') { setValue('serviceId', key); setValue('agentId', ''); setValue('serviceKey', ''); }
+                                                else { setValue('agentId', scope); setValue('serviceKey', key); setValue('serviceId', ''); }
+                                            }
                                         }}
 
                                     >
@@ -462,6 +489,11 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                         {agentServices.map(svc => (
                                             <option key={`${svc.agentId}:::${svc.key}`} value={`${svc.agentId}:::${svc.key}`}>
                                                 {svc.agentName} / {svc.name}
+                                            </option>
+                                        ))}
+                                        {availableDirectServices.map(service => (
+                                            <option key={`direct:::${service.id}`} value={`direct:::${service.id}`}>
+                                                Direct / {service.name}
                                             </option>
                                         ))}
                                     </Select>
@@ -473,8 +505,10 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
 
                                     >
                                         <option value="">{t('alerts.rules.allHosts')}</option>
-                                        {agents.map(agent => (
-                                            <option key={agent.id} value={agent.id}>{agent.name}</option>
+                                        {infrastructureResources.map(resource => (
+                                            <option key={resource.id} value={resource.id}>
+                                                {resource.adapter === 'otel-collector' ? 'Collector' : 'Agent'} / {resource.name}
+                                            </option>
                                         ))}
                                     </Select>
                                 )}

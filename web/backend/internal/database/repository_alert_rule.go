@@ -16,7 +16,7 @@ func NewAlertRuleRepository() *AlertRuleRepository {
 }
 
 // alertRuleSelectColumns is the column list for alert rule queries.
-const alertRuleSelectColumns = `id, name, type, agent_id, service_key, metric,
+const alertRuleSelectColumns = `id, name, type, agent_id, service_key, service_id, metric,
 	COALESCE(metric_name, '') as metric_name, operator,
 	threshold, duration, severity, is_enabled, cooldown, COALESCE(message, '') as message,
 	COALESCE(is_system, 0) as is_system, created_at, updated_at`
@@ -25,10 +25,10 @@ const alertRuleSelectColumns = `id, name, type, agent_id, service_key, metric,
 func scanAlertRuleFields(scan func(dest ...interface{}) error) (models.AlertRule, error) {
 	var r models.AlertRule
 	var isEnabled, isSystem int
-	var agentID, serviceKey sql.NullString
+	var agentID, serviceKey, serviceID sql.NullString
 
 	err := scan(
-		&r.ID, &r.Name, &r.Type, &agentID, &serviceKey, &r.Metric, &r.MetricName, &r.Operator,
+		&r.ID, &r.Name, &r.Type, &agentID, &serviceKey, &serviceID, &r.Metric, &r.MetricName, &r.Operator,
 		&r.Threshold, &r.Duration, &r.Severity, &isEnabled, &r.Cooldown, &r.Message,
 		&isSystem, &r.CreatedAt, &r.UpdatedAt,
 	)
@@ -45,6 +45,10 @@ func scanAlertRuleFields(scan func(dest ...interface{}) error) (models.AlertRule
 	if serviceKey.Valid && serviceKey.String != "" {
 		s := serviceKey.String
 		r.ServiceKey = &s
+	}
+	if serviceID.Valid && serviceID.String != "" {
+		s := serviceID.String
+		r.ServiceID = &s
 	}
 	return r, nil
 }
@@ -239,6 +243,7 @@ func (r *AlertRuleRepository) GetEnabledByServiceID(serviceID string) ([]models.
 		SELECT `+alertRuleSelectColumns+`
 		FROM alert_rules
 		WHERE is_enabled = 1 AND type = 'service'
+		  AND (service_id = ? OR service_id IS NULL OR service_id = '')
 		  AND (agent_id IS NULL OR agent_id = '')
 		ORDER BY severity DESC
 	`, serviceID)
@@ -258,14 +263,31 @@ func (r *AlertRuleRepository) GetEnabledByServiceID(serviceID string) ([]models.
 	return loadChannelIDsAll(rules), nil
 }
 
-// GetEnabledApiRequestRulesByServiceID returns enabled API request rules (global or service-scoped).
-func (r *AlertRuleRepository) GetEnabledApiRequestRulesByServiceID(serviceID string) ([]models.AlertRule, error) {
+// GetEnabledApiRequestRules returns global rules plus rules scoped to one
+// direct Observed Service or one Agent-discovered service.
+func (r *AlertRuleRepository) GetEnabledApiRequestRules(serviceID, agentID, serviceName string) ([]models.AlertRule, error) {
 	rows, err := DB.Query(`
 		SELECT `+alertRuleSelectColumns+`
 		FROM alert_rules
 		WHERE is_enabled = 1 AND type = 'log' AND metric = 'api_status_code'
+		  AND (
+		    (? != '' AND service_id = ?)
+		    OR (
+		      ? != '' AND agent_id = ?
+		      AND (
+		        service_key IS NULL OR service_key = ''
+		        OR service_key IN (
+		          SELECT key FROM agent_services WHERE agent_id = ? AND name = ?
+		        )
+		      )
+		    )
+		    OR (
+		      (service_id IS NULL OR service_id = '')
+		      AND (agent_id IS NULL OR agent_id = '')
+		    )
+		  )
 		ORDER BY severity DESC
-	`)
+	`, serviceID, serviceID, agentID, agentID, agentID, serviceName)
 	if err != nil {
 		return nil, err
 	}
@@ -282,17 +304,36 @@ func (r *AlertRuleRepository) GetEnabledApiRequestRulesByServiceID(serviceID str
 	return loadChannelIDsAll(rules), nil
 }
 
-// GetEnabledOtelMetricRules returns enabled OTLP-metric threshold rules for an
-// agent (agent-scoped or global). Scoped in Go by the caller against each
-// data point's metric name + attributes.
-func (r *AlertRuleRepository) GetEnabledOtelMetricRules(agentID string) ([]models.AlertRule, error) {
+func (r *AlertRuleRepository) GetEnabledApiRequestRulesByServiceID(serviceID string) ([]models.AlertRule, error) {
+	return r.GetEnabledApiRequestRules(serviceID, "", "")
+}
+
+// GetEnabledOtelMetricRules returns global rules plus rules scoped to one
+// direct Observed Service or one Agent-discovered service. Metric name and
+// attribute-series matching remains at the ingest call site.
+func (r *AlertRuleRepository) GetEnabledOtelMetricRules(serviceID, agentID, serviceName string) ([]models.AlertRule, error) {
 	rows, err := DB.Query(`
 		SELECT `+alertRuleSelectColumns+`
 		FROM alert_rules
 		WHERE is_enabled = 1 AND metric = 'otel_metric'
-		  AND (agent_id IS NULL OR agent_id = '' OR agent_id = ?)
+		  AND (
+		    (? != '' AND service_id = ?)
+		    OR (
+		      ? != '' AND agent_id = ?
+		      AND (
+		        service_key IS NULL OR service_key = ''
+		        OR service_key IN (
+		          SELECT key FROM agent_services WHERE agent_id = ? AND name = ?
+		        )
+		      )
+		    )
+		    OR (
+		      (service_id IS NULL OR service_id = '')
+		      AND (agent_id IS NULL OR agent_id = '')
+		    )
+		  )
 		ORDER BY severity DESC
-	`, agentID)
+	`, serviceID, serviceID, agentID, agentID, agentID, serviceName)
 	if err != nil {
 		return nil, err
 	}
@@ -309,14 +350,32 @@ func (r *AlertRuleRepository) GetEnabledOtelMetricRules(agentID string) ([]model
 	return loadChannelIDsAll(rules), nil
 }
 
-// GetEnabledLogRulesByServiceID returns enabled log rules (global or service-scoped).
-func (r *AlertRuleRepository) GetEnabledLogRulesByServiceID(serviceID string) ([]models.AlertRule, error) {
+// GetEnabledLogRules returns global rules plus rules scoped to one direct or
+// legacy service, or one Agent-discovered service. The Agent service key is
+// resolved from its stable agent_id + observed service name.
+func (r *AlertRuleRepository) GetEnabledLogRules(serviceID, agentID, serviceName string) ([]models.AlertRule, error) {
 	rows, err := DB.Query(`
 		SELECT `+alertRuleSelectColumns+`
 		FROM alert_rules
 		WHERE is_enabled = 1 AND type = 'log' AND metric != 'api_status_code'
+		  AND (
+		    (? != '' AND service_id = ?)
+		    OR (
+		      ? != '' AND agent_id = ?
+		      AND (
+		        service_key IS NULL OR service_key = ''
+		        OR service_key IN (
+		          SELECT key FROM agent_services WHERE agent_id = ? AND name = ?
+		        )
+		      )
+		    )
+		    OR (
+		      (service_id IS NULL OR service_id = '')
+		      AND (agent_id IS NULL OR agent_id = '')
+		    )
+		  )
 		ORDER BY severity DESC
-	`)
+	`, serviceID, serviceID, agentID, agentID, agentID, serviceName)
 	if err != nil {
 		return nil, err
 	}
@@ -331,6 +390,11 @@ func (r *AlertRuleRepository) GetEnabledLogRulesByServiceID(serviceID string) ([
 		rules = append(rules, rule)
 	}
 	return loadChannelIDsAll(rules), nil
+}
+
+// GetEnabledLogRulesByServiceID preserves the legacy scheduler interface.
+func (r *AlertRuleRepository) GetEnabledLogRulesByServiceID(serviceID string) ([]models.AlertRule, error) {
+	return r.GetEnabledLogRules(serviceID, "", "")
 }
 
 // Create creates a new alert rule with channel mappings in a transaction.
@@ -346,11 +410,11 @@ func (r *AlertRuleRepository) Create(rule *models.AlertRule) error {
 		}
 
 		_, err := tx.Exec(`
-			INSERT INTO alert_rules (id, name, type, agent_id, service_key, metric, metric_name, operator,
+			INSERT INTO alert_rules (id, name, type, agent_id, service_key, service_id, metric, metric_name, operator,
 			                         threshold, duration, severity, is_enabled, cooldown,
 			                         message, is_system, created_at, updated_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-		`, rule.ID, rule.Name, rule.Type, rule.AgentID, rule.ServiceKey,
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`, rule.ID, rule.Name, rule.Type, rule.AgentID, rule.ServiceKey, rule.ServiceID,
 			rule.Metric, rule.MetricName, rule.Operator, rule.Threshold, rule.Duration,
 			rule.Severity, isEnabled, rule.Cooldown, rule.Message, isSystem, rule.CreatedAt, rule.UpdatedAt)
 		if err != nil {
@@ -382,6 +446,8 @@ func (r *AlertRuleRepository) Update(id string, req *models.AlertRuleUpdateReque
 		args = append(args, req.AgentID)
 		setClauses = append(setClauses, "service_key = ?")
 		args = append(args, req.ServiceKey)
+		setClauses = append(setClauses, "service_id = ?")
+		args = append(args, req.ServiceID)
 		if req.Metric != nil {
 			setClauses = append(setClauses, "metric = ?")
 			args = append(args, string(*req.Metric))

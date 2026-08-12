@@ -1,65 +1,116 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslate } from '@tolgee/react';
-import { EmptyState, MaterialIcon, PageHeader, StatusBadge } from '../../components/common';
-import { api, type ConnectedAgent, type SystemInfo } from '../../services/api';
-import { getErrorMessage } from '../../utils/errors';
+import { Button, EmptyState, MaterialIcon, PageHeader, StatusBadge } from '../../components/common';
+import { InfrastructureCollectorSetupDialog } from '../../features/infrastructure/components/InfrastructureCollectorSetupDialog';
 import { CapabilityAgentSetup } from '../../features/services/components/CapabilityAgentSetup';
+import { api, type InfrastructureResource } from '../../services/api';
+import { getErrorMessage } from '../../utils/errors';
 
-interface InfrastructureRow {
-  agent: ConnectedAgent;
-  info?: SystemInfo;
+function resourceOnline(resource: InfrastructureResource) {
+  return resource.isActive && Boolean(resource.lastSeenAt) && Date.now() - new Date(resource.lastSeenAt!).getTime() < 2 * 60 * 1000;
 }
 
-function agentOnline(agent: ConnectedAgent) {
-  return Date.now() - new Date(agent.lastSeenAt).getTime() < 2 * 60 * 1000;
+function ResourceCard({ resource }: { resource: InfrastructureResource }) {
+  const { t } = useTranslate();
+  const direct = resource.adapter === 'otel-collector';
+  const values = [
+    ['CPU', resource.cpuUsage],
+    [t('메모리'), resource.memoryUsage],
+    [t('디스크'), resource.diskUsage],
+  ] as const;
+  return (
+    <Link
+      to={direct ? `/infrastructure/${resource.id}` : `/agents/${resource.id}`}
+      className="card-interactive group rounded-xl border border-ui-border bg-bg-surface p-4"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <MaterialIcon name="memory" className="text-lg text-primary" />
+          <div className="min-w-0">
+            <h2 className="truncate text-base font-bold text-text-base group-hover:text-primary">{resource.name}</h2>
+            <p className="truncate text-xs text-text-muted">{direct ? t('OpenTelemetry Collector') : t('EveryUp Agent')}</p>
+          </div>
+        </div>
+        <StatusBadge healthy={resourceOnline(resource)} />
+      </div>
+      {values.some(([, value]) => value != null) ? (
+        <div className="mt-5 grid grid-cols-3 gap-3">
+          {values.map(([label, value]) => (
+            <div key={label}>
+              <p className="text-2xs text-text-dim">{label}</p>
+              <p className="font-mono text-base font-bold text-text-base">{value == null ? '—' : `${value.toFixed(1)}%`}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-5 text-sm text-text-dim">{t('아직 수집된 호스트 메트릭이 없습니다')}</p>
+      )}
+    </Link>
+  );
 }
 
 export function InfrastructurePage() {
   const { t } = useTranslate();
-  const [rows, setRows] = useState<InfrastructureRow[]>([]);
+  const navigate = useNavigate();
+  const [resources, setResources] = useState<InfrastructureResource[]>([]);
+  const [showCollectorSetup, setShowCollectorSetup] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
-    api.getAgents()
-      .then(async (agents) => {
-        const result = await Promise.all(agents.map(async (agent) => {
-          try {
-            return { agent, info: await api.getSystemInfo(agent.id) };
-          } catch {
-            return { agent };
-          }
-        }));
-        if (alive) setRows(result);
-      })
-      .catch((requestError) => { if (alive) setError(getErrorMessage(requestError)); })
+    api.getInfrastructureResources()
+      .then(rows => { if (alive) setResources(rows ?? []); })
+      .catch(requestError => { if (alive) setError(getErrorMessage(requestError)); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, []);
 
+  const directResources = resources.filter(resource => resource.adapter === 'otel-collector');
+  const agentResources = resources.filter(resource => resource.adapter === 'everyup-agent');
+
   return (
     <div>
-      <PageHeader title={t('인프라')} subtitle={t('인프라 프로필로 연결한 Agent 호스트의 CPU, 메모리, 디스크 상태를 확인합니다.')}>
-        <CapabilityAgentSetup capability="infrastructure" />
-      </PageHeader>
-      {loading ? <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map((item) => <div key={item} className="h-44 animate-pulse rounded-xl border border-ui-border bg-bg-surface" />)}</div> : error ? (
-        <EmptyState icon="error_outline" title={t('인프라를 불러오지 못했습니다')} description={error} />
-      ) : rows.length === 0 ? (
-        <EmptyState icon="memory" title={t('표시할 인프라가 없습니다')} description={t('인프라 Agent를 연결하면 호스트 리소스가 여기에 표시됩니다.')} />
-      ) : (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {rows.map(({ agent, info }) => <Link key={agent.id} to={`/agents/${agent.id}`} className="card-interactive rounded-xl border border-ui-border bg-bg-surface p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-2.5"><MaterialIcon name="memory" className="text-lg text-primary" /><div className="min-w-0"><h2 className="truncate text-base font-bold text-text-base">{agent.name}</h2><p className="truncate text-xs text-text-muted">{info?.hostname || t('호스트 정보 대기 중')}</p></div></div>
-              <StatusBadge healthy={agentOnline(agent)} />
-            </div>
-            {info ? <div className="mt-5 grid grid-cols-3 gap-3">
-              {[['CPU', info.cpu.usage], [t('메모리'), info.memory.usage], [t('디스크'), info.disk.usage]].map(([label, value]) => <div key={String(label)}><p className="text-2xs text-text-dim">{label}</p><p className="font-mono text-base font-bold text-text-base">{Number(value).toFixed(1)}%</p></div>)}
-            </div> : <p className="mt-5 text-sm text-text-dim">{t('아직 수집된 호스트 메트릭이 없습니다')}</p>}
-          </Link>)}
+      <PageHeader title={t('인프라')} subtitle={t('EveryUp Agent 또는 표준 OpenTelemetry Collector로 수집한 호스트 리소스입니다.')}>
+        <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
+          <Button onClick={() => setShowCollectorSetup(true)}><MaterialIcon name="add" />{t('Collector 직접 추가')}</Button>
+          <CapabilityAgentSetup capability="infrastructure" buttonVariant="secondary" />
         </div>
+      </PageHeader>
+      {loading ? (
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map(item => <div key={item} className="h-44 animate-pulse rounded-xl border border-ui-border bg-bg-surface" />)}</div>
+      ) : error ? (
+        <EmptyState icon="error_outline" title={t('인프라를 불러오지 못했습니다')} description={error} />
+      ) : resources.length === 0 ? (
+        <EmptyState icon="memory" title={t('표시할 인프라가 없습니다')} description={t('OpenTelemetry Collector 또는 인프라 Agent를 연결해 주세요.')} />
+      ) : (
+        <div className="space-y-7">
+          {directResources.length > 0 && (
+            <section>
+              <div className="mb-3 flex items-end justify-between gap-3">
+                <div><h2 className="text-base font-bold text-text-base">{t('직접 연결 Collector')}</h2><p className="mt-0.5 text-xs text-text-muted">{t('표준 OTel hostmetrics receiver가 Agent 없이 전송합니다.')}</p></div>
+                <span className="font-mono text-xs text-text-dim">{directResources.length}</span>
+              </div>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{directResources.map(resource => <ResourceCard key={resource.id} resource={resource} />)}</div>
+            </section>
+          )}
+          {agentResources.length > 0 && (
+            <section>
+              <div className="mb-3 flex items-end justify-between gap-3">
+                <div><h2 className="text-base font-bold text-text-base">{t('Agent 호스트')}</h2><p className="mt-0.5 text-xs text-text-muted">{t('EveryUp Agent 인프라 프로필이 수집합니다.')}</p></div>
+                <span className="font-mono text-xs text-text-dim">{agentResources.length}</span>
+              </div>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{agentResources.map(resource => <ResourceCard key={resource.id} resource={resource} />)}</div>
+            </section>
+          )}
+        </div>
+      )}
+      {showCollectorSetup && (
+        <InfrastructureCollectorSetupDialog
+          onClose={() => setShowCollectorSetup(false)}
+          onCreated={resource => navigate(`/infrastructure/${resource.id}`)}
+        />
       )}
     </div>
   );

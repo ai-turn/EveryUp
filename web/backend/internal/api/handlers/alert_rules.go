@@ -1,22 +1,66 @@
 package handlers
 
 import (
+	"errors"
+
+	"github.com/aiturn/everyup/internal/database"
+	"github.com/aiturn/everyup/internal/directtelemetry"
+	"github.com/aiturn/everyup/internal/models"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/aiturn/everyup/internal/database"
-	"github.com/aiturn/everyup/internal/models"
 )
 
 // AlertRuleHandler handles alert rule CRUD operations
 type AlertRuleHandler struct {
-	repo *database.AlertRuleRepository
+	repo          *database.AlertRuleRepository
+	directManager *directtelemetry.Manager
 }
 
 // NewAlertRuleHandler creates a new alert rule handler
 func NewAlertRuleHandler() *AlertRuleHandler {
 	return &AlertRuleHandler{
-		repo: database.NewAlertRuleRepository(),
+		repo:          database.NewAlertRuleRepository(),
+		directManager: directtelemetry.NewManager(),
 	}
+}
+
+func alertMetricSignal(metric models.AlertMetric) models.TelemetrySignal {
+	switch metric {
+	case models.AlertMetricLogLevel:
+		return models.TelemetrySignalLogs
+	case models.AlertMetricApiStatus:
+		return models.TelemetrySignalTraces
+	case models.AlertMetricOtelMetric:
+		return models.TelemetrySignalMetrics
+	default:
+		return ""
+	}
+}
+
+func (h *AlertRuleHandler) validateDirectTarget(serviceID *string, metric models.AlertMetric) error {
+	if serviceID == nil || *serviceID == "" {
+		return nil
+	}
+	signal := alertMetricSignal(metric)
+	if signal == "" {
+		return directtelemetry.ErrSignalDenied
+	}
+	_, err := h.directManager.RequireSignal(*serviceID, signal)
+	return err
+}
+
+func hasAlertTarget(value *string) bool {
+	return value != nil && *value != ""
+}
+
+func directAlertTargetError(c *fiber.Ctx, err error) error {
+	if errors.Is(err, directtelemetry.ErrNotFound) {
+		return agentBadRequest(c, ErrCodeObservedServiceNotFound, "observed service not found")
+	}
+	if errors.Is(err, directtelemetry.ErrSignalDenied) {
+		return agentBadRequest(c, ErrCodeValidation, "alert metric is not enabled for this observed service")
+	}
+	return internalError(c, ErrCodeDatabase, err)
 }
 
 // GetAll returns all alert rules
@@ -132,6 +176,12 @@ func (h *AlertRuleHandler) Create(c *fiber.Ctx) error {
 			},
 		})
 	}
+	if hasAlertTarget(req.ServiceID) && (hasAlertTarget(req.AgentID) || hasAlertTarget(req.ServiceKey)) {
+		return agentBadRequest(c, ErrCodeValidation, "select either a direct service or an Agent target")
+	}
+	if err := h.validateDirectTarget(req.ServiceID, req.Metric); err != nil {
+		return directAlertTargetError(c, err)
+	}
 
 	rule := req.ToAlertRule(uuid.New().String())
 
@@ -190,6 +240,16 @@ func (h *AlertRuleHandler) Update(c *fiber.Ctx) error {
 				"message": "Invalid request body",
 			},
 		})
+	}
+	if hasAlertTarget(req.ServiceID) && (hasAlertTarget(req.AgentID) || hasAlertTarget(req.ServiceKey)) {
+		return agentBadRequest(c, ErrCodeValidation, "select either a direct service or an Agent target")
+	}
+	metric := existing.Metric
+	if req.Metric != nil {
+		metric = *req.Metric
+	}
+	if err := h.validateDirectTarget(req.ServiceID, metric); err != nil {
+		return directAlertTargetError(c, err)
 	}
 
 	if err := h.repo.Update(id, &req); err != nil {

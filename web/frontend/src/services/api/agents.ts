@@ -1,4 +1,11 @@
-import type { LogEntry, ApiRequest } from './services';
+import type { LogEntry, ApiRequest, LogHistogramBucket } from './services';
+import type {
+  ApiRequestStatBucket,
+  ApiRequestStatusSummary,
+  OtelMetricName,
+  OtelMetricPoint,
+  OtelServiceMetric,
+} from './telemetry';
 import { request } from './base';
 
 export interface ConnectedAgent {
@@ -123,70 +130,6 @@ export interface AgentIncident {
   endedAt?: string; // absent while still unhealthy
   durationSec: number;
   active: boolean;
-}
-
-// One time bucket of API request aggregates for the trends chart.
-export interface ApiRequestStatBucket {
-  time: string;
-  count: number;
-  errorCount: number;
-  p50: number;
-  p95: number;
-  timed: number;
-}
-
-// One time bucket of per-level log counts for the logs-tab volume histogram.
-export interface LogHistogramBucket {
-  time: string;
-  error: number;
-  warn: number;
-  info: number;
-  debug: number;
-  trace: number;
-}
-
-// Status-class distribution + most frequent 5xx endpoint over a window.
-export interface ApiRequestStatusSummary {
-  count2xx: number;
-  count3xx: number;
-  count4xx: number;
-  count5xx: number;
-  countOther: number;
-  top5xxMethod?: string;
-  top5xxPath?: string;
-  top5xxCount?: number;
-}
-
-// One OTLP metric a service exports (for the metric picker).
-export interface OtelMetricName {
-  metricName: string;
-  metricType: 'gauge' | 'sum' | 'histogram';
-  unit?: string;
-  lastAt: string;
-}
-
-// One OTLP metric data point. Histogram-family points carry count/total with
-// value = average.
-export interface OtelMetricPoint {
-  id: number;
-  metricName: string;
-  metricType: string;
-  unit?: string;
-  attributes?: Record<string, unknown>;
-  value: number;
-  count?: number;
-  total?: number;
-  createdAt: string;
-}
-
-// A service's representative metric (latest value) for the project overview
-// cards. Chosen server-side from whatever the service exports.
-export interface OtelServiceMetric {
-  serviceName: string;
-  metricName: string;
-  metricType: string;
-  unit?: string;
-  value: number;
 }
 
 export const agentsApi = {

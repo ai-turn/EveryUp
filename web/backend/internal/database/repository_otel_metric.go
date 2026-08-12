@@ -151,7 +151,7 @@ func (r *OtelMetricRepository) LatestValuesByService(agentID string, since time.
 			WHERE agent_id = ? AND created_at >= ?
 			GROUP BY service_name, metric_name
 		)
-	`, agentID, since)
+	`, agentID, since.UTC())
 	if err != nil {
 		return nil, err
 	}
@@ -161,6 +161,37 @@ func (r *OtelMetricRepository) LatestValuesByService(agentID string, since time.
 	for rows.Next() {
 		var m models.OtelServiceMetric
 		if err := rows.Scan(&m.ServiceName, &m.MetricName, &m.MetricType, &m.Unit, &m.Value); err != nil {
+			return nil, err
+		}
+		out = append(out, m)
+	}
+	return out, rows.Err()
+}
+
+// LatestValuesByObservedService returns the newest value of every metric for
+// every direct Observed Service since the cutoff. Legacy service_id rows are
+// excluded by joining observed_services.
+func (r *OtelMetricRepository) LatestValuesByObservedService(since time.Time) ([]models.OtelServiceMetric, error) {
+	rows, err := DB.Query(`
+		SELECT m.service_id, m.service_name, m.metric_name, m.metric_type, m.unit, m.value
+		FROM otel_metrics m
+		WHERE m.id IN (
+			SELECT MAX(points.id)
+			FROM otel_metrics points
+			JOIN observed_services target ON target.id = points.service_id
+			WHERE points.created_at >= ?
+			GROUP BY points.service_id, points.metric_name
+		)
+	`, since.UTC())
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []models.OtelServiceMetric
+	for rows.Next() {
+		var m models.OtelServiceMetric
+		if err := rows.Scan(&m.ServiceID, &m.ServiceName, &m.MetricName, &m.MetricType, &m.Unit, &m.Value); err != nil {
 			return nil, err
 		}
 		out = append(out, m)
