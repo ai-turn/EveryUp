@@ -1,7 +1,7 @@
 # Host Metrics
 
-EveryUp Agent can alert on host CPU, memory, and disk thresholds. This is
-separate from container state collected through Docker.
+The EveryUp Docker collector can alert on host CPU, memory, and disk thresholds.
+This is separate from container state collected through Docker.
 
 ## Configuration
 
@@ -38,5 +38,5 @@ check establishes a baseline and later checks can alert. Memory uses
 
 When Web sync is enabled (`EVERYUP_WEB_SYNC_ENABLED=true`), the same host
 snapshot is also pushed to EveryUp Web (`POST /agents/{agentId}/metrics`) and
-powers the per-agent infrastructure view — independent of the threshold alerts
+powers the Docker environment's infrastructure view — independent of the threshold alerts
 above, which fire only when a threshold is set and exceeded.

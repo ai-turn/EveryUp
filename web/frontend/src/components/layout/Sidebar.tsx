@@ -76,7 +76,7 @@ export function Sidebar() {
       </button>
 
       <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-3">
-        <NavItem to="/" icon="grid_view" label={t('에이전트')} active={isHome} />
+        <NavItem to="/" icon="grid_view" label="Docker" active={isHome} />
         <NavItem to="/uptime" icon="monitor_heart" label={t('업타임')} active={path.startsWith('/uptime')} />
         <NavItem to="/logs" icon="article" label={t('로그')} active={path.startsWith('/logs')} />
         <NavItem to="/infrastructure" icon="memory" label={t('인프라')} active={path.startsWith('/infrastructure')} />

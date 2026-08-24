@@ -119,7 +119,7 @@ export function MetricsPage() {
 
   return (
     <div>
-      <PageHeader title={t('메트릭')} subtitle={t('Agent 또는 직접 OpenTelemetry 연결에서 수집한 서비스 메트릭입니다.')}>
+      <PageHeader title={t('메트릭')} subtitle={t('Docker 수집기 또는 직접 OpenTelemetry 연결에서 수집한 서비스 메트릭입니다.')}>
         <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
           <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />{t('Metrics 직접 추가')}</Button>
           <CapabilityAgentSetup capability="metrics" buttonVariant="secondary" />
@@ -133,7 +133,7 @@ export function MetricsPage() {
       ) : error ? (
         <EmptyState icon="error_outline" title={t('메트릭을 불러오지 못했습니다')} description={error} />
       ) : isEmpty ? (
-        <EmptyState icon="monitoring" title={t('아직 연결된 메트릭 서비스가 없습니다')} description={t('Metrics 직접 연결 또는 메트릭 수집 Agent를 추가해 주세요.')} />
+        <EmptyState icon="monitoring" title={t('아직 연결된 메트릭 서비스가 없습니다')} description={t('Metrics를 직접 연결하거나 Docker 환경에서 메트릭 수집을 활성화해 주세요.')} />
       ) : (
         <div className="space-y-7">
           {directServices.length > 0 && (
@@ -141,7 +141,7 @@ export function MetricsPage() {
               <div className="mb-3 flex items-end justify-between gap-3">
                 <div>
                   <h2 className="text-base font-bold text-text-base">{t('직접 연결 서비스')}</h2>
-                  <p className="mt-0.5 text-xs text-text-muted">{t('Agent 없이 OTLP Metrics를 받는 Observed Service입니다.')}</p>
+                  <p className="mt-0.5 text-xs text-text-muted">{t('OTLP Metrics를 직접 받는 Observed Service입니다.')}</p>
                 </div>
                 <span className="font-mono text-xs text-text-dim">{directServices.length}</span>
               </div>
@@ -164,8 +164,8 @@ export function MetricsPage() {
             <section>
               <div className="mb-3 flex items-end justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-bold text-text-base">{t('Agent 서비스')}</h2>
-                  <p className="mt-0.5 text-xs text-text-muted">{t('EveryUp Agent가 발견하고 전달한 서비스 메트릭입니다.')}</p>
+                  <h2 className="text-base font-bold text-text-base">{t('Docker 서비스')}</h2>
+                  <p className="mt-0.5 text-xs text-text-muted">{t('EveryUp Docker 수집기가 발견하고 전달한 서비스 메트릭입니다.')}</p>
                 </div>
                 <span className="font-mono text-xs text-text-dim">{visibleAgentMetrics.length}</span>
               </div>

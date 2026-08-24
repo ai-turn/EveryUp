@@ -1,6 +1,6 @@
-# EveryUp Agent
+# EveryUp Docker Collector
 
-EveryUp Agent is the lightweight collector that runs on a server you want to
+The EveryUp Docker collector is the lightweight component that runs on a Docker host you want to
 monitor. It discovers Docker containers automatically, reads stdout/stderr logs,
 collects host metrics, and syncs everything to EveryUp Web. API status codes are
 derived by parsing access-log lines out of the logs it already collects — no
@@ -8,18 +8,19 @@ proxy, no app changes. Request/response headers and bodies are an optional Tier 
 feature delivered by app-side OpenTelemetry instrumentation.
 
 Alert rules, notification channels, and dashboard behavior are configured in Web.
-The Agent only collects and forwards data.
+The Docker collector only collects and forwards data. Its binary, environment
+variables, storage paths, and compatibility API retain the internal `agent` name.
 
 ## Quick Start
 
 Download the monitoring bundle on the Docker server you want to monitor. It
-contains the regular Agent and an isolated OBI eBPF observer. You do not need
+contains the regular Docker collector and an isolated OBI eBPF observer. You do not need
 to add EveryUp settings to each application service. Docker Compose 2.23.1 or
 newer is required because the OBI configuration is embedded in the Compose file.
 
-In EveryUp Web, open **Services -> Add**, create a project, and run the one-line
+In EveryUp Web, open **Docker -> Connect Docker**, name the Docker environment, and run the one-line
 installation command shown there on the target server. The command contains a
-join code that expires after ten minutes and works once; the long-lived Agent
+join code that expires after ten minutes and works once; the long-lived collector
 key is exchanged directly between the target server and EveryUp Web.
 
 The installer validates Linux, Docker Engine, and Docker Compose before using
@@ -27,18 +28,18 @@ the code. It stores the generated bundle in `/opt/everyup-agent/compose.yaml`,
 backs up an existing configuration, and starts both services automatically.
 If the code expires, issue a new one from the installation screen.
 
-The Agent should appear online in Web within about 30 seconds. The observer
+The Docker environment should appear online in Web within about 30 seconds. The observer
 automatically discovers application processes running in Docker/OCI containers;
 there is no application port list to configure.
 
-Web keeps the remaining setup visible as one guided flow: Agent connection,
+Web keeps the remaining setup visible as one guided flow: collector connection,
 baseline collection, automatic API tracing, then optional Java/Node detailed
 instrumentation. Compatibility failures are shown on the relevant step without
 hiding the features that still work.
 
 ## What Works Without App Changes
 
-With only the Agent service running, EveryUp can collect:
+With only the Docker collector service running, EveryUp can collect:
 
 - Container running/stopped state
 - Docker events
@@ -47,14 +48,14 @@ With only the Agent service running, EveryUp can collect:
 - Host CPU, memory, disk, and network metrics
 
 The default monitoring bundle additionally collects HTTP/S and gRPC traces with
-real latency through the eBPF observer. If eBPF cannot run on the host, the Agent
+real latency through the eBPF observer. If eBPF cannot run on the host, the Docker collector
 features above continue working independently.
 
-Your application containers do not need the EveryUp Web URL or Agent API key.
+Your application containers do not need the EveryUp Web URL or Docker collector API key.
 
 ## Logs And API Requests
 
-The Agent reads Docker stdout/stderr and stores those lines as logs in Web. Check
+The Docker collector reads Docker stdout/stderr and stores those lines as logs in Web. Check
 what it can see with:
 
 ```bash
@@ -70,11 +71,11 @@ API rows while logs and metrics keep flowing.
 For real latency without touching your apps, use the automatic eBPF observer
 included in the monitoring bundle (below).
 For request/response **headers and bodies**, instrument the app with
-OpenTelemetry pointed at the Agent's OTLP gateway (`http://everyup-agent:4318`).
+OpenTelemetry pointed at the Docker collector's OTLP gateway (`http://everyup-agent:4318`).
 See [docs/OTEL_API_INSTRUMENTATION.md](../docs/OTEL_API_INSTRUMENTATION.md).
 
 If logs are written only to files inside the container, Docker cannot show them
-and the Agent cannot collect them in compose-only mode. Configure the application
+and the Docker collector cannot collect them in compose-only mode. Configure the application
 or reverse proxy to write logs to stdout.
 
 ## Zero-Code Tracing (eBPF, Automatic)
@@ -86,8 +87,8 @@ port configuration, app changes, or service restarts. It captures real SERVER
 spans (method, path, status, **latency**) across supported runtimes, including
 Go and HTTPS traffic.
 
-How it fits together: OBI sends spans to the Agent's OTLP gateway, tagged
-`everyup.source=ebpf`. The Agent maps each span to a service by the
+How it fits together: OBI sends spans to the Docker collector's OTLP gateway, tagged
+`everyup.source=ebpf`. The collector maps each span to a service by the
 instrumented process's PID (via Docker) and renames it accordingly; spans it
 cannot match — host processes, the observer itself, or stale PIDs — are dropped
 so they never appear as phantom services. Services covered by real spans stop
@@ -98,12 +99,12 @@ Notes:
 - Requires a Linux kernel 5.8+ with BTF (`/sys/kernel/btf/vmlinux` exists).
   Docker Desktop's VM qualifies.
 - `privileged` + `pid: host` are required by this simple eBPF deployment. The
-  elevated observer is kept separate from the regular Agent. Remove it if that
+  elevated observer is kept separate from the regular Docker collector. Remove it if that
   is not acceptable for your host; everything else keeps working.
 - The default OBI policy does not capture headers or bodies. Use app-side
   OpenTelemetry for the current EveryUp deep-inspection flow (see above).
 - A service freshly (re)started may drop its first seconds of spans until the
-  Agent's next PID refresh (one check interval).
+  collector's next PID refresh (one check interval).
 - OBI is pinned to a tested release in the Compose file. Upgrade it only after
   validating the target kernel and the PID attribution contract.
 
@@ -112,7 +113,7 @@ Notes:
 The default eBPF policy above needs zero changes and captures
 method/path/status/latency. For
 **headers and bodies** the app itself must be instrumented. Java and Node.js
-still require no code or Dockerfile changes: the one-time Agent installer also
+still require no code or Dockerfile changes: the one-time Docker collector installer also
 installs `/usr/local/bin/everyup-otel`.
 
 Open the project in Web, choose **Detailed API monitoring**, enter the path to
@@ -122,11 +123,11 @@ server. The helper:
 - validates Linux, Docker, the base Compose file, target runtimes, and the
   currently running containers before changing anything;
 - creates a shared `everyup-monitoring` network and populates the
-  `everyup-instrumentation` volume from the Agent image;
+  `everyup-instrumentation` volume from the Docker collector image;
 - preserves existing `JAVA_TOOL_OPTIONS` or `NODE_OPTIONS` and writes a managed
   `docker-compose.everyup.yml` next to the original Compose file;
 - recreates only the selected services, then checks health, injection options,
-  the read-only `/everyup` mount, and Agent network connectivity;
+  the read-only `/everyup` mount, and collector network connectivity;
 - automatically restores and recreates the previous configuration if restart
   or verification fails.
 
@@ -141,14 +142,14 @@ sudo everyup-otel rollback ./compose.yml
 
 Notes:
 
-- The agent's telemetry gateway attributes spans to the right service
+- The Docker collector's telemetry gateway attributes spans to the right service
   automatically; sensitive headers (authorization, cookie, ...) are masked at
   ingest regardless of what you list.
 - Body capture (`EVERYUP_CAPTURE_BODIES`) is Node-only today and masks the
   fields in `EVERYUP_MASKED_BODY_FIELDS` (password, token, ... by default)
   before anything leaves the app. Viewing bodies in the web UI is admin-only
   and audited.
-- The helper attaches the app and Agent to the shared `everyup-monitoring`
+- The helper attaches the app and Docker collector to the shared `everyup-monitoring`
   network so `everyup-agent:4318` resolves without publishing an OTLP port.
 - Existing `JAVA_TOOL_OPTIONS` / `NODE_OPTIONS` values are retained and the
   EveryUp option is appended once.
@@ -156,7 +157,7 @@ Notes:
 
 ## Networking Notes
 
-The Agent discovers containers through the mounted Docker socket. It can run in
+The Docker collector discovers containers through the mounted Docker socket. It can run in
 the same Compose file as your application or in a separate Compose project on the
 same Docker host.
 
@@ -169,8 +170,8 @@ Only the three `yes` rows are required; everything else has a working default.
 | Variable | Required | Default | Description |
 | --- | ---: | --- | --- |
 | `EVERYUP_WEB_SYNC_ENABLED` | yes | `false` | Enables Web enrollment and sync |
-| `EVERYUP_WEB_BASE_URL` | yes | | EveryUp Web base URL reachable from the Agent host |
-| `EVERYUP_AGENT_API_KEY` | yes | | API key generated in Web from Services -> Add (deprecated alias: `EVERYUP_WEB_ENROLLMENT_TOKEN`) |
+| `EVERYUP_WEB_BASE_URL` | yes | | EveryUp Web base URL reachable from the Docker host |
+| `EVERYUP_AGENT_API_KEY` | yes | | API key generated in Web from Docker -> Connect Docker (deprecated alias: `EVERYUP_WEB_ENROLLMENT_TOKEN`) |
 | `EVERYUP_WEB_AGENT_ID` | no | | Web-side agent id; set automatically on enrollment |
 | `EVERYUP_WEB_SYNC_INTERVAL_SECONDS` | no | `30` | How often services, events, and host metrics sync to Web |
 | `EVERYUP_WEB_OTLP_ENDPOINT` | no | | OTLP endpoint advertised for telemetry push |
@@ -179,10 +180,10 @@ Only the three `yes` rows are required; everything else has a working default.
 
 | Variable | Required | Default | Description |
 | --- | ---: | --- | --- |
-| `TZ` | no | `UTC` | Timezone for the agent's own log lines (e.g. `Asia/Seoul`); synced data always carries zone info regardless |
-| `EVERYUP_AGENT_NAME` | no | `everyup-agent` | Agent instance name |
-| `EVERYUP_SERVICE_NAME` | no | `local-service` | Default service name for the agent's own checks |
-| `EVERYUP_DATA_DIR` | no | `/data` | Where agent state (`agent-state.json`, `audit.jsonl`) is stored |
+| `TZ` | no | `UTC` | Timezone for the collector's own log lines (e.g. `Asia/Seoul`); synced data always carries zone info regardless |
+| `EVERYUP_AGENT_NAME` | no | `everyup-agent` | Docker environment name |
+| `EVERYUP_SERVICE_NAME` | no | `local-service` | Default service name for the collector's own checks |
+| `EVERYUP_DATA_DIR` | no | `/data` | Where collector state (`agent-state.json`, `audit.jsonl`) is stored |
 | `EVERYUP_CHECK_INTERVAL_SECONDS` | no | `30` | Health-check interval |
 | `EVERYUP_HTTP_TIMEOUT_SECONDS` | no | `5` | HTTP request timeout |
 | `EVERYUP_ALERT_COOLDOWN_SECONDS` | no | `300` | Minimum seconds between repeat alerts for the same target |
@@ -222,8 +223,8 @@ days (default 7).
 | `EVERYUP_OTEL_CONFIG_PATH` | no | `/etc/everyup/generated/otel-config.yaml` | Where the generated OTel config is written |
 | `EVERYUP_OTEL_CONF_DIR` | no | `/etc/everyup/conf.d` | Directory scanned for OTel config fragments |
 | `EVERYUP_OTEL_FILELOG_PATHS` | no | | Comma-separated file paths for the OTel filelog receiver |
-| `EVERYUP_TELEMETRY_GATEWAY_ENABLED` | no | `true` | Run the in-agent OTLP gateway that forwards telemetry to Web |
-| `EVERYUP_TELEMETRY_GATEWAY_LISTEN_ADDR` | no | `:4318` | Listen address for the in-agent OTLP gateway |
+| `EVERYUP_TELEMETRY_GATEWAY_ENABLED` | no | `true` | Run the Docker collector's OTLP gateway that forwards telemetry to Web |
+| `EVERYUP_TELEMETRY_GATEWAY_LISTEN_ADDR` | no | `:4318` | Listen address for the Docker collector's OTLP gateway |
 
 **Heartbeat watchdog**
 

@@ -32,8 +32,8 @@ type Step = 'form' | 'install';
 
 function SetupProgress({ step, connected, diagnosed }: { step: Step; connected: boolean; diagnosed: boolean }) {
   const steps = [
-    { label: '에이전트', complete: step === 'install', active: step === 'form' },
-    { label: 'Agent', complete: connected, active: step === 'install' && !connected },
+    { label: 'Docker 환경', complete: step === 'install', active: step === 'form' },
+    { label: '수집기 설치', complete: connected, active: step === 'install' && !connected },
     { label: '기능 확인', complete: diagnosed, active: connected && !diagnosed },
     { label: '상세 계측', complete: false, active: diagnosed },
   ];
@@ -140,7 +140,7 @@ function AgentForm({
     <form onSubmit={onSubmit} className="p-6 space-y-5">
       <div className="space-y-1.5">
         <label htmlFor="new-project-name" className="text-sm font-medium text-text-secondary">
-          에이전트 이름
+          Docker 환경 이름
         </label>
         <Input
           id="new-project-name"
@@ -150,7 +150,7 @@ function AgentForm({
           placeholder="예: my-api, payment-service"
         />
         <p className="text-xs text-text-dim">
-          에이전트 Docker 이미지에 설정할 이름입니다
+          대시보드에서 Docker 호스트를 구분할 이름입니다
         </p>
       </div>
       <div className="space-y-2">
@@ -163,7 +163,7 @@ function AgentForm({
           value={profileKind}
           onChange={onProfileKindChange}
           size="md"
-          ariaLabel="에이전트 수집 프로필"
+          ariaLabel="Docker 수집 프로필"
         />
         {profileKind === 'all-in-one' && (
           <p className="text-xs text-text-muted">업타임, 로그, 인프라, API, 메트릭을 한 번에 수집합니다.</p>
@@ -234,7 +234,7 @@ function AgentInstallCommand({
     <details open={expanded} className="group rounded-xl border border-ui-border bg-bg-surface">
       <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-bold text-text-base">
         <MaterialIcon name="terminal" className="text-lg text-primary" />
-        Agent 설치 명령
+        Docker 수집기 설치 명령
         <span className="ml-auto text-xs font-normal text-text-dim">
           {connected ? '재설치할 때 사용' : 'Linux Docker 서버에서 실행'}
         </span>
@@ -261,7 +261,7 @@ function AgentInstallCommand({
 
         <div className="space-y-1.5">
           <label htmlFor="agent-web-base-url" className="text-xs font-medium uppercase tracking-wider text-text-muted">
-            Agent에서 접근할 EveryUp Web 주소
+            Docker 수집기에서 접근할 EveryUp Web 주소
           </label>
           <Input
             id="agent-web-base-url"
@@ -273,8 +273,8 @@ function AgentInstallCommand({
           />
           <p className={`text-xs ${webAddressMissing ? 'text-amber-600 dark:text-amber-400' : 'text-text-dim'}`}>
             {webAddressMissing
-              ? 'Agent 컨테이너에서 접근 가능한 서버 IP나 도메인을 입력하세요.'
-              : 'localhost는 Agent 자신을 가리키므로 원격 설치에는 사용할 수 없습니다.'}
+              ? 'Docker 수집기 컨테이너에서 접근 가능한 서버 IP나 도메인을 입력하세요.'
+              : 'localhost는 Docker 수집기 자신을 가리키므로 원격 설치에는 사용할 수 없습니다.'}
           </p>
         </div>
 
@@ -282,7 +282,7 @@ function AgentInstallCommand({
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-text-base">설치 명령</p>
-              <p className="mt-0.5 text-xs text-text-muted">검사, 설정 백업, Agent·eBPF 시작을 한 번에 처리합니다.</p>
+              <p className="mt-0.5 text-xs text-text-muted">검사, 설정 백업, Docker 수집기·eBPF 시작을 한 번에 처리합니다.</p>
             </div>
             <CopyButton
               onCopy={() => copyInstallCommand(installCommand)}
@@ -303,7 +303,7 @@ function AgentInstallCommand({
           {[
             ['rule', '환경 검사', 'Docker와 Compose 조건을 먼저 확인'],
             ['backup', '안전한 설치', '기존 설정을 백업하고 새 설정 저장'],
-            ['sensors', '자동 발견', 'Agent와 eBPF Observer를 함께 시작'],
+            ['sensors', '자동 발견', 'Docker 수집기와 eBPF Observer를 함께 시작'],
           ].map(([icon, title, description]) => (
             <div key={title} className="rounded-lg bg-ui-hover-soft p-2.5">
               <MaterialIcon name={icon} className="text-base text-primary" />
@@ -391,7 +391,7 @@ export function AddServiceModal({
       setDetectedServices(serviceList ?? []);
       if (!announcedConnection.current) {
         announcedConnection.current = true;
-        if (!firstCheck) toast.success('Agent 연결을 확인했습니다');
+        if (!firstCheck) toast.success('Docker 수집기 연결을 확인했습니다');
         onCreated();
       }
     } catch (error) {
@@ -462,14 +462,14 @@ export function AddServiceModal({
     <dialog
       ref={dialogRef}
       className={`fixed inset-0 z-50 m-auto h-full max-h-none w-full max-w-none items-center justify-center bg-transparent p-4 open:flex ${SCRIM_MODAL_DIALOG}`}
-      aria-label={step === 'form' ? '에이전트 추가' : 'Agent 설치 및 모니터링 설정'}
+      aria-label={step === 'form' ? 'Docker 연결' : 'Docker 수집기 설치 및 모니터링 설정'}
       onCancel={(event) => { event.preventDefault(); onClose(); }}
     >
       <div className={`w-full ${step === 'install' ? 'max-w-2xl' : 'max-w-md'} max-h-[92vh] bg-bg-surface rounded-xl shadow-2xl border border-ui-border overflow-hidden flex flex-col`}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-ui-border-soft">
           <h2 className="text-base font-semibold text-text-base">
-            {step === 'form' ? '에이전트 추가' : 'Agent 설치'}
+            {step === 'form' ? 'Docker 연결' : 'Docker 수집기 설치'}
           </h2>
           <button type="button" onClick={onClose} aria-label="닫기" className="p-1 rounded-lg text-text-dim hover:text-text-base transition-colors">
             <MaterialIcon name="close" className="text-xl" />
@@ -496,7 +496,7 @@ export function AddServiceModal({
               <div className="flex items-start gap-3 rounded-xl border border-ui-border bg-ui-hover-soft p-4">
                 <MaterialIcon name="check_circle" className="mt-0.5 shrink-0 text-xl text-emerald-500" />
                 <div>
-                  <p className="text-sm font-bold text-text-base">Agent 연결을 확인했습니다</p>
+                  <p className="text-sm font-bold text-text-base">Docker 수집기 연결을 확인했습니다</p>
                   <p className="mt-1 text-xs text-text-muted">
                     기능 호환성과 발견된 서비스를 자동으로 확인했습니다. 이 화면에서 선택 계측까지 이어서 설정할 수 있습니다.
                   </p>
@@ -509,7 +509,7 @@ export function AddServiceModal({
                   <span className="relative inline-flex h-3 w-3 rounded-full bg-primary" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-text-base">Agent 연결을 기다리는 중</p>
+                  <p className="text-sm font-bold text-text-base">Docker 수집기 연결을 기다리는 중</p>
                   <p className="mt-0.5 text-xs text-text-muted">명령을 실행하면 최대 5초 간격으로 자동 확인합니다.</p>
                 </div>
                 <button
@@ -563,7 +563,7 @@ export function AddServiceModal({
                     onClick={() => onOpenProject ? onOpenProject(agentId) : onClose()}
                     className="flex-1"
                   >
-                    {onOpenProject ? '에이전트 열기' : '완료'}
+                    {onOpenProject ? 'Docker 환경 열기' : '완료'}
                   </Button>
                 </>
               ) : (

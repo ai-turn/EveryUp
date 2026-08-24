@@ -5,7 +5,7 @@
 <h1 align="center">EveryUp</h1>
 
 <p align="center">
-  Docker 서비스를 위한 셀프호스팅 모니터링 대시보드와 가벼운 Agent.
+  Docker 서비스를 위한 셀프호스팅 모니터링 대시보드와 가벼운 Docker 수집기.
 </p>
 
 <p align="center">
@@ -31,13 +31,13 @@
 ## EveryUp이 뭔가요?
 
 EveryUp은 Docker로 실행 중인 서비스를 한곳에서 모니터링하는 셀프호스팅 도구입니다.
-대시보드 서버에 **Web**을 한 번 띄우고, 모니터링할 서버마다 **Agent**를 하나씩
-실행하면 끝입니다. 큰 관측 스택을 따로 세울 필요가 없습니다.
+대시보드 서버에 **Web**을 한 번 띄우고, 모니터링할 **Docker 환경**마다 가벼운
+EveryUp Docker 수집기를 실행하면 끝입니다. 큰 관측 스택을 따로 세울 필요가 없습니다.
 
 | 구성 | 역할 | 실행 위치 |
 | --- | --- | --- |
 | **Web** | 대시보드, 사용자, 알림 규칙·채널, 히스토리 | 대시보드 서버 |
-| **Agent** | Docker 디스커버리, 컨테이너 상태, 로그, 호스트 메트릭 | 모니터링할 각 서버 |
+| **Docker 수집기** | Docker 디스커버리, 컨테이너 상태, 로그, 호스트 메트릭 | 모니터링할 각 Docker 호스트 |
 
 ## 핵심 기능
 
@@ -92,31 +92,31 @@ docker compose up -d
 
 `http://WEB_SERVER_IP:3001`을 열고 첫 관리자 계정을 만들면 완료입니다.
 
-### 2. 일회용 Agent 설치 명령 만들기
+### 2. 일회용 Docker 연결 명령 만들기
 
-대시보드에서 **Services**를 열고 **Add Project**를 누릅니다. 프로젝트를 만들면
+대시보드에서 **Docker**를 열고 **Docker 연결**을 누릅니다. 연결 화면에는
 10분 동안 한 번만 사용할 수 있는 설치 명령이 표시됩니다. 장기 API 키는
 브라우저에 표시되지 않고 설치 과정에서 대상 서버로 직접 전달됩니다.
 
 ### 3. 모니터링할 서버에 모니터링 번들 설치
 
-번들 Compose 파일은 일반 Agent와 권한이 분리된 OBI eBPF 관측기를 함께
+번들 Compose 파일은 Docker 수집기와 권한이 분리된 OBI eBPF 관측기를 함께
 실행합니다. 앱의 Compose 파일, 이미지, 포트, 컨테이너는 바꿀 필요가 없습니다.
 Docker Compose 2.23.1 이상이 필요합니다.
 
 표시된 명령 한 줄을 대상 Linux Docker 서버에서 실행합니다. 설치기는 Docker와
-Compose 버전을 먼저 확인한 후 `/opt/everyup-agent`에 설정을 만들고 Agent와
+Compose 버전을 먼저 확인한 후 `/opt/everyup-agent`에 설정을 만들고 Docker 수집기와
 eBPF 관측기를 시작합니다. 기존 설정이 있으면 덮어쓰기 전에 백업합니다.
 
 연결 코드가 만료되거나 이미 사용됐다면 프로젝트 설치 화면에서 **새 코드**를
 눌러 다시 발급할 수 있습니다.
 
-약 30초 안에 Web에서 Agent가 online으로 표시되고, 그 서버의 컨테이너들이
+약 30초 안에 Web에서 Docker 환경이 online으로 표시되고, 그 서버의 컨테이너들이
 자동으로 나타납니다. eBPF 관측기도 컨테이너 프로세스를 자동으로 찾으므로
 포트 목록을 관리할 필요가 없습니다. 문제가 생기면
 [트러블슈팅](#트러블슈팅)을 참고하세요.
 
-프로젝트 화면의 **모니터링 설정 가이드**가 Agent 연결, 기본 수집, 자동 API 추적을
+Docker 환경 화면의 **모니터링 설정 가이드**가 수집기 연결, 기본 수집, 자동 API 추적을
 순서대로 진단합니다. Java·Node.js 서비스가 발견되면 같은 가이드에서 선택 기능인
 헤더·바디 상세 계측까지 바로 이어서 설정할 수 있습니다.
 
@@ -124,13 +124,13 @@ eBPF 관측기를 시작합니다. 기존 설정이 있으면 덮어쓰기 전�
 
 ### 자동 eBPF 관측기: API latency와 trace
 
-기본 Agent는 access log에서 method, path, status를 읽습니다. 실제 latency와
+기본 Docker 수집기는 access log에서 method, path, status를 읽습니다. 실제 latency와
 trace까지 볼 수 있도록 번들 Compose가 `everyup-ebpf`를 자동으로 실행합니다.
 Docker/OCI 컨테이너에서 실행 중인 프로세스를 자동 발견하므로
 `BEYLA_OPEN_PORT`나 앱 포트 설정이 필요하지 않습니다.
 
 앱 코드, Dockerfile, 앱 컨테이너를 바꾸지 않습니다. 실제 Linux 호스트에서는
-eBPF가 호스트 프로세스를 관찰해 trace를 만들고, Agent가 각 span을 해당 Docker
+eBPF가 호스트 프로세스를 관찰해 trace를 만들고, Docker 수집기가 각 span을 해당 Docker
 서비스에 연결합니다. Docker Desktop에서는 PID 변환 제약으로 서비스 자동 연결이
 되지 않을 수 있으므로, 이 경우 앱 측 OpenTelemetry 계측을 사용하세요.
 Linux kernel 5.8+ 및 BTF가 필요합니다. 자세한 내용은
@@ -148,7 +148,7 @@ Compose override로 붙일 수 있습니다.
 웹 UI에서 프로젝트를 열고 **상세 API 모니터링**을 실행한 뒤 표시된 명령 한 줄을
 애플리케이션 서버에서 실행합니다. `everyup-otel` CLI가 감지된 Java/Node.js 런타임에
 맞춘 `docker-compose.everyup.yml`을 만들고 선택한 서비스만 다시 띄웁니다. 적용 후
-주입 옵션, 공유 볼륨, Agent 네트워크와 컨테이너 상태를 검증하며 실패하면 직전 설정으로
+주입 옵션, 공유 볼륨, 수집기 네트워크와 컨테이너 상태를 검증하며 실패하면 직전 설정으로
 자동 복구합니다.
 
 요청/응답 바디 자동 캡처는 현재 Node.js에서 지원됩니다. 바디는 앱 안에서
@@ -159,9 +159,9 @@ Java, Python, 수동 SDK는 마스킹된 body span event를 직접 추가할 수
 
 ## 수집되는 데이터
 
-### 기본 Agent
+### 기본 Docker 수집기
 
-앱 수정 없이 수집됩니다. Agent는 Docker 소켓과 `/hostfs`를 읽기 전용으로
+앱 수정 없이 수집됩니다. Docker 수집기는 Docker 소켓과 `/hostfs`를 읽기 전용으로
 마운트합니다.
 
 | 데이터 | 소스 |
@@ -188,16 +188,16 @@ access log가 없어도 컨테이너 상태, 일반 로그, 호스트 메트릭�
 | --- | --- |
 | 요청/응답 헤더 | `http.*.header.*` 스팬 속성 |
 | 요청/응답 바디 | `*_body_masked` 스팬 이벤트 |
-| 앱 메트릭(JVM 메모리, GC, 커스텀 카운터 등) | 앱 OTel -> Agent `:4318` |
+| 앱 메트릭(JVM 메모리, GC, 커스텀 카운터 등) | 앱 OTel -> Docker 수집기 `:4318` |
 
 ## 트러블슈팅
 
-**Agent가 online으로 뜨지 않습니다.**
-`EVERYUP_WEB_BASE_URL`은 Agent 컨테이너 안에서 접근 가능한 Web 주소여야 합니다.
-같은 서버라도 컨테이너 안의 `localhost`는 Web이 아니라 Agent 자신을 가리킬 수
+**Docker 환경이 online으로 뜨지 않습니다.**
+`EVERYUP_WEB_BASE_URL`은 Docker 수집기 컨테이너 안에서 접근 가능한 Web 주소여야 합니다.
+같은 서버라도 컨테이너 안의 `localhost`는 Web이 아니라 수집기 자신을 가리킬 수
 있습니다. Compose 서비스명이나 호스트에서 접근 가능한 IP를 사용하세요.
 
-**Agent가 Docker 소켓을 읽지 못합니다.**
+**Docker 수집기가 Docker 소켓을 읽지 못합니다.**
 권한 문제입니다. 한 줄 설치기는 Docker 소켓의 group ID를 감지해
 `EVERYUP_DOCKER_GID`를 자동으로 기록합니다. 수동 배포라면 이 값을
 `stat -c '%g' /var/run/docker.sock` 결과로 설정하고 `group_add`에 추가하세요.
@@ -205,13 +205,13 @@ access log가 없어도 컨테이너 상태, 일반 로그, 호스트 메트릭�
 [Docker socket proxy 가이드](agent/docs/docker-socket-proxy.md)를 사용하세요.
 
 **로그가 보이지 않습니다.**
-컨테이너 안의 파일에만 쓰는 로그는 Docker 로그로 보이지 않으므로 Agent도 수집할
+컨테이너 안의 파일에만 쓰는 로그는 Docker 로그로 보이지 않으므로 Docker 수집기도 수집할
 수 없습니다. 앱이나 프록시 로그를 stdout/stderr로 출력하세요.
 
 **운영 배포 시 백업.**
 `/app/data`를 백업하세요. `EVERYUP_ENCRYPTION_KEY`를 설정했다면 같은 64자 hex
 키를 배포 secret과 함께 보관해야 합니다. 키 없이 데이터베이스 백업만으로는
-암호화된 Agent 키나 알림 secret을 복원할 수 없습니다.
+암호화된 Docker 수집기 키나 알림 secret을 복원할 수 없습니다.
 자세한 내용은 [백업·복원 가이드](docs/BACKUP_RESTORE.ko.md)를 참고하세요.
 
 ## 문서
@@ -219,11 +219,11 @@ access log가 없어도 컨테이너 상태, 일반 로그, 호스트 메트릭�
 | 문서 | 내용 |
 | --- | --- |
 | [web/README.md](web/README.md) | Web 설정, 환경변수, API 영역, 로컬 개발 |
-| [agent/README.md](agent/README.md) | Agent 설정, 전체 환경변수 레퍼런스, Compose 설정 |
+| [agent/README.md](agent/README.md) | Docker 수집기 설정, 전체 환경변수 레퍼런스, Compose 설정 |
 | [agent/docs/docker-socket-proxy.md](agent/docs/docker-socket-proxy.md) | 운영 환경의 더 엄격한 Docker socket 접근 구성 |
-| [agent/docs/web-connected-mode.md](agent/docs/web-connected-mode.md) | Agent 등록과 Web 동기화 동작 방식 |
+| [agent/docs/web-connected-mode.md](agent/docs/web-connected-mode.md) | Docker 수집기 등록과 Web 동기화 동작 방식 |
 | [agent/docs/host-metrics.md](agent/docs/host-metrics.md) | 호스트 CPU, 메모리, 디스크, 네트워크 수집 세부사항 |
-| [agent/docs/otel-collector.md](agent/docs/otel-collector.md) | Agent가 생성하는 선택적 OTel collector 설정 |
+| [agent/docs/otel-collector.md](agent/docs/otel-collector.md) | Docker 수집기가 생성하는 선택적 OTel collector 설정 |
 | [docs/NOTIFICATION_SETUP.ko.md](docs/NOTIFICATION_SETUP.ko.md) | Telegram / Discord / Slack 채널 자격증명·설정 |
 | [docs/BACKUP_RESTORE.ko.md](docs/BACKUP_RESTORE.ko.md) | `/app/data` 디렉토리 백업·복원 |
 | [docs/OTEL_API_INSTRUMENTATION.ko.md](docs/OTEL_API_INSTRUMENTATION.ko.md) | OpenTelemetry 계측으로 요청/응답 헤더·바디 수집(언어별) |
@@ -231,7 +231,7 @@ access log가 없어도 컨테이너 상태, 일반 로그, 호스트 메트릭�
 
 ## 레퍼런스
 
-**네트워킹.** Agent는 마운트된 Docker 소켓으로 컨테이너·로그에 접근하므로 자체
+**네트워킹.** Docker 수집기는 마운트된 Docker 소켓으로 컨테이너·로그에 접근하므로 자체
 Compose 프로젝트에서도 동작합니다. 가장 깔끔한 구성은 `everyup-agent`를 그
 서버의 앱 스택과 같은 Compose 파일에 두는 것입니다.
 
@@ -243,22 +243,22 @@ web/
   frontend/                # React 19 / Vite 대시보드
   docker-compose.yml       # Web 전용 Compose 템플릿
 agent/
-  cmd/                     # Agent entrypoint
-  docs/                    # Agent 배포/운영 문서
+  cmd/                     # Docker 수집기 entrypoint
+  docs/                    # Docker 수집기 배포/운영 문서
   instrumentation/         # 앱 측 OTel helper 번들
-  docker-compose.yml       # Agent Compose 템플릿
+  docker-compose.yml       # Docker 수집기 Compose 템플릿
 docs/                      # 사용자 문서, 백업/복원, 알림, OTel 가이드
 docker-compose.yml         # 루트 편의용 Compose 파일 (Web 전용)
 ```
 
 **개발**
 
-소스 개발 사전 요구사항: Docker, pnpm, Web용 Go 1.24, Agent용 Go 1.25.
+소스 개발 사전 요구사항: Docker, pnpm, Web용 Go 1.24, Docker 수집기용 Go 1.25.
 
 ```bash
 cd web/backend && go test ./...     # 백엔드 테스트
 cd web/frontend && pnpm build       # 프론트엔드 빌드
-cd agent && go test ./...           # 에이전트 테스트
+cd agent && go test ./...           # Docker 수집기 테스트
 ```
 
 계측 적용, 트래픽, 검증, 롤백 흐름을 시험할 수 있는 일회용 Node.js/Java 앱은

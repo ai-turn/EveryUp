@@ -1,6 +1,6 @@
 # Local State
 
-EveryUp Agent stores local state under `EVERYUP_DATA_DIR` so alert behavior
+The EveryUp Docker collector stores local state under `EVERYUP_DATA_DIR` so alert behavior
 survives container restarts.
 
 ## Files
@@ -13,7 +13,7 @@ survives container restarts.
 ## `agent-state.json`
 
 The state file is written through a temporary file and replace step. It is safe
-to back up while the agent is running, though a very recent check may not yet be
+to back up while the Docker collector is running, though a very recent check may not yet be
 reflected in the backup.
 
 Example:
@@ -39,8 +39,8 @@ Example:
 restart. The map key is the target's local key (`env:<EVERYUP_SERVICE_NAME>` for
 the `EVERYUP_HEALTH_URL` target, or a stable key for discovered ones — service
 name / compose `project:service`, not the container ID, so the entry survives
-container recreation). On each check cycle the agent prunes entries for targets it
-no longer discovers, so removed services don't linger in Web.
+container recreation). On each check cycle the Docker collector prunes entries
+for targets it no longer discovers, so removed services don't linger in Web.
 
 ## `audit.jsonl`
 
@@ -50,7 +50,7 @@ ship into EveryUp Web. Events are flushed to Web over the connected-mode sync.
 Example:
 
 ```jsonl
-{"time":"2026-06-18T00:00:00Z","type":"agent_started","serviceName":"api","message":"Agent everyup-agent is running."}
+{"time":"2026-06-18T00:00:00Z","type":"agent_started","serviceName":"api","message":"Docker collector everyup-agent is running."}
 {"time":"2026-06-18T00:01:00Z","type":"alert_sent","serviceName":"api","targetKey":"env:api","message":"http://api:8080/health failed: connection refused"}
 ```
 

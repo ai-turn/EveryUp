@@ -13,7 +13,7 @@ export function DirectApiSetupDialog(props: DirectApiSetupDialogProps) {
       signal="traces"
       capabilityLabel="API"
       title="API 직접 연결"
-      description="Agent 없이 애플리케이션의 OTLP traces를 연결합니다."
+      description="애플리케이션의 OTLP traces를 직접 연결합니다."
     />
   );
 }

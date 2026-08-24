@@ -147,7 +147,7 @@ export function ServiceGridPage() {
     if (!deleteTarget) return;
     try {
       await api.deleteAgent(deleteTarget.id);
-      toast.success(t('에이전트가 비활성화됐습니다'));
+      toast.success(t('Docker 환경이 비활성화됐습니다'));
       load();
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -197,14 +197,14 @@ export function ServiceGridPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-text-base">{t('에이전트')}</h1>
+          <h1 className="text-2xl font-bold text-text-base">{t('Docker 환경')}</h1>
           <p className="text-sm text-text-muted">
-            {t('연결된 에이전트와 모니터링 서비스 현황')}
+            {t('연결된 Docker 환경과 모니터링 서비스 현황')}
           </p>
         </div>
         <Button onClick={() => setShowAddModal(true)}>
           <MaterialIcon name="add" className="text-base" />
-          {t('에이전트 추가')}
+          {t('Docker 연결')}
         </Button>
       </div>
 
@@ -212,7 +212,7 @@ export function ServiceGridPage() {
       <SearchInput
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder={t('서비스 또는 에이전트 이름으로 검색')}
+        placeholder={t('서비스 또는 Docker 환경 이름으로 검색')}
       />
 
       {/* Content */}
@@ -225,9 +225,9 @@ export function ServiceGridPage() {
       ) : services.length === 0 && agents.length === 0 ? (
         <EmptyState
           icon="sensors"
-          title={t('아직 에이전트가 없습니다')}
-          description={t('에이전트를 추가하고 API 키로 연결하세요')}
-          action={{ label: t('에이전트 추가'), onClick: () => setShowAddModal(true) }}
+          title={t('아직 연결된 Docker 환경이 없습니다')}
+          description={t('Docker 환경을 연결하면 컨테이너와 호스트가 자동으로 표시됩니다')}
+          action={{ label: t('Docker 연결'), onClick: () => setShowAddModal(true) }}
         />
       ) : groups.length === 0 && visiblePending.length === 0 ? (
         <div className="py-16 text-center text-text-dim text-sm">
@@ -299,9 +299,9 @@ export function ServiceGridPage() {
         isOpen={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
-        title={t('에이전트 비활성화')}
-        message={t("{name} 에이전트를 비활성화하시겠습니까?", { name: deleteTarget?.name ?? '' })}
-        description={t('에이전트 연결이 차단되며 수집 데이터는 보존됩니다.')}
+        title={t('Docker 환경 비활성화')}
+        message={t("{name} Docker 환경을 비활성화하시겠습니까?", { name: deleteTarget?.name ?? '' })}
+        description={t('Docker 수집기 연결이 차단되며 수집 데이터는 보존됩니다.')}
         confirmLabel={t('비활성화')}
       />
 

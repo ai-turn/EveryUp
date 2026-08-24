@@ -208,7 +208,7 @@ export function ProjectDetailPage() {
     if (!deleteConfirm || !agentId) return;
     try {
       await api.deleteAgent(agentId);
-      toast.success('에이전트가 비활성화됐습니다');
+      toast.success('Docker 환경이 비활성화됐습니다');
       navigate('/');
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -250,7 +250,7 @@ export function ProjectDetailPage() {
         className="lg:hidden flex items-center gap-1 text-sm text-text-muted hover:text-text-base transition-colors"
       >
         <MaterialIcon name="arrow_back" className="text-base" />
-        {t('에이전트 목록')}
+        {t('Docker 환경 목록')}
       </button>
 
       {/* Project header + actions */}
@@ -290,8 +290,8 @@ export function ProjectDetailPage() {
             <>
               <button
                 onClick={() => setShowInstall(true)}
-                aria-label="Agent 설치 또는 재설치"
-                title="Agent 설치 또는 재설치"
+                aria-label="Docker 수집기 설치 또는 재설치"
+                title="Docker 수집기 설치 또는 재설치"
                 className="h-10 w-10 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
               >
                 <MaterialIcon name="download" className="text-xl" />
@@ -314,8 +314,8 @@ export function ProjectDetailPage() {
               </button>
               <button
                 onClick={() => setDeleteConfirm(true)}
-                aria-label="에이전트 비활성화"
-                title="에이전트 비활성화"
+                aria-label="Docker 환경 비활성화"
+                title="Docker 환경 비활성화"
                 className="h-10 w-10 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
               >
                 <MaterialIcon name="delete_outline" className="text-xl" />
@@ -474,9 +474,9 @@ export function ProjectDetailPage() {
         isOpen={deleteConfirm}
         onClose={() => setDeleteConfirm(false)}
         onConfirm={handleConfirmDelete}
-        title="에이전트 비활성화"
-        message={`'${agent?.name ?? agentId}' 에이전트를 비활성화하시겠습니까?`}
-        description="에이전트 연결이 차단되며 수집 데이터는 보존됩니다."
+        title="Docker 환경 비활성화"
+        message={`'${agent?.name ?? agentId}' Docker 환경을 비활성화하시겠습니까?`}
+        description="Docker 수집기 연결이 차단되며 수집 데이터는 보존됩니다."
         confirmLabel="비활성화"
       />
 

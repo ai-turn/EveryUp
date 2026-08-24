@@ -1,11 +1,11 @@
 # Heartbeat Watchdog
 
-EveryUp Agent can ping an external heartbeat URL so a separate service can
-notice when the Agent host is down.
+The EveryUp Docker collector can ping an external heartbeat URL so a separate
+service can notice when the Docker host is down.
 
 This is a lightweight dead-man's-switch integration, not a full central
-watchdog. The Agent sends the heartbeat while it is alive; the external service
-owns timeout detection and escalation.
+watchdog. The Docker collector sends the heartbeat while it is alive; the
+external service owns timeout detection and escalation.
 
 ## Configuration
 

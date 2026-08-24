@@ -3,7 +3,7 @@ import { useTranslate } from '@tolgee/react';
 import { MaterialIcon, PageHeader } from '../../components/common';
 
 const LINKS = [
-  { to: '/projects', icon: 'folder_open', title: 'Projects', description: 'Agent와 업타임 모니터를 논리적으로 묶습니다.' },
+  { to: '/projects', icon: 'folder_open', title: 'Projects', description: 'Docker 환경과 업타임 모니터를 논리적으로 묶습니다.' },
   { to: '/api', icon: 'api', title: 'API', description: '요청 상태와 오류를 확인합니다.' },
   { to: '/metrics', icon: 'monitoring', title: '메트릭', description: 'OpenTelemetry 메트릭을 확인합니다.' },
   { to: '/alerts', icon: 'notifications', title: '알림', description: '알림 규칙과 채널을 관리합니다.' },

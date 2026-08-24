@@ -13,7 +13,7 @@ export function DirectLogsSetupDialog(props: DirectLogsSetupDialogProps) {
       signal="logs"
       capabilityLabel="Logs"
       title="Logs 직접 연결"
-      description="Agent 없이 애플리케이션의 OTLP 로그를 연결합니다."
+      description="애플리케이션의 OTLP 로그를 직접 연결합니다."
     />
   );
 }

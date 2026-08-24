@@ -215,7 +215,7 @@ function ServiceRequestsPanel({
                   <li className="flex gap-2">
                     <span className="shrink-0 font-bold text-primary">1</span>
                     <span>
-                      에이전트 compose의 <code className="font-mono text-xs bg-ui-hover px-1 py-0.5 rounded">everyup-ebpf</code> 블록
+                      Docker 수집기 Compose의 <code className="font-mono text-xs bg-ui-hover px-1 py-0.5 rounded">everyup-ebpf</code> 블록
                       주석 해제 — 앱 수정 없이 경로·상태·지연시간 수집
                     </span>
                   </li>

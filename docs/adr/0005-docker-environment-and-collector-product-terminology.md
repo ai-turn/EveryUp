@@ -1,0 +1,3 @@
+# Use Docker Environment and Docker Collector in product language
+
+EveryUp presents a connected Docker host as a **Docker Environment** and its installed EveryUp component as a **Docker Collector**, instead of using Agent for both the managed target and the running process. Existing `/agents` APIs, agent IDs, `EVERYUP_AGENT_*` variables, storage paths, and container or image names remain compatibility identifiers so upgrades do not require a coordinated breaking migration. Earlier ADRs retain their original Agent wording as historical records; new user-facing copy and documentation use the canonical Docker terms while independent uptime and direct telemetry remain separate concepts.

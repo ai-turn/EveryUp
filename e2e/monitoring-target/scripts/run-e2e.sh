@@ -14,7 +14,7 @@ elif [ "$#" -gt 0 ]; then
 fi
 
 command -v docker >/dev/null 2>&1 || { echo "docker is required" >&2; exit 1; }
-command -v everyup-otel >/dev/null 2>&1 || { echo "everyup-otel is not installed; install the EveryUp Agent first" >&2; exit 1; }
+command -v everyup-otel >/dev/null 2>&1 || { echo "everyup-otel is not installed; install the EveryUp Docker collector first" >&2; exit 1; }
 docker info >/dev/null 2>&1 || { echo "Docker Engine is not available" >&2; exit 1; }
 
 run_otel() {

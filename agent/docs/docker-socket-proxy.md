@@ -1,8 +1,8 @@
 # Docker Socket Proxy
 
-For stricter production deployments, put a Docker socket proxy between the Agent
-and the Docker Engine. The Agent only needs read access for container discovery,
-container logs, events, and stats.
+For stricter production deployments, put a Docker socket proxy between the Docker
+collector and the Docker Engine. The Docker collector only needs read access for
+container discovery, container logs, events, and stats.
 
 ```yaml
 services:
@@ -37,5 +37,5 @@ volumes:
   everyup-agent-data:
 ```
 
-Use this pattern when you do not want the Agent container to mount the Docker
+Use this pattern when you do not want the Docker collector container to mount the Docker
 socket directly.

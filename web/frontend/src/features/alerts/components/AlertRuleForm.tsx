@@ -507,7 +507,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                         <option value="">{t('alerts.rules.allHosts')}</option>
                                         {infrastructureResources.map(resource => (
                                             <option key={resource.id} value={resource.id}>
-                                                {resource.adapter === 'otel-collector' ? 'Collector' : 'Agent'} / {resource.name}
+                                                {resource.adapter === 'otel-collector' ? 'Collector' : 'Docker'} / {resource.name}
                                             </option>
                                         ))}
                                     </Select>

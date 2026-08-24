@@ -193,7 +193,7 @@ bg-bg-surface border border-ui-border rounded-xl
 
 ### 3.4 내비게이션 셸
 
-- `lg` 이상: 좌측 `Sidebar`(로고 → nav → 에이전트 상태 푸터). `Header`는 `lg:hidden`으로 모바일 전용
+- `lg` 이상: 좌측 `Sidebar`(로고 → nav → Docker 수집기 상태 푸터). `Header`는 `lg:hidden`으로 모바일 전용
 - `lg` 미만: `Header` + `BottomNavMobile`. 하단바 겹침은 `pb-safe-bottom` 유틸리티가 처리
 - 뒤로가기 버튼은 **데스크톱에 두지 않는다** — 사이드바가 상시 내비다
 

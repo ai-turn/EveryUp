@@ -14,14 +14,14 @@ EveryUp의 발견, eBPF, OpenTelemetry 계측, 민감정보 마스킹, 롤백을
 
 - Linux 서버 또는 WSL2 기반 Docker Desktop
 - Docker Engine과 Docker Compose v2
-- 온보딩 명령으로 설치해 실행 중인 EveryUp Agent
+- 온보딩 명령으로 설치해 실행 중인 EveryUp Docker 수집기
 - Linux/WSL 환경의 `curl`
 
-Agent와 `everyup-otel`은 Linux 컨테이너를 대상으로 하므로 전체 E2E 테스트는 Linux
+Docker 수집기와 `everyup-otel`은 Linux 컨테이너를 대상으로 하므로 전체 E2E 테스트는 Linux
 또는 WSL에서 실행합니다. Windows PowerShell에서는 트래픽 생성만 별도로 실행할 수도
 있습니다.
 
-`obi-config.yaml`은 Agent 설치 시 사용하는 zero-code eBPF 발견 설정과 동일하며,
+`obi-config.yaml`은 Docker 수집기 설치 시 사용하는 zero-code eBPF 발견 설정과 동일하며,
 observer를 별도로 진단할 때 마운트해서 사용할 수 있습니다.
 
 ## 한 번에 테스트

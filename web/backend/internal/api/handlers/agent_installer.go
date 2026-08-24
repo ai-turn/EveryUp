@@ -38,7 +38,7 @@ func (h *AgentHandler) IssueJoinCode(c *fiber.Ctx) error {
 		if errors.Is(err, sql.ErrNoRows) {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"success": false,
-				"error":   fiber.Map{"code": ErrCodeNotFound, "message": "agent not found"},
+				"error":   fiber.Map{"code": ErrCodeNotFound, "message": "Docker environment not found"},
 			})
 		}
 		return internalError(c, ErrCodeDatabase, err)
@@ -77,7 +77,7 @@ func (h *AgentHandler) Join(c *fiber.Ctx) error {
 		return internalError(c, ErrCodeDatabase, err)
 	}
 	if credential.KeyEnc == "" {
-		return internalError(c, ErrCodeSecret, errors.New("agent API key is unavailable"))
+		return internalError(c, ErrCodeSecret, errors.New("Docker collector API key is unavailable"))
 	}
 	apiKey, err := appcrypto.Decrypt(credential.KeyEnc)
 	if err != nil {
@@ -227,7 +227,7 @@ env_file=$install_dir/.env
 otel_tmp=
 
 if [ "$(uname -s)" != "Linux" ]; then
-  echo "EveryUp Agent installation currently requires Linux." >&2
+  echo "EveryUp Docker collector installation currently requires Linux." >&2
   exit 1
 fi
 if ! command -v curl >/dev/null 2>&1; then
@@ -311,7 +311,7 @@ fi
 rm -f "$otel_tmp"
 otel_tmp=
 
-echo "EveryUp Agent installation complete."
+echo "EveryUp Docker collector installation complete."
 echo "Configuration: $compose_file"
 echo "Check status: docker compose --env-file $env_file -f $compose_file ps"
 `

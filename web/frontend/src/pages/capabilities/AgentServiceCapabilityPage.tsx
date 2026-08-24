@@ -81,7 +81,7 @@ export function AgentServiceCapabilityPage() {
 
   return (
     <div>
-      <PageHeader title={t('업타임')} subtitle={t('Agent가 발견한 서비스와 직접 추가한 업타임 모니터를 확인합니다.')}>
+      <PageHeader title={t('업타임')} subtitle={t('Docker에서 발견한 서비스와 직접 추가한 업타임 모니터를 확인합니다.')}>
         <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
           <SearchInput value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t('서비스 또는 대상 검색')} aria-label={t('서비스 또는 대상 검색')} wrapperClassName="w-full sm:w-72" />
           <Button onClick={() => setAdding(true)}><MaterialIcon name="add" />{t('업타임 추가')}</Button>
@@ -91,7 +91,7 @@ export function AgentServiceCapabilityPage() {
       {loading ? <ServiceListSkeleton /> : error ? (
         <EmptyState icon="error_outline" title={t('대상을 불러오지 못했습니다')} description={error} />
       ) : empty ? (
-        <EmptyState icon="monitor_heart" title={t(normalizedQuery ? '검색 결과가 없습니다' : '표시할 업타임 대상이 없습니다')} description={t(normalizedQuery ? '검색어를 바꿔 다시 시도해 보세요.' : 'Agent를 연결하거나 업타임 모니터를 직접 추가해 보세요.')} />
+        <EmptyState icon="monitor_heart" title={t(normalizedQuery ? '검색 결과가 없습니다' : '표시할 업타임 대상이 없습니다')} description={t(normalizedQuery ? '검색어를 바꿔 다시 시도해 보세요.' : 'Docker 환경을 연결하거나 업타임 모니터를 직접 추가해 보세요.')} />
       ) : (
         <div className="space-y-8">
           {filteredMonitors.length > 0 && (
@@ -103,7 +103,7 @@ export function AgentServiceCapabilityPage() {
                     key={monitor.id}
                     to={`/uptime/${monitor.id}`}
                     title={monitor.name}
-                    subtitle={t('Agent 없이 설정한 HTTP/TCP 모니터')}
+                    subtitle={t('직접 설정한 HTTP/TCP 모니터')}
                     status={<UptimeMonitorStatusBadge monitor={monitor} onToggle={() => void setActive(monitor)} />}
                     endpoint={monitor.type === 'tcp' ? `${monitor.url}:${monitor.port}` : monitor.url}
                     meta={<p className="text-xs text-text-muted">{monitor.type.toUpperCase()} · {monitor.interval}{t('초')}</p>}
@@ -114,7 +114,7 @@ export function AgentServiceCapabilityPage() {
           )}
           {filteredAgentServices.length > 0 && (
             <section>
-              <div className="mb-3 flex items-center gap-2"><MaterialIcon name="smart_toy" className="text-lg text-primary" /><h2 className="text-base font-bold text-text-base">{t('Agent 발견 서비스')}</h2></div>
+              <div className="mb-3 flex items-center gap-2"><MaterialIcon name="smart_toy" className="text-lg text-primary" /><h2 className="text-base font-bold text-text-base">{t('Docker에서 발견한 서비스')}</h2></div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {filteredAgentServices.map((service) => (
                   <UptimeTargetCard

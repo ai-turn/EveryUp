@@ -54,7 +54,7 @@ export function PendingServiceCard({ agent, onDelete, onViewKey, onInstall }: Pr
       </div>
 
       <div className="flex items-center justify-between gap-2">
-        <p className="min-w-0 truncate text-sm text-text-muted">Agent 연결 대기</p>
+        <p className="min-w-0 truncate text-sm text-text-muted">Docker 수집기 연결 대기</p>
         <Button size="sm" onClick={onInstall}>
           설치 명령어
           <MaterialIcon name="arrow_forward" className="text-sm" />

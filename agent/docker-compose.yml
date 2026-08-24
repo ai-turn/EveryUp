@@ -1,5 +1,5 @@
 # =============================================================================
-# EveryUp Agent watches your Docker services and syncs their health, logs,
+# The EveryUp Docker collector watches your Docker services and syncs their health, logs,
 # API access-log summaries, events, and host metrics to EveryUp Web.
 # Notifications are configured in Web.
 #
@@ -28,13 +28,13 @@ services:
       # Keep this aligned with OBI's OTEL_EBPF_BPF_CONTEXT_PROPAGATION when
       # enabling the advanced, kernel-dependent distributed trace option.
       EVERYUP_EBPF_CONTEXT_PROPAGATION_ENABLED: "false"
-      # TZ: "Asia/Seoul"  # agent log timestamps in your local time (default: UTC)
+      # TZ: "Asia/Seoul"  # Docker collector log timestamps in your local time (default: UTC)
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro  # Docker auto-discovery/logs
       - /:/hostfs:ro                                   # host CPU/memory/disk metrics
       - everyup-agent-data:/data
       # Optional: header capture via app OTel injection — uncomment this line
-      # AND the everyup-instrumentation volume at the bottom. The agent fills
+      # AND the everyup-instrumentation volume at the bottom. The Docker collector fills
       # the volume with the OTel Java agent jar + Node bundle; your app compose
       # mounts it read-only (see "App Instrumentation" in the README).
       # - everyup-instrumentation:/everyup-instrumentation
@@ -42,7 +42,7 @@ services:
 
   # --- Automatic zero-code API tracing (OpenTelemetry eBPF Instrumentation) ---
   # Discovers processes in Docker/OCI containers automatically. No app port
-  # list, app image change, or app restart is required. The regular Agent stays
+  # list, app image change, or app restart is required. The Docker collector stays
   # unprivileged; only this isolated observer receives the eBPF permissions.
   # Requires Linux kernel 5.8+ with BTF. On an unsupported host this service may
   # stop, while container health, logs, events, and host metrics keep working.
@@ -73,7 +73,7 @@ services:
 volumes:
   everyup-agent-data:
     driver: local
-  # Uncomment together with the agent volume line above. The fixed name lets
+  # Uncomment together with the Docker collector volume line above. The fixed name lets
   # your app compose reference it as an external volume.
   # everyup-instrumentation:
   #   name: everyup-instrumentation
@@ -84,7 +84,7 @@ networks:
 
 # Kept inline so installation still needs only this one Compose file. OBI does
 # not receive the Docker socket: this preserves its host:PID instance identity,
-# which the Agent resolves against Docker without trusting executable names.
+# which the Docker collector resolves against Docker without trusting executable names.
 configs:
   everyup-obi-config:
     content: |

@@ -137,7 +137,7 @@ export function DirectInfrastructureDetailPage() {
         </section>
         <section className="rounded-xl border border-ui-border bg-bg-surface p-5">
           <h2 className="text-base font-bold text-text-base">Project</h2>
-          <p className="mt-1 text-xs text-text-muted">{t('Collector 리소스는 Agent와 독립적으로 Project에 배정합니다.')}</p>
+          <p className="mt-1 text-xs text-text-muted">{t('Collector 리소스는 Docker 환경과 별도로 Project에 배정합니다.')}</p>
           <div className="mt-4 space-y-3">
             <Select value={projectId} onChange={event => setProjectId(event.target.value)} aria-label={t('Project 선택')}>
               <option value="">{t('미분류')}</option>

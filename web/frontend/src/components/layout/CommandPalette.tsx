@@ -74,11 +74,11 @@ export function CommandPalette() {
     { id: 'page-infrastructure', icon: 'memory', label: t('인프라'), to: '/infrastructure' },
     { id: 'page-api', icon: 'api', label: 'API', to: '/api' },
     { id: 'page-metrics', icon: 'monitoring', label: t('메트릭'), to: '/metrics' },
-    { id: 'page-home', icon: 'grid_view', label: t('에이전트'), meta: t('홈'), to: '/' },
+    { id: 'page-home', icon: 'grid_view', label: 'Docker', meta: t('홈'), to: '/' },
     { id: 'page-alerts', icon: 'notifications', label: t('알림'), to: '/alerts' },
     { id: 'page-settings', icon: 'settings', label: t('환경설정'), to: '/settings' },
     ...agents.map((a) => ({
-      id: `agent-${a.id}`, icon: 'folder_open', label: a.name, meta: t('에이전트'), to: `/agents/${a.id}`,
+      id: `agent-${a.id}`, icon: 'folder_open', label: a.name, meta: t('Docker 환경'), to: `/agents/${a.id}`,
     })),
     ...services.map((s) => ({
       id: `svc-${s.agentId}-${s.key}`, icon: '', label: s.name, meta: s.agentName,
@@ -137,7 +137,7 @@ export function CommandPalette() {
             value={query}
             onChange={(e) => { setQuery(e.target.value); setIndex(0); }}
             onKeyDown={onInputKeyDown}
-            placeholder={t('에이전트, 서비스, 페이지 검색...')}
+            placeholder={t('Docker 환경, 서비스, 페이지 검색...')}
             className="flex-1 py-3.5 text-sm bg-transparent outline-none text-text-base placeholder-slate-400 dark:placeholder-text-dim-dark"
           />
           <kbd className="shrink-0 px-1.5 py-0.5 rounded border border-ui-border text-2xs font-semibold text-text-dim">

@@ -18,15 +18,15 @@ verification checks that EveryUp appends its agent without overwriting it.
 
 - A Linux host, or Docker Desktop with the WSL2 backend
 - Docker Engine and Docker Compose v2
-- A running EveryUp Agent installed through the onboarding command
+- A running EveryUp Docker collector installed through the onboarding command
 - `curl` in the Linux/WSL environment
 
 The complete instrumentation workflow must run in Linux or WSL because the
-EveryUp Agent and `everyup-otel` helper target Linux containers. Traffic alone
+The EveryUp Docker collector and `everyup-otel` helper target Linux containers. Traffic alone
 can also be generated from Windows PowerShell.
 
 `obi-config.yaml` mirrors the zero-code eBPF discovery configuration installed
-with the Agent and can be mounted when diagnosing the observer independently.
+with the Docker collector and can be mounted when diagnosing the observer independently.
 
 ## Quick end-to-end test
 
@@ -104,7 +104,7 @@ docker compose down
 ```
 
 This cleanup only removes fixture containers and its default network. It does
-not remove the shared `everyup-monitoring` network, the Agent, or its telemetry
+not remove the shared `everyup-monitoring` network, the Docker collector, or its telemetry
 bundle volume.
 
 ## ARM64 cloud server
@@ -135,7 +135,7 @@ sudo everyup-otel verify ./compose.yaml
 docker inspect everyup-agent --format '{{json .State.Health}}'
 ```
 
-If the services work but no telemetry appears, first check that the Agent is on
+If the services work but no telemetry appears, first check that the Docker collector is on
 the `everyup-monitoring` network and that its OTLP gateway is listening. If
 eBPF is unavailable on the host, the capability status should explain the
 reason while Node/Java OpenTelemetry continues to provide application traces.

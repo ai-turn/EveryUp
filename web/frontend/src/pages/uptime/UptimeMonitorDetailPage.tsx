@@ -205,7 +205,7 @@ export function UptimeMonitorDetailPage() {
               <UptimeMonitorStatusBadge monitor={monitor} />
             </div>
             <p className="mt-1 truncate font-mono text-sm text-text-muted">{target}</p>
-            <p className="mt-1 text-xs text-text-dim">{monitor.type.toUpperCase()} · {monitor.interval}{t('초마다 확인')} · {t('Agent 없이 직접 설정')}</p>
+            <p className="mt-1 text-xs text-text-dim">{monitor.type.toUpperCase()} · {monitor.interval}{t('초마다 확인')} · {t('직접 설정')}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="ghost" aria-label={t('새로고침')} onClick={() => void load()}><MaterialIcon name="refresh" /></Button>

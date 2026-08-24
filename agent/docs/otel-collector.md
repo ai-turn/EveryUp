@@ -1,16 +1,16 @@
 # OTel Collector Sidecar
 
-EveryUp Agent can generate a default OpenTelemetry Collector config for an
-`otel/opentelemetry-collector-contrib` sidecar.
+The EveryUp Docker collector can generate a default OpenTelemetry Collector
+config for an `otel/opentelemetry-collector-contrib` sidecar.
 
 ## Files and mounts
 
 | Path | Writer | Reader | Purpose |
 |---|---|---|---|
-| `/etc/everyup/generated/otel-config.yaml` | Agent | Collector | Generated base config |
-| `/etc/everyup/conf.d` | User | Agent/Collector | Reserved override directory |
-| `/hostfs` | Host bind mount | Collector | Host metrics root |
-| `/var/run/docker.sock` | Docker | Agent/Collector | Discovery and docker stats |
+| `/etc/everyup/generated/otel-config.yaml` | Docker collector | OTel Collector | Generated base config |
+| `/etc/everyup/conf.d` | User | Docker collector / OTel Collector | Reserved override directory |
+| `/hostfs` | Host bind mount | OTel Collector | Host metrics root |
+| `/var/run/docker.sock` | Docker | Docker collector / OTel Collector | Discovery and docker stats |
 
 The generated config includes:
 
@@ -32,13 +32,14 @@ EVERYUP_WEB_OTLP_ENDPOINT=https://everyup.example.com/api/v1/otlp
 EVERYUP_AGENT_API_KEY=evup_svc_...   # same project key, also used for connected-mode sync
 ```
 
-The agent writes an `Authorization: Bearer <EVERYUP_AGENT_API_KEY>` header into the
-generated collector config. Keep the generated config volume private.
+The Docker collector writes an `Authorization: Bearer <EVERYUP_AGENT_API_KEY>`
+header into the generated collector config. Keep the generated config volume
+private.
 
 ## Compose
 
 Start from the standard [docker-compose.yml](../docker-compose.yml), add
-`EVERYUP_OTEL_CONFIG_ENABLED=true` to the agent environment, and add the
+`EVERYUP_OTEL_CONFIG_ENABLED=true` to the Docker collector environment, and add the
 collector service alongside it:
 
 ```yaml

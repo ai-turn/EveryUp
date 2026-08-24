@@ -1,16 +1,17 @@
 # OpenTelemetry API 계측
 
 서비스 health·로그·호스트 메트릭·API **상태코드**는 앱 수정이 필요 없고, 선택적
-eBPF 사이드카가 코드 없이 실제 **레이턴시와 트레이스**까지 더합니다(agent README
+eBPF 사이드카가 코드 없이 실제 **레이턴시와 트레이스**까지 더합니다(Docker 수집기 README
 참고). 이 문서는 앱을 건드리는 유일한 단계 — 요청/응답 **헤더·바디**를 앱에
 OpenTelemetry로 계측해 수집하는 방법을 다룹니다.
 
-계측된 스팬은 Agent의 OTLP 게이트웨이 `http://everyup-agent:4318`(알맞은 서비스에
-귀속시켜 Web으로 포워딩)로 보내거나, Web에 직접 `/api/v1/otlp/v1/traces`로 보냅니다.
+계측된 스팬은 Docker 수집기의 OTLP 게이트웨이 `http://everyup-agent:4318`(알맞은
+서비스에 귀속시켜 Web으로 포워딩)로 보내거나, Web에 직접
+`/api/v1/otlp/v1/traces`로 보냅니다.
 
 ## 가장 빠른 길 — 번들 계측 (Java, Node.js)
 
-Java와 Node.js는 코드를 한 줄도 안 써도 됩니다. Agent 설치 과정에서
+Java와 Node.js는 코드를 한 줄도 안 써도 됩니다. Docker 수집기 설치 과정에서
 `everyup-otel` CLI와 OpenTelemetry 번들(Java agent jar + Node.js 부트스트랩)을
 함께 준비합니다.
 
@@ -19,7 +20,7 @@ Java와 Node.js는 코드를 한 줄도 안 써도 됩니다. Agent 설치 과�
 
 CLI는 원본 Compose를 수정하지 않고 옆에 `docker-compose.everyup.yml`을 생성합니다.
 선택한 서비스만 다시 만들고, 기존 `JAVA_TOOL_OPTIONS`/`NODE_OPTIONS`, 번들 볼륨,
-Agent 연결 네트워크와 컨테이너 health를 검증합니다. 검증 실패 시 직전 설정으로 자동
+Docker 수집기 연결 네트워크와 컨테이너 health를 검증합니다. 검증 실패 시 직전 설정으로 자동
 복구합니다. 수동 확인과 복구도 가능합니다:
 
 ```bash
@@ -28,7 +29,7 @@ sudo everyup-otel verify ./docker-compose.yml
 sudo everyup-otel rollback ./docker-compose.yml
 ```
 
-바디는 옵트인입니다(Node만 자동 지원). 전체 동작은 agent README의
+바디는 옵트인입니다(Node만 자동 지원). 전체 동작은 Docker 수집기 README의
 "App Instrumentation"을 참고하세요.
 
 아래 내용은 **다른 언어, 수동 SDK 설정, 또는 번들이 만들어 내는 스팬 계약을 이해**
@@ -152,7 +153,7 @@ Trace 패널은 같은 **trace id**를 공유하는 로그·스팬을 한 요청
 
 - **OTLP 로그 사용 시**(SDK 로그 exporter): 트레이스된 요청 안에서 로그를 남기면 trace
   id가 자동 주입됩니다 — 할 일 없음.
-- **평문 stdout 로그 사용 시**(Agent가 수집): 각 로그 줄에 trace id(또는 `x-request-id`
+- **평문 stdout 로그 사용 시**(Docker 수집기가 수집): 각 로그 줄에 trace id(또는 `x-request-id`
   헤더로 전파하는 `request_id`)를 출력하세요. 그 id로 검색해 로그를 요청과 맞출 수 있습니다.
 
 바디 캡처를 꺼둔 곳에서도 이렇게 하면 전체 요청/응답 내용을 복원할 수 있습니다 — 바디는
@@ -160,7 +161,8 @@ Trace 패널은 같은 **trace id**를 공유하는 로그·스팬을 한 요청
 
 ## 중복 집계
 
-자동 처리됩니다: 어떤 서비스가 agent 게이트웨이로 실제 스팬을 보내는 동안, agent는 그
-서비스의 access-log 합성 스팬을 잠시 멈춥니다(실제 스팬이 끊긴 뒤 ~10분 후 재개).
+자동 처리됩니다: 어떤 서비스가 Docker 수집기 게이트웨이로 실제 스팬을 보내는 동안,
+Docker 수집기는 그 서비스의 access-log 합성 스팬을 잠시 멈춥니다(실제 스팬이 끊긴 뒤
+~10분 후 재개).
 게이트웨이를 우회해 **Web으로 직접** OTLP를 보내는 앱만 여전히 중복될 수 있으니,
 게이트웨이를 향하게 하세요.

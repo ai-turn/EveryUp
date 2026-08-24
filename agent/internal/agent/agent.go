@@ -137,14 +137,14 @@ func New(cfg config.Config) (*Agent, error) {
 }
 
 func (a *Agent) Run(ctx context.Context) error {
-	log.Printf("EveryUp Agent starting: name=%s service=%s", a.cfg.AgentName, a.cfg.ServiceName)
+	log.Printf("EveryUp Docker collector starting: name=%s service=%s", a.cfg.AgentName, a.cfg.ServiceName)
 	if err := a.loadState(); err != nil {
 		log.Printf("failed to load local state: %v", err)
 	}
 	a.writeOTelConfig()
 	a.syncInstrumentationVolume()
 
-	a.auditEvent("agent_started", a.cfg.ServiceName, "", fmt.Sprintf("Agent %s is running.", a.cfg.AgentName), nil)
+	a.auditEvent("agent_started", a.cfg.ServiceName, "", fmt.Sprintf("Docker collector %s is running.", a.cfg.AgentName), nil)
 	a.startWebSync(ctx)
 	a.startTelemetryGateway(ctx)
 	a.startHeartbeat(ctx)

@@ -94,7 +94,7 @@ func (h *AgentHandler) requireAgentKey(c *fiber.Ctx) error {
 	if token == "" {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"success": false,
-			"error":   fiber.Map{"code": "UNAUTHORIZED", "message": "missing agent API key"},
+			"error":   fiber.Map{"code": "UNAUTHORIZED", "message": "missing Docker collector API key"},
 		})
 	}
 	agent, found, err := h.repo.FindAgentByKeyHash(hashAgentKey(token))
@@ -104,7 +104,7 @@ func (h *AgentHandler) requireAgentKey(c *fiber.Ctx) error {
 	if !found || agent.ID != c.Params("agentId") {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"success": false,
-			"error":   fiber.Map{"code": "UNAUTHORIZED", "message": "invalid agent API key"},
+			"error":   fiber.Map{"code": "UNAUTHORIZED", "message": "invalid Docker collector API key"},
 		})
 	}
 	return nil
@@ -115,7 +115,7 @@ func (h *AgentHandler) Enroll(c *fiber.Ctx) error {
 	if token == "" {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"success": false,
-			"error":   fiber.Map{"code": "UNAUTHORIZED", "message": "missing agent API key"},
+			"error":   fiber.Map{"code": "UNAUTHORIZED", "message": "missing Docker collector API key"},
 		})
 	}
 	agent, found, err := h.repo.FindAgentByKeyHash(hashAgentKey(token))
@@ -125,7 +125,7 @@ func (h *AgentHandler) Enroll(c *fiber.Ctx) error {
 	if !found {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"success": false,
-			"error":   fiber.Map{"code": "UNAUTHORIZED", "message": "invalid agent API key"},
+			"error":   fiber.Map{"code": "UNAUTHORIZED", "message": "invalid Docker collector API key"},
 		})
 	}
 	// Update version from request body if provided.
@@ -350,7 +350,7 @@ func (h *AgentHandler) Delete(c *fiber.Ctx) error {
 		if err == sql.ErrNoRows {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"success": false,
-				"error":   fiber.Map{"code": "NOT_FOUND", "message": "agent not found"},
+				"error":   fiber.Map{"code": "NOT_FOUND", "message": "Docker environment not found"},
 			})
 		}
 		return internalError(c, "DATABASE_ERROR", err)
@@ -437,7 +437,7 @@ func (h *AgentHandler) GetKey(c *fiber.Ctx) error {
 	if !found {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"success": false,
-			"error":   fiber.Map{"code": ErrCodeNotFound, "message": "agent not found"},
+			"error":   fiber.Map{"code": ErrCodeNotFound, "message": "Docker environment not found"},
 		})
 	}
 	if enc == "" {
@@ -464,7 +464,7 @@ func (h *AgentHandler) RotateKey(c *fiber.Ctx) error {
 		if err == sql.ErrNoRows {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"success": false,
-				"error":   fiber.Map{"code": ErrCodeNotFound, "message": "agent not found"},
+				"error":   fiber.Map{"code": ErrCodeNotFound, "message": "Docker environment not found"},
 			})
 		}
 		return internalError(c, ErrCodeDatabase, err)

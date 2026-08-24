@@ -243,11 +243,11 @@ export function MonitoringSetupPanel({ agent, services, onInstall, onInstrument,
       <div className={`grid grid-cols-1 gap-2 sm:grid-cols-2 ${compact ? '' : 'xl:grid-cols-4'}`}>
         <SetupStep
           number={1}
-          title="Agent 연결"
+          title="Docker 수집기 연결"
           description="대상 Docker 서버와 EveryUp을 안전하게 연결합니다."
           state={connected ? 'ready' : 'waiting'}
           stateLabel={connected ? '완료' : '설치 필요'}
-          detail={connected ? `Agent ${agent.version ? `v${agent.version}` : ''} 연결됨` : '일회용 명령을 서버에서 실행하세요.'}
+          detail={connected ? `Docker 수집기 ${agent.version ? `v${agent.version}` : ''} 연결됨` : '일회용 명령을 서버에서 실행하세요.'}
           actionLabel={onInstall ? (connected ? '재설치 명령' : '설치 명령') : undefined}
           onAction={onInstall}
         />

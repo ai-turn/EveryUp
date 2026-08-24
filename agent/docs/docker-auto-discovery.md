@@ -1,7 +1,8 @@
 # Docker Auto Discovery
 
-EveryUp Agent discovers Docker containers automatically through the mounted
-Docker socket. Application services do not need EveryUp-specific Compose blocks.
+The EveryUp Docker collector discovers Docker containers automatically through
+the mounted Docker socket. Application services do not need EveryUp-specific
+Compose blocks.
 
 ```yaml
 services:
@@ -24,7 +25,7 @@ volumes:
   everyup-agent-data:
 ```
 
-The Agent reports each discovered container as a service card. It uses Docker
+The Docker collector reports each discovered container as a service card. It uses Docker
 Compose project/service metadata when available, otherwise the container name.
 
 ## What Is Collected

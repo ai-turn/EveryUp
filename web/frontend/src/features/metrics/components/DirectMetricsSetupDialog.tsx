@@ -13,7 +13,7 @@ export function DirectMetricsSetupDialog(props: DirectMetricsSetupDialogProps) {
       signal="metrics"
       capabilityLabel="Metrics"
       title="Metrics 직접 연결"
-      description="Agent 없이 애플리케이션의 OTLP 메트릭을 연결합니다."
+      description="애플리케이션의 OTLP 메트릭을 직접 연결합니다."
     />
   );
 }

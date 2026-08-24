@@ -18,7 +18,7 @@ export function CapabilityAgentSetup({ capability, onCreated, buttonVariant = 'p
     <>
       <Button variant={buttonVariant} onClick={() => setOpen(true)}>
         <MaterialIcon name="add" />
-        {t('Agent 연결')}
+        {t('Docker 연결')}
       </Button>
       {open && (
         <AddServiceModal

@@ -2,17 +2,17 @@
 
 Service health, logs, host metrics, and API **status codes** need no app changes,
 and the optional eBPF sidecar adds real **latency and traces** with no code either
-(see the agent README). This document covers the one app-side step: capturing
+(see the Docker collector README). This document covers the one app-side step: capturing
 request/response **headers and bodies**, by instrumenting the app with
 OpenTelemetry.
 
-Instrumented spans go to the Agent's OTLP gateway at `http://everyup-agent:4318`
-(which attributes them to the right service and forwards to Web), or directly to
-Web at `/api/v1/otlp/v1/traces`.
+Instrumented spans go to the Docker collector's OTLP gateway at
+`http://everyup-agent:4318` (which attributes them to the right service and
+forwards to Web), or directly to Web at `/api/v1/otlp/v1/traces`.
 
 ## Quickest path — the bundled instrumentation (Java, Node.js)
 
-For Java and Node.js you don't write any code. Agent installation also installs
+For Java and Node.js you don't write any code. Docker collector installation also installs
 the `everyup-otel` helper and provides a ready-made OpenTelemetry bundle (Java
 agent jar + Node.js bootstrap).
 
@@ -23,7 +23,7 @@ agent jar + Node.js bootstrap).
 The helper leaves the original Compose file unchanged and writes
 `docker-compose.everyup.yml` beside it. It recreates only the selected services,
 preserves existing `JAVA_TOOL_OPTIONS`/`NODE_OPTIONS`, and verifies the bundle
-mount, Agent network, container health, and injected options. A failed check
+mount, Docker collector network, container health, and injected options. A failed check
 automatically restores the previous configuration. Manual controls are:
 
 ```bash
@@ -33,7 +33,7 @@ sudo everyup-otel rollback ./docker-compose.yml
 ```
 
 Bodies are opt-in and automatically supported for Node only. Full walkthrough:
-"App Instrumentation" in the agent README.
+"App Instrumentation" in the Docker collector README.
 
 Everything below is for **other languages, manual SDK setups, or understanding
 the span contract** the bundle produces.
@@ -161,7 +161,7 @@ its **trace id**. To make your application logs show up there:
 
 - **Using OTLP logs** (SDK log exporter): the trace id is injected automatically
   when a log is emitted inside a traced request — nothing to do.
-- **Using plain stdout logs** (collected by the Agent): print the trace id (or a
+- **Using plain stdout logs** (collected by the Docker collector): print the trace id (or a
   `request_id` you propagate via the `x-request-id` header) in each log line so
   you can search by it and line the log up with the request.
 
@@ -170,8 +170,8 @@ off — the body stays in your own service log, findable by the shared id.
 
 ## Double-counting
 
-Handled automatically: while a service ships real spans through the agent
-gateway, the agent pauses its access-log synthetic spans for that service (it
-resumes ~10 minutes after real spans stop). Only apps that send OTLP **directly
-to Web**, bypassing the gateway, can still double-count — point them at the
-gateway instead.
+Handled automatically: while a service ships real spans through the Docker
+collector gateway, the Docker collector pauses its access-log synthetic spans
+for that service (it resumes ~10 minutes after real spans stop). Only apps that
+send OTLP **directly to Web**, bypassing the gateway, can still double-count —
+point them at the gateway instead.

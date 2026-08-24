@@ -56,7 +56,7 @@ export function LogsPage() {
 
   return (
     <div>
-      <PageHeader title={t('로그')} subtitle={t('Agent 또는 직접 OpenTelemetry 연결에서 수집한 최신 로그입니다.')}>
+      <PageHeader title={t('로그')} subtitle={t('Docker 수집기 또는 직접 OpenTelemetry 연결에서 수집한 최신 로그입니다.')}>
         <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
           <SearchInput
             value={query}
@@ -75,7 +75,7 @@ export function LogsPage() {
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
               <h2 className="text-base font-bold text-text-base">{t('직접 연결 서비스')}</h2>
-              <p className="mt-0.5 text-xs text-text-muted">{t('Agent 없이 OTLP Logs를 받는 Observed Service입니다.')}</p>
+              <p className="mt-0.5 text-xs text-text-muted">{t('OTLP Logs를 직접 받는 Observed Service입니다.')}</p>
             </div>
             <span className="font-mono text-xs text-text-dim">{directServices.length}</span>
           </div>
@@ -112,7 +112,7 @@ export function LogsPage() {
         <EmptyState
           icon="article"
           title={t(query ? '검색 결과가 없습니다' : '아직 수집된 로그가 없습니다')}
-          description={t(query ? '검색어를 바꾸어 다시 시도해 보세요.' : 'Logs 직접 연결 또는 로그 수집 Agent를 추가하면 여기에 표시됩니다.')}
+          description={t(query ? '검색어를 바꾸어 다시 시도해 보세요.' : 'Logs를 직접 연결하거나 Docker 환경에서 로그 수집을 활성화하면 여기에 표시됩니다.')}
         />
       ) : (
         <div className="overflow-hidden rounded-xl border border-ui-border bg-bg-surface">

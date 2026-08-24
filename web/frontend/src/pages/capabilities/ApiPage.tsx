@@ -107,7 +107,7 @@ export function ApiPage() {
 
   return (
     <div>
-      <PageHeader title="API" subtitle={t('Agent 또는 직접 OpenTelemetry 연결에서 수집한 API 요청과 오류 추이입니다.')}>
+      <PageHeader title="API" subtitle={t('Docker 수집기 또는 직접 OpenTelemetry 연결에서 수집한 API 요청과 오류 추이입니다.')}>
         <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
           <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />{t('API 직접 추가')}</Button>
           <CapabilityAgentSetup capability="api" buttonVariant="secondary" />
@@ -120,7 +120,7 @@ export function ApiPage() {
       ) : error ? (
         <EmptyState icon="error_outline" title={t('API 데이터를 불러오지 못했습니다')} description={error} />
       ) : isEmpty ? (
-        <EmptyState icon="api" title={t('표시할 API 대상이 없습니다')} description={t('API 직접 연결 또는 API 수집 Agent를 추가해 주세요.')} />
+        <EmptyState icon="api" title={t('표시할 API 대상이 없습니다')} description={t('API를 직접 연결하거나 Docker 환경에서 API 수집을 활성화해 주세요.')} />
       ) : (
         <div className="space-y-7">
           {directRows.length > 0 && (
@@ -128,7 +128,7 @@ export function ApiPage() {
               <div className="mb-3 flex items-end justify-between gap-3">
                 <div>
                   <h2 className="text-base font-bold text-text-base">{t('직접 연결 서비스')}</h2>
-                  <p className="mt-0.5 text-xs text-text-muted">{t('Agent 없이 애플리케이션이 전송하는 OTLP traces를 받습니다.')}</p>
+                  <p className="mt-0.5 text-xs text-text-muted">{t('애플리케이션이 전송하는 OTLP traces를 직접 받습니다.')}</p>
                 </div>
                 <span className="font-mono text-xs text-text-dim">{directRows.length}</span>
               </div>
@@ -144,14 +144,14 @@ export function ApiPage() {
             <section>
               <div className="mb-3 flex items-end justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-bold text-text-base">{t('Agent 서비스')}</h2>
-                  <p className="mt-0.5 text-xs text-text-muted">{t('EveryUp Agent가 발견하고 전달한 API 요청입니다.')}</p>
+                  <h2 className="text-base font-bold text-text-base">{t('Docker 서비스')}</h2>
+                  <p className="mt-0.5 text-xs text-text-muted">{t('EveryUp Docker 수집기가 발견하고 전달한 API 요청입니다.')}</p>
                 </div>
                 <span className="font-mono text-xs text-text-dim">{agentRows.length}</span>
               </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {agentRows.map(({ agent, summary }) => (
-                  <ApiCard key={agent.id} name={agent.name} source={t('Agent')} active={agentOnline(agent)} summary={summary} to={`/agents/${agent.id}`} />
+                  <ApiCard key={agent.id} name={agent.name} source="Docker" active={agentOnline(agent)} summary={summary} to={`/agents/${agent.id}`} />
                 ))}
               </div>
             </section>

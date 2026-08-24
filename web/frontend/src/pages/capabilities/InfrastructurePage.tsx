@@ -29,7 +29,7 @@ function ResourceCard({ resource }: { resource: InfrastructureResource }) {
           <MaterialIcon name="memory" className="text-lg text-primary" />
           <div className="min-w-0">
             <h2 className="truncate text-base font-bold text-text-base group-hover:text-primary">{resource.name}</h2>
-            <p className="truncate text-xs text-text-muted">{direct ? t('OpenTelemetry Collector') : t('EveryUp Agent')}</p>
+            <p className="truncate text-xs text-text-muted">{direct ? t('OpenTelemetry Collector') : t('EveryUp Docker 수집기')}</p>
           </div>
         </div>
         <StatusBadge healthy={resourceOnline(resource)} />
@@ -72,7 +72,7 @@ export function InfrastructurePage() {
 
   return (
     <div>
-      <PageHeader title={t('인프라')} subtitle={t('EveryUp Agent 또는 표준 OpenTelemetry Collector로 수집한 호스트 리소스입니다.')}>
+      <PageHeader title={t('인프라')} subtitle={t('EveryUp Docker 수집기 또는 표준 OpenTelemetry Collector로 수집한 호스트 리소스입니다.')}>
         <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
           <Button onClick={() => setShowCollectorSetup(true)}><MaterialIcon name="add" />{t('Collector 직접 추가')}</Button>
           <CapabilityAgentSetup capability="infrastructure" buttonVariant="secondary" />
@@ -83,13 +83,13 @@ export function InfrastructurePage() {
       ) : error ? (
         <EmptyState icon="error_outline" title={t('인프라를 불러오지 못했습니다')} description={error} />
       ) : resources.length === 0 ? (
-        <EmptyState icon="memory" title={t('표시할 인프라가 없습니다')} description={t('OpenTelemetry Collector 또는 인프라 Agent를 연결해 주세요.')} />
+        <EmptyState icon="memory" title={t('표시할 인프라가 없습니다')} description={t('OpenTelemetry Collector를 연결하거나 Docker 환경에서 인프라 수집을 활성화해 주세요.')} />
       ) : (
         <div className="space-y-7">
           {directResources.length > 0 && (
             <section>
               <div className="mb-3 flex items-end justify-between gap-3">
-                <div><h2 className="text-base font-bold text-text-base">{t('직접 연결 Collector')}</h2><p className="mt-0.5 text-xs text-text-muted">{t('표준 OTel hostmetrics receiver가 Agent 없이 전송합니다.')}</p></div>
+                <div><h2 className="text-base font-bold text-text-base">{t('직접 연결 Collector')}</h2><p className="mt-0.5 text-xs text-text-muted">{t('표준 OTel hostmetrics receiver가 직접 전송합니다.')}</p></div>
                 <span className="font-mono text-xs text-text-dim">{directResources.length}</span>
               </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{directResources.map(resource => <ResourceCard key={resource.id} resource={resource} />)}</div>
@@ -98,7 +98,7 @@ export function InfrastructurePage() {
           {agentResources.length > 0 && (
             <section>
               <div className="mb-3 flex items-end justify-between gap-3">
-                <div><h2 className="text-base font-bold text-text-base">{t('Agent 호스트')}</h2><p className="mt-0.5 text-xs text-text-muted">{t('EveryUp Agent 인프라 프로필이 수집합니다.')}</p></div>
+                <div><h2 className="text-base font-bold text-text-base">{t('Docker 호스트')}</h2><p className="mt-0.5 text-xs text-text-muted">{t('EveryUp Docker 수집기의 인프라 프로필이 수집합니다.')}</p></div>
                 <span className="font-mono text-xs text-text-dim">{agentResources.length}</span>
               </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{agentResources.map(resource => <ResourceCard key={resource.id} resource={resource} />)}</div>

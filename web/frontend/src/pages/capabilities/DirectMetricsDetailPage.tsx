@@ -130,7 +130,7 @@ export function DirectMetricsDetailPage() {
 
   return (
     <div>
-      <PageHeader title={service.name} subtitle={t('Agent 없이 연결한 OpenTelemetry Metrics 서비스입니다.')}>
+      <PageHeader title={service.name} subtitle={t('직접 연결한 OpenTelemetry Metrics 서비스입니다.')}>
         <div className="flex flex-wrap items-center gap-2">
           <TimeRangePicker value={range} onChange={setRange} />
           <Button variant="secondary" onClick={() => setRefreshKey(value => value + 1)}><MaterialIcon name="refresh" />{t('새로고침')}</Button>
@@ -163,7 +163,7 @@ export function DirectMetricsDetailPage() {
 
         <section className="rounded-xl border border-ui-border bg-bg-surface p-5">
           <h2 className="text-base font-bold text-text-base">{t('Project')}</h2>
-          <p className="mt-1 text-xs text-text-muted">{t('직접 서비스는 Agent와 독립적으로 Project에 배정합니다.')}</p>
+          <p className="mt-1 text-xs text-text-muted">{t('직접 서비스는 Docker 환경과 별도로 Project에 배정합니다.')}</p>
           <div className="mt-4 space-y-3">
             <Select value={projectId} onChange={event => setProjectId(event.target.value)} aria-label={t('Project 선택')}>
               <option value="">{t('미분류')}</option>

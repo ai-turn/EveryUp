@@ -54,7 +54,7 @@ export function AgentFailureHistory({ agentId, serviceKey, refreshKey }: AgentFa
             {t('최근 장애 기록')}
           </h2>
           <p className="text-text-muted text-sm">
-            {t('Agent 알림 이벤트')}
+            {t('Docker 서비스 알림 이벤트')}
           </p>
         </div>
       </div>

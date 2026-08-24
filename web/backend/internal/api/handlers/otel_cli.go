@@ -215,11 +215,11 @@ write_service_override() {
 
 ensure_agent_resources() {
   docker inspect "$agent_container" >/dev/null 2>&1 || {
-    warn "EveryUp Agent container '$agent_container' was not found."
+    warn "EveryUp Docker collector container '$agent_container' was not found."
     return 1
   }
   [ "$(docker inspect --format '{{.State.Running}}' "$agent_container")" = true ] || {
-    warn "EveryUp Agent is not running."
+    warn "The EveryUp Docker collector is not running."
     return 1
   }
 
@@ -231,7 +231,7 @@ ensure_agent_resources() {
     docker network connect --alias "$agent_container" "$monitoring_network" "$agent_container" || return 1
   fi
 
-  say "Checking Agent DNS on the shared monitoring network..."
+  say "Checking Docker collector DNS on the shared monitoring network..."
   docker run --rm --network "$monitoring_network" --entrypoint /bin/sh "$agent_image" \
     -c 'nslookup everyup-agent >/dev/null 2>&1' || return 1
 
@@ -399,7 +399,7 @@ apply_command() {
   done
   [ -s "$targets_tmp" ] || die "At least one service target is required."
 
-  ensure_agent_resources || die "Could not prepare the Agent network and instrumentation bundle. No application service was changed."
+  ensure_agent_resources || die "Could not prepare the Docker collector network and instrumentation bundle. No application service was changed."
 
   override_tmp=$(mktemp "${TMPDIR:-/tmp}/everyup-override.XXXXXX")
   write_override_header

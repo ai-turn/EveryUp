@@ -177,7 +177,7 @@ func (h *AlertRuleHandler) Create(c *fiber.Ctx) error {
 		})
 	}
 	if hasAlertTarget(req.ServiceID) && (hasAlertTarget(req.AgentID) || hasAlertTarget(req.ServiceKey)) {
-		return agentBadRequest(c, ErrCodeValidation, "select either a direct service or an Agent target")
+		return agentBadRequest(c, ErrCodeValidation, "select either a direct service or a Docker environment target")
 	}
 	if err := h.validateDirectTarget(req.ServiceID, req.Metric); err != nil {
 		return directAlertTargetError(c, err)
@@ -242,7 +242,7 @@ func (h *AlertRuleHandler) Update(c *fiber.Ctx) error {
 		})
 	}
 	if hasAlertTarget(req.ServiceID) && (hasAlertTarget(req.AgentID) || hasAlertTarget(req.ServiceKey)) {
-		return agentBadRequest(c, ErrCodeValidation, "select either a direct service or an Agent target")
+		return agentBadRequest(c, ErrCodeValidation, "select either a direct service or a Docker environment target")
 	}
 	metric := existing.Metric
 	if req.Metric != nil {

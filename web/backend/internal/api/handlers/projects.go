@@ -68,7 +68,7 @@ func (h *ProjectHandler) AssignAgent(c *fiber.Ctx) error {
 	}
 	if err := h.repo.AssignAgent(c.Params("projectId"), c.Params("agentId")); err != nil {
 		if err == sql.ErrNoRows {
-			return agentBadRequest(c, "NOT_FOUND", "agent not found")
+			return agentBadRequest(c, "NOT_FOUND", "Docker environment not found")
 		}
 		return internalError(c, "DATABASE_ERROR", err)
 	}
@@ -83,7 +83,7 @@ func (h *ProjectHandler) UnassignAgent(c *fiber.Ctx) error {
 	}
 	if err := h.repo.AssignAgent("", c.Params("agentId")); err != nil {
 		if err == sql.ErrNoRows {
-			return agentBadRequest(c, "NOT_FOUND", "agent not found")
+			return agentBadRequest(c, "NOT_FOUND", "Docker environment not found")
 		}
 		return internalError(c, "DATABASE_ERROR", err)
 	}

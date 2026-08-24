@@ -3,7 +3,7 @@ import { useTranslate } from '@tolgee/react';
 import { MaterialIcon } from '../common';
 
 const navItems = [
-  { icon: 'grid_view', label: '에이전트', href: '/' },
+  { icon: 'grid_view', label: 'Docker', href: '/' },
   { icon: 'monitor_heart', label: '업타임', href: '/uptime' },
   { icon: 'article', label: '로그', href: '/logs' },
   { icon: 'memory', label: '인프라', href: '/infrastructure' },

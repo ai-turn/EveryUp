@@ -5,7 +5,7 @@
 <h1 align="center">EveryUp</h1>
 
 <p align="center">
-  A self-hosted monitoring dashboard and lightweight Agent for Docker services.
+  A self-hosted monitoring dashboard with a lightweight Docker collector.
 </p>
 
 <p align="center">
@@ -31,13 +31,14 @@
 ## What is EveryUp?
 
 EveryUp is a self-hosted tool for monitoring your Docker services in one place.
-Run **Web** once on a dashboard server and one **Agent** on each server you
-want to monitor. There is no large observability stack to set up.
+Run **Web** once on a dashboard server, then connect each **Docker environment**
+with the lightweight EveryUp Docker collector. There is no large observability
+stack to set up.
 
 | Part | What it does | Where it runs |
 | --- | --- | --- |
 | **Web** | Dashboard, users, alert rules, notification channels, history | Your dashboard server |
-| **Agent** | Docker discovery, container state, logs, host metrics | Each server you monitor |
+| **Docker collector** | Docker discovery, container state, logs, host metrics | Each Docker host you monitor |
 
 ## Features
 
@@ -92,34 +93,34 @@ docker compose up -d
 
 Open `http://WEB_SERVER_IP:3001` and create the first admin account. Done.
 
-### 2. Create a one-time Agent install command
+### 2. Create a one-time Docker connection command
 
-In the dashboard, open **Services** and click **Add Project**. The project flow
-shows an installation command containing a join code that expires after ten
+In the dashboard, open **Docker** and click **Connect Docker**. The connection
+flow shows an installation command containing a join code that expires after ten
 minutes and can only be used once. The long-lived API key is not displayed in
 this initial browser flow; it is delivered directly to the target server during
 installation.
 
 ### 3. Install the monitoring bundle on the monitored server
 
-The bundled Compose file starts the regular Agent plus an isolated OBI eBPF
+The bundled Compose file starts the Docker collector plus an isolated OBI eBPF
 observer. Your application Compose file, images, ports, and containers do not
 need to be changed. Docker Compose 2.23.1 or newer is required.
 
 Run the displayed one-line command on the target Linux Docker server. The
 installer checks Docker and Compose first, writes the bundle under
-`/opt/everyup-agent`, backs up any previous configuration, and starts the Agent
-and eBPF observer.
+`/opt/everyup-agent`, backs up any previous configuration, and starts the Docker
+collector and eBPF observer.
 
 If the join code expires or has already been used, click **New code** in the
 project installation screen and copy the refreshed command.
 
-Within about 30 seconds the Agent shows as online in Web and the containers on
+Within about 30 seconds the Docker environment shows as online in Web and the containers on
 that server appear automatically. The eBPF observer also discovers container
 processes automatically; there is no port list to maintain. If something goes wrong, see
 [Troubleshooting](#troubleshooting).
 
-The project's **Monitoring setup guide** checks Agent connection, baseline
+The Docker environment's **Monitoring setup guide** checks collector connection, baseline
 collection, and automatic API tracing in order. When Java or Node.js services
 are discovered, the same guide continues into the optional detailed
 header/body instrumentation flow.
@@ -128,13 +129,13 @@ header/body instrumentation flow.
 
 ### Automatic eBPF observer: API latency and traces
 
-The default Agent reads method, path, and status from access logs. To see real
+The default Docker collector reads method, path, and status from access logs. To see real
 latency and traces, the bundled Compose file starts `everyup-ebpf` automatically.
 It discovers processes running in Docker/OCI containers, so there is no
 `BEYLA_OPEN_PORT` or application port configuration.
 
 This does not change your app code, Dockerfile, or app containers. On a native
-Linux host, eBPF observes host processes to build traces and the Agent
+Linux host, eBPF observes host processes to build traces and the Docker collector
 attributes each span to the matching Docker service. Docker Desktop has the
 PID-translation limitation, so use app-side OpenTelemetry when automatic service
 attribution is unavailable. Requires Linux kernel 5.8+ with BTF. See
@@ -152,7 +153,7 @@ In the web UI, open a project, choose **Detailed API monitoring**, and run the
 displayed one-line command on the application server. The `everyup-otel` helper
 generates a `docker-compose.everyup.yml` tailored to the detected Java/Node.js
 runtimes and recreates only those services. It verifies the injected options,
-shared volume, Agent network, and container state, automatically restoring the
+shared volume, collector network, and container state, automatically restoring the
 previous configuration if a check fails.
 
 Automatic body capture is currently available for Node.js. Bodies are masked
@@ -163,9 +164,9 @@ the full setup, see the
 
 ## What Gets Collected
 
-### Default Agent
+### Default Docker collector
 
-Collected with no app changes. The Agent mounts the Docker socket and
+Collected with no app changes. The Docker collector mounts the Docker socket and
 `/hostfs` read-only.
 
 | Data | Source |
@@ -193,16 +194,17 @@ metrics are still collected.
 | --- | --- |
 | Request/response headers | `http.*.header.*` span attributes |
 | Request/response bodies | `*_body_masked` span events |
-| App metrics (JVM memory, GC, custom counters) | App OTel -> Agent `:4318` |
+| App metrics (JVM memory, GC, custom counters) | App OTel -> Docker collector `:4318` |
 
 ## Troubleshooting
 
-**The Agent does not show as online.**
-`EVERYUP_WEB_BASE_URL` must be a Web address reachable from inside the Agent
-container. Even on the same server, `localhost` inside the container may point
-to the Agent itself, not Web. Use a Compose service name or a host-reachable IP.
+**The Docker environment does not show as online.**
+`EVERYUP_WEB_BASE_URL` must be a Web address reachable from inside the Docker
+collector container. Even on the same server, `localhost` inside the container
+may point to the collector itself, not Web. Use a Compose service name or a
+host-reachable IP.
 
-**The Agent cannot read the Docker socket.**
+**The Docker collector cannot read the Docker socket.**
 This is a permission issue. The one-line installer detects the Docker socket
 group ID and writes `EVERYUP_DOCKER_GID` automatically. For a manual deployment,
 set that value to `stat -c '%g' /var/run/docker.sock` and add it through
@@ -212,12 +214,12 @@ narrow socket access in production, use the
 
 **Logs are not showing up.**
 Logs written only to a file inside the container are not visible to Docker, so
-the Agent cannot collect them. Write app or proxy logs to stdout/stderr.
+the Docker collector cannot collect them. Write app or proxy logs to stdout/stderr.
 
 **Backups for production deployments.**
 Back up `/app/data`. If you set `EVERYUP_ENCRYPTION_KEY`, keep that same
 64-char hex key with your deployment secrets. A database backup alone cannot
-restore encrypted Agent keys or notification secrets without the key.
+restore encrypted Docker collector keys or notification secrets without the key.
 See the [backup and restore guide](docs/BACKUP_RESTORE.md) for details.
 
 ## Documentation
@@ -225,11 +227,11 @@ See the [backup and restore guide](docs/BACKUP_RESTORE.md) for details.
 | Document | What's inside |
 | --- | --- |
 | [web/README.md](web/README.md) | Web setup, environment variables, API areas, local development |
-| [agent/README.md](agent/README.md) | Agent setup, full environment variable reference, Compose settings |
-| [agent/docs/docker-socket-proxy.md](agent/docs/docker-socket-proxy.md) | Stricter Docker socket access for production Agent deployments |
-| [agent/docs/web-connected-mode.md](agent/docs/web-connected-mode.md) | How Agent enrollment and Web sync work |
+| [agent/README.md](agent/README.md) | Docker collector setup, full environment variable reference, Compose settings |
+| [agent/docs/docker-socket-proxy.md](agent/docs/docker-socket-proxy.md) | Stricter Docker socket access for production collector deployments |
+| [agent/docs/web-connected-mode.md](agent/docs/web-connected-mode.md) | How Docker collector enrollment and Web sync work |
 | [agent/docs/host-metrics.md](agent/docs/host-metrics.md) | Host CPU, memory, disk, and network collection details |
-| [agent/docs/otel-collector.md](agent/docs/otel-collector.md) | Optional OTel collector configuration generated by the Agent |
+| [agent/docs/otel-collector.md](agent/docs/otel-collector.md) | Optional OTel collector configuration generated by the Docker collector |
 | [docs/NOTIFICATION_SETUP.md](docs/NOTIFICATION_SETUP.md) | Telegram / Discord / Slack channel credentials and configuration ([한국어](docs/NOTIFICATION_SETUP.ko.md)) |
 | [docs/BACKUP_RESTORE.md](docs/BACKUP_RESTORE.md) | Backing up and restoring the `/app/data` directory ([한국어](docs/BACKUP_RESTORE.ko.md)) |
 | [docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md) | Capturing request/response headers and bodies via OpenTelemetry, per language ([한국어](docs/OTEL_API_INSTRUMENTATION.ko.md)) |
@@ -237,7 +239,7 @@ See the [backup and restore guide](docs/BACKUP_RESTORE.md) for details.
 
 ## Reference
 
-**Networking.** The Agent reaches containers and logs through the mounted
+**Networking.** The Docker collector reaches containers and logs through the mounted
 Docker socket, so it works even from its own Compose project. The cleanest
 setup is to put `everyup-agent` in the same Compose file as the app stack on
 that server.
@@ -250,10 +252,10 @@ web/
   frontend/                # React 19 / Vite dashboard
   docker-compose.yml       # Web-only Compose template
 agent/
-  cmd/                     # Agent entrypoint
-  docs/                    # Agent deployment and operations notes
+  cmd/                     # Docker collector entrypoint
+  docs/                    # Docker collector deployment and operations notes
   instrumentation/         # Bundled app-side OTel helpers
-  docker-compose.yml       # Agent Compose template
+  docker-compose.yml       # Docker collector Compose template
 docs/                      # User docs, backup/restore, notifications, OTel guide
 docker-compose.yml         # root convenience Compose file (Web only)
 ```
@@ -261,12 +263,12 @@ docker-compose.yml         # root convenience Compose file (Web only)
 **Development**
 
 Prerequisites for source development: Docker, pnpm, Go 1.24 for Web, and Go
-1.25 for Agent.
+1.25 for the Docker collector.
 
 ```bash
 cd web/backend && go test ./...     # backend tests
 cd web/frontend && pnpm build       # frontend build
-cd agent && go test ./...           # agent tests
+cd agent && go test ./...           # Docker collector tests
 ```
 
 For a disposable Node.js and Java application that exercises instrumentation,
