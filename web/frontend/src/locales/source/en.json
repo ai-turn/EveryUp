@@ -40,7 +40,6 @@
   "최근 장애": "Recent Failures",
   "최근 100회 체크 기준": "Out of last 100 checks",
   "성능": "Performance",
-  "장애": "Issues",
   "가동률": "Uptime",
   "응답 시간 (ms)": "Response Time (ms)",
   "{range} 동안의 P95 및 평균 지연 시간": "P95 and average latency over {range}",
@@ -268,5 +267,7 @@
   "Docker 환경을 연결하면 컨테이너와 호스트가 자동으로 표시됩니다": "Connect a Docker environment to discover its containers and host automatically",
   "Docker 환경 비활성화": "Deactivate Docker environment",
   "{name} Docker 환경을 비활성화하시겠습니까?": "Deactivate Docker environment {name}?",
-  "직접 설정": "Direct setup"
+  "직접 설정": "Direct setup",
+  "최근 {limit}건 중 {count}건 표시": "Showing {count} of the latest {limit}",
+  "최근 {total}건 · ERROR {error} · WARN {warn}": "{total} recent · ERROR {error} · WARN {warn}"
 }
