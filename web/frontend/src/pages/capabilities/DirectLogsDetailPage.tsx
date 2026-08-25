@@ -133,30 +133,32 @@ export function DirectLogsDetailPage() {
           <TimeRangePicker value={range} onChange={setRange} />
           <Button variant="secondary" onClick={() => setRefreshKey(value => value + 1)}><MaterialIcon name="refresh" />{t('새로고침')}</Button>
           <Button variant="secondary" onClick={() => navigate('/alerts')}><MaterialIcon name="notifications" />{t('알림 규칙')}</Button>
+          <span className="mx-1 hidden h-5 w-px bg-ui-border sm:block" aria-hidden="true" />
+          {service.isActive && <Button variant="ghost" onClick={() => setConfirmAction('revoke')}><MaterialIcon name="block" />{t('연결 중지')}</Button>}
+          <Button variant="ghost" className="text-status-error hover:text-status-error" onClick={() => setConfirmAction('delete')}><MaterialIcon name="delete" />{t('삭제')}</Button>
         </div>
       </PageHeader>
 
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <section className="rounded-xl border border-ui-border bg-bg-surface p-5 lg:col-span-2">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="text-base font-bold text-text-base">{t('직접 수집 연결')}</h2>
-              <p className="mt-1 text-sm text-text-muted">{service.apiKeyMasked || t('마스킹된 키 없음')}</p>
-            </div>
+            <h2 className="text-base font-bold text-text-base">{t('직접 수집 연결')}</h2>
             <span className={`inline-flex items-center gap-1.5 rounded border px-2 py-1 text-xs font-bold ${service.isActive ? 'border-status-healthy/20 bg-status-healthy/10 text-status-healthy' : 'border-status-error/20 bg-status-error/10 text-status-error'}`}>
               <span className={`h-1.5 w-1.5 rounded-full ${service.isActive ? 'bg-status-healthy' : 'bg-status-error'}`} aria-hidden="true" />
               {service.isActive ? t('수집 가능') : t('중지됨')}
             </span>
           </div>
-          <dl className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg bg-ui-hover-soft p-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-text-dim">{t('수집 키')}</p>
+              <p className="mt-1 truncate font-mono text-sm font-semibold text-text-secondary">{service.apiKeyMasked || t('마스킹된 키 없음')}</p>
+            </div>
+            <Button variant="secondary" size="sm" onClick={() => setConfirmAction('rotate')}><MaterialIcon name="key" />{t('키 재발급')}</Button>
+          </div>
+          <dl className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="rounded-lg bg-ui-hover-soft p-3"><dt className="text-xs text-text-dim">{t('마지막 수집')}</dt><dd className="mt-1 text-sm font-semibold text-text-secondary">{service.lastSeenAt ? new Date(service.lastSeenAt).toLocaleString() : t('아직 없음')}</dd></div>
             <div className="rounded-lg bg-ui-hover-soft p-3"><dt className="text-xs text-text-dim">{t('허용 신호')}</dt><dd className="mt-1 font-mono text-sm font-semibold text-text-secondary">{service.signals.join(', ')}</dd></div>
           </dl>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setConfirmAction('rotate')}><MaterialIcon name="key" />{t('키 재발급')}</Button>
-            {service.isActive && <Button variant="ghost" size="sm" onClick={() => setConfirmAction('revoke')}><MaterialIcon name="block" />{t('연결 중지')}</Button>}
-            <Button variant="ghost" size="sm" onClick={() => setConfirmAction('delete')}><MaterialIcon name="delete" className="text-status-error" />{t('삭제')}</Button>
-          </div>
         </section>
 
         <section className="rounded-xl border border-ui-border bg-bg-surface p-5">
