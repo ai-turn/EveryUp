@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MaterialIcon, SegmentedControl, SearchInput, type GlobalTimeRange } from '../../../components/common';
+import { MaterialIcon, SearchInput, type GlobalTimeRange } from '../../../components/common';
 import { api, type ApiRequest } from '../../../services/api';
 import { getErrorMessage } from '../../../utils/errors';
 import { activatable } from '../../../utils/a11y';
@@ -10,8 +10,8 @@ import { AgentServiceRequestTrends, DirectServiceRequestTrends } from './AgentSe
 
 interface SharedProps {
   refreshKey: number;
-  /** Shared chart range from the page-header picker (trends chart only; the list keeps day presets). */
-  range?: GlobalTimeRange;
+  /** Shared range from the page-header picker — drives the trends chart, the list, and the KPI row. */
+  range: GlobalTimeRange;
 }
 
 interface AgentProps extends SharedProps {
@@ -29,19 +29,10 @@ type RequestSource =
   | { kind: 'agent'; agentId: string; serviceKey: string; runtime?: string }
   | { kind: 'direct'; observedServiceId: string };
 
-type DatePreset = '1d' | '7d' | '30d' | '';
+const RANGE_HOURS: Record<GlobalTimeRange, number> = { '1h': 1, '6h': 6, '24h': 24 };
 
-const DATE_PRESETS: { value: DatePreset; label: string }[] = [
-  { value: '', label: '전체' },
-  { value: '1d', label: '오늘' },
-  { value: '7d', label: '7일' },
-  { value: '30d', label: '30일' },
-];
-
-function toISOFrom(preset: DatePreset): string | undefined {
-  if (!preset) return undefined;
-  const days = preset === '1d' ? 1 : preset === '7d' ? 7 : 30;
-  return new Date(Date.now() - days * 86_400_000).toISOString();
+function rangeFrom(range: GlobalTimeRange): string {
+  return new Date(Date.now() - RANGE_HOURS[range] * 3_600_000).toISOString();
 }
 
 function methodClass(method: string): string {
@@ -81,7 +72,6 @@ function ServiceRequestsPanel({
   const [errorsOnly, setErrorsOnly] = useState(false);
   const [search, setSearch] = useState('');
   const [inputValue, setInputValue] = useState('');
-  const [datePreset, setDatePreset] = useState<DatePreset>('');
   const sourceKind = source.kind;
   const agentId = source.kind === 'agent' ? source.agentId : '';
   const serviceKey = source.kind === 'agent' ? source.serviceKey : '';
@@ -95,7 +85,7 @@ function ServiceRequestsPanel({
       const params = {
         errorsOnly,
         search: search || undefined,
-        from: toISOFrom(datePreset),
+        from: rangeFrom(range),
       };
       const res = sourceKind === 'direct'
         ? await api.getObservedServiceRequests(observedServiceId, params)
@@ -107,7 +97,7 @@ function ServiceRequestsPanel({
     } finally {
       setLoading(false);
     }
-  }, [agentId, datePreset, errorsOnly, observedServiceId, refreshKey, search, serviceKey, sourceKind]);
+  }, [agentId, errorsOnly, observedServiceId, range, refreshKey, search, serviceKey, sourceKind]);
 
   useEffect(() => { fetch(); }, [fetch]);
 
@@ -162,9 +152,6 @@ function ServiceRequestsPanel({
           에러만
         </button>
 
-        {/* Date presets */}
-        <SegmentedControl options={DATE_PRESETS} value={datePreset} onChange={setDatePreset} ariaLabel="기간" />
-
         {/* Path search */}
         <form onSubmit={handleSearchSubmit} className="flex-1 min-w-48 flex gap-1.5">
           <SearchInput
@@ -194,9 +181,9 @@ function ServiceRequestsPanel({
         <div className="py-16 text-center">
           <MaterialIcon name="http" className="text-4xl text-text-dim mb-2" />
           <p className="text-sm text-text-dim">
-            {search || errorsOnly || datePreset ? '조건에 맞는 요청이 없습니다' : '수집된 API 요청이 없습니다'}
+            {search || errorsOnly ? '조건에 맞는 요청이 없습니다' : '이 기간에 수집된 API 요청이 없습니다'}
           </p>
-          {!search && !errorsOnly && !datePreset && (
+          {!search && !errorsOnly && (
             <div className="mt-6 mx-auto max-w-md text-left p-4 rounded-xl bg-bg-surface border border-ui-border">
               <p className="text-sm font-semibold text-text-secondary mb-2">
                 {source.kind === 'agent' && source.runtime

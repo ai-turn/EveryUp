@@ -14,7 +14,7 @@ import { LEVEL_STYLE } from '../logLevelStyle';
 
 interface BaseProps {
   refreshKey: number;
-  /** Shared chart range from the page-header picker (drives the volume histogram). */
+  /** Shared range from the page-header picker — drives the list AND the histogram. */
   range: GlobalTimeRange;
 }
 
@@ -62,19 +62,8 @@ const LOG_LEVELS: { value: LogLevel | ''; label: string }[] = [
 // Levels selectable for the OTLP ingest filter (what gets stored), in severity order.
 const INGEST_LEVELS: LogLevel[] = ['error', 'warn', 'info', 'debug', 'trace'];
 
-type DatePreset = '1d' | '7d' | '30d' | '';
-
-const DATE_PRESETS: { value: DatePreset; label: string }[] = [
-  { value: '', label: '전체' },
-  { value: '1d', label: '오늘' },
-  { value: '7d', label: '7일' },
-  { value: '30d', label: '30일' },
-];
-
-function toISOFrom(preset: DatePreset): string | undefined {
-  if (!preset) return undefined;
-  const days = preset === '1d' ? 1 : preset === '7d' ? 7 : 30;
-  return new Date(Date.now() - days * 86_400_000).toISOString();
+function rangeFrom(range: GlobalTimeRange): string {
+  return new Date(Date.now() - RANGE_BUCKET[range].hours * 3600 * 1000).toISOString();
 }
 
 function formatTime(ts: string) {
@@ -142,7 +131,6 @@ function ServiceLogsPanel(props: Props) {
   const [level, setLevel] = useState<LogLevel | ''>('');
   const [search, setSearch] = useState('');
   const [inputValue, setInputValue] = useState('');
-  const [datePreset, setDatePreset] = useState<DatePreset>('');
   const [histogram, setHistogram] = useState<LogHistogramBucket[]>([]);
   const [live, setLive] = useState(false);
 
@@ -184,7 +172,7 @@ function ServiceLogsPanel(props: Props) {
       const params = {
         level: level || undefined,
         search: search || undefined,
-        from: toISOFrom(datePreset),
+        from: rangeFrom(range),
       };
       const res = directServiceId
         ? await api.getObservedServiceLogs(directServiceId, params)
@@ -196,7 +184,7 @@ function ServiceLogsPanel(props: Props) {
     } finally {
       setLoading(false);
     }
-  }, [agentId, directServiceId, serviceKey, refreshKey, level, search, datePreset]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [agentId, directServiceId, serviceKey, refreshKey, level, search, range]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { fetch(); }, [fetch]);
 
@@ -206,7 +194,7 @@ function ServiceLogsPanel(props: Props) {
     const params = {
       level: level || undefined,
       search: search || undefined,
-      from: new Date(Date.now() - r.hours * 3600 * 1000).toISOString(),
+      from: rangeFrom(range),
       bucketMins: r.bucketMins,
     };
     const request = directServiceId
@@ -240,9 +228,6 @@ function ServiceLogsPanel(props: Props) {
       <div className="flex flex-wrap items-center gap-3">
         {/* Level filter */}
         <SegmentedControl options={LOG_LEVELS} value={level} onChange={setLevel} ariaLabel="로그 레벨" />
-
-        {/* Date presets */}
-        <SegmentedControl options={DATE_PRESETS} value={datePreset} onChange={setDatePreset} ariaLabel="기간" />
 
         {/* Search */}
         <form onSubmit={handleSearchSubmit} className="flex-1 min-w-48 flex gap-1.5">
@@ -376,7 +361,7 @@ function ServiceLogsPanel(props: Props) {
         <div className="py-16 text-center">
           <MaterialIcon name="article" className="text-4xl text-text-dim mb-2" />
           <p className="text-sm text-text-dim">
-            {search || level || datePreset ? '조건에 맞는 로그가 없습니다' : '수집된 로그가 없습니다'}
+            {search || level ? '조건에 맞는 로그가 없습니다' : '이 기간에 수집된 로그가 없습니다'}
           </p>
         </div>
       ) : (
