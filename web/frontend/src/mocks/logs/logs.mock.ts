@@ -3,7 +3,7 @@ import type { LogEntry } from '../../services/api';
 /**
  * Rich mock log entries for demo mode.
  * Covers multiple services, all three levels, JSON metadata, internal/external sources.
- * Sorted newest-first.
+ * Authored grouped by service — the mock router sorts newest-first like the real handler.
  */
 
 const now = Date.now();
@@ -260,11 +260,12 @@ export const mockLogEntries: LogEntry[] = [
     createdAt: m(180),
   },
 
-  // ── Payment Worker (id: 5) ────────────────────────────────────────────────
+  // ── payment-worker (Docker 수집기 prod-server) ────────────────────────────
   {
     id: 25,
     serviceId: '5',
-    serviceName: 'Payment Worker',
+    agentId: 'agent_demo_01',
+    serviceName: 'payment-worker',
     level: 'error',
     message: 'Stripe webhook signature verification failed — webhook ignored',
     source: 'otlp',
@@ -276,7 +277,8 @@ export const mockLogEntries: LogEntry[] = [
   {
     id: 26,
     serviceId: '5',
-    serviceName: 'Payment Worker',
+    agentId: 'agent_demo_01',
+    serviceName: 'payment-worker',
     level: 'warn',
     message: 'Payment retry queue backlog: 47 pending jobs (threshold: 20)',
     source: 'internal',
@@ -286,7 +288,8 @@ export const mockLogEntries: LogEntry[] = [
   {
     id: 27,
     serviceId: '5',
-    serviceName: 'Payment Worker',
+    agentId: 'agent_demo_01',
+    serviceName: 'payment-worker',
     level: 'info',
     message: 'Payment processed successfully — txn_id: pay_3Ox9gJ2eZvKYlo2C1 amount: $149.00',
     source: 'otlp',
@@ -296,7 +299,8 @@ export const mockLogEntries: LogEntry[] = [
   {
     id: 28,
     serviceId: '5',
-    serviceName: 'Payment Worker',
+    agentId: 'agent_demo_01',
+    serviceName: 'payment-worker',
     level: 'error',
     message: 'Idempotency key collision detected for key: order_9921_retry — duplicate request rejected',
     source: 'internal',
@@ -306,7 +310,8 @@ export const mockLogEntries: LogEntry[] = [
   {
     id: 29,
     serviceId: '5',
-    serviceName: 'Payment Worker',
+    agentId: 'agent_demo_01',
+    serviceName: 'payment-worker',
     level: 'info',
     message: 'Worker pool scaled up to 8 concurrent processors (was 4)',
     source: 'internal',

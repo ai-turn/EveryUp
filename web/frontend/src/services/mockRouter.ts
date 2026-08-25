@@ -498,12 +498,37 @@ const mockAgentEvents: AgentEvent[] = [
   },
 ];
 
+// The real handler applies level/search/from server-side; mirror it so demo mode
+// responds to the filter bar and the header time range.
+function filterMockLogs(rows: LogEntry[], endpoint: string): LogEntry[] {
+  const query = new URLSearchParams(endpoint.split('?')[1] ?? '');
+  const level = query.get('level');
+  const search = query.get('search')?.toLowerCase();
+  const from = query.get('from');
+  return rows.filter(log =>
+    (!level || log.level === level)
+    && (!search || log.message.toLowerCase().includes(search))
+    && (!from || log.createdAt >= from));
+}
+
 const mockAgentServiceLogs: LogEntry[] = [
   { id: 101, serviceId: '', serviceName: 'api', level: 'error', message: 'Connection timeout to upstream: auth.internal:8080 after 5000ms', source: 'otlp', traceId: mockTraceIds.apiGatewayAuth, createdAt: new Date(nowAgent - 60_000).toISOString() },
   { id: 102, serviceId: '', serviceName: 'api', level: 'warn',  message: 'Rate limit exceeded for client IP 203.0.113.42 — throttling to 10 req/s', source: 'otlp', createdAt: new Date(nowAgent - 180_000).toISOString() },
   { id: 103, serviceId: '', serviceName: 'api', level: 'info',  message: 'Server listening on :8080', source: 'otlp', createdAt: new Date(nowAgent - 600_000).toISOString() },
   { id: 104, serviceId: '', serviceName: 'api', level: 'error', message: 'Payment gateway timeout after 5000ms', source: 'otlp', traceId: mockTraceIds.paymentWebhook, createdAt: new Date(nowAgent - 720_000).toISOString() },
 ];
+
+// Same idea as filterMockLogs — the real handler filters server-side.
+function filterMockRequests(rows: ApiRequest[], endpoint: string): ApiRequest[] {
+  const query = new URLSearchParams(endpoint.split('?')[1] ?? '');
+  const search = query.get('search')?.toLowerCase();
+  const from = query.get('from');
+  const errorsOnly = query.get('errorsOnly') === 'true';
+  return rows.filter(request =>
+    (!errorsOnly || request.statusCode >= 400)
+    && (!search || request.path.toLowerCase().includes(search))
+    && (!from || request.createdAt >= from));
+}
 
 const mockAgentServiceRequests: ApiRequest[] = [
   { id: 201, serviceId: '', serviceName: 'api', requestId: 'r01', method: 'POST',   path: '/api/v1/auth/login',      pathTemplate: '/api/v1/auth/login',  statusCode: 200, durationMs: 42,  isError: false, traceId: mockTraceIds.apiGatewayAuth, createdAt: new Date(nowAgent - 30_000).toISOString() },
@@ -1012,7 +1037,8 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   if (observedLogsMatch) {
     const service = mockObservedServices.find(row => row.id === observedLogsMatch[1]);
     const rows = allMockLogs.slice(0, 24).map(log => ({ ...log, serviceId: service?.id ?? observedLogsMatch[1], serviceName: service?.name ?? 'direct-service', agentId: undefined }));
-    return { data: rows, total: rows.length } as T;
+    const visible = filterMockLogs(rows, endpoint);
+    return { data: visible, total: visible.length } as T;
   }
   if (/^\/observed-services\/[^/]+\/log-histogram/.test(endpoint)) return mockLogHistogram() as T;
   const observedFilterMatch = endpoint.match(/^\/observed-services\/([^/]+)\/log-filter$/);
@@ -1028,7 +1054,8 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
       serviceName: service?.name ?? 'direct-service',
       agentId: undefined,
     }));
-    return { data: rows, total: rows.length } as T;
+    const visible = filterMockRequests(rows, endpoint);
+    return { data: visible, total: visible.length } as T;
   }
   if (/^\/observed-services\/[^/]+\/request-stats/.test(endpoint)) return mockRequestStats() as T;
   if (/^\/observed-services\/[^/]+\/request-status-summary/.test(endpoint)) {
@@ -1046,7 +1073,10 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
     return mockObservedServices.filter(service => !signal || service.signals.includes(signal as 'logs' | 'metrics' | 'traces')) as T;
   }
   if (endpoint === '/services?type=http,tcp') return mockUptimeMonitors as T;
-  if (endpoint.startsWith('/logs?')) return allMockLogs as T;
+  // The fixture is authored grouped by service; the real handler is ORDER BY created_at DESC.
+  if (endpoint.startsWith('/logs?')) {
+    return [...allMockLogs].sort((a, b) => b.createdAt.localeCompare(a.createdAt)) as T;
+  }
   const uptimeSummaryMatch = endpoint.match(/^\/services\/([^/]+)\/metrics\/summary(?:\?|$)/);
   if (uptimeSummaryMatch) return (uptimeSummaryMatch[1] === 'uptime_mock_store' ? mockUptimeSummary : null) as T;
   const uptimeMetricsMatch = endpoint.match(/^\/services\/([^/]+)\/metrics(?:\?|$)/);
@@ -1081,7 +1111,10 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
     return mockLogHistogram() as T;
   // /agents/:agentId/services/:key/logs
   if (/^\/agents\/[^/]+\/services\/[^/]+\/logs/.test(endpoint))
-    return { data: mockAgentServiceLogs, total: mockAgentServiceLogs.length } as unknown as T;
+  {
+    const visible = filterMockLogs(mockAgentServiceLogs, endpoint);
+    return { data: visible, total: visible.length } as unknown as T;
+  }
   // /agents/:agentId/services/:key/request-stats
   if (/^\/agents\/[^/]+\/services\/[^/]+\/request-stats/.test(endpoint))
     return mockRequestStats() as T;
@@ -1098,8 +1131,10 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   // traffic, so its API tab exercises the empty state + setup guidance.
   if (/^\/agents\/[^/]+\/services\/shop%3Apayment-worker\/requests/.test(endpoint))
     return { data: [], total: 0 } as unknown as T;
-  if (/^\/agents\/[^/]+\/services\/[^/]+\/requests/.test(endpoint))
-    return { data: mockAgentServiceRequests, total: mockAgentServiceRequests.length } as unknown as T;
+  if (/^\/agents\/[^/]+\/services\/[^/]+\/requests/.test(endpoint)) {
+    const visible = filterMockRequests(mockAgentServiceRequests, endpoint);
+    return { data: visible, total: visible.length } as unknown as T;
+  }
   // /agents/:agentId/services/:key/otel-metrics/points?name=...
   if (/^\/agents\/[^/]+\/services\/[^/]+\/otel-metrics\/points/.test(endpoint))
     return mockOtelMetricPoints(endpoint) as T;
