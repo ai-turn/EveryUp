@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MaterialIcon, SegmentedControl, SearchInput } from '../../../components/common';
+import { MaterialIcon, Pagination, SegmentedControl, SearchInput } from '../../../components/common';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { api, NotificationChannel, NotificationHistory, NotificationStats } from '../../../services/api';
 import { getChannelStyle } from '../utils/channelMeta';
@@ -19,19 +19,6 @@ const STATUS_META: Record<string, { dot: string; text: string }> = {
   pending: { dot: 'bg-status-warn', text: 'text-status-warn' },
 };
 
-// Pages to render: first, last, current±1, with null for ellipsis gaps.
-function pageItems(current: number, totalPages: number): (number | null)[] {
-  const pages = new Set([1, totalPages, current - 1, current, current + 1]);
-  const sorted = [...pages].filter(p => p >= 1 && p <= totalPages).sort((a, b) => a - b);
-  const items: (number | null)[] = [];
-  let prev = 0;
-  for (const p of sorted) {
-    if (p - prev > 1) items.push(null);
-    items.push(p);
-    prev = p;
-  }
-  return items;
-}
 
 interface NotificationHistoryTabProps {
   channels: NotificationChannel[];
@@ -308,41 +295,13 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
                 total,
               })}
             </p>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="flex h-7 w-7 items-center justify-center rounded-md border border-ui-border text-sm text-text-muted hover:bg-ui-hover disabled:opacity-40 disabled:cursor-not-allowed"
-                aria-label={t('common.previous', { defaultValue: 'Previous' })}
-              >
-                ‹
-              </button>
-              {pageItems(page, totalPages).map((p, i) =>
-                p === null ? (
-                  <span key={`e-${i}`} className="px-1 text-sm text-text-dim">…</span>
-                ) : (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    className={`flex h-7 min-w-7 items-center justify-center rounded-md px-1 text-xs font-semibold ${
-                      p === page
-                        ? 'bg-primary text-white'
-                        : 'border border-ui-border text-text-muted hover:bg-ui-hover'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                )
-              )}
-              <button
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                disabled={page >= totalPages}
-                className="flex h-7 w-7 items-center justify-center rounded-md border border-ui-border text-sm text-text-muted hover:bg-ui-hover disabled:opacity-40 disabled:cursor-not-allowed"
-                aria-label={t('common.next', { defaultValue: 'Next' })}
-              >
-                ›
-              </button>
-            </div>
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onChange={setPage}
+              previousLabel={t('common.previous', { defaultValue: 'Previous' })}
+              nextLabel={t('common.next', { defaultValue: 'Next' })}
+            />
           </div>
         )}
       </div>

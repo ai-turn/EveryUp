@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslate } from '@tolgee/react';
-import { Button, EmptyState, MaterialIcon, PageHeader, SearchInput, Select } from '../../components/common';
+import { Button, EmptyState, MaterialIcon, PageHeader, Pagination, SearchInput, Select } from '../../components/common';
 import { DirectLogsSetupDialog } from '../../features/logs/components/DirectLogsSetupDialog';
 import { LEVEL_STYLE } from '../../features/healthcheck/logLevelStyle';
 import { CapabilityAgentSetup } from '../../features/services/components/CapabilityAgentSetup';
 import { api, type AgentServiceFlat, type LogEntry, type ObservedService } from '../../services/api';
 import { getErrorMessage } from '../../utils/errors';
 
-const LOG_LIMIT = 100;
+const PAGE_SIZE = 25;
+// Sample the card sections read from — wider than one page so the source
+// directory does not shrink to whatever the table happens to be showing.
+const OVERVIEW_SAMPLE = 100;
 
 function formatTime(ts: string) {
   return new Date(ts).toLocaleString([], {
@@ -30,6 +33,7 @@ export function LogsPage() {
   const [inputValue, setInputValue] = useState('');
   const [search, setSearch] = useState('');
   const [serviceFilter, setServiceFilter] = useState('');
+  const [page, setPage] = useState(1);
   const [showDirectSetup, setShowDirectSetup] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,11 +43,13 @@ export function LogsPage() {
     Promise.all([
       api.getAllAgentServicesFlat(),
       api.getObservedServices('logs'),
+      api.getLogs({ limit: OVERVIEW_SAMPLE }),
     ])
-      .then(([agentRows, directRows]) => {
+      .then(([agentRows, directRows, sample]) => {
         if (!alive) return;
         setAgentServices(agentRows ?? []);
         setDirectServices(directRows ?? []);
+        setOverview(sample?.data ?? []);
       })
       .catch((requestError) => { if (alive) setError(getErrorMessage(requestError)); });
     return () => { alive = false; };
@@ -53,18 +59,22 @@ export function LogsPage() {
   // filtering here would search the loaded page and call the rest non-existent.
   useEffect(() => {
     let alive = true;
-    api.getLogs({ limit: LOG_LIMIT, search: search || undefined, serviceName: serviceFilter || undefined })
+    api.getLogs({
+      limit: PAGE_SIZE,
+      offset: (page - 1) * PAGE_SIZE,
+      search: search || undefined,
+      serviceName: serviceFilter || undefined,
+    })
       .then(result => {
         if (!alive) return;
         setError(null);
         setLogs(result?.data ?? []);
         setTotal(result?.total ?? 0);
-        if (!search && !serviceFilter) setOverview(result?.data ?? []);
       })
       .catch((requestError) => { if (alive) setError(getErrorMessage(requestError)); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [search, serviceFilter]);
+  }, [search, serviceFilter, page]);
 
   // Registered sources plus whatever the unfiltered snapshot actually carried —
   // a log's serviceName comes off the OTLP resource and need not match a
@@ -75,6 +85,8 @@ export function LogsPage() {
     ...directServices.map(service => service.name),
     ...overview.map(log => log.serviceName).filter(Boolean) as string[],
   ])].sort(), [agentServices, directServices, overview]);
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const agentPaths = useMemo(() => new Map(
     agentServices.map(service => [`${service.agentId}:${service.name}`, service]),
@@ -107,14 +119,14 @@ export function LogsPage() {
         <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
           <Select
             value={serviceFilter}
-            onChange={event => setServiceFilter(event.target.value)}
+            onChange={event => { setServiceFilter(event.target.value); setPage(1); }}
             aria-label={t('서비스 필터')}
             className="w-full sm:w-48"
           >
             <option value="">{t('전체 서비스')}</option>
             {serviceNames.map(name => <option key={name} value={name}>{name}</option>)}
           </Select>
-          <form onSubmit={event => { event.preventDefault(); setSearch(inputValue); }} className="flex w-full gap-1.5 sm:w-72">
+          <form onSubmit={event => { event.preventDefault(); setSearch(inputValue); setPage(1); }} className="flex w-full gap-1.5 sm:w-72">
             <SearchInput
               value={inputValue}
               onChange={event => setInputValue(event.target.value)}
@@ -123,7 +135,7 @@ export function LogsPage() {
               wrapperClassName="flex-1"
             />
             {search && (
-              <Button type="button" variant="ghost" onClick={() => { setSearch(''); setInputValue(''); }} aria-label={t('검색어 지우기')}>
+              <Button type="button" variant="ghost" onClick={() => { setSearch(''); setInputValue(''); setPage(1); }} aria-label={t('검색어 지우기')}>
                 <MaterialIcon name="close" />
               </Button>
             )}
@@ -206,7 +218,13 @@ export function LogsPage() {
         />
       ) : (
         <>
-          <p className="mb-2 text-xs text-text-dim">{t('총 {total}건 중 {count}건 표시', { total: total.toLocaleString(), count: logs.length })}</p>
+          <p className="mb-2 text-xs text-text-dim">
+            {t('총 {total}건 중 {start}–{end}', {
+              total: total.toLocaleString(),
+              start: ((page - 1) * PAGE_SIZE + 1).toLocaleString(),
+              end: Math.min(page * PAGE_SIZE, total).toLocaleString(),
+            })}
+          </p>
           <div className="overflow-hidden rounded-xl border border-ui-border bg-bg-surface">
             <div className="overflow-x-auto">
               <table className="min-w-full text-left">
@@ -247,6 +265,17 @@ export function LogsPage() {
                 </tbody>
               </table>
             </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-end border-t border-ui-border bg-ui-hover-soft/60 px-4 py-2.5">
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  onChange={setPage}
+                  previousLabel={t('이전')}
+                  nextLabel={t('다음')}
+                />
+              </div>
+            )}
           </div>
         </>
       )}

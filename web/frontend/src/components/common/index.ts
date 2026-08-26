@@ -12,3 +12,4 @@ export { EmptyState } from './EmptyState';
 export { ConfirmDialog } from './ConfirmDialog';
 export { TimeRangePicker, type GlobalTimeRange } from './TimeRangePicker';
 export { SegmentedControl } from './SegmentedControl';
+export { Pagination } from './Pagination';

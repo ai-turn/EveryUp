@@ -268,6 +268,6 @@
   "Docker 환경 비활성화": "Deactivate Docker environment",
   "{name} Docker 환경을 비활성화하시겠습니까?": "Deactivate Docker environment {name}?",
   "직접 설정": "Direct setup",
-  "총 {total}건 중 {count}건 표시": "Showing {count} of {total}",
+  "총 {total}건 중 {start}–{end}": "{start}–{end} of {total}",
   "최근 {total}건 · ERROR {error} · WARN {warn}": "{total} recent · ERROR {error} · WARN {warn}"
 }
