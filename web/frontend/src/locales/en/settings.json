@@ -132,7 +132,8 @@
       "subtitle": "Records of admins viewing captured request/response bodies",
       "empty": "No access records yet",
       "viewedTrace": "Viewed bodies in trace {{trace}}",
-      "bodyCount": "{{count}} bodies"
+      "bodyCount": "{{count}} bodies",
+      "recentCount": "Latest {{total}}"
     },
     "accountReset": {
       "title": "Account Reset",

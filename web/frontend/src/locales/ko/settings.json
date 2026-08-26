@@ -132,7 +132,8 @@
       "subtitle": "관리자가 캡처된 요청/응답 본문을 열람한 기록",
       "empty": "열람 기록이 없습니다",
       "viewedTrace": "Trace {{trace}} 본문 열람",
-      "bodyCount": "본문 {{count}}건"
+      "bodyCount": "본문 {{count}}건",
+      "recentCount": "최근 {{total}}건"
     },
     "accountReset": {
       "title": "계정 초기화",

@@ -6,6 +6,10 @@ import { env } from '../../../config/env';
 import { SectionCard } from './SectionCard';
 
 const BODY_VIEW_ACTION = 'trace.body.view';
+// Audit rows are human actions kept for the body-capture retention window, so
+// this covers the whole trail in practice. The heading says "최근 N건" rather
+// than a total, because the endpoint reports no unpaged count.
+const AUDIT_LIMIT = 200;
 
 function bodyCountOf(metadata?: string): number | undefined {
   if (!metadata) return undefined;
@@ -30,7 +34,7 @@ export function AuditLogSection() {
   useEffect(() => {
     if (!isAdmin || env.useMock) return;
     api
-      .getAuditEvents({ action: BODY_VIEW_ACTION, limit: 50 })
+      .getAuditEvents({ action: BODY_VIEW_ACTION, limit: AUDIT_LIMIT })
       .then(setEvents)
       .catch(() => setEvents([]));
   }, [isAdmin]);
@@ -42,6 +46,8 @@ export function AuditLogSection() {
       {events.length === 0 ? (
         <p className="text-sm text-text-muted">{t('settings.audit.empty')}</p>
       ) : (
+        <>
+        <p className="mb-2 text-xs text-text-dim">{t('settings.audit.recentCount', { total: events.length })}</p>
         <ul className="divide-y divide-ui-border-soft">
           {events.map((event) => {
             const count = bodyCountOf(event.metadata);
@@ -63,6 +69,7 @@ export function AuditLogSection() {
             );
           })}
         </ul>
+        </>
       )}
     </SectionCard>
   );
