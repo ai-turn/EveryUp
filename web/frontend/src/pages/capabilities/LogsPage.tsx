@@ -21,9 +21,14 @@ export function LogsPage() {
   const { t } = useTranslate();
   const navigate = useNavigate();
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [total, setTotal] = useState(0);
+  // Unfiltered snapshot the card sections read from — they are a directory of
+  // sources, so they must not shrink when the table is filtered.
+  const [overview, setOverview] = useState<LogEntry[]>([]);
   const [agentServices, setAgentServices] = useState<AgentServiceFlat[]>([]);
   const [directServices, setDirectServices] = useState<ObservedService[]>([]);
-  const [query, setQuery] = useState('');
+  const [inputValue, setInputValue] = useState('');
+  const [search, setSearch] = useState('');
   const [serviceFilter, setServiceFilter] = useState('');
   const [showDirectSetup, setShowDirectSetup] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -32,38 +37,44 @@ export function LogsPage() {
   useEffect(() => {
     let alive = true;
     Promise.all([
-      api.getLogs({ limit: LOG_LIMIT }),
       api.getAllAgentServicesFlat(),
       api.getObservedServices('logs'),
     ])
-      .then(([logRows, agentRows, directRows]) => {
+      .then(([agentRows, directRows]) => {
         if (!alive) return;
-        setLogs(logRows ?? []);
         setAgentServices(agentRows ?? []);
         setDirectServices(directRows ?? []);
+      })
+      .catch((requestError) => { if (alive) setError(getErrorMessage(requestError)); });
+    return () => { alive = false; };
+  }, []);
+
+  // Filters go to the server: the client only ever holds LOG_LIMIT rows, so
+  // filtering here would search the loaded page and call the rest non-existent.
+  useEffect(() => {
+    let alive = true;
+    api.getLogs({ limit: LOG_LIMIT, search: search || undefined, serviceName: serviceFilter || undefined })
+      .then(result => {
+        if (!alive) return;
+        setError(null);
+        setLogs(result?.data ?? []);
+        setTotal(result?.total ?? 0);
+        if (!search && !serviceFilter) setOverview(result?.data ?? []);
       })
       .catch((requestError) => { if (alive) setError(getErrorMessage(requestError)); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, []);
+  }, [search, serviceFilter]);
 
-  // Every row on this page comes from a different service, so the service name is
-  // the primary scanning axis — offer it as an explicit filter, not just free text.
-  const serviceNames = useMemo(
-    () => [...new Set(logs.map(log => log.serviceName).filter(Boolean) as string[])].sort(),
-    [logs],
-  );
-
-  const filtered = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    return logs.filter(log => {
-      if (serviceFilter && log.serviceName !== serviceFilter) return false;
-      if (!normalized) return true;
-      return log.message.toLowerCase().includes(normalized)
-        || log.serviceName?.toLowerCase().includes(normalized)
-        || log.level.includes(normalized);
-    });
-  }, [logs, query, serviceFilter]);
+  // Registered sources plus whatever the unfiltered snapshot actually carried —
+  // a log's serviceName comes off the OTLP resource and need not match a
+  // registered service. Never derived from the filtered result: a filter whose
+  // choices depend on its own output can't be un-narrowed.
+  const serviceNames = useMemo(() => [...new Set([
+    ...agentServices.map(service => service.name),
+    ...directServices.map(service => service.name),
+    ...overview.map(log => log.serviceName).filter(Boolean) as string[],
+  ])].sort(), [agentServices, directServices, overview]);
 
   const agentPaths = useMemo(() => new Map(
     agentServices.map(service => [`${service.agentId}:${service.name}`, service]),
@@ -76,7 +87,7 @@ export function LogsPage() {
   // the logs already in hand, so the section costs no extra request.
   const agentCards = useMemo(() => {
     const byKey = new Map<string, { service: AgentServiceFlat; total: number; error: number; warn: number }>();
-    for (const log of logs) {
+    for (const log of overview) {
       if (!log.agentId) continue;
       const key = `${log.agentId}:${log.serviceName ?? ''}`;
       const service = agentPaths.get(key);
@@ -88,7 +99,7 @@ export function LogsPage() {
       byKey.set(key, row);
     }
     return [...byKey.values()].sort((a, b) => b.error - a.error || b.total - a.total);
-  }, [logs, agentPaths]);
+  }, [overview, agentPaths]);
 
   return (
     <div>
@@ -103,13 +114,20 @@ export function LogsPage() {
             <option value="">{t('전체 서비스')}</option>
             {serviceNames.map(name => <option key={name} value={name}>{name}</option>)}
           </Select>
-          <SearchInput
-            value={query}
-            onChange={event => setQuery(event.target.value)}
-            placeholder={t('로그 검색')}
-            aria-label={t('로그 검색')}
-            wrapperClassName="w-full sm:w-72"
-          />
+          <form onSubmit={event => { event.preventDefault(); setSearch(inputValue); }} className="flex w-full gap-1.5 sm:w-72">
+            <SearchInput
+              value={inputValue}
+              onChange={event => setInputValue(event.target.value)}
+              placeholder={t('메시지 검색 후 Enter')}
+              aria-label={t('로그 검색')}
+              wrapperClassName="flex-1"
+            />
+            {search && (
+              <Button type="button" variant="ghost" onClick={() => { setSearch(''); setInputValue(''); }} aria-label={t('검색어 지우기')}>
+                <MaterialIcon name="close" />
+              </Button>
+            )}
+          </form>
           <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />{t('Logs 직접 추가')}</Button>
           <CapabilityAgentSetup capability="logs" buttonVariant="secondary" />
         </div>
@@ -180,15 +198,15 @@ export function LogsPage() {
         <div className="h-72 animate-pulse rounded-xl border border-ui-border bg-bg-surface" />
       ) : error ? (
         <EmptyState icon="error_outline" title={t('로그를 불러오지 못했습니다')} description={error} />
-      ) : filtered.length === 0 ? (
+      ) : logs.length === 0 ? (
         <EmptyState
           icon="article"
-          title={t(query ? '검색 결과가 없습니다' : '아직 수집된 로그가 없습니다')}
-          description={t(query ? '검색어를 바꾸어 다시 시도해 보세요.' : 'Logs를 직접 연결하거나 Docker 환경에서 로그 수집을 활성화하면 여기에 표시됩니다.')}
+          title={t(search || serviceFilter ? '검색 결과가 없습니다' : '아직 수집된 로그가 없습니다')}
+          description={t(search || serviceFilter ? '검색어나 서비스 필터를 바꾸어 다시 시도해 보세요.' : 'Logs를 직접 연결하거나 Docker 환경에서 로그 수집을 활성화하면 여기에 표시됩니다.')}
         />
       ) : (
         <>
-          <p className="mb-2 text-xs text-text-dim">{t('최근 {limit}건 중 {count}건 표시', { limit: LOG_LIMIT, count: filtered.length })}</p>
+          <p className="mb-2 text-xs text-text-dim">{t('총 {total}건 중 {count}건 표시', { total: total.toLocaleString(), count: logs.length })}</p>
           <div className="overflow-hidden rounded-xl border border-ui-border bg-bg-surface">
             <div className="overflow-x-auto">
               <table className="min-w-full text-left">
@@ -201,7 +219,7 @@ export function LogsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ui-border-soft">
-                  {filtered.map(log => {
+                  {logs.map(log => {
                     const agentService = log.agentId ? agentPaths.get(`${log.agentId}:${log.serviceName ?? ''}`) : undefined;
                     const directService = !log.agentId && log.serviceId ? directPaths.get(log.serviceId) : undefined;
                     const serviceHref = agentService

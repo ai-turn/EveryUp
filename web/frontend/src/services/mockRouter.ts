@@ -1073,9 +1073,17 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
     return mockObservedServices.filter(service => !signal || service.signals.includes(signal as 'logs' | 'metrics' | 'traces')) as T;
   }
   if (endpoint === '/services?type=http,tcp') return mockUptimeMonitors as T;
-  // The fixture is authored grouped by service; the real handler is ORDER BY created_at DESC.
+  // The fixture is authored grouped by service; the real handler is
+  // ORDER BY created_at DESC and filters serviceName/search/level server-side.
   if (endpoint.startsWith('/logs?')) {
-    return [...allMockLogs].sort((a, b) => b.createdAt.localeCompare(a.createdAt)) as T;
+    const query = new URLSearchParams(endpoint.split('?')[1] ?? '');
+    const serviceName = query.get('serviceName');
+    const matched = filterMockLogs(allMockLogs, endpoint)
+      .filter(log => !serviceName || log.serviceName === serviceName)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    const offset = Number(query.get('offset') ?? 0);
+    const limit = Number(query.get('limit') ?? 100);
+    return { data: matched.slice(offset, offset + limit), total: matched.length } as T;
   }
   const uptimeSummaryMatch = endpoint.match(/^\/services\/([^/]+)\/metrics\/summary(?:\?|$)/);
   if (uptimeSummaryMatch) return (uptimeSummaryMatch[1] === 'uptime_mock_store' ? mockUptimeSummary : null) as T;

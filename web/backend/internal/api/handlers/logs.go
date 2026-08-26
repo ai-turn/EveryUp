@@ -35,12 +35,13 @@ func parseLogTimeQuery(value string) time.Time {
 // GetAll returns logs with filters and pagination
 func (h *LogHandler) GetAll(c *fiber.Ctx) error {
 	filter := models.LogFilter{
-		ServiceID: c.Query("serviceId"),
-		Level:     models.LogLevel(c.Query("level")),
-		Search:    c.Query("search"),
-		TraceID:   c.Query("traceId"),
-		From:      parseLogTimeQuery(c.Query("from")),
-		To:        parseLogTimeQuery(c.Query("to")),
+		ServiceID:   c.Query("serviceId"),
+		ServiceName: c.Query("serviceName"),
+		Level:       models.LogLevel(c.Query("level")),
+		Search:      c.Query("search"),
+		TraceID:     c.Query("traceId"),
+		From:        parseLogTimeQuery(c.Query("from")),
+		To:          parseLogTimeQuery(c.Query("to")),
 	}
 
 	// Parse pagination
@@ -74,23 +75,7 @@ func (h *LogHandler) GetAll(c *fiber.Ctx) error {
 		return internalError(c, "DATABASE_ERROR", err)
 	}
 
-	// Calculate pagination info
-	totalPages := total / filter.Limit
-	if total%filter.Limit > 0 {
-		totalPages++
-	}
-	currentPage := (filter.Offset / filter.Limit) + 1
-
-	return c.JSON(fiber.Map{
-		"success": true,
-		"data":    logs,
-		"pagination": fiber.Map{
-			"page":       currentPage,
-			"limit":      filter.Limit,
-			"total":      total,
-			"totalPages": totalPages,
-		},
-	})
+	return c.JSON(fiber.Map{"success": true, "data": fiber.Map{"data": logs, "total": total}})
 }
 
 // GetByServiceID returns logs for a specific service

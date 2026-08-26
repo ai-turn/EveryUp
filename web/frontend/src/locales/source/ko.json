@@ -268,6 +268,6 @@
   "Docker 환경 비활성화": "Docker 환경 비활성화",
   "{name} Docker 환경을 비활성화하시겠습니까?": "{name} Docker 환경을 비활성화하시겠습니까?",
   "직접 설정": "직접 설정",
-  "최근 {limit}건 중 {count}건 표시": "최근 {limit}건 중 {count}건 표시",
+  "총 {total}건 중 {count}건 표시": "총 {total}건 중 {count}건 표시",
   "최근 {total}건 · ERROR {error} · WARN {warn}": "최근 {total}건 · ERROR {error} · WARN {warn}"
 }

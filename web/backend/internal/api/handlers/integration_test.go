@@ -552,6 +552,74 @@ func TestLogList_NotInterceptedByLogIngestApiKeyAuth(t *testing.T) {
 	}
 }
 
+// TestLogList_ServerSideFilters verifies GET /api/v1/logs narrows by
+// serviceName/search/level server-side and reports the unpaged total, so the
+// aggregate logs page can stop filtering the loaded page client-side.
+func TestLogList_ServerSideFilters(t *testing.T) {
+	ts := setupTestServer(t)
+	token := ts.setupAdmin(t, "admin", "testpass123")
+	auth := authHeader(token)
+
+	repo := database.NewLogRepository()
+	seed := []models.Log{
+		{ServiceName: "api", Level: models.LogLevelError, Message: "connection timeout to upstream"},
+		{ServiceName: "api", Level: models.LogLevelInfo, Message: "server listening"},
+		{ServiceName: "worker", Level: models.LogLevelError, Message: "connection timeout to broker"},
+	}
+	for i := range seed {
+		seed[i].CreatedAt = time.Now().Add(time.Duration(-i) * time.Minute)
+		if err := repo.Create(&seed[i]); err != nil {
+			t.Fatalf("seed log %d: %v", i, err)
+		}
+	}
+
+	var list struct {
+		Data []struct {
+			ServiceName string `json:"serviceName"`
+			Level       string `json:"level"`
+			Message     string `json:"message"`
+		} `json:"data"`
+		Total int `json:"total"`
+	}
+	get := func(query string) {
+		t.Helper()
+		resp, result := ts.doRequest(t, "GET", "/api/v1/logs"+query, nil, auth...)
+		if resp.StatusCode != 200 || !result.Success {
+			t.Fatalf("GET /logs%s: status=%d err=%v", query, resp.StatusCode, result.Error)
+		}
+		list.Data = nil
+		if err := json.Unmarshal(result.Data, &list); err != nil {
+			t.Fatalf("decode /logs%s: %v", query, err)
+		}
+	}
+
+	get("")
+	if list.Total != 3 || len(list.Data) != 3 {
+		t.Fatalf("unfiltered = %d rows / total %d, want 3/3", len(list.Data), list.Total)
+	}
+
+	get("?serviceName=api")
+	if list.Total != 2 || len(list.Data) != 2 {
+		t.Fatalf("serviceName=api = %d rows / total %d, want 2/2", len(list.Data), list.Total)
+	}
+
+	get("?search=broker")
+	if list.Total != 1 || len(list.Data) != 1 || list.Data[0].ServiceName != "worker" {
+		t.Fatalf("search=broker = %+v, want the single worker row", list)
+	}
+
+	get("?serviceName=api&level=error")
+	if list.Total != 1 || len(list.Data) != 1 || list.Data[0].Level != "error" {
+		t.Fatalf("serviceName=api&level=error = %+v, want the single api error row", list)
+	}
+
+	// total is the unpaged count, not the page size — the page prints both.
+	get("?limit=1")
+	if list.Total != 3 || len(list.Data) != 1 {
+		t.Fatalf("limit=1 = %d rows / total %d, want 1 row / total 3", len(list.Data), list.Total)
+	}
+}
+
 // TestLogService_DefaultLogLevelFilter verifies that a new log service defaults
 // its logLevelFilter to [error, warn, info] (DEBUG/TRACE are opt-in). Service
 // creation moved out of the HTTP API in the agent-only architecture, so the

@@ -191,11 +191,14 @@ export const servicesApi = {
   deleteUptimeMonitor: (id: string) =>
     request<void>(`/services/${id}`, { method: 'DELETE' }),
 
-  getLogs: (params?: { limit?: number; level?: LogLevel }) => {
+  getLogs: (params?: { limit?: number; offset?: number; level?: LogLevel; search?: string; serviceName?: string }) => {
     const query = new URLSearchParams();
     query.set('limit', String(params?.limit ?? 100));
+    if (params?.offset) query.set('offset', String(params.offset));
     if (params?.level) query.set('level', params.level);
-    return request<LogEntry[]>(`/logs?${query}`);
+    if (params?.search) query.set('search', params.search);
+    if (params?.serviceName) query.set('serviceName', params.serviceName);
+    return request<{ data: LogEntry[]; total: number }>(`/logs?${query}`);
   },
 
   getTrace: (traceId: string) =>
