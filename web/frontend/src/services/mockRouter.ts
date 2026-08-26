@@ -518,6 +518,14 @@ const mockAgentServiceLogs: LogEntry[] = [
   { id: 104, serviceId: '', serviceName: 'api', level: 'error', message: 'Payment gateway timeout after 5000ms', source: 'otlp', traceId: mockTraceIds.paymentWebhook, createdAt: new Date(nowAgent - 720_000).toISOString() },
 ];
 
+// limit/offset window the real handlers apply; total stays the unpaged count.
+function pageMockRows<R>(rows: R[], endpoint: string): { data: R[]; total: number } {
+  const query = new URLSearchParams(endpoint.split('?')[1] ?? '');
+  const offset = Number(query.get('offset') ?? 0);
+  const limit = Number(query.get('limit') ?? 100);
+  return { data: rows.slice(offset, offset + limit), total: rows.length };
+}
+
 // Same idea as filterMockLogs — the real handler filters server-side.
 function filterMockRequests(rows: ApiRequest[], endpoint: string): ApiRequest[] {
   const query = new URLSearchParams(endpoint.split('?')[1] ?? '');
@@ -1036,9 +1044,8 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   const observedLogsMatch = endpoint.match(/^\/observed-services\/([^/]+)\/logs(?:\?|$)/);
   if (observedLogsMatch) {
     const service = mockObservedServices.find(row => row.id === observedLogsMatch[1]);
-    const rows = allMockLogs.slice(0, 24).map(log => ({ ...log, serviceId: service?.id ?? observedLogsMatch[1], serviceName: service?.name ?? 'direct-service', agentId: undefined }));
-    const visible = filterMockLogs(rows, endpoint);
-    return { data: visible, total: visible.length } as T;
+    const rows = allMockLogs.map(log => ({ ...log, serviceId: service?.id ?? observedLogsMatch[1], serviceName: service?.name ?? 'direct-service', agentId: undefined }));
+    return pageMockRows(filterMockLogs(rows, endpoint), endpoint) as T;
   }
   if (/^\/observed-services\/[^/]+\/log-histogram/.test(endpoint)) return mockLogHistogram() as T;
   const observedFilterMatch = endpoint.match(/^\/observed-services\/([^/]+)\/log-filter$/);
@@ -1054,8 +1061,7 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
       serviceName: service?.name ?? 'direct-service',
       agentId: undefined,
     }));
-    const visible = filterMockRequests(rows, endpoint);
-    return { data: visible, total: visible.length } as T;
+    return pageMockRows(filterMockRequests(rows, endpoint), endpoint) as T;
   }
   if (/^\/observed-services\/[^/]+\/request-stats/.test(endpoint)) return mockRequestStats() as T;
   if (/^\/observed-services\/[^/]+\/request-status-summary/.test(endpoint)) {
@@ -1081,9 +1087,7 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
     const matched = filterMockLogs(allMockLogs, endpoint)
       .filter(log => !serviceName || log.serviceName === serviceName)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    const offset = Number(query.get('offset') ?? 0);
-    const limit = Number(query.get('limit') ?? 100);
-    return { data: matched.slice(offset, offset + limit), total: matched.length } as T;
+    return pageMockRows(matched, endpoint) as T;
   }
   const uptimeSummaryMatch = endpoint.match(/^\/services\/([^/]+)\/metrics\/summary(?:\?|$)/);
   if (uptimeSummaryMatch) return (uptimeSummaryMatch[1] === 'uptime_mock_store' ? mockUptimeSummary : null) as T;
@@ -1120,8 +1124,7 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   // /agents/:agentId/services/:key/logs
   if (/^\/agents\/[^/]+\/services\/[^/]+\/logs/.test(endpoint))
   {
-    const visible = filterMockLogs(mockAgentServiceLogs, endpoint);
-    return { data: visible, total: visible.length } as unknown as T;
+    return pageMockRows(filterMockLogs(mockAgentServiceLogs, endpoint), endpoint) as unknown as T;
   }
   // /agents/:agentId/services/:key/request-stats
   if (/^\/agents\/[^/]+\/services\/[^/]+\/request-stats/.test(endpoint))
@@ -1140,8 +1143,7 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   if (/^\/agents\/[^/]+\/services\/shop%3Apayment-worker\/requests/.test(endpoint))
     return { data: [], total: 0 } as unknown as T;
   if (/^\/agents\/[^/]+\/services\/[^/]+\/requests/.test(endpoint)) {
-    const visible = filterMockRequests(mockAgentServiceRequests, endpoint);
-    return { data: visible, total: visible.length } as unknown as T;
+    return pageMockRows(filterMockRequests(mockAgentServiceRequests, endpoint), endpoint) as unknown as T;
   }
   // /agents/:agentId/services/:key/otel-metrics/points?name=...
   if (/^\/agents\/[^/]+\/services\/[^/]+\/otel-metrics\/points/.test(endpoint))

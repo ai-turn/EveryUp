@@ -3,7 +3,7 @@ import {
   ResponsiveContainer, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts';
-import { Button, MaterialIcon, SegmentedControl, SearchInput, type GlobalTimeRange } from '../../../components/common';
+import { Button, MaterialIcon, Pagination, SegmentedControl, SearchInput, type GlobalTimeRange } from '../../../components/common';
 import { CHART_INITIAL_DIMENSION, ChartTooltip, chartCardClass, getChartTheme, gridProps, xAxisProps, yAxisProps } from '../../../components/charts';
 import { api, type LogEntry, type LogHistogramBucket, type LogLevel } from '../../../services/api';
 import { getErrorMessage } from '../../../utils/errors';
@@ -61,6 +61,8 @@ const LOG_LEVELS: { value: LogLevel | ''; label: string }[] = [
 // 라이트 텍스트는 700단계 — 600은 자기 -100 배경 위에서 red 3.95 / sky 3.57로 AA 미달이었다.
 // Levels selectable for the OTLP ingest filter (what gets stored), in severity order.
 const INGEST_LEVELS: LogLevel[] = ['error', 'warn', 'info', 'debug', 'trace'];
+
+const PAGE_SIZE = 25;
 
 function rangeFrom(range: GlobalTimeRange): string {
   return new Date(Date.now() - RANGE_BUCKET[range].hours * 3600 * 1000).toISOString();
@@ -133,6 +135,7 @@ function ServiceLogsPanel(props: Props) {
   const [inputValue, setInputValue] = useState('');
   const [histogram, setHistogram] = useState<LogHistogramBucket[]>([]);
   const [live, setLive] = useState(false);
+  const [page, setPage] = useState(1);
 
   // Ingest filter: which levels are stored at OTLP ingest ([] = accept all).
   const [showSettings, setShowSettings] = useState(false);
@@ -173,10 +176,18 @@ function ServiceLogsPanel(props: Props) {
         level: level || undefined,
         search: search || undefined,
         from: rangeFrom(range),
+        limit: PAGE_SIZE,
+        offset: (page - 1) * PAGE_SIZE,
       };
       const res = directServiceId
         ? await api.getObservedServiceLogs(directServiceId, params)
         : await api.getAgentServiceLogs(agentId!, serviceKey!, params);
+      // The header range is a prop, so a narrower window can strand us past the
+      // last page; fall back to the first rather than showing an empty table.
+      if ((res?.data?.length ?? 0) === 0 && (res?.total ?? 0) > 0 && page > 1) {
+        setPage(1);
+        return;
+      }
       setLogs(res?.data ?? []);
       setTotal(res?.total ?? 0);
     } catch (err) {
@@ -184,7 +195,7 @@ function ServiceLogsPanel(props: Props) {
     } finally {
       setLoading(false);
     }
-  }, [agentId, directServiceId, serviceKey, refreshKey, level, search, range]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [agentId, directServiceId, serviceKey, refreshKey, level, search, range, page]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { fetch(); }, [fetch]);
 
@@ -217,9 +228,12 @@ function ServiceLogsPanel(props: Props) {
     return () => clearInterval(id);
   }, [live, fetch, fetchHistogram]);
 
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSearch(inputValue);
+    setPage(1);
   };
 
   return (
@@ -227,7 +241,7 @@ function ServiceLogsPanel(props: Props) {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Level filter */}
-        <SegmentedControl options={LOG_LEVELS} value={level} onChange={setLevel} ariaLabel="로그 레벨" />
+        <SegmentedControl options={LOG_LEVELS} value={level} onChange={v => { setLevel(v); setPage(1); }} ariaLabel="로그 레벨" />
 
         {/* Search */}
         <form onSubmit={handleSearchSubmit} className="flex-1 min-w-48 flex gap-1.5">
@@ -238,7 +252,7 @@ function ServiceLogsPanel(props: Props) {
             placeholder="메시지 검색..."
           />
           {search && (
-            <button type="button" onClick={() => { setSearch(''); setInputValue(''); }}
+            <button type="button" onClick={() => { setSearch(''); setInputValue(''); setPage(1); }}
               aria-label="검색어 지우기" title="검색어 지우기"
               className="px-2 py-1.5 rounded-lg text-xs text-slate-500 hover:text-red-500 transition-colors">
               <MaterialIcon name="close" className="text-sm" />
@@ -249,7 +263,7 @@ function ServiceLogsPanel(props: Props) {
         {/* Live tail: 5s silent polling while on */}
         <button
           type="button"
-          onClick={() => setLive(v => !v)}
+          onClick={() => { setLive(v => !v); setPage(1); }}
           title="5초마다 자동 갱신"
           className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${
             live
@@ -344,9 +358,9 @@ function ServiceLogsPanel(props: Props) {
       })()}
 
       {/* Count */}
-      {!loading && (
+      {!loading && total > 0 && (
         <p className="text-xs text-text-dim">
-          {total.toLocaleString()}건 중 {logs.length}건 표시
+          {total.toLocaleString()}건 중 {((page - 1) * PAGE_SIZE + 1).toLocaleString()}–{Math.min(page * PAGE_SIZE, total).toLocaleString()}
         </p>
       )}
 
@@ -367,6 +381,18 @@ function ServiceLogsPanel(props: Props) {
       ) : (
         <div className="divide-y divide-ui-border-soft border border-ui-border rounded-xl overflow-hidden">
           {logs.map(log => <LogRow key={log.id} log={log} onOpenTrace={setActiveTraceId} />)}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-end bg-ui-hover-soft/60 px-4 py-2.5">
+              {/* Live tail only ever shows the newest page, so leaving page 1 turns it off. */}
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onChange={p => { setPage(p); if (p > 1) setLive(false); }}
+                previousLabel="이전"
+                nextLabel="다음"
+              />
+            </div>
+          )}
         </div>
       )}
       {activeTraceId && (

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MaterialIcon, SearchInput, type GlobalTimeRange } from '../../../components/common';
+import { MaterialIcon, Pagination, SearchInput, type GlobalTimeRange } from '../../../components/common';
 import { api, type ApiRequest } from '../../../services/api';
 import { getErrorMessage } from '../../../utils/errors';
 import { activatable } from '../../../utils/a11y';
@@ -30,6 +30,8 @@ type RequestSource =
   | { kind: 'direct'; observedServiceId: string };
 
 const RANGE_HOURS: Record<GlobalTimeRange, number> = { '1h': 1, '6h': 6, '24h': 24 };
+
+const PAGE_SIZE = 25;
 
 function rangeFrom(range: GlobalTimeRange): string {
   return new Date(Date.now() - RANGE_HOURS[range] * 3_600_000).toISOString();
@@ -72,6 +74,7 @@ function ServiceRequestsPanel({
   const [errorsOnly, setErrorsOnly] = useState(false);
   const [search, setSearch] = useState('');
   const [inputValue, setInputValue] = useState('');
+  const [page, setPage] = useState(1);
   const sourceKind = source.kind;
   const agentId = source.kind === 'agent' ? source.agentId : '';
   const serviceKey = source.kind === 'agent' ? source.serviceKey : '';
@@ -86,10 +89,18 @@ function ServiceRequestsPanel({
         errorsOnly,
         search: search || undefined,
         from: rangeFrom(range),
+        limit: PAGE_SIZE,
+        offset: (page - 1) * PAGE_SIZE,
       };
       const res = sourceKind === 'direct'
         ? await api.getObservedServiceRequests(observedServiceId, params)
         : await api.getAgentServiceRequests(agentId, serviceKey, params);
+      // The header range is a prop, so a narrower window can strand us past the
+      // last page; fall back to the first rather than showing an empty list.
+      if ((res?.data?.length ?? 0) === 0 && (res?.total ?? 0) > 0 && page > 1) {
+        setPage(1);
+        return;
+      }
       setRequests(res?.data ?? []);
       setTotal(res?.total ?? 0);
     } catch (err) {
@@ -97,16 +108,18 @@ function ServiceRequestsPanel({
     } finally {
       setLoading(false);
     }
-  }, [agentId, errorsOnly, observedServiceId, range, refreshKey, search, serviceKey, sourceKind]);
+  }, [agentId, errorsOnly, observedServiceId, page, range, refreshKey, search, serviceKey, sourceKind]);
 
   useEffect(() => { fetch(); }, [fetch]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSearch(inputValue);
+    setPage(1);
   };
 
-  // KPI summary from current result set
+  // KPI summary — 전체 is the whole window, the rest describe the loaded page
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const errorCount = requests.filter(r => r.statusCode >= 400).length;
   const avgMs = requests.length > 0
     ? Math.round(requests.reduce((sum, r) => sum + r.durationMs, 0) / requests.length)
@@ -119,8 +132,8 @@ function ServiceRequestsPanel({
         <div className="grid grid-cols-3 gap-3">
           {[
             { label: '전체', value: `${total.toLocaleString()}건`, color: 'text-text-secondary' },
-            { label: '에러', value: `${errorCount}건`, color: errorCount > 0 ? 'text-status-error' : 'text-text-dim' },
-            { label: '평균', value: `${avgMs}ms`, color: 'text-text-secondary' },
+            { label: '에러 (이 페이지)', value: `${errorCount}건`, color: errorCount > 0 ? 'text-status-error' : 'text-text-dim' },
+            { label: '평균 (이 페이지)', value: `${avgMs}ms`, color: 'text-text-secondary' },
           ].map(kpi => (
             <div key={kpi.label} className="rounded-xl bg-bg-surface border border-ui-border px-4 py-3 text-center">
               <p className={`text-xl font-bold ${kpi.color}`}>{kpi.value}</p>
@@ -141,7 +154,7 @@ function ServiceRequestsPanel({
       <div className="flex flex-wrap items-center gap-3">
         {/* Error-only toggle */}
         <button
-          onClick={() => setErrorsOnly(v => !v)}
+          onClick={() => { setErrorsOnly(v => !v); setPage(1); }}
           className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
             errorsOnly
               ? 'bg-red-500 text-white'
@@ -161,7 +174,7 @@ function ServiceRequestsPanel({
             placeholder="경로 검색..."
           />
           {search && (
-            <button type="button" onClick={() => { setSearch(''); setInputValue(''); }}
+            <button type="button" onClick={() => { setSearch(''); setInputValue(''); setPage(1); }}
               aria-label="검색어 지우기" title="검색어 지우기"
               className="px-2 py-1.5 rounded-lg text-xs text-slate-500 hover:text-red-500 transition-colors">
               <MaterialIcon name="close" className="text-sm" />
@@ -247,6 +260,14 @@ function ServiceRequestsPanel({
               </div>
             );
           })}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between bg-ui-hover-soft/60 px-4 py-2.5">
+              <p className="text-xs text-text-dim">
+                {total.toLocaleString()}건 중 {((page - 1) * PAGE_SIZE + 1).toLocaleString()}–{Math.min(page * PAGE_SIZE, total).toLocaleString()}
+              </p>
+              <Pagination page={page} totalPages={totalPages} onChange={setPage} previousLabel="이전" nextLabel="다음" />
+            </div>
+          )}
         </div>
       )}
       {activeTraceId && (
