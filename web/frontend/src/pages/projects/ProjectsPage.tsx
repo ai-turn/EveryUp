@@ -35,7 +35,15 @@ function ProjectDialog({ project, onClose, onSave }: {
   };
 
   return (
-    <dialog ref={dialogRef} aria-labelledby="project-dialog-title" onCancel={event => { event.preventDefault(); if (!saving) onClose(); }} onClick={event => { if (event.target === event.currentTarget && !saving) onClose(); }} className={`m-auto w-full max-w-md overflow-hidden rounded-xl border border-ui-border bg-bg-surface shadow-2xl ${SCRIM_MODAL_DIALOG}`}>
+    // Backdrop click is supplemental; Escape and the labelled cancel button are keyboard equivalents.
+    // react-doctor-disable-next-line no-noninteractive-element-interactions
+    <dialog
+      ref={dialogRef}
+      aria-labelledby="project-dialog-title"
+      onCancel={event => { event.preventDefault(); if (!saving) onClose(); }}
+      onClick={event => { if (event.target === event.currentTarget && !saving) onClose(); }}
+      className={`m-auto w-full max-w-md overflow-hidden rounded-xl border border-ui-border bg-bg-surface shadow-2xl ${SCRIM_MODAL_DIALOG}`}
+    >
       <form onSubmit={submit}>
         <div className="border-b border-ui-border px-6 py-4"><h2 id="project-dialog-title" className="text-lg font-bold text-text-base">{t(project ? 'Project 수정' : 'Project 추가')}</h2></div>
         <div className="space-y-4 p-6">

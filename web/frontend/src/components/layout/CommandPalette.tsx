@@ -98,6 +98,8 @@ export function CommandPalette() {
   };
 
   const onInputKeyDown = (e: React.KeyboardEvent) => {
+    if (e.nativeEvent.isComposing) return;
+
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       setIndex((i) => Math.min(i + 1, filtered.length - 1));
@@ -137,6 +139,7 @@ export function CommandPalette() {
             value={query}
             onChange={(e) => { setQuery(e.target.value); setIndex(0); }}
             onKeyDown={onInputKeyDown}
+            aria-label={t('검색')}
             placeholder={t('Docker 환경, 서비스, 페이지 검색...')}
             className="flex-1 py-3.5 text-sm bg-transparent outline-none text-text-base placeholder-slate-400 dark:placeholder-text-dim-dark"
           />

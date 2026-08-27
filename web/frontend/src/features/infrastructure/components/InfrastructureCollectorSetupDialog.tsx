@@ -42,6 +42,8 @@ export function InfrastructureCollectorSetupDialog({
   };
 
   return (
+    // Backdrop click is supplemental; Escape and the labelled close/cancel buttons are keyboard equivalents.
+    // react-doctor-disable-next-line no-noninteractive-element-interactions
     <dialog
       ref={ref}
       aria-labelledby="infrastructure-collector-dialog-title"

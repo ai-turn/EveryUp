@@ -68,6 +68,8 @@ export function UptimeMonitorDialog({
   };
 
   return (
+    // Backdrop click is supplemental; Escape and the labelled close/cancel buttons are keyboard equivalents.
+    // react-doctor-disable-next-line no-noninteractive-element-interactions
     <dialog
       ref={dialogRef}
       aria-labelledby="uptime-monitor-dialog-title"
