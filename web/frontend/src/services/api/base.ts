@@ -1,5 +1,4 @@
 import { env } from '../../config/env';
-import { mockRouter } from '../mockRouter';
 import { ApiError } from '../../utils/errors';
 
 export interface ApiResponse<T> {
@@ -12,7 +11,10 @@ export interface ApiResponse<T> {
 }
 
 export async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  if (env.useMock) return mockRouter<T>(endpoint, options?.method, options?.body);
+  if (env.useMock) {
+    const { mockRouter } = await import('../mockRouter');
+    return mockRouter<T>(endpoint, options?.method, options?.body);
+  }
 
   const response = await fetch(`${env.apiBaseUrl}${endpoint}`, {
     credentials: 'include',
