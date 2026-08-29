@@ -5,6 +5,8 @@
   "24시간 체크": "Checks in 24 hours",
   "90일 장애": "Incident days in 90 days",
   "{count}일": "{count} days",
+  "개 연결 확인 필요": " connections need attention",
+  "개 장애 신호": " incident signals",
   "30일 업타임": "30-day uptime",
   "90일 업타임": "90-day uptime",
   "30일 실패": "Failures in 30 days",

@@ -217,7 +217,7 @@ bg-bg-surface border border-ui-border rounded-xl
 |----------|-------|------|
 | **`Button`** | `variant` `size` + 네이티브 button | 라벨 있는 액션 버튼의 **유일한** 진입점 |
 | **`Input`** | `invalid?` `warn?` `mono?` | 폼 입력 (§6) |
-| **`Select`** | 네이티브만 | 폼 셀렉트 (§6) |
+| **`Select`** | 네이티브 `option` children + 기존 select props | 앱 스타일 listbox (§6) |
 | **`SearchInput`** | `wrapperClassName?` | 아이콘 붙은 검색창 (§6) |
 | **`StatusBadge`** | `healthy: boolean` | 정상/장애 보더칩 (§5.1) |
 | **`CollectionStatusBadge`** | `collecting` \| `partial` \| `delayed` \| `not-configured` | 수집 신선도·설정 상태. 서비스 건강과 별도 축 (§5.1) |
@@ -345,12 +345,12 @@ h-2.5 w-2.5 rounded-full bg-status-{role}
 | 컴포넌트 | props | 용도 |
 |----------|-------|------|
 | **`Input`** | `invalid?` `warn?` `mono?` + 네이티브 | 폼 입력 전부 |
-| **`Select`** | 네이티브만 | 폼 셀렉트 (Input과 같은 셸) |
+| **`Select`** | 네이티브 `option` children + 기존 select props | 폼 셀렉트 (Input과 같은 셸) |
 | **`SearchInput`** | `wrapperClassName?` + 네이티브 | 아이콘 붙은 검색창 |
 
 **클래스를 직접 쓰지 않는다.** Button과 같은 규칙이다.
 
-셸은 `Input.tsx`가 `FIELD_SHELL`·`FIELD_HEIGHT`로 export한다 — `Select`와 텍스트영역이 같은 상수를 쓴다. **높이는 `h-10`으로 고정**한다(Button과 같은 이유, `px/py` 조합 금지): `<select>`는 `line-height`를 `normal`로 강제해 `leading-*`이 먹지 않으므로, py로 맞추면 input보다 2px 낮게 렌더된다. 높이가 자유로워야 하는 텍스트영역만 `FIELD_SHELL`에 자기 `py`를 덧붙인다.
+셸은 `Input.tsx`가 `FIELD_SHELL`·`FIELD_HEIGHT`로 export한다 — `Select`와 텍스트영역이 같은 상수를 쓴다. **높이는 `h-10`으로 고정**한다(Button과 같은 이유, `px/py` 조합 금지). `Select`는 보이는 trigger + portal listbox를 렌더하고, 네이티브 `<select>`는 폼 값과 기존 `onChange` 계약을 유지하는 숨김 요소다. 따라서 브라우저의 기본 option 메뉴가 노출되지 않는다. 높이가 자유로워야 하는 텍스트영역만 `FIELD_SHELL`에 자기 `py`를 덧붙인다.
 
 **상태 표현**
 - `invalid` — 검증 실패. 붉은 보더 + `aria-invalid`. 메시지는 필드 아래 `text-xs text-red-500`

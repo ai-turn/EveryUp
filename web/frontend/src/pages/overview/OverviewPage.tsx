@@ -188,8 +188,8 @@ export function OverviewPage() {
       ) : (
         <>
           <section aria-label={t('수집 상태 요약')} className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <SummaryCard icon="sensors" label={t('Docker 수집기')} value={agents.length} detail={reportingAgents.length === agents.length ? t('모두 데이터 유입 중') : t('{count}개 연결 확인 필요', { count: staleAgents.length })} tone={reportingAgents.length === agents.length ? 'healthy' : 'warn'} />
-            <SummaryCard icon="dns" label={t('서비스')} value={services.length + monitors.length + observedServices.length} detail={unhealthyServices.length + unhealthyMonitors.length === 0 ? t('현재 건강 상태 이상 없음') : t('{count}개 장애 신호', { count: unhealthyServices.length + unhealthyMonitors.length })} tone={unhealthyServices.length + unhealthyMonitors.length === 0 ? 'healthy' : 'error'} />
+            <SummaryCard icon="sensors" label={t('Docker 수집기')} value={agents.length} detail={reportingAgents.length === agents.length ? t('모두 데이터 유입 중') : `${staleAgents.length}${t('개 연결 확인 필요')}`} tone={reportingAgents.length === agents.length ? 'healthy' : 'warn'} />
+            <SummaryCard icon="dns" label={t('서비스')} value={services.length + monitors.length + observedServices.length} detail={unhealthyServices.length + unhealthyMonitors.length === 0 ? t('현재 건강 상태 이상 없음') : `${unhealthyServices.length + unhealthyMonitors.length}${t('개 장애 신호')}`} tone={unhealthyServices.length + unhealthyMonitors.length === 0 ? 'healthy' : 'error'} />
             <SummaryCard icon="account_tree" label="Projects" value={projects.length} detail={projects.length > 0 ? t('대상을 운영 단위로 묶고 있습니다') : t('필요할 때 대상들을 묶어 보세요')} tone={projects.length > 0 ? 'healthy' : 'idle'} />
             <SummaryCard icon="sensors_off" label={t('수집 확인 필요')} value={connectionIssues} detail={connectionIssues === 0 ? t('모든 연결이 최신 상태입니다') : t('지연 또는 미확인 대상을 확인하세요')} tone={connectionIssues === 0 ? 'healthy' : 'warn'} />
           </section>

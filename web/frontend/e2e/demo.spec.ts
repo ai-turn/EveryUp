@@ -7,6 +7,7 @@ test.describe('live demo', () => {
     await expect(page.getByRole('complementary').getByText('Live Demo', { exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { level: 1, name: '모니터링 개요' })).toBeVisible();
     await expect(page.getByRole('region', { name: '수집 상태 요약' })).toBeVisible();
+    await expect(page.getByText('1개 장애 신호')).toBeVisible();
     await expect(page.getByRole('heading', { name: '현재 확인 필요' })).toBeVisible();
   });
 
@@ -28,7 +29,7 @@ test.describe('live demo', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('./');
 
-    await expect(page.locator('select[aria-label="데모 시나리오"]:visible')).toBeVisible();
+    await expect(page.getByRole('button', { name: '데모 시나리오' })).toBeVisible();
     await expect(page.getByRole('link', { name: '개요', exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Projects', exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: '알림', exact: true })).toBeVisible();
@@ -38,7 +39,9 @@ test.describe('live demo', () => {
 
   test('empty scenario explains how to start monitoring', async ({ page }) => {
     await page.goto('./');
-    await page.locator('select[aria-label="데모 시나리오"]:visible').selectOption('empty');
+    await page.getByRole('button', { name: '데모 시나리오' }).click();
+    await expect(page.getByRole('listbox')).toBeVisible();
+    await page.getByRole('option', { name: '첫 시작' }).click();
 
     await expect(page.getByText('아직 모니터링 대상이 없습니다')).toBeVisible();
     await expect(page.locator('section').filter({ hasText: '아직 모니터링 대상이 없습니다' }).getByRole('button', { name: '모니터링 시작', exact: true })).toBeVisible();
@@ -46,14 +49,16 @@ test.describe('live demo', () => {
 
   test('normal scenario shows that no action is needed', async ({ page }) => {
     await page.goto('./');
-    await page.locator('select[aria-label="데모 시나리오"]:visible').selectOption('normal');
+    await page.getByRole('button', { name: '데모 시나리오' }).click();
+    await page.getByRole('option', { name: '정상 운영' }).click();
 
     await expect(page.getByText('현재 확인이 필요한 이상이 없습니다')).toBeVisible();
   });
 
   test('partial failure preserves successful overview regions', async ({ page }) => {
     await page.goto('./');
-    await page.locator('select[aria-label="데모 시나리오"]:visible').selectOption('partial-failure');
+    await page.getByRole('button', { name: '데모 시나리오' }).click();
+    await page.getByRole('option', { name: '부분 수집 실패' }).click();
 
     await expect(page.getByText('일부 모니터링 정보를 불러오지 못했습니다')).toBeVisible();
     await expect(page.getByRole('region', { name: '수집 상태 요약' })).toBeVisible();
