@@ -117,33 +117,36 @@ export function LogsPage() {
     <div>
       <PageHeader title={t('로그')} subtitle={t('Docker 수집기 또는 직접 OpenTelemetry 연결에서 수집한 최신 로그입니다.')}>
         <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
-          <Select
-            value={serviceFilter}
-            onChange={event => { setServiceFilter(event.target.value); setPage(1); }}
-            aria-label={t('서비스 필터')}
-            className="w-full sm:w-48"
-          >
-            <option value="">{t('전체 서비스')}</option>
-            {serviceNames.map(name => <option key={name} value={name}>{name}</option>)}
-          </Select>
-          <form onSubmit={event => { event.preventDefault(); setSearch(inputValue); setPage(1); }} className="flex w-full gap-1.5 sm:w-72">
-            <SearchInput
-              value={inputValue}
-              onChange={event => setInputValue(event.target.value)}
-              placeholder={t('메시지 검색 후 Enter')}
-              aria-label={t('로그 검색')}
-              wrapperClassName="flex-1"
-            />
-            {search && (
-              <Button type="button" variant="ghost" onClick={() => { setSearch(''); setInputValue(''); setPage(1); }} aria-label={t('검색어 지우기')}>
-                <MaterialIcon name="close" />
-              </Button>
-            )}
-          </form>
           <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />{t('Logs 직접 추가')}</Button>
           <CapabilityAgentSetup capability="logs" buttonVariant="secondary" />
         </div>
       </PageHeader>
+
+      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <Select
+          value={serviceFilter}
+          onChange={event => { setServiceFilter(event.target.value); setPage(1); }}
+          aria-label={t('서비스 필터')}
+          className="w-full sm:w-48"
+        >
+          <option value="">{t('전체 서비스')}</option>
+          {serviceNames.map(name => <option key={name} value={name}>{name}</option>)}
+        </Select>
+        <form onSubmit={event => { event.preventDefault(); setSearch(inputValue); setPage(1); }} className="flex w-full gap-1.5 sm:w-72">
+          <SearchInput
+            value={inputValue}
+            onChange={event => setInputValue(event.target.value)}
+            placeholder={t('메시지 검색 후 Enter')}
+            aria-label={t('로그 검색')}
+            wrapperClassName="flex-1"
+          />
+          {search && (
+            <Button type="button" variant="ghost" onClick={() => { setSearch(''); setInputValue(''); setPage(1); }} aria-label={t('검색어 지우기')}>
+              <MaterialIcon name="close" />
+            </Button>
+          )}
+        </form>
+      </div>
 
       {!loading && directServices.length > 0 && (
         <section className="mb-6">

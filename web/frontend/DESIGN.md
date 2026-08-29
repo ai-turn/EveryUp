@@ -227,6 +227,7 @@ bg-bg-surface border border-ui-border rounded-xl
 | **`ConfirmDialog`** | `isOpen` `title` `message` `variant` `icon` … | `window.confirm()` 금지 — 항상 이것 |
 | **`EmptyState`** | `icon` `title` `description?` `action?` | 빈 목록의 정본 |
 | **`PageHeader`** | `title` `subtitle?` `children` | h1 등급 고정 |
+| **`DetailActionToolbar`** | `controls` `actions` | 상세의 조회 제어·변경 액션을 반응형으로 분리 |
 | **`MaterialIcon`** | `name` `className` `style` | 로컬 정적 SVG |
 | **`CopyButton`** | `onCopy` `title` `className` … | 3초 완료 피드백 |
 
@@ -247,6 +248,13 @@ bg-bg-surface border border-ui-border rounded-xl
 
 크기는 **높이로 고정**한다. `px/py` 조합으로 높이를 만들지 않는다 — 나란히 놓았을 때 밑변이 어긋난다.
 `p-2 rounded-lg` + 아이콘 하나짜리 **아이콘 전용 토글 버튼은 이 컴포넌트 대상이 아니다**.
+
+**액션 앵커**
+
+- 페이지의 주 액션은 `PageHeader`의 `children`에 둔다. `md` 이상에서는 제목 우측, 그 미만에서는 제목 아래가 고정 위치다.
+- 검색·필터는 페이지 헤더에 섞지 않고 그 아래의 보조 툴바에 둔다. 모바일에서는 툴바가 CTA보다 앞서지 않는다.
+- 상세 화면은 `DetailActionToolbar`로 조회 제어와 변경 액션을 분리한다. 모바일에서는 두 그룹이 제목 아래에서 차례로 쌓이고, `md` 이상에서는 양 끝에 둔다.
+- 페이지·상세 헤더의 아이콘 전용 액션은 `h-10 w-10`이다. `h-8 w-8`은 테이블 행처럼 조밀한 맥락에서만 쓴다.
 
 **MaterialIcon 함정** — `iconMarkup` 맵에 없는 `name`은 조용히 `help_outline`(`?`)로 폴백한다. 콘솔 경고도 없다. 신규 아이콘은 반드시 [`materialIconPaths.ts`](src/components/common/materialIconPaths.ts)에 path를 추가한다. 크기는 `text-*` 스케일로 준다(`text-4xl` = EmptyState 아이콘, `text-3xl` = 인라인 스피너).
 

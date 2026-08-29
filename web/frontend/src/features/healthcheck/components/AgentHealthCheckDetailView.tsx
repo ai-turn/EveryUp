@@ -71,7 +71,7 @@ function RefreshButton({ onRefresh }: { onRefresh: () => void }) {
     <button
       onClick={handleRefresh}
       aria-label="새로고침" title="새로고침"
-      className="p-2 rounded-lg text-slate-400 hover:text-text-base hover:bg-ui-hover transition-colors"
+      className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-text-muted hover:text-text-base hover:bg-ui-hover transition-colors"
     >
       <MaterialIcon name="refresh" className={`text-lg ${spinning ? 'animate-spin' : ''}`} />
     </button>

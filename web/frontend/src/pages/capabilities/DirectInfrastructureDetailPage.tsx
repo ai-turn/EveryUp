@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import {
   Button,
   ConfirmDialog,
+  DetailActionToolbar,
   EmptyState,
   MaterialIcon,
   PageHeader,
@@ -108,16 +109,22 @@ export function DirectInfrastructureDetailPage() {
 
   return (
     <div>
-      <PageHeader title={resource.name} subtitle={t('표준 OpenTelemetry Collector hostmetrics 리소스입니다.')}>
-        <div className="flex flex-wrap items-center gap-2">
+      <PageHeader title={resource.name} subtitle={t('표준 OpenTelemetry Collector hostmetrics 리소스입니다.')} />
+      <DetailActionToolbar
+        controls={
+          <>
           <TimeRangePicker value={range} onChange={setRange} />
           <Button variant="secondary" onClick={() => setRefreshKey(value => value + 1)}><MaterialIcon name="refresh" />{t('새로고침')}</Button>
+          </>
+        }
+        actions={
+          <>
           <Button variant="secondary" onClick={() => navigate('/alerts')}><MaterialIcon name="notifications" />{t('알림 규칙')}</Button>
-          <span className="mx-1 hidden h-5 w-px bg-ui-border sm:block" aria-hidden="true" />
           {resource.isActive && <Button variant="ghost" onClick={() => setConfirmAction('revoke')}><MaterialIcon name="block" />{t('연결 중지')}</Button>}
           <Button variant="ghost" className="text-status-error hover:text-status-error" onClick={() => setConfirmAction('delete')}><MaterialIcon name="delete" />{t('삭제')}</Button>
-        </div>
-      </PageHeader>
+          </>
+        }
+      />
 
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <section className="rounded-xl border border-ui-border bg-bg-surface p-5 lg:col-span-2">

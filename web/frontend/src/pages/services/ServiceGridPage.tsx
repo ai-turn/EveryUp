@@ -5,6 +5,7 @@ import { Button } from '../../components/common/Button';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { EmptyState } from '../../components/common/EmptyState';
 import { MaterialIcon } from '../../components/common/MaterialIcon';
+import { PageHeader } from '../../components/common/PageHeader';
 import { CollectionStatusBadge } from '../../components/common/CollectionStatusBadge';
 import { SearchInput } from '../../components/common/SearchInput';
 import { api, type AgentOverview, type AgentServiceFlat, type ConnectedAgent } from '../../services/api';
@@ -196,20 +197,18 @@ export function ServiceGridPage() {
   const visiblePending = pendingAgents.filter((a) => !search || a.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-text-base">{t('Docker 환경')}</h1>
-          <p className="text-sm text-text-muted">
-            {t('연결된 Docker 환경과 모니터링 서비스 현황')}
-          </p>
-        </div>
-        <Button onClick={() => setShowAddModal(true)}>
+    <div>
+      <PageHeader
+        title={t('Docker 환경')}
+        subtitle={t('연결된 Docker 환경과 모니터링 서비스 현황')}
+      >
+        <Button className="w-full md:w-auto" onClick={() => setShowAddModal(true)}>
           <MaterialIcon name="add" className="text-base" />
           {t('Docker 연결')}
         </Button>
-      </div>
+      </PageHeader>
+
+      <div className="space-y-5">
 
       {/* Search */}
       <SearchInput
@@ -323,6 +322,7 @@ export function ServiceGridPage() {
           onRotated={load}
         />
       )}
+      </div>
     </div>
   );
 }

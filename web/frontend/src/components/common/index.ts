@@ -4,6 +4,7 @@ export { Textarea } from './Textarea';
 export { Select } from './Select';
 export { SearchInput } from './SearchInput';
 export { PageHeader } from './PageHeader';
+export { DetailActionToolbar } from './DetailActionToolbar';
 export { MaterialIcon } from './MaterialIcon';
 export { CopyButton } from './CopyButton';
 export { StatusBadge } from './StatusBadge';

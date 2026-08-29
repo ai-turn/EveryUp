@@ -78,13 +78,13 @@ export function AlertsMobileView({
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4">
         <div>
           <h1 className="text-xl font-bold text-text-base">{t('alerts.title')}</h1>
           <p className="text-sm text-text-muted mt-0.5">{t('alerts.subtitle')}</p>
         </div>
         {activeTab === 'channels' && (
-          <Button size="sm" onClick={onAddChannel}>
+          <Button className="w-full" onClick={onAddChannel}>
             <MaterialIcon name="add" className="text-base" />
             {t('alerts.addChannel')}
           </Button>

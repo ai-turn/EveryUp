@@ -265,7 +265,7 @@ export function ProjectDetailPage() {
       )}
 
       {/* Project header + actions */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="space-y-1 min-w-0">
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl font-bold text-text-base truncate">{agentName}</h1>
@@ -284,7 +284,7 @@ export function ProjectDetailPage() {
             )}
           </p>
         </div>
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex self-end items-center gap-1 shrink-0 md:self-auto">
           <button
             onClick={handleRefresh}
             aria-label="새로고침"

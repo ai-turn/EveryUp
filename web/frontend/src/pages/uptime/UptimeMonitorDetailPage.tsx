@@ -198,7 +198,7 @@ export function UptimeMonitorDetailPage() {
         <Link to="/uptime" className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-text-muted transition-colors hover:text-primary">
           <MaterialIcon name="arrow_back" className="text-lg" />{t('업타임')}
         </Link>
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2.5">
               <h1 className="truncate text-2xl font-bold text-text-base">{monitor.name}</h1>
@@ -207,8 +207,16 @@ export function UptimeMonitorDetailPage() {
             <p className="mt-1 truncate font-mono text-sm text-text-muted">{target}</p>
             <p className="mt-1 text-xs text-text-dim">{monitor.type.toUpperCase()} · {monitor.interval}{t('초마다 확인')} · {t('직접 설정')}</p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="ghost" aria-label={t('새로고침')} onClick={() => void load()}><MaterialIcon name="refresh" /></Button>
+          <div className="flex flex-wrap gap-2 md:shrink-0">
+            <button
+              type="button"
+              aria-label={t('새로고침')}
+              title={t('새로고침')}
+              onClick={() => void load()}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-ui-hover hover:text-text-base"
+            >
+              <MaterialIcon name="refresh" />
+            </button>
             <Button variant="secondary" disabled={processing} onClick={() => void toggleActive()}>{t(monitor.isActive ? '일시정지' : '재개')}</Button>
             <Button variant="secondary" onClick={() => setEditing(true)}><MaterialIcon name="edit" />{t('수정')}</Button>
             <Button variant="ghost" onClick={() => setDeleting(true)}><MaterialIcon name="delete" className="text-status-error" />{t('삭제')}</Button>
