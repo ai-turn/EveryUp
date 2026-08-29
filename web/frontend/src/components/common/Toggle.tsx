@@ -17,7 +17,7 @@ export function Toggle({ checked, onChange, disabled = false, title, ariaLabel }
       disabled={disabled}
       title={title}
       className={`relative w-9 h-5 shrink-0 rounded-full transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer ${
-        checked ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'
+        checked ? 'bg-primary' : 'bg-ui-active'
       }`}
     >
       <span

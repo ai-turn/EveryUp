@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
-import { Button, MaterialIcon } from '../../../components/common';
+import { Button, MaterialIcon, Toggle } from '../../../components/common';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { getChannelStyle, getChannelTypeLabel } from '../utils/channelMeta';
 import { ChannelHealthMeta } from './ChannelHealthMeta';
@@ -25,6 +25,11 @@ interface AlertsMobileViewProps {
   onDeleteChannel: (id: string) => void;
   onToggleChannel: (id: string) => void;
   onTestChannel: (id: string) => void;
+  onToggleRule: (id: string) => void;
+  togglingIds: Set<string>;
+  testingIds: Set<string>;
+  errors: { channels: string | null; rules: string | null; history: string | null };
+  onRetry: { channels: () => void; rules: () => void; history: () => void };
 }
 
 const severityColors: Record<string, { text: string; bg: string }> = {
@@ -55,6 +60,11 @@ export function AlertsMobileView({
   onDeleteChannel,
   onToggleChannel,
   onTestChannel,
+  onToggleRule,
+  togglingIds,
+  testingIds,
+  errors,
+  onRetry,
 }: AlertsMobileViewProps) {
   const { t, i18n } = useTranslation(['alerts', 'common']);
   const dateLocale = i18n.language === 'ko' ? ko : enUS;
@@ -106,12 +116,13 @@ export function AlertsMobileView({
       )}
 
       {/* Tab Bar */}
-      <div role="tablist" aria-label={t('alerts.title')} className="flex bg-slate-100 dark:bg-bg-surface-dark/50 p-1 rounded-xl">
+      <div role="tablist" aria-label={t('alerts.title')} className="flex rounded-xl border border-ui-border bg-ui-hover p-1">
         {tabs.map(tab => (
           <button
             key={tab.key}
             role="tab"
             aria-selected={activeTab === tab.key}
+            aria-controls={`alerts-mobile-panel-${tab.key}`}
             onClick={() => setActiveTab(tab.key)}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-bold transition-all ${
               activeTab === tab.key
@@ -132,7 +143,8 @@ export function AlertsMobileView({
 
       {/* Channels Tab */}
       {activeTab === 'channels' && (
-        <div className="space-y-3">
+        <div id="alerts-mobile-panel-channels" role="tabpanel" className="space-y-3">
+          {errors.channels && <InlineError message={errors.channels} onRetry={onRetry.channels} />}
           {isLoading ? (
             [1, 2].map(i => (
               <div key={i} className="h-20 rounded-xl bg-ui-hover animate-pulse" />
@@ -173,38 +185,27 @@ export function AlertsMobileView({
                       </div>
                       <p className={`text-sm font-semibold ${meta.text}`}>{getChannelTypeLabel(channel.type, t)}</p>
                     </div>
-                    <button
-                      onClick={() => onToggleChannel(channel.id)}
-                      role="switch"
-                      aria-checked={channel.isEnabled}
-                      aria-label={channel.name}
-                      className={`relative w-11 h-6 rounded-full transition-colors ${channel.isEnabled ? 'bg-primary' : 'bg-slate-400'}`}
-                    >
-                      <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${channel.isEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
-                    </button>
+                    <Toggle checked={channel.isEnabled} onChange={() => onToggleChannel(channel.id)} disabled={togglingIds.has(channel.id)} ariaLabel={`${channel.name} ${channel.isEnabled ? t('alerts.disable') : t('alerts.enable')}`} />
                   </div>
                   <div className="mb-3 pb-3 border-b border-ui-border-soft/50">
                     <ChannelHealthMeta health={channelHealth[channel.id]} compact />
                   </div>
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => onTestChannel(channel.id)}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary text-sm font-bold active:scale-95 transition-transform"
-                    >
+                    <Button variant="secondary" size="sm" onClick={() => onTestChannel(channel.id)} disabled={!channel.isEnabled || testingIds.has(channel.id)} className="flex-1">
                       <MaterialIcon name="send" className="text-sm" />
-                      {t('alerts.test')}
-                    </button>
+                      {testingIds.has(channel.id) ? t('전송 중') : t('alerts.test')}
+                    </Button>
                     <button
                       onClick={() => onEditChannel(channel)}
                       aria-label={t('alerts.channels.edit', { defaultValue: '채널 편집' })}
-                      className="flex items-center justify-center p-2 rounded-lg bg-ui-hover text-slate-500 active:scale-95 transition-transform"
+                      className="flex h-10 w-10 items-center justify-center rounded-lg bg-ui-hover text-text-muted transition-colors active:scale-95"
                     >
                       <MaterialIcon name="edit" className="text-base" />
                     </button>
                     <button
                       onClick={() => onDeleteChannel(channel.id)}
                       aria-label={t('alerts.channels.delete', { defaultValue: '채널 삭제' })}
-                      className="flex items-center justify-center p-2 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-500 active:scale-95 transition-transform"
+                      className="flex h-10 w-10 items-center justify-center rounded-lg text-status-error transition-colors hover:bg-ui-hover active:scale-95"
                     >
                       <MaterialIcon name="delete" className="text-base" />
                     </button>
@@ -218,7 +219,8 @@ export function AlertsMobileView({
 
       {/* Rules Tab */}
       {activeTab === 'rules' && (
-        <div className="space-y-2">
+        <div id="alerts-mobile-panel-rules" role="tabpanel" className="space-y-2">
+          {errors.rules && <InlineError message={errors.rules} onRetry={onRetry.rules} />}
           {rulesLoading ? (
             [1, 2].map(i => (
               <div key={i} className="h-16 rounded-xl bg-ui-hover animate-pulse" />
@@ -250,12 +252,9 @@ export function AlertsMobileView({
                         {rule.severity} · {rule.metric} {rule.operator} {rule.threshold}
                       </p>
                     </div>
-                    {rule.isEnabled ? (
-                      <span className="w-2 h-2 rounded-full bg-lime-500 shrink-0" />
-                    ) : (
-                      <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
-                    )}
+                    <Toggle checked={rule.isEnabled} onChange={() => onToggleRule(rule.id)} disabled={togglingIds.has(rule.id)} ariaLabel={`${rule.name} ${rule.isEnabled ? t('alerts.disable') : t('alerts.enable')}`} />
                   </div>
+                  <p className="mt-2 text-xs text-text-muted">{rule.isEnabled ? t('활성화됨') : t('비활성화됨')}</p>
                 </div>
               );
             })
@@ -265,7 +264,8 @@ export function AlertsMobileView({
 
       {/* History Tab */}
       {activeTab === 'history' && (
-        <div className="space-y-2">
+        <div id="alerts-mobile-panel-history" role="tabpanel" className="space-y-2">
+          {errors.history && <InlineError message={errors.history} onRetry={onRetry.history} />}
           {historyLoading ? (
             [1, 2, 3].map(i => (
               <div key={i} className="h-16 rounded-xl bg-ui-hover animate-pulse" />
@@ -310,6 +310,17 @@ export function AlertsMobileView({
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function InlineError({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const { t } = useTranslation('common');
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-ui-border bg-bg-surface p-3" role="alert">
+      <MaterialIcon name="sync_problem" className="mt-0.5 text-lg text-status-warn" />
+      <div className="min-w-0 flex-1"><p className="text-sm font-semibold text-text-base">{t('불러오지 못했습니다')}</p><p className="mt-0.5 truncate text-xs text-text-muted">{message}</p></div>
+      <Button size="sm" variant="secondary" onClick={onRetry}>{t('다시 시도')}</Button>
     </div>
   );
 }

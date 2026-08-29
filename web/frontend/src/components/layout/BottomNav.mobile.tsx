@@ -3,10 +3,9 @@ import { useTranslate } from '@tolgee/react';
 import { MaterialIcon } from '../common';
 
 const navItems = [
-  { icon: 'grid_view', label: 'Docker', href: '/' },
-  { icon: 'monitor_heart', label: '업타임', href: '/uptime' },
-  { icon: 'article', label: '로그', href: '/logs' },
-  { icon: 'memory', label: '인프라', href: '/infrastructure' },
+  { icon: 'dashboard', label: '개요', href: '/' },
+  { icon: 'folder_open', label: 'Projects', href: '/projects' },
+  { icon: 'notifications', label: '알림', href: '/alerts' },
   { icon: 'apps', label: '더보기', href: '/more' },
 ];
 
@@ -15,16 +14,15 @@ export function BottomNavMobile() {
   const { t } = useTranslate();
 
   function isActive(href: string) {
-    if (href === '/') {
-      return location.pathname === '/' || location.pathname.startsWith('/agents') || location.pathname.startsWith('/projects') || location.pathname.startsWith('/services');
-    }
+    if (href === '/') return location.pathname === '/';
+    if (href === '/more') return ['/environments', '/uptime', '/logs', '/infrastructure', '/api', '/metrics', '/settings'].some((prefix) => location.pathname.startsWith(prefix));
     return location.pathname.startsWith(href);
   }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-30 flex items-stretch border-t border-ui-border bg-bg-surface lg:hidden" style={{ height: 'calc(4rem + env(safe-area-inset-bottom, 0px))', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
       {navItems.map((item) => (
-        <Link key={item.href} to={item.href} className={`relative flex flex-1 flex-col items-center justify-center gap-0.5 transition-colors ${isActive(item.href) ? 'text-primary' : 'text-text-dim'}`}>
+        <Link key={item.href} to={item.href} aria-current={isActive(item.href) ? 'page' : undefined} className={`relative flex flex-1 flex-col items-center justify-center gap-0.5 transition-colors ${isActive(item.href) ? 'text-primary' : 'text-text-dim'}`}>
           <MaterialIcon name={item.icon} className="text-2xl" />
           <span className="whitespace-nowrap text-sm font-medium">{t(item.label)}</span>
           {isActive(item.href) && <span className="absolute top-1.5 h-1 w-1 rounded-full bg-primary" />}

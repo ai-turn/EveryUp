@@ -23,19 +23,21 @@ export function SettingsPage() {
   const [collectInterval, setCollectInterval] = useState(30);
   const [consecutiveFailures, setConsecutiveFailures] = useState(3);
   const [backendLoading, setBackendLoading] = useState(true);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     const load = async () => {
+      setSettingsError(null);
       try {
         const settings = await api.getSettings();
         setMetricsRetention(settings.retention.metrics);
         setLogsRetention(settings.retention.logs);
         setCollectInterval(settings.system.collectInterval);
         setConsecutiveFailures(settings.alerts.consecutiveFailures);
-      } catch {
-        // Backend unreachable in mock/dev mode
+      } catch (error) {
+        setSettingsError(getErrorMessage(error));
       } finally {
         setBackendLoading(false);
       }
@@ -103,6 +105,7 @@ export function SettingsPage() {
     collectInterval,
     consecutiveFailures,
     backendLoading,
+    settingsError,
     showResetConfirm,
     resetting,
     onLanguageChange: handleLanguageChange,
@@ -114,6 +117,19 @@ export function SettingsPage() {
     onResetClick: () => !env.useMock && setShowResetConfirm(true),
     onResetConfirm: handleReset,
     onResetCancel: () => setShowResetConfirm(false),
+    onRetryLoad: () => {
+      setBackendLoading(true);
+      void api.getSettings()
+        .then((settings) => {
+          setMetricsRetention(settings.retention.metrics);
+          setLogsRetention(settings.retention.logs);
+          setCollectInterval(settings.system.collectInterval);
+          setConsecutiveFailures(settings.alerts.consecutiveFailures);
+          setSettingsError(null);
+        })
+        .catch((error) => setSettingsError(getErrorMessage(error)))
+        .finally(() => setBackendLoading(false));
+    },
   } as const;
 
   if (isMobile) return <SettingsMobileView {...sharedProps} />;

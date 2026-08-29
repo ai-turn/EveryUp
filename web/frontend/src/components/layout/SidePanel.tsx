@@ -11,7 +11,7 @@ export function SidePanel() {
             : 'w-full sm:w-[500px] lg:w-[600px]';
     const panelRef = useRef<HTMLDivElement>(null);
 
-    useOverlay(isOpen, closePanel);
+    useOverlay(isOpen, closePanel, panelRef);
 
     return (
         <>
@@ -26,10 +26,16 @@ export function SidePanel() {
             {/* Side Panel */}
             <div
                 ref={panelRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="side-panel-title"
+                aria-hidden={!isOpen}
+                inert={!isOpen || undefined}
+                tabIndex={-1}
                 className={`
           fixed inset-y-0 right-0 z-50 ${widthClass}
           bg-bg-surface border-l border-ui-border
-          shadow-2xl transform transition-transform duration-500 ease-in-out
+          shadow-lg transform transition-transform duration-200 ease-in-out
           ${isOpen ? 'translate-x-0' : 'translate-x-full'}
           flex flex-col
         `}
@@ -41,14 +47,15 @@ export function SidePanel() {
                 <div className="flex-none flex items-center justify-between px-6 h-16 border-b border-ui-border bg-bg-surface z-10 transition-colors duration-200">
                     <div className="flex items-center gap-3 min-w-0">
                         <MaterialIcon name="apps" className="text-text-dim shrink-0" />
-                        <h2 className="text-lg font-bold text-text-base tracking-tight truncate">
+                        <h2 id="side-panel-title" className="text-base font-semibold text-text-base truncate">
                             {title}
                         </h2>
                     </div>
                     <button
                         type="button"
-                        className="p-2 -mr-2 text-slate-400 hover:text-text-base rounded-lg hover:bg-ui-hover transition-colors shrink-0"
+                        className="flex h-10 w-10 items-center justify-center -mr-2 rounded-lg text-text-muted transition-colors hover:bg-ui-hover hover:text-text-base shrink-0"
                         onClick={closePanel}
+                        aria-label="Close panel"
                     >
                         <MaterialIcon name="close" className="text-xl" />
                         <span className="sr-only">Close panel</span>

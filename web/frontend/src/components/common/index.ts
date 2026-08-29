@@ -7,6 +7,7 @@ export { PageHeader } from './PageHeader';
 export { MaterialIcon } from './MaterialIcon';
 export { CopyButton } from './CopyButton';
 export { StatusBadge } from './StatusBadge';
+export { CollectionStatusBadge, type CollectionStatus } from './CollectionStatusBadge';
 export { Toggle } from './Toggle';
 export { EmptyState } from './EmptyState';
 export { ConfirmDialog } from './ConfirmDialog';

@@ -7,6 +7,7 @@ import { env } from './config/env';
 import { lazyWithRetry as lazy } from './utils/lazyWithRetry';
 
 const ServiceGridPage       = lazy(() => import('./pages/services/ServiceGridPage').then(m => ({ default: m.ServiceGridPage })));
+const OverviewPage          = lazy(() => import('./pages/overview/OverviewPage').then(m => ({ default: m.OverviewPage })));
 const ProjectDetailPage     = lazy(() => import('./pages/services/ProjectDetailPage').then(m => ({ default: m.ProjectDetailPage })));
 const HealthCheckDetailPage = lazy(() => import('./pages/healthcheck/HealthCheckDetailPage').then(m => ({ default: m.HealthCheckDetailPage })));
 const AlertsPage            = lazy(() => import('./pages/alerts/AlertsPage').then(m => ({ default: m.AlertsPage })));
@@ -26,6 +27,7 @@ const InfrastructurePage    = lazy(() => import('./pages/capabilities/Infrastruc
 const DirectInfrastructureDetailPage = lazy(() => import('./pages/capabilities/DirectInfrastructureDetailPage').then(m => ({ default: m.DirectInfrastructureDetailPage })));
 const MorePage              = lazy(() => import('./pages/capabilities/MorePage').then(m => ({ default: m.MorePage })));
 const ProjectsPage          = lazy(() => import('./pages/projects/ProjectsPage').then(m => ({ default: m.ProjectsPage })));
+const ProjectOverviewPage   = lazy(() => import('./pages/projects/ProjectOverviewPage').then(m => ({ default: m.ProjectOverviewPage })));
 
 function PageLoader() {
   return (
@@ -66,8 +68,9 @@ function App() {
             <Route path="/login" element={env.isDemoMode ? <Navigate to="/" replace /> : <LoginPage />} />
             <Route element={<ProtectedRoute />}>
               <Route element={<MainLayout />}>
-                <Route index element={<ServiceGridPage />} />
-                <Route path="/agents" element={<Navigate to="/" replace />} />
+                <Route index element={<OverviewPage />} />
+                <Route path="/environments" element={<ServiceGridPage />} />
+                <Route path="/agents" element={<Navigate to="/environments" replace />} />
                 <Route path="/services" element={<Navigate to="/uptime" replace />} />
                 <Route path="/uptime" element={<AgentServiceCapabilityPage />} />
                 <Route path="/uptime/:monitorId" element={<UptimeMonitorDetailPage />} />
@@ -81,6 +84,7 @@ function App() {
                 <Route path="/metrics/:serviceId" element={<DirectMetricsDetailPage />} />
                 <Route path="/more" element={<MorePage />} />
                 <Route path="/projects" element={<ProjectsPage />} />
+                <Route path="/projects/:projectId" element={<ProjectOverviewPage />} />
                 <Route path="/agents/:agentId" element={<ProjectDetailPage />} />
                 <Route path="/projects/:agentId" element={<LegacyAgentProjectRoute />} />
                 <Route path="/services/:agentId/:key" element={<HealthCheckDetailPage />} />

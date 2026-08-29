@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslate } from '@tolgee/react';
 import { MaterialIcon } from '../common';
-import { SCRIM_PANEL } from '../../hooks/useOverlay';
+import { SCRIM_PANEL, useOverlay } from '../../hooks/useOverlay';
 import { api, type AgentServiceFlat, type ConnectedAgent } from '../../services/api';
 
 // Fired by the sidebar search button; ⌘K/Ctrl+K toggles directly.
@@ -25,8 +25,14 @@ export function CommandPalette() {
   const [index, setIndex] = useState(0);
   const [agents, setAgents] = useState<ConnectedAgent[]>([]);
   const [services, setServices] = useState<AgentServiceFlat[]>([]);
+  const [dataStatus, setDataStatus] = useState<'idle' | 'loading' | 'error'>('idle');
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  const closePalette = useCallback(() => setOpen(false), []);
+
+  useOverlay(open, closePalette, dialogRef);
 
   const showPalette = () => {
     setQuery('');
@@ -39,7 +45,7 @@ export function CommandPalette() {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         if (open) {
-          setOpen(false);
+          closePalette();
         } else {
           showPalette();
         }
@@ -52,29 +58,32 @@ export function CommandPalette() {
       window.removeEventListener('keydown', onKey);
       window.removeEventListener(OPEN_PALETTE_EVENT, onOpen);
     };
-  }, [open]);
+  }, [closePalette, open]);
 
   // Fresh data on every open; palette renders fine with none (pages only).
   useEffect(() => {
     if (!open) return;
-    Promise.all([api.getAgents(), api.getAllAgentServicesFlat()])
-      .then(([agts, svcs]) => {
-        setAgents(agts ?? []);
-        setServices(svcs ?? []);
-      })
-      .catch(() => {});
-    // autofocus after the overlay mounts
-    const focusId = setTimeout(() => inputRef.current?.focus(), 0);
-    return () => clearTimeout(focusId);
+    const loadTimer = window.setTimeout(() => {
+      setDataStatus('loading');
+      Promise.all([api.getAgents(), api.getAllAgentServicesFlat()])
+        .then(([agts, svcs]) => {
+          setAgents(agts ?? []);
+          setServices(svcs ?? []);
+          setDataStatus('idle');
+        })
+        .catch(() => setDataStatus('error'));
+    }, 0);
+    return () => window.clearTimeout(loadTimer);
   }, [open]);
 
   const items: PaletteItem[] = useMemo(() => [
     { id: 'page-uptime', icon: 'monitor_heart', label: t('업타임'), to: '/uptime' },
     { id: 'page-logs', icon: 'article', label: t('로그'), to: '/logs' },
     { id: 'page-infrastructure', icon: 'memory', label: t('인프라'), to: '/infrastructure' },
-    { id: 'page-api', icon: 'api', label: 'API', to: '/api' },
+    { id: 'page-api', icon: 'api', label: t('API 요청'), to: '/api' },
     { id: 'page-metrics', icon: 'monitoring', label: t('메트릭'), to: '/metrics' },
-    { id: 'page-home', icon: 'grid_view', label: 'Docker', meta: t('홈'), to: '/' },
+    { id: 'page-home', icon: 'dashboard', label: t('개요'), meta: t('홈'), to: '/' },
+    { id: 'page-projects', icon: 'folder_open', label: 'Projects', to: '/projects' },
     { id: 'page-alerts', icon: 'notifications', label: t('알림'), to: '/alerts' },
     { id: 'page-settings', icon: 'settings', label: t('환경설정'), to: '/settings' },
     ...agents.map((a) => ({
@@ -93,7 +102,7 @@ export function CommandPalette() {
   }, [items, query]);
 
   const go = (item: PaletteItem) => {
-    setOpen(false);
+    closePalette();
     navigate(item.to);
   };
 
@@ -109,8 +118,6 @@ export function CommandPalette() {
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (filtered[index]) go(filtered[index]);
-    } else if (e.key === 'Escape') {
-      setOpen(false);
     }
   };
 
@@ -125,10 +132,15 @@ export function CommandPalette() {
     <div
       className={`fixed inset-0 z-50 flex items-start justify-center pt-[18vh] px-4 ${SCRIM_PANEL}`}
       role="presentation"
-      onClick={() => setOpen(false)}
+      onClick={closePalette}
     >
       <div
-        className="w-full max-w-lg rounded-xl bg-bg-surface border border-ui-border shadow-2xl overflow-hidden"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('검색')}
+        tabIndex={-1}
+        className="w-full max-w-lg overflow-hidden rounded-xl border border-ui-border bg-bg-surface shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search input */}
@@ -140,8 +152,10 @@ export function CommandPalette() {
             onChange={(e) => { setQuery(e.target.value); setIndex(0); }}
             onKeyDown={onInputKeyDown}
             aria-label={t('검색')}
+            aria-controls="command-palette-results"
+            aria-activedescendant={filtered[index] ? `command-palette-option-${filtered[index].id}` : undefined}
             placeholder={t('Docker 환경, 서비스, 페이지 검색...')}
-            className="flex-1 py-3.5 text-sm bg-transparent outline-none text-text-base placeholder-slate-400 dark:placeholder-text-dim-dark"
+            className="flex-1 bg-transparent py-3.5 text-sm text-text-base outline-none placeholder:text-text-dim"
           />
           <kbd className="shrink-0 px-1.5 py-0.5 rounded border border-ui-border text-2xs font-semibold text-text-dim">
             Esc
@@ -149,13 +163,16 @@ export function CommandPalette() {
         </div>
 
         {/* Results */}
-        <div ref={listRef} className="max-h-80 overflow-y-auto py-1.5">
+        <div id="command-palette-results" ref={listRef} role="listbox" className="max-h-80 overflow-y-auto py-1.5">
           {filtered.length === 0 ? (
             <p className="py-8 text-center text-sm text-text-dim">{t('검색 결과가 없습니다')}</p>
           ) : (
             filtered.map((item, i) => (
               <button
                 key={item.id}
+                id={`command-palette-option-${item.id}`}
+                role="option"
+                aria-selected={i === index}
                 onClick={() => go(item)}
                 onMouseMove={() => setIndex(i)}
                 className={`w-full flex items-center gap-2.5 px-4 py-2 text-left transition-colors ${
@@ -186,6 +203,8 @@ export function CommandPalette() {
         <div className="flex items-center gap-3 px-4 py-2 border-t border-ui-border text-2xs text-text-dim">
           <span>↑↓ {t('이동')}</span>
           <span>Enter {t('열기')}</span>
+          {dataStatus === 'loading' && <span className="ml-auto" role="status">{t('대상 불러오는 중')}</span>}
+          {dataStatus === 'error' && <span className="ml-auto text-status-error" role="status">{t('일부 대상을 불러오지 못했습니다')}</span>}
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { useTranslate } from '@tolgee/react';
 import { toast } from 'react-hot-toast';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { MaterialIcon } from '../../components/common/MaterialIcon';
+import { CollectionStatusBadge } from '../../components/common/CollectionStatusBadge';
 import { useSpinAction } from '../../hooks/useSpinAction';
 import {
   api,
@@ -160,6 +161,7 @@ export function ProjectDetailPage() {
   const [agent, setAgent] = useState<ConnectedAgent | null>(null);
   const [services, setServices] = useState<AgentServiceFlat[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [showKey, setShowKey] = useState(false);
   const [showInstall, setShowInstall] = useState(false);
   const [showInstrumentation, setShowInstrumentation] = useState(false);
@@ -175,6 +177,7 @@ export function ProjectDetailPage() {
 
   const load = useCallback(async () => {
     if (!agentId) return;
+    setLoadError(null);
     api.getAgentIncidents(agentId).then((d) => setIncidents(d ?? [])).catch(() => {});
     api.getAgentServiceMetrics(agentId)
       .then((rows) => setMetrics(Object.fromEntries((rows ?? []).map((m) => [m.serviceName, m]))))
@@ -190,7 +193,7 @@ export function ProjectDetailPage() {
       setAgent(agents.find((a) => a.id === agentId) ?? null);
       setServices((all ?? []).filter((s) => s.agentId === agentId));
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      setLoadError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -253,16 +256,20 @@ export function ProjectDetailPage() {
         {t('Docker 환경 목록')}
       </button>
 
+      {loadError && (
+        <div role="alert" className="flex flex-wrap items-center gap-3 rounded-xl border border-status-warn/30 bg-status-warn/10 px-4 py-3 text-sm text-text-secondary">
+          <MaterialIcon name="sync_problem" className="shrink-0 text-status-warn" />
+          <span className="min-w-0 flex-1">{t('Docker 환경 정보를 불러오지 못했습니다.')} {loadError}</span>
+          <button type="button" onClick={() => void load()} className="rounded-lg border border-ui-border bg-bg-surface px-3 py-1.5 text-sm font-semibold text-text-secondary hover:bg-ui-hover">{t('다시 시도')}</button>
+        </div>
+      )}
+
       {/* Project header + actions */}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1 min-w-0">
           <div className="flex items-center gap-2.5">
-            <span
-              role="img"
-              aria-label={online ? t('온라인') : t('오프라인')}
-              className={`h-2.5 w-2.5 rounded-full shrink-0 ${online ? 'bg-status-healthy' : 'bg-status-idle'}`}
-            />
             <h1 className="text-2xl font-bold text-text-base truncate">{agentName}</h1>
+            <CollectionStatusBadge status={online ? 'collecting' : 'delayed'} />
             {agent?.version && <span className="text-xs text-text-dim">v{agent.version}</span>}
           </div>
           <p className="text-sm text-text-muted flex items-center gap-1.5">
@@ -381,7 +388,7 @@ export function ProjectDetailPage() {
       </div>
 
       {/* Service health grid */}
-      {services.length === 0 ? (
+      {services.length === 0 && !loadError ? (
         <div className="py-16 text-center">
           <MaterialIcon name="inventory_2" className="text-4xl text-text-dim mb-2" />
           <p className="text-sm text-text-dim">{t('수집된 서비스가 없습니다')}</p>

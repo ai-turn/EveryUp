@@ -1,7 +1,8 @@
 // Single-track segmented control for mutually-exclusive pick-one selectors
-// (time ranges, date presets, category filters). One recessed track, the
-// active option raised as a pill. Replaces the old scattered "separate badge"
-// button groups so range/preset pickers read the same everywhere.
+// (time ranges, date presets, category filters). It deliberately uses a
+// labelled button group instead of ARIA tabs: changing a value does not
+// necessarily reveal a separate tabpanel, and callers should not inherit the
+// keyboard contract of a document-tab interface by accident.
 //
 // Dark layering is context-proof: track = ui-hover, active pill = ui-active —
 // both lighter than the page (#0d1117) and card (#161b22) surfaces, so the
@@ -28,7 +29,7 @@ export function SegmentedControl<T extends string>({
 }) {
   return (
     <div
-      role="tablist"
+      role="group"
       aria-label={ariaLabel}
       className="inline-flex items-center gap-0.5 rounded-lg p-0.5 bg-ui-hover border border-ui-border"
     >
@@ -37,8 +38,7 @@ export function SegmentedControl<T extends string>({
         return (
           <button
             key={o.value}
-            role="tab"
-            aria-selected={active}
+            aria-pressed={active}
             onClick={() => onChange(o.value)}
             className={`${SIZES[size]} font-semibold rounded-md transition-colors ${
               active

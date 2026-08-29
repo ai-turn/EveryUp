@@ -6,34 +6,38 @@ import { Button, MaterialIcon } from '../../components/common';
 import { useAutoRefresh } from '../../hooks/useAutoRefresh';
 import { api, type AgentServiceFlat } from '../../services/api';
 import { AgentHealthCheckDetailView } from '../../features/healthcheck/components/AgentHealthCheckDetailView';
+import type { DetailTab } from '../../features/healthcheck/components/AgentServiceTabs';
 
 export function HealthCheckDetailPage() {
   const { agentId, key } = useParams<{ agentId: string; key: string }>();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t } = useTranslate();
   const { t: tc } = useTranslation('common');
 
   const [service, setService] = useState<AgentServiceFlat | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const selectedTab = searchParams.get('tab');
-  const initialTab = selectedTab === 'logs' || selectedTab === 'requests' || selectedTab === 'metrics' || selectedTab === 'infra'
+  const tab: DetailTab = selectedTab === 'uptime' || selectedTab === 'logs' || selectedTab === 'requests' || selectedTab === 'metrics' || selectedTab === 'infra'
     ? selectedTab
-    : 'health';
+    : 'overview';
 
   const fetchService = useCallback(async () => {
     if (!agentId || !key) return;
+    setLoadError(null);
     try {
       const all = await api.getAllAgentServicesFlat();
       const found = all.find((s) => s.agentId === agentId && s.key === decodeURIComponent(key));
       setService(found ?? null);
-    } catch {
+    } catch (error) {
       setService(null);
+      setLoadError(error instanceof Error ? error.message : t('서비스를 불러오지 못했습니다'));
     } finally {
       setLoading(false);
     }
-  }, [agentId, key]);
+  }, [agentId, key, t]);
 
   useEffect(() => { fetchService(); }, [fetchService]);
 
@@ -53,6 +57,16 @@ export function HealthCheckDetailPage() {
     );
   }
 
+  if (loadError) {
+    return (
+      <div className="flex h-64 flex-col items-center justify-center gap-4">
+        <MaterialIcon name="sync_problem" className="text-3xl text-status-warn" />
+        <div className="text-center"><p className="text-sm font-semibold text-text-base">{t('서비스를 불러오지 못했습니다')}</p><p className="mt-1 text-xs text-text-muted">{loadError}</p></div>
+        <div className="flex gap-2"><Button variant="secondary" onClick={() => navigate('/environments')}>{t('Docker 환경')}</Button><Button onClick={() => void fetchService()}>{t('다시 시도')}</Button></div>
+      </div>
+    );
+  }
+
   if (!service) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
@@ -60,8 +74,8 @@ export function HealthCheckDetailPage() {
         <p className="text-text-muted">
           {t('서비스를 찾을 수 없습니다')}
         </p>
-        <Button onClick={() => navigate('/')}>
-          {t('목록으로')}
+        <Button onClick={() => navigate('/environments')}>
+          {t('Docker 환경으로')}
         </Button>
       </div>
     );
@@ -74,7 +88,13 @@ export function HealthCheckDetailPage() {
       serviceKey={decodeURIComponent(key!)}
       refreshKey={refreshKey}
       onRefresh={refresh}
-      initialTab={initialTab}
+      tab={tab}
+      onTabChange={(nextTab) => {
+        const next = new URLSearchParams(searchParams);
+        if (nextTab === 'overview') next.delete('tab');
+        else next.set('tab', nextTab);
+        setSearchParams(next);
+      }}
     />
   );
 }

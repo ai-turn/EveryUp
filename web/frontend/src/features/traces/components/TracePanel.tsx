@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CopyButton, MaterialIcon } from '../../../components/common';
@@ -250,7 +250,8 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
     navigate(logServicePath(serviceId, tab, traceId));
   };
 
-  useOverlay(true, onClose);
+  const panelRef = useRef<HTMLDivElement>(null);
+  useOverlay(true, onClose, panelRef);
 
   useEffect(() => {
     let cancelled = false;
@@ -289,8 +290,10 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
       onClick={onClose}
     >
       <div
+        ref={panelRef}
+        tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className="fixed inset-y-0 right-0 w-full sm:w-[560px] lg:w-[720px] bg-bg-surface border-l border-ui-border shadow-2xl flex flex-col animate-slide-in-right"
+        className="fixed inset-y-0 right-0 w-full sm:w-[560px] lg:w-[720px] bg-bg-surface border-l border-ui-border shadow-lg flex flex-col animate-slide-in-right"
       >
         <div className="flex-none flex items-center gap-3 px-5 h-16 border-b border-ui-border">
           <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary shrink-0">

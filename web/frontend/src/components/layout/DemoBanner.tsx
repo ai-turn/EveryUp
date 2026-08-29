@@ -1,5 +1,6 @@
 import { env } from '../../config/env'
 import { useIsMobile } from '../../hooks/useMediaQuery'
+import { DemoScenarioSwitcher } from './DemoScenarioSwitcher'
 
 const bannerText = (
   <>
@@ -17,7 +18,7 @@ export function DemoBanner() {
   return (
     // lg+ 데스크톱은 Sidebar 상단 카드가 대체 — 배너는 모바일/태블릿 전용
     <div className="lg:hidden w-full shrink-0 bg-slate-900 dark:bg-slate-950 border-b border-slate-700">
-      <div className="max-w-6xl mx-auto px-4 py-2 flex items-center justify-between gap-4">
+      <div className="max-w-6xl mx-auto px-4 py-2 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded text-sm font-bold tracking-wider bg-primary/20 text-primary border border-primary/30 uppercase">
             Live Demo
@@ -38,6 +39,7 @@ export function DemoBanner() {
             </p>
           )}
         </div>
+        <DemoScenarioSwitcher tone="dark" />
         <a
           href="https://github.com/ai-turn/everyup"
           target="_blank"

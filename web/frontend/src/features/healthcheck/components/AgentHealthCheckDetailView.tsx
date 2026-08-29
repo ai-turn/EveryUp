@@ -13,7 +13,8 @@ export interface AgentHealthCheckDetailViewProps {
   serviceKey: string;
   refreshKey: number;
   onRefresh: () => void;
-  initialTab?: DetailTab;
+  tab: DetailTab;
+  onTabChange: (tab: DetailTab) => void;
 }
 
 // Internal: layouts receive the shared chart time range from the wrapper below.
@@ -78,7 +79,7 @@ function RefreshButton({ onRefresh }: { onRefresh: () => void }) {
 }
 
 function DesktopLayout(props: LayoutProps) {
-  const { service, agentId, serviceKey, refreshKey, onRefresh, range, onRangeChange, initialTab } = props;
+  const { service, agentId, serviceKey, refreshKey, onRefresh, range, onRangeChange, tab, onTabChange } = props;
 
   return (
     <>
@@ -102,14 +103,15 @@ function DesktopLayout(props: LayoutProps) {
         <ContainerMeta service={service} />
       </div>
       <AgentServiceTabs
-        key={`${serviceKey}:${initialTab ?? 'health'}`}
+        key={serviceKey}
         service={service}
         agentId={agentId}
         serviceKey={serviceKey}
         refreshKey={refreshKey}
         range={range}
         showServiceName={false}
-        initialTab={initialTab}
+        tab={tab}
+        onTabChange={onTabChange}
       />
     </>
   );
@@ -118,13 +120,13 @@ function DesktopLayout(props: LayoutProps) {
 function MobileLayout(props: LayoutProps) {
   const { t: tc } = useTranslation('common');
   const navigate = useNavigate();
-  const { service, agentId, serviceKey, refreshKey, onRefresh, range, onRangeChange, initialTab } = props;
+  const { service, agentId, serviceKey, refreshKey, onRefresh, range, onRangeChange, tab, onTabChange } = props;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate(`/agents/${agentId}`)}
           className="flex items-center gap-1 text-text-muted active:opacity-60 transition-opacity cursor-pointer"
         >
           <MaterialIcon name="arrow_back" className="text-lg" />
@@ -135,8 +137,15 @@ function MobileLayout(props: LayoutProps) {
           <RefreshButton onRefresh={onRefresh} />
         </div>
       </div>
+      <div className="min-w-0">
+        <p className="truncate text-xs text-text-muted">{service.agentName}</p>
+        <div className="mt-1 flex items-center gap-2">
+          <h1 className="truncate text-xl font-bold text-text-base">{service.name}</h1>
+          <StatusBadge healthy={service.healthy} />
+        </div>
+      </div>
       <ContainerMeta service={service} />
-      <AgentServiceTabs key={`${serviceKey}:${initialTab ?? 'health'}`} service={service} agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} range={range} initialTab={initialTab} />
+      <AgentServiceTabs key={serviceKey} service={service} agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} range={range} tab={tab} onTabChange={onTabChange} />
     </div>
   );
 }

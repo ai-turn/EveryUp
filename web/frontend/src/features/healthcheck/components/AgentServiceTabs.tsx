@@ -22,37 +22,51 @@ export interface ServiceTabsProps {
   showServiceName?: boolean;
 }
 
-export type DetailTab = 'health' | 'logs' | 'requests' | 'metrics' | 'infra';
+export type DetailTab = 'overview' | 'uptime' | 'logs' | 'requests' | 'metrics' | 'infra';
 
 const TABS: { key: DetailTab; labelKo: string }[] = [
-  { key: 'health',   labelKo: '헬스체크' },
+  { key: 'overview', labelKo: '개요' },
+  { key: 'uptime',   labelKo: '업타임' },
   { key: 'logs',     labelKo: '로그' },
-  { key: 'requests', labelKo: 'API' },
+  { key: 'requests', labelKo: 'API 요청' },
   { key: 'metrics',  labelKo: '메트릭' },
   { key: 'infra',    labelKo: '인프라' },
 ];
 
-function TabBar({ active, onChange }: { active: DetailTab; onChange: (t: DetailTab) => void }) {
+function TabBar({ active, onChange, serviceKey }: { active: DetailTab; onChange: (t: DetailTab) => void; serviceKey: string }) {
   return (
-    <div className="flex gap-1 border-b border-ui-border mb-6">
-      {TABS.map(tab => (
+    <div role="tablist" aria-label="서비스 데이터" className="mb-6 flex gap-1 overflow-x-auto border-b border-ui-border">
+      {TABS.map(tab => {
+        const selected = active === tab.key;
+        const tabId = `service-tab-${serviceKey}-${tab.key}`;
+        return (
         <button
           key={tab.key}
+          id={tabId}
+          type="button"
+          role="tab"
+          aria-selected={selected}
+          aria-controls={`service-panel-${serviceKey}-${tab.key}`}
           onClick={() => onChange(tab.key)}
-          className={`px-4 py-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px ${
-            active === tab.key
+          className={`-mb-px shrink-0 border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
+            selected
               ? 'border-primary text-primary'
               : 'border-transparent text-text-muted hover:text-text-secondary'
           }`}
         >
           {tab.labelKo}
         </button>
-      ))}
+        );
+      })}
     </div>
   );
 }
 
-function HealthContent({ service, agentId, serviceKey, refreshKey, range, showServiceName = true }: ServiceTabsProps) {
+function OverviewContent({ service, showServiceName = true }: Pick<ServiceTabsProps, 'service' | 'showServiceName'>) {
+  return <AgentIdentity service={service} showName={showServiceName} />;
+}
+
+function UptimeContent({ service, agentId, serviceKey, refreshKey, range, showServiceName = true }: ServiceTabsProps) {
   return (
     <>
       <AgentIdentity service={service} showName={showServiceName} />
@@ -64,23 +78,35 @@ function HealthContent({ service, agentId, serviceKey, refreshKey, range, showSe
 }
 
 function TabContent({ tab, service, agentId, serviceKey, refreshKey, range, showServiceName }: { tab: DetailTab } & ServiceTabsProps) {
+  if (tab === 'overview') return <OverviewContent service={service} showServiceName={showServiceName} />;
   if (tab === 'logs')     return <AgentServiceLogsTab agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} range={range} />;
   if (tab === 'requests') return <AgentServiceRequestsTab agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} range={range} runtime={service.runtime} />;
   if (tab === 'metrics')  return <AgentServiceMetricsTab agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} range={range} />;
   if (tab === 'infra')    return <AgentServiceInfraTab agentId={agentId} refreshKey={refreshKey} range={range} />;
-  return <HealthContent service={service} agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} range={range} showServiceName={showServiceName} />;
+  return <UptimeContent service={service} agentId={agentId} serviceKey={serviceKey} refreshKey={refreshKey} range={range} showServiceName={showServiceName} />;
 }
 
 // Tab bar + content for a single agent service. Reused by the full-page service
-// detail and the project master-detail view. Resets to the health tab when the
+// detail and the project master-detail view. Resets to the overview tab when the
 // selected service changes (key={serviceKey} at the call site).
-export function AgentServiceTabs({ initialTab = 'health', ...props }: ServiceTabsProps & { initialTab?: DetailTab }) {
-  const [activeTab, setActiveTab] = useState<DetailTab>(initialTab);
+export function AgentServiceTabs({ initialTab = 'overview', tab, onTabChange, ...props }: ServiceTabsProps & {
+  initialTab?: DetailTab;
+  tab?: DetailTab;
+  onTabChange?: (tab: DetailTab) => void;
+}) {
+  const [uncontrolledTab, setUncontrolledTab] = useState<DetailTab>(initialTab);
+  const activeTab = tab ?? uncontrolledTab;
+  const changeTab = (nextTab: DetailTab) => {
+    onTabChange?.(nextTab);
+    if (tab === undefined) setUncontrolledTab(nextTab);
+  };
   return (
     <>
-      <ServiceIncidentBanner service={props.service} onInvestigate={() => setActiveTab('logs')} />
-      <TabBar active={activeTab} onChange={setActiveTab} />
-      <TabContent tab={activeTab} {...props} />
+      <ServiceIncidentBanner service={props.service} onInvestigate={() => changeTab('logs')} />
+      <TabBar active={activeTab} onChange={changeTab} serviceKey={props.serviceKey} />
+      <div role="tabpanel" id={`service-panel-${props.serviceKey}-${activeTab}`} aria-labelledby={`service-tab-${props.serviceKey}-${activeTab}`}>
+        <TabContent tab={activeTab} {...props} />
+      </div>
     </>
   );
 }

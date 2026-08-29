@@ -7,6 +7,7 @@
 import { mockLogEntries as allMockLogs, mockTraceIds } from '../mocks/logs/logs.mock';
 import { mockGauges } from '../mocks/infra/resources.mock';
 import { mockChannels } from '../mocks/alerts/channels.mock';
+import { getDemoScenario, type MockScenario } from '../mocks/demoScenario';
 
 import type {
   LogEntry,
@@ -741,6 +742,47 @@ function randomHex(bytes: number): string {
   return s;
 }
 
+function scenarioAgents(scenario: MockScenario): ConnectedAgent[] {
+  if (scenario === 'empty') return [];
+  if (scenario !== 'normal') return mockAgents;
+  const fresh = new Date(nowAgent - 20_000).toISOString();
+  return mockAgents.map((agent) => ({ ...agent, lastSeenAt: fresh, updatedAt: fresh }));
+}
+
+function scenarioServices(scenario: MockScenario): AgentServiceFlat[] {
+  if (scenario === 'empty') return [];
+  if (scenario !== 'normal') return mockAgentServicesFlat;
+  const fresh = new Date(nowAgent - 20_000).toISOString();
+  return mockAgentServicesFlat.map((service) => ({
+    ...service,
+    healthy: true,
+    lastStatus: service.checkType === 'http' ? 200 : 0,
+    lastLatency: service.checkType === 'http' ? '42ms' : '5ms',
+    lastError: undefined,
+    updatedAt: fresh,
+    observedAt: fresh,
+  }));
+}
+
+function scenarioMonitors(scenario: MockScenario): UptimeMonitor[] {
+  if (scenario === 'empty') return [];
+  return mockUptimeMonitors;
+}
+
+function scenarioObservedServices(scenario: MockScenario): ObservedService[] {
+  if (scenario === 'empty') return [];
+  if (scenario !== 'normal') return mockObservedServices;
+  const fresh = new Date(nowAgent - 20_000).toISOString();
+  return mockObservedServices.map((service) => ({ ...service, lastSeenAt: fresh, updatedAt: fresh }));
+}
+
+function scenarioInfrastructureResources(scenario: MockScenario): InfrastructureResource[] {
+  if (scenario === 'empty') return [];
+  if (scenario !== 'normal') return mockInfrastructureResources;
+  const fresh = new Date(nowAgent - 20_000).toISOString();
+  return mockInfrastructureResources.map((resource) => ({ ...resource, lastSeenAt: fresh, updatedAt: fresh }));
+}
+
 function normalizeMockAgentProfile(profile?: Partial<AgentProfile>): AgentProfile {
   const allCapabilities: AgentCollectionCapability[] = ['uptime', 'logs', 'infrastructure', 'api', 'metrics'];
   if (profile?.kind === 'basic') {
@@ -759,6 +801,16 @@ function normalizeMockAgentProfile(profile?: Partial<AgentProfile>): AgentProfil
 }
 
 export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit | null): T {
+  const scenario = getDemoScenario();
+
+  // Keep successful regions visible while exercising the overview's per-source
+  // failure handling. Other detail endpoints continue to work for inspection.
+  if (method === 'GET' && scenario === 'partial-failure' && (
+    endpoint === '/agents/services/all' || endpoint === '/observed-services'
+  )) {
+    throw new Error('Demo scenario: telemetry source is temporarily unavailable');
+  }
+
   // Mutations in mock mode: mutate the in-memory fixtures so flows feel real.
   if (method !== 'GET') {
     const projectMatch = endpoint.match(/^\/projects\/([^/]+)$/);
@@ -1002,15 +1054,23 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   }
 
   // /traces/:traceId
-  if (endpoint === '/projects') return mockProjects.map((project) => ({
+  if (endpoint === '/projects') {
+    if (scenario === 'empty') return [] as T;
+    const agents = scenarioAgents(scenario);
+    const monitors = scenarioMonitors(scenario);
+    const observedServices = scenarioObservedServices(scenario);
+    const infrastructureResources = scenarioInfrastructureResources(scenario);
+    return mockProjects.map((project) => ({
     ...project,
-    agentCount: mockAgents.filter((agent) => agent.projectId === project.id).length,
-    monitorCount: mockUptimeMonitors.filter((monitor) => monitor.projectId === project.id).length,
-    observedServiceCount: mockObservedServices.filter((service) => service.projectId === project.id).length,
-    infrastructureResourceCount: mockInfrastructureResources.filter((resource) => resource.projectId === project.id).length,
-  })) as T;
+      agentCount: agents.filter((agent) => agent.projectId === project.id).length,
+      monitorCount: monitors.filter((monitor) => monitor.projectId === project.id).length,
+      observedServiceCount: observedServices.filter((service) => service.projectId === project.id).length,
+      infrastructureResourceCount: infrastructureResources.filter((resource) => resource.projectId === project.id).length,
+    })) as T;
+  }
   if (endpoint === '/infrastructure-resources') {
-    const agentResources: InfrastructureResource[] = mockAgents
+    if (scenario === 'empty') return [] as T;
+    const agentResources: InfrastructureResource[] = scenarioAgents(scenario)
       .filter(agent => agent.profile?.capabilities.includes('infrastructure'))
       .map(agent => ({
         id: agent.id,
@@ -1025,12 +1085,12 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
         createdAt: agent.createdAt,
         updatedAt: agent.updatedAt,
       }));
-    return [...mockInfrastructureResources, ...agentResources] as T;
+    return [...scenarioInfrastructureResources(scenario), ...agentResources] as T;
   }
   const infrastructureDetailMatch = endpoint.match(/^\/infrastructure-resources\/([^/?]+)$/);
-  if (infrastructureDetailMatch) return (mockInfrastructureResources.find(resource => resource.id === infrastructureDetailMatch[1]) ?? null) as T;
+  if (infrastructureDetailMatch) return (scenarioInfrastructureResources(scenario).find(resource => resource.id === infrastructureDetailMatch[1]) ?? null) as T;
   if (endpoint === '/observed-services/service-metrics') {
-    return mockObservedServices
+    return scenarioObservedServices(scenario)
       .filter(service => service.signals.includes('metrics'))
       .map(service => ({
         serviceId: service.id,
@@ -1043,7 +1103,7 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   }
   const observedLogsMatch = endpoint.match(/^\/observed-services\/([^/]+)\/logs(?:\?|$)/);
   if (observedLogsMatch) {
-    const service = mockObservedServices.find(row => row.id === observedLogsMatch[1]);
+    const service = scenarioObservedServices(scenario).find(row => row.id === observedLogsMatch[1]);
     const rows = allMockLogs.map(log => ({ ...log, serviceId: service?.id ?? observedLogsMatch[1], serviceName: service?.name ?? 'direct-service', agentId: undefined }));
     return pageMockRows(filterMockLogs(rows, endpoint), endpoint) as T;
   }
@@ -1054,7 +1114,7 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   if (/^\/observed-services\/[^/]+\/otel-metrics/.test(endpoint)) return mockOtelMetricNames as T;
   const observedRequestsMatch = endpoint.match(/^\/observed-services\/([^/]+)\/requests(?:\?|$)/);
   if (observedRequestsMatch) {
-    const service = mockObservedServices.find(row => row.id === observedRequestsMatch[1]);
+    const service = scenarioObservedServices(scenario).find(row => row.id === observedRequestsMatch[1]);
     const rows = mockAgentServiceRequests.map(requestRow => ({
       ...requestRow,
       serviceId: service?.id ?? observedRequestsMatch[1],
@@ -1073,12 +1133,12 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   const observedApiExclusionsMatch = endpoint.match(/^\/observed-services\/([^/]+)\/api-exclusions$/);
   if (observedApiExclusionsMatch) return { paths: mockDirectApiExclusions.get(observedApiExclusionsMatch[1]) ?? [] } as T;
   const observedDetailMatch = endpoint.match(/^\/observed-services\/([^/?]+)$/);
-  if (observedDetailMatch) return (mockObservedServices.find(service => service.id === observedDetailMatch[1]) ?? null) as T;
+  if (observedDetailMatch) return (scenarioObservedServices(scenario).find(service => service.id === observedDetailMatch[1]) ?? null) as T;
   if (endpoint.startsWith('/observed-services')) {
     const signal = new URLSearchParams(endpoint.split('?')[1] ?? '').get('signal');
-    return mockObservedServices.filter(service => !signal || service.signals.includes(signal as 'logs' | 'metrics' | 'traces')) as T;
+    return scenarioObservedServices(scenario).filter(service => !signal || service.signals.includes(signal as 'logs' | 'metrics' | 'traces')) as T;
   }
-  if (endpoint === '/services?type=http,tcp') return mockUptimeMonitors as T;
+  if (endpoint === '/services?type=http,tcp') return scenarioMonitors(scenario) as T;
   // The fixture is authored grouped by service; the real handler is
   // ORDER BY created_at DESC and filters serviceName/search/level server-side.
   if (endpoint.startsWith('/logs?')) {
@@ -1109,7 +1169,7 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   }
 
   // /agents/services/all — must come before /agents/:id/services
-  if (endpoint === '/agents/services/all') return mockAgentServicesFlat as T;
+  if (endpoint === '/agents/services/all') return scenarioServices(scenario) as T;
   // /agents/overview — home card KPI rollup
   if (endpoint === '/agents/overview') return mockAgentOverview as T;
   // /agents/:agentId/key
@@ -1161,7 +1221,7 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   const agentServicesMatch = endpoint.match(/^\/agents\/([^/]+)\/services(?:\?|$)/);
   if (agentServicesMatch) {
     const requestedAgentId = decodeURIComponent(agentServicesMatch[1]);
-    return mockAgentServicesFlat.filter((service) => service.agentId === requestedAgentId) as T;
+    return scenarioServices(scenario).filter((service) => service.agentId === requestedAgentId) as T;
   }
   // /agents/:agentId/events
   if (/^\/agents\/[^/]+\/events/.test(endpoint)) return mockAgentEvents as T;
@@ -1172,7 +1232,7 @@ export function mockRouter<T>(endpoint: string, method = 'GET', body?: BodyInit 
   // /agents/:agentId/service-metrics — representative metric per service
   if (/^\/agents\/[^/]+\/service-metrics/.test(endpoint)) return mockServiceMetrics as T;
   // /agents
-  if (endpoint.startsWith('/agents')) return mockAgents as T;
+  if (endpoint.startsWith('/agents')) return scenarioAgents(scenario) as T;
 
   if (endpoint.startsWith('/notifications')) return mockChannels as T;
 

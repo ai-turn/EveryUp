@@ -5,6 +5,7 @@ import { Button } from '../../components/common/Button';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { EmptyState } from '../../components/common/EmptyState';
 import { MaterialIcon } from '../../components/common/MaterialIcon';
+import { CollectionStatusBadge } from '../../components/common/CollectionStatusBadge';
 import { SearchInput } from '../../components/common/SearchInput';
 import { api, type AgentOverview, type AgentServiceFlat, type ConnectedAgent } from '../../services/api';
 import { PendingServiceCard } from '../../features/services/components/PendingServiceCard';
@@ -44,10 +45,10 @@ function ProjectCard({ agentId, agent, agentName, services, overview }: ProjectC
       aria-label={agentName}
       className="card-interactive bg-bg-surface border border-ui-border rounded-xl p-4 cursor-pointer flex flex-col gap-3"
     >
-      {/* Header: status + project name */}
+      {/* Header: collection state + environment name */}
       <div className="flex items-center gap-2.5 min-w-0">
-        <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${online ? 'bg-status-healthy' : 'bg-status-idle'}`} />
         <h3 className="text-base font-bold text-text-base truncate leading-tight">{agentName}</h3>
+        <CollectionStatusBadge status={online ? 'collecting' : 'delayed'} />
       </div>
 
       {/* Summary: service count + health */}
@@ -106,6 +107,7 @@ export function ServiceGridPage() {
   const [agents, setAgents] = useState<ConnectedAgent[]>([]);
   const [overview, setOverview] = useState<Record<string, AgentOverview>>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [installModalAgent, setInstallModalAgent] = useState<{ id: string; name: string } | null>(null);
@@ -125,8 +127,9 @@ export function ServiceGridPage() {
       ]);
       setServices(svcs ?? []);
       setAgents(agts ?? []);
-    } catch {
-      // non-critical
+      setError(null);
+    } catch (requestError) {
+      setError(getErrorMessage(requestError));
     } finally {
       setLoading(false);
     }
@@ -216,13 +219,20 @@ export function ServiceGridPage() {
       />
 
       {/* Content */}
+      {error && (
+        <section className="flex flex-col gap-3 rounded-xl border border-ui-border bg-bg-surface p-4 sm:flex-row sm:items-center sm:justify-between" role="alert">
+          <div className="flex items-start gap-3"><MaterialIcon name="sync_problem" className="mt-0.5 text-lg text-status-warn" /><div><p className="text-sm font-semibold text-text-base">{t('Docker 환경을 불러오지 못했습니다')}</p><p className="mt-0.5 text-xs text-text-muted">{error}</p></div></div>
+          <Button variant="secondary" size="sm" onClick={() => void load()}>{t('다시 시도')}</Button>
+        </section>
+      )}
+
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i} className="h-44 rounded-xl bg-ui-hover animate-pulse" />
           ))}
         </div>
-      ) : services.length === 0 && agents.length === 0 ? (
+      ) : !error && services.length === 0 && agents.length === 0 ? (
         <EmptyState
           icon="sensors"
           title={t('아직 연결된 Docker 환경이 없습니다')}

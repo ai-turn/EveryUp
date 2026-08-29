@@ -118,13 +118,13 @@ export function areaProps(color: string) {
 }
 
 export function getChartTheme(): ChartTheme {
-  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
-
   return {
-    gridColor: isDark ? getCssVar('--color-chart-border') || '#334155' : '#e2e8f0',
-    tickColor: isDark ? getCssVar('--color-text-muted-dark') || '#94a3b8' : '#94a3b8',
-    tooltipBg: isDark ? getCssVar('--color-bg-surface-dark') || '#111827' : '#ffffff',
-    tooltipBorder: isDark ? getCssVar('--color-chart-border') || '#334155' : '#e2e8f0',
+    gridColor: getCssVar('--color-chart-border') || '#e2e8f0',
+    // text-muted is the AA-safe chart label token in both themes. Never read
+    // the implementation-only *-dark variables here.
+    tickColor: getCssVar('--color-text-muted') || '#475569',
+    tooltipBg: getCssVar('--color-bg-surface') || '#ffffff',
+    tooltipBorder: getCssVar('--color-chart-border') || '#e2e8f0',
     primaryColor: getCssVar('--color-primary') || SERIES_HEX.primary,
   };
 }

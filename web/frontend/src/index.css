@@ -73,7 +73,7 @@
   /* 6. Chart tokens — 다크 그리드/툴팁 보더 전용. chartTheme.ts가 getCssVar로 읽는다.
      chart-bg(#131920)는 bg-surface-dark(#161b22)와 대비 1.02로 사실상 같은 색이라 제거하고
      bg-bg-surface로 통합했다. 쓰이지 않던 chart-surface/chart-hover/text-chart-dim도 함께 제거. */
-  --color-chart-border: #2e3c4a;
+  --color-chart-border: #e2e8f0;
 
   /* 7. Font sizes: xs(12px) 미만 초소형 등급. 배지/메타/타임라인 라벨 전용 */
   --text-2xs: 0.6875rem;            /* 11px — text-2xs 유틸리티 생성 */
@@ -122,6 +122,7 @@
   --color-status-warn: var(--color-status-warn-dark);
   --color-status-error: var(--color-status-error-dark);
   --color-status-idle: var(--color-status-idle-dark);
+  --color-chart-border: #2e3c4a;
 
   /* Toast Dark */
   --toast-bg: #161b22;
@@ -246,7 +247,7 @@ body {
 @layer utilities {
   .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: var(--color-ui-border-dark) transparent;
+    scrollbar-color: var(--color-ui-border) transparent;
   }
   .custom-scrollbar::-webkit-scrollbar {
     width: 4px;
@@ -255,7 +256,7 @@ body {
     background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: var(--color-ui-border-dark);
+    background-color: var(--color-ui-border);
     border-radius: 9999px;
   }
 }

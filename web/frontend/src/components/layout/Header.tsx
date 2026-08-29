@@ -5,6 +5,7 @@ import logo from '../../assets/logo.png';
 import logoDark from '../../assets/logo-dark.png';
 import { useIsMobile } from '../../hooks/useMediaQuery';
 import { MaterialIcon } from '../common';
+import { OPEN_PALETTE_EVENT } from './CommandPalette';
 
 export function Header() {
     const { theme, toggleTheme } = useTheme();
@@ -46,22 +47,30 @@ export function Header() {
 
             {/* Right: Actions */}
             <div className="flex items-center gap-2 lg:gap-3 z-10 shrink-0">
+                <button
+                    type="button"
+                    onClick={() => window.dispatchEvent(new Event(OPEN_PALETTE_EVENT))}
+                    aria-label="Search"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-ui-hover hover:text-text-base"
+                >
+                    <MaterialIcon name="search" className="text-xl" />
+                </button>
                 {/* Language Switcher */}
                 {isMobile ? (
                     <button
                         onClick={toggleLanguage}
                         aria-label={i18n.language.startsWith('ko') ? 'Switch to English' : '한국어로 전환'}
-                        className="w-9 h-9 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-bg-surface-dark text-sm font-bold text-text-muted active:scale-95 transition-all"
+                        className="flex h-9 w-9 items-center justify-center rounded-lg bg-ui-hover text-sm font-bold text-text-muted transition-colors active:scale-95"
                     >
                         {i18n.language.startsWith('ko') ? 'EN' : 'KO'}
                     </button>
                 ) : (
-                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-bg-surface-dark p-1 rounded-lg">
+                    <div className="flex items-center gap-1 rounded-lg bg-ui-hover p-1">
                         <button
                             onClick={() => changeLanguage('ko')}
                             className={`px-2.5 py-1.5 text-sm font-bold rounded-md transition-all ${i18n.language.startsWith('ko')
-                                ? 'bg-white dark:bg-ui-hover-dark text-primary shadow-sm'
-                                : 'text-slate-500 hover:text-text-secondary dark:hover:text-white'
+                                ? 'bg-ui-raised text-primary shadow-sm'
+                                : 'text-text-muted hover:text-text-secondary'
                                 }`}
                         >
                             KO
@@ -69,8 +78,8 @@ export function Header() {
                         <button
                             onClick={() => changeLanguage('en')}
                             className={`px-2 py-1 text-sm font-bold rounded-md transition-all ${i18n.language.startsWith('en')
-                                ? 'bg-white dark:bg-ui-hover-dark text-primary shadow-sm'
-                                : 'text-slate-500 hover:text-text-secondary dark:hover:text-white'
+                                ? 'bg-ui-raised text-primary shadow-sm'
+                                : 'text-text-muted hover:text-text-secondary'
                                 }`}
                         >
                             EN

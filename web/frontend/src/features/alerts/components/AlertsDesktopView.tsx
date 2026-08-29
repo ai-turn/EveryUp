@@ -357,6 +357,7 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
                     onChange={() => onToggle(channel.id)}
                     disabled={togglingIds.has(channel.id)}
                     title={channel.isEnabled ? t('alerts.disable') : t('alerts.enable')}
+                    ariaLabel={`${channel.name} ${channel.isEnabled ? t('alerts.disable') : t('alerts.enable')}`}
                   />
                 </td>
                 <td className="px-4 py-3 text-sm font-semibold tabular-nums">

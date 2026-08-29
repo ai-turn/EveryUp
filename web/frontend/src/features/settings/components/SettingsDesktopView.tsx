@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ConfirmDialog, MaterialIcon } from '../../../components/common';
+import { Button, ConfirmDialog, MaterialIcon } from '../../../components/common';
 import { useAuth } from '../../../contexts/AuthContext';
 import { SectionCard } from './SectionCard';
 import { SettingRow } from './SettingRow';
@@ -33,6 +33,7 @@ interface SettingsDesktopViewProps {
   collectInterval: number;
   consecutiveFailures: number;
   backendLoading: boolean;
+  settingsError: string | null;
   showResetConfirm: boolean;
   resetting: boolean;
   onLanguageChange: (lng: string) => void;
@@ -44,6 +45,7 @@ interface SettingsDesktopViewProps {
   onResetClick: () => void;
   onResetConfirm: () => void;
   onResetCancel: () => void;
+  onRetryLoad: () => void;
 }
 
 export function SettingsDesktopView({
@@ -54,6 +56,7 @@ export function SettingsDesktopView({
   collectInterval,
   consecutiveFailures,
   backendLoading,
+  settingsError,
   showResetConfirm,
   resetting,
   onLanguageChange,
@@ -65,6 +68,7 @@ export function SettingsDesktopView({
   onResetClick,
   onResetConfirm,
   onResetCancel,
+  onRetryLoad,
 }: SettingsDesktopViewProps) {
   const { t } = useTranslation(['settings', 'common']);
   const { user } = useAuth();
@@ -111,6 +115,13 @@ export function SettingsDesktopView({
         <h1 className="text-2xl font-bold text-text-base">{t('settings.title')}</h1>
         <p className="text-sm text-text-muted mt-1">{t('settings.subtitle')}</p>
       </div>
+      {settingsError && (
+        <div role="alert" className="mb-5 flex flex-wrap items-center gap-3 rounded-xl border border-status-warn/30 bg-status-warn/10 px-4 py-3 text-sm text-text-secondary">
+          <MaterialIcon name="sync_problem" className="text-status-warn" />
+          <span className="min-w-0 flex-1">{t('settings.loadFailed', { defaultValue: '일부 설정을 불러오지 못했습니다.' })} {settingsError}</span>
+          <Button size="sm" variant="secondary" onClick={onRetryLoad}>{t('common.retry')}</Button>
+        </div>
+      )}
 
       <div className="flex gap-10 items-start">
         {/* 좌측 서브내비 (lg+) — 스크롤스파이 */}

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, type RefObject } from 'react';
 
 /* 오버레이 배경(scrim) — 역할별 2단.
  *
@@ -27,13 +27,63 @@ export const SCRIM_MODAL_DIALOG = 'backdrop:bg-slate-900/60 backdrop:backdrop-bl
 // ponytail: 스크롤 잠금은 넣지 않았다. 이 앱은 body가 아니라 MainLayout 내부 컨테이너가
 // 스크롤하는 구조라 body overflow를 잠가도 효과가 없고, 실제 스크롤 누출은 재현되지 않았다.
 // 누출이 확인되면 그때 잠글 대상(내부 스크롤러)을 정해서 추가할 것.
-export function useOverlay(open: boolean, onClose: () => void) {
+/**
+ * Gives non-native overlays the minimum modal keyboard behaviour: Escape,
+ * focus entry, focus trapping, and returning focus to the trigger. Native
+ * dialogs already provide this, but using the hook there is harmless.
+ */
+export function useOverlay(
+  open: boolean,
+  onClose: () => void,
+  overlayRef?: RefObject<HTMLElement | null>,
+) {
   useEffect(() => {
     if (!open) return;
+    const previouslyFocused = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+
+    const focusFirst = () => {
+      const overlay = overlayRef?.current;
+      if (!overlay) return;
+      const first = overlay.querySelector<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      (first ?? overlay).focus();
+    };
+    const focusTimer = window.setTimeout(focusFirst, 0);
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if (e.key !== 'Tab' || !overlayRef?.current) return;
+
+      const focusable = Array.from(overlayRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )).filter((element) => !element.hasAttribute('hidden'));
+      if (focusable.length === 0) {
+        e.preventDefault();
+        overlayRef.current.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
+    return () => {
+      window.clearTimeout(focusTimer);
+      window.removeEventListener('keydown', onKey);
+      if (previouslyFocused?.isConnected) previouslyFocused.focus();
+    };
+  }, [open, onClose, overlayRef]);
 }

@@ -220,6 +220,7 @@ bg-bg-surface border border-ui-border rounded-xl
 | **`Select`** | 네이티브만 | 폼 셀렉트 (§6) |
 | **`SearchInput`** | `wrapperClassName?` | 아이콘 붙은 검색창 (§6) |
 | **`StatusBadge`** | `healthy: boolean` | 정상/장애 보더칩 (§5.1) |
+| **`CollectionStatusBadge`** | `collecting` \| `partial` \| `delayed` \| `not-configured` | 수집 신선도·설정 상태. 서비스 건강과 별도 축 (§5.1) |
 | **`Toggle`** | `checked` `onChange` `disabled` `title` | w-9 h-5, `role="switch"` |
 | **`SegmentedControl<T>`** | `options` `value` `onChange` `size` `ariaLabel` | 2~4지 배타 선택 |
 | **`TimeRangePicker`** | `value: GlobalTimeRange` `onChange` | `1h`\|`6h`\|`24h`. SegmentedControl 래퍼 |
@@ -314,6 +315,10 @@ text-status-{role}  bg-status-{role}/10  border-status-{role}/20
 
 Tailwind v4는 `/10` 같은 투명도 수식자를 `oklab()` `color-mix`로 컴파일한다. 대비를 직접 잴 때 `getComputedStyle().backgroundColor`를 rgb로 가정하면 값이 어긋나니, 소스 hex와 알파로 합성해 계산할 것.
 
+### 5.1a 수집 상태 — `CollectionStatusBadge`
+
+서비스의 **건강**(정상·장애)과 데이터의 **수집 상태**(수집 중·부분 수집·지연·미설정)는 섞지 않는다. 전자는 대상의 동작 결과이고 후자는 관측 가능성이다. 환경·프로젝트 목록과 개요의 범위/연결 정보에는 `CollectionStatusBadge`를 쓴다. 장애 lifecycle이 실제로 없다면 “Incident” 같은 단계명으로 바꾸지 않는다.
+
 ### 5.2 상태 점
 
 ```
@@ -377,7 +382,7 @@ text-sm font-medium text-text-secondary cursor-pointer
 
 **공통 규약** — z-index `z-50`(SidePanel만 `z-40`), 배경 클릭 닫기.
 
-**ESC 닫기는 [`useOverlay(open, onClose)`](src/hooks/useOverlay.ts)를 쓴다.** 직접 `keydown` 리스너를 달지 않는다 — 이전엔 4곳이 같은 effect를 복사해 두고 2곳은 아예 빠져 있었다.
+**비네이티브 오버레이는 [`useOverlay(open, onClose, overlayRef)`](src/hooks/useOverlay.ts)를 쓴다.** 직접 `keydown` 리스너를 달지 않는다. `overlayRef`를 넘겨 Escape, 최초 포커스, Tab 순환, 트리거 포커스 복귀를 함께 보장한다. 네이티브 `ConfirmDialog`는 `<dialog>`의 동작을 쓴다.
 
 **배경(scrim)은 상수를 쓴다.** 같은 파일이 export한다.
 

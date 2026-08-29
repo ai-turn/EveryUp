@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { ConfirmDialog, MaterialIcon } from '../../../components/common';
+import { Button, ConfirmDialog, MaterialIcon } from '../../../components/common';
 import { SectionCard } from './SectionCard';
 import { AccountSection } from './AccountSection';
 import { AlertsSection } from './AlertsSection';
@@ -19,6 +19,7 @@ interface SettingsMobileViewProps {
   collectInterval: number;
   consecutiveFailures: number;
   backendLoading: boolean;
+  settingsError: string | null;
   showResetConfirm: boolean;
   resetting: boolean;
   onLanguageChange: (lng: string) => void;
@@ -30,6 +31,7 @@ interface SettingsMobileViewProps {
   onResetClick: () => void;
   onResetConfirm: () => void;
   onResetCancel: () => void;
+  onRetryLoad: () => void;
 }
 
 export function SettingsMobileView({
@@ -40,6 +42,7 @@ export function SettingsMobileView({
   collectInterval,
   consecutiveFailures,
   backendLoading,
+  settingsError,
   showResetConfirm,
   resetting,
   onLanguageChange,
@@ -51,6 +54,7 @@ export function SettingsMobileView({
   onResetClick,
   onResetConfirm,
   onResetCancel,
+  onRetryLoad,
 }: SettingsMobileViewProps) {
   const { t } = useTranslation(['settings', 'common']);
 
@@ -61,6 +65,13 @@ export function SettingsMobileView({
         <h1 className="text-xl font-bold text-text-base">{t('settings.title')}</h1>
         <p className="text-sm text-text-muted mt-0.5">{t('settings.subtitle')}</p>
       </div>
+      {settingsError && (
+        <div role="alert" className="flex flex-wrap items-center gap-2 rounded-xl border border-status-warn/30 bg-status-warn/10 px-3 py-2.5 text-sm text-text-secondary">
+          <MaterialIcon name="sync_problem" className="text-status-warn" />
+          <span className="min-w-0 flex-1">{t('settings.loadFailed', { defaultValue: '일부 설정을 불러오지 못했습니다.' })}</span>
+          <Button size="sm" variant="secondary" onClick={onRetryLoad}>{t('common.retry')}</Button>
+        </div>
+      )}
 
       {/* Account (ver2: 계정 · 인증) */}
       <AccountSection />

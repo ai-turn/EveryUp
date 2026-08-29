@@ -7,7 +7,7 @@ import { api, type NotificationChannel, type AlertRule, type NotificationHistory
 import { AlertsDesktopView } from '../../features/alerts/components/AlertsDesktopView';
 import { AlertsMobileView } from '../../features/alerts/components/AlertsMobileView';
 import { useIsMobile } from '../../hooks/useMediaQuery';
-import { ConfirmDialog } from '../../components/common';
+import { Button, ConfirmDialog, MaterialIcon } from '../../components/common';
 
 type TabType = 'channels' | 'rules' | 'history';
 
@@ -33,17 +33,22 @@ export function AlertsPage() {
   const [rulesLoading, setRulesLoading] = useState(true);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
+  const [testingIds, setTestingIds] = useState<Set<string>>(new Set());
+  const [channelsError, setChannelsError] = useState<string | null>(null);
+  const [rulesError, setRulesError] = useState<string | null>(null);
+  const [historyError, setHistoryError] = useState<string | null>(null);
   const [rulesAddTrigger, setRulesAddTrigger] = useState(0);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // --- Data fetching ---
   const loadChannels = async () => {
+    setChannelsError(null);
     try {
       const data = await api.getNotificationChannels();
       setChannels(data);
     } catch (error) {
-      toast.error(getErrorMessage(error));
+      setChannelsError(getErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
@@ -61,22 +66,24 @@ export function AlertsPage() {
   };
 
   const loadRules = async () => {
+    setRulesError(null);
     try {
       const data = await api.getAlertRules();
       setRules(data);
     } catch (error) {
-      toast.error(getErrorMessage(error));
+      setRulesError(getErrorMessage(error));
     } finally {
       setRulesLoading(false);
     }
   };
 
   const loadHistory = async () => {
+    setHistoryError(null);
     try {
       const response = await api.getNotificationHistory({ limit: 30, offset: 0 });
       setHistory(response.items || []);
     } catch (error) {
-      toast.error(getErrorMessage(error));
+      setHistoryError(getErrorMessage(error));
     } finally {
       setHistoryLoading(false);
     }
@@ -154,11 +161,35 @@ export function AlertsPage() {
     : null;
 
   const handleTestChannel = async (id: string) => {
+    setTestingIds(prev => new Set(prev).add(id));
     try {
       await api.testNotificationChannel(id);
       toast.success(t('alerts.testSent'));
     } catch (error) {
       toast.error(getErrorMessage(error));
+    } finally {
+      setTestingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+  };
+
+  const handleToggleRule = async (id: string) => {
+    setTogglingIds(prev => new Set(prev).add(id));
+    try {
+      const result = await api.toggleAlertRule(id);
+      setRules(prev => prev.map(rule => rule.id === id ? { ...rule, isEnabled: result.isEnabled } : rule));
+      toast.success(result.isEnabled ? t('alerts.rules.ruleEnabled') : t('alerts.rules.ruleDisabled'));
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setTogglingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -200,6 +231,13 @@ export function AlertsPage() {
     />
   );
 
+  const loadWarning = (channelsError || rulesError || historyError) ? (
+    <section className="mb-5 flex flex-col gap-3 rounded-xl border border-ui-border bg-bg-surface p-4 sm:flex-row sm:items-center sm:justify-between" role="alert">
+      <div className="flex items-start gap-3"><MaterialIcon name="sync_problem" className="mt-0.5 text-lg text-status-warn" /><div><p className="text-sm font-semibold text-text-base">{t('일부 알림 정보를 불러오지 못했습니다')}</p><p className="mt-0.5 text-xs text-text-muted">{t('성공한 정보는 계속 표시합니다. 탭별 오류 영역에서 다시 시도할 수 있습니다.')}</p></div></div>
+      <Button size="sm" variant="secondary" onClick={() => { void loadChannels(); void loadRules(); void loadHistory(); }}>{t('모두 다시 시도')}</Button>
+    </section>
+  ) : null;
+
   if (isMobile) {
     return (
       <>
@@ -219,6 +257,11 @@ export function AlertsPage() {
           onDeleteChannel={handleDeleteChannel}
           onToggleChannel={handleToggleChannel}
           onTestChannel={handleTestChannel}
+          onToggleRule={handleToggleRule}
+          togglingIds={togglingIds}
+          testingIds={testingIds}
+          errors={{ channels: channelsError, rules: rulesError, history: historyError }}
+          onRetry={{ channels: refreshChannels, rules: loadRules, history: loadHistory }}
         />
         {deleteDialog}
       </>
@@ -227,6 +270,7 @@ export function AlertsPage() {
 
   return (
     <>
+      {loadWarning}
       <AlertsDesktopView
         channels={channels}
         channelHealth={channelHealth}

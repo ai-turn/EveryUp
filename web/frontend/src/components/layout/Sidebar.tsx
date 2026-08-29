@@ -8,6 +8,7 @@ import { api, type AgentServiceFlat } from '../../services/api';
 import { env } from '../../config/env';
 import logo from '../../assets/logo.png';
 import logoDark from '../../assets/logo-dark.png';
+import { DemoScenarioSwitcher } from './DemoScenarioSwitcher';
 
 interface NavItemProps {
   to: string;
@@ -21,13 +22,14 @@ function NavItem({ to, icon, label, active, badge }: NavItemProps) {
   return (
     <Link
       to={to}
+      aria-current={active ? 'page' : undefined}
       className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
         active ? 'bg-primary/10 text-primary' : 'text-text-muted hover:bg-ui-hover hover:text-text-base'
       }`}
     >
       <MaterialIcon name={icon} className="shrink-0 text-lg" />
       <span className="truncate">{label}</span>
-      {badge != null && badge > 0 && <span className="ml-auto shrink-0 rounded-full bg-red-500 px-1.5 py-px text-2xs font-bold text-white">{badge}</span>}
+      {badge != null && badge > 0 && <span className="ml-auto shrink-0 rounded border border-status-error/20 bg-status-error/10 px-1.5 py-px text-2xs font-bold text-status-error">{badge}</span>}
     </Link>
   );
 }
@@ -55,7 +57,9 @@ export function Sidebar() {
   }, []);
 
   const path = location.pathname;
-  const isHome = path === '/' || path === '/agents';
+  const serviceTab = new URLSearchParams(location.search).get('tab') ?? 'health';
+  const serviceDetail = path.startsWith('/services/');
+  const detailActive = (tab: string) => serviceDetail && serviceTab === tab;
 
   return (
     <aside className="hidden w-60 shrink-0 flex-col border-r border-ui-border bg-bg-surface lg:flex">
@@ -64,7 +68,12 @@ export function Sidebar() {
         <span className="text-lg font-bold tracking-tight text-text-base transition-colors group-hover:text-primary">EveryUp</span>
       </Link>
 
-      {env.isDemoMode && <div className="mx-3 mb-2 rounded-lg bg-amber-400 px-3 py-1.5 text-center text-xs font-bold uppercase tracking-wider text-amber-950">Live Demo</div>}
+      {env.isDemoMode && (
+        <div className="mx-3 mb-2 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2">
+          <p className="text-xs font-bold uppercase tracking-wider text-primary">Live Demo</p>
+          <div className="mt-2"><DemoScenarioSwitcher tone="light" /></div>
+        </div>
+      )}
 
       <button
         onClick={() => window.dispatchEvent(new Event('everyup:command-palette'))}
@@ -75,13 +84,17 @@ export function Sidebar() {
         <kbd className="rounded border border-ui-border px-1 py-0.5 text-2xs font-semibold">{navigator.platform.toLowerCase().includes('mac') ? '⌘' : 'Ctrl K'}</kbd>
       </button>
 
-      <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-3">
-        <NavItem to="/" icon="grid_view" label="Docker" active={isHome} />
-        <NavItem to="/uptime" icon="monitor_heart" label={t('업타임')} active={path.startsWith('/uptime')} />
-        <NavItem to="/logs" icon="article" label={t('로그')} active={path.startsWith('/logs')} />
-        <NavItem to="/infrastructure" icon="memory" label={t('인프라')} active={path.startsWith('/infrastructure')} />
-        <NavItem to="/api" icon="api" label="API" active={path.startsWith('/api')} />
-        <NavItem to="/metrics" icon="monitoring" label={t('메트릭')} active={path.startsWith('/metrics')} />
+      <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-3" aria-label={t('주 메뉴')}>
+        <NavItem to="/" icon="dashboard" label={t('개요')} active={path === '/'} />
+        <NavItem to="/projects" icon="folder_open" label="Projects" active={path.startsWith('/projects')} />
+        <NavItem to="/environments" icon="dns" label={t('Docker 환경')} active={path.startsWith('/environments') || path.startsWith('/agents/')} />
+        <p className="px-3 pt-4 pb-1 text-2xs font-semibold uppercase tracking-wider text-text-dim">{t('관측')}</p>
+        <NavItem to="/uptime" icon="monitor_heart" label={t('업타임')} active={path.startsWith('/uptime') || detailActive('health')} />
+        <NavItem to="/logs" icon="article" label={t('로그')} active={path.startsWith('/logs') || detailActive('logs')} />
+        <NavItem to="/infrastructure" icon="memory" label={t('인프라')} active={path.startsWith('/infrastructure') || detailActive('infra')} />
+        <NavItem to="/api" icon="api" label={t('API 요청')} active={path.startsWith('/api') || detailActive('requests')} />
+        <NavItem to="/metrics" icon="monitoring" label={t('메트릭')} active={path.startsWith('/metrics') || detailActive('metrics')} />
+        <p className="px-3 pt-4 pb-1 text-2xs font-semibold uppercase tracking-wider text-text-dim">{t('대응 및 관리')}</p>
         <NavItem to="/alerts" icon="notifications" label={t('알림')} active={path.startsWith('/alerts')} badge={services.filter((service) => !service.healthy).length} />
         <NavItem to="/settings" icon="settings" label={t('환경 설정')} active={path.startsWith('/settings')} />
       </nav>

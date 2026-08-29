@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslate } from '@tolgee/react';
 import { toast } from 'react-hot-toast';
 import { Button, ConfirmDialog, EmptyState, Input, MaterialIcon, PageHeader, Select } from '../../components/common';
@@ -42,10 +43,10 @@ function ProjectDialog({ project, onClose, onSave }: {
       aria-labelledby="project-dialog-title"
       onCancel={event => { event.preventDefault(); if (!saving) onClose(); }}
       onClick={event => { if (event.target === event.currentTarget && !saving) onClose(); }}
-      className={`m-auto w-full max-w-md overflow-hidden rounded-xl border border-ui-border bg-bg-surface shadow-2xl ${SCRIM_MODAL_DIALOG}`}
+      className={`m-auto w-full max-w-md overflow-hidden rounded-xl border border-ui-border bg-bg-surface shadow-lg ${SCRIM_MODAL_DIALOG}`}
     >
       <form onSubmit={submit}>
-        <div className="border-b border-ui-border px-6 py-4"><h2 id="project-dialog-title" className="text-lg font-bold text-text-base">{t(project ? 'Project 수정' : 'Project 추가')}</h2></div>
+        <div className="border-b border-ui-border px-6 py-4"><h2 id="project-dialog-title" className="text-base font-semibold text-text-base">{t(project ? 'Project 수정' : 'Project 추가')}</h2></div>
         <div className="space-y-4 p-6">
           <label className="block space-y-1.5" htmlFor="project-name"><span className="text-sm font-semibold text-text-secondary">{t('이름')}</span><Input id="project-name" required value={name} onChange={event => setName(event.target.value)} placeholder={t('예: Production')} /></label>
           <label className="block space-y-1.5" htmlFor="project-description"><span className="text-sm font-semibold text-text-secondary">{t('설명')}</span><Input id="project-description" value={description} onChange={event => setDescription(event.target.value)} placeholder={t('선택 사항')} /></label>
@@ -91,7 +92,7 @@ function ProjectCard({ project, agents, monitors, directServices, infrastructure
   return (
     <article className="rounded-xl border border-ui-border bg-bg-surface p-5">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0"><h2 className="truncate text-lg font-bold text-text-base">{project.name}</h2><p className="mt-1 text-sm text-text-muted">{project.description || t('설명이 없습니다')}</p></div>
+        <div className="min-w-0"><Link to={`/projects/${project.id}`} className="block truncate text-base font-bold text-text-base hover:text-primary">{project.name}</Link><p className="mt-1 text-sm text-text-muted">{project.description || t('설명이 없습니다')}</p></div>
         <div className="flex gap-1"><Button variant="ghost" size="sm" aria-label={t('Project 수정')} onClick={onEdit}><MaterialIcon name="edit" /></Button><Button variant="ghost" size="sm" aria-label={t('Project 삭제')} onClick={onDelete}><MaterialIcon name="delete" className="text-status-error" /></Button></div>
       </div>
       <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">

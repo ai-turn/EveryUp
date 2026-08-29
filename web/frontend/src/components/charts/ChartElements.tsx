@@ -27,7 +27,7 @@ export function ChartStatsLegend({
   if (rows.length === 0) return null;
 
   return (
-    <table className="w-full text-2xs tabular-nums">
+    <table className="w-full text-2xs font-mono tabular-nums">
       <thead>
         <tr className="text-text-dim">
           <th className="py-0.5 text-left font-semibold" />
@@ -74,7 +74,7 @@ export function ChartLegend({ items, className = '' }: { items: { label: string;
       {items.map((it) => (
         <span
           key={it.label}
-          className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-semibold text-slate-500 dark:border-ui-border-dark dark:bg-ui-hover-dark/40 dark:text-text-muted-dark"
+          className="inline-flex items-center gap-1.5 rounded-full border border-ui-border bg-ui-hover-soft px-2 py-0.5 text-xs font-semibold text-text-muted"
         >
           <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: it.color }} />
           {it.label}
@@ -109,7 +109,6 @@ export function ChartTooltip({
       style={{
         background: theme.tooltipBg,
         border: `1px solid ${theme.tooltipBorder}`,
-        boxShadow: '0 16px 40px rgba(15, 23, 42, 0.16)',
       }}
     >
       <p className="mb-2 text-xs font-bold" style={{ color: theme.tickColor }}>
@@ -122,7 +121,7 @@ export function ChartTooltip({
               <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
               {item.name}
             </span>
-            <span className="font-bold tabular-nums text-text-base">
+            <span className="font-mono font-bold tabular-nums text-text-base">
               {valueFormatter(Number(item.value) || 0)}
               <span className="ml-0.5 text-xs font-semibold text-text-dim">{unit}</span>
             </span>
