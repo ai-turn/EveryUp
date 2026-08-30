@@ -9,6 +9,7 @@ import { MaterialIcon, Input, Select } from '../../../components/common';
 import { FIELD_SHELL } from '../../../components/common/Input';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { getChannelStyle } from '../utils/channelMeta';
+import { SEVERITY_LABELS } from '../utils/severityLabel';
 import {
     api,
     type AlertRule,
@@ -106,12 +107,6 @@ interface AlertRuleFormProps {
 }
 
 // ─── Public export ────────────────────────────────────────────────────────────
-
-const SEVERITY_LABELS: Record<'critical' | 'warning' | 'info', string> = {
-    critical: '심각',
-    warning: '경고',
-    info: '정보',
-};
 
 export function AlertRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange }: AlertRuleFormProps) {
     if (!!rule && rule.isSystem) {

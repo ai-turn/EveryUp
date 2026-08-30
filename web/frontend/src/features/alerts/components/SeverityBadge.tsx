@@ -6,18 +6,20 @@
 // AlertRuleForm의 severity 표시는 이 배지가 아니다 — 알림이 어떻게 보일지 시뮬레이션하는
 // 미리보기 카드(틴트 배경 + 점 + 보더)라 목적과 형태가 다르다.
 
+import { severityLabel } from '../utils/severityLabel';
+
 const TONE: Record<string, string> = {
     critical: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400',
     warning: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
     info: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-400',
 };
 
-export function SeverityBadge({ severity, label }: { severity: string; label: string }) {
+export function SeverityBadge({ severity }: { severity: string }) {
     return (
         <span
             className={`inline-flex rounded-md px-2 py-0.5 text-2xs font-bold uppercase tracking-wide ${TONE[severity] ?? TONE.info}`}
         >
-            {label}
+            {severityLabel(severity)}
         </span>
     );
 }

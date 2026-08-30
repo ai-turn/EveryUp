@@ -5,6 +5,7 @@ import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { getChannelStyle } from '../utils/channelMeta';
 import { ChannelHealthMeta } from './ChannelHealthMeta';
 import type { NotificationChannel, NotificationChannelHealth, AlertRule, NotificationHistory, NotificationStats } from '../../../services/api';
+import { severityLabel } from '../utils/severityLabel';
 
 type MobileTab = 'channels' | 'rules' | 'history';
 
@@ -248,7 +249,7 @@ export function AlertsMobileView({
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-text-base truncate">{rule.name}</p>
                       <p className="text-sm text-text-muted capitalize">
-                        {rule.severity} · {rule.metric} {rule.operator} {rule.threshold}
+                        {severityLabel(rule.severity)} · {rule.metric} {rule.operator} {rule.threshold}
                       </p>
                     </div>
                     <Toggle checked={rule.isEnabled} onChange={() => onToggleRule(rule.id)} disabled={togglingIds.has(rule.id)} ariaLabel={`${rule.name} ${rule.isEnabled ? '비활성화' : '활성화'}`} />

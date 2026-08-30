@@ -278,7 +278,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
                       </td>
                       <td className="px-4 py-3">
                         {item.severity && (
-                          <SeverityBadge severity={item.severity} label={item.severity} />
+                          <SeverityBadge severity={item.severity} />
                         )}
                       </td>
                       <td className="px-4 py-3 text-right text-sm text-text-muted whitespace-nowrap">

@@ -52,12 +52,6 @@ const CATEGORY_LABELS: Record<Exclude<CategoryKey, 'all'>, string> = {
   system: '시스템',
 };
 
-const SEVERITY_LABELS: Record<string, string> = {
-  critical: '긴급',
-  warning: '경고',
-  info: '정보',
-};
-
 const METRIC_LABELS: Record<string, string> = {
   cpu: 'CPU',
   memory: '메모리',
@@ -80,10 +74,6 @@ const OPERATOR_WORDS: Record<string, string> = {
 
 function categoryLabel(category: Exclude<CategoryKey, 'all'>): string {
   return CATEGORY_LABELS[category];
-}
-
-function severityLabel(severity: string): string {
-  return SEVERITY_LABELS[severity] ?? severity;
 }
 
 function metricLabel(metric: string): string {
@@ -399,9 +389,9 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
           className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm font-medium text-text-secondary cursor-pointer"
         >
           <option value="all">전체 심각도</option>
-          <option value="critical">Critical</option>
-          <option value="warning">Warning</option>
-          <option value="info">Info</option>
+          <option value="critical">심각</option>
+          <option value="warning">경고</option>
+          <option value="info">정보</option>
         </select>
 
         <select
@@ -491,7 +481,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                         </p>
                       </td>
                       <td className="px-4 py-2.5 align-middle">
-                        <SeverityBadge severity={rule.severity} label={severityLabel(rule.severity)} />
+                        <SeverityBadge severity={rule.severity} />
                       </td>
                       <td className="px-4 py-2.5 align-middle">
                         <span
