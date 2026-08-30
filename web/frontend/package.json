@@ -13,6 +13,7 @@
     "pretest:e2e": "pnpm build:demo",
     "test:e2e": "playwright test",
     "preview": "vite preview",
+    "screenshot": "pnpm build:demo && node scripts/capture-readme-screenshot.mjs",
     "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
