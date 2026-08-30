@@ -23,7 +23,7 @@ export function ChannelFormPage() {
         if (cancelled) return;
         const found = list.find(c => c.id === id);
         if (!found) {
-          toast.error('Not found');
+          toast.error('채널을 찾을 수 없습니다');
           navigate('/alerts');
           return;
         }

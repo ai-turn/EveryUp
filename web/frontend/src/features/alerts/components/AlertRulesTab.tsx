@@ -380,7 +380,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <SegmentedControl
           size="md"
-          ariaLabel="Category"
+          ariaLabel="카테고리"
           value={categoryFilter}
           onChange={setCategoryFilter}
           options={[
@@ -461,7 +461,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
               {filteredRules.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-10 text-center text-sm text-text-muted">
-                    No rules match your filters{' · '}
+                    조건에 맞는 규칙이 없습니다{' · '}
                     <button onClick={clearFilters} className="text-primary hover:underline font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded">
                       필터 초기화
                     </button>

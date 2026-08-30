@@ -95,19 +95,19 @@ export function AlertsMobileView({
         <div className="grid grid-cols-3 gap-2">
           <div className="bg-bg-surface border border-ui-border rounded-xl p-3">
             <p className="text-sm font-medium text-text-muted truncate">
-              Success
+              성공률
             </p>
             <p className="text-xl font-bold text-text-base">{stats.successRate.toFixed(0)}%</p>
           </div>
           <div className="bg-bg-surface border border-ui-border rounded-xl p-3">
             <p className="text-sm font-medium text-status-healthy truncate">
-              Sent
+              발송
             </p>
             <p className="text-xl font-bold text-status-healthy">{stats.totalSent}</p>
           </div>
           <div className="bg-bg-surface border border-ui-border rounded-xl p-3">
             <p className="text-sm font-medium text-status-error truncate">
-              Failed
+              실패
             </p>
             <p className="text-xl font-bold text-status-error">{stats.totalFailed}</p>
           </div>
@@ -228,7 +228,7 @@ export function AlertsMobileView({
             <div className="py-8 text-center">
               <MaterialIcon name="rule" className="text-4xl text-text-dim" />
               <p className="text-sm text-text-dim mt-2">
-                No alert rules configured
+                등록된 알림 규칙이 없습니다
               </p>
             </div>
           ) : (
