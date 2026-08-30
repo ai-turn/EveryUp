@@ -10,10 +10,13 @@
 
 <p align="center">
   <a href="README.md">한국어</a> -
-  <a href="https://ai-turn.github.io/everyup/">Live Demo</a> -
   <a href="#quick-start">Quick Start</a> -
   <a href="#what-gets-collected">What's Collected</a> -
   <a href="#documentation">Docs</a>
+</p>
+
+<p align="center">
+  <a href="https://ai-turn.github.io/everyup/"><b>Live Demo</b></a>
 </p>
 
 <p align="center">
