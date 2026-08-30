@@ -1,4 +1,3 @@
-import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Link, useLocation } from 'react-router-dom';
 import logo from '../../assets/logo.png';
@@ -9,18 +8,8 @@ import { OPEN_PALETTE_EVENT } from './CommandPalette';
 
 export function Header() {
     const { theme, toggleTheme } = useTheme();
-    const { i18n } = useTranslation('common');
     const isMobile = useIsMobile();
     const location = useLocation();
-
-    const changeLanguage = (lng: string) => {
-        i18n.changeLanguage(lng);
-    };
-
-    const toggleLanguage = () => {
-        const next = i18n.language.startsWith('ko') ? 'en' : 'ko';
-        i18n.changeLanguage(next);
-    };
 
     const isAlertsActive = location.pathname.startsWith('/alerts');
     const isSettingsActive = location.pathname.startsWith('/settings');
@@ -55,38 +44,6 @@ export function Header() {
                 >
                     <MaterialIcon name="search" className="text-xl" />
                 </button>
-                {/* Language Switcher */}
-                {isMobile ? (
-                    <button
-                        onClick={toggleLanguage}
-                        aria-label={i18n.language.startsWith('ko') ? 'Switch to English' : '한국어로 전환'}
-                        className="flex h-9 w-9 items-center justify-center rounded-lg bg-ui-hover text-sm font-bold text-text-muted transition-colors active:scale-95"
-                    >
-                        {i18n.language.startsWith('ko') ? 'EN' : 'KO'}
-                    </button>
-                ) : (
-                    <div className="flex items-center gap-1 rounded-lg bg-ui-hover p-1">
-                        <button
-                            onClick={() => changeLanguage('ko')}
-                            className={`px-2.5 py-1.5 text-sm font-bold rounded-md transition-all ${i18n.language.startsWith('ko')
-                                ? 'bg-ui-raised text-primary shadow-sm'
-                                : 'text-text-muted hover:text-text-secondary'
-                                }`}
-                        >
-                            KO
-                        </button>
-                        <button
-                            onClick={() => changeLanguage('en')}
-                            className={`px-2 py-1 text-sm font-bold rounded-md transition-all ${i18n.language.startsWith('en')
-                                ? 'bg-ui-raised text-primary shadow-sm'
-                                : 'text-text-muted hover:text-text-secondary'
-                                }`}
-                        >
-                            EN
-                        </button>
-                    </div>
-                )}
-
                 {/* Icon buttons */}
                 <div className="flex items-center gap-1">
                     {!isMobile && (

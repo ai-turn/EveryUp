@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../../utils/errors';
 import { api, type NotificationChannel, type AlertRule, type NotificationHistory, type NotificationStats, type NotificationChannelHealth } from '../../services/api';
@@ -18,7 +17,7 @@ function parseTabParam(value: string | null): TabType {
 }
 
 export function AlertsPage() {
-  const { t } = useTranslation(['alerts', 'common']);
+
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
@@ -125,7 +124,7 @@ export function AlertsPage() {
       setChannels(prev =>
         prev.map(ch => ch.id === id ? { ...ch, isEnabled: result.isEnabled } : ch)
       );
-      toast.success(result.isEnabled ? t('alerts.channelEnabled') : t('alerts.channelDisabled'));
+      toast.success(result.isEnabled ? '채널이 활성화되었습니다' : '채널이 비활성화되었습니다');
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
@@ -146,7 +145,7 @@ export function AlertsPage() {
     setIsDeleting(true);
     try {
       await api.deleteNotificationChannel(pendingDeleteId);
-      toast.success(t('alerts.channelDeleted'));
+      toast.success('채널이 삭제되었습니다');
       setPendingDeleteId(null);
       refreshChannels();
     } catch (error) {
@@ -164,7 +163,7 @@ export function AlertsPage() {
     setTestingIds(prev => new Set(prev).add(id));
     try {
       await api.testNotificationChannel(id);
-      toast.success(t('alerts.testSent'));
+      toast.success('테스트 알림이 전송되었습니다!');
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
@@ -181,7 +180,7 @@ export function AlertsPage() {
     try {
       const result = await api.toggleAlertRule(id);
       setRules(prev => prev.map(rule => rule.id === id ? { ...rule, isEnabled: result.isEnabled } : rule));
-      toast.success(result.isEnabled ? t('alerts.rules.ruleEnabled') : t('alerts.rules.ruleDisabled'));
+      toast.success(result.isEnabled ? '규칙이 활성화되었습니다' : '규칙이 비활성화되었습니다');
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
@@ -216,16 +215,16 @@ export function AlertsPage() {
       isOpen={pendingDeleteChannel !== null}
       onClose={() => setPendingDeleteId(null)}
       onConfirm={confirmDeleteChannel}
-      title={t('alerts.deleteDialog.title')}
+      title="채널 삭제"
       message={
         <span>
-          {t('alerts.deleteDialog.messagePrefix')}
+          {''}
           <span className="font-bold text-text-base">{pendingDeleteChannel?.name}</span>
-          {t('alerts.deleteDialog.messageSuffix')}
+          {' 채널을 삭제하시겠습니까?'}
         </span>
       }
-      description={t('alerts.deleteDialog.warning')}
-      confirmLabel={t('common.delete')}
+      description="이 작업은 되돌릴 수 없으며, 연결된 알림 규칙에서도 제거됩니다."
+      confirmLabel="삭제"
       variant="danger"
       isProcessing={isDeleting}
     />
@@ -233,8 +232,8 @@ export function AlertsPage() {
 
   const loadWarning = (channelsError || rulesError || historyError) ? (
     <section className="mb-5 flex flex-col gap-3 rounded-xl border border-ui-border bg-bg-surface p-4 sm:flex-row sm:items-center sm:justify-between" role="alert">
-      <div className="flex items-start gap-3"><MaterialIcon name="sync_problem" className="mt-0.5 text-lg text-status-warn" /><div><p className="text-sm font-semibold text-text-base">{t('일부 알림 정보를 불러오지 못했습니다')}</p><p className="mt-0.5 text-xs text-text-muted">{t('성공한 정보는 계속 표시합니다. 탭별 오류 영역에서 다시 시도할 수 있습니다.')}</p></div></div>
-      <Button size="sm" variant="secondary" onClick={() => { void loadChannels(); void loadRules(); void loadHistory(); }}>{t('모두 다시 시도')}</Button>
+      <div className="flex items-start gap-3"><MaterialIcon name="sync_problem" className="mt-0.5 text-lg text-status-warn" /><div><p className="text-sm font-semibold text-text-base">일부 알림 정보를 불러오지 못했습니다</p><p className="mt-0.5 text-xs text-text-muted">성공한 정보는 계속 표시합니다. 탭별 오류 영역에서 다시 시도할 수 있습니다.</p></div></div>
+      <Button size="sm" variant="secondary" onClick={() => { void loadChannels(); void loadRules(); void loadHistory(); }}>모두 다시 시도</Button>
     </section>
   ) : null;
 

@@ -1,8 +1,6 @@
-import { useMemo } from 'react';
 import { useTranslate } from '@tolgee/react';
-import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
-import { ko, enUS } from 'date-fns/locale';
+import { ko } from 'date-fns/locale';
 import { Button, MaterialIcon } from '../../../components/common';
 import type { AgentServiceFlat } from '../../../services/api';
 
@@ -17,17 +15,14 @@ interface ServiceIncidentBannerProps {
 // Renders nothing for healthy services.
 export function ServiceIncidentBanner({ service, onInvestigate }: ServiceIncidentBannerProps) {
   const { t } = useTranslate();
-  const { i18n } = useTranslation('common');
 
-  const dateLocale = useMemo(
-    () => (i18n.language.startsWith('ko') ? ko : enUS),
-    [i18n.language],
-  );
+
+
 
   if (service.healthy) return null;
 
   const since = service.observedAt
-    ? formatDistanceToNow(new Date(service.observedAt), { addSuffix: true, locale: dateLocale })
+    ? formatDistanceToNow(new Date(service.observedAt), { addSuffix: true, locale: ko })
     : null;
 
   return (

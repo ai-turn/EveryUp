@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-hot-toast';
-import { useTranslation } from 'react-i18next';
 import { getErrorMessage } from '../../../utils/errors';
 import { FormStep, Field } from './FormLayout';
 import { MaterialIcon, Input, Select } from '../../../components/common';
@@ -108,6 +107,12 @@ interface AlertRuleFormProps {
 
 // ─── Public export ────────────────────────────────────────────────────────────
 
+const SEVERITY_LABELS: Record<'critical' | 'warning' | 'info', string> = {
+    critical: '심각',
+    warning: '경고',
+    info: '정보',
+};
+
 export function AlertRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange }: AlertRuleFormProps) {
     if (!!rule && rule.isSystem) {
         return <SystemRuleEditor rule={rule} channels={channels} onSuccess={onSuccess} onCancel={onCancel} onSubmittingChange={onSubmittingChange} />;
@@ -118,7 +123,7 @@ export function AlertRuleForm({ onSuccess, onCancel, rule, channels, onSubmittin
 // ─── System rule editor ───────────────────────────────────────────────────────
 
 function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingChange }: { rule: AlertRule; channels: NotificationChannel[]; onSuccess: () => void; onCancel: () => void; onSubmittingChange?: (v: boolean) => void }) {
-    const { t } = useTranslation(['alerts', 'common']);
+
     const [message, setMessage] = useState(rule.message ?? '');
     const [selectedChannels, setSelectedChannels] = useState<string[]>(rule.channelIds || []);
     const effectiveChannelCount = selectedChannels.length === 0 ? channels.length : selectedChannels.length;
@@ -132,7 +137,7 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
         onSubmittingChange?.(true);
         try {
             await api.updateAlertRule(rule.id, { message, channelIds: selectedChannels });
-            toast.success(t('alerts.rules.updated'));
+            toast.success('규칙이 수정되었습니다');
             onSuccess();
             onCancel();
         } catch (error) {
@@ -146,16 +151,16 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
         <form id="alert-rule-form" onSubmit={handleSubmit}>
             <div className="max-w-350 mx-auto grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
                 <div className="space-y-4 min-w-0">
-                    <FormStep n={1} title={t('alerts.rules.systemRule')} subtitle={t('alerts.rules.systemRuleDesc')}>
+                    <FormStep n={1} title="시스템 규칙" subtitle="이 규칙은 시스템에 의해 관리됩니다. 메시지와 알림 채널만 수정할 수 있습니다.">
                         <div className="p-4 bg-ui-hover-soft/50 rounded-xl">
                             <h3 className="text-base font-bold text-text-base mb-1">{rule.name}</h3>
-                            <p className="text-sm text-slate-500">{t('alerts.rules.systemRuleDesc')}</p>
+                            <p className="text-sm text-slate-500">이 규칙은 시스템에 의해 관리됩니다. 메시지와 알림 채널만 수정할 수 있습니다.</p>
                         </div>
                     </FormStep>
 
-                    <FormStep n={2} title={t('alerts.rules.messageLabel')} subtitle={t('alerts.rules.messageSubtitle', { defaultValue: '알림 발송 시 사용될 메시지' })}>
+                    <FormStep n={2} title="알림 메시지" subtitle="알림 발송 시 사용될 메시지">
                         <textarea
-                            aria-label={t('alerts.rules.messageLabel')}
+                            aria-label="알림 메시지"
                             value={message}
                             onChange={e => setMessage(e.target.value)}
                             rows={3}
@@ -164,10 +169,10 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
                         />
                     </FormStep>
 
-                    <FormStep n={3} title={t('alerts.rules.notifyChannels')} subtitle={t('alerts.rules.channelsSubtitle', { defaultValue: '발송할 채널 선택' })}>
+                    <FormStep n={3} title="알림 채널" subtitle="발송할 채널 선택">
                         <div className="space-y-2">
                             {channels.length === 0 ? (
-                                <p className="text-sm text-slate-400">{t('alerts.rules.noChannels')}</p>
+                                <p className="text-sm text-slate-400">등록된 알림 채널이 없습니다</p>
                             ) : channels.map(ch => (
                                 <button key={ch.id} type="button" onClick={() => handleToggleChannel(ch.id)}
                                     className={`w-full flex items-center gap-3 px-3 py-2.5 border-2 rounded-xl transition-all ${selectedChannels.includes(ch.id) ? 'border-primary bg-primary/5 text-primary' : 'border-ui-border-soft text-slate-500'}`}>
@@ -176,7 +181,7 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
                                 </button>
                             ))}
                             {selectedChannels.length === 0 && channels.length > 0 && (
-                                <p className="text-sm text-slate-400 italic">{t('alerts.rules.allChannels')}</p>
+                                <p className="text-sm text-slate-400 italic">비우면 전체 채널</p>
                             )}
                         </div>
                     </FormStep>
@@ -190,28 +195,28 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
                                 <MaterialIcon name="lock" className="text-base text-slate-400" />
                                 <div>
                                     <p className="text-sm font-bold text-text-base uppercase tracking-widest">
-                                        {t('alerts.rules.systemRule')}
+                                        시스템 규칙
                                     </p>
                                     <p className="text-sm text-text-muted mt-0.5">
-                                        {t('alerts.rules.preview')}
+                                        발동 시:
                                     </p>
                                 </div>
                             </div>
                             <div className="p-5 space-y-4">
                                 <div className="rounded-xl bg-ui-hover-soft/50 p-3">
-                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{t('alerts.rules.ruleName')}</p>
+                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">규칙 이름</p>
                                     <p className="mt-1 truncate text-sm font-bold text-text-base">{rule.name}</p>
                                 </div>
                                 <div className="rounded-xl bg-ui-hover-soft/50 p-3">
-                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{t('alerts.rules.notifyChannels')}</p>
+                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">알림 채널</p>
                                     <p className="mt-1 text-sm font-bold text-text-base">
                                         {selectedChannels.length === 0
-                                            ? t('alerts.rules.channelSummaryAll', { count: effectiveChannelCount })
-                                            : t('alerts.rules.channelSummarySelected', { count: effectiveChannelCount })}
+                                            ? `전체 ${effectiveChannelCount}개`
+                                            : `${effectiveChannelCount}개 선택`}
                                     </p>
                                 </div>
                                 <div className="rounded-xl bg-ui-hover-soft/50 p-3">
-                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{t('alerts.rules.messageLabel')}</p>
+                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">알림 메시지</p>
                                     <p className="mt-2 text-sm leading-relaxed text-text-secondary">
                                         {message || 'Server has been started'}
                                     </p>
@@ -228,7 +233,7 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
 // ─── Full rule form ───────────────────────────────────────────────────────────
 
 function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange }: AlertRuleFormProps) {
-    const { t } = useTranslation(['alerts', 'common']);
+
     const isEdit = !!rule;
     const [agentServices, setAgentServices] = useState<AgentServiceFlat[]>([]);
     const [agents, setAgents] = useState<ConnectedAgent[]>([]);
@@ -364,10 +369,10 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
             };
             if (isEdit && rule) {
                 await api.updateAlertRule(rule.id, payload);
-                toast.success(t('alerts.rules.updated'));
+                toast.success('규칙이 수정되었습니다');
             } else {
                 await api.createAlertRule(payload);
-                toast.success(t('alerts.rules.created'));
+                toast.success('규칙이 생성되었습니다');
             }
             onSuccess();
             onCancel();
@@ -408,12 +413,12 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
             ? selectedDirectService.name
             : watchedAgentId && watchedServiceKey
             ? (selectedAgentService ? `${selectedAgentService.agentName} / ${selectedAgentService.name}` : watchedServiceKey)
-            : (isLog ? t('alerts.rules.allLogServices') : t('alerts.rules.allHealthchecks')))
+            : (isLog ? '전체 로그 서비스' : '전체 헬스체크'))
         : isMetric && selectedDirectService
             ? selectedDirectService.name
         : watchedCategory === 'resource' && watchedAgentId
             ? (selectedInfrastructureResource?.name ?? selectedAgent?.name ?? watchedAgentId)
-            : (watchedAgentId ? (selectedAgent?.name ?? watchedAgentId) : t('alerts.rules.allHosts'));
+            : (watchedAgentId ? (selectedAgent?.name ?? watchedAgentId) : '전체 인프라');
 
     const previewChannels = watchedChannelIds.length === 0
         ? channels
@@ -429,7 +434,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
         <form
             id="alert-rule-form"
             onSubmit={handleSubmit(onSubmit, () => {
-                toast.error(t('alerts.rules.validationFailed', { defaultValue: '필수 항목을 확인해주세요' }));
+                toast.error('필수 항목을 확인해주세요');
             })}
         >
             <div className="max-w-350 mx-auto grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
@@ -438,14 +443,14 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                 <div className="space-y-4 min-w-0">
 
                     {/* Step 1: Target */}
-                    <FormStep n={1} title={t('alerts.rules.stepTarget', { defaultValue: '대상' })}>
-                        <Field label={t('alerts.rules.category', { defaultValue: '카테고리' })}>
+                    <FormStep n={1} title="대상">
+                        <Field label="카테고리">
                             <div className="flex gap-2">
                                 {([
-                                    { value: 'endpoint' as const, label: t('alerts.rules.endpointHealth'), icon: 'monitor_heart' },
-                                    { value: 'log'      as const, label: t('alerts.rules.logRule'),        icon: 'article' },
-                                    { value: 'metric'   as const, label: t('alerts.rules.metricRule', { defaultValue: '메트릭' }), icon: 'monitoring' },
-                                    { value: 'resource' as const, label: t('alerts.rules.serverResource'), icon: 'memory' },
+                                    { value: 'endpoint' as const, label: '헬스체크', icon: 'monitor_heart' },
+                                    { value: 'log'      as const, label: '로그',        icon: 'article' },
+                                    { value: 'metric'   as const, label: '메트릭', icon: 'monitoring' },
+                                    { value: 'resource' as const, label: '인프라', icon: 'memory' },
                                 ]).map(cat => (
                                     <button
                                         key={cat.value}
@@ -467,8 +472,8 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                         <div className="grid grid-cols-2 gap-4">
                             <Field
                                 htmlFor="rule-target"
-                                label={t('alerts.rules.target')}
-                                hint={!watchedAgentId ? t('alerts.rules.targetHintAll', { defaultValue: '미선택 시 모든 대상에 적용됩니다' }) : null}
+                                label="대상"
+                                hint={!watchedAgentId ? '미선택 시 모든 대상에 적용됩니다' : null}
                             >
                                 {isEndpoint || isLog || isMetric ? (
                                     <Select
@@ -485,7 +490,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                         }}
 
                                     >
-                                        <option value="">{isLog ? t('alerts.rules.allLogServices') : isMetric ? t('alerts.rules.allMetricServices', { defaultValue: '모든 서비스' }) : t('alerts.rules.allHealthchecks')}</option>
+                                        <option value="">{isLog ? '전체 로그 서비스' : isMetric ? '모든 서비스' : '전체 헬스체크'}</option>
                                         {agentServices.map(svc => (
                                             <option key={`${svc.agentId}:::${svc.key}`} value={`${svc.agentId}:::${svc.key}`}>
                                                 {svc.agentName} / {svc.name}
@@ -504,7 +509,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                         onChange={e => { setValue('agentId', e.target.value); setValue('serviceKey', ''); }}
 
                                     >
-                                        <option value="">{t('alerts.rules.allHosts')}</option>
+                                        <option value="">전체 인프라</option>
                                         {infrastructureResources.map(resource => (
                                             <option key={resource.id} value={resource.id}>
                                                 {resource.adapter === 'otel-collector' ? 'Collector' : 'Docker'} / {resource.name}
@@ -514,7 +519,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                 )}
                             </Field>
 
-                            <Field htmlFor={isMetric ? 'rule-metric' : undefined} label={t('alerts.rules.metric')} hint={isMetric && !watchedServiceKey ? t('alerts.rules.metricSuggestHint', { defaultValue: '서비스를 선택하면 수집된 메트릭이 제안됩니다' }) : null}>
+                            <Field htmlFor={isMetric ? 'rule-metric' : undefined} label="지표" hint={isMetric && !watchedServiceKey ? '서비스를 선택하면 수집된 메트릭이 제안됩니다' : null}>
                                 {isMetric ? (
                                     <>
                                         <Input
@@ -547,7 +552,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                                         : 'border-ui-border-soft text-slate-500 hover:border-slate-200 dark:hover:border-slate-600'
                                                 }`}
                                             >
-                                                {m === 'log_level' ? t('alerts.rules.logLevel') : m === 'api_status_code' ? t('alerts.rules.apiStatusCode') : m.replace('_', ' ').toUpperCase()}
+                                                {m === 'log_level' ? '로그 레벨' : m === 'api_status_code' ? 'API 요청' : m.replace('_', ' ').toUpperCase()}
                                             </button>
                                         ))}
                                     </div>
@@ -555,7 +560,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                             </Field>
                         </div>
 
-                        <Field htmlFor="rule-name" label={t('alerts.rules.ruleName')} required>
+                        <Field htmlFor="rule-name" label="규칙 이름" required>
                             <Input
                                 id="rule-name"
                                 {...register('name')}
@@ -566,13 +571,13 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                     </FormStep>
 
                     {/* Step 2: Condition */}
-                    <FormStep n={2} title={t('alerts.rules.stepCondition', { defaultValue: '조건' })}>
-                        <Field label={t('alerts.rules.preset', { defaultValue: '프리셋' })}>
+                    <FormStep n={2} title="조건">
+                        <Field label="프리셋">
                             <div className="grid grid-cols-3 gap-2">
                                 {([
-                                    { value: 'normal' as const, icon: 'check_circle', label: t('alerts.rules.conditionNormal') },
-                                    { value: 'error'  as const, icon: 'warning',      label: t('alerts.rules.conditionError') },
-                                    { value: 'custom' as const, icon: 'tune',         label: t('alerts.rules.conditionCustom') },
+                                    { value: 'normal' as const, icon: 'check_circle', label: '정상' },
+                                    { value: 'error'  as const, icon: 'warning',      label: '에러 및 오류' },
+                                    { value: 'custom' as const, icon: 'tune',         label: '직접 설정' },
                                 ]).map(p => (
                                     <button
                                         key={p.value}
@@ -593,7 +598,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
 
                         {conditionPreset === 'custom' && (
                             <div className="grid grid-cols-[auto_1fr_1fr] gap-3 items-end">
-                                <Field htmlFor="rule-operator" label={t('alerts.rules.operator')}>
+                                <Field htmlFor="rule-operator" label="연산자">
                                     <Select
                                         id="rule-operator"
                                         {...register('operator')}
@@ -606,7 +611,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                         <option value="eq">=</option>
                                     </Select>
                                 </Field>
-                                <Field htmlFor="rule-threshold-unit" label={t('alerts.rules.customInputThreshold')}>
+                                <Field htmlFor="rule-threshold-unit" label="임계값">
                                     {watchedMetric === 'log_level' ? (
                                         // Log levels are stored numerically — expose them as named levels
                                         <Select
@@ -643,7 +648,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                     )}
                                 </Field>
                                 {isEndpoint ? (
-                                    <Field htmlFor="rule-consecutive" label={t('alerts.rules.consecutiveChecks')}>
+                                    <Field htmlFor="rule-consecutive" label="연속 체크 횟수">
                                         <Input
                                             id="rule-consecutive"
                                             type="number" min={1} max={20}
@@ -652,7 +657,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                         />
                                     </Field>
                                 ) : !isLog ? (
-                                    <Field htmlFor="rule-duration" label={t('alerts.rules.durationMin', { defaultValue: '지속 시간 (분)' })}>
+                                    <Field htmlFor="rule-duration" label="지속 시간 (분)">
                                         <Input
                                             id="rule-duration"
                                             type="number" min={1} max={60}
@@ -661,8 +666,8 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                         />
                                     </Field>
                                 ) : (
-                                    <Field label={t('alerts.rules.evalMode', { defaultValue: '평가 방식' })}>
-                                        <p className="text-sm text-slate-400 italic py-2.5">{t('alerts.rules.evalImmediate', { defaultValue: '이벤트당 즉시 평가' })}</p>
+                                    <Field label="평가 방식">
+                                        <p className="text-sm text-slate-400 italic py-2.5">이벤트당 즉시 평가</p>
                                     </Field>
                                 )}
                             </div>
@@ -671,8 +676,8 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                         {conditionPreset !== 'custom' && isEndpoint && (
                             <div className="flex items-center justify-between p-3 bg-ui-hover-soft/50 rounded-xl">
                                 <div>
-                                    <p className="text-sm font-bold text-text-base">{t('alerts.rules.consecutiveChecks')}</p>
-                                    <p className="text-sm text-slate-400">{t('alerts.rules.consecutiveChecksHint')}</p>
+                                    <p className="text-sm font-bold text-text-base">연속 체크 횟수</p>
+                                    <p className="text-sm text-slate-400">알림 발생 전 연속 실패 횟수</p>
                                 </div>
                                 <Input
                                     type="number" min={1} max={20}
@@ -685,8 +690,8 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                         {!isEndpoint && !isLog && (
                             <Field
                                 htmlFor="rule-cooldown"
-                                label={t('alerts.rules.cooldown', { defaultValue: '쿨다운 (초)' })}
-                                hint={t('alerts.rules.cooldownHint', { defaultValue: '동일 규칙은 이 시간 내 재발송하지 않음' })}
+                                label="쿨다운 (초)"
+                                hint="동일 규칙은 이 시간 내 재발송하지 않음"
                             >
                                 <Input
                                     id="rule-cooldown"
@@ -700,8 +705,8 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                     </FormStep>
 
                     {/* Step 3: Notify */}
-                    <FormStep n={3} title={t('alerts.rules.stepNotify', { defaultValue: '알림' })}>
-                        <Field label={t('alerts.rules.severity')}>
+                    <FormStep n={3} title="알림">
+                        <Field label="심각도">
                             <div className="grid grid-cols-3 gap-2">
                                 {([
                                     { value: 'critical' as const, active: 'border-red-500 bg-red-500/10 text-red-600 dark:text-red-400', dot: 'bg-red-500' },
@@ -719,19 +724,19 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                         }`}
                                     >
                                         <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
-                                        {t(`alerts.rules.${s.value}`)}
+                                        {SEVERITY_LABELS[s.value]}
                                     </button>
                                 ))}
                             </div>
                         </Field>
 
                         <Field
-                            label={t('alerts.rules.notifyChannels')}
-                            hint={watchedChannelIds.length === 0 && channels.length > 0 ? t('alerts.rules.channelsHintAll', { defaultValue: '미선택 시 모든 활성 채널로 발송됩니다' }) : null}
+                            label="알림 채널"
+                            hint={watchedChannelIds.length === 0 && channels.length > 0 ? '미선택 시 모든 활성 채널로 발송됩니다' : null}
                         >
                             <div className="space-y-2">
                                 {channels.length === 0 ? (
-                                    <p className="text-sm text-slate-400">{t('alerts.rules.noChannels')}</p>
+                                    <p className="text-sm text-slate-400">등록된 알림 채널이 없습니다</p>
                                 ) : channels.map(ch => (
                                     <button
                                         key={ch.id}
@@ -753,18 +758,15 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
 
                         <Field
                             htmlFor="rule-message"
-                            label={t('alerts.rules.messageLabel')}
-                            hint={t('alerts.rules.messageOverridesHint') + ' · ' + t('alerts.rules.messageVarsHint', {
-                                vars: (isApiStatus
+                            label="알림 메시지"
+                            hint={'선택 · 자동 생성 메시지 대체' + ' · ' + `사용 가능한 변수: ${(isApiStatus
                                     ? ['{service_name}', '{method}', '{path}', '{status}', '{duration}']
                                     : isLog
                                     ? ['{service_name}', '{level}', '{message}']
                                     : isEndpoint
                                     ? ['{service_name}', '{value}', '{threshold}', '{metric}']
                                     : ['{host_name}', '{value}', '{threshold}', '{metric}', '{duration}']
-                                ).join(' '),
-                                defaultValue: '사용 가능한 변수: {{vars}}',
-                            })}
+                                ).join(' ')}`}
                         >
                             <textarea
                                 id="rule-message"
@@ -788,15 +790,15 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                             <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-ui-hover-soft/50">
                                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                                 <div>
-                                    <p className="text-sm font-bold text-text-base uppercase tracking-widest">{t('alerts.rules.livePreview', { defaultValue: '라이브 미리보기' })}</p>
-                                    <p className="text-sm text-text-muted mt-0.5">{t('alerts.rules.livePreviewSub', { defaultValue: '입력값 변경 시 자동 갱신' })}</p>
+                                    <p className="text-sm font-bold text-text-base uppercase tracking-widest">라이브 미리보기</p>
+                                    <p className="text-sm text-text-muted mt-0.5">입력값 변경 시 자동 갱신</p>
                                 </div>
                             </div>
                             <div className="p-5 space-y-5">
 
                                 {/* IF block */}
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{t('alerts.rules.previewCondition', { defaultValue: '조건' })}</p>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">조건</p>
                                     <div className="bg-slate-900 dark:bg-slate-950 rounded-lg px-4 py-3 font-mono text-xs leading-7">
                                         <div>
                                             <span className="text-sky-300">IF </span>
@@ -837,14 +839,14 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
 
                                 {/* THEN block */}
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{t('alerts.rules.previewMessage', { defaultValue: '메시지' })}</p>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">메시지</p>
                                     <div className={`rounded-xl px-3 py-3 ${severityClasses.bg}`}>
                                         <div className="flex items-center gap-2 mb-1.5">
                                             <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide ${severityClasses.badge}`}>
                                                 <span className={`w-1.5 h-1.5 rounded-full ${severityClasses.dot}`} />
                                                 {watchedSeverity}
                                             </span>
-                                            <span className="text-sm text-text-muted truncate">{watchedName || `<${t('alerts.rules.ruleName')}>`}</span>
+                                            <span className="text-sm text-text-muted truncate">{watchedName || '<규칙 이름>'}</span>
                                         </div>
                                         <p className="text-sm text-text-secondary leading-relaxed">
                                             {customMessage || buildDefaultMessage(watchedMetric, watchedOperator, watchedThreshold, watchedDuration)}
@@ -856,12 +858,12 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                 <div>
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
                                         {watchedChannelIds.length === 0
-                                            ? t('alerts.rules.sendToAll', { count: channels.length, defaultValue: '발송 → 전체 {{count}}개 채널' })
-                                            : t('alerts.rules.sendToSelected', { count: watchedChannelIds.length, defaultValue: '발송 → {{count}}개 선택' })}
+                                            ? `발송 → 전체 ${channels.length}개 채널`
+                                            : `발송 → ${watchedChannelIds.length}개 선택`}
                                     </p>
                                     <div className="space-y-1.5">
                                         {channels.length === 0 ? (
-                                            <p className="text-sm text-slate-400 italic">{t('alerts.rules.noChannels')}</p>
+                                            <p className="text-sm text-slate-400 italic">등록된 알림 채널이 없습니다</p>
                                         ) : previewChannels.slice(0, 5).map(ch => (
                                             <div key={ch.id} className="flex items-center gap-2 px-3 py-1.5 bg-ui-hover-soft/50 rounded-lg">
                                                 <ChannelIcon type={ch.type} size={14} className={getChannelStyle(ch.type).text} />
@@ -870,7 +872,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                             </div>
                                         ))}
                                         {previewChannels.length > 5 && (
-                                            <p className="text-sm text-slate-400 italic pl-1">{t('alerts.rules.moreChannels', { count: previewChannels.length - 5, defaultValue: '+{{count}}개 더' })}</p>
+                                            <p className="text-sm text-slate-400 italic pl-1">{`+${previewChannels.length - 5}개 더`}</p>
                                         )}
                                     </div>
                                 </div>

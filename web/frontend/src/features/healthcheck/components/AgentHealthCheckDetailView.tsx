@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { MaterialIcon, StatusBadge, TimeRangePicker, type GlobalTimeRange } from '../../../components/common';
 import { useSpinAction } from '../../../hooks/useSpinAction';
 import { useIsMobile } from '../../../hooks/useMediaQuery';
@@ -118,7 +117,7 @@ function DesktopLayout(props: LayoutProps) {
 }
 
 function MobileLayout(props: LayoutProps) {
-  const { t: tc } = useTranslation('common');
+
   const navigate = useNavigate();
   const { service, agentId, serviceKey, refreshKey, onRefresh, range, onRangeChange, tab, onTabChange } = props;
 
@@ -130,7 +129,7 @@ function MobileLayout(props: LayoutProps) {
           className="flex items-center gap-1 text-text-muted active:opacity-60 transition-opacity cursor-pointer"
         >
           <MaterialIcon name="arrow_back" className="text-lg" />
-          <span className="text-sm font-medium">{tc('common.backToList')}</span>
+          <span className="text-sm font-medium">목록으로</span>
         </button>
         <div className="flex items-center gap-2">
           <TimeRangePicker value={range} onChange={onRangeChange} />

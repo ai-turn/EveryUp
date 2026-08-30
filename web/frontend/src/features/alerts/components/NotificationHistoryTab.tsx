@@ -1,14 +1,33 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 import { MaterialIcon, Pagination, SegmentedControl, SearchInput } from '../../../components/common';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { api, NotificationChannel, NotificationHistory, NotificationStats } from '../../../services/api';
 import { getChannelStyle } from '../utils/channelMeta';
 import { SeverityBadge } from './SeverityBadge';
 import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
-import { ko, enUS } from 'date-fns/locale';
+import { ko } from 'date-fns/locale';
+
+const HISTORY_TYPE_LABELS: Record<string, string> = {
+  resource: '리소스',
+  healthcheck: '헬스체크',
+  endpoint: '엔드포인트',
+  log: '로그',
+  scheduled: '스케줄',
+  system: '시스템',
+};
 
 const PAGE_SIZE = 25;
+
+const typeLabel = (type: string) =>
+  HISTORY_TYPE_LABELS[type] ?? type.charAt(0).toUpperCase() + type.slice(1);
+
+const dateGroupLabel = (d: Date) => {
+  const dayLabel = format(d, 'M월 d일', { locale: ko });
+  if (isToday(d)) return `오늘 · ${dayLabel}`;
+  if (isYesterday(d)) return `어제 · ${dayLabel}`;
+  return dayLabel;
+};
+
 
 type StatusFilter = 'all' | 'sent' | 'failed';
 type PeriodDays = 1 | 7 | 30;
@@ -26,7 +45,7 @@ interface NotificationHistoryTabProps {
 }
 
 export function NotificationHistoryTab({ channels, initialStatus }: NotificationHistoryTabProps) {
-  const { t, i18n } = useTranslation(['alerts', 'common']);
+
   const [history, setHistory] = useState<NotificationHistory[]>([]);
   const [stats, setStats] = useState<NotificationStats | null>(null);
   const [total, setTotal] = useState(0);
@@ -40,7 +59,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
 
-  const dateLocale = i18n.language === 'ko' ? ko : enUS;
+
 
   useEffect(() => {
     const handle = setTimeout(() => setDebouncedSearch(search.trim()), 300);
@@ -49,11 +68,13 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
 
   // Any filter change resets to page 1
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 기존 패턴. i18n 제거로 린트가 이 컴포넌트를 분석하게 되면서 드러났을 뿐, 별건으로 정리한다.
     setPage(1);
   }, [statusFilter, typeFilter, channelFilter, periodDays, debouncedSearch]);
 
   useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 위와 동일. 페치 시작 시 로딩 플래그를 세우는 기존 동작 유지.
     setLoading(true);
     api.getNotificationHistory({
       status: statusFilter === 'all' ? undefined : statusFilter,
@@ -84,18 +105,6 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
   const totalFailed = stats?.totalFailed ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  const typeLabel = (type: string) => {
-    const cap = type.charAt(0).toUpperCase() + type.slice(1);
-    return t(`alerts.history.type${cap}`, { defaultValue: cap });
-  };
-
-  const dateGroupLabel = (d: Date) => {
-    const dayLabel = format(d, i18n.language === 'ko' ? 'M월 d일' : 'MMM d', { locale: dateLocale });
-    if (isToday(d)) return `${t('alerts.history.today')} · ${dayLabel}`;
-    if (isYesterday(d)) return `${t('alerts.history.yesterday')} · ${dayLabel}`;
-    return dayLabel;
-  };
-
   // Rows interleaved with date-group headers
   const groupedRows = useMemo(() => {
     const rows: ({ kind: 'group'; label: string; key: string } | { kind: 'item'; item: NotificationHistory })[] = [];
@@ -110,8 +119,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
       rows.push({ kind: 'item', item });
     }
     return rows;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [history, i18n.language]);
+  }, [history]);
 
   const thClass = 'px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider';
 
@@ -121,59 +129,59 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
       <div className="flex flex-wrap items-center gap-2">
         <SegmentedControl
           size="md"
-          ariaLabel={t('alerts.history.status')}
+          ariaLabel="상태"
           value={statusFilter}
           onChange={setStatusFilter}
           options={[
-            { value: 'all', label: `${t('alerts.history.statusAll')} ${totalSent + totalFailed}` },
-            { value: 'sent', label: `${t('alerts.history.statusSent')} ${totalSent}` },
-            { value: 'failed', label: `${t('alerts.history.statusFailed')} ${totalFailed}` },
+            { value: 'all', label: `전체 ${totalSent + totalFailed}` },
+            { value: 'sent', label: `성공 ${totalSent}` },
+            { value: 'failed', label: `실패 ${totalFailed}` },
           ]}
         />
 
         <select
-          aria-label={t('alerts.history.typeAllOption')}
+          aria-label="전체 타입"
           value={typeFilter}
           onChange={e => setTypeFilter(e.target.value)}
           className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm font-medium text-text-secondary cursor-pointer"
         >
-          <option value="all">{t('alerts.history.typeAllOption')}</option>
-          <option value="resource">{t('alerts.history.typeResource')}</option>
-          <option value="healthcheck">{t('alerts.history.typeHealthcheck')}</option>
-          <option value="endpoint">{t('alerts.history.typeEndpoint')}</option>
-          <option value="log">{t('alerts.history.typeLog')}</option>
-          <option value="scheduled">{t('alerts.history.typeScheduled')}</option>
-          <option value="system">{t('alerts.history.typeSystem')}</option>
+          <option value="all">전체 타입</option>
+          <option value="resource">리소스</option>
+          <option value="healthcheck">헬스체크</option>
+          <option value="endpoint">엔드포인트</option>
+          <option value="log">로그</option>
+          <option value="scheduled">스케줄</option>
+          <option value="system">시스템</option>
         </select>
 
         <select
-          aria-label={t('alerts.history.channelAll')}
+          aria-label="전체 채널"
           value={channelFilter}
           onChange={e => setChannelFilter(e.target.value)}
           className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm font-medium text-text-secondary cursor-pointer"
         >
-          <option value="all">{t('alerts.history.channelAll')}</option>
+          <option value="all">전체 채널</option>
           {channels.map(ch => (
             <option key={ch.id} value={ch.id}>{ch.name}</option>
           ))}
         </select>
 
         <select
-          aria-label={t('alerts.history.period7d')}
+          aria-label="최근 7일"
           value={periodDays}
           onChange={e => setPeriodDays(Number(e.target.value) as PeriodDays)}
           className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm font-medium text-text-secondary cursor-pointer"
         >
-          <option value={1}>{t('alerts.history.period24h')}</option>
-          <option value={7}>{t('alerts.history.period7d')}</option>
-          <option value={30}>{t('alerts.history.period30d')}</option>
+          <option value={1}>최근 24시간</option>
+          <option value={7}>최근 7일</option>
+          <option value={30}>최근 30일</option>
         </select>
 
         <div className="ml-auto relative w-64">
           <SearchInput
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder={t('alerts.history.searchPlaceholder')}
+            placeholder="메시지 검색"
             className="pr-7"
           />
           {search && (
@@ -194,12 +202,12 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
           <table className="w-full min-w-[960px] table-fixed">
             <thead className="bg-ui-hover-soft/40">
               <tr className="border-b border-ui-border">
-                <th className={`${thClass} w-[110px]`}>{t('alerts.history.status')}</th>
-                <th className={`${thClass} w-[120px]`}>{t('alerts.history.type')}</th>
-                <th className={`${thClass} w-[190px]`}>{t('alerts.history.channel')}</th>
-                <th className={thClass}>{t('alerts.history.message')}</th>
-                <th className={`${thClass} w-[110px]`}>{t('alerts.history.severity')}</th>
-                <th className={`${thClass} w-[170px] text-right`}>{t('alerts.history.time')}</th>
+                <th className={`${thClass} w-[110px]`}>상태</th>
+                <th className={`${thClass} w-[120px]`}>알림 타입</th>
+                <th className={`${thClass} w-[190px]`}>채널</th>
+                <th className={thClass}>메시지</th>
+                <th className={`${thClass} w-[110px]`}>심각도</th>
+                <th className={`${thClass} w-[170px] text-right`}>시간</th>
               </tr>
             </thead>
             <tbody>
@@ -207,14 +215,14 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-text-muted">
                     <MaterialIcon name="sync" className="text-4xl animate-spin mx-auto mb-2" />
-                    <p>{t('alerts.history.loading')}</p>
+                    <p>로딩 중...</p>
                   </td>
                 </tr>
               ) : history.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-text-dim">
                     <MaterialIcon name="inbox" className="text-4xl mx-auto mb-2" />
-                    <p className="text-sm">{t('alerts.history.empty')}</p>
+                    <p className="text-sm">알림 히스토리가 없습니다</p>
                   </td>
                 </tr>
               ) : (
@@ -264,7 +272,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
                         {item.errorMessage && (
                           <p className="mt-0.5 truncate text-2xs text-red-600 dark:text-red-400">
                             {item.errorMessage}
-                            {item.retryCount > 0 && ` · ${t('alerts.history.retried', { count: item.retryCount })}`}
+                            {item.retryCount > 0 && ` · ${`${item.retryCount}회 재시도`}`}
                           </p>
                         )}
                       </td>
@@ -274,7 +282,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
                         )}
                       </td>
                       <td className="px-4 py-3 text-right text-sm text-text-muted whitespace-nowrap">
-                        {formatDistanceToNow(created, { addSuffix: true, locale: dateLocale })}
+                        {formatDistanceToNow(created, { addSuffix: true, locale: ko })}
                         <span className="text-text-dim"> · {format(created, 'HH:mm')}</span>
                       </td>
                     </tr>
@@ -289,18 +297,14 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
         {!loading && total > 0 && (
           <div className="flex items-center justify-between border-t border-ui-border bg-ui-hover-soft/60 px-4 py-2.5">
             <p className="text-xs text-text-muted">
-              {t('alerts.history.pagination', {
-                start: (page - 1) * PAGE_SIZE + 1,
-                end: Math.min(page * PAGE_SIZE, total),
-                total,
-              })}
+              {`총 ${total}건 중 ${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)}`}
             </p>
             <Pagination
               page={page}
               totalPages={totalPages}
               onChange={setPage}
-              previousLabel={t('common.previous', { defaultValue: 'Previous' })}
-              nextLabel={t('common.next', { defaultValue: 'Next' })}
+              previousLabel="이전"
+              nextLabel="다음"
             />
           </div>
         )}

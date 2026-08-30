@@ -1,4 +1,3 @@
-import { useTranslation } from 'react-i18next';
 import { Button, MaterialIcon } from '../common';
 
 interface ErrorFallbackProps {
@@ -7,7 +6,6 @@ interface ErrorFallbackProps {
 }
 
 export function ErrorFallback({ error, onReset }: ErrorFallbackProps) {
-  const { t } = useTranslation('common');
 
   const handleGoHome = () => {
     window.location.href = '/';
@@ -22,11 +20,11 @@ export function ErrorFallback({ error, onReset }: ErrorFallbackProps) {
         />
 
         <h1 className="text-2xl font-bold text-text-base mb-2">
-          {t('errorFallback.title')}
+          문제가 발생했습니다
         </h1>
 
         <p className="text-text-muted mb-4">
-          {t('errorFallback.description')}
+          예기치 않은 오류가 발생했습니다. 페이지를 새로고침하거나 홈으로 돌아가세요.
         </p>
 
         {import.meta.env.DEV && error && (
@@ -40,10 +38,10 @@ export function ErrorFallback({ error, onReset }: ErrorFallbackProps) {
             onClick={onReset}
             className="px-4 py-2 border border-ui-border text-text-secondary font-semibold rounded-lg hover:bg-ui-hover transition-colors"
           >
-            {t('errorFallback.retry')}
+            다시 시도
           </button>
           <Button onClick={handleGoHome}>
-            {t('errorFallback.goHome')}
+            홈으로 돌아가기
           </Button>
         </div>
       </div>

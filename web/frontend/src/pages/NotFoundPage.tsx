@@ -1,9 +1,8 @@
 import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from '../components/common';
 
 export function NotFoundPage() {
-  const { t } = useTranslation('common');
+
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8">
@@ -15,12 +14,12 @@ export function NotFoundPage() {
 
       {/* 404 텍스트 */}
       <h1 className="text-6xl font-bold text-text-base mb-2">
-        {t('notfound.title')}
+        404
       </h1>
 
       {/* 설명 */}
       <p className="text-xl text-text-muted mb-8">
-        {t('notfound.subtitle')}
+        페이지를 찾을 수 없습니다.
       </p>
 
       {/* 홈으로 돌아가기 버튼 */}
@@ -29,7 +28,7 @@ export function NotFoundPage() {
         className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors"
       >
         <MaterialIcon name="home" className="text-xl" />
-        {t('common.backToDashboard')}
+        대시보드로 돌아가기
       </Link>
     </div>
   );

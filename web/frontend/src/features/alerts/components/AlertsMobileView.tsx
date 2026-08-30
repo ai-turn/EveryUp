@@ -1,9 +1,8 @@
-import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
-import { ko, enUS } from 'date-fns/locale';
+import { ko } from 'date-fns/locale';
 import { Button, MaterialIcon, Toggle } from '../../../components/common';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
-import { getChannelStyle, getChannelTypeLabel } from '../utils/channelMeta';
+import { getChannelStyle } from '../utils/channelMeta';
 import { ChannelHealthMeta } from './ChannelHealthMeta';
 import type { NotificationChannel, NotificationChannelHealth, AlertRule, NotificationHistory, NotificationStats } from '../../../services/api';
 
@@ -66,13 +65,13 @@ export function AlertsMobileView({
   errors,
   onRetry,
 }: AlertsMobileViewProps) {
-  const { t, i18n } = useTranslation(['alerts', 'common']);
-  const dateLocale = i18n.language === 'ko' ? ko : enUS;
+
+
 
   const tabs: { key: MobileTab; label: string; icon: string; count?: number }[] = [
-    { key: 'channels', label: t('alerts.channelsTitle'), icon: 'notifications', count: channels.length },
-    { key: 'rules', label: t('alerts.rulesTitle'), icon: 'rule', count: rules.length },
-    { key: 'history', label: t('alerts.history.title'), icon: 'history' },
+    { key: 'channels', label: '알림 채널', icon: 'notifications', count: channels.length },
+    { key: 'rules', label: '알림 규칙', icon: 'rule', count: rules.length },
+    { key: 'history', label: '알림 로그', icon: 'history' },
   ];
 
   return (
@@ -80,13 +79,13 @@ export function AlertsMobileView({
       {/* Header */}
       <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-xl font-bold text-text-base">{t('alerts.title')}</h1>
-          <p className="text-sm text-text-muted mt-0.5">{t('alerts.subtitle')}</p>
+          <h1 className="text-xl font-bold text-text-base">알림</h1>
+          <p className="text-sm text-text-muted mt-0.5">알림 채널과 규칙을 설정하고 알림 이력을 확인합니다.</p>
         </div>
         {activeTab === 'channels' && (
           <Button className="w-full" onClick={onAddChannel}>
             <MaterialIcon name="add" className="text-base" />
-            {t('alerts.addChannel')}
+            채널 추가
           </Button>
         )}
       </div>
@@ -96,19 +95,19 @@ export function AlertsMobileView({
         <div className="grid grid-cols-3 gap-2">
           <div className="bg-bg-surface border border-ui-border rounded-xl p-3">
             <p className="text-sm font-medium text-text-muted truncate">
-              {t('alerts.history.stats.successRate', { defaultValue: 'Success' })}
+              Success
             </p>
             <p className="text-xl font-bold text-text-base">{stats.successRate.toFixed(0)}%</p>
           </div>
           <div className="bg-bg-surface border border-ui-border rounded-xl p-3">
             <p className="text-sm font-medium text-status-healthy truncate">
-              {t('alerts.history.stats.sent', { defaultValue: 'Sent' })}
+              Sent
             </p>
             <p className="text-xl font-bold text-status-healthy">{stats.totalSent}</p>
           </div>
           <div className="bg-bg-surface border border-ui-border rounded-xl p-3">
             <p className="text-sm font-medium text-status-error truncate">
-              {t('alerts.history.stats.failed', { defaultValue: 'Failed' })}
+              Failed
             </p>
             <p className="text-xl font-bold text-status-error">{stats.totalFailed}</p>
           </div>
@@ -116,7 +115,7 @@ export function AlertsMobileView({
       )}
 
       {/* Tab Bar */}
-      <div role="tablist" aria-label={t('alerts.title')} className="flex rounded-xl border border-ui-border bg-ui-hover p-1">
+      <div role="tablist" aria-label="알림" className="flex rounded-xl border border-ui-border bg-ui-hover p-1">
         {tabs.map(tab => (
           <button
             key={tab.key}
@@ -153,13 +152,13 @@ export function AlertsMobileView({
             <div className="py-8 text-center">
               <MaterialIcon name="notifications_off" className="text-4xl text-text-dim" />
               <p className="text-sm text-text-dim mt-2">
-                {t('alerts.noChannels')}
+                구성된 알림 채널이 없습니다
               </p>
               <button
                 onClick={onAddChannel}
                 className="mt-3 text-sm font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer"
               >
-                {t('alerts.addChannel')} →
+                채널 추가 →
               </button>
             </div>
           ) : (
@@ -179,13 +178,13 @@ export function AlertsMobileView({
                         <p className="text-sm font-bold text-text-base truncate">{channel.name}</p>
                         {!channel.isEnabled && (
                           <span className="px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider bg-ui-active text-text-muted rounded-full shrink-0">
-                            {t('common.disabled', { defaultValue: 'Disabled' })}
+                            비활성
                           </span>
                         )}
                       </div>
-                      <p className={`text-sm font-semibold ${meta.text}`}>{getChannelTypeLabel(channel.type, t)}</p>
+                      <p className={`text-sm font-semibold ${meta.text}`}>{channel.type}</p>
                     </div>
-                    <Toggle checked={channel.isEnabled} onChange={() => onToggleChannel(channel.id)} disabled={togglingIds.has(channel.id)} ariaLabel={`${channel.name} ${channel.isEnabled ? t('alerts.disable') : t('alerts.enable')}`} />
+                    <Toggle checked={channel.isEnabled} onChange={() => onToggleChannel(channel.id)} disabled={togglingIds.has(channel.id)} ariaLabel={`${channel.name} ${channel.isEnabled ? '비활성화' : '활성화'}`} />
                   </div>
                   <div className="mb-3 pb-3 border-b border-ui-border-soft/50">
                     <ChannelHealthMeta health={channelHealth[channel.id]} compact />
@@ -193,18 +192,18 @@ export function AlertsMobileView({
                   <div className="flex gap-2">
                     <Button variant="secondary" size="sm" onClick={() => onTestChannel(channel.id)} disabled={!channel.isEnabled || testingIds.has(channel.id)} className="flex-1">
                       <MaterialIcon name="send" className="text-sm" />
-                      {testingIds.has(channel.id) ? t('전송 중') : t('alerts.test')}
+                      {testingIds.has(channel.id) ? '전송 중' : '테스트'}
                     </Button>
                     <button
                       onClick={() => onEditChannel(channel)}
-                      aria-label={t('alerts.channels.edit', { defaultValue: '채널 편집' })}
+                      aria-label="채널 편집"
                       className="flex h-10 w-10 items-center justify-center rounded-lg bg-ui-hover text-text-muted transition-colors active:scale-95"
                     >
                       <MaterialIcon name="edit" className="text-base" />
                     </button>
                     <button
                       onClick={() => onDeleteChannel(channel.id)}
-                      aria-label={t('alerts.channels.delete', { defaultValue: '채널 삭제' })}
+                      aria-label="채널 삭제"
                       className="flex h-10 w-10 items-center justify-center rounded-lg text-status-error transition-colors hover:bg-ui-hover active:scale-95"
                     >
                       <MaterialIcon name="delete" className="text-base" />
@@ -229,7 +228,7 @@ export function AlertsMobileView({
             <div className="py-8 text-center">
               <MaterialIcon name="rule" className="text-4xl text-text-dim" />
               <p className="text-sm text-text-dim mt-2">
-                {t('alerts.rules.empty', { defaultValue: 'No alert rules configured' })}
+                No alert rules configured
               </p>
             </div>
           ) : (
@@ -252,9 +251,9 @@ export function AlertsMobileView({
                         {rule.severity} · {rule.metric} {rule.operator} {rule.threshold}
                       </p>
                     </div>
-                    <Toggle checked={rule.isEnabled} onChange={() => onToggleRule(rule.id)} disabled={togglingIds.has(rule.id)} ariaLabel={`${rule.name} ${rule.isEnabled ? t('alerts.disable') : t('alerts.enable')}`} />
+                    <Toggle checked={rule.isEnabled} onChange={() => onToggleRule(rule.id)} disabled={togglingIds.has(rule.id)} ariaLabel={`${rule.name} ${rule.isEnabled ? '비활성화' : '활성화'}`} />
                   </div>
-                  <p className="mt-2 text-xs text-text-muted">{rule.isEnabled ? t('활성화됨') : t('비활성화됨')}</p>
+                  <p className="mt-2 text-xs text-text-muted">{rule.isEnabled ? '활성화됨' : '비활성화됨'}</p>
                 </div>
               );
             })
@@ -274,7 +273,7 @@ export function AlertsMobileView({
             <div className="py-8 text-center">
               <MaterialIcon name="history" className="text-4xl text-text-dim" />
               <p className="text-sm text-text-dim mt-2">
-                {t('alerts.history.empty', { defaultValue: 'No notification history' })}
+                알림 히스토리가 없습니다
               </p>
             </div>
           ) : (
@@ -296,7 +295,7 @@ export function AlertsMobileView({
                       </p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-sm text-text-dim">
-                          {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true, locale: dateLocale })}
+                          {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true, locale: ko })}
                         </span>
                         <span className="text-sm capitalize text-text-dim">
                           {item.channelType}
@@ -315,12 +314,11 @@ export function AlertsMobileView({
 }
 
 function InlineError({ message, onRetry }: { message: string; onRetry: () => void }) {
-  const { t } = useTranslation('common');
   return (
     <div className="flex items-start gap-3 rounded-xl border border-ui-border bg-bg-surface p-3" role="alert">
       <MaterialIcon name="sync_problem" className="mt-0.5 text-lg text-status-warn" />
-      <div className="min-w-0 flex-1"><p className="text-sm font-semibold text-text-base">{t('불러오지 못했습니다')}</p><p className="mt-0.5 truncate text-xs text-text-muted">{message}</p></div>
-      <Button size="sm" variant="secondary" onClick={onRetry}>{t('다시 시도')}</Button>
+      <div className="min-w-0 flex-1"><p className="text-sm font-semibold text-text-base">불러오지 못했습니다</p><p className="mt-0.5 truncate text-xs text-text-muted">{message}</p></div>
+      <Button size="sm" variant="secondary" onClick={onRetry}>다시 시도</Button>
     </div>
   );
 }

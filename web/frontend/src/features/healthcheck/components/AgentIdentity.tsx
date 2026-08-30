@@ -1,8 +1,6 @@
-import { useMemo } from 'react';
 import { useTranslate } from '@tolgee/react';
-import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
-import { ko, enUS } from 'date-fns/locale';
+import { ko } from 'date-fns/locale';
 import { MaterialIcon } from '../../../components/common';
 import type { AgentServiceFlat } from '../../../services/api';
 import { runtimeLabel } from '../runtimeLabels';
@@ -27,12 +25,9 @@ function InfoChip({ icon, label, value }: InfoChipProps) {
 // layout (e.g. the project sidebar/rail) already shows them, to avoid duplication.
 export function AgentIdentity({ service, showName = true }: { service: AgentServiceFlat; showName?: boolean }) {
   const { t } = useTranslate();
-  const { t: tc, i18n } = useTranslation('common');
 
-  const dateLocale = useMemo(
-    () => (i18n.language.startsWith('ko') ? ko : enUS),
-    [i18n.language],
-  );
+
+
 
   // red = 장애(unhealthy); offline(수집 중단)은 slate — 색/어휘 매핑 규칙 준수
   const status = service.healthy ? 'healthy' : 'unhealthy';
@@ -51,8 +46,8 @@ export function AgentIdentity({ service, showName = true }: { service: AgentServ
   const cfg = statusConfig[status];
 
   const lastCheckedText = service.observedAt
-    ? formatDistanceToNow(new Date(service.observedAt), { addSuffix: true, locale: dateLocale })
-    : tc('common.never');
+    ? formatDistanceToNow(new Date(service.observedAt), { addSuffix: true, locale: ko })
+    : '없음';
 
   return (
     <div className="mb-8">

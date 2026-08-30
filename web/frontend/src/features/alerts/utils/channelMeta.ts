@@ -1,5 +1,3 @@
-import type { TFunction } from 'i18next';
-
 export type ChannelStyle = { bg: string; text: string };
 
 const channelStyles: Record<string, ChannelStyle> = {
@@ -14,12 +12,6 @@ export function getChannelStyle(type: string): ChannelStyle {
   return channelStyles[type] ?? fallbackStyle;
 }
 
-export function getChannelTypeLabel(type: string, t: TFunction): string {
-  const key = `alerts.modal.types.${type}`;
-  const translated = t(key, { defaultValue: '' });
-  return translated || type;
-}
-
 // Brand name + transport, e.g. "Telegram · Bot API" — brand names are not translated
 const channelSubtitles: Record<string, string> = {
   telegram: 'Telegram · Bot API',
@@ -27,6 +19,6 @@ const channelSubtitles: Record<string, string> = {
   slack: 'Slack · Webhook',
 };
 
-export function getChannelSubtitle(type: string, t: TFunction): string {
-  return channelSubtitles[type] ?? getChannelTypeLabel(type, t);
+export function getChannelSubtitle(type: string): string {
+  return channelSubtitles[type] ?? type;
 }

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { api, type NotificationChannel } from '../../services/api';
 import { ChannelForm } from '../../features/alerts/components/ChannelForm';
@@ -10,7 +9,6 @@ import { getErrorMessage } from '../../utils/errors';
 export function ChannelFormPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation(['alerts', 'common']);
   const isEdit = !!id;
   const [channel, setChannel] = useState<NotificationChannel | undefined>();
   const [loading, setLoading] = useState(isEdit);
@@ -25,7 +23,7 @@ export function ChannelFormPage() {
         if (cancelled) return;
         const found = list.find(c => c.id === id);
         if (!found) {
-          toast.error(t('common.notFound', { defaultValue: 'Not found' }));
+          toast.error('Not found');
           navigate('/alerts');
           return;
         }
@@ -38,13 +36,13 @@ export function ChannelFormPage() {
       }
     })();
     return () => { cancelled = true; };
-  }, [id, navigate, t]);
+  }, [id, navigate]);
 
   const goBack = () => navigate('/alerts');
 
   const title = isEdit
-    ? t('alerts.modal.editTitle', { defaultValue: '채널 편집' })
-    : t('alerts.addChannel', { defaultValue: '채널 추가' });
+    ? '채널 편집'
+    : '채널 추가';
 
   return (
     <div className="-m-4 sm:-m-6 md:-m-8 flex flex-col bg-bg-main h-[calc(100dvh-3.5rem)] lg:h-[calc(100dvh-4rem)]">
@@ -56,7 +54,7 @@ export function ChannelFormPage() {
             onClick={goBack}
             className="hover:text-text-base transition-colors"
           >
-            {t('alerts.title')}
+            알림
           </button>
           <MaterialIcon name="chevron_right" className="text-sm opacity-50" />
           <button
@@ -64,11 +62,11 @@ export function ChannelFormPage() {
             onClick={goBack}
             className="hover:text-text-base transition-colors"
           >
-            {t('alerts.table.channel')}
+            채널
           </button>
           <MaterialIcon name="chevron_right" className="text-sm opacity-50" />
           <span className="text-text-base font-medium truncate max-w-50">
-            {loading ? '...' : isEdit ? (channel?.name ?? t('common.edit')) : t('alerts.modal.newChannel', { defaultValue: '새 채널' })}
+            {loading ? '...' : isEdit ? (channel?.name ?? '수정') : '새 채널'}
           </span>
         </nav>
         <div className="flex items-center justify-between gap-4">
@@ -76,13 +74,13 @@ export function ChannelFormPage() {
             <h1 className="text-2xl font-bold text-text-base tracking-tight">{title}</h1>
             <p className="text-sm text-text-muted mt-0.5">
               {isEdit
-                ? t('alerts.modal.editSubtitle', { name: channel?.name ?? '', defaultValue: '{{name}} · 채널 설정을 수정합니다' })
-                : t('alerts.modal.newSubtitle', { defaultValue: 'Telegram, Discord, Slack 중 채널을 선택하고 연결 정보를 입력하세요' })}
+                ? `${channel?.name ?? ''} · 채널 설정을 수정합니다`
+                : 'Telegram, Discord, Slack 중 채널을 선택하고 연결 정보를 입력하세요'}
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <Button type="button" variant="secondary" onClick={goBack}>
-              {t('common.cancel')}
+              취소
             </Button>
             <Button
               type="submit"
@@ -94,7 +92,7 @@ export function ChannelFormPage() {
               ) : (
                 <>
                   <MaterialIcon name="save" className="text-sm" />
-                  {t('common.save')}
+                  저장
                 </>
               )}
             </Button>

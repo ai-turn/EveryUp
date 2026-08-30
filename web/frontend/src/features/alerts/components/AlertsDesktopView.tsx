@@ -6,7 +6,7 @@ import { ChannelForm } from './ChannelForm';
 import { FormSidePanel } from './FormSidePanel';
 import { NotificationHistoryTab } from './NotificationHistoryTab';
 import { formatDistanceToNow } from 'date-fns';
-import { ko, enUS } from 'date-fns/locale';
+import { ko } from 'date-fns/locale';
 import type {
   NotificationChannel,
   NotificationChannelHealth,
@@ -14,7 +14,6 @@ import type {
   NotificationHistory,
   NotificationStats,
 } from '../../../services/api';
-import { useTranslation } from 'react-i18next';
 import { getChannelStyle, getChannelSubtitle } from '../utils/channelMeta';
 
 type TabType = 'channels' | 'rules' | 'history';
@@ -53,7 +52,6 @@ export function AlertsDesktopView({
   onTestChannel,
   onAddRule,
 }: AlertsDesktopViewProps) {
-  const { t } = useTranslation(['alerts', 'common']);
 
   // Channel form — right slide-over panel (same pattern as the rules tab)
   const [channelFormOpen, setChannelFormOpen] = useState(false);
@@ -92,21 +90,21 @@ export function AlertsDesktopView({
     : 'bg-status-error';
 
   const tabs: { key: TabType; label: string; count?: number }[] = [
-    { key: 'channels', label: t('alerts.channelsTitle'), count: channels.length },
-    { key: 'rules',    label: t('alerts.rulesTitle'),    count: rules.length },
-    { key: 'history',  label: t('alerts.history.title'), count: totalNotifications || undefined },
+    { key: 'channels', label: '알림 채널', count: channels.length },
+    { key: 'rules',    label: '알림 규칙',    count: rules.length },
+    { key: 'history',  label: '알림 로그', count: totalNotifications || undefined },
   ];
 
   return (
     <>
       <PageHeader
-        title={t('alerts.title')}
-        subtitle={t('alerts.subtitle')}
+        title="알림"
+        subtitle="알림 채널과 규칙을 설정하고 알림 이력을 확인합니다."
       >
         {activeTab !== 'history' && (
           <Button onClick={activeTab === 'rules' ? onAddRule : () => openChannelForm()}>
             <MaterialIcon name="add" className="text-lg" />
-            {activeTab === 'rules' ? t('alerts.rules.addRule') : t('alerts.addChannel')}
+            {activeTab === 'rules' ? '규칙 추가' : '채널 추가'}
           </Button>
         )}
       </PageHeader>
@@ -114,11 +112,11 @@ export function AlertsDesktopView({
       {/* KPI stat bar — one card, divider-separated cells */}
       <div className="mb-5 grid grid-cols-5 divide-x divide-ui-border-soft rounded-xl border border-ui-border bg-bg-surface py-3.5">
         <div className="flex flex-col gap-0.5 px-5">
-          <span className="text-2xs text-text-muted">{t('alerts.kpi.sent7d')}</span>
+          <span className="text-2xs text-text-muted">발송 (7일)</span>
           <span className="text-xl font-extrabold tabular-nums text-text-base">{totalSent}</span>
         </div>
         <div className="flex flex-col gap-0.5 px-5">
-          <span className="text-2xs text-text-muted">{t('alerts.kpi.failed7d')}</span>
+          <span className="text-2xs text-text-muted">실패 (7일)</span>
           <span className="flex items-baseline gap-2.5">
             <span className={`text-xl font-extrabold tabular-nums ${totalFailed > 0 ? 'text-red-600 dark:text-red-400' : 'text-text-base'}`}>
               {totalFailed}
@@ -128,13 +126,13 @@ export function AlertsDesktopView({
                 onClick={viewFailedLogs}
                 className="text-2xs font-semibold text-primary hover:underline"
               >
-                {t('alerts.kpi.viewFailedLogs')}
+                실패 로그 보기 →
               </button>
             )}
           </span>
         </div>
         <div className="flex flex-col gap-0.5 px-5">
-          <span className="text-2xs text-text-muted">{t('alerts.kpi.successRate')}</span>
+          <span className="text-2xs text-text-muted">성공률</span>
           <span className="flex items-center gap-2">
             <span className="text-xl font-extrabold tabular-nums text-text-base">
               {successRate != null ? `${successRate}%` : '—'}
@@ -147,11 +145,11 @@ export function AlertsDesktopView({
           </span>
         </div>
         <div className="flex flex-col gap-0.5 px-5">
-          <span className="text-2xs text-text-muted">{t('alerts.kpi.activeRules')}</span>
+          <span className="text-2xs text-text-muted">활성 규칙</span>
           <span className="text-xl font-extrabold tabular-nums text-text-base">{enabledRules}/{rules.length}</span>
         </div>
         <div className="flex flex-col gap-0.5 px-5">
-          <span className="text-2xs text-text-muted">{t('alerts.kpi.activeChannels')}</span>
+          <span className="text-2xs text-text-muted">활성 채널</span>
           <span className="text-xl font-extrabold tabular-nums text-text-base">
             {channels.filter(c => c.isEnabled).length}/{channels.length}
           </span>
@@ -160,7 +158,7 @@ export function AlertsDesktopView({
 
       {/* Tabs */}
       <div className="flex items-end border-b border-ui-border mb-5">
-        <div role="tablist" aria-label={t('alerts.title')} className="flex gap-0">
+        <div role="tablist" aria-label="알림" className="flex gap-0">
           {tabs.map(tab => (
             <button
               key={tab.key}
@@ -197,8 +195,8 @@ export function AlertsDesktopView({
             open={channelFormOpen}
             icon="notifications"
             title={channelFormTarget
-              ? t('alerts.modal.editTitle', { defaultValue: '채널 편집' })
-              : t('alerts.addChannel')}
+              ? '채널 편집'
+              : '채널 추가'}
             onClose={closeChannelForm}
             footer={
               <ChannelFormActions
@@ -235,11 +233,10 @@ export function AlertsDesktopView({
 }
 
 function ChannelFormActions({ isSubmitting, isEdit, onCancel }: { isSubmitting: boolean; isEdit: boolean; onCancel: () => void }) {
-  const { t } = useTranslation(['alerts', 'common']);
   return (
     <div className="flex items-center gap-2 shrink-0">
       <Button type="button" variant="secondary" onClick={onCancel}>
-        {t('common.cancel')}
+        취소
       </Button>
       <Button type="submit" form="channel-form" disabled={isSubmitting}>
         {isSubmitting ? (
@@ -247,7 +244,7 @@ function ChannelFormActions({ isSubmitting, isEdit, onCancel }: { isSubmitting: 
         ) : (
           <>
             <MaterialIcon name="check" className="text-sm" />
-            {isEdit ? t('common.save') : t('alerts.addChannel')}
+            {isEdit ? '저장' : '채널 추가'}
           </>
         )}
       </Button>
@@ -270,8 +267,6 @@ interface ChannelsGridProps {
 }
 
 function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd, onEdit, onDelete, onToggle, onTest }: ChannelsGridProps) {
-  const { t, i18n } = useTranslation(['alerts', 'common']);
-  const locale = i18n.language === 'ko' ? ko : enUS;
 
   if (isLoading) {
     return (
@@ -303,9 +298,9 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
       <div className="rounded-xl border border-ui-border bg-bg-surface">
         <EmptyState
           icon="notifications_off"
-          title={t('alerts.noChannels')}
-          description={t('alerts.noChannelsDesc')}
-          action={{ label: t('alerts.addChannel'), onClick: onAdd }}
+          title="구성된 알림 채널이 없습니다"
+          description="Slack, Discord, Telegram 채널을 추가해 알림을 받아보세요."
+          action={{ label: '채널 추가', onClick: onAdd }}
         />
       </div>
     );
@@ -316,12 +311,12 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
       <table className="w-full min-w-[960px] table-fixed">
         <thead className="bg-ui-hover-soft/40">
           <tr className="border-b border-ui-border">
-            <th className="w-[280px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">{t('alerts.table.channel')}</th>
-            <th className="w-[90px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">{t('alerts.table.status')}</th>
-            <th className="w-[150px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">{t('alerts.table.sentFailed')}</th>
-            <th className="w-[110px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">{t('alerts.table.linkedRules')}</th>
-            <th className="w-[160px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">{t('alerts.table.lastSent')}</th>
-            <th className="w-[180px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-text-muted">{t('alerts.table.actions')}</th>
+            <th className="w-[280px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">채널</th>
+            <th className="w-[90px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">상태</th>
+            <th className="w-[150px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">7일 발송 / 실패</th>
+            <th className="w-[110px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">연결 규칙</th>
+            <th className="w-[160px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">최근 발송</th>
+            <th className="w-[180px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-text-muted">작업</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-ui-border-soft">
@@ -346,7 +341,7 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
                     <div className="min-w-0">
                       <p className="truncate text-sm font-bold text-text-base">{channel.name}</p>
                       <p className="truncate text-2xs text-text-dim">
-                        {getChannelSubtitle(channel.type, t)}
+                        {getChannelSubtitle(channel.type)}
                       </p>
                     </div>
                   </div>
@@ -356,8 +351,8 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
                     checked={channel.isEnabled}
                     onChange={() => onToggle(channel.id)}
                     disabled={togglingIds.has(channel.id)}
-                    title={channel.isEnabled ? t('alerts.disable') : t('alerts.enable')}
-                    ariaLabel={`${channel.name} ${channel.isEnabled ? t('alerts.disable') : t('alerts.enable')}`}
+                    title={channel.isEnabled ? '비활성화' : '활성화'}
+                    ariaLabel={`${channel.name} ${channel.isEnabled ? '비활성화' : '활성화'}`}
                   />
                 </td>
                 <td className="px-4 py-3 text-sm font-semibold tabular-nums">
@@ -365,20 +360,20 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
                     <span className="text-text-base">
                       {sent}
                       {failed > 0 && (
-                        <span className="text-red-600 dark:text-red-400"> · {t('alerts.table.failedCount', { count: failed })}</span>
+                        <span className="text-red-600 dark:text-red-400"> · {`실패 ${failed}`}</span>
                       )}
                     </span>
                   ) : (
-                    <span className="font-normal text-text-dim">{t('alerts.health.noHistory')}</span>
+                    <span className="font-normal text-text-dim">이력 없음</span>
                   )}
                 </td>
                 <td className="px-4 py-3 text-sm font-semibold text-text-secondary">
-                  {t('alerts.health.rulesCount', { count: health?.ruleCount ?? 0 })}
+                  {`규칙 ${health?.ruleCount ?? 0}개`}
                 </td>
                 <td className="px-4 py-3 text-sm text-text-muted">
                   {lastSent
-                    ? formatDistanceToNow(lastSent, { addSuffix: true, locale })
-                    : <span className="text-text-dim">{t('alerts.health.testHint')}</span>}
+                    ? formatDistanceToNow(lastSent, { addSuffix: true, locale: ko })
+                    : <span className="text-text-dim">— 테스트로 확인</span>}
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-1">
@@ -388,19 +383,19 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
                       className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-ui-border-dark dark:bg-bg-surface-dark dark:text-text-base-dark dark:hover:bg-ui-hover-dark"
                     >
                       <MaterialIcon name="send" className="text-sm" />
-                      {t('alerts.test')}
+                      테스트
                     </button>
                     <button
                       onClick={() => onEdit(channel)}
                       className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-ui-hover-dark dark:hover:text-white"
-                      aria-label={t('common.edit')} title={t('common.edit')}
+                      aria-label="수정" title="수정"
                     >
                       <MaterialIcon name="edit" className="text-base" />
                     </button>
                     <button
                       onClick={() => onDelete(channel.id)}
                       className="flex h-8 w-8 items-center justify-center rounded-md text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
-                      aria-label={t('common.delete')} title={t('common.delete')}
+                      aria-label="삭제" title="삭제"
                     >
                       <MaterialIcon name="delete_outline" className="text-base" />
                     </button>

@@ -1,6 +1,5 @@
-import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
-import { ko, enUS } from 'date-fns/locale';
+import { ko } from 'date-fns/locale';
 import { MaterialIcon } from '../../../components/common';
 import type { NotificationChannelHealth } from '../../../services/api';
 
@@ -10,8 +9,8 @@ interface Props {
 }
 
 export function ChannelHealthMeta({ health, compact = false }: Props) {
-  const { t, i18n } = useTranslation(['alerts', 'common']);
-  const locale = i18n.language === 'ko' ? ko : enUS;
+
+
 
   const sent = health?.successCount ?? 0;
   const failed = health?.failedCount ?? 0;
@@ -34,28 +33,28 @@ export function ChannelHealthMeta({ health, compact = false }: Props) {
 
   return (
     <div className={`flex items-center flex-wrap ${gap} ${text} text-text-muted`}>
-      <span className="inline-flex items-center gap-1" title={t('alerts.health.lastSent', { defaultValue: 'Last sent' })}>
+      <span className="inline-flex items-center gap-1" title="마지막 발송">
         <MaterialIcon name="schedule" className="text-sm" />
         {lastSentAt
-          ? formatDistanceToNow(lastSentAt, { addSuffix: true, locale })
-          : t('alerts.health.never', { defaultValue: 'Never sent' })}
+          ? formatDistanceToNow(lastSentAt, { addSuffix: true, locale: ko })
+          : '발송 이력 없음'}
       </span>
 
       {total > 0 ? (
-        <span className={`inline-flex items-center gap-1 font-semibold ${rateColor}`} title={t('alerts.health.successRate7d', { defaultValue: '7d success rate' })}>
+        <span className={`inline-flex items-center gap-1 font-semibold ${rateColor}`} title="7일 성공률">
           <MaterialIcon name="check_circle" className="text-sm" />
           {successRate}% <span className="font-normal text-text-dim">({sent}/{total})</span>
         </span>
       ) : (
-        <span className="inline-flex items-center gap-1" title={t('alerts.health.noActivity', { defaultValue: 'No activity in last 7 days' })}>
+        <span className="inline-flex items-center gap-1" title="최근 7일 활동 없음">
           <MaterialIcon name="check_circle" className="text-sm text-text-dim" />
-          {t('alerts.health.noActivityShort', { defaultValue: '—' })}
+          활동 없음
         </span>
       )}
 
-      <span className="inline-flex items-center gap-1" title={t('alerts.health.linkedRules', { defaultValue: 'Linked enabled rules' })}>
+      <span className="inline-flex items-center gap-1" title="연결된 활성 규칙">
         <MaterialIcon name="rule" className="text-sm" />
-        {t('alerts.health.rulesCount', { count: ruleCount, defaultValue: '{{count}} rules' })}
+        {`규칙 ${ruleCount}개`}
       </span>
     </div>
   );

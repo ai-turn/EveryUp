@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslate } from '@tolgee/react';
-import { useTranslation } from 'react-i18next';
 import { Button, MaterialIcon } from '../../components/common';
 import { useAutoRefresh } from '../../hooks/useAutoRefresh';
 import { api, type AgentServiceFlat } from '../../services/api';
@@ -13,7 +12,7 @@ export function HealthCheckDetailPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t } = useTranslate();
-  const { t: tc } = useTranslation('common');
+
 
   const [service, setService] = useState<AgentServiceFlat | null>(null);
   const [loading, setLoading] = useState(true);
@@ -52,7 +51,7 @@ export function HealthCheckDetailPage() {
     return (
       <div className="flex items-center justify-center h-64 gap-3 text-text-muted">
         <MaterialIcon name="sync" className="text-2xl animate-spin" />
-        <span>{tc('common.loading')}</span>
+        <span>로딩 중...</span>
       </div>
     );
   }

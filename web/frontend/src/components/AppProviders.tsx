@@ -1,29 +1,14 @@
-import { useEffect, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { TolgeeProvider } from '@tolgee/react';
-import { useTranslation } from 'react-i18next';
 import { tolgee } from '../tolgee';
 import { AuthProvider } from '../contexts/AuthContext';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { SidePanelProvider } from '../contexts/SidePanelContext';
 
-function TolgeeLanguageSync() {
-  const { i18n } = useTranslation();
-  useEffect(() => {
-    tolgee.changeLanguage(i18n.language);
-    // Keep <html lang> in sync with the rendered language so Chrome (esp.
-    // mobile) doesn't detect a lang/content mismatch and offer to translate
-    // the page. index.html hardcodes lang="en"; without this, Korean UI under
-    // lang="en" triggers the "원본으로 보기" banner.
-    document.documentElement.lang = i18n.resolvedLanguage ?? i18n.language;
-  }, [i18n.language, i18n.resolvedLanguage]);
-  return null;
-}
-
 /**
  * Composes all app-level React context providers in the required dependency order:
  *
- *   TolgeeProvider      — i18n for new code (source-as-key). Coexists with
- *                         react-i18next during the gradual migration.
+ *   TolgeeProvider      — 한국어 전용. 문자열은 source-as-key로 원문이 곧 키다.
  *     AuthProvider      — must wrap all authenticated UI
  *       ThemeProvider   — reads user theme preference (may depend on auth state)
  *         SidePanelProvider — read-only side panel for detail viewers (e.g. API
@@ -36,7 +21,6 @@ function TolgeeLanguageSync() {
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <TolgeeProvider tolgee={tolgee}>
-      <TolgeeLanguageSync />
       <AuthProvider>
         <ThemeProvider>
           <SidePanelProvider>

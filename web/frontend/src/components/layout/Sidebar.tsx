@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { useTranslate } from '@tolgee/react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { MaterialIcon } from '../common';
@@ -36,7 +35,7 @@ function NavItem({ to, icon, label, active, badge }: NavItemProps) {
 
 export function Sidebar() {
   const { theme, toggleTheme } = useTheme();
-  const { i18n } = useTranslation('common');
+
   const { t } = useTranslate();
   const location = useLocation();
   const [services, setServices] = useState<AgentServiceFlat[]>([]);
@@ -104,9 +103,6 @@ export function Sidebar() {
           <button onClick={toggleTheme} aria-label="Toggle theme" className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-ui-hover hover:text-text-base">
             <MaterialIcon name={theme === 'light' ? 'dark_mode' : 'light_mode'} className="text-lg" />
           </button>
-          <div className="flex items-center gap-1 rounded-lg border border-ui-border bg-bg-main p-0.5">
-            {(['ko', 'en'] as const).map((language) => <button key={language} onClick={() => i18n.changeLanguage(language)} className={`rounded-md px-2 py-1 text-2xs font-bold transition-colors ${i18n.language.startsWith(language) ? 'bg-primary/10 text-primary' : 'text-text-muted hover:text-text-base'}`}>{language.toUpperCase()}</button>)}
-          </div>
         </div>
       </div>
     </aside>

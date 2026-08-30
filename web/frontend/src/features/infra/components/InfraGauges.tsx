@@ -1,8 +1,13 @@
-import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from '../../../components/common';
 import { useMonitoringGauges } from '../../../hooks/useInfra';
 import { Skeleton } from '../../../components/skeleton';
 import type { GaugeData } from '../../../types/infra';
+
+const LOAD_STATE_LABELS: Record<'normal' | 'elevated' | 'critical', string> = {
+  normal: '정상',
+  elevated: '상승',
+  critical: '위험',
+};
 
 interface InfraGaugesProps {
   hostId: string;
@@ -32,7 +37,7 @@ export function InfraGauges({ hostId, refreshKey = 0 }: InfraGaugesProps) {
 }
 
 function VitalGaugeCard({ gauge }: { gauge: GaugeData }) {
-  const { t } = useTranslation(['infra']);
+
   const pct = clampPercent(gauge.percentage);
   const tone = getGaugeTone(pct);
   const trend = getTrendTone(gauge.trendType);
@@ -61,7 +66,7 @@ function VitalGaugeCard({ gauge }: { gauge: GaugeData }) {
         </span>
         <span className="text-sm font-bold text-text-dim">{displayUnit}</span>
         <span className={`ml-auto shrink-0 rounded-full px-2 py-0.5 text-2xs font-bold ${tone.soft} ${tone.text}`}>
-          {t(`infra.detail.loadStates.${getGaugeState(pct)}`)}
+          {LOAD_STATE_LABELS[getGaugeState(pct)]}
         </span>
       </div>
 

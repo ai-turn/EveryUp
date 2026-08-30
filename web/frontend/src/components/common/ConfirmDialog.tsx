@@ -1,5 +1,4 @@
 import { ReactNode, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './MaterialIcon';
 import { SCRIM_MODAL_DIALOG } from '../../hooks/useOverlay';
 import { Button } from './Button';
@@ -46,7 +45,7 @@ export function ConfirmDialog({
   icon,
   isProcessing = false,
 }: ConfirmDialogProps) {
-  const { t } = useTranslation('common');
+
   const dialogRef = useRef<HTMLDialogElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const styles = variantStyles[variant];
@@ -100,7 +99,7 @@ export function ConfirmDialog({
           disabled={isProcessing}
           className="flex-1"
         >
-          {cancelLabel ?? t('common.cancel')}
+          {cancelLabel ?? '취소'}
         </Button>
         <Button
           type="button"
@@ -114,7 +113,7 @@ export function ConfirmDialog({
           ) : (
             <>
               {variant === 'danger' && <MaterialIcon name="delete" className="text-lg" />}
-              {confirmLabel ?? t('common.delete')}
+              {confirmLabel ?? '삭제'}
             </>
           )}
         </Button>

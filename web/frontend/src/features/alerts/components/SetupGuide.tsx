@@ -1,36 +1,41 @@
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from '../../../components/common';
 
 interface SetupGuideProps {
     type: 'telegram' | 'discord' | 'slack';
 }
 
+const GUIDE_TIPS: Record<SetupGuideProps['type'], string> = {
+    telegram: '그룹 채팅의 Chat ID는 마이너스(-)로 시작합니다 (예: -100123456789). 봇을 먼저 그룹에 추가한 후 getUpdates를 확인하세요.',
+    discord: '웹후크는 특정 채널에 연결됩니다. 여러 채널에 알림을 보내려면 채널별로 웹후크를 따로 만드세요.',
+    slack: '각 웹훅은 특정 채널에 연결됩니다. 같은 Slack 앱에서 여러 채널용 웹훅을 만들 수 있습니다.',
+};
+
 export function SetupGuide({ type }: SetupGuideProps) {
-    const { t } = useTranslation(['alerts', 'common']);
+
     const [isOpen, setIsOpen] = useState(false);
 
     const stepsMap: Record<string, string[]> = {
         telegram: [
-            t('alerts.guide.telegram.step1'),
-            t('alerts.guide.telegram.step2'),
-            t('alerts.guide.telegram.step3'),
-            t('alerts.guide.telegram.step4'),
+            '텔레그램에서 @BotFather를 검색하세요',
+            '/newbot 명령어를 보내고 안내에 따라 봇을 생성하세요',
+            'BotFather가 제공하는 봇 토큰을 복사하세요',
+            '봇에게 아무 메시지를 보낸 후, https://api.telegram.org/bot<TOKEN>/getUpdates 에 접속하여 Chat ID를 확인하세요',
         ],
         discord: [
-            t('alerts.guide.discord.step1'),
-            t('alerts.guide.discord.step2'),
-            t('alerts.guide.discord.step3'),
+            '디스코드 서버 설정 → 연동 → 웹후크로 이동하세요',
+            '"새 웹후크"를 클릭하고 대상 채널을 선택한 후 이름을 설정하세요',
+            '"웹후크 URL 복사"를 클릭하여 위 입력란에 붙여넣으세요',
         ],
         slack: [
-            t('alerts.guide.slack.step1'),
-            t('alerts.guide.slack.step2'),
-            t('alerts.guide.slack.step3'),
+            'https://api.slack.com/apps 에서 새 앱을 생성하세요 (또는 기존 앱 선택)',
+            '"Incoming Webhooks"로 이동하여 활성화한 후 "Add New Webhook to Workspace"를 클릭하세요',
+            '알림을 보낼 채널을 선택하고, 웹훅 URL을 복사하여 위 입력란에 붙여넣으세요',
         ],
     };
 
     const steps = stepsMap[type] || [];
-    const tip = t(`alerts.guide.${type}.tip`);
+    const tip = GUIDE_TIPS[type];
 
     return (
         <div className="rounded-lg border border-ui-border overflow-hidden">
@@ -44,7 +49,7 @@ export function SetupGuide({ type }: SetupGuideProps) {
                     className="text-base text-primary shrink-0"
                 />
                 <span className="text-sm font-semibold text-text-secondary flex-1">
-                    {t('alerts.guide.title')}
+                    API 키는 어떻게 발급받나요?
                 </span>
                 <MaterialIcon
                     name={isOpen ? 'expand_less' : 'expand_more'}
@@ -79,7 +84,7 @@ export function SetupGuide({ type }: SetupGuideProps) {
                         className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
                     >
                         <MaterialIcon name="open_in_new" className="text-sm" />
-                        {t('alerts.guide.detailLink')}
+                        상세 가이드 보기
                     </a>
                 </div>
             )}

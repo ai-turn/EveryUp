@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../../utils/errors';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -12,7 +11,7 @@ import { SettingsDesktopView } from '../../features/settings/components/Settings
 import { SettingsMobileView } from '../../features/settings/components/SettingsMobileView';
 
 export function SettingsPage() {
-  const { t, i18n } = useTranslation(['settings', 'common']);
+
   const { theme, setTheme } = useTheme();
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -45,15 +44,11 @@ export function SettingsPage() {
     load();
   }, []);
 
-  const handleLanguageChange = (lng: string) => {
-    i18n.changeLanguage(lng);
-  };
-
   // 모든 설정은 선택 즉시 저장 (백엔드 PUT은 부분 업데이트 지원). 실패 시 롤백.
   const saveSetting = async (patch: Parameters<typeof api.updateSettings>[0], rollback: () => void) => {
     try {
       await api.updateSettings(patch);
-      toast.success(t('settings.saved'));
+      toast.success('저장되었습니다.');
     } catch (error) {
       rollback();
       toast.error(getErrorMessage(error));
@@ -88,7 +83,7 @@ export function SettingsPage() {
     setResetting(true);
     try {
       await api.resetAccount();
-      toast.success(t('settings.accountReset.success'));
+      toast.success('계정이 초기화되었습니다. 다시 로그인해 주세요.');
       logout();
       navigate('/login');
     } catch (error) {
@@ -98,7 +93,6 @@ export function SettingsPage() {
   };
 
   const sharedProps = {
-    currentLanguage: i18n.language,
     theme: theme as 'light' | 'dark',
     metricsRetention,
     logsRetention,
@@ -108,7 +102,6 @@ export function SettingsPage() {
     settingsError,
     showResetConfirm,
     resetting,
-    onLanguageChange: handleLanguageChange,
     onThemeChange: setTheme,
     onMetricsRetentionChange: handleMetricsRetentionChange,
     onLogsRetentionChange: handleLogsRetentionChange,

@@ -1,4 +1,3 @@
-import { useTranslation } from 'react-i18next';
 import { SectionCard } from './SectionCard';
 import { SettingRow } from './SettingRow';
 
@@ -11,18 +10,17 @@ export function AlertsSection({ value, loading, onChange }: {
   loading: boolean;
   onChange: (n: number) => void;
 }) {
-  const { t } = useTranslation('settings');
   // 표준 옵션 밖의 값(config 직접 수정 등)도 선택지로 노출해 현재값이 숨지 않게 한다.
   const options = OPTIONS.includes(value) ? OPTIONS : [...OPTIONS, value].sort((a, b) => a - b);
 
   return (
-    <SectionCard title={t('settings.alertThreshold.title')} subtitle={t('settings.alertThreshold.subtitle')}>
+    <SectionCard title="알림 임계값" subtitle="알림 발송 조건 설정">
       {loading ? (
         <div className="h-10 bg-ui-hover rounded-lg animate-pulse" />
       ) : (
         <SettingRow
-          label={t('settings.alertThreshold.consecutiveFailures')}
-          description={t('settings.alertThreshold.consecutiveFailuresDesc')}
+          label="연속 실패 횟수"
+          description="알림을 발송하기 전 필요한 연속 실패 횟수"
         >
           <div className="flex gap-1 bg-ui-hover p-0.5 rounded-lg">
             {options.map((n) => (
@@ -35,7 +33,7 @@ export function AlertsSection({ value, loading, onChange }: {
                     : 'text-text-muted hover:text-text-secondary'
                 }`}
               >
-                {n}{t('settings.alertThreshold.times')}
+                {n}회
               </button>
             ))}
           </div>

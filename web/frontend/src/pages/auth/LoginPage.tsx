@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useLocation, Navigate } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../contexts/AuthContext'
 import { env } from '../../config/env'
 import { Button, MaterialIcon, Input } from '../../components/common'
@@ -10,7 +9,6 @@ export function LoginPage() {
   const { login, isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const { t } = useTranslation(['auth', 'common'])
   // Validate redirect path to prevent open redirect attacks
   const rawFrom = (location.state as { from?: string })?.from
   const from = rawFrom && rawFrom.startsWith('/') && !rawFrom.startsWith('//') ? rawFrom : '/'
@@ -29,8 +27,8 @@ export function LoginPage() {
       .then(json => {
         if (json.success) setNeedsSetup(json.data.needs_setup)
       })
-      .catch(() => setError(t('login.error.network')))
-  }, [t])
+      .catch(() => setError('서버에 연결할 수 없습니다. 백엔드가 실행 중인지 확인하세요.'))
+  }, [])
 
   // 렌더 중에 navigate()를 부르면 렌더 단계 부작용이라 내비게이션 루프를 만들 수 있다.
   // 리다이렉트를 렌더 결과로 표현하는 것이 react-router가 의도한 방식이다.
@@ -57,11 +55,11 @@ export function LoginPage() {
         login(json.data)
         navigate(from, { replace: true })
       } else {
-        setError(json.error?.message || t('login.error.generic'))
+        setError(json.error?.message || '오류가 발생했습니다')
         setLoading(false)
       }
     } catch {
-      setError(t('login.error.network'))
+      setError('서버에 연결할 수 없습니다. 백엔드가 실행 중인지 확인하세요.')
       setLoading(false)
     }
   }
@@ -87,10 +85,10 @@ export function LoginPage() {
           </div>
           <div className="text-2xl font-bold text-primary tracking-tight mb-1">EveryUp</div>
           <h2 className="text-xl font-bold text-text-base">
-            {isSetup ? t('login.setupTitle') : t('login.loginTitle')}
+            {isSetup ? '초기 설정' : '로그인'}
           </h2>
           <p className="text-text-muted text-sm mt-1">
-            {isSetup ? t('login.setupSubtitle') : t('login.loginSubtitle')}
+            {isSetup ? '관리자 계정을 생성하세요' : '관리자 계정으로 로그인하세요'}
           </p>
         </div>
 
@@ -113,13 +111,13 @@ export function LoginPage() {
                   <span className="w-4 h-5 shrink-0 inline-flex items-center justify-center">
                     <MaterialIcon name="info" className="text-sm leading-none" />
                   </span>
-                  <span>{t('login.setupNotice')}</span>
+                  <span>처음 실행되었습니다. 관리자 계정을 설정하세요.</span>
                 </div>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-3">
                 <div>
-                  <label htmlFor="login-username" className="block text-sm font-bold text-text-muted uppercase tracking-wider mb-1.5">{t('login.username')}</label>
+                  <label htmlFor="login-username" className="block text-sm font-bold text-text-muted uppercase tracking-wider mb-1.5">사용자 이름</label>
                   <Input
                     id="login-username"
                     type="text"
@@ -133,7 +131,7 @@ export function LoginPage() {
                 </div>
                 <div>
                   <label htmlFor="login-password" className="block text-sm font-bold text-text-muted uppercase tracking-wider mb-1.5">
-                    {t('login.password')}{isSetup && ` (${t('login.passwordMinLength')})`}
+                    비밀번호{isSetup && ' (최소 8자 이상)'}
                   </label>
                   <Input
                     id="login-password"
@@ -142,7 +140,7 @@ export function LoginPage() {
                     onChange={e => { setPassword(e.target.value); setError(''); }}
                     required
                     invalid={!!error}
-                    placeholder={isSetup ? t('login.passwordMinLength') : t('login.password')}
+                    placeholder={isSetup ? '최소 8자 이상' : '비밀번호'}
                   />
                 </div>
                 {!isSetup && (
@@ -152,13 +150,13 @@ export function LoginPage() {
                       onClick={() => setShowForgot(!showForgot)}
                       className="text-sm text-primary hover:text-primary/80 underline underline-offset-2 transition-colors"
                     >
-                      {t('login.forgotPassword')}
+                      계정 정보를 잊으셨나요?
                     </button>
                   </div>
                 )}
                 <Button type="submit" size="lg" disabled={loading} className="w-full mt-2">
                   {loading && <MaterialIcon name="progress_activity" className="text-sm animate-spin" />}
-                  {loading ? t('login.processing') : isSetup ? t('login.setupButton') : t('login.loginButton')}
+                  {loading ? '처리 중...' : isSetup ? '계정 생성' : '로그인'}
                 </Button>
               </form>
             </div>
@@ -167,22 +165,22 @@ export function LoginPage() {
             {!isSetup && showForgot && (
               <div className="animate-slide-in-right absolute bottom-0 left-full ml-4 w-[26rem] bg-bg-surface border border-ui-border rounded-xl shadow-sm p-5 space-y-4">
                 <p className="text-sm font-semibold text-text-secondary">
-                  {t('login.forgotPassword')}
+                  계정 정보를 잊으셨나요?
                 </p>
                 <p className="text-sm text-text-muted">
-                  {t('login.forgotPasswordDesc')}
+                  셀프 호스팅 환경에서는 아래 방법으로 계정을 재설정할 수 있습니다.
                 </p>
 
                 {/* Method 1: Env var */}
                 <div className="space-y-1.5">
                   <p className="text-sm font-semibold text-text-secondary">
-                    {t('login.recoveryMethod1Title')}
+                    방법 1: 환경 변수로 임시 접근 후 초기화 (권장)
                   </p>
                   <p className="text-sm text-text-muted">
-                    {t('login.recoveryMethod1Desc')}
+                    환경 변수로 임시 계정을 만들어 로그인한 뒤, 설정 → 계정 초기화에서 계정을 새로 생성하세요.
                   </p>
                   <div className="space-y-1">
-                    <p className="text-sm font-semibold text-text-muted">① {t('login.recoveryMethod1Step1')}</p>
+                    <p className="text-sm font-semibold text-text-muted">① 환경 변수 설정 후 재시작</p>
                     <pre className="text-xs bg-bg-main border border-ui-border rounded-lg p-2.5 overflow-x-auto text-text-secondary leading-relaxed">
 {`# docker-compose.yml
 environment:
@@ -192,17 +190,17 @@ environment:
 docker compose restart`}
                     </pre>
                   </div>
-                  <p className="text-sm font-semibold text-text-muted">② {t('login.recoveryMethod1Step2')}</p>
-                  <p className="text-sm font-semibold text-text-muted">③ {t('login.recoveryMethod1Step3')}</p>
+                  <p className="text-sm font-semibold text-text-muted">② 위 계정 정보로 로그인</p>
+                  <p className="text-sm font-semibold text-text-muted">③ 설정 → 계정 초기화 → 새 계정 생성</p>
                 </div>
 
                 {/* Method 2: Remove data volume */}
                 <div className="space-y-1.5">
                   <p className="text-sm font-semibold text-text-secondary">
-                    {t('login.recoveryMethod2Title')}
+                    방법 2: 계정 데이터 삭제 후 초기화
                   </p>
                   <p className="text-sm text-text-muted">
-                    {t('login.recoveryMethod2Desc')}
+                    데이터 볼륨을 제거하고 재시작하면 초기 설정 화면으로 돌아갑니다. 모니터링 데이터는 유지됩니다.
                   </p>
                   <pre className="text-xs bg-bg-main border border-ui-border rounded-lg p-2.5 overflow-x-auto text-text-secondary leading-relaxed">
 {`# 컨테이너 중지 후 데이터 볼륨 삭제
@@ -229,7 +227,7 @@ docker compose up -d`}
           </div>{/* end relative wrapper */}
 
           <p className="text-center text-text-dim text-sm mt-4">
-            {t('login.hint')}
+            이 계정으로 모니터링 시스템에 접근합니다
           </p>
         </div>
       </div>

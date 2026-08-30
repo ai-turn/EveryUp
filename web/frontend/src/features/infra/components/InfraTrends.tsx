@@ -1,4 +1,3 @@
-import { useTranslation } from 'react-i18next';
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -31,15 +30,15 @@ function getXAxisInterval(pointCount: number): number {
 }
 
 export function InfraTrends({ hostId, refreshKey = 0, range }: InfraTrendsProps) {
-  const { t } = useTranslation(['infra', 'common']);
+
   const { data: charts, loading } = useMonitoringTrends(hostId, range, refreshKey);
 
   const theme = getChartTheme();
 
   const rangeLabel: Record<GlobalTimeRange, string> = {
-    '1h': t('infra.trends.last1h'),
-    '6h': t('infra.trends.last6h'),
-    '24h': t('infra.trends.last24h'),
+    '1h': '최근 1시간',
+    '6h': '최근 6시간',
+    '24h': '최근 24시간',
   };
 
   const pointCount = charts?.reduce((max, chart) => Math.max(max, chart.data.length), 0) ?? 12;
@@ -50,7 +49,7 @@ export function InfraTrends({ hostId, refreshKey = 0, range }: InfraTrendsProps)
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-text-base">
-            {t('infra.trends.title')}
+            인프라 추세
           </h2>
           <p className="mt-1 text-sm font-medium text-text-muted">
             {rangeLabel[range]}
@@ -92,7 +91,7 @@ function ChartCard({
   rangeLabel: string;
   theme: ReturnType<typeof getChartTheme>;
 }) {
-  const { t } = useTranslation(['infra']);
+
   const allValues = chart.series.flatMap((s) =>
     chart.data.map((p) => Number(p[s.key])).filter(Number.isFinite)
   );
@@ -110,7 +109,7 @@ function ChartCard({
         <div className="flex h-60 flex-col items-center justify-center gap-2 text-text-dim">
           <MaterialIcon name="show_chart" className="text-4xl opacity-30" />
           <p className="text-sm font-medium">
-            {t('infra.trends.noActivity', { range: rangeLabel })}
+            {`${rangeLabel} 동안 활동 없음`}
           </p>
         </div>
       ) : (

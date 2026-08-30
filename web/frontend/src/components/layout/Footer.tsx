@@ -1,4 +1,3 @@
-import { useTranslation } from 'react-i18next';
 
 const GitHubIcon = () => (
   <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" aria-hidden="true">
@@ -7,7 +6,7 @@ const GitHubIcon = () => (
 );
 
 export function Footer() {
-  const { t } = useTranslation('common');
+
 
   const currentYear = new Date().getFullYear();
 
@@ -16,7 +15,7 @@ export function Footer() {
       {/* 본문 컨테이너(p-4 sm:px-6)와 동일 패딩 — full-bleed 콘텐츠와 좌우 정렬 유지 */}
       <div className="px-4 sm:px-6 py-3">
         <div className="flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-text-dim">
-          <span>© {currentYear} EveryUp · {t('footer.rights')}</span>
+          <span>© {currentYear} EveryUp · All rights reserved.</span>
 
           <div className="flex items-center gap-4">
             <a
@@ -34,7 +33,7 @@ export function Footer() {
               rel="noopener noreferrer"
               className="hover:text-text-muted transition-colors"
             >
-              {t('footer.bugReport')}
+              피드백 보내기
             </a>
           </div>
         </div>

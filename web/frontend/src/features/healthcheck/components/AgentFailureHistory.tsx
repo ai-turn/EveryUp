@@ -1,8 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslate } from '@tolgee/react';
-import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
-import { ko, enUS } from 'date-fns/locale';
+import { ko } from 'date-fns/locale';
 import { MaterialIcon } from '../../../components/common';
 import { api, type AgentEvent } from '../../../services/api';
 
@@ -16,14 +15,11 @@ const ALERT_TYPES = new Set(['alert_sent', 'recovery_sent']);
 
 export function AgentFailureHistory({ agentId, serviceKey, refreshKey }: AgentFailureHistoryProps) {
   const { t } = useTranslate();
-  const { i18n } = useTranslation('common');
+
   const [events, setEvents] = useState<AgentEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const dateLocale = useMemo(
-    () => (i18n.language.startsWith('ko') ? ko : enUS),
-    [i18n.language],
-  );
+
 
   useEffect(() => {
     api.getAgentServiceKeyEvents(agentId, serviceKey, 50)
@@ -84,7 +80,7 @@ export function AgentFailureHistory({ agentId, serviceKey, refreshKey }: AgentFa
                     {event.message || (isAlert ? t('장애 감지') : t('복구 감지'))}
                   </p>
                   <p className="text-xs text-text-muted mt-0.5">
-                    {formatDistanceToNow(new Date(event.time), { addSuffix: true, locale: dateLocale })}
+                    {formatDistanceToNow(new Date(event.time), { addSuffix: true, locale: ko })}
                   </p>
                 </div>
               </div>

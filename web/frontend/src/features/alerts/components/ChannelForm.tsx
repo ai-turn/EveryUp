@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-hot-toast';
-import { useTranslation } from 'react-i18next';
 import { getErrorMessage } from '../../../utils/errors';
 import { FormStep, Field } from './FormLayout';
 import { MaterialIcon, Input } from '../../../components/common';
@@ -20,9 +19,8 @@ import { SetupGuide } from './SetupGuide';
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
-// Error messages are i18n keys — resolved with t() at the display site.
 const channelSchema = z.object({
-    name: z.string().trim().min(2, 'alerts.modal.errors.nameTooShort'),
+    name: z.string().trim().min(2, '이름이 너무 짧습니다 (2자 이상)'),
     type: z.enum(['telegram', 'discord', 'slack']),
     botToken: z.string().optional(),
     chatId: z.string().optional(),
@@ -30,18 +28,18 @@ const channelSchema = z.object({
 }).superRefine((data, ctx) => {
     if (data.type === 'telegram') {
         if (!data.botToken?.trim()) {
-            ctx.addIssue({ code: 'custom', path: ['botToken'], message: 'alerts.modal.errors.botTokenRequired' });
+            ctx.addIssue({ code: 'custom', path: ['botToken'], message: '봇 토큰을 입력하세요' });
         }
         if (!data.chatId?.trim()) {
-            ctx.addIssue({ code: 'custom', path: ['chatId'], message: 'alerts.modal.errors.chatIdRequired' });
+            ctx.addIssue({ code: 'custom', path: ['chatId'], message: '채팅 ID를 입력하세요' });
         }
     }
 
     if (data.type === 'discord' || data.type === 'slack') {
         if (!data.webhookUrl?.trim()) {
-            ctx.addIssue({ code: 'custom', path: ['webhookUrl'], message: 'alerts.modal.errors.webhookRequired' });
+            ctx.addIssue({ code: 'custom', path: ['webhookUrl'], message: '웹훅 URL을 입력하세요' });
         } else if (!/^https?:\/\/.+/.test(data.webhookUrl)) {
-            ctx.addIssue({ code: 'custom', path: ['webhookUrl'], message: 'alerts.modal.errors.webhookInvalid' });
+            ctx.addIssue({ code: 'custom', path: ['webhookUrl'], message: '웹훅 URL은 http:// 또는 https://로 시작해야 합니다' });
         }
     }
 });
@@ -236,7 +234,7 @@ interface ChannelFormProps {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }: ChannelFormProps) {
-    const { t } = useTranslation(['alerts', 'common']);
+
     const isEdit = !!channel;
 
     const [testState, setTestState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -294,12 +292,12 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
         try {
             if (isEdit) {
                 await api.updateNotificationChannel(channel.id, buildPayload(data));
-                toast.success(t('alerts.channelUpdated', { defaultValue: 'Channel updated' }));
+                toast.success('채널이 수정되었습니다');
                 onSuccess();
                 onCancel();
             } else {
                 await api.createNotificationChannel(buildPayload(data));
-                toast.success(t('alerts.channelAdded'));
+                toast.success('채널이 추가되었습니다');
                 onSuccess();
                 onCancel();
             }
@@ -315,8 +313,8 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
         const valid = await trigger();
         if (!valid) {
             setTestState('error');
-            setTestError(t('alerts.modal.errors.fixFieldsFirst', { defaultValue: '필수 항목을 먼저 입력하세요' }));
-            toast.error(t('alerts.modal.errors.fixFieldsFirst', { defaultValue: '필수 항목을 먼저 입력하세요' }));
+            setTestError('필수 항목을 먼저 입력하세요');
+            toast.error('필수 항목을 먼저 입력하세요');
             return;
         }
 
@@ -344,8 +342,8 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                 <div className="space-y-4 min-w-0">
 
                     {/* Step 1: Type + Name */}
-                    <FormStep n={1} title={t('alerts.modal.channelType')}>
-                        <Field label={t('common.type')}>
+                    <FormStep n={1} title="채널 유형">
+                        <Field label="유형">
                             <div className="grid grid-cols-3 gap-3">
                                 {(['telegram', 'discord', 'slack'] as const).map(type => {
                                     const m = CHANNEL_META[type];
@@ -369,45 +367,45 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                             </div>
                         </Field>
 
-                        <Field htmlFor="channel-name" label={t('common.name')} required error={errors.name?.message ? t(errors.name.message) : undefined}>
+                        <Field htmlFor="channel-name" label="표시 이름" required error={errors.name?.message}>
                             <Input
                                 id="channel-name"
                                 {...register('name')}
-                                placeholder={t('alerts.modal.namePlaceholder')}
+                                placeholder="예: 내 텔레그램 봇"
                                 invalid={!!errors.name}
                             />
                         </Field>
                     </FormStep>
 
                     {/* Step 2: Credentials */}
-                    <FormStep n={2} title={t('alerts.modal.credentials')}>
+                    <FormStep n={2} title="연결 설정">
                         {watchedType === 'telegram' ? (
                             <>
                                 <Field
                                     htmlFor="channel-bot-token"
-                                    label={t('alerts.modal.botToken')}
+                                    label="봇 토큰"
                                     required
-                                    error={errors.botToken?.message ? t(errors.botToken.message) : undefined}
-                                    hint={t('alerts.modal.botTokenHint', { defaultValue: 'BotFather에서 발급받은 Bot Token' })}
+                                    error={errors.botToken?.message}
+                                    hint="BotFather에서 발급받은 Bot Token"
                                 >
                                     <Input
                                         id="channel-bot-token"
                                         {...register('botToken')}
-                                        placeholder={t('alerts.modal.botTokenPlaceholder')}
+                                        placeholder="123456:ABC-DEF1234ghIkl..."
                                         mono invalid={!!errors.botToken}
                                     />
                                 </Field>
                                 <Field
                                     htmlFor="channel-chat-id"
-                                    label={t('alerts.modal.chatId')}
+                                    label="채팅 ID"
                                     required
-                                    error={errors.chatId?.message ? t(errors.chatId.message) : undefined}
-                                    hint={t('alerts.modal.chatIdHint', { defaultValue: '채팅방 또는 채널의 Chat ID' })}
+                                    error={errors.chatId?.message}
+                                    hint="채팅방 또는 채널의 Chat ID"
                                 >
                                     <Input
                                         id="channel-chat-id"
                                         {...register('chatId')}
-                                        placeholder={t('alerts.modal.chatIdPlaceholder')}
+                                        placeholder="-100123456789"
                                         mono
                                     />
                                 </Field>
@@ -417,17 +415,17 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                             <>
                                 <Field
                                     htmlFor="channel-webhook-url"
-                                    label={t('alerts.modal.webhookUrl')}
+                                    label="웹훅 URL"
                                     required
-                                    error={errors.webhookUrl?.message ? t(errors.webhookUrl.message) : undefined}
+                                    error={errors.webhookUrl?.message}
                                     hint={watchedType === 'slack' ? 'Slack Incoming Webhooks URL' : 'Discord Channel Webhook URL'}
                                 >
                                     <Input
                                         id="channel-webhook-url"
                                         {...register('webhookUrl')}
                                         placeholder={watchedType === 'slack'
-                                            ? t('alerts.modal.slackWebhookUrlPlaceholder')
-                                            : t('alerts.modal.webhookUrlPlaceholder')}
+                                            ? 'https://hooks.slack.com/services/...'
+                                            : 'https://discord.com/api/webhooks/...'}
                                         mono invalid={!!errors.webhookUrl}
                                     />
                                 </Field>
@@ -446,8 +444,8 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                             <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-ui-hover-soft/50">
                                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                                 <div>
-                                    <p className="text-sm font-bold text-text-base uppercase tracking-widest">{t('alerts.modal.previewTitle', { defaultValue: '채널 미리보기' })}</p>
-                                    <p className="text-sm text-text-muted mt-0.5">{t('alerts.modal.previewSub', { defaultValue: '실제 전송 메시지 형식' })}</p>
+                                    <p className="text-sm font-bold text-text-base uppercase tracking-widest">채널 미리보기</p>
+                                    <p className="text-sm text-text-muted mt-0.5">실제 전송 메시지 형식</p>
                                 </div>
                             </div>
                             <div className="p-5 space-y-4">
@@ -458,7 +456,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                     </div>
                                     <div className="min-w-0">
                                         <p className="text-sm font-bold text-text-base truncate">
-                                            {watchedName || <span className="text-slate-400 font-normal italic">{t('alerts.modal.noName', { defaultValue: '채널 이름 미입력' })}</span>}
+                                            {watchedName || <span className="text-slate-400 font-normal italic">채널 이름 미입력</span>}
                                         </p>
                                         <p className={`text-sm font-semibold ${meta.color}`}>{meta.label}</p>
                                     </div>
@@ -471,13 +469,13 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                             <div className="flex items-center justify-between px-3 py-2 bg-ui-hover-soft/50 rounded-lg">
                                                 <span className="text-slate-400 font-mono uppercase text-xs tracking-wide">Bot Token</span>
                                                 <span className="font-mono text-text-muted">
-                                                    {watchedBotToken ? maskToken(watchedBotToken) : <span className="text-text-dim italic">{t('alerts.modal.notEntered', { defaultValue: '미입력' })}</span>}
+                                                    {watchedBotToken ? maskToken(watchedBotToken) : <span className="text-text-dim italic">미입력</span>}
                                                 </span>
                                             </div>
                                             <div className="flex items-center justify-between px-3 py-2 bg-ui-hover-soft/50 rounded-lg">
                                                 <span className="text-slate-400 font-mono uppercase text-xs tracking-wide">Chat ID</span>
                                                 <span className="font-mono text-text-muted">
-                                                    {watchedChatId || <span className="text-text-dim italic">{t('alerts.modal.notEntered', { defaultValue: '미입력' })}</span>}
+                                                    {watchedChatId || <span className="text-text-dim italic">미입력</span>}
                                                 </span>
                                             </div>
                                         </>
@@ -487,7 +485,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                             <span className="font-mono text-text-muted truncate text-right">
                                                 {watchedWebhook
                                                     ? watchedWebhook.replace(/^https?:\/\//, '').slice(0, 32) + (watchedWebhook.length > 40 ? '…' : '')
-                                                    : <span className="text-text-dim italic">{t('alerts.modal.notEntered', { defaultValue: '미입력' })}</span>}
+                                                    : <span className="text-text-dim italic">미입력</span>}
                                             </span>
                                         </div>
                                     )}
@@ -495,7 +493,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
 
                                 {/* Actual message preview */}
                                 <div>
-                                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">{t('alerts.modal.testPreviewTitle', { defaultValue: '테스트 메시지 미리보기' })}</p>
+                                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">테스트 메시지 미리보기</p>
                                     <PreviewComponent name={watchedName} />
                                 </div>
                             </div>
@@ -506,13 +504,13 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                             <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-ui-hover-soft/50">
                                 <MaterialIcon name="send" className="text-base text-slate-400" />
                                 <div>
-                                    <p className="text-sm font-bold text-text-base uppercase tracking-widest">{t('alerts.modal.testTitle', { defaultValue: '테스트 전송' })}</p>
-                                    <p className="text-sm text-text-muted mt-0.5">{t('alerts.modal.testSub', { defaultValue: '실제 채널로 테스트 메시지 발송' })}</p>
+                                    <p className="text-sm font-bold text-text-base uppercase tracking-widest">테스트 전송</p>
+                                    <p className="text-sm text-text-muted mt-0.5">실제 채널로 테스트 메시지 발송</p>
                                 </div>
                             </div>
                             <div className="p-5 space-y-3">
                                 <p className="text-sm text-text-muted leading-relaxed">
-                                    {t('alerts.modal.testDesc', { defaultValue: '현재 입력값으로 테스트 메시지를 보냅니다. 채널은 저장되지 않습니다.' })}
+                                    현재 입력값으로 테스트 메시지를 보냅니다. 채널은 저장되지 않습니다.
                                 </p>
 
                                 <button
@@ -524,12 +522,12 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                     {testState === 'loading' ? (
                                         <>
                                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                            {t('alerts.modal.sending', { defaultValue: '전송 중...' })}
+                                            전송 중...
                                         </>
                                     ) : (
                                         <>
                                             <MaterialIcon name="send" className="text-sm" />
-                                            {t('alerts.modal.testTitle', { defaultValue: '테스트 전송' })}
+                                            테스트 전송
                                         </>
                                     )}
                                 </button>
@@ -538,8 +536,8 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                     <div className="flex items-start gap-2 px-3 py-2.5 bg-ui-hover-soft border border-ui-border rounded-xl">
                                         <MaterialIcon name="check_circle" className="text-base text-emerald-500 mt-0.5 shrink-0" />
                                         <div>
-                                            <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{t('alerts.modal.testSuccess', { defaultValue: '발송 성공' })}</p>
-                                            <p className="text-sm text-text-muted mt-0.5">{t('alerts.modal.testSuccessAt', { time: testTime, defaultValue: '{{time}}에 전송되었습니다' })}</p>
+                                            <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">발송 성공</p>
+                                            <p className="text-sm text-text-muted mt-0.5">{`${testTime}에 전송되었습니다`}</p>
                                         </div>
                                     </div>
                                 )}
@@ -548,7 +546,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                     <div className="flex items-start gap-2 px-3 py-2.5 bg-ui-hover-soft border border-ui-border rounded-xl">
                                         <MaterialIcon name="error" className="text-base text-red-500 mt-0.5 shrink-0" />
                                         <div>
-                                            <p className="text-sm font-bold text-red-600 dark:text-red-400">{t('alerts.modal.testFailed', { defaultValue: '발송 실패' })}</p>
+                                            <p className="text-sm font-bold text-red-600 dark:text-red-400">발송 실패</p>
                                             <p className="text-sm text-text-muted mt-0.5">{testError}</p>
                                         </div>
                                     </div>
