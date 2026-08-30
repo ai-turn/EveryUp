@@ -5,15 +5,15 @@
 <h1 align="center">EveryUp</h1>
 
 <p align="center">
-  A self-hosted monitoring dashboard with a lightweight Docker collector.
+  Docker 서비스를 위한 셀프호스팅 모니터링 대시보드와 가벼운 Docker 수집기.
 </p>
 
 <p align="center">
-  <a href="README.ko.md">한국어</a> -
+  <a href="README.en.md">English</a> -
   <a href="https://ai-turn.github.io/everyup/">Live Demo</a> -
-  <a href="#quick-start">Quick Start</a> -
-  <a href="#what-gets-collected">What's Collected</a> -
-  <a href="#documentation">Docs</a>
+  <a href="#빠른-시작">빠른 시작</a> -
+  <a href="#수집되는-데이터">수집 항목</a> -
+  <a href="#문서">문서</a>
 </p>
 
 <p align="center">
@@ -25,45 +25,44 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/everyup-main-en.png" alt="EveryUp dashboard" width="100%">
+  <img src="docs/images/everyup-main-ko.png" alt="EveryUp 대시보드" width="100%">
 </p>
 
-## What is EveryUp?
+## EveryUp이 뭔가요?
 
-EveryUp is a self-hosted tool for monitoring your Docker services in one place.
-Run **Web** once on a dashboard server, then connect each **Docker environment**
-with the lightweight EveryUp Docker collector. There is no large observability
-stack to set up.
+EveryUp은 Docker로 실행 중인 서비스를 한곳에서 모니터링하는 셀프호스팅 도구입니다.
+대시보드 서버에 **Web**을 한 번 띄우고, 모니터링할 **Docker 환경**마다 가벼운
+EveryUp Docker 수집기를 실행하면 끝입니다. 큰 관측 스택을 따로 세울 필요가 없습니다.
 
-| Part | What it does | Where it runs |
+| 구성 | 역할 | 실행 위치 |
 | --- | --- | --- |
-| **Web** | Dashboard, users, alert rules, notification channels, history | Your dashboard server |
-| **Docker collector** | Docker discovery, container state, logs, host metrics | Each Docker host you monitor |
+| **Web** | 대시보드, 사용자, 알림 규칙·채널, 히스토리 | 대시보드 서버 |
+| **Docker 수집기** | Docker 디스커버리, 컨테이너 상태, 로그, 호스트 메트릭 | 모니터링할 각 Docker 호스트 |
 
-## Features
+## 핵심 기능
 
-🟢 Built-in — works out of the box, no app code changes · 🔵 Optional — enable when needed
+🟢 기본 제공 — 앱 코드 수정 없이 설치만으로 동작 · 🔵 선택 — 필요할 때 활성화
 
-|  | Feature | Description |
+|  | 기능 | 설명 |
 | :-: | --- | --- |
-| 🟢 | 💓 Health checks | Automatic Docker container discovery, container state and health |
-| 🟢 | 🖥️ Infrastructure | Host CPU, memory, disk, and network metrics |
-| 🟢 | 📜 Logs | Container stdout/stderr collection |
-| 🟢 | 🌐 API status | Request status codes (method, path, status) parsed from access logs |
-| 🟢 | 🔔 Notifications | Telegram, Discord, and Slack channels |
-| 🔵 | ⚡ API latency & traces | Automatic eBPF observer — no app changes |
-| 🔵 | 🔍 API headers & bodies | OpenTelemetry instrumentation — one app restart |
+| 🟢 | 💓 헬스체크 | Docker 컨테이너 자동 발견, 실행 상태와 health |
+| 🟢 | 🖥️ 인프라 | 호스트 CPU·메모리·디스크·네트워크 메트릭 |
+| 🟢 | 📜 로그 | 컨테이너 stdout/stderr 수집 |
+| 🟢 | 🌐 API 상태 | access log에서 읽은 요청 상태코드(method·path·status) |
+| 🟢 | 🔔 알림 | Telegram·Discord·Slack 채널 |
+| 🔵 | ⚡ API latency·트레이스 | 자동 eBPF 관측기 — 앱 수정 없음 |
+| 🔵 | 🔍 API 헤더·바디 | OpenTelemetry 계측 — 앱 재시작 한 번 |
 
-## Quick Start
+## 빠른 시작
 
-This is the smallest setup: one Web and one monitoring bundle, both with Docker Compose.
-On a single server you can run both side by side. Compose templates live in
-[`web/docker-compose.yml`](web/docker-compose.yml) and
-[`agent/docker-compose.yml`](agent/docker-compose.yml).
+Web 1개와 모니터링 번들 1개를 Docker Compose로 실행하는 가장 작은 구성입니다.
+단일 서버라면 둘을 같은 서버에서 실행해도 됩니다. Compose 템플릿은
+[`web/docker-compose.yml`](web/docker-compose.yml)과
+[`agent/docker-compose.yml`](agent/docker-compose.yml)에 있습니다.
 
-### 1. Start Web
+### 1. Web 실행
 
-On the dashboard server, create `docker-compose.yml`:
+대시보드 서버에서 `docker-compose.yml`을 작성합니다.
 
 ```yaml
 services:
@@ -91,186 +90,176 @@ volumes:
 docker compose up -d
 ```
 
-Open `http://WEB_SERVER_IP:3001` and create the first admin account. Done.
+`http://WEB_SERVER_IP:3001`을 열고 첫 관리자 계정을 만들면 완료입니다.
 
-### 2. Create a one-time Docker connection command
+### 2. 일회용 Docker 연결 명령 만들기
 
-In the dashboard, open **Docker** and click **Connect Docker**. The connection
-flow shows an installation command containing a join code that expires after ten
-minutes and can only be used once. The long-lived API key is not displayed in
-this initial browser flow; it is delivered directly to the target server during
-installation.
+대시보드에서 **Docker**를 열고 **Docker 연결**을 누릅니다. 연결 화면에는
+10분 동안 한 번만 사용할 수 있는 설치 명령이 표시됩니다. 장기 API 키는
+브라우저에 표시되지 않고 설치 과정에서 대상 서버로 직접 전달됩니다.
 
-### 3. Install the monitoring bundle on the monitored server
+### 3. 모니터링할 서버에 모니터링 번들 설치
 
-The bundled Compose file starts the Docker collector plus an isolated OBI eBPF
-observer. Your application Compose file, images, ports, and containers do not
-need to be changed. Docker Compose 2.23.1 or newer is required.
+번들 Compose 파일은 Docker 수집기와 권한이 분리된 OBI eBPF 관측기를 함께
+실행합니다. 앱의 Compose 파일, 이미지, 포트, 컨테이너는 바꿀 필요가 없습니다.
+Docker Compose 2.23.1 이상이 필요합니다.
 
-Run the displayed one-line command on the target Linux Docker server. The
-installer checks Docker and Compose first, writes the bundle under
-`/opt/everyup-agent`, backs up any previous configuration, and starts the Docker
-collector and eBPF observer.
+표시된 명령 한 줄을 대상 Linux Docker 서버에서 실행합니다. 설치기는 Docker와
+Compose 버전을 먼저 확인한 후 `/opt/everyup-agent`에 설정을 만들고 Docker 수집기와
+eBPF 관측기를 시작합니다. 기존 설정이 있으면 덮어쓰기 전에 백업합니다.
 
-If the join code expires or has already been used, click **New code** in the
-project installation screen and copy the refreshed command.
+연결 코드가 만료되거나 이미 사용됐다면 프로젝트 설치 화면에서 **새 코드**를
+눌러 다시 발급할 수 있습니다.
 
-Within about 30 seconds the Docker environment shows as online in Web and the containers on
-that server appear automatically. The eBPF observer also discovers container
-processes automatically; there is no port list to maintain. If something goes wrong, see
-[Troubleshooting](#troubleshooting).
+약 30초 안에 Web에서 Docker 환경이 online으로 표시되고, 그 서버의 컨테이너들이
+자동으로 나타납니다. eBPF 관측기도 컨테이너 프로세스를 자동으로 찾으므로
+포트 목록을 관리할 필요가 없습니다. 문제가 생기면
+[트러블슈팅](#트러블슈팅)을 참고하세요.
 
-The Docker environment's **Monitoring setup guide** checks collector connection, baseline
-collection, and automatic API tracing in order. When Java or Node.js services
-are discovered, the same guide continues into the optional detailed
-header/body instrumentation flow.
+Docker 환경 화면의 **모니터링 설정 가이드**가 수집기 연결, 기본 수집, 자동 API 추적을
+순서대로 진단합니다. Java·Node.js 서비스가 발견되면 같은 가이드에서 선택 기능인
+헤더·바디 상세 계측까지 바로 이어서 설정할 수 있습니다.
 
-## Optional Features
+## 선택 기능
 
-### Automatic eBPF observer: API latency and traces
+### 자동 eBPF 관측기: API latency와 trace
 
-The default Docker collector reads method, path, and status from access logs. To see real
-latency and traces, the bundled Compose file starts `everyup-ebpf` automatically.
-It discovers processes running in Docker/OCI containers, so there is no
-`BEYLA_OPEN_PORT` or application port configuration.
+기본 Docker 수집기는 access log에서 method, path, status를 읽습니다. 실제 latency와
+trace까지 볼 수 있도록 번들 Compose가 `everyup-ebpf`를 자동으로 실행합니다.
+Docker/OCI 컨테이너에서 실행 중인 프로세스를 자동 발견하므로
+`BEYLA_OPEN_PORT`나 앱 포트 설정이 필요하지 않습니다.
 
-This does not change your app code, Dockerfile, or app containers. On a native
-Linux host, eBPF observes host processes to build traces and the Docker collector
-attributes each span to the matching Docker service. Docker Desktop has the
-PID-translation limitation, so use app-side OpenTelemetry when automatic service
-attribution is unavailable. Requires Linux kernel 5.8+ with BTF. See
-"Zero-Code Tracing" in [agent/README.md](agent/README.md) for details. The
-observer needs elevated eBPF permissions; remove the `everyup-ebpf` service if
-that is not acceptable. Logs, health, events, and host metrics keep working.
+앱 코드, Dockerfile, 앱 컨테이너를 바꾸지 않습니다. 실제 Linux 호스트에서는
+eBPF가 호스트 프로세스를 관찰해 trace를 만들고, Docker 수집기가 각 span을 해당 Docker
+서비스에 연결합니다. Docker Desktop에서는 PID 변환 제약으로 서비스 자동 연결이
+되지 않을 수 있으므로, 이 경우 앱 측 OpenTelemetry 계측을 사용하세요.
+Linux kernel 5.8+ 및 BTF가 필요합니다. 자세한 내용은
+[agent/README.md](agent/README.md)의 "Zero-Code Tracing"을 참고하세요. eBPF
+관측기는 높은 권한이 필요하므로 허용할 수 없는 환경에서는 `everyup-ebpf`
+서비스를 제거할 수 있습니다. 이 경우에도 로그, 상태, 이벤트, 호스트 메트릭은
+계속 동작합니다.
 
-### OpenTelemetry instrumentation: request/response headers and bodies
+### OpenTelemetry 계측: 요청/응답 헤더·바디
 
-To diagnose why a request failed, use app-side OpenTelemetry instrumentation.
-It requires one app restart, but for Java and Node.js it attaches through a
-Compose override without touching your code or Dockerfile.
+요청이 실패한 이유까지 진단하려면 앱 측 OpenTelemetry 계측을 사용합니다. 앱을
+한 번 재시작해야 하지만, Java와 Node.js는 코드나 Dockerfile을 고치지 않고
+Compose override로 붙일 수 있습니다.
 
-In the web UI, open a project, choose **Detailed API monitoring**, and run the
-displayed one-line command on the application server. The `everyup-otel` helper
-generates a `docker-compose.everyup.yml` tailored to the detected Java/Node.js
-runtimes and recreates only those services. It verifies the injected options,
-shared volume, collector network, and container state, automatically restoring the
-previous configuration if a check fails.
+웹 UI에서 프로젝트를 열고 **상세 API 모니터링**을 실행한 뒤 표시된 명령 한 줄을
+애플리케이션 서버에서 실행합니다. `everyup-otel` CLI가 감지된 Java/Node.js 런타임에
+맞춘 `docker-compose.everyup.yml`을 만들고 선택한 서비스만 다시 띄웁니다. 적용 후
+주입 옵션, 공유 볼륨, 수집기 네트워크와 컨테이너 상태를 검증하며 실패하면 직전 설정으로
+자동 복구합니다.
 
-Automatic body capture is currently available for Node.js. Bodies are masked
-inside the app before export, are admin-only in Web, and viewing is audited.
-Java, Python, and manual SDKs can add masked body span events explicitly. For
-the full setup, see the
-[OTel API instrumentation guide](docs/OTEL_API_INSTRUMENTATION.md).
+요청/응답 바디 자동 캡처는 현재 Node.js에서 지원됩니다. 바디는 앱 안에서
+export 전에 마스킹되며, Web에서는 관리자만 볼 수 있고 열람 기록이 남습니다.
+Java, Python, 수동 SDK는 마스킹된 body span event를 직접 추가할 수 있습니다.
+전체 설정은 [OTel API 계측 가이드](docs/OTEL_API_INSTRUMENTATION.ko.md)를
+참고하세요.
 
-## What Gets Collected
+## 수집되는 데이터
 
-### Default Docker collector
+### 기본 Docker 수집기
 
-Collected with no app changes. The Docker collector mounts the Docker socket and
-`/hostfs` read-only.
+앱 수정 없이 수집됩니다. Docker 수집기는 Docker 소켓과 `/hostfs`를 읽기 전용으로
+마운트합니다.
 
-| Data | Source |
+| 데이터 | 소스 |
 | --- | --- |
-| Container up/down, name, image, state, events | Docker socket |
-| stdout/stderr logs | `docker logs` |
-| API request method, path, status (no latency) | Access-log parsing |
-| Host CPU, memory, disk, network | `/hostfs` mount |
+| 컨테이너 up/down, 이름, 이미지, 상태, 이벤트 | Docker 소켓 |
+| stdout/stderr 로그 | `docker logs` |
+| API 요청 method, path, status (latency 없음) | access log 파싱 |
+| 호스트 CPU, 메모리, 디스크, 네트워크 | `/hostfs` 마운트 |
 
-API status codes appear when the app or a proxy writes access logs to
-stdout/stderr. Without access logs, container state, regular logs, and host
-metrics are still collected.
+API 상태코드는 앱이나 프록시가 access log를 stdout/stderr로 남길 때 표시됩니다.
+access log가 없어도 컨테이너 상태, 일반 로그, 호스트 메트릭은 계속 수집됩니다.
 
-### Automatic eBPF observer in the monitoring bundle
+### 모니터링 번들의 자동 eBPF 관측기
 
-| Data | Source |
+| 데이터 | 소스 |
 | --- | --- |
-| API traces with real latency | `everyup-ebpf` observer (OBI/eBPF) |
-| method, path, status, duration | Host process observation |
-| Many languages including Go, and HTTPS services | OpenTelemetry eBPF Instrumentation |
+| 실제 latency가 포함된 API trace | `everyup-ebpf` 관측기(OBI/eBPF) |
+| method, path, status, duration | 호스트 프로세스 관찰 |
+| Go를 포함한 여러 언어와 HTTPS 서비스 | OpenTelemetry eBPF Instrumentation |
 
-### Optional: app-side OpenTelemetry instrumentation
+### 선택: 앱 측 OpenTelemetry 계측
 
-| Data | Source |
+| 데이터 | 소스 |
 | --- | --- |
-| Request/response headers | `http.*.header.*` span attributes |
-| Request/response bodies | `*_body_masked` span events |
-| App metrics (JVM memory, GC, custom counters) | App OTel -> Docker collector `:4318` |
+| 요청/응답 헤더 | `http.*.header.*` 스팬 속성 |
+| 요청/응답 바디 | `*_body_masked` 스팬 이벤트 |
+| 앱 메트릭(JVM 메모리, GC, 커스텀 카운터 등) | 앱 OTel -> Docker 수집기 `:4318` |
 
-## Troubleshooting
+## 트러블슈팅
 
-**The Docker environment does not show as online.**
-`EVERYUP_WEB_BASE_URL` must be a Web address reachable from inside the Docker
-collector container. Even on the same server, `localhost` inside the container
-may point to the collector itself, not Web. Use a Compose service name or a
-host-reachable IP.
+**Docker 환경이 online으로 뜨지 않습니다.**
+`EVERYUP_WEB_BASE_URL`은 Docker 수집기 컨테이너 안에서 접근 가능한 Web 주소여야 합니다.
+같은 서버라도 컨테이너 안의 `localhost`는 Web이 아니라 수집기 자신을 가리킬 수
+있습니다. Compose 서비스명이나 호스트에서 접근 가능한 IP를 사용하세요.
 
-**The Docker collector cannot read the Docker socket.**
-This is a permission issue. The one-line installer detects the Docker socket
-group ID and writes `EVERYUP_DOCKER_GID` automatically. For a manual deployment,
-set that value to `stat -c '%g' /var/run/docker.sock` and add it through
-`group_add`; use `user: "0:0"` only as a short-lived diagnostic fallback. To
-narrow socket access in production, use the
-[Docker socket proxy guide](agent/docs/docker-socket-proxy.md).
+**Docker 수집기가 Docker 소켓을 읽지 못합니다.**
+권한 문제입니다. 한 줄 설치기는 Docker 소켓의 group ID를 감지해
+`EVERYUP_DOCKER_GID`를 자동으로 기록합니다. 수동 배포라면 이 값을
+`stat -c '%g' /var/run/docker.sock` 결과로 설정하고 `group_add`에 추가하세요.
+`user: "0:0"`은 짧은 진단 용도로만 사용하세요. 운영 환경에서 소켓 접근 권한을 좁히려면
+[Docker socket proxy 가이드](agent/docs/docker-socket-proxy.md)를 사용하세요.
 
-**Logs are not showing up.**
-Logs written only to a file inside the container are not visible to Docker, so
-the Docker collector cannot collect them. Write app or proxy logs to stdout/stderr.
+**로그가 보이지 않습니다.**
+컨테이너 안의 파일에만 쓰는 로그는 Docker 로그로 보이지 않으므로 Docker 수집기도 수집할
+수 없습니다. 앱이나 프록시 로그를 stdout/stderr로 출력하세요.
 
-**Backups for production deployments.**
-Back up `/app/data`. If you set `EVERYUP_ENCRYPTION_KEY`, keep that same
-64-char hex key with your deployment secrets. A database backup alone cannot
-restore encrypted Docker collector keys or notification secrets without the key.
-See the [backup and restore guide](docs/BACKUP_RESTORE.md) for details.
+**운영 배포 시 백업.**
+`/app/data`를 백업하세요. `EVERYUP_ENCRYPTION_KEY`를 설정했다면 같은 64자 hex
+키를 배포 secret과 함께 보관해야 합니다. 키 없이 데이터베이스 백업만으로는
+암호화된 Docker 수집기 키나 알림 secret을 복원할 수 없습니다.
+자세한 내용은 [백업·복원 가이드](docs/BACKUP_RESTORE.ko.md)를 참고하세요.
 
-## Documentation
+## 문서
 
-| Document | What's inside |
+| 문서 | 내용 |
 | --- | --- |
-| [web/README.md](web/README.md) | Web setup, environment variables, API areas, local development |
-| [agent/README.md](agent/README.md) | Docker collector setup, full environment variable reference, Compose settings |
-| [agent/docs/docker-socket-proxy.md](agent/docs/docker-socket-proxy.md) | Stricter Docker socket access for production collector deployments |
-| [agent/docs/web-connected-mode.md](agent/docs/web-connected-mode.md) | How Docker collector enrollment and Web sync work |
-| [agent/docs/host-metrics.md](agent/docs/host-metrics.md) | Host CPU, memory, disk, and network collection details |
-| [agent/docs/otel-collector.md](agent/docs/otel-collector.md) | Optional OTel collector configuration generated by the Docker collector |
-| [docs/NOTIFICATION_SETUP.md](docs/NOTIFICATION_SETUP.md) | Telegram / Discord / Slack channel credentials and configuration ([한국어](docs/NOTIFICATION_SETUP.ko.md)) |
-| [docs/BACKUP_RESTORE.md](docs/BACKUP_RESTORE.md) | Backing up and restoring the `/app/data` directory ([한국어](docs/BACKUP_RESTORE.ko.md)) |
-| [docs/OTEL_API_INSTRUMENTATION.md](docs/OTEL_API_INSTRUMENTATION.md) | Capturing request/response headers and bodies via OpenTelemetry, per language ([한국어](docs/OTEL_API_INSTRUMENTATION.ko.md)) |
-| [docs/CHANGELOG.md](docs/CHANGELOG.md) | Historical feature, refactor, and bugfix notes |
+| [web/README.md](web/README.md) | Web 설정, 환경변수, API 영역, 로컬 개발 |
+| [agent/README.md](agent/README.md) | Docker 수집기 설정, 전체 환경변수 레퍼런스, Compose 설정 |
+| [agent/docs/docker-socket-proxy.md](agent/docs/docker-socket-proxy.md) | 운영 환경의 더 엄격한 Docker socket 접근 구성 |
+| [agent/docs/web-connected-mode.md](agent/docs/web-connected-mode.md) | Docker 수집기 등록과 Web 동기화 동작 방식 |
+| [agent/docs/host-metrics.md](agent/docs/host-metrics.md) | 호스트 CPU, 메모리, 디스크, 네트워크 수집 세부사항 |
+| [agent/docs/otel-collector.md](agent/docs/otel-collector.md) | Docker 수집기가 생성하는 선택적 OTel collector 설정 |
+| [docs/NOTIFICATION_SETUP.ko.md](docs/NOTIFICATION_SETUP.ko.md) | Telegram / Discord / Slack 채널 자격증명·설정 |
+| [docs/BACKUP_RESTORE.ko.md](docs/BACKUP_RESTORE.ko.md) | `/app/data` 디렉토리 백업·복원 |
+| [docs/OTEL_API_INSTRUMENTATION.ko.md](docs/OTEL_API_INSTRUMENTATION.ko.md) | OpenTelemetry 계측으로 요청/응답 헤더·바디 수집(언어별) |
+| [docs/CHANGELOG.md](docs/CHANGELOG.md) | 기능·리팩토링·버그픽스의 과거 이력 |
 
-## Reference
+## 레퍼런스
 
-**Networking.** The Docker collector reaches containers and logs through the mounted
-Docker socket, so it works even from its own Compose project. The cleanest
-setup is to put `everyup-agent` in the same Compose file as the app stack on
-that server.
+**네트워킹.** Docker 수집기는 마운트된 Docker 소켓으로 컨테이너·로그에 접근하므로 자체
+Compose 프로젝트에서도 동작합니다. 가장 깔끔한 구성은 `everyup-agent`를 그
+서버의 앱 스택과 같은 Compose 파일에 두는 것입니다.
 
-**Repository layout**
+**저장소 구조**
 
 ```text
 web/
-  backend/                 # Go 1.24 API server, SQLite migrations, OTLP ingest
-  frontend/                # React 19 / Vite dashboard
-  docker-compose.yml       # Web-only Compose template
+  backend/                 # Go 1.24 API 서버, SQLite migration, OTLP ingest
+  frontend/                # React 19 / Vite 대시보드
+  docker-compose.yml       # Web 전용 Compose 템플릿
 agent/
-  cmd/                     # Docker collector entrypoint
-  docs/                    # Docker collector deployment and operations notes
-  instrumentation/         # Bundled app-side OTel helpers
-  docker-compose.yml       # Docker collector Compose template
-docs/                      # User docs, backup/restore, notifications, OTel guide
-docker-compose.yml         # root convenience Compose file (Web only)
+  cmd/                     # Docker 수집기 entrypoint
+  docs/                    # Docker 수집기 배포/운영 문서
+  instrumentation/         # 앱 측 OTel helper 번들
+  docker-compose.yml       # Docker 수집기 Compose 템플릿
+docs/                      # 사용자 문서, 백업/복원, 알림, OTel 가이드
+docker-compose.yml         # 루트 편의용 Compose 파일 (Web 전용)
 ```
 
-**Development**
+**개발**
 
-Prerequisites for source development: Docker, pnpm, Go 1.24 for Web, and Go
-1.25 for the Docker collector.
+소스 개발 사전 요구사항: Docker, pnpm, Web용 Go 1.24, Docker 수집기용 Go 1.25.
 
 ```bash
-cd web/backend && go test ./...     # backend tests
-cd web/frontend && pnpm build       # frontend build
-cd agent && go test ./...           # Docker collector tests
+cd web/backend && go test ./...     # 백엔드 테스트
+cd web/frontend && pnpm build       # 프론트엔드 빌드
+cd agent && go test ./...           # Docker 수집기 테스트
 ```
 
-For a disposable Node.js and Java application that exercises instrumentation,
-traffic, verification, and rollback, see the
-[monitoring target E2E fixture](e2e/monitoring-target/README.md).
+계측 적용, 트래픽, 검증, 롤백 흐름을 시험할 수 있는 일회용 Node.js/Java 앱은
+[모니터링 대상 E2E fixture](e2e/monitoring-target/README.ko.md)를 참고하세요.
