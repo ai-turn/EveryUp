@@ -28,7 +28,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/everyup-main-ko.png" alt="EveryUp dashboard" width="100%">
+  <img src="docs/images/everyup-main-en.png" alt="EveryUp dashboard" width="100%">
 </p>
 
 > **Note:** the dashboard interface is Korean only. This page documents setup

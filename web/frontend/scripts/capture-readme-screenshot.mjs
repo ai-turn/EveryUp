@@ -6,10 +6,15 @@
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { writeFile } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const OUT = path.resolve(here, '../../../docs/images/everyup-main-ko.png');
+// UI는 한국어 전용이라 두 파일은 같은 이미지다. 영문 README가 참조하는 -en도
+// 함께 써서, 한쪽만 갱신되어 낡는 일이 없게 한다.
+const OUT = ['everyup-main-ko.png', 'everyup-main-en.png'].map((name) =>
+  path.resolve(here, '../../../docs/images/', name),
+);
 const PORT = 4319; // playwright(4173)/vite dev(5173)와 겹치지 않게
 const URL = `http://127.0.0.1:${PORT}/everyup/`;
 
@@ -76,8 +81,11 @@ try {
     await page.waitForTimeout(400); // 리사이즈 후 차트 리레이아웃
   }
 
-  await page.screenshot({ path: OUT });
-  console.log(`wrote ${path.relative(process.cwd(), OUT)}`);
+  const shot = await page.screenshot();
+  for (const out of OUT) {
+    await writeFile(out, shot);
+    console.log(`wrote ${path.relative(process.cwd(), out)}`);
+  }
 } finally {
   await browser?.close();
   server.kill();
