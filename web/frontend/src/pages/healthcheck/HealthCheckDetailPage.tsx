@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { useTranslate } from '@tolgee/react';
 import { Button, MaterialIcon } from '../../components/common';
 import { useAutoRefresh } from '../../hooks/useAutoRefresh';
 import { api, type AgentServiceFlat } from '../../services/api';
@@ -11,7 +10,6 @@ export function HealthCheckDetailPage() {
   const { agentId, key } = useParams<{ agentId: string; key: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { t } = useTranslate();
 
 
   const [service, setService] = useState<AgentServiceFlat | null>(null);
@@ -32,11 +30,11 @@ export function HealthCheckDetailPage() {
       setService(found ?? null);
     } catch (error) {
       setService(null);
-      setLoadError(error instanceof Error ? error.message : t('서비스를 불러오지 못했습니다'));
+      setLoadError(error instanceof Error ? error.message : '서비스를 불러오지 못했습니다');
     } finally {
       setLoading(false);
     }
-  }, [agentId, key, t]);
+  }, [agentId, key]);
 
   useEffect(() => { fetchService(); }, [fetchService]);
 
@@ -60,8 +58,8 @@ export function HealthCheckDetailPage() {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
         <MaterialIcon name="sync_problem" className="text-3xl text-status-warn" />
-        <div className="text-center"><p className="text-sm font-semibold text-text-base">{t('서비스를 불러오지 못했습니다')}</p><p className="mt-1 text-xs text-text-muted">{loadError}</p></div>
-        <div className="flex gap-2"><Button variant="secondary" onClick={() => navigate('/environments')}>{t('Docker 환경')}</Button><Button onClick={() => void fetchService()}>{t('다시 시도')}</Button></div>
+        <div className="text-center"><p className="text-sm font-semibold text-text-base">서비스를 불러오지 못했습니다</p><p className="mt-1 text-xs text-text-muted">{loadError}</p></div>
+        <div className="flex gap-2"><Button variant="secondary" onClick={() => navigate('/environments')}>Docker 환경</Button><Button onClick={() => void fetchService()}>다시 시도</Button></div>
       </div>
     );
   }
@@ -71,10 +69,10 @@ export function HealthCheckDetailPage() {
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <MaterialIcon name="error_outline" className="text-3xl text-red-500" />
         <p className="text-text-muted">
-          {t('서비스를 찾을 수 없습니다')}
+          서비스를 찾을 수 없습니다
         </p>
         <Button onClick={() => navigate('/environments')}>
-          {t('Docker 환경으로')}
+          Docker 환경으로
         </Button>
       </div>
     );

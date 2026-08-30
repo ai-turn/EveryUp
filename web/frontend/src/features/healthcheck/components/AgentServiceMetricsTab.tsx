@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useTranslate } from '@tolgee/react';
 import {
   ResponsiveContainer, ComposedChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip,
@@ -50,7 +49,6 @@ function seriesLabel(attributes?: Record<string, unknown>): string {
 }
 
 function ServiceMetricsPanel({ source, refreshKey, range }: CommonProps & { source: MetricSource }) {
-  const { t } = useTranslate();
   const [names, setNames] = useState<OtelMetricName[]>([]);
   const [namesLoading, setNamesLoading] = useState(true);
   const [selected, setSelected] = useState('');
@@ -130,7 +128,7 @@ function ServiceMetricsPanel({ source, refreshKey, range }: CommonProps & { sour
   if (names.length === 0) {
     return (
       <div className="rounded-xl border border-ui-border bg-bg-surface p-8 text-center">
-        <p className="text-sm text-text-muted">{t('수신한 메트릭이 없습니다. OpenTelemetry SDK가 메트릭을 보내면 여기에 표시됩니다.')}</p>
+        <p className="text-sm text-text-muted">수신한 메트릭이 없습니다. OpenTelemetry SDK가 메트릭을 보내면 여기에 표시됩니다.</p>
       </div>
     );
   }
@@ -150,7 +148,7 @@ function ServiceMetricsPanel({ source, refreshKey, range }: CommonProps & { sour
         {pointsLoading ? (
           <div className="h-64 animate-pulse rounded bg-ui-hover" />
         ) : chartData.length === 0 ? (
-          <div className="flex h-64 items-center justify-center text-sm text-text-dim">{t('데이터 없음')}</div>
+          <div className="flex h-64 items-center justify-center text-sm text-text-dim">데이터 없음</div>
         ) : (
           <>
             <ResponsiveContainer width="100%" height={256} initialDimension={CHART_INITIAL_DIMENSION}>
@@ -187,23 +185,23 @@ function ServiceMetricsPanel({ source, refreshKey, range }: CommonProps & { sour
                 valueFormatter={value => unit === 'By' ? formatMetricValue(value, unit) : String(Math.round(value * 100) / 100)}
               />
             </div>
-            {truncatedSeries > 0 && <p className="mt-2 text-xs text-text-dim">{t(`속성 조합이 많아 상위 ${MAX_SERIES}개 시리즈만 표시합니다. (+${truncatedSeries}개 생략)`)}</p>}
+            {truncatedSeries > 0 && <p className="mt-2 text-xs text-text-dim">{`속성 조합이 많아 상위 ${MAX_SERIES}개 시리즈만 표시합니다. (+${truncatedSeries}개 생략)`}</p>}
           </>
         )}
       </div>
 
       <div className="rounded-xl border border-ui-border bg-bg-surface p-6">
         <div className="mb-2 flex items-center gap-2">
-          <h3 className="text-base font-bold text-text-base">{t('전체 시리즈')}</h3>
-          <span className="text-xs text-text-dim">{t('행을 선택해 차트에 표시')}</span>
+          <h3 className="text-base font-bold text-text-base">전체 시리즈</h3>
+          <span className="text-xs text-text-dim">행을 선택해 차트에 표시</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead><tr className="border-b border-ui-border-soft text-left text-xs font-semibold uppercase tracking-wider text-text-muted">
-              <th className="py-1.5 pr-3 font-semibold">{t('시리즈')}</th>
-              <th className="py-1.5 pr-3 font-semibold">{t('유형')}</th>
-              <th className="py-1.5 pr-3 font-semibold">{t('단위')}</th>
-              <th className="py-1.5 text-right font-semibold">{t('마지막 수신')}</th>
+              <th className="py-1.5 pr-3 font-semibold">시리즈</th>
+              <th className="py-1.5 pr-3 font-semibold">유형</th>
+              <th className="py-1.5 pr-3 font-semibold">단위</th>
+              <th className="py-1.5 text-right font-semibold">마지막 수신</th>
             </tr></thead>
             <tbody>
               {names.map(name => {

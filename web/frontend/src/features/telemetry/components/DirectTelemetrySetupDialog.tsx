@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslate } from '@tolgee/react';
 import { toast } from 'react-hot-toast';
 import { Button, Input, MaterialIcon, SegmentedControl, Select } from '../../../components/common';
 import { SCRIM_MODAL_DIALOG } from '../../../hooks/useOverlay';
@@ -32,7 +31,6 @@ export function DirectTelemetrySetupDialog({
   onClose,
   onCreated,
 }: DirectTelemetrySetupDialogProps) {
-  const { t } = useTranslate();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [mode, setMode] = useState<SetupMode>('new');
   const [name, setName] = useState('');
@@ -90,8 +88,8 @@ export function DirectTelemetrySetupDialog({
   };
 
   const modeOptions: { value: SetupMode; label: string }[] = [
-    { value: 'new', label: t('새 서비스') },
-    { value: 'existing', label: t('기존 서비스') },
+    { value: 'new', label: '새 서비스' },
+    { value: 'existing', label: '기존 서비스' },
   ];
 
   return (
@@ -107,7 +105,7 @@ export function DirectTelemetrySetupDialog({
           <h2 id={`direct-${signal}-dialog-title`} className="text-lg font-bold text-text-base">{title}</h2>
           <p className="mt-0.5 text-xs text-text-muted">{description}</p>
         </div>
-        <Button variant="ghost" size="sm" aria-label={t('닫기')} onClick={onClose} disabled={submitting}>
+        <Button variant="ghost" size="sm" aria-label="닫기" onClick={onClose} disabled={submitting}>
           <MaterialIcon name="close" />
         </Button>
       </div>
@@ -115,8 +113,8 @@ export function DirectTelemetrySetupDialog({
       {setup ? (
         <DirectTelemetrySetupResult
           setup={setup}
-          title={t(`${capabilityLabel} 연결이 준비되었습니다`)}
-          doneLabel={t(`${capabilityLabel} 보기`)}
+          title={`${capabilityLabel} 연결이 준비되었습니다`}
+          doneLabel={`${capabilityLabel} 보기`}
           onDone={done}
         />
       ) : attached ? (
@@ -124,49 +122,49 @@ export function DirectTelemetrySetupDialog({
           <div className="flex items-start gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-status-healthy/10 text-status-healthy"><MaterialIcon name="check" /></span>
             <div>
-              <h3 className="text-lg font-bold text-text-base">{t(`기존 서비스에 ${capabilityLabel}를 추가했습니다`)}</h3>
-              <p className="mt-1 text-sm text-text-muted">{t(`기존 직접 수집 키에 ${capabilityLabel} 권한을 추가했습니다. 실행 중인 OpenTelemetry 설정은 같은 키를 계속 사용합니다.`)}</p>
+              <h3 className="text-lg font-bold text-text-base">{`기존 서비스에 ${capabilityLabel}를 추가했습니다`}</h3>
+              <p className="mt-1 text-sm text-text-muted">{`기존 직접 수집 키에 ${capabilityLabel} 권한을 추가했습니다. 실행 중인 OpenTelemetry 설정은 같은 키를 계속 사용합니다.`}</p>
             </div>
           </div>
-          <div className="flex justify-end"><Button onClick={done}>{t(`${capabilityLabel} 보기`)}</Button></div>
+          <div className="flex justify-end"><Button onClick={done}>{`${capabilityLabel} 보기`}</Button></div>
         </div>
       ) : (
         <form onSubmit={submit} className="space-y-5 p-6">
-          <SegmentedControl options={modeOptions} value={mode} onChange={setMode} size="md" ariaLabel={t('서비스 선택 방식')} />
+          <SegmentedControl options={modeOptions} value={mode} onChange={setMode} size="md" ariaLabel="서비스 선택 방식" />
 
           {mode === 'new' ? (
             <>
               <label className="block space-y-1.5" htmlFor={`direct-${signal}-service-name`}>
-                <span className="text-sm font-semibold text-text-secondary">{t('서비스 이름')}</span>
+                <span className="text-sm font-semibold text-text-secondary">서비스 이름</span>
                 <Input id={`direct-${signal}-service-name`} required maxLength={200} value={name} onChange={event => setName(event.target.value)} placeholder="checkout-api" />
-                <span className="block text-xs text-text-dim">{t('수신 payload의 service.name 대신 이 이름으로 고정합니다.')}</span>
+                <span className="block text-xs text-text-dim">수신 payload의 service.name 대신 이 이름으로 고정합니다.</span>
               </label>
               <label className="block space-y-1.5" htmlFor={`direct-${signal}-project`}>
-                <span className="text-sm font-semibold text-text-secondary">{t('Project')}</span>
+                <span className="text-sm font-semibold text-text-secondary">Project</span>
                 <Select id={`direct-${signal}-project`} value={projectId} onChange={event => setProjectId(event.target.value)}>
-                  <option value="">{t('미분류')}</option>
+                  <option value="">미분류</option>
                   {projects.map(project => <option key={project.id} value={project.id}>{project.name}</option>)}
                 </Select>
               </label>
             </>
           ) : existingServices.length > 0 ? (
             <label className="block space-y-1.5" htmlFor={`direct-${signal}-existing-service`}>
-              <span className="text-sm font-semibold text-text-secondary">{t('Observed Service')}</span>
+              <span className="text-sm font-semibold text-text-secondary">Observed Service</span>
               <Select id={`direct-${signal}-existing-service`} required value={existingId} onChange={event => setExistingId(event.target.value)}>
-                <option value="">{t('서비스 선택')}</option>
+                <option value="">서비스 선택</option>
                 {existingServices.map(service => <option key={service.id} value={service.id}>{service.name}</option>)}
               </Select>
-              <span className="block text-xs text-text-dim">{t(`기존 연결 키의 범위에 ${capabilityLabel}를 추가합니다.`)}</span>
+              <span className="block text-xs text-text-dim">{`기존 연결 키의 범위에 ${capabilityLabel}를 추가합니다.`}</span>
             </label>
           ) : (
-            <div className="rounded-xl border border-ui-border bg-ui-hover-soft p-4 text-sm text-text-muted">{t(`${capabilityLabel}를 추가할 수 있는 기존 직접 서비스가 없습니다. 새 서비스를 만들어 주세요.`)}</div>
+            <div className="rounded-xl border border-ui-border bg-ui-hover-soft p-4 text-sm text-text-muted">{`${capabilityLabel}를 추가할 수 있는 기존 직접 서비스가 없습니다. 새 서비스를 만들어 주세요.`}</div>
           )}
 
           <div className="flex justify-end gap-2 border-t border-ui-border pt-4">
-            <Button type="button" variant="secondary" onClick={onClose} disabled={submitting}>{t('취소')}</Button>
+            <Button type="button" variant="secondary" onClick={onClose} disabled={submitting}>취소</Button>
             <Button type="submit" disabled={submitting || (mode === 'new' ? !name.trim() : !selected)}>
               <MaterialIcon name="add" />
-              {submitting ? t('추가 중...') : t(`${capabilityLabel} 추가`)}
+              {submitting ? '추가 중...' : `${capabilityLabel} 추가`}
             </Button>
           </div>
         </form>

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useTranslate } from '@tolgee/react';
 import { Button, EmptyState, MaterialIcon, PageHeader, StatusBadge } from '../../components/common';
 import { DirectApiSetupDialog } from '../../features/api/components/DirectApiSetupDialog';
 import { CapabilityAgentSetup } from '../../features/services/components/CapabilityAgentSetup';
@@ -43,7 +42,6 @@ function ApiCard({
   summary: ApiRequestStatusSummary;
   to: string;
 }) {
-  const { t } = useTranslate();
   const total = totalRequests(summary);
   const hasErrors = summary.count5xx > 0;
   return (
@@ -59,20 +57,19 @@ function ApiCard({
         <StatusBadge healthy={active} />
       </div>
       <div className="mt-5 grid grid-cols-2 gap-3">
-        <div><p className="text-2xs text-text-dim">{t('요청')}</p><p className="font-mono text-lg font-bold text-text-base">{total.toLocaleString()}</p></div>
+        <div><p className="text-2xs text-text-dim">요청</p><p className="font-mono text-lg font-bold text-text-base">{total.toLocaleString()}</p></div>
         <div><p className="text-2xs text-text-dim">5xx</p><p className={`font-mono text-lg font-bold ${hasErrors ? 'text-status-error' : 'text-text-base'}`}>{summary.count5xx.toLocaleString()}</p></div>
       </div>
       {summary.top5xxPath ? (
         <p className="mt-4 truncate font-mono text-xs text-text-muted">{summary.top5xxMethod} {summary.top5xxPath}</p>
       ) : (
-        <p className="mt-4 text-xs text-text-dim">{total > 0 ? t('아직 오류 요청이 없습니다') : t('첫 trace 수신을 기다리는 중입니다.')}</p>
+        <p className="mt-4 text-xs text-text-dim">{total > 0 ? '아직 오류 요청이 없습니다' : '첫 trace 수신을 기다리는 중입니다.'}</p>
       )}
     </Link>
   );
 }
 
 export function ApiPage() {
-  const { t } = useTranslate();
   const navigate = useNavigate();
   const [agentRows, setAgentRows] = useState<AgentApiSummary[]>([]);
   const [directRows, setDirectRows] = useState<DirectApiSummary[]>([]);
@@ -107,9 +104,9 @@ export function ApiPage() {
 
   return (
     <div>
-      <PageHeader title="API" subtitle={t('Docker 수집기 또는 직접 OpenTelemetry 연결에서 수집한 API 요청과 오류 추이입니다.')}>
+      <PageHeader title="API" subtitle="Docker 수집기 또는 직접 OpenTelemetry 연결에서 수집한 API 요청과 오류 추이입니다.">
         <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
-          <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />{t('API 직접 추가')}</Button>
+          <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />API 직접 추가</Button>
           <CapabilityAgentSetup capability="api" buttonVariant="secondary" />
         </div>
       </PageHeader>
@@ -118,23 +115,23 @@ export function ApiPage() {
           {[0, 1, 2].map(item => <div key={item} className="h-40 animate-pulse rounded-xl border border-ui-border bg-bg-surface" />)}
         </div>
       ) : error ? (
-        <EmptyState icon="error_outline" title={t('API 데이터를 불러오지 못했습니다')} description={error} />
+        <EmptyState icon="error_outline" title="API 데이터를 불러오지 못했습니다" description={error} />
       ) : isEmpty ? (
-        <EmptyState icon="api" title={t('표시할 API 대상이 없습니다')} description={t('API를 직접 연결하거나 Docker 환경에서 API 수집을 활성화해 주세요.')} />
+        <EmptyState icon="api" title="표시할 API 대상이 없습니다" description="API를 직접 연결하거나 Docker 환경에서 API 수집을 활성화해 주세요." />
       ) : (
         <div className="space-y-7">
           {directRows.length > 0 && (
             <section>
               <div className="mb-3 flex items-end justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-bold text-text-base">{t('직접 연결 서비스')}</h2>
-                  <p className="mt-0.5 text-xs text-text-muted">{t('애플리케이션이 전송하는 OTLP traces를 직접 받습니다.')}</p>
+                  <h2 className="text-base font-bold text-text-base">직접 연결 서비스</h2>
+                  <p className="mt-0.5 text-xs text-text-muted">애플리케이션이 전송하는 OTLP traces를 직접 받습니다.</p>
                 </div>
                 <span className="font-mono text-xs text-text-dim">{directRows.length}</span>
               </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {directRows.map(({ service, summary }) => (
-                  <ApiCard key={service.id} name={service.name} source={t('Direct')} active={service.isActive} summary={summary} to={`/api/${service.id}`} />
+                  <ApiCard key={service.id} name={service.name} source="Direct" active={service.isActive} summary={summary} to={`/api/${service.id}`} />
                 ))}
               </div>
             </section>
@@ -144,8 +141,8 @@ export function ApiPage() {
             <section>
               <div className="mb-3 flex items-end justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-bold text-text-base">{t('Docker 서비스')}</h2>
-                  <p className="mt-0.5 text-xs text-text-muted">{t('EveryUp Docker 수집기가 발견하고 전달한 API 요청입니다.')}</p>
+                  <h2 className="text-base font-bold text-text-base">Docker 서비스</h2>
+                  <p className="mt-0.5 text-xs text-text-muted">EveryUp Docker 수집기가 발견하고 전달한 API 요청입니다.</p>
                 </div>
                 <span className="font-mono text-xs text-text-dim">{agentRows.length}</span>
               </div>

@@ -1,4 +1,3 @@
-import { useTranslate } from '@tolgee/react';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Button, MaterialIcon } from '../../../components/common';
@@ -14,7 +13,7 @@ interface ServiceIncidentBannerProps {
 // so the cause, impact, and next action are visible without scrolling.
 // Renders nothing for healthy services.
 export function ServiceIncidentBanner({ service, onInvestigate }: ServiceIncidentBannerProps) {
-  const { t } = useTranslate();
+
 
 
 
@@ -30,15 +29,15 @@ export function ServiceIncidentBanner({ service, onInvestigate }: ServiceInciden
       <span className="h-2.5 w-2.5 rounded-full bg-status-error animate-pulse shrink-0" />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-bold text-status-error">
-          {t('진행 중인 장애')} — {service.name}
+          진행 중인 장애 — {service.name}
         </p>
         <p className="text-xs text-text-muted mt-0.5 truncate">
-          {service.lastError || t('서비스가 응답하지 않습니다')}
-          {since && <span className="text-text-dim"> · {t('마지막 응답')} {since}</span>}
+          {service.lastError || '서비스가 응답하지 않습니다'}
+          {since && <span className="text-text-dim"> · {'마지막 응답'} {since}</span>}
         </p>
       </div>
       <Button variant="danger" onClick={onInvestigate}>
-        {t('로그 확인')}
+        로그 확인
         <MaterialIcon name="arrow_forward" className="text-base" />
       </Button>
     </div>

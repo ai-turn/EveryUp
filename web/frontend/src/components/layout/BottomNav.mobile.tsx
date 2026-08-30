@@ -1,5 +1,4 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useTranslate } from '@tolgee/react';
 import { MaterialIcon } from '../common';
 
 const navItems = [
@@ -11,7 +10,7 @@ const navItems = [
 
 export function BottomNavMobile() {
   const location = useLocation();
-  const { t } = useTranslate();
+
 
   function isActive(href: string) {
     if (href === '/') return location.pathname === '/';
@@ -24,7 +23,7 @@ export function BottomNavMobile() {
       {navItems.map((item) => (
         <Link key={item.href} to={item.href} aria-current={isActive(item.href) ? 'page' : undefined} className={`relative flex flex-1 flex-col items-center justify-center gap-0.5 transition-colors ${isActive(item.href) ? 'text-primary' : 'text-text-dim'}`}>
           <MaterialIcon name={item.icon} className="text-2xl" />
-          <span className="whitespace-nowrap text-sm font-medium">{t(item.label)}</span>
+          <span className="whitespace-nowrap text-sm font-medium">{item.label}</span>
           {isActive(item.href) && <span className="absolute top-1.5 h-1 w-1 rounded-full bg-primary" />}
         </Link>
       ))}

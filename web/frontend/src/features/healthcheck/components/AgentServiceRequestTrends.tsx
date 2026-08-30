@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useTranslate } from '@tolgee/react';
 import {
   ResponsiveContainer, ComposedChart, Line, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip,
@@ -53,7 +52,6 @@ function ServiceRequestTrends({
   refreshKey,
   range: controlledRange,
 }: SharedProps & { source: RequestTrendSource }) {
-  const { t } = useTranslate();
   const [localRange, setLocalRange] = useState<TimeRange>('6h');
   const range = controlledRange ?? localRange;
   const [buckets, setBuckets] = useState<ApiRequestStatBucket[]>([]);
@@ -120,11 +118,11 @@ function ServiceRequestTrends({
     <div className={`p-6 ${chartCardClass}`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex flex-wrap items-center gap-3">
-          <h3 className="text-base font-bold text-text-base">{t('요청 추이')}</h3>
+          <h3 className="text-base font-bold text-text-base">요청 추이</h3>
           <ChartLegend
             items={[
-              { label: t('요청 수'), color: theme.primaryColor },
-              { label: t('에러율(%)'), color: SERIES_HEX.red },
+              { label: '요청 수', color: theme.primaryColor },
+              { label: '에러율(%)', color: SERIES_HEX.red },
             ]}
           />
         </div>
@@ -157,7 +155,7 @@ function ServiceRequestTrends({
               ))}
               {summary.top5xxPath && (
                 <span className="text-text-muted truncate">
-                  · {t('5xx 최다')}: <span className="font-mono font-semibold text-status-error">{summary.top5xxMethod} {summary.top5xxPath}</span> ×{summary.top5xxCount}
+                  · {'5xx 최다'}: <span className="font-mono font-semibold text-status-error">{summary.top5xxMethod} {summary.top5xxPath}</span> ×{summary.top5xxCount}
                 </span>
               )}
             </div>
@@ -203,8 +201,8 @@ function ServiceRequestTrends({
           <Tooltip cursor={tooltipCursor(theme)} content={({ active, label, payload }) => (
             <ChartTooltip active={active} label={label} payload={payload as import('../../../components/charts').TooltipPayloadItem[]} unit="" theme={theme} valueFormatter={(v) => String(v)} />
           )} />
-          <Bar yAxisId="count" dataKey="count" name={t('요청 수')} fill={theme.primaryColor} fillOpacity={0.35} radius={[2, 2, 0, 0]} isAnimationActive={false} />
-          <Line {...lineProps(SERIES_HEX.red)} yAxisId="err" dataKey="errorRate" name={t('에러율(%)')} />
+          <Bar yAxisId="count" dataKey="count" name="요청 수" fill={theme.primaryColor} fillOpacity={0.35} radius={[2, 2, 0, 0]} isAnimationActive={false} />
+          <Line {...lineProps(SERIES_HEX.red)} yAxisId="err" dataKey="errorRate" name="에러율(%)" />
         </ComposedChart>
       </ResponsiveContainer>
     </div>

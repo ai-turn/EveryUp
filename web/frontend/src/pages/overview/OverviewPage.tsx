@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useTranslate } from '@tolgee/react';
 import { Button, EmptyState, MaterialIcon, PageHeader } from '../../components/common';
 import {
   api,
@@ -56,7 +55,6 @@ interface AttentionItem {
 }
 
 export function OverviewPage() {
-  const { t } = useTranslate();
   const navigate = useNavigate();
   const [agents, setAgents] = useState<ConnectedAgent[]>([]);
   const [services, setServices] = useState<AgentServiceFlat[]>([]);
@@ -108,7 +106,7 @@ export function OverviewPage() {
     ...unhealthyServices.map((service) => ({
       id: `service-${service.agentId}-${service.key}`,
       title: service.name,
-      detail: t('서비스 건강 상태가 장애입니다'),
+      detail: '서비스 건강 상태가 장애입니다',
       to: `/services/${service.agentId}/${encodeURIComponent(service.key)}?tab=uptime`,
       tone: 'error' as const,
       icon: 'error_outline',
@@ -116,7 +114,7 @@ export function OverviewPage() {
     ...unhealthyMonitors.map((monitor) => ({
       id: `monitor-${monitor.id}`,
       title: monitor.name,
-      detail: t('업타임 모니터가 장애를 보고했습니다'),
+      detail: '업타임 모니터가 장애를 보고했습니다',
       to: `/uptime/${monitor.id}`,
       tone: 'error' as const,
       icon: 'error_outline',
@@ -124,7 +122,7 @@ export function OverviewPage() {
     ...staleAgents.map((agent) => ({
       id: `agent-${agent.id}`,
       title: agent.name,
-      detail: t('Docker 수집기 데이터가 지연되었거나 끊겼습니다'),
+      detail: 'Docker 수집기 데이터가 지연되었거나 끊겼습니다',
       to: `/agents/${agent.id}`,
       tone: 'warn' as const,
       icon: 'sensors_off',
@@ -132,7 +130,7 @@ export function OverviewPage() {
     ...directAwaitingData.map((service) => ({
       id: `observed-${service.id}`,
       title: service.name,
-      detail: t('직접 연결한 서비스에서 아직 데이터가 확인되지 않았습니다'),
+      detail: '직접 연결한 서비스에서 아직 데이터가 확인되지 않았습니다',
       to: `/logs/${service.id}`,
       tone: 'warn' as const,
       icon: 'schedule',
@@ -140,12 +138,12 @@ export function OverviewPage() {
     ...inactiveInfrastructure.map((resource) => ({
       id: `infrastructure-${resource.id}`,
       title: resource.name,
-      detail: t('인프라 Collector 데이터가 지연되었거나 끊겼습니다'),
+      detail: '인프라 Collector 데이터가 지연되었거나 끊겼습니다',
       to: `/infrastructure/${resource.id}`,
       tone: 'warn' as const,
       icon: 'sensors_off',
     })),
-  ], [directAwaitingData, inactiveInfrastructure, staleAgents, t, unhealthyMonitors, unhealthyServices]);
+  ], [directAwaitingData, inactiveInfrastructure, staleAgents, unhealthyMonitors, unhealthyServices]);
 
   const totalTargets = agents.length + monitors.length + observedServices.length + infrastructure.length;
   const connectionIssues = staleAgents.length + directAwaitingData.length + inactiveInfrastructure.length;
@@ -156,10 +154,10 @@ export function OverviewPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title={t('모니터링 개요')} subtitle={t('수집 상태와 현재 이상을 먼저 확인하세요.')}>
+      <PageHeader title="모니터링 개요" subtitle="수집 상태와 현재 이상을 먼저 확인하세요.">
         <Button onClick={() => navigate('/environments')}>
           <MaterialIcon name="add" className="text-base" />
-          {t('모니터링 시작')}
+          모니터링 시작
         </Button>
       </PageHeader>
 
@@ -168,11 +166,11 @@ export function OverviewPage() {
           <div className="flex items-start gap-3">
             <MaterialIcon name="sync_problem" className="mt-0.5 text-lg text-status-warn" />
             <div>
-              <p className="text-sm font-semibold text-text-base">{t('일부 모니터링 정보를 불러오지 못했습니다')}</p>
-              <p className="mt-0.5 text-xs text-text-muted">{t('성공한 영역은 계속 표시합니다. 다시 시도해 최신 상태를 확인하세요.')}</p>
+              <p className="text-sm font-semibold text-text-base">일부 모니터링 정보를 불러오지 못했습니다</p>
+              <p className="mt-0.5 text-xs text-text-muted">성공한 영역은 계속 표시합니다. 다시 시도해 최신 상태를 확인하세요.</p>
             </div>
           </div>
-          <Button variant="secondary" size="sm" onClick={() => void load()}>{t('다시 시도')}</Button>
+          <Button variant="secondary" size="sm" onClick={() => void load()}>다시 시도</Button>
         </section>
       )}
 
@@ -180,34 +178,34 @@ export function OverviewPage() {
         <section className="rounded-xl border border-ui-border bg-bg-surface">
           <EmptyState
             icon="sensors"
-            title={t('아직 모니터링 대상이 없습니다')}
-            description={t('Docker 환경, 업타임 모니터 또는 직접 OpenTelemetry 연결 중 하나를 선택해 시작하세요.')}
-            action={{ label: t('모니터링 시작'), onClick: () => navigate('/environments') }}
+            title="아직 모니터링 대상이 없습니다"
+            description="Docker 환경, 업타임 모니터 또는 직접 OpenTelemetry 연결 중 하나를 선택해 시작하세요."
+            action={{ label: '모니터링 시작', onClick: () => navigate('/environments') }}
           />
         </section>
       ) : (
         <>
-          <section aria-label={t('수집 상태 요약')} className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <SummaryCard icon="sensors" label={t('Docker 수집기')} value={agents.length} detail={reportingAgents.length === agents.length ? t('모두 데이터 유입 중') : `${staleAgents.length}${t('개 연결 확인 필요')}`} tone={reportingAgents.length === agents.length ? 'healthy' : 'warn'} />
-            <SummaryCard icon="dns" label={t('서비스')} value={services.length + monitors.length + observedServices.length} detail={unhealthyServices.length + unhealthyMonitors.length === 0 ? t('현재 건강 상태 이상 없음') : `${unhealthyServices.length + unhealthyMonitors.length}${t('개 장애 신호')}`} tone={unhealthyServices.length + unhealthyMonitors.length === 0 ? 'healthy' : 'error'} />
-            <SummaryCard icon="account_tree" label="Projects" value={projects.length} detail={projects.length > 0 ? t('대상을 운영 단위로 묶고 있습니다') : t('필요할 때 대상들을 묶어 보세요')} tone={projects.length > 0 ? 'healthy' : 'idle'} />
-            <SummaryCard icon="sensors_off" label={t('수집 확인 필요')} value={connectionIssues} detail={connectionIssues === 0 ? t('모든 연결이 최신 상태입니다') : t('지연 또는 미확인 대상을 확인하세요')} tone={connectionIssues === 0 ? 'healthy' : 'warn'} />
+          <section aria-label="수집 상태 요약" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <SummaryCard icon="sensors" label="Docker 수집기" value={agents.length} detail={reportingAgents.length === agents.length ? '모두 데이터 유입 중' : `${staleAgents.length}개 연결 확인 필요`} tone={reportingAgents.length === agents.length ? 'healthy' : 'warn'} />
+            <SummaryCard icon="dns" label="서비스" value={services.length + monitors.length + observedServices.length} detail={unhealthyServices.length + unhealthyMonitors.length === 0 ? '현재 건강 상태 이상 없음' : `${unhealthyServices.length + unhealthyMonitors.length}개 장애 신호`} tone={unhealthyServices.length + unhealthyMonitors.length === 0 ? 'healthy' : 'error'} />
+            <SummaryCard icon="account_tree" label="Projects" value={projects.length} detail={projects.length > 0 ? '대상을 운영 단위로 묶고 있습니다' : '필요할 때 대상들을 묶어 보세요'} tone={projects.length > 0 ? 'healthy' : 'idle'} />
+            <SummaryCard icon="sensors_off" label="수집 확인 필요" value={connectionIssues} detail={connectionIssues === 0 ? '모든 연결이 최신 상태입니다' : '지연 또는 미확인 대상을 확인하세요'} tone={connectionIssues === 0 ? 'healthy' : 'warn'} />
           </section>
 
           <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)]">
             <article className="rounded-xl border border-ui-border bg-bg-surface">
               <div className="flex items-center justify-between gap-3 border-b border-ui-border px-4 py-3.5">
                 <div>
-                  <h2 className="text-base font-bold text-text-base">{t('현재 확인 필요')}</h2>
-                  <p className="mt-0.5 text-xs text-text-muted">{t('서비스 건강과 수집 상태를 분리해 보여줍니다.')}</p>
+                  <h2 className="text-base font-bold text-text-base">현재 확인 필요</h2>
+                  <p className="mt-0.5 text-xs text-text-muted">서비스 건강과 수집 상태를 분리해 보여줍니다.</p>
                 </div>
                 <span className="font-mono text-sm font-bold tabular-nums text-text-muted">{attention.length}</span>
               </div>
               {attention.length === 0 ? (
                 <div className="flex min-h-44 flex-col items-center justify-center p-5 text-center">
                   <MaterialIcon name="check_circle" className="text-3xl text-status-healthy" />
-                  <p className="mt-3 text-sm font-semibold text-text-base">{t('현재 확인이 필요한 이상이 없습니다')}</p>
-                  <p className="mt-1 text-xs text-text-muted">{t('수집 연결과 서비스 건강 상태가 최신입니다.')}</p>
+                  <p className="mt-3 text-sm font-semibold text-text-base">현재 확인이 필요한 이상이 없습니다</p>
+                  <p className="mt-1 text-xs text-text-muted">수집 연결과 서비스 건강 상태가 최신입니다.</p>
                 </div>
               ) : (
                 <ul className="divide-y divide-ui-border-soft">
@@ -228,14 +226,14 @@ export function OverviewPage() {
             </article>
 
             <article className="rounded-xl border border-ui-border bg-bg-surface p-4">
-              <h2 className="text-base font-bold text-text-base">{t('모니터링 범위')}</h2>
-              <p className="mt-1 text-xs text-text-muted">{t('연결 방식별로 수집 범위를 확인하세요.')}</p>
+              <h2 className="text-base font-bold text-text-base">모니터링 범위</h2>
+              <p className="mt-1 text-xs text-text-muted">연결 방식별로 수집 범위를 확인하세요.</p>
               <dl className="mt-4 space-y-3">
                 {[
-                  [t('Docker 환경'), agents.length, '/environments'],
-                  [t('업타임 모니터'), monitors.length, '/uptime'],
-                  [t('직접 연결 서비스'), observedServices.length, '/logs'],
-                  [t('인프라 리소스'), infrastructure.length, '/infrastructure'],
+                  ['Docker 환경', agents.length, '/environments'],
+                  ['업타임 모니터', monitors.length, '/uptime'],
+                  ['직접 연결 서비스', observedServices.length, '/logs'],
+                  ['인프라 리소스', infrastructure.length, '/infrastructure'],
                 ].map(([label, count, to]) => (
                   <div key={String(label)} className="flex items-center justify-between gap-3">
                     <dt className="text-sm text-text-secondary">{label}</dt>
@@ -244,7 +242,7 @@ export function OverviewPage() {
                 ))}
               </dl>
               <Link to="/projects" className="mt-5 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
-                {t('Project로 대상 정리하기')} <MaterialIcon name="arrow_forward" className="text-sm" />
+                Project로 대상 정리하기 <MaterialIcon name="arrow_forward" className="text-sm" />
               </Link>
             </article>
           </section>

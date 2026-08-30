@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useTranslate } from '@tolgee/react';
 import { UptimeOverview } from '../../uptime/components/UptimeOverview';
 import { api, type ServiceHistoryPoint, type ServiceUptimeDay } from '../../../services/api';
 
@@ -12,7 +11,6 @@ interface AgentUptimeOverviewProps {
 const HISTORY_DAYS = 90;
 
 export function AgentUptimeOverview({ agentId, serviceKey, refreshKey }: AgentUptimeOverviewProps) {
-  const { t } = useTranslate();
   const [points, setPoints] = useState<ServiceHistoryPoint[]>([]);
   const [days, setDays] = useState<ServiceUptimeDay[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,15 +41,15 @@ export function AgentUptimeOverview({ agentId, serviceKey, refreshKey }: AgentUp
       className="mb-8"
       loading={loading}
       stats={[
-        { label: t('24시간 업타임'), value: uptime24h === null ? '—' : `${uptime24h.toFixed(2)}%` },
-        { label: t('90일 업타임'), value: uptime90d === null ? '—' : `${uptime90d.toFixed(2)}%` },
-        { label: t('24시간 체크'), value: loading ? '—' : totalChecks.toLocaleString() },
-        { label: t('90일 장애'), value: loading ? '—' : t('{count}일', { count: incidentDays }) },
+        { label: '24시간 업타임', value: uptime24h === null ? '—' : `${uptime24h.toFixed(2)}%` },
+        { label: '90일 업타임', value: uptime90d === null ? '—' : `${uptime90d.toFixed(2)}%` },
+        { label: '24시간 체크', value: loading ? '—' : totalChecks.toLocaleString() },
+        { label: '90일 장애', value: loading ? '—' : `${incidentDays}일` },
       ]}
       days={days.map((day) => ({
         date: day.date,
         uptime: day.uptimePct,
-        detail: `${day.healthyChecks}/${day.totalChecks} ${t('정상')}`,
+        detail: `${day.healthyChecks}/${day.totalChecks} 정상`,
       }))}
     />
   );

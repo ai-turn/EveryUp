@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useTranslate } from '@tolgee/react';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { MaterialIcon } from '../../../components/common';
@@ -14,7 +13,7 @@ interface AgentFailureHistoryProps {
 const ALERT_TYPES = new Set(['alert_sent', 'recovery_sent']);
 
 export function AgentFailureHistory({ agentId, serviceKey, refreshKey }: AgentFailureHistoryProps) {
-  const { t } = useTranslate();
+
 
   const [events, setEvents] = useState<AgentEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,10 +46,10 @@ export function AgentFailureHistory({ agentId, serviceKey, refreshKey }: AgentFa
         </div>
         <div>
           <h2 className="text-text-base text-xl font-bold tracking-tight">
-            {t('최근 장애 기록')}
+            최근 장애 기록
           </h2>
           <p className="text-text-muted text-sm">
-            {t('Docker 서비스 알림 이벤트')}
+            Docker 서비스 알림 이벤트
           </p>
         </div>
       </div>
@@ -60,7 +59,7 @@ export function AgentFailureHistory({ agentId, serviceKey, refreshKey }: AgentFa
           <div className="flex items-center justify-center w-12 h-12 rounded-full bg-status-healthy/10">
             <MaterialIcon name="check_circle" className="text-2xl text-status-healthy" />
           </div>
-          <p className="text-text-muted text-sm">{t('장애 기록이 없습니다')}</p>
+          <p className="text-text-muted text-sm">장애 기록이 없습니다</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -77,7 +76,7 @@ export function AgentFailureHistory({ agentId, serviceKey, refreshKey }: AgentFa
                 />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-text-base truncate">
-                    {event.message || (isAlert ? t('장애 감지') : t('복구 감지'))}
+                    {event.message || (isAlert ? '장애 감지' : '복구 감지')}
                   </p>
                   <p className="text-xs text-text-muted mt-0.5">
                     {formatDistanceToNow(new Date(event.time), { addSuffix: true, locale: ko })}

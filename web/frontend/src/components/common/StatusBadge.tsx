@@ -8,10 +8,9 @@
 // 배지 문법은 DESIGN.md §5.1 — 틴트 배경 + 같은 색 보더 + 진한 텍스트.
 // 색은 status 시맨틱 토큰이 담당하므로 `dark:` 짝이 필요 없다.
 
-import { useTranslate } from '@tolgee/react';
 
 export function StatusBadge({ healthy }: { healthy: boolean }) {
-  const { t } = useTranslate();
+
   return (
     <span
       className={`text-2xs font-bold px-1.5 py-0.5 rounded border ${
@@ -20,7 +19,7 @@ export function StatusBadge({ healthy }: { healthy: boolean }) {
           : 'text-status-error bg-status-error/10 border-status-error/20'
       }`}
     >
-      {healthy ? t('정상') : t('장애')}
+      {healthy ? '정상' : '장애'}
     </span>
   );
 }

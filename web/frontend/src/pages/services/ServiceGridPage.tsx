@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslate } from '@tolgee/react';
 import { Button } from '../../components/common/Button';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { EmptyState } from '../../components/common/EmptyState';
@@ -33,7 +32,7 @@ interface ProjectCardProps {
 // Clicking drills into the project detail page that lists its internal services.
 function ProjectCard({ agentId, agent, agentName, services, overview }: ProjectCardProps) {
   const navigate = useNavigate();
-  const { t } = useTranslate();
+
   const online = agent ? agentOnline(agent) : true;
   const total = services.length;
   const healthy = services.filter(s => s.healthy).length;
@@ -54,17 +53,17 @@ function ProjectCard({ agentId, agent, agentName, services, overview }: ProjectC
 
       {/* Summary: service count + health */}
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm text-text-muted">{t('서비스 {count}개', { count: total })}</span>
+        <span className="text-sm text-text-muted">{`서비스 ${total}개`}</span>
         <span className={`flex items-center gap-1 text-sm font-semibold ${allHealthy ? 'text-status-healthy' : 'text-status-error'}`}>
           <MaterialIcon name={allHealthy ? 'check_circle' : 'cancel'} className="text-sm" />
-          {healthy}/{total} {t('정상')}
+          {healthy}/{total} 정상
         </span>
       </div>
 
       {/* Failing services preview */}
       {down.length > 0 && (
         <p className="text-xs text-status-error truncate -mt-1">
-          {t('장애')}: {down.map(s => s.name).join(', ')}
+          장애: {down.map(s => s.name).join(', ')}
         </p>
       )}
 
@@ -72,13 +71,13 @@ function ProjectCard({ agentId, agent, agentName, services, overview }: ProjectC
       {overview && (
         <div className="flex items-center gap-4 text-sm">
           <div>
-            <div className="text-2xs text-text-dim">{t('가동률 30일')}</div>
+            <div className="text-2xs text-text-dim">가동률 30일</div>
             <div className="font-mono font-semibold text-text-base">
               {overview.uptimePct != null ? `${overview.uptimePct.toFixed(2)}%` : '—'}
             </div>
           </div>
           <div>
-            <div className="text-2xs text-text-dim">{t('요청 24h')}</div>
+            <div className="text-2xs text-text-dim">요청 24h</div>
             <div className="font-mono font-semibold text-text-base">
               {overview.requests24h > 0
                 ? Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(overview.requests24h)
@@ -102,7 +101,7 @@ function ProjectCard({ agentId, agent, agentName, services, overview }: ProjectC
 }
 
 export function ServiceGridPage() {
-  const { t } = useTranslate();
+
   const navigate = useNavigate();
   const [services, setServices] = useState<AgentServiceFlat[]>([]);
   const [agents, setAgents] = useState<ConnectedAgent[]>([]);
@@ -151,7 +150,7 @@ export function ServiceGridPage() {
     if (!deleteTarget) return;
     try {
       await api.deleteAgent(deleteTarget.id);
-      toast.success(t('Docker 환경이 비활성화됐습니다'));
+      toast.success('Docker 환경이 비활성화됐습니다');
       load();
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -199,12 +198,12 @@ export function ServiceGridPage() {
   return (
     <div>
       <PageHeader
-        title={t('Docker 환경')}
-        subtitle={t('연결된 Docker 환경과 모니터링 서비스 현황')}
+        title="Docker 환경"
+        subtitle="연결된 Docker 환경과 모니터링 서비스 현황"
       >
         <Button className="w-full md:w-auto" onClick={() => setShowAddModal(true)}>
           <MaterialIcon name="add" className="text-base" />
-          {t('Docker 연결')}
+          Docker 연결
         </Button>
       </PageHeader>
 
@@ -214,14 +213,14 @@ export function ServiceGridPage() {
       <SearchInput
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder={t('서비스 또는 Docker 환경 이름으로 검색')}
+        placeholder="서비스 또는 Docker 환경 이름으로 검색"
       />
 
       {/* Content */}
       {error && (
         <section className="flex flex-col gap-3 rounded-xl border border-ui-border bg-bg-surface p-4 sm:flex-row sm:items-center sm:justify-between" role="alert">
-          <div className="flex items-start gap-3"><MaterialIcon name="sync_problem" className="mt-0.5 text-lg text-status-warn" /><div><p className="text-sm font-semibold text-text-base">{t('Docker 환경을 불러오지 못했습니다')}</p><p className="mt-0.5 text-xs text-text-muted">{error}</p></div></div>
-          <Button variant="secondary" size="sm" onClick={() => void load()}>{t('다시 시도')}</Button>
+          <div className="flex items-start gap-3"><MaterialIcon name="sync_problem" className="mt-0.5 text-lg text-status-warn" /><div><p className="text-sm font-semibold text-text-base">Docker 환경을 불러오지 못했습니다</p><p className="mt-0.5 text-xs text-text-muted">{error}</p></div></div>
+          <Button variant="secondary" size="sm" onClick={() => void load()}>다시 시도</Button>
         </section>
       )}
 
@@ -234,13 +233,13 @@ export function ServiceGridPage() {
       ) : !error && services.length === 0 && agents.length === 0 ? (
         <EmptyState
           icon="sensors"
-          title={t('아직 연결된 Docker 환경이 없습니다')}
-          description={t('Docker 환경을 연결하면 컨테이너와 호스트가 자동으로 표시됩니다')}
-          action={{ label: t('Docker 연결'), onClick: () => setShowAddModal(true) }}
+          title="아직 연결된 Docker 환경이 없습니다"
+          description="Docker 환경을 연결하면 컨테이너와 호스트가 자동으로 표시됩니다"
+          action={{ label: 'Docker 연결', onClick: () => setShowAddModal(true) }}
         />
       ) : groups.length === 0 && visiblePending.length === 0 ? (
         <div className="py-16 text-center text-text-dim text-sm">
-          {t('검색 결과가 없습니다')}
+          검색 결과가 없습니다
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -308,10 +307,10 @@ export function ServiceGridPage() {
         isOpen={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
-        title={t('Docker 환경 비활성화')}
-        message={t("{name} Docker 환경을 비활성화하시겠습니까?", { name: deleteTarget?.name ?? '' })}
-        description={t('Docker 수집기 연결이 차단되며 수집 데이터는 보존됩니다.')}
-        confirmLabel={t('비활성화')}
+        title="Docker 환경 비활성화"
+        message={`${deleteTarget?.name ?? ''} Docker 환경을 비활성화하시겠습니까?`}
+        description="Docker 수집기 연결이 차단되며 수집 데이터는 보존됩니다."
+        confirmLabel="비활성화"
       />
 
       {keyModalAgent && (

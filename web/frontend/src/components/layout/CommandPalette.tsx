@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslate } from '@tolgee/react';
 import { MaterialIcon } from '../common';
 import { SCRIM_PANEL, useOverlay } from '../../hooks/useOverlay';
 import { api, type AgentServiceFlat, type ConnectedAgent } from '../../services/api';
@@ -19,7 +18,7 @@ interface PaletteItem {
 
 export function CommandPalette() {
   const navigate = useNavigate();
-  const { t } = useTranslate();
+
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [index, setIndex] = useState(0);
@@ -77,23 +76,23 @@ export function CommandPalette() {
   }, [open]);
 
   const items: PaletteItem[] = useMemo(() => [
-    { id: 'page-uptime', icon: 'monitor_heart', label: t('업타임'), to: '/uptime' },
-    { id: 'page-logs', icon: 'article', label: t('로그'), to: '/logs' },
-    { id: 'page-infrastructure', icon: 'memory', label: t('인프라'), to: '/infrastructure' },
-    { id: 'page-api', icon: 'api', label: t('API 요청'), to: '/api' },
-    { id: 'page-metrics', icon: 'monitoring', label: t('메트릭'), to: '/metrics' },
-    { id: 'page-home', icon: 'dashboard', label: t('개요'), meta: t('홈'), to: '/' },
+    { id: 'page-uptime', icon: 'monitor_heart', label: '업타임', to: '/uptime' },
+    { id: 'page-logs', icon: 'article', label: '로그', to: '/logs' },
+    { id: 'page-infrastructure', icon: 'memory', label: '인프라', to: '/infrastructure' },
+    { id: 'page-api', icon: 'api', label: 'API 요청', to: '/api' },
+    { id: 'page-metrics', icon: 'monitoring', label: '메트릭', to: '/metrics' },
+    { id: 'page-home', icon: 'dashboard', label: '개요', meta: '홈', to: '/' },
     { id: 'page-projects', icon: 'folder_open', label: 'Projects', to: '/projects' },
-    { id: 'page-alerts', icon: 'notifications', label: t('알림'), to: '/alerts' },
-    { id: 'page-settings', icon: 'settings', label: t('환경설정'), to: '/settings' },
+    { id: 'page-alerts', icon: 'notifications', label: '알림', to: '/alerts' },
+    { id: 'page-settings', icon: 'settings', label: '환경설정', to: '/settings' },
     ...agents.map((a) => ({
-      id: `agent-${a.id}`, icon: 'folder_open', label: a.name, meta: t('Docker 환경'), to: `/agents/${a.id}`,
+      id: `agent-${a.id}`, icon: 'folder_open', label: a.name, meta: 'Docker 환경', to: `/agents/${a.id}`,
     })),
     ...services.map((s) => ({
       id: `svc-${s.agentId}-${s.key}`, icon: '', label: s.name, meta: s.agentName,
       to: `/services/${s.agentId}/${encodeURIComponent(s.key)}`, healthy: s.healthy,
     })),
-  ], [agents, services, t]);
+  ], [agents, services]);
 
   const filtered = useMemo(() => {
     if (!query) return items;
@@ -138,7 +137,7 @@ export function CommandPalette() {
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-label={t('검색')}
+        aria-label="검색"
         tabIndex={-1}
         className="w-full max-w-lg overflow-hidden rounded-xl border border-ui-border bg-bg-surface shadow-lg"
         onClick={(e) => e.stopPropagation()}
@@ -151,10 +150,10 @@ export function CommandPalette() {
             value={query}
             onChange={(e) => { setQuery(e.target.value); setIndex(0); }}
             onKeyDown={onInputKeyDown}
-            aria-label={t('검색')}
+            aria-label="검색"
             aria-controls="command-palette-results"
             aria-activedescendant={filtered[index] ? `command-palette-option-${filtered[index].id}` : undefined}
-            placeholder={t('Docker 환경, 서비스, 페이지 검색...')}
+            placeholder="Docker 환경, 서비스, 페이지 검색..."
             className="flex-1 bg-transparent py-3.5 text-sm text-text-base outline-none placeholder:text-text-dim"
           />
           <kbd className="shrink-0 px-1.5 py-0.5 rounded border border-ui-border text-2xs font-semibold text-text-dim">
@@ -165,7 +164,7 @@ export function CommandPalette() {
         {/* Results */}
         <div id="command-palette-results" ref={listRef} role="listbox" className="max-h-80 overflow-y-auto py-1.5">
           {filtered.length === 0 ? (
-            <p className="py-8 text-center text-sm text-text-dim">{t('검색 결과가 없습니다')}</p>
+            <p className="py-8 text-center text-sm text-text-dim">검색 결과가 없습니다</p>
           ) : (
             filtered.map((item, i) => (
               <button
@@ -186,7 +185,7 @@ export function CommandPalette() {
                 ) : (
                   <span
                     role="img"
-                    aria-label={item.healthy ? t('정상') : t('장애')}
+                    aria-label={item.healthy ? '정상' : '장애'}
                     className={`ml-1 mr-1 h-1.5 w-1.5 rounded-full shrink-0 ${item.healthy ? 'bg-status-healthy' : 'bg-status-error'}`}
                   />
                 )}
@@ -201,10 +200,10 @@ export function CommandPalette() {
 
         {/* Footer hint */}
         <div className="flex items-center gap-3 px-4 py-2 border-t border-ui-border text-2xs text-text-dim">
-          <span>↑↓ {t('이동')}</span>
-          <span>Enter {t('열기')}</span>
-          {dataStatus === 'loading' && <span className="ml-auto" role="status">{t('대상 불러오는 중')}</span>}
-          {dataStatus === 'error' && <span className="ml-auto text-status-error" role="status">{t('일부 대상을 불러오지 못했습니다')}</span>}
+          <span>↑↓ 이동</span>
+          <span>Enter 열기</span>
+          {dataStatus === 'loading' && <span className="ml-auto" role="status">대상 불러오는 중</span>}
+          {dataStatus === 'error' && <span className="ml-auto text-status-error" role="status">일부 대상을 불러오지 못했습니다</span>}
         </div>
       </div>
     </div>

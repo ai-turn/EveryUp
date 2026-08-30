@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useTranslate } from '@tolgee/react';
 import { Button, EmptyState, MaterialIcon, PageHeader } from '../../components/common';
 import { DirectMetricsSetupDialog } from '../../features/metrics/components/DirectMetricsSetupDialog';
 import { CapabilityAgentSetup } from '../../features/services/components/CapabilityAgentSetup';
@@ -43,7 +42,6 @@ function MetricCard({
   to: string;
   active?: boolean;
 }) {
-  const { t } = useTranslate();
   return (
     <Link to={to} className="card-interactive group rounded-xl border border-ui-border bg-bg-surface p-4">
       <div className="flex items-start justify-between gap-3">
@@ -57,19 +55,18 @@ function MetricCard({
         <>
           <p className="mt-4 break-all font-mono text-xs text-text-muted">{metric.metricName}</p>
           <div className="mt-6 flex items-end justify-between gap-3">
-            <span className="text-xs font-medium text-text-muted">{t('현재 값')}</span>
+            <span className="text-xs font-medium text-text-muted">현재 값</span>
             <span className="font-mono text-2xl font-bold tabular-nums text-text-base">{formatMetric(metric.value, metric.unit)}</span>
           </div>
         </>
       ) : (
-        <div className="mt-6 rounded-lg bg-ui-hover-soft px-3 py-4 text-sm text-text-muted">{t('첫 메트릭 수신을 기다리는 중입니다.')}</div>
+        <div className="mt-6 rounded-lg bg-ui-hover-soft px-3 py-4 text-sm text-text-muted">첫 메트릭 수신을 기다리는 중입니다.</div>
       )}
     </Link>
   );
 }
 
 export function MetricsPage() {
-  const { t } = useTranslate();
   const navigate = useNavigate();
   const [agentMetrics, setAgentMetrics] = useState<AgentMetricRow[]>([]);
   const [directServices, setDirectServices] = useState<ObservedService[]>([]);
@@ -119,9 +116,9 @@ export function MetricsPage() {
 
   return (
     <div>
-      <PageHeader title={t('메트릭')} subtitle={t('Docker 수집기 또는 직접 OpenTelemetry 연결에서 수집한 서비스 메트릭입니다.')}>
+      <PageHeader title="메트릭" subtitle="Docker 수집기 또는 직접 OpenTelemetry 연결에서 수집한 서비스 메트릭입니다.">
         <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
-          <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />{t('Metrics 직접 추가')}</Button>
+          <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />Metrics 직접 추가</Button>
           <CapabilityAgentSetup capability="metrics" buttonVariant="secondary" />
         </div>
       </PageHeader>
@@ -131,17 +128,17 @@ export function MetricsPage() {
           {METRIC_SKELETONS.map(item => <div key={item} className="h-44 animate-pulse rounded-xl border border-ui-border bg-bg-surface" />)}
         </div>
       ) : error ? (
-        <EmptyState icon="error_outline" title={t('메트릭을 불러오지 못했습니다')} description={error} />
+        <EmptyState icon="error_outline" title="메트릭을 불러오지 못했습니다" description={error} />
       ) : isEmpty ? (
-        <EmptyState icon="monitoring" title={t('아직 연결된 메트릭 서비스가 없습니다')} description={t('Metrics를 직접 연결하거나 Docker 환경에서 메트릭 수집을 활성화해 주세요.')} />
+        <EmptyState icon="monitoring" title="아직 연결된 메트릭 서비스가 없습니다" description="Metrics를 직접 연결하거나 Docker 환경에서 메트릭 수집을 활성화해 주세요." />
       ) : (
         <div className="space-y-7">
           {directServices.length > 0 && (
             <section>
               <div className="mb-3 flex items-end justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-bold text-text-base">{t('직접 연결 서비스')}</h2>
-                  <p className="mt-0.5 text-xs text-text-muted">{t('OTLP Metrics를 직접 받는 Observed Service입니다.')}</p>
+                  <h2 className="text-base font-bold text-text-base">직접 연결 서비스</h2>
+                  <p className="mt-0.5 text-xs text-text-muted">OTLP Metrics를 직접 받는 Observed Service입니다.</p>
                 </div>
                 <span className="font-mono text-xs text-text-dim">{directServices.length}</span>
               </div>
@@ -150,7 +147,7 @@ export function MetricsPage() {
                   <MetricCard
                     key={service.id}
                     name={service.name}
-                    source={t('Direct')}
+                    source="Direct"
                     metric={directByService.get(service.id)}
                     to={`/metrics/${service.id}`}
                     active={service.isActive}
@@ -164,8 +161,8 @@ export function MetricsPage() {
             <section>
               <div className="mb-3 flex items-end justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-bold text-text-base">{t('Docker 서비스')}</h2>
-                  <p className="mt-0.5 text-xs text-text-muted">{t('EveryUp Docker 수집기가 발견하고 전달한 서비스 메트릭입니다.')}</p>
+                  <h2 className="text-base font-bold text-text-base">Docker 서비스</h2>
+                  <p className="mt-0.5 text-xs text-text-muted">EveryUp Docker 수집기가 발견하고 전달한 서비스 메트릭입니다.</p>
                 </div>
                 <span className="font-mono text-xs text-text-dim">{visibleAgentMetrics.length}</span>
               </div>

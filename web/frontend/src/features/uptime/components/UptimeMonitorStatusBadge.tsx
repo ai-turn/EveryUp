@@ -1,9 +1,7 @@
-import { useTranslate } from '@tolgee/react';
 import { MaterialIcon } from '../../../components/common';
 import type { UptimeMonitor } from '../../../services/api';
 
 export function UptimeMonitorStatusBadge({ monitor, onToggle }: { monitor: UptimeMonitor; onToggle?: () => void }) {
-  const { t } = useTranslate();
   const label = !monitor.isActive
     ? '일시정지'
     : monitor.status === 'healthy'
@@ -22,14 +20,14 @@ export function UptimeMonitorStatusBadge({ monitor, onToggle }: { monitor: Uptim
   const content = (
     <>
       <MaterialIcon name={monitor.isActive ? 'play_arrow' : 'pause'} className="text-sm" />
-      {t(label)}
+      {label}
     </>
   );
 
   if (!onToggle) return <span className={base}>{content}</span>;
 
   return (
-    <button type="button" onClick={onToggle} aria-label={t(monitor.isActive ? '일시정지' : '재개')} className={`${base} transition-opacity hover:opacity-70`}>
+    <button type="button" onClick={onToggle} aria-label={monitor.isActive ? '일시정지' : '재개'} className={`${base} transition-opacity hover:opacity-70`}>
       {content}
     </button>
   );

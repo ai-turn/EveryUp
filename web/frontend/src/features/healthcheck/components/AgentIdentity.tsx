@@ -1,4 +1,3 @@
-import { useTranslate } from '@tolgee/react';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { MaterialIcon } from '../../../components/common';
@@ -24,7 +23,7 @@ function InfoChip({ icon, label, value }: InfoChipProps) {
 // showName=false hides the service name + status badge — used where the surrounding
 // layout (e.g. the project sidebar/rail) already shows them, to avoid duplication.
 export function AgentIdentity({ service, showName = true }: { service: AgentServiceFlat; showName?: boolean }) {
-  const { t } = useTranslate();
+
 
 
 
@@ -35,12 +34,12 @@ export function AgentIdentity({ service, showName = true }: { service: AgentServ
     healthy: {
       bg: 'bg-status-healthy/10', border: 'border-status-healthy/20',
       text: 'text-status-healthy', dot: 'bg-status-healthy', ping: 'bg-status-healthy',
-      label: t('정상'),
+      label: '정상',
     },
     unhealthy: {
       bg: 'bg-status-error/10', border: 'border-status-error/20',
       text: 'text-status-error', dot: 'bg-status-error', ping: 'bg-status-error',
-      label: t('장애'),
+      label: '장애',
     },
   };
   const cfg = statusConfig[status];
@@ -69,18 +68,18 @@ export function AgentIdentity({ service, showName = true }: { service: AgentServ
       )}
 
       <div className="flex flex-wrap gap-2">
-        <InfoChip icon="language" label={t('타입')} value={service.checkType.toUpperCase()} />
-        {service.runtime && <InfoChip icon="code" label={t('런타임')} value={runtimeLabel(service.runtime)} />}
-        {showName && <InfoChip icon="sensors" label={t('Docker 환경')} value={service.agentName} />}
+        <InfoChip icon="language" label="타입" value={service.checkType.toUpperCase()} />
+        {service.runtime && <InfoChip icon="code" label="런타임" value={runtimeLabel(service.runtime)} />}
+        {showName && <InfoChip icon="sensors" label="Docker 환경" value={service.agentName} />}
         {service.lastLatency && (
-          <InfoChip icon="speed" label={t('지연시간')} value={service.lastLatency} />
+          <InfoChip icon="speed" label="지연시간" value={service.lastLatency} />
         )}
-        <InfoChip icon="event" label={t('마지막 체크')} value={lastCheckedText} />
+        <InfoChip icon="event" label="마지막 체크" value={lastCheckedText} />
       </div>
 
       {!service.healthy && service.lastError && (
         <div className="mt-4 p-3 rounded-lg bg-ui-hover-soft border border-ui-border text-sm text-text-secondary">
-          <span className="font-semibold text-status-error">{t('오류')}: </span>
+          <span className="font-semibold text-status-error">오류: </span>
           {service.lastError}
         </div>
       )}

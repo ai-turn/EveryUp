@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useTranslate } from '@tolgee/react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { MaterialIcon } from '../common';
 import { api, type AgentServiceFlat } from '../../services/api';
@@ -36,7 +35,7 @@ function NavItem({ to, icon, label, active, badge }: NavItemProps) {
 export function Sidebar() {
   const { theme, toggleTheme } = useTheme();
 
-  const { t } = useTranslate();
+
   const location = useLocation();
   const [services, setServices] = useState<AgentServiceFlat[]>([]);
 
@@ -79,23 +78,23 @@ export function Sidebar() {
         className="mx-3 mb-2 flex items-center gap-2 rounded-lg border border-ui-border bg-bg-main px-3 py-1.5 text-text-dim transition-colors hover:border-primary/40 hover:text-text-base"
       >
         <MaterialIcon name="search" className="shrink-0 text-base" />
-        <span className="flex-1 text-left text-xs">{t('검색')}</span>
+        <span className="flex-1 text-left text-xs">검색</span>
         <kbd className="rounded border border-ui-border px-1 py-0.5 text-2xs font-semibold">{navigator.platform.toLowerCase().includes('mac') ? '⌘' : 'Ctrl K'}</kbd>
       </button>
 
-      <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-3" aria-label={t('주 메뉴')}>
-        <NavItem to="/" icon="dashboard" label={t('개요')} active={path === '/'} />
+      <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-3" aria-label="주 메뉴">
+        <NavItem to="/" icon="dashboard" label="개요" active={path === '/'} />
         <NavItem to="/projects" icon="folder_open" label="Projects" active={path.startsWith('/projects')} />
-        <NavItem to="/environments" icon="dns" label={t('Docker 환경')} active={path.startsWith('/environments') || path.startsWith('/agents/')} />
-        <p className="px-3 pt-4 pb-1 text-2xs font-semibold uppercase tracking-wider text-text-dim">{t('관측')}</p>
-        <NavItem to="/uptime" icon="monitor_heart" label={t('업타임')} active={path.startsWith('/uptime') || detailActive('health')} />
-        <NavItem to="/logs" icon="article" label={t('로그')} active={path.startsWith('/logs') || detailActive('logs')} />
-        <NavItem to="/infrastructure" icon="memory" label={t('인프라')} active={path.startsWith('/infrastructure') || detailActive('infra')} />
-        <NavItem to="/api" icon="api" label={t('API 요청')} active={path.startsWith('/api') || detailActive('requests')} />
-        <NavItem to="/metrics" icon="monitoring" label={t('메트릭')} active={path.startsWith('/metrics') || detailActive('metrics')} />
-        <p className="px-3 pt-4 pb-1 text-2xs font-semibold uppercase tracking-wider text-text-dim">{t('대응 및 관리')}</p>
-        <NavItem to="/alerts" icon="notifications" label={t('알림')} active={path.startsWith('/alerts')} badge={services.filter((service) => !service.healthy).length} />
-        <NavItem to="/settings" icon="settings" label={t('환경 설정')} active={path.startsWith('/settings')} />
+        <NavItem to="/environments" icon="dns" label="Docker 환경" active={path.startsWith('/environments') || path.startsWith('/agents/')} />
+        <p className="px-3 pt-4 pb-1 text-2xs font-semibold uppercase tracking-wider text-text-dim">관측</p>
+        <NavItem to="/uptime" icon="monitor_heart" label="업타임" active={path.startsWith('/uptime') || detailActive('health')} />
+        <NavItem to="/logs" icon="article" label="로그" active={path.startsWith('/logs') || detailActive('logs')} />
+        <NavItem to="/infrastructure" icon="memory" label="인프라" active={path.startsWith('/infrastructure') || detailActive('infra')} />
+        <NavItem to="/api" icon="api" label="API 요청" active={path.startsWith('/api') || detailActive('requests')} />
+        <NavItem to="/metrics" icon="monitoring" label="메트릭" active={path.startsWith('/metrics') || detailActive('metrics')} />
+        <p className="px-3 pt-4 pb-1 text-2xs font-semibold uppercase tracking-wider text-text-dim">대응 및 관리</p>
+        <NavItem to="/alerts" icon="notifications" label="알림" active={path.startsWith('/alerts')} badge={services.filter((service) => !service.healthy).length} />
+        <NavItem to="/settings" icon="settings" label="환경 설정" active={path.startsWith('/settings')} />
       </nav>
 
       <div className="flex shrink-0 flex-col gap-2 p-3">

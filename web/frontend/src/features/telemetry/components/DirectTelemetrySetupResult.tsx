@@ -1,4 +1,3 @@
-import { useTranslate } from '@tolgee/react';
 import { toast } from 'react-hot-toast';
 import { Button, CopyButton, MaterialIcon } from '../../../components/common';
 import { env } from '../../../config/env';
@@ -25,7 +24,6 @@ export function DirectTelemetrySetupResult({
   onDone,
   doneLabel,
 }: DirectTelemetrySetupResultProps) {
-  const { t } = useTranslate();
   const endpoint = `${env.apiBaseUrl.replace(/\/+$/, '')}/otlp`;
   const configuration = [
     `OTEL_SERVICE_NAME=${setup.name}`,
@@ -42,17 +40,17 @@ export function DirectTelemetrySetupResult({
         </span>
         <div>
           <h3 className="text-lg font-bold text-text-base">{title}</h3>
-          <p className="mt-1 text-sm text-text-muted">{t('API 키는 지금 한 번만 표시됩니다. 안전한 곳에 저장해 주세요.')}</p>
+          <p className="mt-1 text-sm text-text-muted">API 키는 지금 한 번만 표시됩니다. 안전한 곳에 저장해 주세요.</p>
         </div>
       </div>
 
       <div className="space-y-2">
-        <p className="text-xs font-semibold text-text-secondary">{t('직접 수집 API 키')}</p>
+        <p className="text-xs font-semibold text-text-secondary">직접 수집 API 키</p>
         <div className="flex items-center gap-2 rounded-xl border border-ui-border bg-ui-hover-soft p-3">
           <code className="min-w-0 flex-1 break-all font-mono text-xs text-text-base">{setup.apiKey}</code>
           <CopyButton
             onCopy={() => copy(setup.apiKey)}
-            title={t('API 키 복사')}
+            title="API 키 복사"
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-text-muted hover:bg-ui-hover"
           />
         </div>
@@ -60,20 +58,20 @@ export function DirectTelemetrySetupResult({
 
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-semibold text-text-secondary">{t('OpenTelemetry 환경 변수')}</p>
+          <p className="text-xs font-semibold text-text-secondary">OpenTelemetry 환경 변수</p>
           <CopyButton
             onCopy={() => copy(configuration)}
-            title={t('환경 변수 복사')}
+            title="환경 변수 복사"
             className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-xs font-semibold text-primary hover:bg-primary/10"
           >
-            {t('복사')}
+            복사
           </CopyButton>
         </div>
         <pre className="overflow-x-auto whitespace-pre-wrap break-all rounded-xl border border-ui-border bg-ui-hover-soft p-4 font-mono text-xs text-text-secondary">{configuration}</pre>
       </div>
 
       <div className="flex justify-end border-t border-ui-border pt-4">
-        <Button onClick={onDone}>{doneLabel ?? t('완료')}</Button>
+        <Button onClick={onDone}>{doneLabel ?? '완료'}</Button>
       </div>
     </div>
   );

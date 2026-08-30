@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useTranslate } from '@tolgee/react';
 import { Button, EmptyState, MaterialIcon, PageHeader, Pagination, SearchInput, Select } from '../../components/common';
 import { DirectLogsSetupDialog } from '../../features/logs/components/DirectLogsSetupDialog';
 import { LEVEL_STYLE } from '../../features/healthcheck/logLevelStyle';
@@ -21,7 +20,7 @@ function formatTime(ts: string) {
 }
 
 export function LogsPage() {
-  const { t } = useTranslate();
+
   const navigate = useNavigate();
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [total, setTotal] = useState(0);
@@ -115,9 +114,9 @@ export function LogsPage() {
 
   return (
     <div>
-      <PageHeader title={t('로그')} subtitle={t('Docker 수집기 또는 직접 OpenTelemetry 연결에서 수집한 최신 로그입니다.')}>
+      <PageHeader title="로그" subtitle="Docker 수집기 또는 직접 OpenTelemetry 연결에서 수집한 최신 로그입니다.">
         <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
-          <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />{t('Logs 직접 추가')}</Button>
+          <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />Logs 직접 추가</Button>
           <CapabilityAgentSetup capability="logs" buttonVariant="secondary" />
         </div>
       </PageHeader>
@@ -126,22 +125,22 @@ export function LogsPage() {
         <Select
           value={serviceFilter}
           onChange={event => { setServiceFilter(event.target.value); setPage(1); }}
-          aria-label={t('서비스 필터')}
+          aria-label="서비스 필터"
           className="w-full sm:w-48"
         >
-          <option value="">{t('전체 서비스')}</option>
+          <option value="">전체 서비스</option>
           {serviceNames.map(name => <option key={name} value={name}>{name}</option>)}
         </Select>
         <form onSubmit={event => { event.preventDefault(); setSearch(inputValue); setPage(1); }} className="flex w-full gap-1.5 sm:w-72">
           <SearchInput
             value={inputValue}
             onChange={event => setInputValue(event.target.value)}
-            placeholder={t('메시지 검색 후 Enter')}
-            aria-label={t('로그 검색')}
+            placeholder="메시지 검색 후 Enter"
+            aria-label="로그 검색"
             wrapperClassName="flex-1"
           />
           {search && (
-            <Button type="button" variant="ghost" onClick={() => { setSearch(''); setInputValue(''); setPage(1); }} aria-label={t('검색어 지우기')}>
+            <Button type="button" variant="ghost" onClick={() => { setSearch(''); setInputValue(''); setPage(1); }} aria-label="검색어 지우기">
               <MaterialIcon name="close" />
             </Button>
           )}
@@ -152,8 +151,8 @@ export function LogsPage() {
         <section className="mb-6">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-base font-bold text-text-base">{t('직접 연결 서비스')}</h2>
-              <p className="mt-0.5 text-xs text-text-muted">{t('OTLP Logs를 직접 받는 Observed Service입니다.')}</p>
+              <h2 className="text-base font-bold text-text-base">직접 연결 서비스</h2>
+              <p className="mt-0.5 text-xs text-text-muted">OTLP Logs를 직접 받는 Observed Service입니다.</p>
             </div>
             <span className="font-mono text-xs text-text-dim">{directServices.length}</span>
           </div>
@@ -165,13 +164,13 @@ export function LogsPage() {
                   <span
                     className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${service.isActive ? 'bg-status-healthy' : 'bg-status-error'}`}
                     role="img"
-                    aria-label={service.isActive ? t('수집 가능') : t('중지됨')}
+                    aria-label={service.isActive ? '수집 가능' : '중지됨'}
                   />
                 </div>
                 <p className="mt-3 text-xs text-text-secondary">
                   {service.lastSeenAt
-                    ? `${t('마지막 수집')}: ${new Date(service.lastSeenAt).toLocaleString()}`
-                    : t('아직 수집된 로그가 없습니다')}
+                    ? `마지막 수집: ${new Date(service.lastSeenAt).toLocaleString()}`
+                    : '아직 수집된 로그가 없습니다'}
                 </p>
                 <p className="mt-1 truncate font-mono text-2xs text-text-dim">{service.apiKeyMasked || '—'}</p>
               </Link>
@@ -184,8 +183,8 @@ export function LogsPage() {
         <section className="mb-6">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-base font-bold text-text-base">{t('Docker 서비스')}</h2>
-              <p className="mt-0.5 text-xs text-text-muted">{t('EveryUp Docker 수집기가 전달한 서비스입니다.')}</p>
+              <h2 className="text-base font-bold text-text-base">Docker 서비스</h2>
+              <p className="mt-0.5 text-xs text-text-muted">EveryUp Docker 수집기가 전달한 서비스입니다.</p>
             </div>
             <span className="font-mono text-xs text-text-dim">{agentCards.length}</span>
           </div>
@@ -201,7 +200,7 @@ export function LogsPage() {
                   <span className="shrink-0 text-xs text-text-muted">{service.agentName}</span>
                 </div>
                 <p className="mt-3 text-xs text-text-secondary">
-                  {t('최근 {total}건 · ERROR {error} · WARN {warn}', { total, error, warn })}
+                  {`최근 ${total}건 · ERROR ${error} · WARN ${warn}`}
                 </p>
               </Link>
             ))}
@@ -212,31 +211,27 @@ export function LogsPage() {
       {loading ? (
         <div className="h-72 animate-pulse rounded-xl border border-ui-border bg-bg-surface" />
       ) : error ? (
-        <EmptyState icon="error_outline" title={t('로그를 불러오지 못했습니다')} description={error} />
+        <EmptyState icon="error_outline" title="로그를 불러오지 못했습니다" description={error} />
       ) : logs.length === 0 ? (
         <EmptyState
           icon="article"
-          title={t(search || serviceFilter ? '검색 결과가 없습니다' : '아직 수집된 로그가 없습니다')}
-          description={t(search || serviceFilter ? '검색어나 서비스 필터를 바꾸어 다시 시도해 보세요.' : 'Logs를 직접 연결하거나 Docker 환경에서 로그 수집을 활성화하면 여기에 표시됩니다.')}
+          title={search || serviceFilter ? '검색 결과가 없습니다' : '아직 수집된 로그가 없습니다'}
+          description={search || serviceFilter ? '검색어나 서비스 필터를 바꾸어 다시 시도해 보세요.' : 'Logs를 직접 연결하거나 Docker 환경에서 로그 수집을 활성화하면 여기에 표시됩니다.'}
         />
       ) : (
         <>
           <p className="mb-2 text-xs text-text-dim">
-            {t('총 {total}건 중 {start}–{end}', {
-              total: total.toLocaleString(),
-              start: ((page - 1) * PAGE_SIZE + 1).toLocaleString(),
-              end: Math.min(page * PAGE_SIZE, total).toLocaleString(),
-            })}
+            {`총 ${total.toLocaleString()}건 중 ${((page - 1) * PAGE_SIZE + 1).toLocaleString()}–${Math.min(page * PAGE_SIZE, total).toLocaleString()}`}
           </p>
           <div className="overflow-hidden rounded-xl border border-ui-border bg-bg-surface">
             <div className="overflow-x-auto">
               <table className="min-w-full text-left">
                 <thead className="border-b border-ui-border bg-ui-hover-soft">
                   <tr>
-                    <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-muted">{t('시간')}</th>
-                    <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-muted">{t('레벨')}</th>
-                    <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-muted">{t('서비스')}</th>
-                    <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-muted">{t('메시지')}</th>
+                    <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-muted">시간</th>
+                    <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-muted">레벨</th>
+                    <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-muted">서비스</th>
+                    <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-muted">메시지</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ui-border-soft">
@@ -274,8 +269,8 @@ export function LogsPage() {
                   page={page}
                   totalPages={totalPages}
                   onChange={setPage}
-                  previousLabel={t('이전')}
-                  nextLabel={t('다음')}
+                  previousLabel="이전"
+                  nextLabel="다음"
                 />
               </div>
             )}

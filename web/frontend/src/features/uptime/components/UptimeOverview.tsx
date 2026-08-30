@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { useTranslate } from '@tolgee/react';
 import { chartCardClass } from '../../../components/charts/chartTheme';
 
 const HISTORY_DAYS = 90;
@@ -23,7 +22,6 @@ interface UptimeOverviewProps {
 }
 
 export function UptimeOverview({ stats, days, loading = false, className = '' }: UptimeOverviewProps) {
-  const { t } = useTranslate();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const slots = useMemo(() => {
     const result: (UptimeOverviewDay | null)[] = Array(HISTORY_DAYS).fill(null);
@@ -43,8 +41,8 @@ export function UptimeOverview({ stats, days, loading = false, className = '' }:
     <section className={`p-6 ${chartCardClass} ${className}`}>
       <div className="mb-5 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h2 className="text-base font-bold text-text-base">{t('업타임 현황')}</h2>
-          <p className="mt-1 text-xs text-text-muted">{t('요약 지표와 90일 상태 변화')}</p>
+          <h2 className="text-base font-bold text-text-base">업타임 현황</h2>
+          <p className="mt-1 text-xs text-text-muted">요약 지표와 90일 상태 변화</p>
         </div>
         <dl className={`grid grid-cols-2 gap-x-8 gap-y-4 ${statsGridClass}`}>
           {stats.map((stat, index) => (
@@ -61,7 +59,7 @@ export function UptimeOverview({ stats, days, loading = false, className = '' }:
       {loading ? (
         <div className="h-8 animate-pulse rounded bg-ui-hover" />
       ) : (
-        <div className="flex gap-px" role="img" aria-label={t('최근 90일 일별 업타임 상태')}>
+        <div className="flex gap-px" role="img" aria-label="최근 90일 일별 업타임 상태">
           {slots.map((day, index) => (
             <div
               key={index}
@@ -82,15 +80,15 @@ export function UptimeOverview({ stats, days, loading = false, className = '' }:
       )}
 
       <div className="mt-2 flex justify-between gap-3 text-xs text-text-dim">
-        <span className="shrink-0">{t('90일 전')}</span>
+        <span className="shrink-0">90일 전</span>
         {hovered && (
           <span className="truncate text-text-secondary">
             <span className="font-semibold">{hovered.date}</span>
-            {' — '}{hovered.uptime.toFixed(1)}% {t('업타임')}
+            {' — '}{hovered.uptime.toFixed(1)}% {'업타임'}
             {hovered.detail && <> ({hovered.detail})</>}
           </span>
         )}
-        <span className="shrink-0">{t('오늘')}</span>
+        <span className="shrink-0">오늘</span>
       </div>
     </section>
   );

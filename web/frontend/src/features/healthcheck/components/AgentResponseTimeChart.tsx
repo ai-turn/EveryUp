@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useTranslate } from '@tolgee/react';
 import {
   ResponsiveContainer, ComposedChart, Area, Line,
   XAxis, YAxis, CartesianGrid, Tooltip,
@@ -25,7 +24,7 @@ interface ChartPoint {
 }
 
 export function AgentResponseTimeChart({ agentId, serviceKey, refreshKey, range }: AgentResponseTimeChartProps) {
-  const { t } = useTranslate();
+
   const [points, setPoints] = useState<ServiceHistoryPoint[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -56,14 +55,14 @@ export function AgentResponseTimeChart({ agentId, serviceKey, refreshKey, range 
   return (
     <div className={`mb-8 p-6 ${chartCardClass}`}>
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-base font-bold text-text-base">{t('응답 시간')}</h3>
+        <h3 className="text-base font-bold text-text-base">응답 시간</h3>
       </div>
 
       {loading ? (
         <div className="h-48 bg-ui-hover rounded animate-pulse" />
       ) : chartData.length === 0 ? (
         <div className="flex items-center justify-center h-48 text-text-dim text-sm">
-          {t('데이터 없음')}
+          데이터 없음
         </div>
       ) : (
         <>
@@ -96,7 +95,7 @@ export function AgentResponseTimeChart({ agentId, serviceKey, refreshKey, range 
           <div className="mt-2">
             <ChartStatsLegend
               series={[{
-                label: t('응답 시간'),
+                label: '응답 시간',
                 color: theme.primaryColor,
                 values: chartData.map((p) => p.latencyMs),
               }]}

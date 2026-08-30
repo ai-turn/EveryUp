@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTranslate } from '@tolgee/react';
 import { toast } from 'react-hot-toast';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { MaterialIcon } from '../../components/common/MaterialIcon';
@@ -94,7 +93,7 @@ function ServiceCard({ service, metric, onOpen }: {
   metric?: OtelServiceMetric;
   onOpen: () => void;
 }) {
-  const { t } = useTranslate();
+
   return (
     <div
       {...activatable(onOpen)}
@@ -105,7 +104,7 @@ function ServiceCard({ service, metric, onOpen }: {
         <div className="flex items-center gap-2.5 min-w-0">
           <span
             role="img"
-            aria-label={service.healthy ? t('정상') : t('장애')}
+            aria-label={service.healthy ? '정상' : '장애'}
             className={`h-2.5 w-2.5 rounded-full shrink-0 mt-0.5 ${service.healthy ? 'bg-status-healthy' : 'bg-status-error animate-pulse'}`}
           />
           <div className="min-w-0">
@@ -115,7 +114,7 @@ function ServiceCard({ service, metric, onOpen }: {
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {!service.healthy && (
-            <span className="text-2xs font-bold text-status-error bg-status-error/10 px-1.5 py-0.5 rounded">{t('장애')}</span>
+            <span className="text-2xs font-bold text-status-error bg-status-error/10 px-1.5 py-0.5 rounded">장애</span>
           )}
           <MaterialIcon name="chevron_right" className="text-base text-text-dim group-hover:text-primary transition-colors" />
         </div>
@@ -123,11 +122,11 @@ function ServiceCard({ service, metric, onOpen }: {
 
       <div className="grid grid-cols-3 gap-3 text-sm">
         <div className="min-w-0">
-          <div className="text-2xs text-text-dim">{t('응답시간')}</div>
+          <div className="text-2xs text-text-dim">응답시간</div>
           <div className="font-mono font-semibold text-text-base truncate">{service.lastLatency ?? '—'}</div>
         </div>
         <div className="min-w-0">
-          <div className="text-2xs text-text-dim">{t('상태')}</div>
+          <div className="text-2xs text-text-dim">상태</div>
           <div className={`font-mono font-semibold ${service.healthy ? 'text-status-healthy' : 'text-status-error'}`}>
             {service.lastStatus ?? '—'}
           </div>
@@ -156,7 +155,7 @@ function ServiceCard({ service, metric, onOpen }: {
 export function ProjectDetailPage() {
   const { agentId } = useParams<{ agentId: string }>();
   const navigate = useNavigate();
-  const { t } = useTranslate();
+
 
   const [agent, setAgent] = useState<ConnectedAgent | null>(null);
   const [services, setServices] = useState<AgentServiceFlat[]>([]);
@@ -253,14 +252,14 @@ export function ProjectDetailPage() {
         className="lg:hidden flex items-center gap-1 text-sm text-text-muted hover:text-text-base transition-colors"
       >
         <MaterialIcon name="arrow_back" className="text-base" />
-        {t('Docker 환경 목록')}
+        Docker 환경 목록
       </button>
 
       {loadError && (
         <div role="alert" className="flex flex-wrap items-center gap-3 rounded-xl border border-status-warn/30 bg-status-warn/10 px-4 py-3 text-sm text-text-secondary">
           <MaterialIcon name="sync_problem" className="shrink-0 text-status-warn" />
-          <span className="min-w-0 flex-1">{t('Docker 환경 정보를 불러오지 못했습니다.')} {loadError}</span>
-          <button type="button" onClick={() => void load()} className="rounded-lg border border-ui-border bg-bg-surface px-3 py-1.5 text-sm font-semibold text-text-secondary hover:bg-ui-hover">{t('다시 시도')}</button>
+          <span className="min-w-0 flex-1">Docker 환경 정보를 불러오지 못했습니다. {loadError}</span>
+          <button type="button" onClick={() => void load()} className="rounded-lg border border-ui-border bg-bg-surface px-3 py-1.5 text-sm font-semibold text-text-secondary hover:bg-ui-hover">다시 시도</button>
         </div>
       )}
 
@@ -273,13 +272,13 @@ export function ProjectDetailPage() {
             {agent?.version && <span className="text-xs text-text-dim">v{agent.version}</span>}
           </div>
           <p className="text-sm text-text-muted flex items-center gap-1.5">
-            <span>{t('서비스')} {services.length}{t('개')}</span>
+            <span>서비스 {services.length}개</span>
             <span className="text-text-dim">·</span>
-            <span className="text-status-healthy font-medium">{healthy} {t('정상')}</span>
+            <span className="text-status-healthy font-medium">{healthy} 정상</span>
             {!allHealthy && (
               <>
                 <span className="text-text-dim">·</span>
-                <span className="text-status-error font-medium">{services.length - healthy} {t('장애')}</span>
+                <span className="text-status-error font-medium">{services.length - healthy} 장애</span>
               </>
             )}
           </p>
@@ -349,14 +348,14 @@ export function ProjectDetailPage() {
         >
           <span className="h-2.5 w-2.5 rounded-full bg-status-error animate-pulse shrink-0" />
           <span className="text-sm font-semibold text-text-base truncate">
-            {t('진행 중 장애')} — {banner.serviceName}
+            진행 중 장애 — {banner.serviceName}
           </span>
           <span className="text-xs text-text-muted shrink-0">
-            {formatDuration(banner.durationSec)} {t('경과')}
+            {formatDuration(banner.durationSec)} {'경과'}
             {activeIncidents.length > 1 && ` · +${activeIncidents.length - 1}`}
           </span>
           <span className="ml-auto text-xs font-semibold text-primary shrink-0 flex items-center">
-            {t('서비스 열기')}
+            서비스 열기
             <MaterialIcon name="chevron_right" className="text-sm" />
           </span>
         </button>
@@ -365,22 +364,22 @@ export function ProjectDetailPage() {
       {/* KPI row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard
-          label={t('가동률 · 30일')}
+          label="가동률 · 30일"
           value={uptime30 !== null ? uptime30.toFixed(2) : '—'}
           unit={uptime30 !== null ? '%' : undefined}
         />
         <KpiCard
-          label={t('활성 장애')}
+          label="활성 장애"
           value={String(activeIncidents.length)}
           tone={activeIncidents.length > 0 ? 'danger' : undefined}
           sub={activeIncidents.length > 0 ? activeIncidents.map((i) => i.serviceName).join(', ') : undefined}
         />
         <KpiCard
-          label={t('요청 · 24시간')}
+          label="요청 · 24시간"
           value={req24h > 0 ? Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(req24h) : '—'}
         />
         <KpiCard
-          label={t('p95 · 최근')}
+          label="p95 · 최근"
           value={p95 !== null ? String(p95) : '—'}
           unit={p95 !== null ? 'ms' : undefined}
           tone={p95 !== null && p95 > 500 ? 'warn' : undefined}
@@ -391,7 +390,7 @@ export function ProjectDetailPage() {
       {services.length === 0 && !loadError ? (
         <div className="py-16 text-center">
           <MaterialIcon name="inventory_2" className="text-4xl text-text-dim mb-2" />
-          <p className="text-sm text-text-dim">{t('수집된 서비스가 없습니다')}</p>
+          <p className="text-sm text-text-dim">수집된 서비스가 없습니다</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -421,9 +420,9 @@ export function ProjectDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
           {/* Incident history */}
           <div className="bg-bg-surface border border-ui-border rounded-xl p-4">
-              <h3 className="text-base font-bold text-text-base mb-3">{t('장애 이력 · 30일')}</h3>
+              <h3 className="text-base font-bold text-text-base mb-3">장애 이력 · 30일</h3>
               {incidents.length === 0 ? (
-                <p className="text-xs text-text-dim py-4 text-center">{t('최근 30일간 장애가 없습니다')}</p>
+                <p className="text-xs text-text-dim py-4 text-center">최근 30일간 장애가 없습니다</p>
               ) : (
                 <div className="space-y-2">
                   {incidents.slice(0, 5).map((inc, i) => (
@@ -437,11 +436,11 @@ export function ProjectDetailPage() {
                       <span className="min-w-0 flex-1">
                         <span className="block text-xs font-semibold text-text-base truncate">{inc.serviceName}</span>
                         <span className="block text-2xs text-text-dim mt-0.5">
-                          {formatIncidentTime(inc.startedAt)} {t('시작')} · {formatDuration(inc.durationSec)}
+                          {formatIncidentTime(inc.startedAt)} {'시작'} · {formatDuration(inc.durationSec)}
                         </span>
                       </span>
                       <span className={`text-2xs font-bold shrink-0 ${inc.active ? 'text-status-error' : 'text-status-healthy'}`}>
-                        {inc.active ? t('진행중') : t('해소')}
+                        {inc.active ? '진행중' : '해소'}
                       </span>
                     </button>
                   ))}
@@ -451,9 +450,9 @@ export function ProjectDetailPage() {
 
             {/* Event timeline */}
             <div className="bg-bg-surface border border-ui-border rounded-xl p-4">
-              <h3 className="text-base font-bold text-text-base mb-3">{t('타임라인')}</h3>
+              <h3 className="text-base font-bold text-text-base mb-3">타임라인</h3>
               {events.length === 0 ? (
-                <p className="text-xs text-text-dim py-4 text-center">{t('최근 이벤트가 없습니다')}</p>
+                <p className="text-xs text-text-dim py-4 text-center">최근 이벤트가 없습니다</p>
               ) : (
                 <div className="space-y-0.5">
                   {events.map((e) => (
