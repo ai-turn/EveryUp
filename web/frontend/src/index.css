@@ -140,8 +140,11 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
   -webkit-font-smoothing: auto;
   -moz-osx-font-smoothing: auto;
-  text-rendering: optimizeSpeed;
-  font-optical-sizing: auto;
+  /* text-rendering / font-optical-sizing 둘 다 제거 — 기본값 auto가 정답.
+     optimizeSpeed는 Chrome 148 실측에서 커닝에 영향이 없었다(auto·optimizeSpeed·
+     optimizeLegibility 렌더 폭 동일, font-kerning:none 대조군은 +6.9%). 옛 WebKit
+     동작이라 지금은 무의미하다. font-optical-sizing은 Pretendard가 wght 단일 축이라
+     opsz가 없어 처음부터 무효였다. 되살릴 이유 없음. */
 }
 
 /* Global Focus Ring: 사용자 경험(UX) 개선 */
