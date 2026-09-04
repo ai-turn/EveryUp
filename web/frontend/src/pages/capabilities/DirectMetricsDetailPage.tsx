@@ -171,7 +171,7 @@ export function DirectMetricsDetailPage() {
 
         <section className="rounded-xl border border-ui-border bg-bg-surface p-5">
           <h2 className="text-base font-bold text-text-base">Project</h2>
-          <p className="mt-1 text-xs text-text-muted">직접 서비스는 Docker 환경과 별도로 Project에 배정합니다.</p>
+          <p className="mt-1 text-sm text-text-muted">직접 서비스는 Docker 환경과 별도로 Project에 배정합니다.</p>
           <div className="mt-4 space-y-3">
             <Select value={projectId} onChange={event => setProjectId(event.target.value)} aria-label="Project 선택">
               <option value="">미분류</option>

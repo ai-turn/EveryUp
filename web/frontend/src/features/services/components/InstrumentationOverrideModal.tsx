@@ -143,7 +143,7 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="text-base font-bold text-text-base">상세 API 모니터링 적용</h3>
-            <p className="mt-0.5 text-xs text-text-muted">
+            <p className="mt-0.5 text-sm text-text-muted">
               감지된 Java·Node.js 서비스에 OpenTelemetry를 안전하게 적용합니다.
             </p>
           </div>

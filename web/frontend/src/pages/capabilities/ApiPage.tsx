@@ -125,7 +125,7 @@ export function ApiPage() {
               <div className="mb-3 flex items-end justify-between gap-3">
                 <div>
                   <h2 className="text-base font-bold text-text-base">직접 연결 서비스</h2>
-                  <p className="mt-0.5 text-xs text-text-muted">애플리케이션이 전송하는 OTLP traces를 직접 받습니다.</p>
+                  <p className="mt-0.5 text-sm text-text-muted">애플리케이션이 전송하는 OTLP traces를 직접 받습니다.</p>
                 </div>
                 <span className="font-mono text-xs text-text-dim">{directRows.length}</span>
               </div>
@@ -142,7 +142,7 @@ export function ApiPage() {
               <div className="mb-3 flex items-end justify-between gap-3">
                 <div>
                   <h2 className="text-base font-bold text-text-base">Docker 서비스</h2>
-                  <p className="mt-0.5 text-xs text-text-muted">EveryUp Docker 수집기가 발견하고 전달한 API 요청입니다.</p>
+                  <p className="mt-0.5 text-sm text-text-muted">EveryUp Docker 수집기가 발견하고 전달한 API 요청입니다.</p>
                 </div>
                 <span className="font-mono text-xs text-text-dim">{agentRows.length}</span>
               </div>

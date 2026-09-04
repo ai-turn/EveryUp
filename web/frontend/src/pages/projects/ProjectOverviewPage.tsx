@@ -92,7 +92,7 @@ export function ProjectOverviewPage() {
 
       {totalTargets === 0 ? <section className="rounded-xl border border-ui-border bg-bg-surface"><EmptyState icon="folder_open" title="아직 배정된 대상이 없습니다" description="Project 관리 화면에서 환경과 모니터링 대상을 배정하세요." action={{ label: 'Project 관리', onClick: () => navigate('/projects') }} /></section> : (
         <section className="rounded-xl border border-ui-border bg-bg-surface">
-          <div className="border-b border-ui-border px-4 py-3.5"><h2 className="text-base font-bold text-text-base">대상</h2><p className="mt-0.5 text-xs text-text-muted">건강 상태와 수집 상태는 대상 상세에서 분리해 확인할 수 있습니다.</p></div>
+          <div className="border-b border-ui-border px-4 py-3.5"><h2 className="text-base font-bold text-text-base">대상</h2><p className="mt-0.5 text-sm text-text-muted">건강 상태와 수집 상태는 대상 상세에서 분리해 확인할 수 있습니다.</p></div>
           <div className="divide-y divide-ui-border-soft">
             {data.agents.map((agent) => <MemberLink key={agent.id} to={`/agents/${agent.id}`} icon="dns" name={agent.name} detail={fresh(agent.lastSeenAt) ? 'Docker 수집기 데이터 유입 중' : 'Docker 수집기 데이터 지연'} state={fresh(agent.lastSeenAt) ? 'healthy' : 'warn'} />)}
             {data.monitors.map((monitor) => <MemberLink key={monitor.id} to={`/uptime/${monitor.id}`} icon="monitor_heart" name={monitor.name} detail={monitor.status === 'unhealthy' ? '업타임 장애' : monitor.status === 'healthy' ? '업타임 정상' : '상태 확인 중'} state={monitor.status === 'unhealthy' ? 'error' : monitor.status === 'healthy' ? 'healthy' : 'idle'} />)}

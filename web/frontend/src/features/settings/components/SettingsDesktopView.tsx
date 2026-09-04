@@ -216,7 +216,7 @@ export function SettingsDesktopView({
                     </div>
                   </SettingRow>
 
-                  <p className="pt-3 text-xs text-text-dim">
+                  <p className="pt-3 text-xs text-text-muted">
                     보존 기간을 줄이면 기간을 초과한 기존 데이터는 다음 정리 주기에 삭제됩니다.
                   </p>
                 </>
@@ -236,7 +236,7 @@ export function SettingsDesktopView({
           <section id="sec-danger" className="scroll-mt-4">
             <SectionCard title="계정 초기화" subtitle="관리자 계정을 삭제하고 최초 설정 상태로 초기화합니다">
               <div className="flex items-center justify-between gap-4">
-                <p className="text-xs text-text-dim">
+                <p className="text-xs text-text-muted">
                   {env.useMock ? '데모 환경에서는 계정 초기화를 사용할 수 없습니다.' : '모든 계정 정보가 삭제되며, 다시 계정을 생성해야 합니다. 이 작업은 되돌릴 수 없습니다.'}
                 </p>
                 <button

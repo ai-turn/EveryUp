@@ -54,6 +54,8 @@ React 19 · Tailwind v4 · Recharts 3. 이 문서가 **디자인 규약의 SSOT*
 
 **4단 전부 AA(4.5)를 넘는다** — 가장 옅은 `dim`이 하한선이다. dim은 slate-400(2.56, 미달)이었고 이를 slate-500로 내리면서 muted도 slate-600으로 한 칸 밀어 위계를 유지했다. 더 옅은 등급을 추가하지 말 것.
 
+**읽는 산문에 `dim`을 쓰지 않는다.** `dim`은 표에 적힌 대로 **메타·placeholder 전용**이다 — `최근 3건`, 타임스탬프, 차트 축 라벨, endpoint 값처럼 훑는 자리. 문장으로 읽어야 하는 설명문·경고문은 `muted`(7.58)다. 산문은 훑는 값보다 오래 눈이 머물기 때문에 하한선인 4.76에 두면 흐리게 읽힌다.
+
 ### 1.4 브랜드 · 상태
 
 **primary** `#3b76c9` (dark `#3F6FDB`) — 주 액션, 링크, 선택 상태, 차트 첫 시리즈
@@ -129,8 +131,8 @@ primary #3b76c9 → emerald #059669 → amber #d97706 → violet #7c3aed → red
 | 토큰 | px | 용도 | 실사용 |
 |------|-----|------|--------|
 | `text-2xs` | 11 | 배지, 메타, 타임라인 라벨, 차트 범례 | 51 |
-| `text-xs` | 12 | 레이블, 칩, 테이블 헤더, 보조 액션 | 186 |
-| `text-sm` | 14 | **기본 UI 텍스트** — 본문, 버튼, 폼 | 290 |
+| `text-xs` | 12 | 레이블, 칩, 테이블 헤더, 보조 액션 | 267 |
+| `text-sm` | 14 | **기본 UI 텍스트** — 본문, 버튼, 폼, 카드·섹션 부제 | 346 |
 | `text-base` | 16 | 카드 제목(h3), 강조 본문 | 57 |
 | `text-lg` | 18 | 서브타이틀 | 28 |
 | `text-xl` | 20 | 카드 헤더(h2), 섹션 제목 | 32 |
@@ -138,6 +140,8 @@ primary #3b76c9 → emerald #059669 → amber #d97706 → violet #7c3aed → red
 | `text-3xl`+ | 30+ | KPI 수치, 아이콘 크기 | 19 |
 
 `text-2xs`는 Tailwind 기본이 아니라 `index.css @theme`에서 추가한 커스텀 등급이다.
+
+**12px 이하는 훑는 자리 전용이다.** 라벨·칩·상태·테이블 헤더·타임스탬프·키·endpoint처럼 눈이 스쳐 지나가는 값. **문장으로 읽는 산문은 `text-sm`(14px)부터**다 — 한글은 라틴보다 획이 밀집해 같은 px에서 더 얇게 읽히고, 산문은 눈이 오래 머물러 12px에서 흐려진다. `/logs`의 12px 134곳은 전부 데이터·라벨이라 정당하고, 문제가 되는 건 산문이 12px로 내려온 자리다.
 
 ### 2.3 헤딩 등급 (정본)
 
@@ -152,6 +156,9 @@ primary #3b76c9 → emerald #059669 → amber #d97706 → violet #7c3aed → red
 | 설정 섹션 카드 h2 | `text-sm font-bold text-text-base` |
 | 카드 내 제목·차트 헤더 h3 | `text-base font-bold text-text-base` |
 | 테이블 `<th>` | `text-xs font-semibold uppercase tracking-wider text-text-muted` |
+| 카드·섹션 부제 | `text-sm text-text-muted` |
+
+부제는 **제목이 `text-base`(16px) 이상인 자리에서만** `text-sm`이다. 제목이 `text-sm`인 자리(에러 배너 등)의 부제는 `text-xs`를 유지한다 — 올리면 제목과 크기가 같아져 위계가 사라진다. 부제는 설명 본문이므로 `text-xs`(레이블·칩·테이블 헤더 등급)가 아니다.
 
 클래스 순서는 **크기 → 굵기 → 색**으로 적는다. `text-text-base font-bold text-lg`처럼 뒤섞으면 같은 등급인지 눈으로 판별되지 않는다.
 

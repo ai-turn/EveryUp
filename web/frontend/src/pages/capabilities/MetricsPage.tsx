@@ -138,7 +138,7 @@ export function MetricsPage() {
               <div className="mb-3 flex items-end justify-between gap-3">
                 <div>
                   <h2 className="text-base font-bold text-text-base">직접 연결 서비스</h2>
-                  <p className="mt-0.5 text-xs text-text-muted">OTLP Metrics를 직접 받는 Observed Service입니다.</p>
+                  <p className="mt-0.5 text-sm text-text-muted">OTLP Metrics를 직접 받는 Observed Service입니다.</p>
                 </div>
                 <span className="font-mono text-xs text-text-dim">{directServices.length}</span>
               </div>
@@ -162,7 +162,7 @@ export function MetricsPage() {
               <div className="mb-3 flex items-end justify-between gap-3">
                 <div>
                   <h2 className="text-base font-bold text-text-base">Docker 서비스</h2>
-                  <p className="mt-0.5 text-xs text-text-muted">EveryUp Docker 수집기가 발견하고 전달한 서비스 메트릭입니다.</p>
+                  <p className="mt-0.5 text-sm text-text-muted">EveryUp Docker 수집기가 발견하고 전달한 서비스 메트릭입니다.</p>
                 </div>
                 <span className="font-mono text-xs text-text-dim">{visibleAgentMetrics.length}</span>
               </div>

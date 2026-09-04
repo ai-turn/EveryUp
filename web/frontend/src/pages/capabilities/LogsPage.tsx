@@ -152,7 +152,7 @@ export function LogsPage() {
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
               <h2 className="text-base font-bold text-text-base">직접 연결 서비스</h2>
-              <p className="mt-0.5 text-xs text-text-muted">OTLP Logs를 직접 받는 Observed Service입니다.</p>
+              <p className="mt-0.5 text-sm text-text-muted">OTLP Logs를 직접 받는 Observed Service입니다.</p>
             </div>
             <span className="font-mono text-xs text-text-dim">{directServices.length}</span>
           </div>
@@ -184,7 +184,7 @@ export function LogsPage() {
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
               <h2 className="text-base font-bold text-text-base">Docker 서비스</h2>
-              <p className="mt-0.5 text-xs text-text-muted">EveryUp Docker 수집기가 전달한 서비스입니다.</p>
+              <p className="mt-0.5 text-sm text-text-muted">EveryUp Docker 수집기가 전달한 서비스입니다.</p>
             </div>
             <span className="font-mono text-xs text-text-dim">{agentCards.length}</span>
           </div>

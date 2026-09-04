@@ -42,7 +42,7 @@ export function UptimeOverview({ stats, days, loading = false, className = '' }:
       <div className="mb-5 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h2 className="text-base font-bold text-text-base">업타임 현황</h2>
-          <p className="mt-1 text-xs text-text-muted">요약 지표와 90일 상태 변화</p>
+          <p className="mt-1 text-sm text-text-muted">요약 지표와 90일 상태 변화</p>
         </div>
         <dl className={`grid grid-cols-2 gap-x-8 gap-y-4 ${statsGridClass}`}>
           {stats.map((stat, index) => (

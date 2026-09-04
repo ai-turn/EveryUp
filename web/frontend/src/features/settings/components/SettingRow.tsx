@@ -12,7 +12,7 @@ export function SettingRow({
     <div className="flex flex-col gap-2 py-2.5 sm:flex-row sm:items-center sm:gap-3 border-b border-ui-border-soft last:border-0">
       <p className="w-40 shrink-0 text-sm font-semibold text-text-secondary">{label}</p>
       {description && (
-        <p className="flex-1 min-w-0 text-xs text-text-dim">{description}</p>
+        <p className="flex-1 min-w-0 text-xs text-text-muted">{description}</p>
       )}
       <div className="shrink-0 sm:ml-auto">{children}</div>
     </div>

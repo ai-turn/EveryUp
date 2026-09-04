@@ -103,7 +103,7 @@ export function DirectTelemetrySetupDialog({
       <div className="flex items-center justify-between gap-3 border-b border-ui-border px-6 py-4">
         <div>
           <h2 id={`direct-${signal}-dialog-title`} className="text-lg font-bold text-text-base">{title}</h2>
-          <p className="mt-0.5 text-xs text-text-muted">{description}</p>
+          <p className="mt-0.5 text-sm text-text-muted">{description}</p>
         </div>
         <Button variant="ghost" size="sm" aria-label="닫기" onClick={onClose} disabled={submitting}>
           <MaterialIcon name="close" />

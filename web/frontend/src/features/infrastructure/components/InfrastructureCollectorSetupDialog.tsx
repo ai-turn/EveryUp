@@ -52,7 +52,7 @@ export function InfrastructureCollectorSetupDialog({
       <div className="flex items-center justify-between gap-3 border-b border-ui-border px-6 py-4">
         <div>
           <h2 id="infrastructure-collector-dialog-title" className="text-lg font-bold text-text-base">OpenTelemetry Collector 연결</h2>
-          <p className="mt-0.5 text-xs text-text-muted">표준 hostmetrics receiver로 CPU, 메모리, 디스크를 수집합니다.</p>
+          <p className="mt-0.5 text-sm text-text-muted">표준 hostmetrics receiver로 CPU, 메모리, 디스크를 수집합니다.</p>
         </div>
         <Button variant="ghost" size="sm" aria-label="닫기" onClick={onClose} disabled={submitting}><MaterialIcon name="close" /></Button>
       </div>

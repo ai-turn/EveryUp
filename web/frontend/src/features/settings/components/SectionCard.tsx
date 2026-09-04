@@ -14,7 +14,7 @@ export function SectionCard({
       <div className="mb-3">
         <h2 className="text-sm font-bold text-text-base">{title}</h2>
         {subtitle && (
-          <p className="text-xs text-text-dim mt-0.5">{subtitle}</p>
+          <p className="text-xs text-text-muted mt-0.5">{subtitle}</p>
         )}
       </div>
       {children}

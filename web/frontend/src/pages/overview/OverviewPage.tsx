@@ -197,7 +197,7 @@ export function OverviewPage() {
               <div className="flex items-center justify-between gap-3 border-b border-ui-border px-4 py-3.5">
                 <div>
                   <h2 className="text-base font-bold text-text-base">현재 확인 필요</h2>
-                  <p className="mt-0.5 text-xs text-text-muted">서비스 건강과 수집 상태를 분리해 보여줍니다.</p>
+                  <p className="mt-0.5 text-sm text-text-muted">서비스 건강과 수집 상태를 분리해 보여줍니다.</p>
                 </div>
                 <span className="font-mono text-sm font-bold tabular-nums text-text-muted">{attention.length}</span>
               </div>
@@ -227,7 +227,7 @@ export function OverviewPage() {
 
             <article className="rounded-xl border border-ui-border bg-bg-surface p-4">
               <h2 className="text-base font-bold text-text-base">모니터링 범위</h2>
-              <p className="mt-1 text-xs text-text-muted">연결 방식별로 수집 범위를 확인하세요.</p>
+              <p className="mt-1 text-sm text-text-muted">연결 방식별로 수집 범위를 확인하세요.</p>
               <dl className="mt-4 space-y-3">
                 {[
                   ['Docker 환경', agents.length, '/environments'],
