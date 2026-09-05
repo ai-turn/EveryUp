@@ -112,11 +112,11 @@ export function AlertsDesktopView({
       {/* KPI stat bar — one card, divider-separated cells */}
       <div className="mb-5 grid grid-cols-5 divide-x divide-ui-border-soft rounded-xl border border-ui-border bg-bg-surface py-3.5">
         <div className="flex flex-col gap-0.5 px-5">
-          <span className="text-2xs text-text-muted">발송 (7일)</span>
+          <span className="text-xs text-text-muted">발송 (7일)</span>
           <span className="text-xl font-extrabold tabular-nums text-text-base">{totalSent}</span>
         </div>
         <div className="flex flex-col gap-0.5 px-5">
-          <span className="text-2xs text-text-muted">실패 (7일)</span>
+          <span className="text-xs text-text-muted">실패 (7일)</span>
           <span className="flex items-baseline gap-2.5">
             <span className={`text-xl font-extrabold tabular-nums ${totalFailed > 0 ? 'text-red-600 dark:text-red-400' : 'text-text-base'}`}>
               {totalFailed}
@@ -124,7 +124,7 @@ export function AlertsDesktopView({
             {totalFailed > 0 && (
               <button
                 onClick={viewFailedLogs}
-                className="text-2xs font-semibold text-primary hover:underline"
+                className="text-xs font-semibold text-primary hover:underline"
               >
                 실패 로그 보기 →
               </button>
@@ -132,7 +132,7 @@ export function AlertsDesktopView({
           </span>
         </div>
         <div className="flex flex-col gap-0.5 px-5">
-          <span className="text-2xs text-text-muted">성공률</span>
+          <span className="text-xs text-text-muted">성공률</span>
           <span className="flex items-center gap-2">
             <span className="text-xl font-extrabold tabular-nums text-text-base">
               {successRate != null ? `${successRate}%` : '—'}
@@ -145,11 +145,11 @@ export function AlertsDesktopView({
           </span>
         </div>
         <div className="flex flex-col gap-0.5 px-5">
-          <span className="text-2xs text-text-muted">활성 규칙</span>
+          <span className="text-xs text-text-muted">활성 규칙</span>
           <span className="text-xl font-extrabold tabular-nums text-text-base">{enabledRules}/{rules.length}</span>
         </div>
         <div className="flex flex-col gap-0.5 px-5">
-          <span className="text-2xs text-text-muted">활성 채널</span>
+          <span className="text-xs text-text-muted">활성 채널</span>
           <span className="text-xl font-extrabold tabular-nums text-text-base">
             {channels.filter(c => c.isEnabled).length}/{channels.length}
           </span>
@@ -340,7 +340,7 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
                     </div>
                     <div className="min-w-0">
                       <p className="truncate text-sm font-bold text-text-base">{channel.name}</p>
-                      <p className="truncate text-2xs text-text-dim">
+                      <p className="truncate text-xs text-text-dim">
                         {getChannelSubtitle(channel.type)}
                       </p>
                     </div>

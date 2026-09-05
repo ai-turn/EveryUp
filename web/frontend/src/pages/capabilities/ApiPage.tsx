@@ -57,8 +57,8 @@ function ApiCard({
         <StatusBadge healthy={active} />
       </div>
       <div className="mt-5 grid grid-cols-2 gap-3">
-        <div><p className="text-2xs text-text-dim">요청</p><p className="font-mono text-lg font-bold text-text-base">{total.toLocaleString()}</p></div>
-        <div><p className="text-2xs text-text-dim">5xx</p><p className={`font-mono text-lg font-bold ${hasErrors ? 'text-status-error' : 'text-text-base'}`}>{summary.count5xx.toLocaleString()}</p></div>
+        <div><p className="text-xs text-text-dim">요청</p><p className="font-mono text-lg font-bold text-text-base">{total.toLocaleString()}</p></div>
+        <div><p className="text-xs text-text-dim">5xx</p><p className={`font-mono text-lg font-bold ${hasErrors ? 'text-status-error' : 'text-text-base'}`}>{summary.count5xx.toLocaleString()}</p></div>
       </div>
       {summary.top5xxPath ? (
         <p className="mt-4 truncate font-mono text-xs text-text-muted">{summary.top5xxMethod} {summary.top5xxPath}</p>

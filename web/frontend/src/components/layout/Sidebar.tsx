@@ -27,7 +27,7 @@ function NavItem({ to, icon, label, active, badge }: NavItemProps) {
     >
       <MaterialIcon name={icon} className="shrink-0 text-lg" />
       <span className="truncate">{label}</span>
-      {badge != null && badge > 0 && <span className="ml-auto shrink-0 rounded border border-status-error/20 bg-status-error/10 px-1.5 py-px text-2xs font-bold text-status-error">{badge}</span>}
+      {badge != null && badge > 0 && <span className="ml-auto shrink-0 rounded border border-status-error/20 bg-status-error/10 px-1.5 py-px text-xs font-bold text-status-error">{badge}</span>}
     </Link>
   );
 }
@@ -68,7 +68,7 @@ export function Sidebar() {
 
       {env.isDemoMode && (
         <div data-demo-chrome className="mx-3 mb-2 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2">
-          <p className="text-xs font-bold uppercase tracking-wider text-primary">Live Demo</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-primary">Live Demo</p>
           <div className="mt-2"><DemoScenarioSwitcher tone="light" /></div>
         </div>
       )}
@@ -79,20 +79,20 @@ export function Sidebar() {
       >
         <MaterialIcon name="search" className="shrink-0 text-base" />
         <span className="flex-1 text-left text-xs">검색</span>
-        <kbd className="rounded border border-ui-border px-1 py-0.5 text-2xs font-semibold">{navigator.platform.toLowerCase().includes('mac') ? '⌘' : 'Ctrl K'}</kbd>
+        <kbd className="rounded border border-ui-border px-1 py-0.5 text-xs font-semibold">{navigator.platform.toLowerCase().includes('mac') ? '⌘' : 'Ctrl K'}</kbd>
       </button>
 
       <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-3" aria-label="주 메뉴">
         <NavItem to="/" icon="dashboard" label="개요" active={path === '/'} />
         <NavItem to="/projects" icon="folder_open" label="Projects" active={path.startsWith('/projects')} />
         <NavItem to="/environments" icon="dns" label="Docker 환경" active={path.startsWith('/environments') || path.startsWith('/agents/')} />
-        <p className="px-3 pt-4 pb-1 text-2xs font-semibold uppercase tracking-wider text-text-dim">관측</p>
+        <p className="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-text-dim">관측</p>
         <NavItem to="/uptime" icon="monitor_heart" label="업타임" active={path.startsWith('/uptime') || detailActive('health')} />
         <NavItem to="/logs" icon="article" label="로그" active={path.startsWith('/logs') || detailActive('logs')} />
         <NavItem to="/infrastructure" icon="memory" label="인프라" active={path.startsWith('/infrastructure') || detailActive('infra')} />
         <NavItem to="/api" icon="api" label="API 요청" active={path.startsWith('/api') || detailActive('requests')} />
         <NavItem to="/metrics" icon="monitoring" label="메트릭" active={path.startsWith('/metrics') || detailActive('metrics')} />
-        <p className="px-3 pt-4 pb-1 text-2xs font-semibold uppercase tracking-wider text-text-dim">대응 및 관리</p>
+        <p className="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-text-dim">대응 및 관리</p>
         <NavItem to="/alerts" icon="notifications" label="알림" active={path.startsWith('/alerts')} badge={services.filter((service) => !service.healthy).length} />
         <NavItem to="/settings" icon="settings" label="환경 설정" active={path.startsWith('/settings')} />
       </nav>

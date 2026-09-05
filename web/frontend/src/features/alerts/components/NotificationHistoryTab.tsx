@@ -230,7 +230,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
                   if (row.kind === 'group') {
                     return (
                       <tr key={`g-${row.key}`}>
-                        <td colSpan={6} className="px-4 py-1.5 border-t border-ui-border-soft/50 bg-ui-hover-soft/30 text-2xs font-bold text-text-muted">
+                        <td colSpan={6} className="px-4 py-1.5 border-t border-ui-border-soft/50 bg-ui-hover-soft/30 text-xs font-bold text-text-muted">
                           {row.label}
                         </td>
                       </tr>
@@ -270,7 +270,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
                       <td className="px-4 py-3">
                         <p className="truncate text-sm text-text-base">{item.message}</p>
                         {item.errorMessage && (
-                          <p className="mt-0.5 truncate text-2xs text-red-600 dark:text-red-400">
+                          <p className="mt-0.5 truncate text-xs text-red-600 dark:text-red-400">
                             {item.errorMessage}
                             {item.retryCount > 0 && ` · ${`${item.retryCount}회 재시도`}`}
                           </p>

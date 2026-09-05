@@ -71,7 +71,7 @@ export function gridProps(theme: ChartTheme) {
 
 export function xAxisProps(theme: ChartTheme) {
   return {
-    tick: { fill: theme.tickColor, fontSize: 11, fontWeight: 600 },
+    tick: { fill: theme.tickColor, fontSize: 12, fontWeight: 500 },
     tickLine: false,
     axisLine: false,
     tickMargin: 8,
@@ -81,7 +81,7 @@ export function xAxisProps(theme: ChartTheme) {
 
 export function yAxisProps(theme: ChartTheme, width = 44) {
   return {
-    tick: { fill: theme.tickColor, fontSize: 11, fontWeight: 600 },
+    tick: { fill: theme.tickColor, fontSize: 12, fontWeight: 500 },
     tickLine: false,
     axisLine: false,
     width,

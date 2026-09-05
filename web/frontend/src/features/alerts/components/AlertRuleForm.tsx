@@ -146,10 +146,10 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
         <form id="alert-rule-form" onSubmit={handleSubmit}>
             <div className="max-w-350 mx-auto grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
                 <div className="space-y-4 min-w-0">
-                    <FormStep n={1} title="시스템 규칙" subtitle="이 규칙은 시스템에 의해 관리됩니다. 메시지와 알림 채널만 수정할 수 있습니다.">
+                    <FormStep n={1} title="시스템 규칙" subtitle="시스템이 관리하는 규칙입니다. 메시지와 알림 채널만 수정할 수 있습니다.">
                         <div className="p-4 bg-ui-hover-soft/50 rounded-xl">
                             <h3 className="text-base font-bold text-text-base mb-1">{rule.name}</h3>
-                            <p className="text-sm text-slate-500">이 규칙은 시스템에 의해 관리됩니다. 메시지와 알림 채널만 수정할 수 있습니다.</p>
+                            <p className="text-sm text-slate-500">시스템이 관리하는 규칙입니다. 메시지와 알림 채널만 수정할 수 있습니다.</p>
                         </div>
                     </FormStep>
 
@@ -189,7 +189,7 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
                             <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-ui-hover-soft/50">
                                 <MaterialIcon name="lock" className="text-base text-slate-400" />
                                 <div>
-                                    <p className="text-sm font-bold text-text-base uppercase tracking-widest">
+                                    <p className="text-sm font-semibold text-text-base uppercase tracking-widest">
                                         시스템 규칙
                                     </p>
                                     <p className="text-sm text-text-muted mt-0.5">
@@ -199,11 +199,11 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
                             </div>
                             <div className="p-5 space-y-4">
                                 <div className="rounded-xl bg-ui-hover-soft/50 p-3">
-                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">규칙 이름</p>
+                                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">규칙 이름</p>
                                     <p className="mt-1 truncate text-sm font-bold text-text-base">{rule.name}</p>
                                 </div>
                                 <div className="rounded-xl bg-ui-hover-soft/50 p-3">
-                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">알림 채널</p>
+                                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">알림 채널</p>
                                     <p className="mt-1 text-sm font-bold text-text-base">
                                         {selectedChannels.length === 0
                                             ? `전체 ${effectiveChannelCount}개`
@@ -211,7 +211,7 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
                                     </p>
                                 </div>
                                 <div className="rounded-xl bg-ui-hover-soft/50 p-3">
-                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">알림 메시지</p>
+                                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">알림 메시지</p>
                                     <p className="mt-2 text-sm leading-relaxed text-text-secondary">
                                         {message || 'Server has been started'}
                                     </p>
@@ -785,7 +785,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                             <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-ui-hover-soft/50">
                                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                                 <div>
-                                    <p className="text-sm font-bold text-text-base uppercase tracking-widest">라이브 미리보기</p>
+                                    <p className="text-sm font-semibold text-text-base uppercase tracking-widest">라이브 미리보기</p>
                                     <p className="text-sm text-text-muted mt-0.5">입력값 변경 시 자동 갱신</p>
                                 </div>
                             </div>
@@ -793,7 +793,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
 
                                 {/* IF block */}
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">조건</p>
+                                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">조건</p>
                                     <div className="bg-slate-900 dark:bg-slate-950 rounded-lg px-4 py-3 font-mono text-xs leading-7">
                                         <div>
                                             <span className="text-sky-300">IF </span>
@@ -834,7 +834,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
 
                                 {/* THEN block */}
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">메시지</p>
+                                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">메시지</p>
                                     <div className={`rounded-xl px-3 py-3 ${severityClasses.bg}`}>
                                         <div className="flex items-center gap-2 mb-1.5">
                                             <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide ${severityClasses.badge}`}>
@@ -851,7 +851,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
 
                                 {/* Channels */}
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
+                                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">
                                         {watchedChannelIds.length === 0
                                             ? `발송 → 전체 ${channels.length}개 채널`
                                             : `발송 → ${watchedChannelIds.length}개 선택`}

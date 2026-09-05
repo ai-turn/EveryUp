@@ -23,7 +23,7 @@ export function PendingServiceCard({ agent, onDelete, onViewKey, onInstall }: Pr
           <h3 className="truncate text-base font-bold leading-tight text-text-base">{agent.name}</h3>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <span className="rounded border border-status-idle/20 bg-status-idle/10 px-1.5 py-0.5 text-2xs font-bold text-status-idle">
+          <span className="rounded border border-status-idle/20 bg-status-idle/10 px-1.5 py-0.5 text-xs font-bold text-status-idle">
             설치 대기
           </span>
           <details className="relative">

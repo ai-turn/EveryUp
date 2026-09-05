@@ -444,7 +444,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                             <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-ui-hover-soft/50">
                                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                                 <div>
-                                    <p className="text-sm font-bold text-text-base uppercase tracking-widest">채널 미리보기</p>
+                                    <p className="text-sm font-semibold text-text-base uppercase tracking-widest">채널 미리보기</p>
                                     <p className="text-sm text-text-muted mt-0.5">실제 전송 메시지 형식</p>
                                 </div>
                             </div>
@@ -493,7 +493,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
 
                                 {/* Actual message preview */}
                                 <div>
-                                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">테스트 메시지 미리보기</p>
+                                    <p className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-2">테스트 메시지 미리보기</p>
                                     <PreviewComponent name={watchedName} />
                                 </div>
                             </div>
@@ -504,7 +504,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                             <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-ui-hover-soft/50">
                                 <MaterialIcon name="send" className="text-base text-slate-400" />
                                 <div>
-                                    <p className="text-sm font-bold text-text-base uppercase tracking-widest">테스트 전송</p>
+                                    <p className="text-sm font-semibold text-text-base uppercase tracking-widest">테스트 전송</p>
                                     <p className="text-sm text-text-muted mt-0.5">실제 채널로 테스트 메시지 발송</p>
                                 </div>
                             </div>

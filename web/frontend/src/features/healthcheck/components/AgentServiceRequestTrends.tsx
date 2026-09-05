@@ -147,7 +147,7 @@ function ServiceRequestTrends({
                 <div key={c.label} className={c.bar} style={{ width: `${(c.count / total) * 100}%` }} />
               ))}
             </div>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-2xs">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs">
               {classes.map((c) => (
                 <span key={c.label} className={`font-mono font-semibold ${c.text}`}>
                   {c.label} {((c.count / total) * 100).toFixed(1)}%

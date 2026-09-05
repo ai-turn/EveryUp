@@ -1,5 +1,24 @@
-/* Pretendard Variable — self-hosted, CSP-safe */
-@import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
+/* Spoqa Han Sans Neo — self-hosted, CSP-safe. 가변폰트가 아니라 정적 굵기 5종(100/300/400/500/700).
+   패키지 CSS를 통째로 import하면 안 쓰는 Thin·Light까지 번들에 실려 328KB가 죽는다.
+   굵기 3단(400/500/700, §9)에 해당하는 셋만 싣는다 — 굵기를 늘리면 여기에 @font-face를 더할 것. */
+@font-face {
+  font-family: 'Spoqa Han Sans Neo';
+  font-weight: 400;
+  font-display: swap;
+  src: url('spoqa-han-sans/Subset/SpoqaHanSansNeo/SpoqaHanSansNeo-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Spoqa Han Sans Neo';
+  font-weight: 500;
+  font-display: swap;
+  src: url('spoqa-han-sans/Subset/SpoqaHanSansNeo/SpoqaHanSansNeo-Medium.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Spoqa Han Sans Neo';
+  font-weight: 700;
+  font-display: swap;
+  src: url('spoqa-han-sans/Subset/SpoqaHanSansNeo/SpoqaHanSansNeo-Bold.woff2') format('woff2');
+}
 /* JetBrains Mono Variable — 숫자·코드 전용, self-hosted, CSP-safe. unicode-range로 latin subset만 로드 */
 @import '@fontsource-variable/jetbrains-mono';
 
@@ -75,12 +94,17 @@
      bg-bg-surface로 통합했다. 쓰이지 않던 chart-surface/chart-hover/text-chart-dim도 함께 제거. */
   --color-chart-border: #e2e8f0;
 
-  /* 7. Font sizes: xs(12px) 미만 초소형 등급. 배지/메타/타임라인 라벨 전용 */
-  --text-2xs: 0.6875rem;            /* 11px — text-2xs 유틸리티 생성 */
-  --text-2xs--line-height: 1rem;    /* 16px */
-
   /* 8. Mono: 숫자·코드·타임스탬프 전용. font-mono 유틸리티 전체에 자동 반영 */
   --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* 9. 굵기 3단 — 400 / 500 / 700. Atlassian의 Regular·Medium·Bold와 같은 구성이고,
+     Carbon도 3단(Light·Regular·SemiBold)을 쓴다. 밀집 UI는 크기 대역이 12~24px로 좁아
+     크기 혼자 위계를 못 만든다 — 두 축을 함께 쓰는 게 레퍼런스의 공통 결론이다.
+     Spoqa Han Sans Neo에 600이 없어 semibold를 500(Atlassian의 Medium 역할)으로 내렸다.
+     유틸리티는 4개인데 쓸 수 있는 굵기가 3개라 한 쌍은 겹친다 — medium을 normal과 겹치게 뒀다.
+     300(Light)은 쓰지 않는다: dpr=1 14px에서 불투명 픽셀 0.2%로 획이 사라진다. */
+  --font-weight-semibold: 500;
+  --font-weight-medium: 400;
 }
 
 /* Variable Scoping: 다크모드 대응을 위한 변수 재할당
@@ -135,7 +159,7 @@ body {
   margin: 0;
   background-color: var(--app-bg);
   color: var(--app-text);
-  font-family: 'Pretendard Variable', system-ui, sans-serif;
+  font-family: 'Spoqa Han Sans Neo', system-ui, sans-serif;
   font-weight: 400;
   transition: background-color 0.3s ease, color 0.3s ease;
   -webkit-font-smoothing: auto;
@@ -143,8 +167,8 @@ body {
   /* text-rendering / font-optical-sizing 둘 다 제거 — 기본값 auto가 정답.
      optimizeSpeed는 Chrome 148 실측에서 커닝에 영향이 없었다(auto·optimizeSpeed·
      optimizeLegibility 렌더 폭 동일, font-kerning:none 대조군은 +6.9%). 옛 WebKit
-     동작이라 지금은 무의미하다. font-optical-sizing은 Pretendard가 wght 단일 축이라
-     opsz가 없어 처음부터 무효였다. 되살릴 이유 없음. */
+     동작이라 지금은 무의미하다. font-optical-sizing은 Spoqa Han Sans Neo가 정적 폰트라
+     opsz 축 자체가 없어 무효다. 되살릴 이유 없음. */
 }
 
 /* Global Focus Ring: 사용자 경험(UX) 개선 */

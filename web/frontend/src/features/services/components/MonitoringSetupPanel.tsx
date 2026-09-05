@@ -128,15 +128,15 @@ function SetupStep({
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-1.5">
             <h3 className="text-xs font-bold text-text-base">{title}</h3>
-            <span className={`shrink-0 rounded px-1.5 py-0.5 text-2xs font-bold ${appearance.badge}`}>
+            <span className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-bold ${appearance.badge}`}>
               {stateLabel}
             </span>
           </div>
-          <p className="mt-1 text-2xs leading-relaxed text-text-muted">{description}</p>
+          <p className="mt-1 text-xs leading-relaxed text-text-muted">{description}</p>
         </div>
       </div>
       {detail && (
-        <p className={`mt-2 rounded-md px-2 py-1.5 text-2xs ${state === 'issue' ? 'bg-status-warn/5 text-status-warn' : 'bg-ui-hover-soft text-text-dim'}`}>
+        <p className={`mt-2 rounded-md px-2 py-1.5 text-xs ${state === 'issue' ? 'bg-status-warn/5 text-status-warn' : 'bg-ui-hover-soft text-text-dim'}`}>
           {detail}
         </p>
       )}
@@ -216,7 +216,7 @@ export function MonitoringSetupPanel({ agent, services, onInstall, onInstrument,
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold text-text-base">모니터링 설정 가이드</h2>
-            <span className={`rounded-full px-2 py-0.5 text-2xs font-bold ${requiredComplete ? 'bg-status-healthy/10 text-status-healthy' : 'bg-primary/10 text-primary'}`}>
+            <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${requiredComplete ? 'bg-status-healthy/10 text-status-healthy' : 'bg-primary/10 text-primary'}`}>
               필수 {requiredReady}/{requiredTotal}
             </span>
           </div>
@@ -225,13 +225,13 @@ export function MonitoringSetupPanel({ agent, services, onInstall, onInstrument,
               ? '기본 모니터링 설정이 완료됐습니다. 필요할 때 상세 계측을 추가하세요.'
               : '위에서 아래 순서로 확인하면 별도 앱 수정 없이 기본 모니터링을 시작할 수 있습니다.'}
           </p>
-          <p className="mt-2 text-2xs text-text-dim">
+          <p className="mt-2 text-xs text-text-dim">
             수집 프로필: {profileLabels[profile?.kind ?? 'all-in-one']} · 사용 {enabledCapabilityLabels.join(', ')}
             {unavailableCapabilityLabels.length > 0 && ` · 미선택 ${unavailableCapabilityLabels.join(', ')}`}
           </p>
         </div>
         {report && (
-          <div className="text-right text-2xs text-text-dim">
+          <div className="text-right text-xs text-text-dim">
             <p>{host || '호스트 정보 확인 중'} · {report.host.btf ? 'BTF 있음' : 'BTF 없음'}</p>
             <p className="mt-0.5">
               {new Date(report.checkedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })} 확인

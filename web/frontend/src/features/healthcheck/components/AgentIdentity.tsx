@@ -60,7 +60,7 @@ export function AgentIdentity({ service, showName = true }: { service: AgentServ
               )}
               <span className={`relative inline-flex rounded-full h-2 w-2 ${cfg.dot}`} />
             </span>
-            <span className={`${cfg.text} text-sm font-bold uppercase tracking-wider`}>
+            <span className={`${cfg.text} text-sm font-semibold uppercase tracking-wider`}>
               {cfg.label}
             </span>
           </div>

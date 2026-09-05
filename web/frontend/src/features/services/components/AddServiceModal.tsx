@@ -42,14 +42,14 @@ function SetupProgress({ step, connected, diagnosed }: { step: Step; connected: 
       <div className="grid grid-cols-4 gap-1">
         {steps.map((item, index) => (
           <div key={item.label} className="flex min-w-0 items-center gap-1.5">
-            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-2xs font-bold ${
+            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
               item.complete
                 ? 'bg-emerald-500 text-white'
                 : item.active ? 'bg-primary text-white' : 'bg-ui-hover text-text-dim'
             }`}>
               {item.complete ? <MaterialIcon name="check" className="text-xs" /> : index + 1}
             </span>
-            <span className={`truncate text-2xs font-semibold ${item.active ? 'text-primary' : item.complete ? 'text-text-secondary' : 'text-text-dim'}`}>
+            <span className={`truncate text-xs font-semibold ${item.active ? 'text-primary' : item.complete ? 'text-text-secondary' : 'text-text-dim'}`}>
               {item.label}
             </span>
             {index < steps.length - 1 && <span className="hidden h-px flex-1 bg-ui-border sm:block" />}
@@ -308,7 +308,7 @@ function AgentInstallCommand({
             <div key={title} className="rounded-lg bg-ui-hover-soft p-2.5">
               <MaterialIcon name={icon} className="text-base text-primary" />
               <p className="mt-1 font-semibold text-text-secondary">{title}</p>
-              <p className="mt-0.5 text-2xs leading-relaxed text-text-dim">{description}</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-text-dim">{description}</p>
             </div>
           ))}
         </div>

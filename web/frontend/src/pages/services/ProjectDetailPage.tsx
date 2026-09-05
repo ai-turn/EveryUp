@@ -60,7 +60,7 @@ function KpiCard({ label, value, unit, sub, tone }: {
         {value}
         {unit && <span className="text-xs font-medium text-text-dim ml-0.5">{unit}</span>}
       </div>
-      {sub && <div className="text-2xs text-text-dim mt-0.5">{sub}</div>}
+      {sub && <div className="text-xs text-text-dim mt-0.5">{sub}</div>}
     </div>
   );
 }
@@ -114,7 +114,7 @@ function ServiceCard({ service, metric, onOpen }: {
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {!service.healthy && (
-            <span className="text-2xs font-bold text-status-error bg-status-error/10 px-1.5 py-0.5 rounded">장애</span>
+            <span className="text-xs font-bold text-status-error bg-status-error/10 px-1.5 py-0.5 rounded">장애</span>
           )}
           <MaterialIcon name="chevron_right" className="text-base text-text-dim group-hover:text-primary transition-colors" />
         </div>
@@ -122,18 +122,18 @@ function ServiceCard({ service, metric, onOpen }: {
 
       <div className="grid grid-cols-3 gap-3 text-sm">
         <div className="min-w-0">
-          <div className="text-2xs text-text-dim">응답시간</div>
+          <div className="text-xs text-text-dim">응답시간</div>
           <div className="font-mono font-semibold text-text-base truncate">{service.lastLatency ?? '—'}</div>
         </div>
         <div className="min-w-0">
-          <div className="text-2xs text-text-dim">상태</div>
+          <div className="text-xs text-text-dim">상태</div>
           <div className={`font-mono font-semibold ${service.healthy ? 'text-status-healthy' : 'text-status-error'}`}>
             {service.lastStatus ?? '—'}
           </div>
         </div>
         {metric && (
           <div className="min-w-0">
-            <div className="text-2xs text-text-dim truncate" title={metric.metricName}>
+            <div className="text-xs text-text-dim truncate" title={metric.metricName}>
               {metricLabel(metric.metricName)}
             </div>
             <div className="font-mono font-semibold text-text-base truncate">
@@ -435,11 +435,11 @@ export function ProjectDetailPage() {
                       <span className={`h-1.5 w-1.5 rounded-full mt-1.5 shrink-0 ${inc.active ? 'bg-status-error' : 'bg-status-healthy'}`} />
                       <span className="min-w-0 flex-1">
                         <span className="block text-xs font-semibold text-text-base truncate">{inc.serviceName}</span>
-                        <span className="block text-2xs text-text-dim mt-0.5">
+                        <span className="block text-xs text-text-dim mt-0.5">
                           {formatIncidentTime(inc.startedAt)} {'시작'} · {formatDuration(inc.durationSec)}
                         </span>
                       </span>
-                      <span className={`text-2xs font-bold shrink-0 ${inc.active ? 'text-status-error' : 'text-status-healthy'}`}>
+                      <span className={`text-xs font-bold shrink-0 ${inc.active ? 'text-status-error' : 'text-status-healthy'}`}>
                         {inc.active ? '진행중' : '해소'}
                       </span>
                     </button>
@@ -457,7 +457,7 @@ export function ProjectDetailPage() {
                 <div className="space-y-0.5">
                   {events.map((e) => (
                     <div key={e.id} className="flex items-baseline gap-2.5 py-1.5 border-b border-ui-border-soft/50 last:border-0">
-                      <span className="text-2xs font-mono text-text-dim w-10 shrink-0">
+                      <span className="text-xs font-mono text-text-dim w-10 shrink-0">
                         {new Date(e.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                       <span className={`h-1.5 w-1.5 rounded-full shrink-0 translate-y-px ${

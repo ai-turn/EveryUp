@@ -48,11 +48,11 @@ function VitalGaugeCard({ gauge }: { gauge: GaugeData }) {
     <article className="rounded-xl border border-ui-border bg-bg-surface p-4 shadow-sm">
       {/* 상단: 레이블 + 추세 배지 */}
       <div className="flex items-center justify-between gap-2">
-        <p className="truncate text-2xs font-bold uppercase tracking-wider text-text-muted">
+        <p className="truncate text-xs font-semibold uppercase tracking-wider text-text-muted">
           {gauge.label}
         </p>
         {gauge.trend && (
-          <span className={`inline-flex shrink-0 items-center gap-0.5 rounded text-2xs font-bold px-1.5 py-0.5 ${trend.soft} ${trend.text}`}>
+          <span className={`inline-flex shrink-0 items-center gap-0.5 rounded text-xs font-bold px-1.5 py-0.5 ${trend.soft} ${trend.text}`}>
             <MaterialIcon name={trend.icon} className="text-sm" />
             {gauge.trend}
           </span>
@@ -65,7 +65,7 @@ function VitalGaugeCard({ gauge }: { gauge: GaugeData }) {
           {displayValue}
         </span>
         <span className="text-sm font-bold text-text-dim">{displayUnit}</span>
-        <span className={`ml-auto shrink-0 rounded-full px-2 py-0.5 text-2xs font-bold ${tone.soft} ${tone.text}`}>
+        <span className={`ml-auto shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ${tone.soft} ${tone.text}`}>
           {LOAD_STATE_LABELS[getGaugeState(pct)]}
         </span>
       </div>
@@ -76,7 +76,7 @@ function VitalGaugeCard({ gauge }: { gauge: GaugeData }) {
       </div>
 
       {/* 부가 설명 */}
-      <p className="truncate text-2xs text-text-dim">{gauge.subtitle}</p>
+      <p className="truncate text-xs text-text-dim">{gauge.subtitle}</p>
     </article>
   );
 }

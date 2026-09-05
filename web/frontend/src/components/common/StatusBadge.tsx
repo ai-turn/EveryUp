@@ -13,7 +13,7 @@ export function StatusBadge({ healthy }: { healthy: boolean }) {
 
   return (
     <span
-      className={`text-2xs font-bold px-1.5 py-0.5 rounded border ${
+      className={`text-xs font-bold px-1.5 py-0.5 rounded border ${
         healthy
           ? 'text-status-healthy bg-status-healthy/10 border-status-healthy/20'
           : 'text-status-error bg-status-error/10 border-status-error/20'

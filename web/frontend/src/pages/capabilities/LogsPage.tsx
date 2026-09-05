@@ -172,7 +172,7 @@ export function LogsPage() {
                     ? `마지막 수집: ${new Date(service.lastSeenAt).toLocaleString()}`
                     : '아직 수집된 로그가 없습니다'}
                 </p>
-                <p className="mt-1 truncate font-mono text-2xs text-text-dim">{service.apiKeyMasked || '—'}</p>
+                <p className="mt-1 truncate font-mono text-xs text-text-dim">{service.apiKeyMasked || '—'}</p>
               </Link>
             ))}
           </div>
@@ -244,7 +244,7 @@ export function LogsPage() {
                     return (
                       <tr key={log.id} className="hover:bg-ui-hover-soft">
                         <td className="whitespace-nowrap px-4 py-3 align-top font-mono text-xs text-text-dim">{formatTime(log.createdAt)}</td>
-                        <td className="px-4 py-3 align-top"><span className={`inline-flex rounded px-1.5 py-0.5 text-2xs font-bold ${LEVEL_STYLE[log.level] ?? LEVEL_STYLE.info}`}>{log.level.toUpperCase()}</span></td>
+                        <td className="px-4 py-3 align-top"><span className={`inline-flex rounded px-1.5 py-0.5 text-xs font-bold ${LEVEL_STYLE[log.level] ?? LEVEL_STYLE.info}`}>{log.level.toUpperCase()}</span></td>
                         <td className="whitespace-nowrap px-4 py-3 align-top">
                           <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-text-secondary">
                             <MaterialIcon

@@ -337,7 +337,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
 
           {isEmpty && (
             <div className="text-center py-10 text-sm text-text-muted">
-              이 트레이스에 대한 span·로그·API 요청이 없습니다.
+              이 트레이스에 연결된 span·로그·API 요청이 없습니다.
             </div>
           )}
 
@@ -477,7 +477,7 @@ function HeaderRows({ label, headers }: { label: string; headers: HeaderEntry[] 
   if (headers.length === 0) return null;
   return (
     <div>
-      <p className="mb-1 text-xs font-bold uppercase tracking-wider text-text-dim">{label}</p>
+      <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-text-dim">{label}</p>
       <dl className="space-y-0.5">
         {headers.map((h) => (
           <div key={h.name} className="flex gap-2 font-mono text-xs">

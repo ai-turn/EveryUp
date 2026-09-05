@@ -474,7 +474,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                             <MaterialIcon name="lock" className="shrink-0 text-sm text-slate-400" />
                           )}
                         </div>
-                        <p className="truncate text-2xs text-text-dim">
+                        <p className="truncate text-xs text-text-dim">
                           {rule.isSystem
                             ? '시스템 기본 규칙 · 삭제 불가, 채널만 변경 가능'
                             : categoryLabel(cat)}
@@ -618,7 +618,7 @@ function ChannelAvatars({ rule, channels }: { rule: AlertRule; channels: Notific
         );
       })}
       {overflow > 0 && (
-        <span className="-ml-1.5 flex h-6 w-6 items-center justify-center rounded-md bg-slate-100 text-2xs font-bold text-slate-500 ring-2 ring-white dark:bg-ui-hover-dark dark:text-text-muted-dark dark:ring-bg-surface-dark">
+        <span className="-ml-1.5 flex h-6 w-6 items-center justify-center rounded-md bg-slate-100 text-xs font-bold text-slate-500 ring-2 ring-white dark:bg-ui-hover-dark dark:text-text-muted-dark dark:ring-bg-surface-dark">
           +{overflow}
         </span>
       )}

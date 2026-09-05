@@ -20,13 +20,13 @@
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@hookform/resolvers": "^5.2.2",
     "date-fns": "^4.1.0",
-    "pretendard": "^1.3.9",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.71.1",
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.13.0",
     "recharts": "^3.7.0",
+    "spoqa-han-sans": "^3.3.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

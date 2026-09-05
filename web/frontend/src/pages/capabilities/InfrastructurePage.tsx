@@ -36,7 +36,7 @@ function ResourceCard({ resource }: { resource: InfrastructureResource }) {
         <div className="mt-5 grid grid-cols-3 gap-3">
           {values.map(([label, value]) => (
             <div key={label}>
-              <p className="text-2xs text-text-dim">{label}</p>
+              <p className="text-xs text-text-dim">{label}</p>
               <p className="font-mono text-base font-bold text-text-base">{value == null ? '—' : `${value.toFixed(1)}%`}</p>
             </div>
           ))}

@@ -27,7 +27,7 @@ export function ChartStatsLegend({
   if (rows.length === 0) return null;
 
   return (
-    <table className="w-full text-2xs font-mono tabular-nums">
+    <table className="w-full text-xs font-mono tabular-nums">
       <thead>
         <tr className="text-text-dim">
           <th className="py-0.5 text-left font-semibold" />

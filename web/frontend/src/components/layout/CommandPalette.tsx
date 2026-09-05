@@ -156,7 +156,7 @@ export function CommandPalette() {
             placeholder="Docker 환경, 서비스, 페이지 검색..."
             className="flex-1 bg-transparent py-3.5 text-sm text-text-base outline-none placeholder:text-text-dim"
           />
-          <kbd className="shrink-0 px-1.5 py-0.5 rounded border border-ui-border text-2xs font-semibold text-text-dim">
+          <kbd className="shrink-0 px-1.5 py-0.5 rounded border border-ui-border text-xs font-semibold text-text-dim">
             Esc
           </kbd>
         </div>
@@ -191,7 +191,7 @@ export function CommandPalette() {
                 )}
                 <span className="text-sm font-medium truncate">{item.label}</span>
                 {item.meta && (
-                  <span className="ml-auto text-2xs text-text-dim shrink-0">{item.meta}</span>
+                  <span className="ml-auto text-xs text-text-dim shrink-0">{item.meta}</span>
                 )}
               </button>
             ))
@@ -199,7 +199,7 @@ export function CommandPalette() {
         </div>
 
         {/* Footer hint */}
-        <div className="flex items-center gap-3 px-4 py-2 border-t border-ui-border text-2xs text-text-dim">
+        <div className="flex items-center gap-3 px-4 py-2 border-t border-ui-border text-xs text-text-dim">
           <span>↑↓ 이동</span>
           <span>Enter 열기</span>
           {dataStatus === 'loading' && <span className="ml-auto" role="status">대상 불러오는 중</span>}

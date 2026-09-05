@@ -106,7 +106,7 @@ export function OverviewPage() {
     ...unhealthyServices.map((service) => ({
       id: `service-${service.agentId}-${service.key}`,
       title: service.name,
-      detail: '서비스 건강 상태가 장애입니다',
+      detail: '장애가 발생했습니다',
       to: `/services/${service.agentId}/${encodeURIComponent(service.key)}?tab=uptime`,
       tone: 'error' as const,
       icon: 'error_outline',
@@ -187,7 +187,7 @@ export function OverviewPage() {
         <>
           <section aria-label="수집 상태 요약" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <SummaryCard icon="sensors" label="Docker 수집기" value={agents.length} detail={reportingAgents.length === agents.length ? '모두 데이터 유입 중' : `${staleAgents.length}개 연결 확인 필요`} tone={reportingAgents.length === agents.length ? 'healthy' : 'warn'} />
-            <SummaryCard icon="dns" label="서비스" value={services.length + monitors.length + observedServices.length} detail={unhealthyServices.length + unhealthyMonitors.length === 0 ? '현재 건강 상태 이상 없음' : `${unhealthyServices.length + unhealthyMonitors.length}개 장애 신호`} tone={unhealthyServices.length + unhealthyMonitors.length === 0 ? 'healthy' : 'error'} />
+            <SummaryCard icon="dns" label="서비스" value={services.length + monitors.length + observedServices.length} detail={unhealthyServices.length + unhealthyMonitors.length === 0 ? '장애 신호 없음' : `${unhealthyServices.length + unhealthyMonitors.length}개 장애 신호`} tone={unhealthyServices.length + unhealthyMonitors.length === 0 ? 'healthy' : 'error'} />
             <SummaryCard icon="account_tree" label="Projects" value={projects.length} detail={projects.length > 0 ? '대상을 운영 단위로 묶고 있습니다' : '필요할 때 대상들을 묶어 보세요'} tone={projects.length > 0 ? 'healthy' : 'idle'} />
             <SummaryCard icon="sensors_off" label="수집 확인 필요" value={connectionIssues} detail={connectionIssues === 0 ? '모든 연결이 최신 상태입니다' : '지연 또는 미확인 대상을 확인하세요'} tone={connectionIssues === 0 ? 'healthy' : 'warn'} />
           </section>
@@ -197,7 +197,7 @@ export function OverviewPage() {
               <div className="flex items-center justify-between gap-3 border-b border-ui-border px-4 py-3.5">
                 <div>
                   <h2 className="text-base font-bold text-text-base">현재 확인 필요</h2>
-                  <p className="mt-0.5 text-sm text-text-muted">서비스 건강과 수집 상태를 분리해 보여줍니다.</p>
+                  <p className="mt-0.5 text-sm text-text-muted">서비스 상태와 수집 상태를 분리해 보여줍니다.</p>
                 </div>
                 <span className="font-mono text-sm font-bold tabular-nums text-text-muted">{attention.length}</span>
               </div>
@@ -205,7 +205,7 @@ export function OverviewPage() {
                 <div className="flex min-h-44 flex-col items-center justify-center p-5 text-center">
                   <MaterialIcon name="check_circle" className="text-3xl text-status-healthy" />
                   <p className="mt-3 text-sm font-semibold text-text-base">현재 확인이 필요한 이상이 없습니다</p>
-                  <p className="mt-1 text-xs text-text-muted">수집 연결과 서비스 건강 상태가 최신입니다.</p>
+                  <p className="mt-1 text-xs text-text-muted">수집 연결과 서비스 상태 모두 정상입니다.</p>
                 </div>
               ) : (
                 <ul className="divide-y divide-ui-border-soft">

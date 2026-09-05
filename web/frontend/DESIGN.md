@@ -122,7 +122,8 @@ primary #3b76c9 → emerald #059669 → amber #d97706 → violet #7c3aed → red
 
 ### 2.1 폰트
 
-- **본문** Pretendard Variable (self-hosted, dynamic-subset)
+- **본문** Spoqa Han Sans Neo (self-hosted, `spoqa-han-sans` 패키지)
+- **정적 폰트다.** 굵기는 100/300/400/500/700 다섯 개뿐이고 가변 축이 없다 — 중간 굵기를 만들 수 없다
 - **숫자·코드·타임스탬프** JetBrains Mono Variable → `font-mono`
 - 숫자가 자리 이동하면 안 되는 곳(KPI, 차트 범례, 테이블)은 `tabular-nums`를 함께 건다
 
@@ -130,8 +131,7 @@ primary #3b76c9 → emerald #059669 → amber #d97706 → violet #7c3aed → red
 
 | 토큰 | px | 용도 | 실사용 |
 |------|-----|------|--------|
-| `text-2xs` | 11 | 배지, 메타, 타임라인 라벨, 차트 범례 | 51 |
-| `text-xs` | 12 | 레이블, 칩, 테이블 헤더, 보조 액션 | 267 |
+| `text-xs` | 12 | **하한 등급** — 배지, 칩, 레이블, 테이블 헤더, 차트 눈금, 보조 액션 | 320 |
 | `text-sm` | 14 | **기본 UI 텍스트** — 본문, 버튼, 폼, 카드·섹션 부제 | 346 |
 | `text-base` | 16 | 카드 제목(h3), 강조 본문 | 57 |
 | `text-lg` | 18 | 서브타이틀 | 28 |
@@ -139,7 +139,7 @@ primary #3b76c9 → emerald #059669 → amber #d97706 → violet #7c3aed → red
 | `text-2xl` | 24 | **페이지 h1** | 14 |
 | `text-3xl`+ | 30+ | KPI 수치, 아이콘 크기 | 19 |
 
-`text-2xs`는 Tailwind 기본이 아니라 `index.css @theme`에서 추가한 커스텀 등급이다.
+**12px가 하한이다.** 11px(`text-2xs`)은 폐지했다 — IBM Carbon(y₀=12px)과 Atlassian(최소 12px) 모두 12px를 바닥으로 두고, 한글 UI 권고도 "11px 이하는 가독성이 급락하므로 최소 12px"로 일치한다. 더 작은 등급을 다시 만들지 말 것.
 
 **12px 이하는 훑는 자리 전용이다.** 라벨·칩·상태·테이블 헤더·타임스탬프·키·endpoint처럼 눈이 스쳐 지나가는 값. **문장으로 읽는 산문은 `text-sm`(14px)부터**다 — 한글은 라틴보다 획이 밀집해 같은 px에서 더 얇게 읽히고, 산문은 눈이 오래 머물러 12px에서 흐려진다. `/logs`의 12px 134곳은 전부 데이터·라벨이라 정당하고, 문제가 되는 건 산문이 12px로 내려온 자리다.
 
@@ -166,9 +166,22 @@ primary #3b76c9 → emerald #059669 → amber #d97706 → violet #7c3aed → red
 
 **예외** — `NotFoundPage`의 `text-6xl`은 "404" 디스플레이 숫자, `Header`의 `text-lg`는 페이지 제목이 아니라 로고, `EmptyState`의 `text-xl`은 빈 상태 안내다.
 
-### 2.4 굵기
+### 2.4 굵기 — 3단 (400 / 500 / 700)
 
-`font-bold`(제목·배지·수치) / `font-semibold`(버튼·테이블 헤더·강조 레이블) / `font-medium`(내비 항목·설정/KPI 캡션·필터 셀렉트 등 보조 레이블 — §6) / 기본(본문). 이 4단을 넘기지 않는다.
+| 유틸리티 | 실제 굵기 | 자리 |
+|---|---|---|
+| `font-bold` | **700** | 제목(h1·h2·h3), 배지, KPI 수치 |
+| `font-semibold` | **500** | 버튼, 테이블 `<th>`, **uppercase 라벨**, 강조 레이블 |
+| `font-medium` | 400 | 보조 레이블 (§6) — 현재 기본과 같은 굵기 |
+| 기본 | 400 | 본문 |
+
+**크기와 굵기를 함께 쓴다.** 밀집 UI는 크기 대역이 12~24px로 좁아 크기 혼자 위계를 만들지 못한다. 레퍼런스 두 곳이 같은 결론이다 — [Atlassian](https://atlassian.design/foundations/typography)은 Heading을 12px까지 전부 Bold로 두고 `Heading xsmall`(14px Bold)과 `Body`(14px Regular)를 **같은 크기에서 굵기로** 가른다. [Carbon](https://v10.carbondesignsystem.com/guidelines/typography/overview/)도 3단(Light·Regular·SemiBold)을 쓰며 "같은 크기면 굵은 쪽이 강조가 세고, 크고 가벼운 글자가 작고 굵은 글자보다 위계가 높을 수 있다"고 적는다. 즉 `text-sm font-bold` 제목과 `text-sm` 본문이 공존하는 건 부채가 아니라 정석이다.
+
+**`uppercase tracking-*` 라벨은 `font-semibold`다.** `<th>` 스펙(§2.3)이 이미 semibold인데 폼·패널의 같은 꼴 라벨 19곳이 bold를 쓰고 있었다. 대문자 + 자간 확장이 이미 강조를 만들므로 굵기까지 올리지 않는다.
+
+**Spoqa Han Sans Neo에 600이 없다.** 매핑을 두지 않으면 CSS 폰트 매칭이 `font-semibold`(600)를 700으로 올려 bold와 똑같아진다. `index.css @theme`에서 500(Atlassian의 Medium 역할)으로 내렸다. 유틸리티는 4개인데 쓸 수 있는 굵기가 셋뿐이라 한 쌍은 겹치는데, `font-medium`을 기본과 겹치게 뒀다 — 보조 레이블은 굵기가 아니라 색(§1.3)으로 가른다.
+
+**300(Light)은 쓰지 않는다.** dpr=1 14px에서 불투명 픽셀이 0.2%까지 떨어져 획이 사라진다(실측). 새 굵기 유틸리티도 쓰지 말 것 — 폰트에 없어 브라우저가 가짜 볼드를 합성한다.
 
 ---
 
@@ -227,7 +240,7 @@ bg-bg-surface border border-ui-border rounded-xl
 | **`Select`** | 네이티브 `option` children + 기존 select props | 앱 스타일 listbox (§6) |
 | **`SearchInput`** | `wrapperClassName?` | 아이콘 붙은 검색창 (§6) |
 | **`StatusBadge`** | `healthy: boolean` | 정상/장애 보더칩 (§5.1) |
-| **`CollectionStatusBadge`** | `collecting` \| `partial` \| `delayed` \| `not-configured` | 수집 신선도·설정 상태. 서비스 건강과 별도 축 (§5.1) |
+| **`CollectionStatusBadge`** | `collecting` \| `partial` \| `delayed` \| `not-configured` | 수집 신선도·설정 상태. 서비스 상태와 별도 축 (§5.1) |
 | **`Toggle`** | `checked` `onChange` `disabled` `title` | w-9 h-5, `role="switch"` |
 | **`SegmentedControl<T>`** | `options` `value` `onChange` `size` `ariaLabel` | 2~4지 배타 선택 |
 | **`TimeRangePicker`** | `value: GlobalTimeRange` `onChange` | `1h`\|`6h`\|`24h`. SegmentedControl 래퍼 |
@@ -292,7 +305,7 @@ const theme = getChartTheme();
 - 1.5px `monotoneX` 라인, 둥근 캡, dot 없음
 - 라인 아래 **평면 10% 채움** — 그라디언트 아님
 - 수평 실선 그리드만 (`vertical: false`, opacity 0.55)
-- semibold 11px 눈금, 축선·틱선 없음
+- medium 12px 눈금, 축선·틱선 없음
 - **애니메이션 없음** (`isAnimationActive: false`)
 - activeDot = r4 + 흰 테두리 2px
 
@@ -320,7 +333,7 @@ const theme = getChartTheme();
 ```
 
 ```
-text-2xs font-bold px-1.5 py-0.5 rounded border
+text-xs font-bold px-1.5 py-0.5 rounded border
 text-status-{role}  bg-status-{role}/10  border-status-{role}/20
 ```
 
@@ -332,7 +345,7 @@ Tailwind v4는 `/10` 같은 투명도 수식자를 `oklab()` `color-mix`로 컴�
 
 ### 5.1a 수집 상태 — `CollectionStatusBadge`
 
-서비스의 **건강**(정상·장애)과 데이터의 **수집 상태**(수집 중·부분 수집·지연·미설정)는 섞지 않는다. 전자는 대상의 동작 결과이고 후자는 관측 가능성이다. 환경·프로젝트 목록과 개요의 범위/연결 정보에는 `CollectionStatusBadge`를 쓴다. 장애 lifecycle이 실제로 없다면 “Incident” 같은 단계명으로 바꾸지 않는다.
+**서비스 상태**(정상·장애)와 **수집 상태**(수집 중·부분 수집·지연·미설정)는 섞지 않는다. 전자는 대상의 동작 결과이고 후자는 관측 가능성이다. 환경·프로젝트 목록과 개요의 범위/연결 정보에는 `CollectionStatusBadge`를 쓴다. 장애 lifecycle이 실제로 없다면 “Incident” 같은 단계명으로 바꾸지 않는다.
 
 ### 5.2 상태 점
 
@@ -490,14 +503,14 @@ text-sm font-medium text-text-secondary cursor-pointer
 
 | 축 | 예 | 토큰 |
 |----|-----|------|
-| **대상의 건강 상태** | 서비스 정상/장애, 체크 결과, HTTP 2xx/4xx/5xx, 게이지 임계, 알림 전송 성공/실패, 진단 ok/issue | **`status-*` ✓** |
+| **대상의 정상/장애 여부** | 서비스 정상/장애, 체크 결과, HTTP 2xx/4xx/5xx, 게이지 임계, 알림 전송 성공/실패, 진단 ok/issue | **`status-*` ✓** |
 | 액션 의미 | `danger` 버튼, 삭제 링크, 복사 완료 피드백 | primitive |
 | 카테고리 분류 | HTTP 메서드, span kind(SERVER/CLIENT), 이벤트 타입 | primitive |
 | 별도 축 | 로그 레벨(§1.5), 알림 severity(critical/warning/info) | primitive |
 | 폼 | 필수 표시 `*`, 검증 경고, 로그인 에러 | primitive |
 | 3rd-party 재현 | `ChannelForm`의 Slack/Discord/Telegram 미리보기 | 리터럴 hex |
 
-새 코드에서 판단이 서지 않으면 **"이 색이 사라지면 사용자가 대상의 건강을 오판하는가?"** 로 가른다. 그렇다면 `status-*`다.
+새 코드에서 판단이 서지 않으면 **"이 색이 사라지면 사용자가 대상의 정상/장애를 오판하는가?"** 로 가른다. 그렇다면 `status-*`다.
 
 ### C. `Field` htmlFor 배선 — 완료 (2026-08-05)
 
@@ -505,9 +518,9 @@ text-sm font-medium text-text-secondary cursor-pointer
 
 버튼 그리드 Field(카테고리·프리셋·심각도)는 `<label>` 대상이 아니다. 그룹 자체에 `role="group"` + `aria-label`을 다는 것이 맞고, 이건 `Field`가 아니라 호출부 마크업 변경이라 별도 판단이 필요하다.
 
-### 배지 크기 — 정리하지 않기로 함
+### ~~배지 크기 — 정리하지 않기로 함~~ → 11px 폐지로 해소
 
-읽기 전용 배지가 `text-2xs`(상태칩·테이블)와 `text-xs`(로그 레벨·span kind) 두 계열이다. 크기 차이가 밀도(테이블 셀 vs 목록 스캔) 때문이라 강제로 맞추면 로그 레벨 배지가 작아지는 손해만 확실하다.
+~~읽기 전용 배지가 `text-2xs`(상태칩·테이블)와 `text-xs`(로그 레벨·span kind) 두 계열이다.~~ **11px 등급을 폐지하면서 배지가 `text-xs` 한 계열로 통일됐다.** 아래는 당시 판단 기록이다. 크기 차이가 밀도(테이블 셀 vs 목록 스캔) 때문이라 강제로 맞추면 로그 레벨 배지가 작아지는 손해만 확실하다.
 
 > 이전에 "같은 severity 배지가 폼과 테이블에서 등급이 다르다"고 적었던 것은 **오진이었다.** 폼 쪽은 배지가 아니라 알림이 어떻게 보일지 보여주는 미리보기 카드(틴트 배경 + 점 + 보더)로, 목적과 형태가 다른 물건이다. 실제 중복이던 `SEVERITY_BADGE` 상수는 `SeverityBadge` 컴포넌트로 통합했다.
 
