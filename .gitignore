@@ -25,6 +25,7 @@ skills-lock.json
 
 # Agent-local workspace: markdown issue tracker and the conventions describing it
 .scratch/
+_workspace/
 docs/agents/
 
 # Environment variables
