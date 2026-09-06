@@ -83,8 +83,8 @@ export function LoginPage() {
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 mb-4">
             <IconHealthCheck size={24} className="text-primary" />
           </div>
-          <div className="text-2xl font-bold text-primary tracking-tight mb-1">EveryUp</div>
-          <h2 className="text-xl font-bold text-text-base">
+          <div className="text-2xl text-primary tracking-tight mb-1">EveryUp</div>
+          <h2 className="text-xl text-text-base">
             {isSetup ? '초기 설정' : '로그인'}
           </h2>
           <p className="text-text-muted text-sm mt-1">

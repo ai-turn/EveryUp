@@ -618,7 +618,7 @@ function ChannelAvatars({ rule, channels }: { rule: AlertRule; channels: Notific
         );
       })}
       {overflow > 0 && (
-        <span className="-ml-1.5 flex h-6 w-6 items-center justify-center rounded-md bg-slate-100 text-xs font-bold text-slate-500 ring-2 ring-white dark:bg-ui-hover-dark dark:text-text-muted-dark dark:ring-bg-surface-dark">
+        <span className="-ml-1.5 flex h-6 w-6 items-center justify-center rounded-md bg-slate-100 text-xs text-slate-500 ring-2 ring-white dark:bg-ui-hover-dark dark:text-text-muted-dark dark:ring-bg-surface-dark">
           +{overflow}
         </span>
       )}

@@ -98,19 +98,19 @@ export function AlertsMobileView({
             <p className="text-sm text-text-muted truncate">
               성공률
             </p>
-            <p className="text-xl font-bold text-text-base">{stats.successRate.toFixed(0)}%</p>
+            <p className="text-xl text-text-base">{stats.successRate.toFixed(0)}%</p>
           </div>
           <div className="bg-bg-surface border border-ui-border rounded-xl p-3">
             <p className="text-sm text-status-healthy truncate">
               발송
             </p>
-            <p className="text-xl font-bold text-status-healthy">{stats.totalSent}</p>
+            <p className="text-xl text-status-healthy">{stats.totalSent}</p>
           </div>
           <div className="bg-bg-surface border border-ui-border rounded-xl p-3">
             <p className="text-sm text-status-error truncate">
               실패
             </p>
-            <p className="text-xl font-bold text-status-error">{stats.totalFailed}</p>
+            <p className="text-xl text-status-error">{stats.totalFailed}</p>
           </div>
         </div>
       )}
@@ -124,7 +124,7 @@ export function AlertsMobileView({
             aria-selected={activeTab === tab.key}
             aria-controls={`alerts-mobile-panel-${tab.key}`}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-bold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm transition-all ${
               activeTab === tab.key
                 ? 'bg-bg-surface text-text-base shadow-sm'
                 : 'text-text-muted'
@@ -176,9 +176,9 @@ export function AlertsMobileView({
                     </div>
                     <div className={`flex-1 min-w-0 ${!channel.isEnabled ? 'opacity-60' : ''}`}>
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-bold text-text-base truncate">{channel.name}</p>
+                        <p className="text-sm text-text-base truncate">{channel.name}</p>
                         {!channel.isEnabled && (
-                          <span className="px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider bg-ui-active text-text-muted rounded-full shrink-0">
+                          <span className="px-1.5 py-0.5 text-xs uppercase tracking-wider bg-ui-active text-text-muted rounded-full shrink-0">
                             비활성
                           </span>
                         )}
@@ -242,12 +242,12 @@ export function AlertsMobileView({
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-9 h-9 rounded-lg ${sev.bg} flex items-center justify-center shrink-0`}>
-                      <span className={`text-xs font-bold ${sev.text}`}>
+                      <span className={`text-xs ${sev.text}`}>
                         {rule.metric?.toUpperCase().slice(0, 3)}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-text-base truncate">{rule.name}</p>
+                      <p className="text-sm text-text-base truncate">{rule.name}</p>
                       <p className="text-sm text-text-muted capitalize">
                         {severityLabel(rule.severity)} · {rule.metric} {rule.operator} {rule.threshold}
                       </p>

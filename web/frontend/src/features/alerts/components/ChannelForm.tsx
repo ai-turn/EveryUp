@@ -102,7 +102,7 @@ function TelegramPreview({ name }: { name: string }) {
             <div className="bg-[#0E1621] px-3 py-3">
                 <div className="bg-[#182533] rounded-lg rounded-tl-none px-3 py-2.5 max-w-[90%] space-y-1 leading-[1.6]">
                     <p>
-                        <span className="text-[#5FBDE3] font-bold">✅ Service Recovered</span>
+                        <span className="text-[#5FBDE3]">✅ Service Recovered</span>
                     </p>
                     <p className="text-slate-300">
                         <span className="text-[#7C91A7]">Service: </span>Notification Test
@@ -133,7 +133,7 @@ function DiscordPreview({ name }: { name: string }) {
                 </div>
                 <div className="flex items-center gap-1.5">
                     <span className="text-white font-semibold">{name || 'EVERYUP'}</span>
-                    <span className="px-1 py-px bg-[#5865F2] text-white text-xs font-bold rounded uppercase">APP</span>
+                    <span className="px-1 py-px bg-[#5865F2] text-white text-xs rounded uppercase">APP</span>
                 </div>
             </div>
             {/* Message area */}
@@ -142,7 +142,7 @@ function DiscordPreview({ name }: { name: string }) {
                 <div className="border-l-4 border-[#3baa7c] bg-[#2b2d31] rounded-r-lg overflow-hidden">
                     <div className="px-3 py-2.5 space-y-2">
                         {/* Embed title */}
-                        <p className="text-[#3baa7c] font-bold">✅ Service healthy: Notification Test</p>
+                        <p className="text-[#3baa7c]">✅ Service healthy: Notification Test</p>
                         {/* Embed description */}
                         <p className="text-[#dbdee1] leading-relaxed">
                             This is a test notification. Your EVERYUP notification channel is connected correctly.
@@ -150,11 +150,11 @@ function DiscordPreview({ name }: { name: string }) {
                         {/* Fields row */}
                         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 pt-1">
                             <div>
-                                <p className="text-[#b5bac1] text-xs font-bold uppercase mb-0.5">Service ID</p>
+                                <p className="text-[#b5bac1] text-xs uppercase mb-0.5">Service ID</p>
                                 <p className="text-[#dbdee1]">test</p>
                             </div>
                             <div>
-                                <p className="text-[#b5bac1] text-xs font-bold uppercase mb-0.5">Status</p>
+                                <p className="text-[#b5bac1] text-xs uppercase mb-0.5">Status</p>
                                 <p className="text-[#dbdee1]">healthy</p>
                             </div>
                         </div>
@@ -180,7 +180,7 @@ function SlackPreview({ name }: { name: string }) {
                 </div>
                 <div className="flex items-center gap-1.5">
                     <span className="text-white font-semibold">{name || 'EVERYUP'}</span>
-                    <span className="px-1 py-px bg-white/25 text-white text-xs font-bold rounded uppercase">APP</span>
+                    <span className="px-1 py-px bg-white/25 text-white text-xs rounded uppercase">APP</span>
                 </div>
             </div>
             {/* Message body */}
@@ -188,7 +188,7 @@ function SlackPreview({ name }: { name: string }) {
                 {/* Attachment with left colored border */}
                 <div className="border-l-4 border-[#2eb67d] pl-2.5 space-y-1.5">
                     {/* Header section */}
-                    <p className="font-bold text-text-base">
+                    <p className="text-text-base">
                         ✅ <span className="italic">Service healthy: Notification Test</span>
                     </p>
                     {/* Message section */}
@@ -198,11 +198,11 @@ function SlackPreview({ name }: { name: string }) {
                     {/* Fields row */}
                     <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 pt-0.5">
                         <div>
-                            <p className="font-bold text-text-secondary text-xs">Service ID</p>
+                            <p className="text-text-secondary text-xs">Service ID</p>
                             <p className="text-text-muted">test</p>
                         </div>
                         <div>
-                            <p className="font-bold text-text-secondary text-xs">Status</p>
+                            <p className="text-text-secondary text-xs">Status</p>
                             <p className="text-text-muted">healthy</p>
                         </div>
                     </div>
@@ -359,7 +359,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                         >
                                             <input {...register('type')} type="radio" value={type} className="sr-only" />
                                             <m.Icon size={26} className={active ? m.color : 'text-text-dim'} />
-                                            <span className={`text-sm font-bold ${active ? m.color : 'text-text-muted'}`}>{m.label}</span>
+                                            <span className={`text-sm ${active ? m.color : 'text-text-muted'}`}>{m.label}</span>
                                             <span className="text-sm font-semibold uppercase tracking-wider text-slate-400">{m.sub}</span>
                                         </label>
                                     );
@@ -455,7 +455,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                         <meta.Icon size={20} className={meta.color} />
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-sm font-bold text-text-base truncate">
+                                        <p className="text-sm text-text-base truncate">
                                             {watchedName || <span className="text-slate-400 font-normal italic">채널 이름 미입력</span>}
                                         </p>
                                         <p className={`text-sm ${meta.color}`}>{meta.label}</p>
@@ -517,7 +517,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                     type="button"
                                     onClick={handleTest}
                                     disabled={testState === 'loading'}
-                                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 dark:bg-slate-800 text-white text-sm font-bold rounded-xl hover:bg-slate-700 dark:hover:bg-slate-700 transition-all active:scale-95 disabled:opacity-50"
+                                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 dark:bg-slate-800 text-white text-sm rounded-xl hover:bg-slate-700 dark:hover:bg-slate-700 transition-all active:scale-95 disabled:opacity-50"
                                 >
                                     {testState === 'loading' ? (
                                         <>
@@ -536,7 +536,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                     <div className="flex items-start gap-2 px-3 py-2.5 bg-ui-hover-soft border border-ui-border rounded-xl">
                                         <MaterialIcon name="check_circle" className="text-base text-emerald-500 mt-0.5 shrink-0" />
                                         <div>
-                                            <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">발송 성공</p>
+                                            <p className="text-sm text-emerald-600 dark:text-emerald-400">발송 성공</p>
                                             <p className="text-sm text-text-muted mt-0.5">{`${testTime}에 전송되었습니다`}</p>
                                         </div>
                                     </div>
@@ -546,7 +546,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                     <div className="flex items-start gap-2 px-3 py-2.5 bg-ui-hover-soft border border-ui-border rounded-xl">
                                         <MaterialIcon name="error" className="text-base text-red-500 mt-0.5 shrink-0" />
                                         <div>
-                                            <p className="text-sm font-bold text-red-600 dark:text-red-400">발송 실패</p>
+                                            <p className="text-sm text-red-600 dark:text-red-400">발송 실패</p>
                                             <p className="text-sm text-text-muted mt-0.5">{testError}</p>
                                         </div>
                                     </div>

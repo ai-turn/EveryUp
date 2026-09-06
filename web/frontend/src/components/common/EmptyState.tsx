@@ -17,7 +17,7 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
       <div className="w-20 h-20 rounded-full bg-ui-hover flex items-center justify-center mb-6">
         <MaterialIcon name={icon} className="text-4xl text-text-dim" />
       </div>
-      <h3 className="text-xl font-bold text-text-base mb-2 text-center">
+      <h3 className="text-xl text-text-base mb-2 text-center">
         {title}
       </h3>
       {description && (

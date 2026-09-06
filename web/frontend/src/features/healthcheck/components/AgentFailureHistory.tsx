@@ -45,7 +45,7 @@ export function AgentFailureHistory({ agentId, serviceKey, refreshKey }: AgentFa
           <MaterialIcon name="history" className="text-lg text-status-error" />
         </div>
         <div>
-          <h2 className="text-text-base text-xl font-bold tracking-tight">
+          <h2 className="text-text-base text-xl tracking-tight">
             최근 장애 기록
           </h2>
           <p className="text-text-muted text-sm">

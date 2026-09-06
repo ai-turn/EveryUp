@@ -41,14 +41,14 @@ export function UptimeOverview({ stats, days, loading = false, className = '' }:
     <section className={`p-6 ${chartCardClass} ${className}`}>
       <div className="mb-5 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h2 className="text-base font-bold text-text-base">업타임 현황</h2>
+          <h2 className="text-base text-text-base">업타임 현황</h2>
           <p className="mt-1 text-sm text-text-muted">요약 지표와 90일 상태 변화</p>
         </div>
         <dl className={`grid grid-cols-2 gap-x-8 gap-y-4 ${statsGridClass}`}>
           {stats.map((stat, index) => (
             <div key={stat.label}>
               <dt className="text-xs text-text-muted">{stat.label}</dt>
-              <dd className={`mt-1 font-mono font-bold tabular-nums text-text-base ${index === 0 ? 'text-2xl' : 'text-base'}`}>
+              <dd className={`mt-1 font-mono tabular-nums text-text-base ${index === 0 ? 'text-2xl' : 'text-base'}`}>
                 {stat.value}
               </dd>
             </div>

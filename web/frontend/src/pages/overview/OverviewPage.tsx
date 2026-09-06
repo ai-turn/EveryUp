@@ -36,7 +36,7 @@ function SummaryCard({ icon, label, value, detail, tone = 'idle' }: {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs text-text-muted">{label}</p>
-          <p className="mt-1 font-mono text-2xl font-bold tabular-nums text-text-base">{value}</p>
+          <p className="mt-1 font-mono text-2xl tabular-nums text-text-base">{value}</p>
         </div>
         <MaterialIcon name={icon} className={`text-xl ${toneClass}`} />
       </div>
@@ -196,10 +196,10 @@ export function OverviewPage() {
             <article className="rounded-xl border border-ui-border bg-bg-surface">
               <div className="flex items-center justify-between gap-3 border-b border-ui-border px-4 py-3.5">
                 <div>
-                  <h2 className="text-base font-bold text-text-base">현재 확인 필요</h2>
+                  <h2 className="text-base text-text-base">현재 확인 필요</h2>
                   <p className="mt-0.5 text-sm text-text-muted">서비스 상태와 수집 상태를 분리해 보여줍니다.</p>
                 </div>
-                <span className="font-mono text-sm font-bold tabular-nums text-text-muted">{attention.length}</span>
+                <span className="font-mono text-sm tabular-nums text-text-muted">{attention.length}</span>
               </div>
               {attention.length === 0 ? (
                 <div className="flex min-h-44 flex-col items-center justify-center p-5 text-center">
@@ -226,7 +226,7 @@ export function OverviewPage() {
             </article>
 
             <article className="rounded-xl border border-ui-border bg-bg-surface p-4">
-              <h2 className="text-base font-bold text-text-base">모니터링 범위</h2>
+              <h2 className="text-base text-text-base">모니터링 범위</h2>
               <p className="mt-1 text-sm text-text-muted">연결 방식별로 수집 범위를 확인하세요.</p>
               <dl className="mt-4 space-y-3">
                 {[
@@ -237,7 +237,7 @@ export function OverviewPage() {
                 ].map(([label, count, to]) => (
                   <div key={String(label)} className="flex items-center justify-between gap-3">
                     <dt className="text-sm text-text-secondary">{label}</dt>
-                    <dd><Link to={String(to)} className="font-mono text-sm font-bold tabular-nums text-primary hover:underline">{count}</Link></dd>
+                    <dd><Link to={String(to)} className="font-mono text-sm tabular-nums text-primary hover:underline">{count}</Link></dd>
                   </div>
                 ))}
               </dl>

@@ -142,7 +142,7 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
             <MaterialIcon name="integration_instructions" className="text-lg" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-base font-bold text-text-base">상세 API 모니터링 적용</h3>
+            <h3 className="text-base text-text-base">상세 API 모니터링 적용</h3>
             <p className="mt-0.5 text-sm text-text-muted">
               감지된 Java·Node.js 서비스에 OpenTelemetry를 안전하게 적용합니다.
             </p>
@@ -174,7 +174,7 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
                 <div className="flex items-start gap-2.5">
                   <MaterialIcon name="verified_user" className="mt-0.5 shrink-0 text-lg text-emerald-500" />
                   <div>
-                    <p className="text-sm font-bold text-text-base">원본 Compose는 수정하지 않습니다</p>
+                    <p className="text-sm text-text-base">원본 Compose는 수정하지 않습니다</p>
                     <p className="mt-1 text-xs leading-relaxed text-text-muted">
                       CLI가 별도 override를 만들고 선택한 서비스만 재시작합니다. 주입 옵션, 공유 볼륨, 네트워크와 컨테이너 상태를 확인하며 실패하면 직전 설정으로 자동 복구합니다.
                     </p>
@@ -266,7 +266,7 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-bold text-text-base">안전 적용 명령</p>
+                    <p className="text-sm text-text-base">안전 적용 명령</p>
                     <p className="mt-0.5 text-xs text-text-muted">애플리케이션 Compose가 있는 Linux 서버에서 실행하세요.</p>
                   </div>
                   <CopyButton

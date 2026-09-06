@@ -151,7 +151,7 @@ export function LogsPage() {
         <section className="mb-6">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-base font-bold text-text-base">직접 연결 서비스</h2>
+              <h2 className="text-base text-text-base">직접 연결 서비스</h2>
               <p className="mt-0.5 text-sm text-text-muted">OTLP Logs를 직접 받는 Observed Service입니다.</p>
             </div>
             <span className="font-mono text-xs text-text-dim">{directServices.length}</span>
@@ -160,7 +160,7 @@ export function LogsPage() {
             {directServices.map(service => (
               <Link key={service.id} to={`/logs/${service.id}`} className="card-interactive rounded-xl border border-ui-border bg-bg-surface p-4">
                 <div className="flex items-start justify-between gap-3">
-                  <h3 className="min-w-0 truncate text-sm font-bold text-text-base">{service.name}</h3>
+                  <h3 className="min-w-0 truncate text-sm text-text-base">{service.name}</h3>
                   <span
                     className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${service.isActive ? 'bg-status-healthy' : 'bg-status-error'}`}
                     role="img"
@@ -183,7 +183,7 @@ export function LogsPage() {
         <section className="mb-6">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-base font-bold text-text-base">Docker 서비스</h2>
+              <h2 className="text-base text-text-base">Docker 서비스</h2>
               <p className="mt-0.5 text-sm text-text-muted">EveryUp Docker 수집기가 전달한 서비스입니다.</p>
             </div>
             <span className="font-mono text-xs text-text-dim">{agentCards.length}</span>
@@ -196,7 +196,7 @@ export function LogsPage() {
                 className="card-interactive rounded-xl border border-ui-border bg-bg-surface p-4"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <h3 className="min-w-0 truncate text-sm font-bold text-text-base">{service.name}</h3>
+                  <h3 className="min-w-0 truncate text-sm text-text-base">{service.name}</h3>
                   <span className="shrink-0 text-xs text-text-muted">{service.agentName}</span>
                 </div>
                 <p className="mt-3 text-xs text-text-secondary">
@@ -244,7 +244,7 @@ export function LogsPage() {
                     return (
                       <tr key={log.id} className="hover:bg-ui-hover-soft">
                         <td className="whitespace-nowrap px-4 py-3 align-top font-mono text-xs text-text-dim">{formatTime(log.createdAt)}</td>
-                        <td className="px-4 py-3 align-top"><span className={`inline-flex rounded px-1.5 py-0.5 text-xs font-bold ${LEVEL_STYLE[log.level] ?? LEVEL_STYLE.info}`}>{log.level.toUpperCase()}</span></td>
+                        <td className="px-4 py-3 align-top"><span className={`inline-flex rounded px-1.5 py-0.5 text-xs ${LEVEL_STYLE[log.level] ?? LEVEL_STYLE.info}`}>{log.level.toUpperCase()}</span></td>
                         <td className="whitespace-nowrap px-4 py-3 align-top">
                           <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-text-secondary">
                             <MaterialIcon

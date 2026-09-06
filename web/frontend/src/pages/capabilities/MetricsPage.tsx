@@ -45,7 +45,7 @@ function MetricCard({
   return (
     <Link to={to} className="card-interactive group rounded-xl border border-ui-border bg-bg-surface p-4">
       <div className="flex items-start justify-between gap-3">
-        <h2 className="min-w-0 truncate text-base font-bold text-text-base group-hover:text-primary">{name}</h2>
+        <h2 className="min-w-0 truncate text-base text-text-base group-hover:text-primary">{name}</h2>
         <span className="flex shrink-0 items-center gap-1.5 text-xs text-text-muted">
           <span className={`h-2 w-2 rounded-full ${active ? 'bg-status-healthy' : 'bg-status-error'}`} aria-hidden="true" />
           {source}
@@ -56,7 +56,7 @@ function MetricCard({
           <p className="mt-4 break-all font-mono text-xs text-text-muted">{metric.metricName}</p>
           <div className="mt-6 flex items-end justify-between gap-3">
             <span className="text-xs text-text-muted">현재 값</span>
-            <span className="font-mono text-2xl font-bold tabular-nums text-text-base">{formatMetric(metric.value, metric.unit)}</span>
+            <span className="font-mono text-2xl tabular-nums text-text-base">{formatMetric(metric.value, metric.unit)}</span>
           </div>
         </>
       ) : (
@@ -137,7 +137,7 @@ export function MetricsPage() {
             <section>
               <div className="mb-3 flex items-end justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-bold text-text-base">직접 연결 서비스</h2>
+                  <h2 className="text-base text-text-base">직접 연결 서비스</h2>
                   <p className="mt-0.5 text-sm text-text-muted">OTLP Metrics를 직접 받는 Observed Service입니다.</p>
                 </div>
                 <span className="font-mono text-xs text-text-dim">{directServices.length}</span>
@@ -161,7 +161,7 @@ export function MetricsPage() {
             <section>
               <div className="mb-3 flex items-end justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-bold text-text-base">Docker 서비스</h2>
+                  <h2 className="text-base text-text-base">Docker 서비스</h2>
                   <p className="mt-0.5 text-sm text-text-muted">EveryUp Docker 수집기가 발견하고 전달한 서비스 메트릭입니다.</p>
                 </div>
                 <span className="font-mono text-xs text-text-dim">{visibleAgentMetrics.length}</span>

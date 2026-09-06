@@ -56,7 +56,7 @@ function KpiCard({ label, value, unit, sub, tone }: {
   return (
     <div className="bg-bg-surface border border-ui-border rounded-xl p-4">
       <div className="text-xs text-text-muted">{label}</div>
-      <div className={`text-xl font-bold mt-1 font-mono ${valueColor}`}>
+      <div className={`text-xl mt-1 font-mono ${valueColor}`}>
         {value}
         {unit && <span className="text-xs text-text-dim ml-0.5">{unit}</span>}
       </div>
@@ -108,13 +108,13 @@ function ServiceCard({ service, metric, onOpen }: {
             className={`h-2.5 w-2.5 rounded-full shrink-0 mt-0.5 ${service.healthy ? 'bg-status-healthy' : 'bg-status-error animate-pulse'}`}
           />
           <div className="min-w-0">
-            <h3 className="text-base font-bold text-text-base truncate leading-tight">{service.name}</h3>
+            <h3 className="text-base text-text-base truncate leading-tight">{service.name}</h3>
             <span className="text-xs text-text-dim truncate block">{service.runtime ?? service.checkType}</span>
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {!service.healthy && (
-            <span className="text-xs font-bold text-status-error bg-status-error/10 px-1.5 py-0.5 rounded">장애</span>
+            <span className="text-xs text-status-error bg-status-error/10 px-1.5 py-0.5 rounded">장애</span>
           )}
           <MaterialIcon name="chevron_right" className="text-base text-text-dim group-hover:text-primary transition-colors" />
         </div>
@@ -420,7 +420,7 @@ export function ProjectDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
           {/* Incident history */}
           <div className="bg-bg-surface border border-ui-border rounded-xl p-4">
-              <h3 className="text-base font-bold text-text-base mb-3">장애 이력 · 30일</h3>
+              <h3 className="text-base text-text-base mb-3">장애 이력 · 30일</h3>
               {incidents.length === 0 ? (
                 <p className="text-xs text-text-dim py-4 text-center">최근 30일간 장애가 없습니다</p>
               ) : (
@@ -439,7 +439,7 @@ export function ProjectDetailPage() {
                           {formatIncidentTime(inc.startedAt)} {'시작'} · {formatDuration(inc.durationSec)}
                         </span>
                       </span>
-                      <span className={`text-xs font-bold shrink-0 ${inc.active ? 'text-status-error' : 'text-status-healthy'}`}>
+                      <span className={`text-xs shrink-0 ${inc.active ? 'text-status-error' : 'text-status-healthy'}`}>
                         {inc.active ? '진행중' : '해소'}
                       </span>
                     </button>
@@ -450,7 +450,7 @@ export function ProjectDetailPage() {
 
             {/* Event timeline */}
             <div className="bg-bg-surface border border-ui-border rounded-xl p-4">
-              <h3 className="text-base font-bold text-text-base mb-3">타임라인</h3>
+              <h3 className="text-base text-text-base mb-3">타임라인</h3>
               {events.length === 0 ? (
                 <p className="text-xs text-text-dim py-4 text-center">최근 이벤트가 없습니다</p>
               ) : (

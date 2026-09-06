@@ -42,7 +42,7 @@ function SetupProgress({ step, connected, diagnosed }: { step: Step; connected: 
       <div className="grid grid-cols-4 gap-1">
         {steps.map((item, index) => (
           <div key={item.label} className="flex min-w-0 items-center gap-1.5">
-            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs ${
               item.complete
                 ? 'bg-emerald-500 text-white'
                 : item.active ? 'bg-primary text-white' : 'bg-ui-hover text-text-dim'
@@ -232,7 +232,7 @@ function AgentInstallCommand({
 }) {
   return (
     <details open={expanded} className="group rounded-xl border border-ui-border bg-bg-surface">
-      <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-bold text-text-base">
+      <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm text-text-base">
         <MaterialIcon name="terminal" className="text-lg text-primary" />
         Docker 수집기 설치 명령
         <span className="ml-auto text-xs font-normal text-text-dim">
@@ -496,7 +496,7 @@ export function AddServiceModal({
               <div className="flex items-start gap-3 rounded-xl border border-ui-border bg-ui-hover-soft p-4">
                 <MaterialIcon name="check_circle" className="mt-0.5 shrink-0 text-xl text-emerald-500" />
                 <div>
-                  <p className="text-sm font-bold text-text-base">Docker 수집기 연결을 확인했습니다</p>
+                  <p className="text-sm text-text-base">Docker 수집기 연결을 확인했습니다</p>
                   <p className="mt-1 text-xs text-text-muted">
                     기능 호환성과 발견된 서비스를 자동으로 확인했습니다. 이 화면에서 선택 계측까지 이어서 설정할 수 있습니다.
                   </p>
@@ -509,7 +509,7 @@ export function AddServiceModal({
                   <span className="relative inline-flex h-3 w-3 rounded-full bg-primary" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-text-base">Docker 수집기 연결을 기다리는 중</p>
+                  <p className="text-sm text-text-base">Docker 수집기 연결을 기다리는 중</p>
                   <p className="mt-0.5 text-xs text-text-muted">명령을 실행하면 최대 5초 간격으로 자동 확인합니다.</p>
                 </div>
                 <button

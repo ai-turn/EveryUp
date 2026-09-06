@@ -192,7 +192,7 @@ function ServiceMetricsPanel({ source, refreshKey, range }: CommonProps & { sour
 
       <div className="rounded-xl border border-ui-border bg-bg-surface p-6">
         <div className="mb-2 flex items-center gap-2">
-          <h3 className="text-base font-bold text-text-base">전체 시리즈</h3>
+          <h3 className="text-base text-text-base">전체 시리즈</h3>
           <span className="text-xs text-text-dim">행을 선택해 차트에 표시</span>
         </div>
         <div className="overflow-x-auto">

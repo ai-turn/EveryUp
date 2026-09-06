@@ -148,7 +148,7 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
                 <div className="space-y-4 min-w-0">
                     <FormStep n={1} title="시스템 규칙" subtitle="시스템이 관리하는 규칙입니다. 메시지와 알림 채널만 수정할 수 있습니다.">
                         <div className="p-4 bg-ui-hover-soft/50 rounded-xl">
-                            <h3 className="text-base font-bold text-text-base mb-1">{rule.name}</h3>
+                            <h3 className="text-base text-text-base mb-1">{rule.name}</h3>
                             <p className="text-sm text-slate-500">시스템이 관리하는 규칙입니다. 메시지와 알림 채널만 수정할 수 있습니다.</p>
                         </div>
                     </FormStep>
@@ -172,7 +172,7 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
                                 <button key={ch.id} type="button" onClick={() => handleToggleChannel(ch.id)}
                                     className={`w-full flex items-center gap-3 px-3 py-2.5 border-2 rounded-xl transition-all ${selectedChannels.includes(ch.id) ? 'border-primary bg-primary/5 text-primary' : 'border-ui-border-soft text-slate-500'}`}>
                                     <ChannelIcon type={ch.type} size={16} className={getChannelStyle(ch.type).text} />
-                                    <span className="text-sm font-bold flex-1 text-left">{ch.name}</span>
+                                    <span className="text-sm flex-1 text-left">{ch.name}</span>
                                 </button>
                             ))}
                             {selectedChannels.length === 0 && channels.length > 0 && (
@@ -200,11 +200,11 @@ function SystemRuleEditor({ rule, channels, onSuccess, onCancel, onSubmittingCha
                             <div className="p-5 space-y-4">
                                 <div className="rounded-xl bg-ui-hover-soft/50 p-3">
                                     <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">규칙 이름</p>
-                                    <p className="mt-1 truncate text-sm font-bold text-text-base">{rule.name}</p>
+                                    <p className="mt-1 truncate text-sm text-text-base">{rule.name}</p>
                                 </div>
                                 <div className="rounded-xl bg-ui-hover-soft/50 p-3">
                                     <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">알림 채널</p>
-                                    <p className="mt-1 text-sm font-bold text-text-base">
+                                    <p className="mt-1 text-sm text-text-base">
                                         {selectedChannels.length === 0
                                             ? `전체 ${effectiveChannelCount}개`
                                             : `${effectiveChannelCount}개 선택`}
@@ -458,7 +458,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                         }`}
                                     >
                                         <MaterialIcon name={cat.icon} className="text-base" />
-                                        <span className="font-bold text-sm">{cat.label}</span>
+                                        <span className="text-sm">{cat.label}</span>
                                     </button>
                                 ))}
                             </div>
@@ -541,7 +541,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                                 key={m}
                                                 type="button"
                                                 onClick={() => handleMetricChange(m)}
-                                                className={`px-3 py-2 rounded-lg text-sm font-bold border-2 transition-all ${
+                                                className={`px-3 py-2 rounded-lg text-sm border-2 transition-all ${
                                                     watchedMetric === m
                                                         ? 'border-primary bg-primary/10 text-primary'
                                                         : 'border-ui-border-soft text-slate-500 hover:border-slate-200 dark:hover:border-slate-600'
@@ -578,7 +578,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                         key={p.value}
                                         type="button"
                                         onClick={() => handleConditionPreset(p.value)}
-                                        className={`flex items-center justify-center gap-1.5 p-3 border-2 rounded-xl transition-all text-sm font-bold ${
+                                        className={`flex items-center justify-center gap-1.5 p-3 border-2 rounded-xl transition-all text-sm ${
                                             conditionPreset === p.value
                                                 ? 'border-primary bg-primary/10 text-primary'
                                                 : 'border-ui-border-soft text-slate-500 hover:border-slate-200 dark:hover:border-slate-600'
@@ -671,7 +671,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                         {conditionPreset !== 'custom' && isEndpoint && (
                             <div className="flex items-center justify-between p-3 bg-ui-hover-soft/50 rounded-xl">
                                 <div>
-                                    <p className="text-sm font-bold text-text-base">연속 체크 횟수</p>
+                                    <p className="text-sm text-text-base">연속 체크 횟수</p>
                                     <p className="text-sm text-slate-400">알림 발생 전 연속 실패 횟수</p>
                                 </div>
                                 <Input
@@ -712,7 +712,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                         key={s.value}
                                         type="button"
                                         onClick={() => setValue('severity', s.value)}
-                                        className={`py-2.5 text-sm font-bold rounded-xl border-2 transition-all flex items-center justify-center gap-2 uppercase tracking-wide ${
+                                        className={`py-2.5 text-sm rounded-xl border-2 transition-all flex items-center justify-center gap-2 uppercase tracking-wide ${
                                             watchedSeverity === s.value
                                                 ? s.active
                                                 : 'border-ui-border-soft text-slate-500 hover:border-slate-200 dark:hover:border-slate-600'
@@ -744,7 +744,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                         }`}
                                     >
                                         <ChannelIcon type={ch.type} size={16} className={getChannelStyle(ch.type).text} />
-                                        <span className="text-sm font-bold flex-1 text-left">{ch.name}</span>
+                                        <span className="text-sm flex-1 text-left">{ch.name}</span>
                                         <span className="text-sm uppercase tracking-wider text-slate-400 font-mono">{ch.type}</span>
                                     </button>
                                 ))}
@@ -837,7 +837,7 @@ function FullRuleForm({ onSuccess, onCancel, rule, channels, onSubmittingChange 
                                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">메시지</p>
                                     <div className={`rounded-xl px-3 py-3 ${severityClasses.bg}`}>
                                         <div className="flex items-center gap-2 mb-1.5">
-                                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide ${severityClasses.badge}`}>
+                                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs uppercase tracking-wide ${severityClasses.badge}`}>
                                                 <span className={`w-1.5 h-1.5 rounded-full ${severityClasses.dot}`} />
                                                 {watchedSeverity}
                                             </span>

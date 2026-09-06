@@ -230,7 +230,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
                   if (row.kind === 'group') {
                     return (
                       <tr key={`g-${row.key}`}>
-                        <td colSpan={6} className="px-4 py-1.5 border-t border-ui-border-soft/50 bg-ui-hover-soft/30 text-xs font-bold text-text-muted">
+                        <td colSpan={6} className="px-4 py-1.5 border-t border-ui-border-soft/50 bg-ui-hover-soft/30 text-xs text-text-muted">
                           {row.label}
                         </td>
                       </tr>
@@ -251,7 +251,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
                       }`}
                     >
                       <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-1.5 text-sm font-bold capitalize ${statusMeta.text}`}>
+                        <span className={`inline-flex items-center gap-1.5 text-sm capitalize ${statusMeta.text}`}>
                           <span className={`h-1.5 w-1.5 rounded-full ${statusMeta.dot}`} />
                           {item.status}
                         </span>

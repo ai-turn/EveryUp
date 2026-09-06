@@ -298,7 +298,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
           <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary shrink-0">
             <MaterialIcon name="timeline" className="text-lg" />
           </div>
-          <h3 className="text-base font-bold text-text-base shrink-0">트레이스</h3>
+          <h3 className="text-base text-text-base shrink-0">트레이스</h3>
           <code
             className="flex-1 min-w-0 truncate text-xs font-mono text-text-dim"
             title={traceId}
@@ -350,7 +350,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
                 <button
                   type="button"
                   onClick={() => jumpTo('logs')}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm font-bold text-primary hover:bg-primary/10 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm text-primary hover:bg-primary/10 cursor-pointer"
                 >
                   <MaterialIcon name="article" className="text-sm" />
                   {`로그 (${logs.length})`}
@@ -360,7 +360,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
                 <button
                   type="button"
                   onClick={() => jumpTo('requests')}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm font-bold text-primary hover:bg-primary/10 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm text-primary hover:bg-primary/10 cursor-pointer"
                 >
                   <MaterialIcon name="http" className="text-sm" />
                   {`API 요청 (${apiRequests.length})`}
@@ -397,7 +397,7 @@ function PanelSectionHeader({ icon, title, count }: { icon: string; title: strin
   return (
     <div className="flex items-center gap-2 mb-2">
       <MaterialIcon name={icon} className="text-base text-primary" />
-      <h4 className="text-sm font-bold text-text-base">{title}</h4>
+      <h4 className="text-sm text-text-base">{title}</h4>
       <span className="text-xs font-semibold text-text-dim bg-slate-100 dark:bg-ui-active-dark px-2 py-0.5 rounded-md">
         {count}
       </span>
@@ -437,7 +437,7 @@ function SpanList({ spans, onCopy }: { spans: TraceSpan[]; onCopy: CopyFn }) {
               className="px-3 py-2 rounded-lg bg-ui-hover-soft border border-ui-border-soft text-sm"
             >
               <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
-                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold shrink-0 ${spanKindBadge(span.kind)}`}>
+                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs shrink-0 ${spanKindBadge(span.kind)}`}>
                   {span.kind}
                 </span>
                 <span className="font-mono text-text-secondary truncate flex-1 min-w-0" title={span.name}>
@@ -559,7 +559,7 @@ function CapturedBodyList({ items, onCopy }: { items: CapturedBody[]; onCopy: Co
             className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm dark:border-ui-border-dark dark:bg-ui-hover-dark"
           >
             <div className="mb-2 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center rounded bg-primary/10 px-1.5 py-0.5 text-xs font-bold text-primary">
+              <span className="inline-flex items-center rounded bg-primary/10 px-1.5 py-0.5 text-xs text-primary">
                 {item.label}
               </span>
               {item.serviceName && (
@@ -576,7 +576,7 @@ function CapturedBodyList({ items, onCopy }: { items: CapturedBody[]; onCopy: Co
                 </span>
               )}
               {item.truncated && (
-                <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-xs font-bold text-amber-600 dark:text-amber-400">
+                <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-xs text-amber-600 dark:text-amber-400">
                   잘림
                 </span>
               )}
@@ -601,7 +601,7 @@ function ApiRequestList({ items, onCopy }: { items: ApiRequest[]; onCopy: CopyFn
             key={req.id}
             className="flex flex-wrap items-center gap-2 px-3 py-2 rounded-lg bg-ui-hover-soft border border-ui-border-soft text-sm sm:flex-nowrap"
           >
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold bg-ui-active text-text-secondary shrink-0">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-ui-active text-text-secondary shrink-0">
               {req.method}
             </span>
             <span className="font-mono text-text-secondary truncate flex-1 min-w-0" title={req.path}>
@@ -636,7 +636,7 @@ function LogList({ logs, onCopy }: { logs: LogEntry[]; onCopy: CopyFn }) {
             key={log.id}
             className="flex items-start gap-2 px-3 py-2 rounded-lg bg-ui-hover-soft border border-ui-border-soft text-sm"
           >
-            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold shrink-0 ${logLevelBadge(log.level)}`}>
+            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs shrink-0 ${logLevelBadge(log.level)}`}>
               {log.level.toUpperCase()}
             </span>
             <span className="text-text-muted font-mono shrink-0 mt-0.5">

@@ -52,7 +52,7 @@ function VitalGaugeCard({ gauge }: { gauge: GaugeData }) {
           {gauge.label}
         </p>
         {gauge.trend && (
-          <span className={`inline-flex shrink-0 items-center gap-0.5 rounded text-xs font-bold px-1.5 py-0.5 ${trend.soft} ${trend.text}`}>
+          <span className={`inline-flex shrink-0 items-center gap-0.5 rounded text-xs px-1.5 py-0.5 ${trend.soft} ${trend.text}`}>
             <MaterialIcon name={trend.icon} className="text-sm" />
             {gauge.trend}
           </span>
@@ -64,8 +64,8 @@ function VitalGaugeCard({ gauge }: { gauge: GaugeData }) {
         <span className="text-2xl font-extrabold tracking-tight tabular-nums text-text-base">
           {displayValue}
         </span>
-        <span className="text-sm font-bold text-text-dim">{displayUnit}</span>
-        <span className={`ml-auto shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ${tone.soft} ${tone.text}`}>
+        <span className="text-sm text-text-dim">{displayUnit}</span>
+        <span className={`ml-auto shrink-0 rounded-full px-2 py-0.5 text-xs ${tone.soft} ${tone.text}`}>
           {LOAD_STATE_LABELS[getGaugeState(pct)]}
         </span>
       </div>

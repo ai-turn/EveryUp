@@ -47,7 +47,7 @@ function ProjectCard({ agentId, agent, agentName, services, overview }: ProjectC
     >
       {/* Header: collection state + environment name */}
       <div className="flex items-center gap-2.5 min-w-0">
-        <h3 className="text-base font-bold text-text-base truncate leading-tight">{agentName}</h3>
+        <h3 className="text-base text-text-base truncate leading-tight">{agentName}</h3>
         <CollectionStatusBadge status={online ? 'collecting' : 'delayed'} />
       </div>
 

@@ -79,7 +79,7 @@ export function UptimeMonitorDialog({
       <form onSubmit={submit}>
         <div className="flex items-center justify-between gap-3 border-b border-ui-border px-6 py-4">
           <div>
-            <h2 id="uptime-monitor-dialog-title" className="text-lg font-bold text-text-base">
+            <h2 id="uptime-monitor-dialog-title" className="text-lg text-text-base">
               {monitor ? '업타임 수정' : '업타임 추가'}
             </h2>
             <p className="mt-1 text-sm text-text-muted">HTTP 또는 TCP 상태를 직접 확인합니다.</p>

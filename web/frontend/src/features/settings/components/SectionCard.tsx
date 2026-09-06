@@ -12,7 +12,7 @@ export function SectionCard({
   return (
     <div className="bg-bg-surface border border-ui-border rounded-xl p-5">
       <div className="mb-3">
-        <h2 className="text-sm font-bold text-text-base">{title}</h2>
+        <h2 className="text-base text-text-base">{title}</h2>
         {subtitle && (
           <p className="text-xs text-text-muted mt-0.5">{subtitle}</p>
         )}

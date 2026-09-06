@@ -87,7 +87,7 @@ function LogRow({ log, onOpenTrace }: { log: LogEntry; onOpenTrace: (traceId: st
       aria-expanded={hasMeta ? expanded : undefined}
     >
       <div className="flex items-start gap-3">
-        <span className={`mt-0.5 shrink-0 px-1.5 py-0.5 rounded text-xs font-bold uppercase ${LEVEL_STYLE[log.level] ?? LEVEL_STYLE.info}`}>
+        <span className={`mt-0.5 shrink-0 px-1.5 py-0.5 rounded text-xs uppercase ${LEVEL_STYLE[log.level] ?? LEVEL_STYLE.info}`}>
           {log.level}
         </span>
         <div className="min-w-0 flex-1">
@@ -98,7 +98,7 @@ function LogRow({ log, onOpenTrace }: { log: LogEntry; onOpenTrace: (traceId: st
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onOpenTrace(log.traceId!); }}
-            className="shrink-0 inline-flex items-center gap-1 rounded-lg border border-primary/20 bg-primary/5 px-2 py-1 text-xs font-bold text-primary hover:bg-primary/10 cursor-pointer"
+            className="shrink-0 inline-flex items-center gap-1 rounded-lg border border-primary/20 bg-primary/5 px-2 py-1 text-xs text-primary hover:bg-primary/10 cursor-pointer"
             title="트레이스 보기"
           >
             <MaterialIcon name="timeline" className="text-sm" />
@@ -265,7 +265,7 @@ function ServiceLogsPanel(props: Props) {
           type="button"
           onClick={() => { setLive(v => !v); setPage(1); }}
           title="5초마다 자동 갱신"
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
             live
               ? 'bg-red-500/10 text-red-500'
               : 'bg-ui-hover text-text-muted hover:bg-ui-active'
@@ -308,7 +308,7 @@ function ServiceLogsPanel(props: Props) {
                   key={l}
                   type="button"
                   onClick={() => toggleIngestLevel(l)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold uppercase transition-colors ${
+                  className={`px-2.5 py-1 rounded-lg text-xs uppercase transition-colors ${
                     on
                       ? LEVEL_STYLE[l]
                       : 'bg-bg-surface text-text-dim border border-ui-border opacity-60'

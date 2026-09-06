@@ -111,7 +111,7 @@ export function ChartTooltip({
         border: `1px solid ${theme.tooltipBorder}`,
       }}
     >
-      <p className="mb-2 text-xs font-bold" style={{ color: theme.tickColor }}>
+      <p className="mb-2 text-xs" style={{ color: theme.tickColor }}>
         {labelFormatter ? labelFormatter(label) : label}
       </p>
       <div className="space-y-1.5">
@@ -121,7 +121,7 @@ export function ChartTooltip({
               <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
               {item.name}
             </span>
-            <span className="font-mono font-bold tabular-nums text-text-base">
+            <span className="font-mono tabular-nums text-text-base">
               {valueFormatter(Number(item.value) || 0)}
               <span className="ml-0.5 text-xs font-semibold text-text-dim">{unit}</span>
             </span>

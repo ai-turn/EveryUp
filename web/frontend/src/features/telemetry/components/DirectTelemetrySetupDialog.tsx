@@ -102,7 +102,7 @@ export function DirectTelemetrySetupDialog({
     >
       <div className="flex items-center justify-between gap-3 border-b border-ui-border px-6 py-4">
         <div>
-          <h2 id={`direct-${signal}-dialog-title`} className="text-lg font-bold text-text-base">{title}</h2>
+          <h2 id={`direct-${signal}-dialog-title`} className="text-lg text-text-base">{title}</h2>
           <p className="mt-0.5 text-sm text-text-muted">{description}</p>
         </div>
         <Button variant="ghost" size="sm" aria-label="닫기" onClick={onClose} disabled={submitting}>
@@ -122,7 +122,7 @@ export function DirectTelemetrySetupDialog({
           <div className="flex items-start gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-status-healthy/10 text-status-healthy"><MaterialIcon name="check" /></span>
             <div>
-              <h3 className="text-lg font-bold text-text-base">{`기존 서비스에 ${capabilityLabel}를 추가했습니다`}</h3>
+              <h3 className="text-lg text-text-base">{`기존 서비스에 ${capabilityLabel}를 추가했습니다`}</h3>
               <p className="mt-1 text-sm text-text-muted">{`기존 직접 수집 키에 ${capabilityLabel} 권한을 추가했습니다. 실행 중인 OpenTelemetry 설정은 같은 키를 계속 사용합니다.`}</p>
             </div>
           </div>

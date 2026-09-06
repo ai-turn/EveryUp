@@ -120,15 +120,15 @@ function SetupStep({
   return (
     <div className="flex min-w-0 flex-col rounded-xl border border-ui-border-soft bg-ui-hover-soft p-3">
       <div className="flex items-start gap-2.5">
-        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${appearance.circle}`}>
+        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs ${appearance.circle}`}>
           {state === 'ready' || state === 'issue' ? (
             <MaterialIcon name={appearance.icon} className="text-base" />
           ) : appearance.icon}
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-1.5">
-            <h3 className="text-xs font-bold text-text-base">{title}</h3>
-            <span className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-bold ${appearance.badge}`}>
+            <h3 className="text-xs text-text-base">{title}</h3>
+            <span className={`shrink-0 rounded px-1.5 py-0.5 text-xs ${appearance.badge}`}>
               {stateLabel}
             </span>
           </div>
@@ -215,8 +215,8 @@ export function MonitoringSetupPanel({ agent, services, onInstall, onInstrument,
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-bold text-text-base">모니터링 설정 가이드</h2>
-            <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${requiredComplete ? 'bg-status-healthy/10 text-status-healthy' : 'bg-primary/10 text-primary'}`}>
+            <h2 className="text-sm text-text-base">모니터링 설정 가이드</h2>
+            <span className={`rounded-full px-2 py-0.5 text-xs ${requiredComplete ? 'bg-status-healthy/10 text-status-healthy' : 'bg-primary/10 text-primary'}`}>
               필수 {requiredReady}/{requiredTotal}
             </span>
           </div>

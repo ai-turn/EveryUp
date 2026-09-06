@@ -55,7 +55,7 @@ export function AgentResponseTimeChart({ agentId, serviceKey, refreshKey, range 
   return (
     <div className={`mb-8 p-6 ${chartCardClass}`}>
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-base font-bold text-text-base">응답 시간</h3>
+        <h3 className="text-base text-text-base">응답 시간</h3>
       </div>
 
       {loading ? (

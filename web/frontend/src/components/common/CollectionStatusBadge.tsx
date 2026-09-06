@@ -17,5 +17,5 @@ const LABEL: Record<CollectionStatus, string> = {
 
 /** Collection state is deliberately independent from the service health badge. */
 export function CollectionStatusBadge({ status }: { status: CollectionStatus }) {
-  return <span className={`inline-flex shrink-0 rounded border px-1.5 py-0.5 text-xs font-bold ${STYLE[status]}`}>{LABEL[status]}</span>;
+  return <span className={`inline-flex shrink-0 rounded border px-1.5 py-0.5 text-xs ${STYLE[status]}`}>{LABEL[status]}</span>;
 }

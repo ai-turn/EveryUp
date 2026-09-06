@@ -89,11 +89,11 @@ function ProjectCard({ project, agents, monitors, directServices, infrastructure
   return (
     <article className="rounded-xl border border-ui-border bg-bg-surface p-5">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0"><Link to={`/projects/${project.id}`} className="block truncate text-base font-bold text-text-base hover:text-primary">{project.name}</Link><p className="mt-1 text-sm text-text-muted">{project.description || '설명이 없습니다'}</p></div>
+        <div className="min-w-0"><Link to={`/projects/${project.id}`} className="block truncate text-base text-text-base hover:text-primary">{project.name}</Link><p className="mt-1 text-sm text-text-muted">{project.description || '설명이 없습니다'}</p></div>
         <div className="flex gap-1"><Button variant="ghost" size="sm" aria-label="Project 수정" onClick={onEdit}><MaterialIcon name="edit" /></Button><Button variant="ghost" size="sm" aria-label="Project 삭제" onClick={onDelete}><MaterialIcon name="delete" className="text-status-error" /></Button></div>
       </div>
       <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {[['Docker 환경', agents.length], ['업타임', monitors.length], ['직접 서비스', directServices.length], ['Collector', infrastructureResources.length]].map(([label, count]) => <div key={String(label)} className="rounded-lg bg-ui-hover-soft p-3"><p className="text-xs text-text-dim">{label}</p><p className="mt-1 font-mono text-lg font-bold text-text-base">{count}</p></div>)}
+        {[['Docker 환경', agents.length], ['업타임', monitors.length], ['직접 서비스', directServices.length], ['Collector', infrastructureResources.length]].map(([label, count]) => <div key={String(label)} className="rounded-lg bg-ui-hover-soft p-3"><p className="text-xs text-text-dim">{label}</p><p className="mt-1 font-mono text-lg text-text-base">{count}</p></div>)}
       </div>
       <div className="mt-5 space-y-2">
         {agents.map(agent => <AssignedRow key={agent.id} label={agent.name} detail="Docker 환경" removeLabel="Docker 환경 해제" onRemove={() => onUnassignAgent(agent.id)} />)}

@@ -151,12 +151,14 @@ primary #3b76c9 → emerald #059669 → amber #d97706 → violet #7c3aed → red
 |------|--------|
 | 페이지 h1 | `text-2xl font-bold text-text-base` |
 | 페이지 h1 (모바일 전용 뷰) | `text-xl font-bold text-text-base` |
-| 카드·섹션 헤더 h2 | `text-xl font-bold text-text-base` |
+| 카드·섹션 헤더 h2 | `text-xl text-text-base` |
 | 모달 제목 h2 | `text-base font-semibold text-text-base` |
-| 설정 섹션 카드 h2 | `text-sm font-bold text-text-base` |
-| 카드 내 제목·차트 헤더 h3 | `text-base font-bold text-text-base` |
+| 설정 섹션 카드 h2 | `text-base text-text-base` |
+| 카드 내 제목·차트 헤더 h3 | `text-base text-text-base` |
 | 테이블 `<th>` | `text-xs font-semibold uppercase tracking-wider text-text-muted` |
 | 카드·섹션 부제 | `text-sm text-text-muted` |
+
+**`font-bold`은 페이지 h1에만 쓴다.** 카드·섹션 헤더는 크기만으로 위계를 만든다 — 20px·16px 제목이 14px 본문 위에 서므로 굵기까지 얹을 필요가 없다. 설정 섹션 카드 h2는 `text-sm`(14px)이라 굵기를 빼면 본문과 같아지므로 `text-base`(16px)로 올렸다.
 
 부제는 **제목이 `text-base`(16px) 이상인 자리에서만** `text-sm`이다. 제목이 `text-sm`인 자리(에러 배너 등)의 부제는 `text-xs`를 유지한다 — 올리면 제목과 크기가 같아져 위계가 사라진다. 부제는 설명 본문이므로 `text-xs`(레이블·칩·테이블 헤더 등급)가 아니다.
 
@@ -170,11 +172,15 @@ primary #3b76c9 → emerald #059669 → amber #d97706 → violet #7c3aed → red
 
 | 유틸리티 | 실제 굵기 | 자리 |
 |---|---|---|
-| `font-bold` | **700** | 제목(h1·h2·h3), 배지, KPI 수치 |
+| `font-bold` | **700** | **페이지 h1 전용** (로고 포함) |
 | `font-semibold` | **500** | 버튼, 테이블 `<th>`, **uppercase 라벨**, 강조 레이블 |
 | 기본 | 400 | 본문 |
 
-**크기와 굵기를 함께 쓴다.** 밀집 UI는 크기 대역이 12~24px로 좁아 크기 혼자 위계를 만들지 못한다. 레퍼런스 두 곳이 같은 결론이다 — [Atlassian](https://atlassian.design/foundations/typography)은 Heading을 12px까지 전부 Bold로 두고 `Heading xsmall`(14px Bold)과 `Body`(14px Regular)를 **같은 크기에서 굵기로** 가른다. [Carbon](https://v10.carbondesignsystem.com/guidelines/typography/overview/)도 3단(Light·Regular·SemiBold)을 쓰며 "같은 크기면 굵은 쪽이 강조가 세고, 크고 가벼운 글자가 작고 굵은 글자보다 위계가 높을 수 있다"고 적는다. 즉 `text-sm font-bold` 제목과 `text-sm` 본문이 공존하는 건 부채가 아니라 정석이다.
+**굵기는 페이지 제목 하나에만 쓴다.** 나머지 위계는 크기와 색이 진다. 실측으로 확인한 근거는 이렇다 — 목록 항목명은 14px·`text-base` 색이고 설명은 12px·`text-muted`라 두 채널이 이미 갈라놓으며, 카드 헤더는 16~20px로 14px 본문 위에 선다. KPI 수치는 24px에 `font-mono`·`tabular-nums`까지 붙어 서체 자체가 다르다. 배지는 배경·보더·색 세 채널을 이미 쓴다. `font-bold` 166곳을 제거한 뒤 5개 화면에서 굵기 역전 0건, 7개 화면에서 레이아웃 회귀 0건이었다.
+
+이 결정은 아래 레퍼런스 조사(크기·굵기를 함께 쓴다)에서 한 발 더 나간 것이다. 두 축을 함께 쓰는 것이 일반해인 건 맞지만, Spoqa Han Sans Neo는 획이 두꺼워 굵기를 얹을수록 화면이 묵직해진다 — 폰트가 이미 무게를 갖고 있으면 굵기 축의 몫이 줄어든다.
+
+**참고 — 레퍼런스는 두 축을 함께 쓴다.** 밀집 UI는 크기 대역이 12~24px로 좁아 크기 혼자 위계를 만들지 못한다. 레퍼런스 두 곳이 같은 결론이다 — [Atlassian](https://atlassian.design/foundations/typography)은 Heading을 12px까지 전부 Bold로 두고 `Heading xsmall`(14px Bold)과 `Body`(14px Regular)를 **같은 크기에서 굵기로** 가른다. [Carbon](https://v10.carbondesignsystem.com/guidelines/typography/overview/)도 3단(Light·Regular·SemiBold)을 쓰며 "같은 크기면 굵은 쪽이 강조가 세고, 크고 가벼운 글자가 작고 굵은 글자보다 위계가 높을 수 있다"고 적는다. 즉 `text-sm font-bold` 제목과 `text-sm` 본문이 공존하는 건 부채가 아니라 정석이다.
 
 **레이블과 값이 이미 갈렸으면 값에 굵기를 얹지 않는다.** `<dt class="text-xs text-text-dim">` / `<dd class="text-sm text-text-secondary">` 구조는 크기(12→14)와 색(dim→secondary) 두 채널이 이미 둘을 가른다. 굵기는 세 번째 채널이라 잉여다. Direct API·Logs·Metrics·Infrastructure 상세와 API 키 마스크 12곳에서 뺐다.
 

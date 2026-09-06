@@ -78,7 +78,7 @@ export function ConfirmDialog({
         <div className={`flex items-center justify-center w-10 h-10 rounded-full ${styles.iconBg}`}>
           <MaterialIcon name={icon ?? styles.defaultIcon} className={`${styles.iconText} text-xl`} />
         </div>
-        <h2 id="confirm-dialog-title" className="text-xl font-bold text-text-base">
+        <h2 id="confirm-dialog-title" className="text-xl text-text-base">
           {title}
         </h2>
       </div>

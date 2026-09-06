@@ -48,7 +48,7 @@ export function InfraTrends({ hostId, refreshKey = 0, range }: InfraTrendsProps)
     <>
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-text-base">
+          <h2 className="text-xl tracking-tight text-text-base">
             인프라 추세
           </h2>
           <p className="mt-1 text-sm text-text-muted">
@@ -102,7 +102,7 @@ function ChartCard({
   return (
     <section className={`overflow-hidden ${chartCardClass}`} aria-label={chart.title}>
       <div className="px-5 pb-1 pt-5">
-        <p className="truncate text-base font-bold text-text-base">{chart.title}</p>
+        <p className="truncate text-base text-text-base">{chart.title}</p>
       </div>
 
       {isEmpty ? (

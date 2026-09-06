@@ -95,7 +95,7 @@ export function AgentServiceCapabilityPage() {
         <div className="space-y-8">
           {filteredMonitors.length > 0 && (
             <section>
-              <div className="mb-3 flex items-center gap-2"><MaterialIcon name="public" className="text-lg text-primary" /><h2 className="text-base font-bold text-text-base">직접 추가한 업타임</h2></div>
+              <div className="mb-3 flex items-center gap-2"><MaterialIcon name="public" className="text-lg text-primary" /><h2 className="text-base text-text-base">직접 추가한 업타임</h2></div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {filteredMonitors.map((monitor) => (
                   <UptimeTargetCard
@@ -113,7 +113,7 @@ export function AgentServiceCapabilityPage() {
           )}
           {filteredAgentServices.length > 0 && (
             <section>
-              <div className="mb-3 flex items-center gap-2"><MaterialIcon name="smart_toy" className="text-lg text-primary" /><h2 className="text-base font-bold text-text-base">Docker에서 발견한 서비스</h2></div>
+              <div className="mb-3 flex items-center gap-2"><MaterialIcon name="smart_toy" className="text-lg text-primary" /><h2 className="text-base text-text-base">Docker에서 발견한 서비스</h2></div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {filteredAgentServices.map((service) => (
                   <UptimeTargetCard

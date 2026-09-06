@@ -31,7 +31,7 @@ function ResponseTimeChart({ metrics }: { metrics: UptimeMonitorMetric[] }) {
 
   return (
     <div className={`p-6 ${chartCardClass}`}>
-      <h2 className="mb-6 text-base font-bold text-text-base">응답 시간</h2>
+      <h2 className="mb-6 text-base text-text-base">응답 시간</h2>
       {chartData.length === 0 ? (
         <div className="flex h-48 items-center justify-center text-sm text-text-dim">데이터 없음</div>
       ) : (
@@ -74,7 +74,7 @@ function ResponseTimeChart({ metrics }: { metrics: UptimeMonitorMetric[] }) {
 function RecentChecks({ metrics }: { metrics: UptimeMonitorMetric[] }) {
   return (
     <section className="rounded-xl border border-ui-border bg-bg-surface p-6">
-      <h2 className="mb-4 text-base font-bold text-text-base">최근 체크 기록</h2>
+      <h2 className="mb-4 text-base text-text-base">최근 체크 기록</h2>
       {metrics.length === 0 ? (
         <div className="py-8 text-center text-sm text-text-dim">아직 체크 기록이 없습니다</div>
       ) : (

@@ -18,7 +18,7 @@ export function UptimeTargetCard({
     <article className="card-interactive relative flex min-h-36 flex-col gap-3 rounded-xl border border-ui-border bg-bg-surface p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate text-base font-bold text-text-base">
+          <h3 className="truncate text-base text-text-base">
             <Link to={to} className="after:absolute after:inset-0 after:rounded-xl">{title}</Link>
           </h3>
           <p className="mt-1 truncate text-xs text-text-muted">{subtitle}</p>

@@ -39,7 +39,7 @@ export function DirectTelemetrySetupResult({
           <MaterialIcon name="check" className="text-xl" />
         </span>
         <div>
-          <h3 className="text-lg font-bold text-text-base">{title}</h3>
+          <h3 className="text-lg text-text-base">{title}</h3>
           <p className="mt-1 text-sm text-text-muted">API 키는 지금 한 번만 표시됩니다. 안전한 곳에 저장해 주세요.</p>
         </div>
       </div>

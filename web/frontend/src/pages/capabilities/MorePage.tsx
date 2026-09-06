@@ -16,7 +16,7 @@ export function MorePage() {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {LINKS.map((link) => <Link key={link.to} to={link.to} className="card-interactive flex items-center gap-3 rounded-xl border border-ui-border bg-bg-surface p-4">
           <MaterialIcon name={link.icon} className="text-xl text-primary" />
-          <div className="min-w-0"><h2 className="text-base font-bold text-text-base">{link.title}</h2><p className="text-sm text-text-muted">{link.description}</p></div>
+          <div className="min-w-0"><h2 className="text-base text-text-base">{link.title}</h2><p className="text-sm text-text-muted">{link.description}</p></div>
           <MaterialIcon name="chevron_right" className="ml-auto text-lg text-text-dim" />
         </Link>)}
       </div>

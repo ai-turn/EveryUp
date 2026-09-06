@@ -174,7 +174,7 @@ export function AlertsDesktopView({
               <span className="inline-flex items-center gap-2">
                 {tab.label}
                 {tab.count != null && (
-                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded-md ${
+                  <span className={`text-xs px-1.5 py-0.5 rounded-md ${
                     activeTab === tab.key
                       ? 'bg-primary/10 text-primary'
                       : 'bg-ui-hover text-text-muted'
@@ -339,7 +339,7 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
                       <ChannelIcon type={channel.type} size={18} className={style.text} />
                     </div>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-bold text-text-base">{channel.name}</p>
+                      <p className="truncate text-sm text-text-base">{channel.name}</p>
                       <p className="truncate text-xs text-text-dim">
                         {getChannelSubtitle(channel.type)}
                       </p>

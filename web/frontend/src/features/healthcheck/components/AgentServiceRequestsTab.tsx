@@ -136,7 +136,7 @@ function ServiceRequestsPanel({
             { label: '평균 (이 페이지)', value: `${avgMs}ms`, color: 'text-text-secondary' },
           ].map(kpi => (
             <div key={kpi.label} className="rounded-xl bg-bg-surface border border-ui-border px-4 py-3 text-center">
-              <p className={`text-xl font-bold ${kpi.color}`}>{kpi.value}</p>
+              <p className={`text-xl ${kpi.color}`}>{kpi.value}</p>
               <p className="text-xs text-text-dim mt-0.5">{kpi.label}</p>
             </div>
           ))}
@@ -207,20 +207,20 @@ function ServiceRequestsPanel({
               </p>
               {source.kind === 'direct' ? (
                 <ul className="space-y-1.5 text-sm text-text-muted">
-                  <li className="flex gap-2"><span className="shrink-0 font-bold text-primary">1</span><span>애플리케이션에 OpenTelemetry SDK 또는 자동 계측을 적용합니다.</span></li>
-                  <li className="flex gap-2"><span className="shrink-0 font-bold text-primary">2</span><span>설정 화면에서 발급한 OTLP endpoint와 Authorization 헤더로 traces를 전송합니다.</span></li>
+                  <li className="flex gap-2"><span className="shrink-0 text-primary">1</span><span>애플리케이션에 OpenTelemetry SDK 또는 자동 계측을 적용합니다.</span></li>
+                  <li className="flex gap-2"><span className="shrink-0 text-primary">2</span><span>설정 화면에서 발급한 OTLP endpoint와 Authorization 헤더로 traces를 전송합니다.</span></li>
                 </ul>
               ) : (
                 <ul className="space-y-1.5 text-sm text-text-muted">
                   <li className="flex gap-2">
-                    <span className="shrink-0 font-bold text-primary">1</span>
+                    <span className="shrink-0 text-primary">1</span>
                     <span>
                       Docker 수집기 Compose의 <code className="font-mono text-xs bg-ui-hover px-1 py-0.5 rounded">everyup-ebpf</code> 블록
                       주석 해제 — 앱 수정 없이 경로·상태·지연시간 수집
                     </span>
                   </li>
                   <li className="flex gap-2">
-                    <span className="shrink-0 font-bold text-primary">2</span>
+                    <span className="shrink-0 text-primary">2</span>
                     <span>
                       헤더까지 필요하면 앱에 OpenTelemetry 연결
                       {source.runtime === 'java' && ' — Java는 JAVA_TOOL_OPTIONS 환경변수만으로 가능'}
@@ -243,10 +243,10 @@ function ServiceRequestsPanel({
                 {...activatable(() => setActiveTraceId(req.traceId!), clickable)}
                 className={`flex items-center gap-3 px-4 py-3 bg-bg-surface transition-colors ${clickable ? 'cursor-pointer hover:bg-ui-hover-soft' : ''}`}
               >
-                <span className={`shrink-0 px-1.5 py-0.5 rounded text-xs font-bold uppercase ${methodClass(req.method)}`}>
+                <span className={`shrink-0 px-1.5 py-0.5 rounded text-xs uppercase ${methodClass(req.method)}`}>
                   {req.method}
                 </span>
-                <span className={`shrink-0 font-mono text-sm font-bold ${statusClass(req.statusCode)}`}>
+                <span className={`shrink-0 font-mono text-sm ${statusClass(req.statusCode)}`}>
                   {req.statusCode}
                 </span>
                 <span className="flex-1 min-w-0 text-sm text-text-secondary truncate font-mono">

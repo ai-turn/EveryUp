@@ -14,7 +14,7 @@ export function AccountSection() {
   return (
     <SectionCard title="계정 · 인증" subtitle="로그인 계정과 세션 정보">
       <div className="flex items-center gap-4">
-        <span className="w-10 h-10 rounded-full bg-ui-active flex items-center justify-center text-sm font-bold text-text-secondary shrink-0">
+        <span className="w-10 h-10 rounded-full bg-ui-active flex items-center justify-center text-sm text-text-secondary shrink-0">
           {initials}
         </span>
         <div className="min-w-0 flex-1">

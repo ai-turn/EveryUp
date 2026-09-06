@@ -26,7 +26,7 @@ function ResourceCard({ resource }: { resource: InfrastructureResource }) {
         <div className="flex min-w-0 items-center gap-2.5">
           <MaterialIcon name="memory" className="text-lg text-primary" />
           <div className="min-w-0">
-            <h2 className="truncate text-base font-bold text-text-base group-hover:text-primary">{resource.name}</h2>
+            <h2 className="truncate text-base text-text-base group-hover:text-primary">{resource.name}</h2>
             <p className="truncate text-xs text-text-muted">{direct ? 'OpenTelemetry Collector' : 'EveryUp Docker 수집기'}</p>
           </div>
         </div>
@@ -37,7 +37,7 @@ function ResourceCard({ resource }: { resource: InfrastructureResource }) {
           {values.map(([label, value]) => (
             <div key={label}>
               <p className="text-xs text-text-dim">{label}</p>
-              <p className="font-mono text-base font-bold text-text-base">{value == null ? '—' : `${value.toFixed(1)}%`}</p>
+              <p className="font-mono text-base text-text-base">{value == null ? '—' : `${value.toFixed(1)}%`}</p>
             </div>
           ))}
         </div>
@@ -86,7 +86,7 @@ export function InfrastructurePage() {
           {directResources.length > 0 && (
             <section>
               <div className="mb-3 flex items-end justify-between gap-3">
-                <div><h2 className="text-base font-bold text-text-base">직접 연결 Collector</h2><p className="mt-0.5 text-sm text-text-muted">표준 OTel hostmetrics receiver가 직접 전송합니다.</p></div>
+                <div><h2 className="text-base text-text-base">직접 연결 Collector</h2><p className="mt-0.5 text-sm text-text-muted">표준 OTel hostmetrics receiver가 직접 전송합니다.</p></div>
                 <span className="font-mono text-xs text-text-dim">{directResources.length}</span>
               </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{directResources.map(resource => <ResourceCard key={resource.id} resource={resource} />)}</div>
@@ -95,7 +95,7 @@ export function InfrastructurePage() {
           {agentResources.length > 0 && (
             <section>
               <div className="mb-3 flex items-end justify-between gap-3">
-                <div><h2 className="text-base font-bold text-text-base">Docker 호스트</h2><p className="mt-0.5 text-sm text-text-muted">EveryUp Docker 수집기의 인프라 프로필이 수집합니다.</p></div>
+                <div><h2 className="text-base text-text-base">Docker 호스트</h2><p className="mt-0.5 text-sm text-text-muted">EveryUp Docker 수집기의 인프라 프로필이 수집합니다.</p></div>
                 <span className="font-mono text-xs text-text-dim">{agentResources.length}</span>
               </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{agentResources.map(resource => <ResourceCard key={resource.id} resource={resource} />)}</div>

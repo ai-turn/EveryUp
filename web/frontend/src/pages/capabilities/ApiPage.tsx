@@ -50,15 +50,15 @@ function ApiCard({
         <div className="flex min-w-0 items-center gap-2.5">
           <MaterialIcon name="api" className="text-lg text-primary" />
           <div className="min-w-0">
-            <h2 className="truncate text-base font-bold text-text-base group-hover:text-primary">{name}</h2>
+            <h2 className="truncate text-base text-text-base group-hover:text-primary">{name}</h2>
             <p className="mt-0.5 truncate text-xs text-text-muted">{source}</p>
           </div>
         </div>
         <StatusBadge healthy={active} />
       </div>
       <div className="mt-5 grid grid-cols-2 gap-3">
-        <div><p className="text-xs text-text-dim">요청</p><p className="font-mono text-lg font-bold text-text-base">{total.toLocaleString()}</p></div>
-        <div><p className="text-xs text-text-dim">5xx</p><p className={`font-mono text-lg font-bold ${hasErrors ? 'text-status-error' : 'text-text-base'}`}>{summary.count5xx.toLocaleString()}</p></div>
+        <div><p className="text-xs text-text-dim">요청</p><p className="font-mono text-lg text-text-base">{total.toLocaleString()}</p></div>
+        <div><p className="text-xs text-text-dim">5xx</p><p className={`font-mono text-lg ${hasErrors ? 'text-status-error' : 'text-text-base'}`}>{summary.count5xx.toLocaleString()}</p></div>
       </div>
       {summary.top5xxPath ? (
         <p className="mt-4 truncate font-mono text-xs text-text-muted">{summary.top5xxMethod} {summary.top5xxPath}</p>
@@ -124,7 +124,7 @@ export function ApiPage() {
             <section>
               <div className="mb-3 flex items-end justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-bold text-text-base">직접 연결 서비스</h2>
+                  <h2 className="text-base text-text-base">직접 연결 서비스</h2>
                   <p className="mt-0.5 text-sm text-text-muted">애플리케이션이 전송하는 OTLP traces를 직접 받습니다.</p>
                 </div>
                 <span className="font-mono text-xs text-text-dim">{directRows.length}</span>
@@ -141,7 +141,7 @@ export function ApiPage() {
             <section>
               <div className="mb-3 flex items-end justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-bold text-text-base">Docker 서비스</h2>
+                  <h2 className="text-base text-text-base">Docker 서비스</h2>
                   <p className="mt-0.5 text-sm text-text-muted">EveryUp Docker 수집기가 발견하고 전달한 API 요청입니다.</p>
                 </div>
                 <span className="font-mono text-xs text-text-dim">{agentRows.length}</span>
