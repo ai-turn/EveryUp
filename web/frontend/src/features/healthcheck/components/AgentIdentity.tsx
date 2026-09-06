@@ -60,7 +60,7 @@ export function AgentIdentity({ service, showName = true }: { service: AgentServ
               )}
               <span className={`relative inline-flex rounded-full h-2 w-2 ${cfg.dot}`} />
             </span>
-            <span className={`${cfg.text} text-sm font-semibold uppercase tracking-wider`}>
+            <span className={`${cfg.text} text-sm uppercase tracking-wider`}>
               {cfg.label}
             </span>
           </div>
@@ -79,7 +79,7 @@ export function AgentIdentity({ service, showName = true }: { service: AgentServ
 
       {!service.healthy && service.lastError && (
         <div className="mt-4 p-3 rounded-lg bg-ui-hover-soft border border-ui-border text-sm text-text-secondary">
-          <span className="font-semibold text-status-error">오류: </span>
+          <span className="text-status-error">오류: </span>
           {service.lastError}
         </div>
       )}

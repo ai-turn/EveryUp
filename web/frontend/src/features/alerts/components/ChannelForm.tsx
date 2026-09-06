@@ -458,7 +458,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                         <p className="text-sm font-bold text-text-base truncate">
                                             {watchedName || <span className="text-slate-400 font-normal italic">채널 이름 미입력</span>}
                                         </p>
-                                        <p className={`text-sm font-semibold ${meta.color}`}>{meta.label}</p>
+                                        <p className={`text-sm ${meta.color}`}>{meta.label}</p>
                                     </div>
                                 </div>
 

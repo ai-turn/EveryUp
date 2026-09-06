@@ -143,7 +143,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
           aria-label="전체 타입"
           value={typeFilter}
           onChange={e => setTypeFilter(e.target.value)}
-          className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm font-medium text-text-secondary cursor-pointer"
+          className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm text-text-secondary cursor-pointer"
         >
           <option value="all">전체 타입</option>
           <option value="resource">리소스</option>
@@ -158,7 +158,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
           aria-label="전체 채널"
           value={channelFilter}
           onChange={e => setChannelFilter(e.target.value)}
-          className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm font-medium text-text-secondary cursor-pointer"
+          className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm text-text-secondary cursor-pointer"
         >
           <option value="all">전체 채널</option>
           {channels.map(ch => (
@@ -170,7 +170,7 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
           aria-label="최근 7일"
           value={periodDays}
           onChange={e => setPeriodDays(Number(e.target.value) as PeriodDays)}
-          className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm font-medium text-text-secondary cursor-pointer"
+          className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm text-text-secondary cursor-pointer"
         >
           <option value={1}>최근 24시간</option>
           <option value={7}>최근 7일</option>

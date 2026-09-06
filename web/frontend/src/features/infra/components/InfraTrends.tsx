@@ -51,7 +51,7 @@ export function InfraTrends({ hostId, refreshKey = 0, range }: InfraTrendsProps)
           <h2 className="text-xl font-bold tracking-tight text-text-base">
             인프라 추세
           </h2>
-          <p className="mt-1 text-sm font-medium text-text-muted">
+          <p className="mt-1 text-sm text-text-muted">
             {rangeLabel[range]}
           </p>
         </div>
@@ -108,7 +108,7 @@ function ChartCard({
       {isEmpty ? (
         <div className="flex h-60 flex-col items-center justify-center gap-2 text-text-dim">
           <MaterialIcon name="show_chart" className="text-4xl opacity-30" />
-          <p className="text-sm font-medium">
+          <p className="text-sm">
             {`${rangeLabel} 동안 활동 없음`}
           </p>
         </div>

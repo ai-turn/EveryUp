@@ -65,7 +65,7 @@ export function ChannelFormPage() {
             채널
           </button>
           <MaterialIcon name="chevron_right" className="text-sm opacity-50" />
-          <span className="text-text-base font-medium truncate max-w-50">
+          <span className="text-text-base truncate max-w-50">
             {loading ? '...' : isEdit ? (channel?.name ?? '수정') : '새 채널'}
           </span>
         </nav>

@@ -58,7 +58,7 @@ function KpiCard({ label, value, unit, sub, tone }: {
       <div className="text-xs text-text-muted">{label}</div>
       <div className={`text-xl font-bold mt-1 font-mono ${valueColor}`}>
         {value}
-        {unit && <span className="text-xs font-medium text-text-dim ml-0.5">{unit}</span>}
+        {unit && <span className="text-xs text-text-dim ml-0.5">{unit}</span>}
       </div>
       {sub && <div className="text-xs text-text-dim mt-0.5">{sub}</div>}
     </div>
@@ -127,7 +127,7 @@ function ServiceCard({ service, metric, onOpen }: {
         </div>
         <div className="min-w-0">
           <div className="text-xs text-text-dim">상태</div>
-          <div className={`font-mono font-semibold ${service.healthy ? 'text-status-healthy' : 'text-status-error'}`}>
+          <div className={`font-mono ${service.healthy ? 'text-status-healthy' : 'text-status-error'}`}>
             {service.lastStatus ?? '—'}
           </div>
         </div>
@@ -274,11 +274,11 @@ export function ProjectDetailPage() {
           <p className="text-sm text-text-muted flex items-center gap-1.5">
             <span>서비스 {services.length}개</span>
             <span className="text-text-dim">·</span>
-            <span className="text-status-healthy font-medium">{healthy} 정상</span>
+            <span className="text-status-healthy">{healthy} 정상</span>
             {!allHealthy && (
               <>
                 <span className="text-text-dim">·</span>
-                <span className="text-status-error font-medium">{services.length - healthy} 장애</span>
+                <span className="text-status-error">{services.length - healthy} 장애</span>
               </>
             )}
           </p>
@@ -412,7 +412,7 @@ export function ProjectDetailPage() {
 
       {/* 90-day uptime — 낮고 넓은 바라서 full-width 단독 행 (바 폭 확보 + 높이 불일치 해소) */}
       {services.length > 0 && agentId && (
-        <AgentCheckHistoryBar agentId={agentId} className="" />
+        <AgentCheckHistoryBar agentId={agentId} />
       )}
 
       {/* Incident history | event timeline — 둘 다 리스트 카드라 나란히 두면 높이가 맞는다 */}

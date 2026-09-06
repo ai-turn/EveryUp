@@ -172,10 +172,17 @@ primary #3b76c9 → emerald #059669 → amber #d97706 → violet #7c3aed → red
 |---|---|---|
 | `font-bold` | **700** | 제목(h1·h2·h3), 배지, KPI 수치 |
 | `font-semibold` | **500** | 버튼, 테이블 `<th>`, **uppercase 라벨**, 강조 레이블 |
-| `font-medium` | 400 | 보조 레이블 (§6) — 현재 기본과 같은 굵기 |
 | 기본 | 400 | 본문 |
 
 **크기와 굵기를 함께 쓴다.** 밀집 UI는 크기 대역이 12~24px로 좁아 크기 혼자 위계를 만들지 못한다. 레퍼런스 두 곳이 같은 결론이다 — [Atlassian](https://atlassian.design/foundations/typography)은 Heading을 12px까지 전부 Bold로 두고 `Heading xsmall`(14px Bold)과 `Body`(14px Regular)를 **같은 크기에서 굵기로** 가른다. [Carbon](https://v10.carbondesignsystem.com/guidelines/typography/overview/)도 3단(Light·Regular·SemiBold)을 쓰며 "같은 크기면 굵은 쪽이 강조가 세고, 크고 가벼운 글자가 작고 굵은 글자보다 위계가 높을 수 있다"고 적는다. 즉 `text-sm font-bold` 제목과 `text-sm` 본문이 공존하는 건 부채가 아니라 정석이다.
+
+**레이블과 값이 이미 갈렸으면 값에 굵기를 얹지 않는다.** `<dt class="text-xs text-text-dim">` / `<dd class="text-sm text-text-secondary">` 구조는 크기(12→14)와 색(dim→secondary) 두 채널이 이미 둘을 가른다. 굵기는 세 번째 채널이라 잉여다. Direct API·Logs·Metrics·Infrastructure 상세와 API 키 마스크 12곳에서 뺐다.
+
+**`font-medium`은 쓰지 않는다.** Spoqa의 쓸 수 있는 굵기가 400/500/700 셋뿐이라 `font-semibold`가 500을 가져가면서 `font-medium`은 기본(400)과 같아졌다. 아무 효과 없는 클래스가 "여기는 500"이라고 오해하게 만들어 37곳에서 제거했다. 600을 가진 폰트로 옮기면 semibold를 600으로 올리고 medium을 500으로 되살리면 된다.
+
+**강조 채널은 한 번에 하나다.** 상태색(`text-status-*`)이 걸린 텍스트에 굵기를 겹치지 않는다 — 색이 이미 강조를 다 하고 있어 굵기는 잉여이고, Spoqa처럼 획이 두꺼운 폰트에서는 화면이 묵직해질 뿐이다. 개요 카드의 `detail`(`2개 연결 확인 필요`·`1개 장애 신호`)이 대표 사례로, `text-xs font-semibold text-status-warn`에서 굵기를 뺐다. 8곳 적용.
+
+다만 **중립색 제목은 예외다.** 에러 배너의 `text-sm font-semibold text-text-base`처럼 텍스트 자체는 중립이고 상태색이 옆 아이콘에만 있는 자리는 굵기가 제목 위계를 만드는 유일한 수단이므로 유지한다.
 
 **`uppercase tracking-*` 라벨은 `font-semibold`다.** `<th>` 스펙(§2.3)이 이미 semibold인데 폼·패널의 같은 꼴 라벨 19곳이 bold를 쓰고 있었다. 대문자 + 자간 확장이 이미 강조를 만들므로 굵기까지 올리지 않는다.
 

@@ -55,7 +55,7 @@ function MetricCard({
         <>
           <p className="mt-4 break-all font-mono text-xs text-text-muted">{metric.metricName}</p>
           <div className="mt-6 flex items-end justify-between gap-3">
-            <span className="text-xs font-medium text-text-muted">현재 값</span>
+            <span className="text-xs text-text-muted">현재 값</span>
             <span className="font-mono text-2xl font-bold tabular-nums text-text-base">{formatMetric(metric.value, metric.unit)}</span>
           </div>
         </>

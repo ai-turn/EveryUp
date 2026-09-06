@@ -180,7 +180,7 @@ export function LoginPage() {
                     환경 변수로 임시 계정을 만들어 로그인한 뒤, 설정 → 계정 초기화에서 계정을 새로 생성하세요.
                   </p>
                   <div className="space-y-1">
-                    <p className="text-sm font-semibold text-text-muted">① 환경 변수 설정 후 재시작</p>
+                    <p className="text-sm text-text-muted">① 환경 변수 설정 후 재시작</p>
                     <pre className="text-xs bg-bg-main border border-ui-border rounded-lg p-2.5 overflow-x-auto text-text-secondary leading-relaxed">
 {`# docker-compose.yml
 environment:
@@ -190,8 +190,8 @@ environment:
 docker compose restart`}
                     </pre>
                   </div>
-                  <p className="text-sm font-semibold text-text-muted">② 위 계정 정보로 로그인</p>
-                  <p className="text-sm font-semibold text-text-muted">③ 설정 → 계정 초기화 → 새 계정 생성</p>
+                  <p className="text-sm text-text-muted">② 위 계정 정보로 로그인</p>
+                  <p className="text-sm text-text-muted">③ 설정 → 계정 초기화 → 새 계정 생성</p>
                 </div>
 
                 {/* Method 2: Remove data volume */}

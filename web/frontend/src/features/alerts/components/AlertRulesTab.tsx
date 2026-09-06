@@ -386,7 +386,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
           aria-label="전체 심각도"
           value={severityFilter}
           onChange={e => setSeverityFilter(e.target.value as typeof severityFilter)}
-          className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm font-medium text-text-secondary cursor-pointer"
+          className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm text-text-secondary cursor-pointer"
         >
           <option value="all">전체 심각도</option>
           <option value="critical">심각</option>
@@ -398,7 +398,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
           aria-label="전체 상태"
           value={enabledFilter}
           onChange={e => setEnabledFilter(e.target.value as typeof enabledFilter)}
-          className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm font-medium text-text-secondary cursor-pointer"
+          className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm text-text-secondary cursor-pointer"
         >
           <option value="all">전체 상태</option>
           <option value="on">활성</option>
@@ -593,7 +593,7 @@ function ChannelAvatars({ rule, channels }: { rule: AlertRule; channels: Notific
 
   if (ruleChannels.length === 0) {
     return (
-      <span className="inline-flex max-w-full items-center gap-1.5 text-sm font-medium text-text-dim">
+      <span className="inline-flex max-w-full items-center gap-1.5 text-sm text-text-dim">
         <MaterialIcon name="notifications_off" className="shrink-0 text-base" />
         <span className="truncate">등록된 알림 채널이 없습니다</span>
       </span>

@@ -51,7 +51,7 @@ export function Field({ label, hint, required, children, error, htmlFor }: {
                 {required && <span className="text-red-500 text-xs">*</span>}
             </div>
             {children}
-            {error && <p className="text-sm text-red-500 font-medium mt-1">{error}</p>}
+            {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
             {hint && !error && <p className="text-sm text-text-dim mt-1.5 italic">{hint}</p>}
         </div>
     );

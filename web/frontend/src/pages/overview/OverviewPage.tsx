@@ -35,12 +35,12 @@ function SummaryCard({ icon, label, value, detail, tone = 'idle' }: {
     <article className="rounded-xl border border-ui-border bg-bg-surface p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-medium text-text-muted">{label}</p>
+          <p className="text-xs text-text-muted">{label}</p>
           <p className="mt-1 font-mono text-2xl font-bold tabular-nums text-text-base">{value}</p>
         </div>
         <MaterialIcon name={icon} className={`text-xl ${toneClass}`} />
       </div>
-      <p className={`mt-3 text-xs font-semibold ${toneClass}`}>{detail}</p>
+      <p className={`mt-3 text-xs ${toneClass}`}>{detail}</p>
     </article>
   );
 }

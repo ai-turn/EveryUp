@@ -149,13 +149,13 @@ function ServiceRequestTrends({
             </div>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs">
               {classes.map((c) => (
-                <span key={c.label} className={`font-mono font-semibold ${c.text}`}>
+                <span key={c.label} className={`font-mono ${c.text}`}>
                   {c.label} {((c.count / total) * 100).toFixed(1)}%
                 </span>
               ))}
               {summary.top5xxPath && (
                 <span className="text-text-muted truncate">
-                  · {'5xx 최다'}: <span className="font-mono font-semibold text-status-error">{summary.top5xxMethod} {summary.top5xxPath}</span> ×{summary.top5xxCount}
+                  · {'5xx 최다'}: <span className="font-mono text-status-error">{summary.top5xxMethod} {summary.top5xxPath}</span> ×{summary.top5xxCount}
                 </span>
               )}
             </div>

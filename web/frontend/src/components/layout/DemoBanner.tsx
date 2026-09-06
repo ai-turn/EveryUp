@@ -4,7 +4,7 @@ import { DemoScenarioSwitcher } from './DemoScenarioSwitcher'
 
 const bannerText = (
   <>
-    <span className="text-white font-medium">모든 데이터는 예시용 데이터이며, 실제 서버와 연결되어 있지 않습니다.</span>
+    <span className="text-white">모든 데이터는 예시용 데이터이며, 실제 서버와 연결되어 있지 않습니다.</span>
     <span className="text-slate-400 mx-1.5">|</span>
     <span>All data is for demonstration purposes only and is not connected to a real server.</span>
   </>

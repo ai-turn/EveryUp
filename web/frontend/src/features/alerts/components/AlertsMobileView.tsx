@@ -95,19 +95,19 @@ export function AlertsMobileView({
       {stats && (
         <div className="grid grid-cols-3 gap-2">
           <div className="bg-bg-surface border border-ui-border rounded-xl p-3">
-            <p className="text-sm font-medium text-text-muted truncate">
+            <p className="text-sm text-text-muted truncate">
               성공률
             </p>
             <p className="text-xl font-bold text-text-base">{stats.successRate.toFixed(0)}%</p>
           </div>
           <div className="bg-bg-surface border border-ui-border rounded-xl p-3">
-            <p className="text-sm font-medium text-status-healthy truncate">
+            <p className="text-sm text-status-healthy truncate">
               발송
             </p>
             <p className="text-xl font-bold text-status-healthy">{stats.totalSent}</p>
           </div>
           <div className="bg-bg-surface border border-ui-border rounded-xl p-3">
-            <p className="text-sm font-medium text-status-error truncate">
+            <p className="text-sm text-status-error truncate">
               실패
             </p>
             <p className="text-xl font-bold text-status-error">{stats.totalFailed}</p>
@@ -183,7 +183,7 @@ export function AlertsMobileView({
                           </span>
                         )}
                       </div>
-                      <p className={`text-sm font-semibold ${meta.text}`}>{channel.type}</p>
+                      <p className={`text-sm ${meta.text}`}>{channel.type}</p>
                     </div>
                     <Toggle checked={channel.isEnabled} onChange={() => onToggleChannel(channel.id)} disabled={togglingIds.has(channel.id)} ariaLabel={`${channel.name} ${channel.isEnabled ? '비활성화' : '활성화'}`} />
                   </div>

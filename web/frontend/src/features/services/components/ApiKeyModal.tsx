@@ -81,7 +81,7 @@ export function ApiKeyModal({ agentId, agentName, onClose, onRotated }: Props) {
           ) : available ? (
             <>
               <div className="space-y-1.5">
-                <p className="text-xs font-medium text-text-muted uppercase tracking-wider">API 키</p>
+                <p className="text-xs text-text-muted uppercase tracking-wider">API 키</p>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 px-3 py-2.5 rounded-xl bg-ui-hover-soft border border-ui-border text-xs font-mono text-text-base break-all">
                     {apiKey}
@@ -97,7 +97,7 @@ export function ApiKeyModal({ agentId, agentName, onClose, onRotated }: Props) {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <p className="text-xs font-medium text-text-muted uppercase tracking-wider">Docker 수집기 설정</p>
+                <p className="text-xs text-text-muted uppercase tracking-wider">Docker 수집기 설정</p>
                 <pre className="px-3 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-950 text-xs font-mono text-slate-100 overflow-x-auto">{`EVERYUP_AGENT_API_KEY=${apiKey}`}</pre>
               </div>
             </>

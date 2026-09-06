@@ -54,7 +54,7 @@ function ProjectCard({ agentId, agent, agentName, services, overview }: ProjectC
       {/* Summary: service count + health */}
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm text-text-muted">{`서비스 ${total}개`}</span>
-        <span className={`flex items-center gap-1 text-sm font-semibold ${allHealthy ? 'text-status-healthy' : 'text-status-error'}`}>
+        <span className={`flex items-center gap-1 text-sm ${allHealthy ? 'text-status-healthy' : 'text-status-error'}`}>
           <MaterialIcon name={allHealthy ? 'check_circle' : 'cancel'} className="text-sm" />
           {healthy}/{total} 정상
         </span>

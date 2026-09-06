@@ -41,7 +41,7 @@ export function ChannelHealthMeta({ health, compact = false }: Props) {
       </span>
 
       {total > 0 ? (
-        <span className={`inline-flex items-center gap-1 font-semibold ${rateColor}`} title="7일 성공률">
+        <span className={`inline-flex items-center gap-1 ${rateColor}`} title="7일 성공률">
           <MaterialIcon name="check_circle" className="text-sm" />
           {successRate}% <span className="font-normal text-text-dim">({sent}/{total})</span>
         </span>

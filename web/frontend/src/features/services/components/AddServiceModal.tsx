@@ -139,7 +139,7 @@ function AgentForm({
   return (
     <form onSubmit={onSubmit} className="p-6 space-y-5">
       <div className="space-y-1.5">
-        <label htmlFor="new-project-name" className="text-sm font-medium text-text-secondary">
+        <label htmlFor="new-project-name" className="text-sm text-text-secondary">
           Docker 환경 이름
         </label>
         <Input
@@ -155,7 +155,7 @@ function AgentForm({
       </div>
       <div className="space-y-2">
         <div>
-          <span className="text-sm font-medium text-text-secondary">수집 범위</span>
+          <span className="text-sm text-text-secondary">수집 범위</span>
           <p className="mt-0.5 text-xs text-text-muted">필요한 권한과 수집기만 설치합니다.</p>
         </div>
         <SegmentedControl
@@ -260,7 +260,7 @@ function AgentInstallCommand({
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="agent-web-base-url" className="text-xs font-medium uppercase tracking-wider text-text-muted">
+          <label htmlFor="agent-web-base-url" className="text-xs uppercase tracking-wider text-text-muted">
             Docker 수집기에서 접근할 EveryUp Web 주소
           </label>
           <Input

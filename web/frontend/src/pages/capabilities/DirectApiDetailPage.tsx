@@ -184,13 +184,13 @@ export function DirectApiDetailPage() {
           <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg bg-ui-hover-soft p-3">
             <div className="min-w-0 flex-1">
               <p className="text-xs text-text-dim">수집 키</p>
-              <p className="mt-1 truncate font-mono text-sm font-semibold text-text-secondary">{service.apiKeyMasked || '마스킹된 키 없음'}</p>
+              <p className="mt-1 truncate font-mono text-sm text-text-secondary">{service.apiKeyMasked || '마스킹된 키 없음'}</p>
             </div>
             <Button variant="secondary" size="sm" onClick={() => setConfirmAction('rotate')}><MaterialIcon name="key" />키 재발급</Button>
           </div>
           <dl className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-lg bg-ui-hover-soft p-3"><dt className="text-xs text-text-dim">마지막 수집</dt><dd className="mt-1 text-sm font-semibold text-text-secondary">{service.lastSeenAt ? new Date(service.lastSeenAt).toLocaleString() : '아직 없음'}</dd></div>
-            <div className="rounded-lg bg-ui-hover-soft p-3"><dt className="text-xs text-text-dim">허용 신호</dt><dd className="mt-1 font-mono text-sm font-semibold text-text-secondary">{service.signals.join(', ')}</dd></div>
+            <div className="rounded-lg bg-ui-hover-soft p-3"><dt className="text-xs text-text-dim">마지막 수집</dt><dd className="mt-1 text-sm text-text-secondary">{service.lastSeenAt ? new Date(service.lastSeenAt).toLocaleString() : '아직 없음'}</dd></div>
+            <div className="rounded-lg bg-ui-hover-soft p-3"><dt className="text-xs text-text-dim">허용 신호</dt><dd className="mt-1 font-mono text-sm text-text-secondary">{service.signals.join(', ')}</dd></div>
           </dl>
         </section>
 

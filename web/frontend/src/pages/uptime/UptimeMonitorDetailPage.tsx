@@ -83,7 +83,7 @@ function RecentChecks({ metrics }: { metrics: UptimeMonitorMetric[] }) {
             <div key={metric.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
               <span role="img" aria-label={metric.status === 'success' ? '정상' : '장애'} className={`h-2.5 w-2.5 shrink-0 rounded-full ${metric.status === 'success' ? 'bg-status-healthy' : 'bg-status-error'}`} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-text-secondary">{metric.errorMessage || metric.status === 'success' ? '정상 응답' : '체크 실패'}</p>
+                <p className="truncate text-sm text-text-secondary">{metric.errorMessage || metric.status === 'success' ? '정상 응답' : '체크 실패'}</p>
                 <p className="mt-0.5 text-xs text-text-dim">{new Date(metric.checkedAt).toLocaleString()}</p>
               </div>
               {metric.statusCode ? <span className="font-mono text-xs text-text-muted">HTTP {metric.statusCode}</span> : null}
@@ -193,7 +193,7 @@ export function UptimeMonitorDetailPage() {
   return (
     <div className="space-y-5">
       <div>
-        <Link to="/uptime" className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-text-muted transition-colors hover:text-primary">
+        <Link to="/uptime" className="mb-3 inline-flex items-center gap-1 text-sm text-text-muted transition-colors hover:text-primary">
           <MaterialIcon name="arrow_back" className="text-lg" />업타임
         </Link>
         <div className="flex flex-col gap-4 md:flex-row md:items-start">

@@ -49,7 +49,7 @@ function ContainerMeta({ service }: { service: AgentServiceFlat }) {
       {restarts > 0 && (
         <>
           <span className="text-text-dim shrink-0">·</span>
-          <span className={`shrink-0 ${restarts >= 3 ? 'text-status-warn font-medium' : ''}`}>
+          <span className={`shrink-0 ${restarts >= 3 ? 'text-status-warn' : ''}`}>
             재시작 {restarts}회
           </span>
         </>
@@ -129,7 +129,7 @@ function MobileLayout(props: LayoutProps) {
           className="flex items-center gap-1 text-text-muted active:opacity-60 transition-opacity cursor-pointer"
         >
           <MaterialIcon name="arrow_back" className="text-lg" />
-          <span className="text-sm font-medium">목록으로</span>
+          <span className="text-sm">목록으로</span>
         </button>
         <div className="flex items-center gap-2">
           <TimeRangePicker value={range} onChange={onRangeChange} />

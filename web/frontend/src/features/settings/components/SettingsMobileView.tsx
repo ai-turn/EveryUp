@@ -74,7 +74,7 @@ export function SettingsMobileView({
       <SectionCard title="인터페이스" subtitle="테마, 시간대 설정">
         {/* Theme */}
         <div className="space-y-2">
-          <p className="text-sm font-medium text-text-base">테마</p>
+          <p className="text-sm text-text-base">테마</p>
           <p className="text-sm text-text-muted">라이트 또는 다크 모드를 선택합니다</p>
           <div className="flex gap-1 bg-ui-hover p-1 rounded-lg">
             {(['light', 'dark'] as const).map((t_) => (
@@ -106,7 +106,7 @@ export function SettingsMobileView({
           <>
             {/* Collect interval */}
             <div className="space-y-2">
-              <p className="text-sm font-medium text-text-base">수집 주기</p>
+              <p className="text-sm text-text-base">수집 주기</p>
               <p className="text-sm text-text-muted">시스템 메트릭을 수집하는 간격 · 다음 시작 시 적용됩니다</p>
               <div className="flex gap-1 flex-wrap bg-ui-hover p-1 rounded-lg">
                 {(COLLECT_INTERVAL_OPTIONS.includes(collectInterval)
@@ -132,7 +132,7 @@ export function SettingsMobileView({
 
             {/* Metrics */}
             <div className="space-y-2">
-              <p className="text-sm font-medium text-text-base">메트릭 보존 기간</p>
+              <p className="text-sm text-text-base">메트릭 보존 기간</p>
               <p className="text-sm text-text-muted">수집된 시스템 메트릭 데이터 보존 기간</p>
               <div className="flex gap-1 flex-wrap bg-ui-hover p-1 rounded-lg">
                 {METRICS_RETENTION_OPTIONS.map((opt) => (
@@ -155,7 +155,7 @@ export function SettingsMobileView({
 
             {/* Logs */}
             <div className="space-y-2">
-              <p className="text-sm font-medium text-text-base">로그 보존 기간</p>
+              <p className="text-sm text-text-base">로그 보존 기간</p>
               <p className="text-sm text-text-muted">에러 로그 데이터 보존 기간</p>
               <div className="flex gap-1 flex-wrap bg-ui-hover p-1 rounded-lg">
                 {LOGS_RETENTION_OPTIONS.map((opt) => (

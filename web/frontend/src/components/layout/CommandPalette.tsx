@@ -189,7 +189,7 @@ export function CommandPalette() {
                     className={`ml-1 mr-1 h-1.5 w-1.5 rounded-full shrink-0 ${item.healthy ? 'bg-status-healthy' : 'bg-status-error'}`}
                   />
                 )}
-                <span className="text-sm font-medium truncate">{item.label}</span>
+                <span className="text-sm truncate">{item.label}</span>
                 {item.meta && (
                   <span className="ml-auto text-xs text-text-dim shrink-0">{item.meta}</span>
                 )}
