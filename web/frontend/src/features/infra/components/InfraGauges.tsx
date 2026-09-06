@@ -61,7 +61,7 @@ function VitalGaugeCard({ gauge }: { gauge: GaugeData }) {
 
       {/* 값 + 단위 + 상태 pill */}
       <div className="mt-3 flex items-baseline gap-1.5">
-        <span className="text-2xl font-extrabold tracking-tight tabular-nums text-text-base">
+        <span className="text-2xl tracking-tight tabular-nums text-text-base">
           {displayValue}
         </span>
         <span className="text-sm text-text-dim">{displayUnit}</span>

@@ -113,12 +113,12 @@ export function AlertsDesktopView({
       <div className="mb-5 grid grid-cols-5 divide-x divide-ui-border-soft rounded-xl border border-ui-border bg-bg-surface py-3.5">
         <div className="flex flex-col gap-0.5 px-5">
           <span className="text-xs text-text-muted">발송 (7일)</span>
-          <span className="text-xl font-extrabold tabular-nums text-text-base">{totalSent}</span>
+          <span className="text-xl tabular-nums text-text-base">{totalSent}</span>
         </div>
         <div className="flex flex-col gap-0.5 px-5">
           <span className="text-xs text-text-muted">실패 (7일)</span>
           <span className="flex items-baseline gap-2.5">
-            <span className={`text-xl font-extrabold tabular-nums ${totalFailed > 0 ? 'text-red-600 dark:text-red-400' : 'text-text-base'}`}>
+            <span className={`text-xl tabular-nums ${totalFailed > 0 ? 'text-red-600 dark:text-red-400' : 'text-text-base'}`}>
               {totalFailed}
             </span>
             {totalFailed > 0 && (
@@ -134,7 +134,7 @@ export function AlertsDesktopView({
         <div className="flex flex-col gap-0.5 px-5">
           <span className="text-xs text-text-muted">성공률</span>
           <span className="flex items-center gap-2">
-            <span className="text-xl font-extrabold tabular-nums text-text-base">
+            <span className="text-xl tabular-nums text-text-base">
               {successRate != null ? `${successRate}%` : '—'}
             </span>
             {successRate != null && (
@@ -146,11 +146,11 @@ export function AlertsDesktopView({
         </div>
         <div className="flex flex-col gap-0.5 px-5">
           <span className="text-xs text-text-muted">활성 규칙</span>
-          <span className="text-xl font-extrabold tabular-nums text-text-base">{enabledRules}/{rules.length}</span>
+          <span className="text-xl tabular-nums text-text-base">{enabledRules}/{rules.length}</span>
         </div>
         <div className="flex flex-col gap-0.5 px-5">
           <span className="text-xs text-text-muted">활성 채널</span>
-          <span className="text-xl font-extrabold tabular-nums text-text-base">
+          <span className="text-xl tabular-nums text-text-base">
             {channels.filter(c => c.isEnabled).length}/{channels.length}
           </span>
         </div>
