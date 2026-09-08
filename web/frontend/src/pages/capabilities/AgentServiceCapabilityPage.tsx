@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import {
-  Button, EmptyState, MaterialIcon, PageHeader, SearchInput, StatusBadge,
+  Button, EmptyState, ListToolbar, MaterialIcon, PageHeader, SearchInput, StatusBadge,
 } from '../../components/common';
 import { UptimeMonitorDialog } from '../../features/uptime/components/UptimeMonitorDialog';
 import { UptimeMonitorStatusBadge } from '../../features/uptime/components/UptimeMonitorStatusBadge';
@@ -81,21 +81,24 @@ export function AgentServiceCapabilityPage() {
   return (
     <div>
       <PageHeader title="업타임" subtitle="Docker에서 발견한 서비스와 직접 추가한 업타임 모니터를 확인합니다.">
-        <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
-          <SearchInput value={query} onChange={(event) => setQuery(event.target.value)} placeholder="서비스 또는 대상 검색" aria-label="서비스 또는 대상 검색" wrapperClassName="w-full sm:w-72" />
-          <Button onClick={() => setAdding(true)}><MaterialIcon name="add" />업타임 추가</Button>
-        </div>
+        <Button onClick={() => setAdding(true)}><MaterialIcon name="add" />업타임 추가</Button>
       </PageHeader>
+      <ListToolbar search={
+        <SearchInput value={query} onChange={(event) => setQuery(event.target.value)} placeholder="서비스 또는 대상 검색" aria-label="서비스 또는 대상 검색" />
+      } />
 
       {loading ? <ServiceListSkeleton /> : error ? (
         <EmptyState icon="error_outline" title="대상을 불러오지 못했습니다" description={error} />
       ) : empty ? (
         <EmptyState icon="monitor_heart" title={normalizedQuery ? '검색 결과가 없습니다' : '표시할 업타임 대상이 없습니다'} description={normalizedQuery ? '검색어를 바꿔 다시 시도해 보세요.' : 'Docker 환경을 연결하거나 업타임 모니터를 직접 추가해 보세요.'} />
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-7">
           {filteredMonitors.length > 0 && (
             <section>
-              <div className="mb-3 flex items-center gap-2"><MaterialIcon name="public" className="text-lg text-primary" /><h2 className="text-base text-text-base">직접 추가한 업타임</h2></div>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h2 className="type-section-title text-text-base">직접 추가한 업타임</h2>
+                <span className="font-mono text-xs text-text-dim">{filteredMonitors.length}</span>
+              </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {filteredMonitors.map((monitor) => (
                   <UptimeTargetCard
@@ -103,7 +106,13 @@ export function AgentServiceCapabilityPage() {
                     to={`/uptime/${monitor.id}`}
                     title={monitor.name}
                     subtitle="직접 설정한 HTTP/TCP 모니터"
-                    status={<UptimeMonitorStatusBadge monitor={monitor} onToggle={() => void setActive(monitor)} />}
+                    status={<UptimeMonitorStatusBadge monitor={monitor} />}
+                    actions={
+                      <Button size="sm" variant="secondary" aria-label={`${monitor.name} ${monitor.isActive ? '일시정지' : '재개'}`} onClick={() => void setActive(monitor)}>
+                        <MaterialIcon name={monitor.isActive ? 'pause' : 'play_arrow'} />
+                        {monitor.isActive ? '일시정지' : '재개'}
+                      </Button>
+                    }
                     endpoint={monitor.type === 'tcp' ? `${monitor.url}:${monitor.port}` : monitor.url}
                     meta={<p className="text-xs text-text-muted">{monitor.type.toUpperCase()} · {monitor.interval}초</p>}
                   />
@@ -113,7 +122,10 @@ export function AgentServiceCapabilityPage() {
           )}
           {filteredAgentServices.length > 0 && (
             <section>
-              <div className="mb-3 flex items-center gap-2"><MaterialIcon name="smart_toy" className="text-lg text-primary" /><h2 className="text-base text-text-base">Docker에서 발견한 서비스</h2></div>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h2 className="type-section-title text-text-base">Docker에서 발견한 서비스</h2>
+                <span className="font-mono text-xs text-text-dim">{filteredAgentServices.length}</span>
+              </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {filteredAgentServices.map((service) => (
                   <UptimeTargetCard

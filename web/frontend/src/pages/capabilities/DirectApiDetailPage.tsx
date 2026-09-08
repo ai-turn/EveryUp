@@ -175,7 +175,7 @@ export function DirectApiDetailPage() {
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <section className="rounded-xl border border-ui-border bg-bg-surface p-5 lg:col-span-2">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <h2 className="text-base text-text-base">직접 수집 연결</h2>
+            <h2 className="type-card-title text-text-base">직접 수집 연결</h2>
             <span className={`inline-flex items-center gap-1.5 rounded border px-2 py-1 text-xs ${service.isActive ? 'border-status-healthy/20 bg-status-healthy/10 text-status-healthy' : 'border-status-error/20 bg-status-error/10 text-status-error'}`}>
               <span className={`h-1.5 w-1.5 rounded-full ${service.isActive ? 'bg-status-healthy' : 'bg-status-error'}`} aria-hidden="true" />
               {service.isActive ? '수집 가능' : '중지됨'}
@@ -195,7 +195,7 @@ export function DirectApiDetailPage() {
         </section>
 
         <section className="rounded-xl border border-ui-border bg-bg-surface p-5">
-          <h2 className="text-base text-text-base">Project</h2>
+          <h2 className="type-card-title text-text-base">Project</h2>
           <p className="mt-1 text-sm text-text-muted">직접 서비스는 Docker 환경과 별도로 Project에 배정합니다.</p>
           <div className="mt-4 space-y-3">
             <Select value={projectId} onChange={event => setProjectId(event.target.value)} aria-label="Project 선택">
@@ -210,7 +210,7 @@ export function DirectApiDetailPage() {
       <section className="mb-6 rounded-xl border border-ui-border bg-bg-surface p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="text-base text-text-base">API 제외 경로</h2>
+            <h2 className="type-card-title text-text-base">API 제외 경로</h2>
             <p className="mt-1 text-sm text-text-muted">수집 전에 제외할 경로를 한 줄에 하나씩 입력합니다. 정확한 경로 또는 끝에 *를 붙인 prefix를 지원합니다.</p>
           </div>
           <Button size="sm" onClick={() => void saveExclusions()} disabled={savingExclusions || excludePaths === savedExcludePaths}>

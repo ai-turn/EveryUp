@@ -137,7 +137,7 @@ function ServiceMetricsPanel({ source, refreshKey, range }: CommonProps & { sour
     <div className="space-y-4">
       <div className={`p-6 ${chartCardClass}`}>
         <div className="mb-6 flex min-w-0 flex-wrap items-center gap-3">
-          <span className="truncate font-mono text-sm font-semibold text-text-base">{selected}</span>
+          <span className="truncate font-mono text-sm font-medium text-text-base">{selected}</span>
           {selectedMeta && (
             <span className="shrink-0 rounded-full bg-ui-hover px-2 py-0.5 text-xs text-text-muted">
               {selectedMeta.metricType}{unit ? ` · ${unit}` : ''}
@@ -185,23 +185,23 @@ function ServiceMetricsPanel({ source, refreshKey, range }: CommonProps & { sour
                 valueFormatter={value => unit === 'By' ? formatMetricValue(value, unit) : String(Math.round(value * 100) / 100)}
               />
             </div>
-            {truncatedSeries > 0 && <p className="mt-2 text-xs text-text-dim">{`속성 조합이 많아 상위 ${MAX_SERIES}개 시리즈만 표시합니다. (+${truncatedSeries}개 생략)`}</p>}
+            {truncatedSeries > 0 && <p className="mt-2 type-body text-text-muted">{`속성 조합이 많아 상위 ${MAX_SERIES}개 시리즈만 표시합니다. (+${truncatedSeries}개 생략)`}</p>}
           </>
         )}
       </div>
 
       <div className="rounded-xl border border-ui-border bg-bg-surface p-6">
         <div className="mb-2 flex items-center gap-2">
-          <h3 className="text-base text-text-base">전체 시리즈</h3>
+          <h3 className="type-card-title text-text-base">전체 시리즈</h3>
           <span className="text-xs text-text-dim">행을 선택해 차트에 표시</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead><tr className="border-b border-ui-border-soft text-left text-xs font-semibold uppercase tracking-wider text-text-muted">
-              <th className="py-1.5 pr-3 font-semibold">시리즈</th>
-              <th className="py-1.5 pr-3 font-semibold">유형</th>
-              <th className="py-1.5 pr-3 font-semibold">단위</th>
-              <th className="py-1.5 text-right font-semibold">마지막 수신</th>
+            <thead><tr className="border-b border-ui-border-soft text-left text-xs font-medium uppercase tracking-wider text-text-muted">
+              <th className="py-1.5 pr-3 font-medium">시리즈</th>
+              <th className="py-1.5 pr-3 font-medium">유형</th>
+              <th className="py-1.5 pr-3 font-medium">단위</th>
+              <th className="py-1.5 text-right font-medium">마지막 수신</th>
             </tr></thead>
             <tbody>
               {names.map(name => {
@@ -220,7 +220,7 @@ function ServiceMetricsPanel({ source, refreshKey, range }: CommonProps & { sour
                     }}
                     className={`cursor-pointer border-b border-ui-border-soft/50 transition-colors last:border-0 ${active ? 'bg-primary/5' : 'hover:bg-ui-hover-soft'}`}
                   >
-                    <td className={`py-2 pr-3 font-mono text-xs ${active ? 'font-semibold text-primary' : 'text-text-secondary'}`}>{name.metricName}</td>
+                    <td className={`py-2 pr-3 font-mono text-xs ${active ? 'font-medium text-primary' : 'text-text-secondary'}`}>{name.metricName}</td>
                     <td className="py-2 pr-3 text-xs text-text-muted">{name.metricType}</td>
                     <td className="py-2 pr-3 text-xs text-text-muted">{name.unit || '—'}</td>
                     <td className="whitespace-nowrap py-2 text-right font-mono text-xs text-text-dim">{new Date(name.lastAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>

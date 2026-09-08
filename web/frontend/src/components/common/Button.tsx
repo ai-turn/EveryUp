@@ -15,13 +15,13 @@ const VARIANTS = {
 
 const SIZES = {
   sm: 'h-8 px-3 text-xs gap-1',
-  md: 'h-9 px-4 text-sm gap-1.5',
+  md: 'h-10 px-4 text-sm gap-1.5',
   lg: 'h-11 px-5 text-sm gap-2',
 } as const;
 
 // focus-visible 링은 index.css의 전역 규칙이 처리한다 — 여기서 중복 정의하지 않는다.
 const BASE =
-  'inline-flex items-center justify-center shrink-0 rounded-lg font-semibold ' +
+  'inline-flex items-center justify-center shrink-0 rounded-lg font-medium ' +
   'transition-all active:scale-95 cursor-pointer ' +
   'disabled:opacity-50 disabled:pointer-events-none';
 

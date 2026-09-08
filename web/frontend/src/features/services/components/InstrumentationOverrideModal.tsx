@@ -67,12 +67,11 @@ function CommandRow({
   return (
     <div className="rounded-lg border border-ui-border bg-ui-hover-soft px-3 py-2">
       <div className="mb-1 flex items-center justify-between gap-2">
-        <span className="text-xs font-semibold text-text-muted">{label}</span>
+        <span className="text-xs font-medium text-text-muted">{label}</span>
         <CopyButton
           onCopy={() => onCopy(command)}
           title={`${label} 복사`}
           className="rounded p-1 text-slate-500 hover:text-primary"
-          iconClassName="text-sm"
         />
       </div>
       <code className="block overflow-x-auto whitespace-nowrap font-mono text-xs text-text-secondary">
@@ -139,10 +138,10 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
       <div className="flex h-full max-h-full w-full max-w-2xl flex-col bg-bg-surface shadow-2xl sm:h-auto sm:max-h-[90vh] sm:rounded-xl">
         <div className="flex items-center gap-3 border-b border-ui-border px-5 py-4">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <MaterialIcon name="integration_instructions" className="text-lg" />
+            <MaterialIcon size={20} name="integration_instructions" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-base text-text-base">상세 API 모니터링 적용</h3>
+            <h3 className="type-card-title text-text-base">상세 API 모니터링 적용</h3>
             <p className="mt-0.5 text-sm text-text-muted">
               감지된 Java·Node.js 서비스에 OpenTelemetry를 안전하게 적용합니다.
             </p>
@@ -153,7 +152,7 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
             className="cursor-pointer rounded p-1.5 text-slate-400 hover:bg-ui-hover hover:text-text-secondary"
             aria-label="닫기"
           >
-            <MaterialIcon name="close" className="text-base" />
+            <MaterialIcon size={16} name="close" />
           </button>
         </div>
 
@@ -162,9 +161,9 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
             <div className="h-40 animate-pulse rounded-xl bg-ui-hover" />
           ) : targets.length === 0 ? (
             <div className="space-y-2 py-10 text-center">
-              <MaterialIcon name="info" className="text-3xl text-text-dim" />
+              <MaterialIcon size={32} name="info" className="text-text-dim" />
               <p className="text-sm text-text-muted">자동 적용할 수 있는 서비스가 없습니다.</p>
-              <p className="mx-auto max-w-sm text-xs text-text-dim">
+              <p className="mx-auto max-w-sm type-body text-text-muted">
                 Compose로 실행 중인 Java 또는 Node.js 서비스가 대상입니다. 나머지 서비스는 eBPF 기본 모니터링을 계속 사용할 수 있습니다.
               </p>
             </div>
@@ -172,10 +171,10 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
             <>
               <div className="rounded-xl border border-ui-border bg-ui-hover-soft p-4">
                 <div className="flex items-start gap-2.5">
-                  <MaterialIcon name="verified_user" className="mt-0.5 shrink-0 text-lg text-emerald-500" />
+                  <MaterialIcon size={20} name="verified_user" className="mt-0.5 shrink-0 text-emerald-500" />
                   <div>
                     <p className="text-sm text-text-base">원본 Compose는 수정하지 않습니다</p>
-                    <p className="mt-1 text-xs leading-relaxed text-text-muted">
+                    <p className="mt-1 type-body text-text-muted">
                       CLI가 별도 override를 만들고 선택한 서비스만 재시작합니다. 주입 옵션, 공유 볼륨, 네트워크와 컨테이너 상태를 확인하며 실패하면 직전 설정으로 자동 복구합니다.
                     </p>
                   </div>
@@ -183,12 +182,12 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
               </div>
 
               <div>
-                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-text-dim">적용 대상</p>
+                <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-text-dim">적용 대상</p>
                 <div className="flex flex-wrap gap-1.5">
                   {targets.map((target) => (
                     <span
                       key={target.composeService}
-                      className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary"
+                      className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
                     >
                       {target.name}
                       <span className="opacity-70">· {runtimeLabel(target.runtime)}</span>
@@ -200,7 +199,7 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
               <div className={`grid gap-3 ${composeProjects.length > 1 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
                 {composeProjects.length > 1 && (
                   <div className="space-y-1.5">
-                    <label htmlFor="otel-compose-project" className="text-xs font-semibold text-text-muted">
+                    <label htmlFor="otel-compose-project" className="text-xs font-medium text-text-muted">
                       Compose 프로젝트
                     </label>
                     <Select
@@ -212,11 +211,11 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
                         <option key={project} value={project}>{project}</option>
                       ))}
                     </Select>
-                    <p className="text-xs text-text-dim">한 번에 한 Compose 프로젝트씩 적용합니다.</p>
+                    <p className="type-body text-text-muted">한 번에 한 Compose 프로젝트씩 적용합니다.</p>
                   </div>
                 )}
                 <div className="space-y-1.5">
-                  <label htmlFor="otel-web-base-url" className="text-xs font-semibold text-text-muted">
+                  <label htmlFor="otel-web-base-url" className="text-xs font-medium text-text-muted">
                     모니터링 서버 주소
                   </label>
                   <Input
@@ -227,12 +226,12 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
                     placeholder="예: http://192.168.0.10:3001"
                     warn={webAddressMissing}
                   />
-                  <p className={`text-xs ${webAddressMissing ? 'text-amber-600 dark:text-amber-400' : 'text-text-dim'}`}>
+                  <p className={`type-body ${webAddressMissing ? 'text-amber-600 dark:text-amber-400' : 'text-text-muted'}`}>
                     {webAddressMissing ? '애플리케이션 서버에서 접근 가능한 주소를 입력하세요.' : 'CLI를 최신 버전으로 내려받을 주소입니다.'}
                   </p>
                 </div>
                 <div className="space-y-1.5">
-                  <label htmlFor="otel-compose-path" className="text-xs font-semibold text-text-muted">
+                  <label htmlFor="otel-compose-path" className="text-xs font-medium text-text-muted">
                     애플리케이션 Compose 경로
                   </label>
                   <Input
@@ -243,7 +242,7 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
                     placeholder="./docker-compose.yml"
                     mono warn={composePathMissing}
                   />
-                  <p className="text-xs text-text-dim">이 명령을 실행할 서버의 파일 경로입니다.</p>
+                  <p className="type-body text-text-muted">이 명령을 실행할 서버의 파일 경로입니다.</p>
                 </div>
               </div>
 
@@ -255,8 +254,8 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
                   className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-primary"
                 />
                 <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-text-base">요청·응답 바디도 수집</span>
-                  <span className="mt-0.5 block text-xs text-text-muted">
+                  <span className="block text-sm font-medium text-text-base">요청·응답 바디도 수집</span>
+                  <span className="mt-0.5 block type-body text-text-muted">
                     Node.js만 지원하며 민감 필드를 마스킹하고 크기를 제한합니다.
                     {hasJava && captureBodies && ' Java 서비스에는 헤더 수집만 적용됩니다.'}
                   </span>
@@ -267,14 +266,13 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-sm text-text-base">안전 적용 명령</p>
-                    <p className="mt-0.5 text-xs text-text-muted">애플리케이션 Compose가 있는 Linux 서버에서 실행하세요.</p>
+                    <p className="mt-0.5 type-body text-text-muted">애플리케이션 Compose가 있는 Linux 서버에서 실행하세요.</p>
                   </div>
                   <CopyButton
                     onCopy={() => copy(applyCommand)}
                     title={webAddressMissing || composePathMissing ? '주소와 Compose 경로를 입력하세요' : '안전 적용 명령 복사'}
                     disabled={webAddressMissing || composePathMissing}
-                    className="shrink-0 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
-                    iconClassName="text-base"
+                    className="shrink-0 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <span>복사</span>
                   </CopyButton>
@@ -285,7 +283,7 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
               </div>
 
               <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wider text-text-dim">적용 후 관리</p>
+                <p className="text-xs font-medium uppercase tracking-wider text-text-dim">적용 후 관리</p>
                 <CommandRow label="상태 확인" command={statusCommand} onCopy={copy} />
                 <CommandRow label="다시 검증" command={verifyCommand} onCopy={copy} />
                 <CommandRow label="직전 설정으로 되돌리기" command={rollbackCommand} onCopy={copy} />
@@ -293,11 +291,11 @@ export function InstrumentationOverrideModal({ agentId, onClose }: Props) {
 
               <div className="space-y-1 border-t border-ui-border-soft pt-3">
                 {skipped.length > 0 && (
-                  <p className="text-xs text-text-dim">
+                  <p className="type-body text-text-muted">
                     제외됨(Compose 관리 대상 아님): {skipped.map((service) => service.name).join(', ')}
                   </p>
                 )}
-                <p className="text-xs text-text-dim">
+                <p className="type-body text-text-muted">
                   Authorization, Cookie 등 민감 헤더는 서버에서 자동 마스킹됩니다.{' '}
                   <a href={DOC_URL} target="_blank" rel="noreferrer" className="text-primary hover:underline">
                     상세 계측 문서

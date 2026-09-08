@@ -36,16 +36,16 @@ export function DirectTelemetrySetupResult({
     <div className="space-y-5 p-6">
       <div className="flex items-start gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-status-healthy/10 text-status-healthy">
-          <MaterialIcon name="check" className="text-xl" />
+          <MaterialIcon size={20} name="check" />
         </span>
         <div>
-          <h3 className="text-lg text-text-base">{title}</h3>
+          <h3 className="type-card-title text-text-base">{title}</h3>
           <p className="mt-1 text-sm text-text-muted">API 키는 지금 한 번만 표시됩니다. 안전한 곳에 저장해 주세요.</p>
         </div>
       </div>
 
       <div className="space-y-2">
-        <p className="text-xs font-semibold text-text-secondary">직접 수집 API 키</p>
+        <p className="text-xs font-medium text-text-secondary">직접 수집 API 키</p>
         <div className="flex items-center gap-2 rounded-xl border border-ui-border bg-ui-hover-soft p-3">
           <code className="min-w-0 flex-1 break-all font-mono text-xs text-text-base">{setup.apiKey}</code>
           <CopyButton
@@ -58,11 +58,11 @@ export function DirectTelemetrySetupResult({
 
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-semibold text-text-secondary">OpenTelemetry 환경 변수</p>
+          <p className="text-xs font-medium text-text-secondary">OpenTelemetry 환경 변수</p>
           <CopyButton
             onCopy={() => copy(configuration)}
             title="환경 변수 복사"
-            className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-xs font-semibold text-primary hover:bg-primary/10"
+            className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-primary hover:bg-primary/10"
           >
             복사
           </CopyButton>

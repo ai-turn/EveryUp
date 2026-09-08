@@ -17,7 +17,7 @@ const TONE: Record<string, string> = {
 export function SeverityBadge({ severity }: { severity: string }) {
     return (
         <span
-            className={`inline-flex rounded-md px-2 py-0.5 text-xs uppercase tracking-wide ${TONE[severity] ?? TONE.info}`}
+            className={`badge ${TONE[severity] ?? TONE.info}`}
         >
             {severityLabel(severity)}
         </span>

@@ -13,9 +13,9 @@ interface InfoChipProps {
 function InfoChip({ icon, label, value }: InfoChipProps) {
   return (
     <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-bg-surface border border-ui-border">
-      <MaterialIcon name={icon} className="text-lg text-text-muted" />
+      <MaterialIcon size={20} name={icon} className="text-text-muted" />
       <span className="text-sm text-text-muted">{label}</span>
-      <span className="text-sm font-semibold text-text-base">{value}</span>
+      <span className="text-sm font-medium text-text-base">{value}</span>
     </div>
   );
 }

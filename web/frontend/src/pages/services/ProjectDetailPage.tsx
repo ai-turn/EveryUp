@@ -108,7 +108,7 @@ function ServiceCard({ service, metric, onOpen }: {
             className={`h-2.5 w-2.5 rounded-full shrink-0 mt-0.5 ${service.healthy ? 'bg-status-healthy' : 'bg-status-error animate-pulse'}`}
           />
           <div className="min-w-0">
-            <h3 className="text-base text-text-base truncate leading-tight">{service.name}</h3>
+            <h3 className="type-card-title text-text-base truncate">{service.name}</h3>
             <span className="text-xs text-text-dim truncate block">{service.runtime ?? service.checkType}</span>
           </div>
         </div>
@@ -116,14 +116,14 @@ function ServiceCard({ service, metric, onOpen }: {
           {!service.healthy && (
             <span className="text-xs text-status-error bg-status-error/10 px-1.5 py-0.5 rounded">장애</span>
           )}
-          <MaterialIcon name="chevron_right" className="text-base text-text-dim group-hover:text-primary transition-colors" />
+          <MaterialIcon size={16} name="chevron_right" className="text-text-dim group-hover:text-primary transition-colors" />
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-3 text-sm">
         <div className="min-w-0">
           <div className="text-xs text-text-dim">응답시간</div>
-          <div className="font-mono font-semibold text-text-base truncate">{service.lastLatency ?? '—'}</div>
+          <div className="font-mono font-medium text-text-base truncate">{service.lastLatency ?? '—'}</div>
         </div>
         <div className="min-w-0">
           <div className="text-xs text-text-dim">상태</div>
@@ -136,7 +136,7 @@ function ServiceCard({ service, metric, onOpen }: {
             <div className="text-xs text-text-dim truncate" title={metric.metricName}>
               {metricLabel(metric.metricName)}
             </div>
-            <div className="font-mono font-semibold text-text-base truncate">
+            <div className="font-mono font-medium text-text-base truncate">
               {formatMetricValue(metric.value, metric.unit)}
             </div>
           </div>
@@ -222,7 +222,7 @@ export function ProjectDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64 gap-3 text-text-muted">
-        <MaterialIcon name="sync" className="text-2xl animate-spin" />
+        <MaterialIcon size={24} name="sync" className="animate-spin" />
       </div>
     );
   }
@@ -251,7 +251,7 @@ export function ProjectDetailPage() {
         onClick={() => navigate('/')}
         className="lg:hidden flex items-center gap-1 text-sm text-text-muted hover:text-text-base transition-colors"
       >
-        <MaterialIcon name="arrow_back" className="text-base" />
+        <MaterialIcon size={16} name="arrow_back" />
         Docker 환경 목록
       </button>
 
@@ -259,7 +259,7 @@ export function ProjectDetailPage() {
         <div role="alert" className="flex flex-wrap items-center gap-3 rounded-xl border border-status-warn/30 bg-status-warn/10 px-4 py-3 text-sm text-text-secondary">
           <MaterialIcon name="sync_problem" className="shrink-0 text-status-warn" />
           <span className="min-w-0 flex-1">Docker 환경 정보를 불러오지 못했습니다. {loadError}</span>
-          <button type="button" onClick={() => void load()} className="rounded-lg border border-ui-border bg-bg-surface px-3 py-1.5 text-sm font-semibold text-text-secondary hover:bg-ui-hover">다시 시도</button>
+          <button type="button" onClick={() => void load()} className="rounded-lg border border-ui-border bg-bg-surface px-3 py-1.5 text-sm font-medium text-text-secondary hover:bg-ui-hover">다시 시도</button>
         </div>
       )}
 
@@ -290,7 +290,7 @@ export function ProjectDetailPage() {
             title="새로고침"
             className="h-10 w-10 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-text-base hover:bg-ui-hover transition-colors"
           >
-            <MaterialIcon name="refresh" className={`text-lg ${spinning ? 'animate-spin' : ''}`} />
+            <MaterialIcon size={20} name="refresh" className={`${spinning ? 'animate-spin' : ''}`} />
           </button>
           {agent && (
             <>
@@ -300,7 +300,7 @@ export function ProjectDetailPage() {
                 title="Docker 수집기 설치 또는 재설치"
                 className="h-10 w-10 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
               >
-                <MaterialIcon name="download" className="text-xl" />
+                <MaterialIcon size={20} name="download" />
               </button>
               <button
                 onClick={() => setShowKey(true)}
@@ -308,7 +308,7 @@ export function ProjectDetailPage() {
                 title="API 키 보기"
                 className="h-10 w-10 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
               >
-                <MaterialIcon name="key" className="text-xl" />
+                <MaterialIcon size={20} name="key" />
               </button>
               <button
                 onClick={() => setShowInstrumentation(true)}
@@ -316,7 +316,7 @@ export function ProjectDetailPage() {
                 title="OTel 계측 설정 (헤더·바디)"
                 className="h-10 w-10 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors"
               >
-                <MaterialIcon name="integration_instructions" className="text-xl" />
+                <MaterialIcon size={20} name="integration_instructions" />
               </button>
               <button
                 onClick={() => setDeleteConfirm(true)}
@@ -324,7 +324,7 @@ export function ProjectDetailPage() {
                 title="Docker 환경 비활성화"
                 className="h-10 w-10 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
               >
-                <MaterialIcon name="delete_outline" className="text-xl" />
+                <MaterialIcon size={20} name="delete_outline" />
               </button>
             </>
           )}
@@ -347,16 +347,16 @@ export function ProjectDetailPage() {
           className="w-full flex items-center gap-3 rounded-xl border border-ui-border bg-bg-surface px-4 py-3 text-left hover:bg-ui-hover-soft transition-colors"
         >
           <span className="h-2.5 w-2.5 rounded-full bg-status-error animate-pulse shrink-0" />
-          <span className="text-sm font-semibold text-text-base truncate">
+          <span className="text-sm font-medium text-text-base truncate">
             진행 중 장애 — {banner.serviceName}
           </span>
           <span className="text-xs text-text-muted shrink-0">
             {formatDuration(banner.durationSec)} {'경과'}
             {activeIncidents.length > 1 && ` · +${activeIncidents.length - 1}`}
           </span>
-          <span className="ml-auto text-xs font-semibold text-primary shrink-0 flex items-center">
+          <span className="ml-auto text-xs font-medium text-primary shrink-0 flex items-center">
             서비스 열기
-            <MaterialIcon name="chevron_right" className="text-sm" />
+            <MaterialIcon size={16} name="chevron_right" />
           </span>
         </button>
       )}
@@ -389,7 +389,7 @@ export function ProjectDetailPage() {
       {/* Service health grid */}
       {services.length === 0 && !loadError ? (
         <div className="py-16 text-center">
-          <MaterialIcon name="inventory_2" className="text-4xl text-text-dim mb-2" />
+          <MaterialIcon size={36} name="inventory_2" className="text-text-dim mb-2" />
           <p className="text-sm text-text-dim">수집된 서비스가 없습니다</p>
         </div>
       ) : (
@@ -420,9 +420,9 @@ export function ProjectDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
           {/* Incident history */}
           <div className="bg-bg-surface border border-ui-border rounded-xl p-4">
-              <h3 className="text-base text-text-base mb-3">장애 이력 · 30일</h3>
+              <h3 className="type-card-title text-text-base mb-3">장애 이력 · 30일</h3>
               {incidents.length === 0 ? (
-                <p className="text-xs text-text-dim py-4 text-center">최근 30일간 장애가 없습니다</p>
+                <p className="type-body text-text-muted py-4 text-center">최근 30일간 장애가 없습니다</p>
               ) : (
                 <div className="space-y-2">
                   {incidents.slice(0, 5).map((inc, i) => (
@@ -434,7 +434,7 @@ export function ProjectDetailPage() {
                     >
                       <span className={`h-1.5 w-1.5 rounded-full mt-1.5 shrink-0 ${inc.active ? 'bg-status-error' : 'bg-status-healthy'}`} />
                       <span className="min-w-0 flex-1">
-                        <span className="block text-xs font-semibold text-text-base truncate">{inc.serviceName}</span>
+                        <span className="block text-xs font-medium text-text-base truncate">{inc.serviceName}</span>
                         <span className="block text-xs text-text-dim mt-0.5">
                           {formatIncidentTime(inc.startedAt)} {'시작'} · {formatDuration(inc.durationSec)}
                         </span>
@@ -450,9 +450,9 @@ export function ProjectDetailPage() {
 
             {/* Event timeline */}
             <div className="bg-bg-surface border border-ui-border rounded-xl p-4">
-              <h3 className="text-base text-text-base mb-3">타임라인</h3>
+              <h3 className="type-card-title text-text-base mb-3">타임라인</h3>
               {events.length === 0 ? (
-                <p className="text-xs text-text-dim py-4 text-center">최근 이벤트가 없습니다</p>
+                <p className="type-body text-text-muted py-4 text-center">최근 이벤트가 없습니다</p>
               ) : (
                 <div className="space-y-0.5">
                   {events.map((e) => (

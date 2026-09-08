@@ -72,7 +72,7 @@ function RefreshButton({ onRefresh }: { onRefresh: () => void }) {
       aria-label="새로고침" title="새로고침"
       className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-text-muted hover:text-text-base hover:bg-ui-hover transition-colors"
     >
-      <MaterialIcon name="refresh" className={`text-lg ${spinning ? 'animate-spin' : ''}`} />
+      <MaterialIcon size={20} name="refresh" className={`${spinning ? 'animate-spin' : ''}`} />
     </button>
   );
 }
@@ -128,7 +128,7 @@ function MobileLayout(props: LayoutProps) {
           onClick={() => navigate(`/agents/${agentId}`)}
           className="flex items-center gap-1 text-text-muted active:opacity-60 transition-opacity cursor-pointer"
         >
-          <MaterialIcon name="arrow_back" className="text-lg" />
+          <MaterialIcon size={20} name="arrow_back" />
           <span className="text-sm">목록으로</span>
         </button>
         <div className="flex items-center gap-2">

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '../../../utils/errors';
-import { Button, MaterialIcon, EmptyState, ConfirmDialog, Toggle, SegmentedControl, SearchInput } from '../../../components/common';
+import { Button, MaterialIcon, EmptyState, ConfirmDialog, Toggle, SegmentedControl, SearchInput, ListToolbar, Select } from '../../../components/common';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { api, type AlertRule, type NotificationChannel, type AgentServiceFlat, type ConnectedAgent, type InfrastructureResource, type ObservedService } from '../../../services/api';
 import { getChannelStyle } from '../utils/channelMeta';
@@ -302,10 +302,10 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
         disabled={formLoading || isSubmitting}
       >
         {isSubmitting ? (
-          <MaterialIcon name="sync" className="text-base animate-spin" />
+          <MaterialIcon size={16} name="sync" className="animate-spin" />
         ) : (
           <>
-            <MaterialIcon name="check" className="text-sm" />
+            <MaterialIcon size={16} name="check" />
             {formRule ? '저장' : '규칙 생성'}
           </>
         )}
@@ -325,7 +325,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
     >
       {formLoading ? (
         <div className="flex min-h-40 items-center justify-center">
-          <MaterialIcon name="sync" className="text-3xl text-primary animate-spin" />
+          <MaterialIcon size={32} name="sync" className="text-primary animate-spin" />
         </div>
       ) : (
         <AlertRuleForm
@@ -342,7 +342,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
   if (isLoading) {
     return (
       <div className="p-8 text-center text-slate-500">
-        <MaterialIcon name="sync" className="text-3xl text-primary animate-spin mx-auto mb-2 block" />
+        <MaterialIcon size={32} name="sync" className="text-primary animate-spin mx-auto mb-2 block" />
         로딩 중...
       </div>
     );
@@ -367,7 +367,27 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
     <>
       {formPanel}
       {/* Filter bar — category pills + severity/enabled + search */}
-      <div className="flex flex-wrap items-center gap-2 mb-3">
+      <ListToolbar search={
+        <div className="relative">
+          <SearchInput
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            aria-label="규칙 이름 또는 대상 검색"
+            placeholder="규칙 이름 · 대상 검색"
+            className="pr-7"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-700"
+              aria-label="검색어 지우기"
+              title="검색어 지우기"
+            >
+              <MaterialIcon size={16} name="close" />
+            </button>
+          )}
+        </div>
+      }>
         <SegmentedControl
           size="md"
           ariaLabel="카테고리"
@@ -382,47 +402,29 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
           ]}
         />
 
-        <select
+        <Select
           aria-label="전체 심각도"
           value={severityFilter}
           onChange={e => setSeverityFilter(e.target.value as typeof severityFilter)}
-          className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm text-text-secondary cursor-pointer"
+          wrapperClassName="w-36"
         >
           <option value="all">전체 심각도</option>
           <option value="critical">심각</option>
           <option value="warning">경고</option>
           <option value="info">정보</option>
-        </select>
+        </Select>
 
-        <select
+        <Select
           aria-label="전체 상태"
           value={enabledFilter}
           onChange={e => setEnabledFilter(e.target.value as typeof enabledFilter)}
-          className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm text-text-secondary cursor-pointer"
+          wrapperClassName="w-36"
         >
           <option value="all">전체 상태</option>
           <option value="on">활성</option>
           <option value="off">비활성</option>
-        </select>
-
-        <div className="ml-auto relative w-64">
-          <SearchInput
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="규칙 이름 · 대상 검색"
-            className="pr-7"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-700"
-              aria-label="Clear"
-            >
-              <MaterialIcon name="close" className="text-sm" />
-            </button>
-          )}
-        </div>
-      </div>
+        </Select>
+      </ListToolbar>
 
       {/* Table */}
       <div className="bg-bg-surface border border-ui-border rounded-xl overflow-hidden">
@@ -433,16 +435,16 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                 <SortableTH className="w-[260px]" label="규칙" active={sortKey === 'name'} dir={sortDir} onClick={() => onSort('name')} />
                 <SortableTH className="w-[110px]" label="심각도" active={sortKey === 'severity'} dir={sortDir} onClick={() => onSort('severity')} />
                 <SortableTH className="w-[200px]" label="대상" active={sortKey === 'target'} dir={sortDir} onClick={() => onSort('target')} />
-                <th className="w-[250px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">
+                <th className="w-[250px] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-muted">
                   발생 조건
                 </th>
-                <th className="w-[120px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">
+                <th className="w-[120px] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-muted">
                   채널
                 </th>
-                <th className="w-[120px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">
+                <th className="w-[120px] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-muted">
                   최근 발동
                 </th>
-                <th className="w-[120px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-text-muted">
+                <th className="w-[120px] px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-text-muted">
                   작업
                 </th>
               </tr>
@@ -452,7 +454,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                 <tr>
                   <td colSpan={7} className="p-10 text-center text-sm text-text-muted">
                     조건에 맞는 규칙이 없습니다{' · '}
-                    <button onClick={clearFilters} className="text-primary hover:underline font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded">
+                    <button onClick={clearFilters} className="text-primary hover:underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded">
                       필터 초기화
                     </button>
                   </td>
@@ -467,11 +469,11 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                     >
                       <td className="px-4 py-2.5 align-middle">
                         <div className="flex min-w-0 items-center gap-2">
-                          <span className={`truncate font-semibold ${rule.isEnabled ? 'text-text-base' : 'text-text-muted'}`}>
+                          <span className={`truncate font-medium ${rule.isEnabled ? 'text-text-base' : 'text-text-muted'}`}>
                             {rule.name}
                           </span>
                           {rule.isSystem && (
-                            <MaterialIcon name="lock" className="shrink-0 text-sm text-slate-400" />
+                            <MaterialIcon size={16} name="lock" className="shrink-0 text-slate-400" />
                           )}
                         </div>
                         <p className="truncate text-xs text-text-dim">
@@ -518,7 +520,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                             aria-label="수정"
                           title="수정"
                           >
-                            <MaterialIcon name="edit" className="text-base" />
+                            <MaterialIcon size={16} name="edit" />
                           </button>
                           <button
                             onClick={() => {
@@ -535,7 +537,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
                               ? '시스템 규칙은 삭제할 수 없습니다'
                               : '삭제'}
                           >
-                            <MaterialIcon name="delete_outline" className="text-base" />
+                            <MaterialIcon size={16} name="delete_outline" />
                           </button>
                         </div>
                       </td>
@@ -566,7 +568,7 @@ function SortableTH({ label, active, dir, onClick, className = '' }: { label: st
   return (
     <th
       aria-sort={active ? (dir === 'desc' ? 'descending' : 'ascending') : 'none'}
-      className={`select-none px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted ${className}`}
+      className={`select-none px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-muted ${className}`}
     >
       <button
         type="button"
@@ -594,7 +596,7 @@ function ChannelAvatars({ rule, channels }: { rule: AlertRule; channels: Notific
   if (ruleChannels.length === 0) {
     return (
       <span className="inline-flex max-w-full items-center gap-1.5 text-sm text-text-dim">
-        <MaterialIcon name="notifications_off" className="shrink-0 text-base" />
+        <MaterialIcon size={16} name="notifications_off" className="shrink-0" />
         <span className="truncate">등록된 알림 채널이 없습니다</span>
       </span>
     );

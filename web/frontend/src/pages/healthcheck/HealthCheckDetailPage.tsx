@@ -48,7 +48,7 @@ export function HealthCheckDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64 gap-3 text-text-muted">
-        <MaterialIcon name="sync" className="text-2xl animate-spin" />
+        <MaterialIcon size={24} name="sync" className="animate-spin" />
         <span>로딩 중...</span>
       </div>
     );
@@ -57,8 +57,8 @@ export function HealthCheckDetailPage() {
   if (loadError) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4">
-        <MaterialIcon name="sync_problem" className="text-3xl text-status-warn" />
-        <div className="text-center"><p className="text-sm font-semibold text-text-base">서비스를 불러오지 못했습니다</p><p className="mt-1 text-xs text-text-muted">{loadError}</p></div>
+        <MaterialIcon size={32} name="sync_problem" className="text-status-warn" />
+        <div className="text-center"><p className="text-sm font-medium text-text-base">서비스를 불러오지 못했습니다</p><p className="mt-1 type-body text-text-muted">{loadError}</p></div>
         <div className="flex gap-2"><Button variant="secondary" onClick={() => navigate('/environments')}>Docker 환경</Button><Button onClick={() => void fetchService()}>다시 시도</Button></div>
       </div>
     );
@@ -67,7 +67,7 @@ export function HealthCheckDetailPage() {
   if (!service) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <MaterialIcon name="error_outline" className="text-3xl text-red-500" />
+        <MaterialIcon size={32} name="error_outline" className="text-red-500" />
         <p className="text-text-muted">
           서비스를 찾을 수 없습니다
         </p>

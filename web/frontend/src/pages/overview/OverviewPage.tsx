@@ -35,12 +35,12 @@ function SummaryCard({ icon, label, value, detail, tone = 'idle' }: {
     <article className="rounded-xl border border-ui-border bg-bg-surface p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs text-text-muted">{label}</p>
+          <p className="type-label text-text-secondary">{label}</p>
           <p className="mt-1 font-mono text-2xl tabular-nums text-text-base">{value}</p>
         </div>
-        <MaterialIcon name={icon} className={`text-xl ${toneClass}`} />
+        <MaterialIcon size={20} name={icon} className={`${toneClass}`} />
       </div>
-      <p className={`mt-3 text-xs ${toneClass}`}>{detail}</p>
+      <p className={`mt-3 type-caption ${toneClass}`}>{detail}</p>
     </article>
   );
 }
@@ -156,7 +156,7 @@ export function OverviewPage() {
     <div className="space-y-5">
       <PageHeader title="모니터링 개요" subtitle="수집 상태와 현재 이상을 먼저 확인하세요.">
         <Button onClick={() => navigate('/environments')}>
-          <MaterialIcon name="add" className="text-base" />
+          <MaterialIcon size={16} name="add" />
           모니터링 시작
         </Button>
       </PageHeader>
@@ -164,10 +164,10 @@ export function OverviewPage() {
       {failedSources.length > 0 && (
         <section className="flex flex-col gap-3 rounded-xl border border-ui-border bg-bg-surface p-4 sm:flex-row sm:items-center sm:justify-between" role="status">
           <div className="flex items-start gap-3">
-            <MaterialIcon name="sync_problem" className="mt-0.5 text-lg text-status-warn" />
+            <MaterialIcon size={20} name="sync_problem" className="mt-0.5 text-status-warn" />
             <div>
-              <p className="text-sm font-semibold text-text-base">일부 모니터링 정보를 불러오지 못했습니다</p>
-              <p className="mt-0.5 text-xs text-text-muted">성공한 영역은 계속 표시합니다. 다시 시도해 최신 상태를 확인하세요.</p>
+              <p className="text-sm font-medium text-text-base">일부 모니터링 정보를 불러오지 못했습니다</p>
+              <p className="mt-0.5 type-body text-text-muted">성공한 영역은 계속 표시합니다. 다시 시도해 최신 상태를 확인하세요.</p>
             </div>
           </div>
           <Button variant="secondary" size="sm" onClick={() => void load()}>다시 시도</Button>
@@ -196,28 +196,28 @@ export function OverviewPage() {
             <article className="rounded-xl border border-ui-border bg-bg-surface">
               <div className="flex items-center justify-between gap-3 border-b border-ui-border px-4 py-3.5">
                 <div>
-                  <h2 className="text-base text-text-base">현재 확인 필요</h2>
+                  <h2 className="type-card-title text-text-base">현재 확인 필요</h2>
                   <p className="mt-0.5 text-sm text-text-muted">서비스 상태와 수집 상태를 분리해 보여줍니다.</p>
                 </div>
                 <span className="font-mono text-sm tabular-nums text-text-muted">{attention.length}</span>
               </div>
               {attention.length === 0 ? (
                 <div className="flex min-h-44 flex-col items-center justify-center p-5 text-center">
-                  <MaterialIcon name="check_circle" className="text-3xl text-status-healthy" />
-                  <p className="mt-3 text-sm font-semibold text-text-base">현재 확인이 필요한 이상이 없습니다</p>
-                  <p className="mt-1 text-xs text-text-muted">수집 연결과 서비스 상태 모두 정상입니다.</p>
+                  <MaterialIcon size={32} name="check_circle" className="text-status-healthy" />
+                  <p className="mt-3 text-sm font-medium text-text-base">현재 확인이 필요한 이상이 없습니다</p>
+                  <p className="mt-1 type-body text-text-muted">수집 연결과 서비스 상태 모두 정상입니다.</p>
                 </div>
               ) : (
                 <ul className="divide-y divide-ui-border-soft">
                   {attention.slice(0, 6).map((item) => (
                     <li key={item.id}>
                       <Link to={item.to} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-ui-hover-soft">
-                        <MaterialIcon name={item.icon} className={`shrink-0 text-lg ${item.tone === 'error' ? 'text-status-error' : 'text-status-warn'}`} />
+                        <MaterialIcon size={20} name={item.icon} className={`shrink-0 ${item.tone === 'error' ? 'text-status-error' : 'text-status-warn'}`} />
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-semibold text-text-base">{item.title}</span>
-                          <span className="mt-0.5 block truncate text-xs text-text-muted">{item.detail}</span>
+                          <span className="block truncate text-sm font-medium text-text-base">{item.title}</span>
+                          <span className="mt-0.5 block type-body text-text-muted">{item.detail}</span>
                         </span>
-                        <MaterialIcon name="chevron_right" className="shrink-0 text-lg text-text-dim" />
+                        <MaterialIcon size={20} name="chevron_right" className="shrink-0 text-text-dim" />
                       </Link>
                     </li>
                   ))}
@@ -226,7 +226,7 @@ export function OverviewPage() {
             </article>
 
             <article className="rounded-xl border border-ui-border bg-bg-surface p-4">
-              <h2 className="text-base text-text-base">모니터링 범위</h2>
+              <h2 className="type-card-title text-text-base">모니터링 범위</h2>
               <p className="mt-1 text-sm text-text-muted">연결 방식별로 수집 범위를 확인하세요.</p>
               <dl className="mt-4 space-y-3">
                 {[
@@ -241,8 +241,8 @@ export function OverviewPage() {
                   </div>
                 ))}
               </dl>
-              <Link to="/projects" className="mt-5 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
-                Project로 대상 정리하기 <MaterialIcon name="arrow_forward" className="text-sm" />
+              <Link to="/projects" className="mt-5 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+                Project로 대상 정리하기 <MaterialIcon size={16} name="arrow_forward" />
               </Link>
             </article>
           </section>

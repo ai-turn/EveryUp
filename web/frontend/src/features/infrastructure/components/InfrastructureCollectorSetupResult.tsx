@@ -57,12 +57,12 @@ export function InfrastructureCollectorSetupResult({
       <div className="flex items-start gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-status-healthy/10 text-status-healthy"><MaterialIcon name="check" /></span>
         <div>
-          <h3 className="text-lg text-text-base">{title}</h3>
+          <h3 className="type-card-title text-text-base">{title}</h3>
           <p className="mt-1 text-sm text-text-muted">Collector API 키는 지금 한 번만 표시됩니다. 안전한 곳에 저장해 주세요.</p>
         </div>
       </div>
       <div className="space-y-2">
-        <p className="text-xs font-semibold text-text-secondary">Collector API 키</p>
+        <p className="text-xs font-medium text-text-secondary">Collector API 키</p>
         <div className="flex items-center gap-2 rounded-xl border border-ui-border bg-ui-hover-soft p-3">
           <code className="min-w-0 flex-1 break-all font-mono text-xs text-text-base">{setup.apiKey}</code>
           <CopyButton onCopy={() => copy(setup.apiKey)} title="API 키 복사" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-text-muted hover:bg-ui-hover" />
@@ -70,13 +70,13 @@ export function InfrastructureCollectorSetupResult({
       </div>
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-semibold text-text-secondary">otelcol-contrib.yaml</p>
-          <CopyButton onCopy={() => copy(config)} title="Collector 설정 복사" className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-xs font-semibold text-primary hover:bg-primary/10">복사</CopyButton>
+          <p className="text-xs font-medium text-text-secondary">otelcol-contrib.yaml</p>
+          <CopyButton onCopy={() => copy(config)} title="Collector 설정 복사" className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-primary hover:bg-primary/10">복사</CopyButton>
         </div>
         <pre className="max-h-80 overflow-auto whitespace-pre rounded-xl border border-ui-border bg-ui-hover-soft p-4 font-mono text-xs text-text-secondary">{config}</pre>
       </div>
-      <div className="rounded-xl border border-ui-border bg-ui-hover-soft p-4 text-xs text-text-muted">
-        <p className="font-semibold text-text-secondary">실행</p>
+      <div className="rounded-xl border border-ui-border bg-ui-hover-soft p-4 type-body text-text-muted">
+        <p className="font-medium text-text-secondary">실행</p>
         <code className="mt-2 block break-all font-mono">otelcol-contrib --config otelcol-contrib.yaml</code>
       </div>
       <div className="flex justify-end border-t border-ui-border pt-4"><Button onClick={onDone}>인프라 보기</Button></div>

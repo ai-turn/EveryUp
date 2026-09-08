@@ -1,6 +1,6 @@
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { Button, MaterialIcon, Toggle } from '../../../components/common';
+import { Button, MaterialIcon, PageHeader, Toggle } from '../../../components/common';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { getChannelStyle } from '../utils/channelMeta';
 import { ChannelHealthMeta } from './ChannelHealthMeta';
@@ -78,18 +78,14 @@ export function AlertsMobileView({
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-text-base">알림</h1>
-          <p className="text-sm text-text-muted mt-0.5">알림 채널과 규칙을 설정하고 알림 이력을 확인합니다.</p>
-        </div>
+      <PageHeader title="알림" subtitle="알림 채널과 규칙을 설정하고 알림 이력을 확인합니다.">
         {activeTab === 'channels' && (
           <Button className="w-full" onClick={onAddChannel}>
-            <MaterialIcon name="add" className="text-base" />
+            <MaterialIcon size={16} name="add" />
             채널 추가
           </Button>
         )}
-      </div>
+      </PageHeader>
 
       {/* Stats Summary */}
       {stats && (
@@ -130,7 +126,7 @@ export function AlertsMobileView({
                 : 'text-text-muted'
             }`}
           >
-            <MaterialIcon name={tab.icon} className="text-lg" />
+            <MaterialIcon size={20} name={tab.icon} />
             {tab.label}
             {tab.count !== undefined && (
               <span className="text-xs bg-ui-active px-1.5 py-0.5 rounded-full">
@@ -151,13 +147,13 @@ export function AlertsMobileView({
             ))
           ) : channels.length === 0 ? (
             <div className="py-8 text-center">
-              <MaterialIcon name="notifications_off" className="text-4xl text-text-dim" />
+              <MaterialIcon size={36} name="notifications_off" className="text-text-dim" />
               <p className="text-sm text-text-dim mt-2">
                 구성된 알림 채널이 없습니다
               </p>
               <button
                 onClick={onAddChannel}
-                className="mt-3 text-sm font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer"
+                className="mt-3 text-sm font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer"
               >
                 채널 추가 →
               </button>
@@ -192,7 +188,7 @@ export function AlertsMobileView({
                   </div>
                   <div className="flex gap-2">
                     <Button variant="secondary" size="sm" onClick={() => onTestChannel(channel.id)} disabled={!channel.isEnabled || testingIds.has(channel.id)} className="flex-1">
-                      <MaterialIcon name="send" className="text-sm" />
+                      <MaterialIcon size={16} name="send" />
                       {testingIds.has(channel.id) ? '전송 중' : '테스트'}
                     </Button>
                     <button
@@ -200,14 +196,14 @@ export function AlertsMobileView({
                       aria-label="채널 편집"
                       className="flex h-10 w-10 items-center justify-center rounded-lg bg-ui-hover text-text-muted transition-colors active:scale-95"
                     >
-                      <MaterialIcon name="edit" className="text-base" />
+                      <MaterialIcon size={16} name="edit" />
                     </button>
                     <button
                       onClick={() => onDeleteChannel(channel.id)}
                       aria-label="채널 삭제"
                       className="flex h-10 w-10 items-center justify-center rounded-lg text-status-error transition-colors hover:bg-ui-hover active:scale-95"
                     >
-                      <MaterialIcon name="delete" className="text-base" />
+                      <MaterialIcon size={16} name="delete" />
                     </button>
                   </div>
                 </div>
@@ -227,7 +223,7 @@ export function AlertsMobileView({
             ))
           ) : rules.length === 0 ? (
             <div className="py-8 text-center">
-              <MaterialIcon name="rule" className="text-4xl text-text-dim" />
+              <MaterialIcon size={36} name="rule" className="text-text-dim" />
               <p className="text-sm text-text-dim mt-2">
                 등록된 알림 규칙이 없습니다
               </p>
@@ -272,7 +268,7 @@ export function AlertsMobileView({
             ))
           ) : history.length === 0 ? (
             <div className="py-8 text-center">
-              <MaterialIcon name="history" className="text-4xl text-text-dim" />
+              <MaterialIcon size={36} name="history" className="text-text-dim" />
               <p className="text-sm text-text-dim mt-2">
                 알림 히스토리가 없습니다
               </p>
@@ -286,9 +282,9 @@ export function AlertsMobileView({
                   className="bg-bg-surface border border-ui-border rounded-xl p-3"
                 >
                   <div className="flex items-start gap-3">
-                    <MaterialIcon name={statusConf.icon} className={`text-lg mt-0.5 shrink-0 ${statusConf.color}`} />
+                    <MaterialIcon size={20} name={statusConf.icon} className={`mt-0.5 shrink-0 ${statusConf.color}`} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-text-base truncate">
+                      <p className="text-sm font-medium text-text-base truncate">
                         {item.hostName || item.serviceName || item.channelName}
                       </p>
                       <p className="text-sm text-text-muted truncate mt-0.5">
@@ -317,8 +313,8 @@ export function AlertsMobileView({
 function InlineError({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
     <div className="flex items-start gap-3 rounded-xl border border-ui-border bg-bg-surface p-3" role="alert">
-      <MaterialIcon name="sync_problem" className="mt-0.5 text-lg text-status-warn" />
-      <div className="min-w-0 flex-1"><p className="text-sm font-semibold text-text-base">불러오지 못했습니다</p><p className="mt-0.5 truncate text-xs text-text-muted">{message}</p></div>
+      <MaterialIcon size={20} name="sync_problem" className="mt-0.5 text-status-warn" />
+      <div className="min-w-0 flex-1"><p className="text-sm font-medium text-text-base">불러오지 못했습니다</p><p className="mt-0.5 type-body text-text-muted">{message}</p></div>
       <Button size="sm" variant="secondary" onClick={onRetry}>다시 시도</Button>
     </div>
   );

@@ -42,7 +42,7 @@ export function Header() {
                     aria-label="Search"
                     className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-ui-hover hover:text-text-base"
                 >
-                    <MaterialIcon name="search" className="text-xl" />
+                    <MaterialIcon size={20} name="search" />
                 </button>
                 {/* Icon buttons */}
                 <div className="flex items-center gap-1">
@@ -52,16 +52,16 @@ export function Header() {
                             className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-ui-hover text-text-muted hover:text-text-base transition-colors"
                             aria-label="Toggle theme"
                         >
-                            <MaterialIcon name={theme === 'light' ? 'dark_mode' : 'light_mode'} className="text-xl" />
+                            <MaterialIcon size={20} name={theme === 'light' ? 'dark_mode' : 'light_mode'} />
                         </button>
                     )}
                     {!isMobile && (
                         <>
                             <Link to="/alerts" aria-label="Alerts" className={iconLinkCls(isAlertsActive)}>
-                                <MaterialIcon name="notifications" className="text-xl" />
+                                <MaterialIcon size={20} name="notifications" />
                             </Link>
                             <Link to="/settings" aria-label="Settings" className={iconLinkCls(isSettingsActive)}>
-                                <MaterialIcon name="settings" className="text-xl" />
+                                <MaterialIcon size={20} name="settings" />
                             </Link>
                         </>
                     )}

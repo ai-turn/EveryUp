@@ -48,11 +48,11 @@ React 19 · Tailwind v4 · Recharts 3. 이 문서가 **디자인 규약의 SSOT*
 | 제목·강조 | `text-text-base` | `#0f172a` | 17.85 | `#ffffff` |
 | 본문 | `text-text-secondary` | `#334155` | 10.35 | `#cbd5e1` |
 | 보조 | `text-text-muted` | `#475569` | 7.58 | `#94a3b8` |
-| 메타·placeholder | `text-text-dim` | `#64748b` | 4.76 | `#6b7280` |
+| 메타·placeholder | `text-text-dim` | `#64748b` | 4.76 | `#8795a9` |
 
 한 화면에서 4단을 전부 쓰지 않는다. 카드 하나에는 보통 **base + muted 2단**이면 충분하다.
 
-**4단 전부 AA(4.5)를 넘는다** — 가장 옅은 `dim`이 하한선이다. dim은 slate-400(2.56, 미달)이었고 이를 slate-500로 내리면서 muted도 slate-600으로 한 칸 밀어 위계를 유지했다. 더 옅은 등급을 추가하지 말 것.
+대비 열은 **라이트의 흰 카드 배경 기준**이다. 다크 `dim`은 페이지 6.22:1, 카드 5.69:1, hover 4.82:1이다. 이전 값 `#6b7280`은 카드에서 3.58:1로 AA에 미달했다. 대비는 토큰 하나가 아니라 실제 배경과의 조합으로 확인한다. `ui-active`·`ui-raised`의 텍스트는 `base` 또는 `secondary`를 사용하고, 그 위에 `dim`을 올리지 않는다. 더 옅은 등급을 추가하지 말 것.
 
 **읽는 산문에 `dim`을 쓰지 않는다.** `dim`은 표에 적힌 대로 **메타·placeholder 전용**이다 — `최근 3건`, 타임스탬프, 차트 축 라벨, endpoint 값처럼 훑는 자리. 문장으로 읽어야 하는 설명문·경고문은 `muted`(7.58)다. 산문은 훑는 값보다 오래 눈이 머물기 때문에 하한선인 4.76에 두면 흐리게 읽힌다.
 
@@ -127,76 +127,40 @@ primary #3b76c9 → emerald #059669 → amber #d97706 → violet #7c3aed → red
 - **숫자·코드·타임스탬프** JetBrains Mono Variable → `font-mono`
 - 숫자가 자리 이동하면 안 되는 곳(KPI, 차트 범례, 테이블)은 `tabular-nums`를 함께 건다
 
-### 2.2 스케일 — `text-[Npx]` 임의값 금지
+### 2.2 역할별 타이포그래피
 
-| 토큰 | px | 용도 | 실사용 |
-|------|-----|------|--------|
-| `text-xs` | 12 | **하한 등급** — 배지, 칩, 레이블, 테이블 헤더, 차트 눈금, 보조 액션 | 320 |
-| `text-sm` | 14 | **기본 UI 텍스트** — 본문, 버튼, 폼, 카드·섹션 부제 | 346 |
-| `text-base` | 16 | 카드 제목(h3), 강조 본문 | 57 |
-| `text-lg` | 18 | 서브타이틀 | 28 |
-| `text-xl` | 20 | 카드 헤더(h2), 섹션 제목 | 32 |
-| `text-2xl` | 24 | **페이지 h1** | 14 |
-| `text-3xl`+ | 30+ | KPI 수치, 아이콘 크기 | 19 |
+크기·행간·굵기는 `index.css`의 역할 유틸리티를 쓴다. 색·여백·정렬은 호출부가 정한다.
 
-**12px가 하한이다.** 11px(`text-2xs`)은 폐지했다 — IBM Carbon(y₀=12px)과 Atlassian(최소 12px) 모두 12px를 바닥으로 두고, 한글 UI 권고도 "11px 이하는 가독성이 급락하므로 최소 12px"로 일치한다. 더 작은 등급을 다시 만들지 말 것.
+| 역할 | 클래스 | 크기 / 행간 | 굵기 |
+|---|---|---|---|
+| 페이지 제목 | `type-page-title` | 24 / 32px | 700 |
+| 카드 밖 섹션 제목 | `type-section-title` | 20 / 28px | 500 |
+| 카드·차트·모달 제목 | `type-card-title` | 16 / 24px | 500 |
+| 본문·설명·도움말 | `type-body` | 14 / 21px | 400 |
+| 버튼·폼 라벨·조밀한 항목 제목 | `type-label` | 14 / 20px | 500 |
+| 메타·시간·짧은 보조 값 | `type-caption` | 12 / 16px | 400 |
 
-**12px 이하는 훑는 자리 전용이다.** 라벨·칩·상태·테이블 헤더·타임스탬프·키·endpoint처럼 눈이 스쳐 지나가는 값. **문장으로 읽는 산문은 `text-sm`(14px)부터**다 — 한글은 라틴보다 획이 밀집해 같은 px에서 더 얇게 읽히고, 산문은 눈이 오래 머물러 12px에서 흐려진다. `/logs`의 12px 134곳은 전부 데이터·라벨이라 정당하고, 문제가 되는 건 산문이 12px로 내려온 자리다.
+페이지 헤더는 [PageHeader](src/components/common/PageHeader.tsx)를 쓴다. 모바일 전용 화면의 h1은 기존 `text-xl font-bold`(20px)을 허용한다. KPI 수치는 24~30px, `font-mono tabular-nums`를 사용한다. 404 같은 디스플레이 숫자는 별도 크기를 허용한다.
 
-### 2.3 헤딩 등급 (정본)
+크기 토큰은 `text-xs`(12), `text-sm`(14), `text-base`(16), `text-lg`(18), `text-xl`(20), `text-2xl`(24), `text-3xl`(30)이다. `text-[Npx]`로 임의 크기를 추가하지 않는다. 역할 유틸리티 위에 다른 크기·굵기·행간을 중복 지정하지 않는다.
 
-등급은 **담긴 컨테이너**가 정한다. 같은 `h2`라도 카드 헤더와 모달 제목은 크기가 다르다.
+**12px는 배지·시간·차트 눈금·조밀한 데이터용이다.** 설명문·경고문·설정 도움말은 `type-body`를 사용한다. 같은 14px라도 제목은 500, 본문은 400으로 구분할 수 있다. 설명을 작게 줄여 제목과 구분하지 않는다. 로그 테이블·코드 블록은 12px를 유지할 수 있다.
 
-| 자리 | 클래스 |
-|------|--------|
-| 페이지 h1 | `text-2xl font-bold text-text-base` |
-| 페이지 h1 (모바일 전용 뷰) | `text-xl font-bold text-text-base` |
-| 카드·섹션 헤더 h2 | `text-xl text-text-base` |
-| 모달 제목 h2 | `text-base font-semibold text-text-base` |
-| 설정 섹션 카드 h2 | `text-base text-text-base` |
-| 카드 내 제목·차트 헤더 h3 | `text-base text-text-base` |
-| 테이블 `<th>` | `text-xs font-semibold uppercase tracking-wider text-text-muted` |
-| 카드·섹션 부제 | `text-sm text-text-muted` |
+### 2.3 제목과 강조
 
-**`font-bold`은 페이지 h1에만 쓴다.** 카드·섹션 헤더는 크기만으로 위계를 만든다 — 20px·16px 제목이 14px 본문 위에 서므로 굵기까지 얹을 필요가 없다. 설정 섹션 카드 h2는 `text-sm`(14px)이라 굵기를 빼면 본문과 같아지므로 `text-base`(16px)로 올렸다.
+상위 섹션은 20px·500, 카드 제목은 16px·500, 조밀한 항목명은 14px·500으로 구분한다. 카드 안 제목과 본문은 굵기와 여백을 함께 사용한다. HTML 헤딩 레벨은 문서 구조를 따르고, 시각적 등급은 역할을 따른다.
 
-부제는 **제목이 `text-base`(16px) 이상인 자리에서만** `text-sm`이다. 제목이 `text-sm`인 자리(에러 배너 등)의 부제는 `text-xs`를 유지한다 — 올리면 제목과 크기가 같아져 위계가 사라진다. 부제는 설명 본문이므로 `text-xs`(레이블·칩·테이블 헤더 등급)가 아니다.
+상태색과 굵기는 함께 사용할 수 있다. 배지는 12px·500으로 읽기 쉽게 만들고, 장애 안내의 제목도 500을 사용할 수 있다. 본문 전체를 굵게 만들거나 모든 값을 강조하지 않는다. 색만으로 상태를 전달하지 않는 규칙은 유지한다.
 
-클래스 순서는 **크기 → 굵기 → 색**으로 적는다. `text-text-base font-bold text-lg`처럼 뒤섞으면 같은 등급인지 눈으로 판별되지 않는다.
+### 2.4 굵기 — 400 / 500 / 700
 
-페이지 헤더는 [`PageHeader`](src/components/common/PageHeader.tsx)를 쓴다 — h1 등급이 여기 박혀 있다.
-
-**예외** — `NotFoundPage`의 `text-6xl`은 "404" 디스플레이 숫자, `Header`의 `text-lg`는 페이지 제목이 아니라 로고, `EmptyState`의 `text-xl`은 빈 상태 안내다.
-
-### 2.4 굵기 — 3단 (400 / 500 / 700)
-
-| 유틸리티 | 실제 굵기 | 자리 |
+| 유틸리티 | 실제 굵기 | 용도 |
 |---|---|---|
-| `font-bold` | **700** | **페이지 h1 전용** (로고 포함) |
-| `font-semibold` | **500** | 버튼, 테이블 `<th>`, **uppercase 라벨**, 강조 레이블 |
-| 기본 | 400 | 본문 |
+| `font-normal` | 400 | 본문·메타·일반 데이터 |
+| `font-medium` | 500 | 제목·버튼·라벨·배지 |
+| `font-bold` | 700 | 페이지 제목·특별히 중요한 짧은 강조 |
 
-**굵기는 페이지 제목 하나에만 쓴다.** 나머지 위계는 크기와 색이 진다. 실측으로 확인한 근거는 이렇다 — 목록 항목명은 14px·`text-base` 색이고 설명은 12px·`text-muted`라 두 채널이 이미 갈라놓으며, 카드 헤더는 16~20px로 14px 본문 위에 선다. KPI 수치는 24px에 `font-mono`·`tabular-nums`까지 붙어 서체 자체가 다르다. 배지는 배경·보더·색 세 채널을 이미 쓴다. `font-bold` 166곳을 제거한 뒤 5개 화면에서 굵기 역전 0건, 7개 화면에서 레이아웃 회귀 0건이었다.
-
-이 결정은 아래 레퍼런스 조사(크기·굵기를 함께 쓴다)에서 한 발 더 나간 것이다. 두 축을 함께 쓰는 것이 일반해인 건 맞지만, Spoqa Han Sans Neo는 획이 두꺼워 굵기를 얹을수록 화면이 묵직해진다 — 폰트가 이미 무게를 갖고 있으면 굵기 축의 몫이 줄어든다.
-
-**참고 — 레퍼런스는 두 축을 함께 쓴다.** 밀집 UI는 크기 대역이 12~24px로 좁아 크기 혼자 위계를 만들지 못한다. 레퍼런스 두 곳이 같은 결론이다 — [Atlassian](https://atlassian.design/foundations/typography)은 Heading을 12px까지 전부 Bold로 두고 `Heading xsmall`(14px Bold)과 `Body`(14px Regular)를 **같은 크기에서 굵기로** 가른다. [Carbon](https://v10.carbondesignsystem.com/guidelines/typography/overview/)도 3단(Light·Regular·SemiBold)을 쓰며 "같은 크기면 굵은 쪽이 강조가 세고, 크고 가벼운 글자가 작고 굵은 글자보다 위계가 높을 수 있다"고 적는다. 즉 `text-sm font-bold` 제목과 `text-sm` 본문이 공존하는 건 부채가 아니라 정석이다.
-
-**레이블과 값이 이미 갈렸으면 값에 굵기를 얹지 않는다.** `<dt class="text-xs text-text-dim">` / `<dd class="text-sm text-text-secondary">` 구조는 크기(12→14)와 색(dim→secondary) 두 채널이 이미 둘을 가른다. 굵기는 세 번째 채널이라 잉여다. Direct API·Logs·Metrics·Infrastructure 상세와 API 키 마스크 12곳에서 뺐다.
-
-**`font-medium`은 쓰지 않는다.** Spoqa의 쓸 수 있는 굵기가 400/500/700 셋뿐이라 `font-semibold`가 500을 가져가면서 `font-medium`은 기본(400)과 같아졌다. 아무 효과 없는 클래스가 "여기는 500"이라고 오해하게 만들어 37곳에서 제거했다. 600을 가진 폰트로 옮기면 semibold를 600으로 올리고 medium을 500으로 되살리면 된다.
-
-**강조 채널은 한 번에 하나다.** 상태색(`text-status-*`)이 걸린 텍스트에 굵기를 겹치지 않는다 — 색이 이미 강조를 다 하고 있어 굵기는 잉여이고, Spoqa처럼 획이 두꺼운 폰트에서는 화면이 묵직해질 뿐이다. 개요 카드의 `detail`(`2개 연결 확인 필요`·`1개 장애 신호`)이 대표 사례로, `text-xs font-semibold text-status-warn`에서 굵기를 뺐다. 8곳 적용.
-
-다만 **중립색 제목은 예외다.** 에러 배너의 `text-sm font-semibold text-text-base`처럼 텍스트 자체는 중립이고 상태색이 옆 아이콘에만 있는 자리는 굵기가 제목 위계를 만드는 유일한 수단이므로 유지한다.
-
-**`uppercase tracking-*` 라벨은 `font-semibold`다.** `<th>` 스펙(§2.3)이 이미 semibold인데 폼·패널의 같은 꼴 라벨 19곳이 bold를 쓰고 있었다. 대문자 + 자간 확장이 이미 강조를 만들므로 굵기까지 올리지 않는다.
-
-**Spoqa Han Sans Neo에 600이 없다.** 매핑을 두지 않으면 CSS 폰트 매칭이 `font-semibold`(600)를 700으로 올려 bold와 똑같아진다. `index.css @theme`에서 500(Atlassian의 Medium 역할)으로 내렸다. 유틸리티는 4개인데 쓸 수 있는 굵기가 셋뿐이라 한 쌍은 겹치는데, `font-medium`을 기본과 겹치게 뒀다 — 보조 레이블은 굵기가 아니라 색(§1.3)으로 가른다.
-
-**쓸 수 있는 굵기 클래스는 `font-bold` · `font-semibold` · `font-normal` 셋뿐이다.** Spoqa Han Sans Neo가 가진 굵기가 100/300/400/500/700이라 그 밖의 값은 브라우저가 가짜 볼드를 합성한다. 실제로 `font-extrabold`(800)가 KPI 수치 6곳에 남아 합성되고 있었고 제거했다. 새 굵기 유틸리티를 쓰기 전에 폰트에 그 굵기가 있는지 먼저 확인할 것.
-
-**300(Light)은 쓰지 않는다.** dpr=1 14px에서 불투명 픽셀이 0.2%까지 떨어져 획이 사라진다(실측). 새 굵기 유틸리티도 쓰지 말 것 — 폰트에 없어 브라우저가 가짜 볼드를 합성한다.
+유틸리티 이름과 실제 굵기를 다르게 재정의하지 않는다. Spoqa Han Sans Neo에서 로드한 굵기는 400/500/700이다. `font-semibold`(600), `font-extrabold`(800), Light(300)는 사용하지 않는다. 이전의 `font-semibold=500`, `font-medium=400` 매핑은 폐지했다.
 
 ---
 
@@ -225,6 +189,8 @@ bg-bg-surface border border-ui-border rounded-xl
 ### 3.3 본문 그리드
 
 `MainLayout` 본문 래퍼: `p-4 sm:px-6 sm:py-5 space-y-5` — **풀블리드**(중앙 정렬·max-width 없음). 카드 간 간격은 래퍼의 `space-y-5`가 담당하므로 개별 카드에 `mb-*`를 붙이지 않는다.
+
+설정 화면은 최대 폭 `max-w-4xl`의 단일 컬럼이다. 카드 안에서는 라벨 아래에 14px 설명을 놓고, 컨트롤은 오른쪽에 배치한다. 모바일에서는 컨트롤을 설명 아래로 내려 읽는 순서를 유지한다. 항목이 하나뿐인 보조 내비게이션은 만들지 않는다.
 
 ### 3.4 내비게이션 셸
 
@@ -262,8 +228,10 @@ bg-bg-surface border border-ui-border rounded-xl
 | **`ConfirmDialog`** | `isOpen` `title` `message` `variant` `icon` … | `window.confirm()` 금지 — 항상 이것 |
 | **`EmptyState`** | `icon` `title` `description?` `action?` | 빈 목록의 정본 |
 | **`PageHeader`** | `title` `subtitle?` `children` | h1 등급 고정 |
+| **`ListToolbar`** | `search` `children?` | 목록 검색은 왼쪽, 필터는 그다음 |
+| **`ResourceCardHeader`** | `icon` `title` `subtitle?` `status?` | 대상 아이콘·이름·출처·상태의 고정 배치 |
 | **`DetailActionToolbar`** | `controls` `actions` | 상세의 조회 제어·변경 액션을 반응형으로 분리 |
-| **`MaterialIcon`** | `name` `className` `style` | 로컬 정적 SVG |
+| **`MaterialIcon`** | `name` `size` `className` `style` | 로컬 정적 SVG |
 | **`CopyButton`** | `onCopy` `title` `className` … | 3초 완료 피드백 |
 
 **Button 스펙**
@@ -278,8 +246,10 @@ bg-bg-surface border border-ui-border rounded-xl
 | size | 높이 | 용도 |
 |------|------|------|
 | `sm` | `h-8` | 테이블 행, 조밀한 툴바 |
-| `md` | `h-9` | **기본** |
+| `md` | `h-10` | **기본** — 입력·검색창과 같은 40px |
 | `lg` | `h-11` | 폼 제출, 모달 CTA |
+
+`SegmentedControl`은 트랙을 포함해 `sm` 32px, `md` 40px다. 기본 검색·폼 입력·버튼은 모두 40px로 맞춘다.
 
 크기는 **높이로 고정**한다. `px/py` 조합으로 높이를 만들지 않는다 — 나란히 놓았을 때 밑변이 어긋난다.
 `p-2 rounded-lg` + 아이콘 하나짜리 **아이콘 전용 토글 버튼은 이 컴포넌트 대상이 아니다**.
@@ -287,11 +257,29 @@ bg-bg-surface border border-ui-border rounded-xl
 **액션 앵커**
 
 - 페이지의 주 액션은 `PageHeader`의 `children`에 둔다. `md` 이상에서는 제목 우측, 그 미만에서는 제목 아래가 고정 위치다.
+- 액션은 **보조 → 주 액션** 순서로 전달해 주 액션을 우측 끝에 둔다. 헤더 내부에 별도 flex 래퍼를 만들지 않는다. 제목 첫 줄과 40px 버튼의 중심을 맞추며, 설명이 길어져도 버튼의 세로 위치는 유지한다. `sm` 미만에서는 버튼을 전체 폭으로 쌓고, 그 이상에서는 같은 순서로 줄바꿈한다. 버튼 아이콘은 16px, 버튼 간격은 8px, 헤더 아래 간격은 24px다.
 - 검색·필터는 페이지 헤더에 섞지 않고 그 아래의 보조 툴바에 둔다. 모바일에서는 툴바가 CTA보다 앞서지 않는다.
+- 목록의 보조 툴바는 `ListToolbar`를 쓴다. 검색창은 왼쪽 320px(`sm` 미만 전체 폭), 필터는 오른쪽부터 이어지며 공간이 부족하면 다음 줄로 흐른다. 검색·필터·버튼 높이는 모두 40px다. 탭 안의 검색은 해당 탭의 목록 위에 둔다. 검색 기능이 없는 화면에 정렬만을 위한 빈 검색창을 만들지 않는다.
 - 상세 화면은 `DetailActionToolbar`로 조회 제어와 변경 액션을 분리한다. 모바일에서는 두 그룹이 제목 아래에서 차례로 쌓이고, `md` 이상에서는 양 끝에 둔다.
 - 페이지·상세 헤더의 아이콘 전용 액션은 `h-10 w-10`이다. `h-8 w-8`은 테이블 행처럼 조밀한 맥락에서만 쓴다.
 
-**MaterialIcon 함정** — `iconMarkup` 맵에 없는 `name`은 조용히 `help_outline`(`?`)로 폴백한다. 콘솔 경고도 없다. 신규 아이콘은 반드시 [`materialIconPaths.ts`](src/components/common/materialIconPaths.ts)에 path를 추가한다. 크기는 `text-*` 스케일로 준다(`text-4xl` = EmptyState 아이콘, `text-3xl` = 인라인 스피너).
+**아이콘 크기** — `MaterialIcon`은 `size`로 SVG 크기를 정한다. 기본 16px는 인라인·버튼, 20px는 내비게이션·섹션, 24px는 주요 상태용이다. 스피너·빈 상태에는 32/36/48px를 허용한다. `text-*`는 색에만 사용하고 폰트 크기를 아이콘 크기로 사용하지 않는다. 아이콘 획은 SVG 도형이 결정하므로 `font-*`로 두께를 조절하지 않는다. 같은 영역에서는 같은 아이콘 계열을 사용한다.
+
+**MaterialIcon 함정** — `iconMarkup` 맵에 없는 `name`은 `help_outline`(`?`)로 폴백한다. 신규 아이콘은 반드시 [`materialIconPaths.ts`](src/components/common/materialIconPaths.ts)에 path를 추가한다.
+
+**대상 목록의 아이콘 배치** — 업타임·API·로그·메트릭·인프라·Docker 환경·Project의 대상 카드는 `ResourceCardHeader`를 쓴다. 아이콘은 이름 왼쪽 20px·`text-text-muted`로 고정하고, 첫 제목 줄과 정렬한다. 직접 연결/Docker 연결 여부로 아이콘 위치나 색을 달리하지 않는다. 출처는 이름 아래, 상태 또는 대상별 작업은 우측이다. 페이지 제목과 연결 방식별 섹션 제목에는 같은 아이콘을 반복하지 않는다. 알림 채널의 브랜드 아이콘, 상태 아이콘, 빈 상태 안내는 각 의미를 유지한다.
+
+| 대상 | 아이콘 |
+|---|---|
+| 업타임 | `monitor_heart` |
+| API | `api` |
+| 로그 | `article` |
+| 메트릭 | `monitoring` |
+| 인프라 | `memory` |
+| Docker 환경 | `dns` |
+| Project | `folder_open` |
+
+배치 판단 참고: [PatternFly Page header](https://www.patternfly.org/component-groups/content-containers/page-header/)의 제목 우측 액션, [Carbon Data table](https://carbondesignsystem.com/components/data-table/usage/)의 검색·필터 툴바. 이 프로젝트에서는 기존 페이지 CTA 앵커를 유지하고 목록 조회 제어를 별도 줄로 통일한다. 카드 아이콘의 정확한 크기·색·배치는 이 프로젝트의 규약이다.
 
 ### 4.2 `components/charts/` — 차트 스펙
 
@@ -348,13 +336,15 @@ const theme = getChartTheme();
 ```
 
 ```
-text-xs font-bold px-1.5 py-0.5 rounded border
+badge
 text-status-{role}  bg-status-{role}/10  border-status-{role}/20
 ```
 
 `healthy` boolean 하나만 받는다. 실제로 렌더되는 상태가 정상/장애 둘뿐이라 그 이상은 지원하지 않는다 — 3단계 이상이 필요해지면 그때 union으로 넓힌다.
 
-**틴트 배경 + 같은 색 보더 + 진한 텍스트** 3종 세트가 배지 문법이다. 커스텀 배지가 필요해도 이 비율(`/10` 배경, `/20` 보더)을 유지한다. 4개 role 전부 양쪽 테마에서 AA를 넘는 것이 검증돼 있다(4.78~9.31).
+`badge`는 `index.css`의 공통 형태다: **12px / 16px, 500, 최소 높이 24px, 좌우 6px 패딩, 4px radius**. 서비스 상태·수집 상태·알림 severity·로그 레벨 배지가 공유한다. 상태색은 `/10` 틴트 배경과 `/20` 보더를 사용하고, 별도 분류 축인 severity·로그 레벨은 자기 팔레트를 유지한다.
+
+배지는 읽기 전용이다. 업타임의 일시정지·재개는 별도 `Button`으로 표시해 상태와 액션을 구분한다. 길이가 변하는 상태 문자열은 줄바꿈하지 않는다.
 
 Tailwind v4는 `/10` 같은 투명도 수식자를 `oklab()` `color-mix`로 컴파일한다. 대비를 직접 잴 때 `getComputedStyle().backgroundColor`를 rgb로 가정하면 값이 어긋나니, 소스 hex와 알파로 합성해 계산할 것.
 
@@ -405,11 +395,7 @@ h-2.5 w-2.5 rounded-full bg-status-{role}
 
 > 대비를 스크립트로 잴 때 주의: Tailwind v4의 `transition-colors`는 **`outline-color`를 포함**한다. `.focus()` 직후 `getComputedStyle`을 읽으면 트랜지션 첫 프레임(`currentColor`)이 잡혀 링이 검게 보인다. `transitionProperty='none'`으로 끄고 재야 실제 값이 나온다.
 
-**툴바 필터 셀렉트는 `Select` 대상이 아니다.** 폼 필드와 크기·목적이 다르고 5곳이 이미 동일하다:
-```
-px-2 py-1.5 rounded-md border border-ui-border bg-bg-surface
-text-sm font-medium text-text-secondary cursor-pointer
-```
+**목록 툴바 필터도 `Select`를 사용한다.** `ListToolbar`의 검색창·버튼과 같은 40px 높이로 맞추며, 시각 라벨이 없으면 `aria-label`을 지정한다. 필터 폭은 `wrapperClassName`으로 바깥 래퍼에 지정한다. 조회 제어의 위치와 폭은 §4.1을 따른다.
 
 **텍스트영역**은 아직 공용 컴포넌트가 없다 — `AlertRuleForm`의 `textareaCls` 하나를 2곳이 공유한다. 세 번째 사용처가 생기면 `Textarea`로 뽑는다.
 
@@ -458,7 +444,7 @@ text-sm font-medium text-text-secondary cursor-pointer
 - **렌더 중 부작용 금지** — 렌더 본문에서 `navigate()`를 부르거나 ref를 갱신하지 않는다. React가 렌더를 버릴 수 있어 커밋되지 않은 상태가 샌다. 리다이렉트는 `<Navigate>`, ref 갱신은 effect에서.
 - **Toggle** `role="switch"` + `aria-checked`
 - **`prefers-reduced-motion`** 전역 처리됨 (모든 애니메이션 0.01ms)
-- **대비** `text-text-dim`의 다크 값이 `#6b7280`인 것은 WCAG AA 충족을 위한 조정 결과다. 더 어둡게 내리지 않는다
+- **대비** 작은 메타·placeholder도 일반 텍스트 기준 4.5:1을 만족해야 한다. `text-text-dim`의 다크 값 `#8795a9`는 페이지·카드·hover 배경에서 검증했다. 더 밝은 표면에서는 `base` 또는 `secondary`를 사용한다 (§1.3).
 
 ---
 
@@ -467,7 +453,7 @@ text-sm font-medium text-text-secondary cursor-pointer
 사용자 피드백에서 확정된 규칙이다. 근거까지 함께 적는다.
 
 1. **카드 좌측 상태 보더 금지** — warn/crit 3px 세로 컬러 라인. *"AI 생성 디자인 같다."* 상태는 배지·아이콘·텍스트 색으로만.
-2. **danger zone 스타일 금지** — 붉은 카드 보더, 붉은 섹션 제목, 앰버 경고 박스. 파괴적 액션은 **중립 카드 + `text-xs font-semibold text-red-600` 텍스트 링크**. 주의문은 앰버 박스 대신 muted 본문.
+2. **danger zone 스타일 금지** — 붉은 카드 보더, 붉은 섹션 제목, 앰버 경고 박스. 파괴적 액션은 **중립 카드 + `text-xs font-medium text-red-600` 텍스트 링크**. 주의문은 앰버 박스 대신 muted 본문.
 3. **파스텔 틴트 박스 금지** — `bg-emerald-50` / `bg-amber-50` / `bg-red-50` 계열 공지 박스. `bg-ui-hover-soft + border-ui-border` + 상태색 아이콘 악센트로 대체. (배지·게이지 채움·hover는 데이터 시맨틱이라 예외)
 4. **`dark:` 이중 작성 금지** (§1.1) — `text-slate-500 dark:text-text-muted-dark` → `text-text-muted`
 5. **상태색 primitive 직접 사용 금지** — `text-emerald-600 dark:text-emerald-400` → `text-status-healthy` (§1.4). 대비·색각 조정이 index.css 한 곳에서 끝나야 한다

@@ -79,7 +79,7 @@ export function UptimeMonitorDialog({
       <form onSubmit={submit}>
         <div className="flex items-center justify-between gap-3 border-b border-ui-border px-6 py-4">
           <div>
-            <h2 id="uptime-monitor-dialog-title" className="text-lg text-text-base">
+            <h2 id="uptime-monitor-dialog-title" className="type-card-title text-text-base">
               {monitor ? '업타임 수정' : '업타임 추가'}
             </h2>
             <p className="mt-1 text-sm text-text-muted">HTTP 또는 TCP 상태를 직접 확인합니다.</p>
@@ -90,33 +90,33 @@ export function UptimeMonitorDialog({
         </div>
         <div className="space-y-4 p-6">
           <label className="block space-y-1.5">
-            <span className="text-sm font-semibold text-text-secondary">이름</span>
+            <span className="text-sm font-medium text-text-secondary">이름</span>
             <Input required value={draft.name} onChange={(event) => update('name', event.target.value)} placeholder="예: 공개 API" />
           </label>
           <label className="block space-y-1.5">
-            <span className="text-sm font-semibold text-text-secondary">체크 방식</span>
+            <span className="text-sm font-medium text-text-secondary">체크 방식</span>
             <Select value={draft.type} onChange={(event) => update('type', event.target.value as UptimeMonitorType)} disabled={Boolean(monitor)}>
               <option value="http">HTTP</option>
               <option value="tcp">TCP</option>
             </Select>
           </label>
           <label className="block space-y-1.5">
-            <span className="text-sm font-semibold text-text-secondary">{draft.type === 'http' ? 'URL' : '호스트'}</span>
+            <span className="text-sm font-medium text-text-secondary">{draft.type === 'http' ? 'URL' : '호스트'}</span>
             <Input required mono value={draft.target} onChange={(event) => update('target', event.target.value)} placeholder={draft.type === 'http' ? 'https://api.example.com/health' : 'db.example.com'} />
           </label>
           {draft.type === 'tcp' && (
             <label className="block space-y-1.5">
-              <span className="text-sm font-semibold text-text-secondary">포트</span>
+              <span className="text-sm font-medium text-text-secondary">포트</span>
               <Input required type="number" min={1} max={65535} value={draft.port} onChange={(event) => update('port', Number(event.target.value))} />
             </label>
           )}
           <div className="grid grid-cols-2 gap-3">
             <label className="block space-y-1.5">
-              <span className="text-sm font-semibold text-text-secondary">주기 (초)</span>
+              <span className="text-sm font-medium text-text-secondary">주기 (초)</span>
               <Input required type="number" min={5} value={draft.interval} onChange={(event) => update('interval', Number(event.target.value))} />
             </label>
             <label className="block space-y-1.5">
-              <span className="text-sm font-semibold text-text-secondary">타임아웃 (ms)</span>
+              <span className="text-sm font-medium text-text-secondary">타임아웃 (ms)</span>
               <Input required type="number" min={1} value={draft.timeout} onChange={(event) => update('timeout', Number(event.target.value))} />
             </label>
           </div>

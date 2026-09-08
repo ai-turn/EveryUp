@@ -14,8 +14,8 @@ interface SegmentedOption<T extends string> {
 }
 
 const SIZES = {
-  sm: 'px-3 py-1 text-xs',
-  md: 'px-2.5 py-1.5 text-sm',
+  sm: 'h-7 px-3 text-xs',
+  md: 'h-9 px-3 text-sm',
 } as const;
 
 export function SegmentedControl<T extends string>({
@@ -31,7 +31,7 @@ export function SegmentedControl<T extends string>({
     <div
       role="group"
       aria-label={ariaLabel}
-      className="inline-flex items-center gap-0.5 rounded-lg p-0.5 bg-ui-hover border border-ui-border"
+      className="inline-flex max-w-full flex-wrap items-center gap-0.5 rounded-lg p-px bg-ui-hover border border-ui-border"
     >
       {options.map((o) => {
         const active = o.value === value;
@@ -40,7 +40,7 @@ export function SegmentedControl<T extends string>({
             key={o.value}
             aria-pressed={active}
             onClick={() => onChange(o.value)}
-            className={`${SIZES[size]} font-semibold rounded-md transition-colors ${
+            className={`${SIZES[size]} font-medium rounded-md transition-colors ${
               active
                 ? 'bg-ui-raised text-text-base shadow-sm'
                 : 'text-text-muted hover:text-text-base'

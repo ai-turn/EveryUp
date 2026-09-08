@@ -144,7 +144,7 @@ export function CommandPalette() {
       >
         {/* Search input */}
         <div className="flex items-center gap-2.5 px-4 border-b border-ui-border">
-          <MaterialIcon name="search" className="text-lg text-text-dim shrink-0" />
+          <MaterialIcon size={20} name="search" className="text-text-dim shrink-0" />
           <input
             ref={inputRef}
             value={query}
@@ -156,7 +156,7 @@ export function CommandPalette() {
             placeholder="Docker 환경, 서비스, 페이지 검색..."
             className="flex-1 bg-transparent py-3.5 text-sm text-text-base outline-none placeholder:text-text-dim"
           />
-          <kbd className="shrink-0 px-1.5 py-0.5 rounded border border-ui-border text-xs font-semibold text-text-dim">
+          <kbd className="shrink-0 px-1.5 py-0.5 rounded border border-ui-border text-xs font-medium text-text-dim">
             Esc
           </kbd>
         </div>
@@ -164,7 +164,7 @@ export function CommandPalette() {
         {/* Results */}
         <div id="command-palette-results" ref={listRef} role="listbox" className="max-h-80 overflow-y-auto py-1.5">
           {filtered.length === 0 ? (
-            <p className="py-8 text-center text-sm text-text-dim">검색 결과가 없습니다</p>
+            <p className="py-8 text-center type-body text-text-muted">검색 결과가 없습니다</p>
           ) : (
             filtered.map((item, i) => (
               <button
@@ -181,7 +181,7 @@ export function CommandPalette() {
                 }`}
               >
                 {item.icon ? (
-                  <MaterialIcon name={item.icon} className="text-base shrink-0 text-text-dim" />
+                  <MaterialIcon size={16} name={item.icon} className="shrink-0 text-text-dim" />
                 ) : (
                   <span
                     role="img"

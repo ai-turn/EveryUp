@@ -26,9 +26,9 @@ function MemberLink({ to, icon, name, detail, state }: { to: string; icon: strin
   const stateClass = { healthy: 'text-status-healthy', warn: 'text-status-warn', error: 'text-status-error', idle: 'text-status-idle' }[state];
   return (
     <Link to={to} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-ui-hover-soft">
-      <MaterialIcon name={icon} className={`shrink-0 text-lg ${stateClass}`} />
-      <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-text-base">{name}</span><span className="mt-0.5 block truncate text-xs text-text-muted">{detail}</span></span>
-      <MaterialIcon name="chevron_right" className="shrink-0 text-lg text-text-dim" />
+      <MaterialIcon size={20} name={icon} className={`shrink-0 ${stateClass}`} />
+      <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium text-text-base">{name}</span><span className="mt-0.5 block truncate text-xs text-text-muted">{detail}</span></span>
+      <MaterialIcon size={20} name="chevron_right" className="shrink-0 text-text-dim" />
     </Link>
   );
 }
@@ -85,14 +85,14 @@ export function ProjectOverviewPage() {
       </div>
 
       <section aria-label="Project 요약" className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-ui-border bg-bg-surface p-4"><p className="text-xs text-text-muted">모니터링 대상</p><p className="mt-1 font-mono text-2xl tabular-nums text-text-base">{totalTargets}</p><p className="mt-3 text-xs font-semibold text-text-muted">환경, 모니터, 직접 연결, 인프라</p></div>
+        <div className="rounded-xl border border-ui-border bg-bg-surface p-4"><p className="text-xs text-text-muted">모니터링 대상</p><p className="mt-1 font-mono text-2xl tabular-nums text-text-base">{totalTargets}</p><p className="mt-3 text-xs font-medium text-text-muted">환경, 모니터, 직접 연결, 인프라</p></div>
         <div className="rounded-xl border border-ui-border bg-bg-surface p-4"><p className="text-xs text-text-muted">수집 확인 필요</p><p className={`mt-1 font-mono text-2xl tabular-nums ${connectionIssues ? 'text-status-warn' : 'text-status-healthy'}`}>{connectionIssues}</p><p className={`mt-3 text-xs ${connectionIssues ? 'text-status-warn' : 'text-status-healthy'}`}>{connectionIssues ? '지연 또는 미확인 대상이 있습니다' : '연결이 모두 최신입니다'}</p></div>
         <div className="rounded-xl border border-ui-border bg-bg-surface p-4"><p className="text-xs text-text-muted">업타임 장애</p><p className={`mt-1 font-mono text-2xl tabular-nums ${unhealthyMonitors ? 'text-status-error' : 'text-status-healthy'}`}>{unhealthyMonitors}</p><p className={`mt-3 text-xs ${unhealthyMonitors ? 'text-status-error' : 'text-status-healthy'}`}>{unhealthyMonitors ? '즉시 확인이 필요한 모니터가 있습니다' : '현재 업타임 장애가 없습니다'}</p></div>
       </section>
 
       {totalTargets === 0 ? <section className="rounded-xl border border-ui-border bg-bg-surface"><EmptyState icon="folder_open" title="아직 배정된 대상이 없습니다" description="Project 관리 화면에서 환경과 모니터링 대상을 배정하세요." action={{ label: 'Project 관리', onClick: () => navigate('/projects') }} /></section> : (
         <section className="rounded-xl border border-ui-border bg-bg-surface">
-          <div className="border-b border-ui-border px-4 py-3.5"><h2 className="text-base text-text-base">대상</h2><p className="mt-0.5 text-sm text-text-muted">서비스 상태와 수집 상태는 대상 상세에서 분리해 확인할 수 있습니다.</p></div>
+          <div className="border-b border-ui-border px-4 py-3.5"><h2 className="type-card-title text-text-base">대상</h2><p className="mt-0.5 text-sm text-text-muted">서비스 상태와 수집 상태는 대상 상세에서 분리해 확인할 수 있습니다.</p></div>
           <div className="divide-y divide-ui-border-soft">
             {data.agents.map((agent) => <MemberLink key={agent.id} to={`/agents/${agent.id}`} icon="dns" name={agent.name} detail={fresh(agent.lastSeenAt) ? 'Docker 수집기 데이터 유입 중' : 'Docker 수집기 데이터 지연'} state={fresh(agent.lastSeenAt) ? 'healthy' : 'warn'} />)}
             {data.monitors.map((monitor) => <MemberLink key={monitor.id} to={`/uptime/${monitor.id}`} icon="monitor_heart" name={monitor.name} detail={monitor.status === 'unhealthy' ? '업타임 장애' : monitor.status === 'healthy' ? '업타임 정상' : '상태 확인 중'} state={monitor.status === 'unhealthy' ? 'error' : monitor.status === 'healthy' ? 'healthy' : 'idle'} />)}

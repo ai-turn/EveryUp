@@ -14,14 +14,14 @@ interface SearchInputProps extends Omit<ComponentPropsWithRef<'input'>, 'type'> 
 export function SearchInput({ wrapperClassName = '', className = '', ...props }: SearchInputProps) {
   return (
     <div className={`relative ${wrapperClassName}`}>
-      <MaterialIcon
+      <MaterialIcon size={16}
         name="search"
-        className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-base text-text-dim"
+        className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-text-dim"
       />
       <input
         type="text"
         className={
-          'w-full rounded-lg border border-ui-border bg-bg-surface py-1.5 pl-8 pr-3 ' +
+          'h-10 w-full rounded-lg border border-ui-border bg-bg-surface pl-8 pr-3 ' +
           `text-sm text-text-base placeholder:text-text-dim transition-colors ${className}`
         }
         {...props}

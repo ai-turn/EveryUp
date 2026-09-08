@@ -94,7 +94,7 @@ function TelegramPreview({ name }: { name: string }) {
                     <IconTelegram size={14} className="text-white" />
                 </div>
                 <div className="min-w-0">
-                    <p className="text-white font-semibold text-xs leading-tight truncate">{name || 'EveryUp Bot'}</p>
+                    <p className="text-white font-medium text-xs leading-tight truncate">{name || 'EveryUp Bot'}</p>
                     <p className="text-[#7C91A7] text-xs">bot</p>
                 </div>
             </div>
@@ -132,7 +132,7 @@ function DiscordPreview({ name }: { name: string }) {
                     <IconDiscord size={14} className="text-white" />
                 </div>
                 <div className="flex items-center gap-1.5">
-                    <span className="text-white font-semibold">{name || 'EVERYUP'}</span>
+                    <span className="text-white font-medium">{name || 'EVERYUP'}</span>
                     <span className="px-1 py-px bg-[#5865F2] text-white text-xs rounded uppercase">APP</span>
                 </div>
             </div>
@@ -179,7 +179,7 @@ function SlackPreview({ name }: { name: string }) {
                     <IconSlack size={14} className="text-[#E01E5A]" />
                 </div>
                 <div className="flex items-center gap-1.5">
-                    <span className="text-white font-semibold">{name || 'EVERYUP'}</span>
+                    <span className="text-white font-medium">{name || 'EVERYUP'}</span>
                     <span className="px-1 py-px bg-white/25 text-white text-xs rounded uppercase">APP</span>
                 </div>
             </div>
@@ -360,7 +360,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                             <input {...register('type')} type="radio" value={type} className="sr-only" />
                                             <m.Icon size={26} className={active ? m.color : 'text-text-dim'} />
                                             <span className={`text-sm ${active ? m.color : 'text-text-muted'}`}>{m.label}</span>
-                                            <span className="text-sm font-semibold uppercase tracking-wider text-slate-400">{m.sub}</span>
+                                            <span className="text-sm font-medium uppercase tracking-wider text-slate-400">{m.sub}</span>
                                         </label>
                                     );
                                 })}
@@ -444,7 +444,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                             <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-ui-hover-soft/50">
                                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                                 <div>
-                                    <p className="text-sm font-semibold text-text-base uppercase tracking-widest">채널 미리보기</p>
+                                    <p className="text-sm font-medium text-text-base uppercase tracking-widest">채널 미리보기</p>
                                     <p className="text-sm text-text-muted mt-0.5">실제 전송 메시지 형식</p>
                                 </div>
                             </div>
@@ -493,7 +493,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
 
                                 {/* Actual message preview */}
                                 <div>
-                                    <p className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-2">테스트 메시지 미리보기</p>
+                                    <p className="text-sm font-medium text-slate-400 uppercase tracking-widest mb-2">테스트 메시지 미리보기</p>
                                     <PreviewComponent name={watchedName} />
                                 </div>
                             </div>
@@ -502,9 +502,9 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                         {/* Test send card */}
                         <div className="bg-bg-surface border border-ui-border rounded-xl overflow-hidden">
                             <div className="flex items-center gap-3 px-5 py-4 border-b border-ui-border bg-ui-hover-soft/50">
-                                <MaterialIcon name="send" className="text-base text-slate-400" />
+                                <MaterialIcon size={16} name="send" className="text-slate-400" />
                                 <div>
-                                    <p className="text-sm font-semibold text-text-base uppercase tracking-widest">테스트 전송</p>
+                                    <p className="text-sm font-medium text-text-base uppercase tracking-widest">테스트 전송</p>
                                     <p className="text-sm text-text-muted mt-0.5">실제 채널로 테스트 메시지 발송</p>
                                 </div>
                             </div>
@@ -526,7 +526,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
                                         </>
                                     ) : (
                                         <>
-                                            <MaterialIcon name="send" className="text-sm" />
+                                            <MaterialIcon size={16} name="send" />
                                             테스트 전송
                                         </>
                                     )}
@@ -534,7 +534,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
 
                                 {testState === 'success' && (
                                     <div className="flex items-start gap-2 px-3 py-2.5 bg-ui-hover-soft border border-ui-border rounded-xl">
-                                        <MaterialIcon name="check_circle" className="text-base text-emerald-500 mt-0.5 shrink-0" />
+                                        <MaterialIcon size={16} name="check_circle" className="text-emerald-500 mt-0.5 shrink-0" />
                                         <div>
                                             <p className="text-sm text-emerald-600 dark:text-emerald-400">발송 성공</p>
                                             <p className="text-sm text-text-muted mt-0.5">{`${testTime}에 전송되었습니다`}</p>
@@ -544,7 +544,7 @@ export function ChannelForm({ onSuccess, onCancel, channel, onSubmittingChange }
 
                                 {testState === 'error' && (
                                     <div className="flex items-start gap-2 px-3 py-2.5 bg-ui-hover-soft border border-ui-border rounded-xl">
-                                        <MaterialIcon name="error" className="text-base text-red-500 mt-0.5 shrink-0" />
+                                        <MaterialIcon size={16} name="error" className="text-red-500 mt-0.5 shrink-0" />
                                         <div>
                                             <p className="text-sm text-red-600 dark:text-red-400">발송 실패</p>
                                             <p className="text-sm text-text-muted mt-0.5">{testError}</p>

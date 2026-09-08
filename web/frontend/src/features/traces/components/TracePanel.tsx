@@ -63,7 +63,6 @@ function copyButton(onCopy: () => Promise<boolean>, label: string) {
       onCopy={onCopy}
       className="ml-auto shrink-0 rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-600 dark:hover:bg-ui-active-dark dark:hover:text-slate-200"
       title={label}
-      iconClassName="text-sm"
     />
   );
 }
@@ -296,9 +295,9 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
       >
         <div className="flex-none flex items-center gap-3 px-5 h-16 border-b border-ui-border">
           <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary shrink-0">
-            <MaterialIcon name="timeline" className="text-lg" />
+            <MaterialIcon size={20} name="timeline" />
           </div>
-          <h3 className="text-base text-text-base shrink-0">트레이스</h3>
+          <h3 className="type-card-title text-text-base shrink-0">트레이스</h3>
           <code
             className="flex-1 min-w-0 truncate text-xs font-mono text-text-dim"
             title={traceId}
@@ -309,28 +308,27 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
             onCopy={() => copy(traceId)}
             className="p-1 rounded hover:bg-ui-hover text-slate-400 hover:text-text-secondary cursor-pointer shrink-0"
             title="트레이스 ID 복사"
-            iconClassName="text-sm"
           />
           <button
             onClick={onClose}
             className="p-1.5 rounded hover:bg-ui-hover text-slate-400 hover:text-text-secondary cursor-pointer shrink-0"
             aria-label="닫기"
           >
-            <MaterialIcon name="close" className="text-base" />
+            <MaterialIcon size={16} name="close" />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
           {loading && (
             <div className="flex items-center justify-center py-10 text-sm text-text-muted">
-              <MaterialIcon name="sync" className="text-base mr-2 animate-spin" />
+              <MaterialIcon size={16} name="sync" className="mr-2 animate-spin" />
               트레이스 불러오는 중...
             </div>
           )}
 
           {error && (
             <div className="flex items-start gap-2 px-3 py-2 bg-ui-hover-soft rounded-lg border border-ui-border">
-              <MaterialIcon name="error" className="text-sm text-status-error shrink-0 mt-0.5" />
+              <MaterialIcon size={16} name="error" className="text-status-error shrink-0 mt-0.5" />
               <p className="text-sm text-text-secondary">{error}</p>
             </div>
           )}
@@ -343,7 +341,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
 
           {!loading && !error && serviceId && (logs.length > 0 || apiRequests.length > 0) && (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-semibold text-text-muted mr-1">
+              <span className="text-sm font-medium text-text-muted mr-1">
                 탭에서 보기:
               </span>
               {logs.length > 0 && (
@@ -352,7 +350,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
                   onClick={() => jumpTo('logs')}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm text-primary hover:bg-primary/10 cursor-pointer"
                 >
-                  <MaterialIcon name="article" className="text-sm" />
+                  <MaterialIcon size={16} name="article" />
                   {`로그 (${logs.length})`}
                 </button>
               )}
@@ -362,7 +360,7 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
                   onClick={() => jumpTo('requests')}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm text-primary hover:bg-primary/10 cursor-pointer"
                 >
-                  <MaterialIcon name="http" className="text-sm" />
+                  <MaterialIcon size={16} name="http" />
                   {`API 요청 (${apiRequests.length})`}
                 </button>
               )}
@@ -396,9 +394,9 @@ export function TracePanel({ traceId, onClose }: TracePanelProps) {
 function PanelSectionHeader({ icon, title, count }: { icon: string; title: string; count: number }) {
   return (
     <div className="flex items-center gap-2 mb-2">
-      <MaterialIcon name={icon} className="text-base text-primary" />
-      <h4 className="text-sm text-text-base">{title}</h4>
-      <span className="text-xs font-semibold text-text-dim bg-slate-100 dark:bg-ui-active-dark px-2 py-0.5 rounded-md">
+      <MaterialIcon size={16} name={icon} className="text-primary" />
+      <h4 className="type-label text-text-base">{title}</h4>
+      <span className="text-xs font-medium text-text-secondary bg-ui-active px-2 py-0.5 rounded-md">
         {count}
       </span>
     </div>
@@ -449,7 +447,7 @@ function SpanList({ spans, onCopy }: { spans: TraceSpan[]; onCopy: CopyFn }) {
                   </span>
                 )}
                 {span.statusCode && span.statusCode !== 'UNSET' && (
-                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold shrink-0 ${statusBadge(span.statusCode)}`}>
+                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium shrink-0 ${statusBadge(span.statusCode)}`}>
                     {span.statusCode}
                   </span>
                 )}
@@ -477,7 +475,7 @@ function HeaderRows({ label, headers }: { label: string; headers: HeaderEntry[] 
   if (headers.length === 0) return null;
   return (
     <div>
-      <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-text-dim">{label}</p>
+      <p className="mb-1 text-xs font-medium uppercase tracking-wider text-text-dim">{label}</p>
       <dl className="space-y-0.5">
         {headers.map((h) => (
           <div key={h.name} className="flex gap-2 font-mono text-xs">
@@ -531,9 +529,9 @@ function RestrictedBodyNotice({ count }: { count: number }) {
     <section>
       <PanelSectionHeader icon="data_object" title="캡처된 바디" count={count} />
       <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm dark:border-ui-border-dark dark:bg-ui-hover-dark">
-        <MaterialIcon name="lock" className="text-lg text-amber-500 shrink-0" />
+        <MaterialIcon size={20} name="lock" className="text-amber-500 shrink-0" />
         <div>
-          <p className="font-semibold text-text-secondary">관리자 전용</p>
+          <p className="font-medium text-text-secondary">관리자 전용</p>
           <p className="text-text-muted">
             캡처된 바디를 볼 권한이 없습니다.
           </p>
@@ -549,7 +547,7 @@ function CapturedBodyList({ items, onCopy }: { items: CapturedBody[]; onCopy: Co
     <section>
       <PanelSectionHeader icon="data_object" title="캡처된 바디" count={items.length} />
       <p className="mb-2 flex items-center gap-1.5 text-xs text-text-dim">
-        <MaterialIcon name="policy" className="text-sm" />
+        <MaterialIcon size={16} name="policy" />
         관리자 전용 · 모든 열람은 감사 로그에 기록됩니다
       </p>
       <ul className="space-y-2">
@@ -607,7 +605,7 @@ function ApiRequestList({ items, onCopy }: { items: ApiRequest[]; onCopy: CopyFn
             <span className="font-mono text-text-secondary truncate flex-1 min-w-0" title={req.path}>
               {req.path}
             </span>
-            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold shrink-0 ${
+            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium shrink-0 ${
               req.isError
                 ? 'bg-status-error/10 text-status-error'
                 : 'bg-status-healthy/10 text-status-healthy'

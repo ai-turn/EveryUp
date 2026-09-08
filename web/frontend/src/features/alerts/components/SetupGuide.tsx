@@ -44,16 +44,16 @@ export function SetupGuide({ type }: SetupGuideProps) {
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-ui-hover-soft transition-colors"
             >
-                <MaterialIcon
+                <MaterialIcon size={16}
                     name="help_outline"
-                    className="text-base text-primary shrink-0"
+                    className="text-primary shrink-0"
                 />
-                <span className="text-sm font-semibold text-text-secondary flex-1">
+                <span className="text-sm font-medium text-text-secondary flex-1">
                     API 키는 어떻게 발급받나요?
                 </span>
-                <MaterialIcon
+                <MaterialIcon size={16}
                     name={isOpen ? 'expand_less' : 'expand_more'}
-                    className="text-base text-text-dim shrink-0"
+                    className="text-text-dim shrink-0"
                 />
             </button>
 
@@ -72,7 +72,7 @@ export function SetupGuide({ type }: SetupGuideProps) {
 
                     {tip && (
                         <div className="flex gap-2 px-2.5 py-2 rounded-md bg-ui-hover-soft border border-ui-border">
-                            <MaterialIcon name="lightbulb" className="text-sm text-amber-500 shrink-0 mt-0.5" />
+                            <MaterialIcon size={16} name="lightbulb" className="text-amber-500 shrink-0 mt-0.5" />
                             <p className="text-sm text-text-secondary">{tip}</p>
                         </div>
                     )}
@@ -81,9 +81,9 @@ export function SetupGuide({ type }: SetupGuideProps) {
                         href="https://github.com/ai-turn/everyup/blob/main/docs/NOTIFICATION_SETUP.md"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
+                        className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
                     >
-                        <MaterialIcon name="open_in_new" className="text-sm" />
+                        <MaterialIcon size={16} name="open_in_new" />
                         상세 가이드 보기
                     </a>
                 </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button, EmptyState, MaterialIcon, PageHeader, StatusBadge } from '../../components/common';
+import { Button, EmptyState, MaterialIcon, PageHeader, ResourceCardHeader, StatusBadge } from '../../components/common';
 import { InfrastructureCollectorSetupDialog } from '../../features/infrastructure/components/InfrastructureCollectorSetupDialog';
 import { CapabilityAgentSetup } from '../../features/services/components/CapabilityAgentSetup';
 import { api, type InfrastructureResource } from '../../services/api';
@@ -22,16 +22,12 @@ function ResourceCard({ resource }: { resource: InfrastructureResource }) {
       to={direct ? `/infrastructure/${resource.id}` : `/agents/${resource.id}`}
       className="card-interactive group rounded-xl border border-ui-border bg-bg-surface p-4"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <MaterialIcon name="memory" className="text-lg text-primary" />
-          <div className="min-w-0">
-            <h2 className="truncate text-base text-text-base group-hover:text-primary">{resource.name}</h2>
-            <p className="truncate text-xs text-text-muted">{direct ? 'OpenTelemetry Collector' : 'EveryUp Docker 수집기'}</p>
-          </div>
-        </div>
-        <StatusBadge healthy={resourceOnline(resource)} />
-      </div>
+      <ResourceCardHeader
+        icon="memory"
+        title={<h3 className="truncate type-card-title text-text-base group-hover:text-primary">{resource.name}</h3>}
+        subtitle={direct ? 'OpenTelemetry Collector' : 'EveryUp Docker 수집기'}
+        status={<StatusBadge healthy={resourceOnline(resource)} />}
+      />
       {values.some(([, value]) => value != null) ? (
         <div className="mt-5 grid grid-cols-3 gap-3">
           {values.map(([label, value]) => (
@@ -70,10 +66,8 @@ export function InfrastructurePage() {
   return (
     <div>
       <PageHeader title="인프라" subtitle="EveryUp Docker 수집기 또는 표준 OpenTelemetry Collector로 수집한 호스트 리소스입니다.">
-        <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
-          <Button onClick={() => setShowCollectorSetup(true)}><MaterialIcon name="add" />Collector 직접 추가</Button>
-          <CapabilityAgentSetup capability="infrastructure" buttonVariant="secondary" />
-        </div>
+        <CapabilityAgentSetup capability="infrastructure" buttonVariant="secondary" />
+        <Button onClick={() => setShowCollectorSetup(true)}><MaterialIcon name="add" />Collector 직접 추가</Button>
       </PageHeader>
       {loading ? (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map(item => <div key={item} className="h-44 animate-pulse rounded-xl border border-ui-border bg-bg-surface" />)}</div>
@@ -86,7 +80,7 @@ export function InfrastructurePage() {
           {directResources.length > 0 && (
             <section>
               <div className="mb-3 flex items-end justify-between gap-3">
-                <div><h2 className="text-base text-text-base">직접 연결 Collector</h2><p className="mt-0.5 text-sm text-text-muted">표준 OTel hostmetrics receiver가 직접 전송합니다.</p></div>
+                <div><h2 className="type-section-title text-text-base">직접 연결 Collector</h2><p className="mt-0.5 text-sm text-text-muted">표준 OTel hostmetrics receiver가 직접 전송합니다.</p></div>
                 <span className="font-mono text-xs text-text-dim">{directResources.length}</span>
               </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{directResources.map(resource => <ResourceCard key={resource.id} resource={resource} />)}</div>
@@ -95,7 +89,7 @@ export function InfrastructurePage() {
           {agentResources.length > 0 && (
             <section>
               <div className="mb-3 flex items-end justify-between gap-3">
-                <div><h2 className="text-base text-text-base">Docker 호스트</h2><p className="mt-0.5 text-sm text-text-muted">EveryUp Docker 수집기의 인프라 프로필이 수집합니다.</p></div>
+                <div><h2 className="type-section-title text-text-base">Docker 호스트</h2><p className="mt-0.5 text-sm text-text-muted">EveryUp Docker 수집기의 인프라 프로필이 수집합니다.</p></div>
                 <span className="font-mono text-xs text-text-dim">{agentResources.length}</span>
               </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{agentResources.map(resource => <ResourceCard key={resource.id} resource={resource} />)}</div>

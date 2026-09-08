@@ -6,7 +6,6 @@ interface CopyButtonProps {
   onCopy: () => Promise<boolean> | boolean | void;
   title: string;
   className: string;
-  iconClassName?: string;
   children?: ReactNode;
   disabled?: boolean;
   copiedDurationMs?: number;
@@ -16,7 +15,6 @@ export function CopyButton({
   onCopy,
   title,
   className,
-  iconClassName = '',
   children,
   disabled = false,
   copiedDurationMs = 3000,
@@ -50,7 +48,7 @@ export function CopyButton({
     >
       <MaterialIcon
         name={copied ? 'check' : 'content_copy'}
-        className={`${iconClassName} ${copied ? 'text-emerald-500 dark:text-emerald-400' : ''}`.trim()}
+        className={copied ? 'text-emerald-500 dark:text-emerald-400' : ''}
       />
       {children}
     </button>

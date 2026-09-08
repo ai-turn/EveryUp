@@ -102,7 +102,7 @@ export function DirectTelemetrySetupDialog({
     >
       <div className="flex items-center justify-between gap-3 border-b border-ui-border px-6 py-4">
         <div>
-          <h2 id={`direct-${signal}-dialog-title`} className="text-lg text-text-base">{title}</h2>
+          <h2 id={`direct-${signal}-dialog-title`} className="type-card-title text-text-base">{title}</h2>
           <p className="mt-0.5 text-sm text-text-muted">{description}</p>
         </div>
         <Button variant="ghost" size="sm" aria-label="닫기" onClick={onClose} disabled={submitting}>
@@ -122,7 +122,7 @@ export function DirectTelemetrySetupDialog({
           <div className="flex items-start gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-status-healthy/10 text-status-healthy"><MaterialIcon name="check" /></span>
             <div>
-              <h3 className="text-lg text-text-base">{`기존 서비스에 ${capabilityLabel}를 추가했습니다`}</h3>
+              <h3 className="type-card-title text-text-base">{`기존 서비스에 ${capabilityLabel}를 추가했습니다`}</h3>
               <p className="mt-1 text-sm text-text-muted">{`기존 직접 수집 키에 ${capabilityLabel} 권한을 추가했습니다. 실행 중인 OpenTelemetry 설정은 같은 키를 계속 사용합니다.`}</p>
             </div>
           </div>
@@ -135,12 +135,12 @@ export function DirectTelemetrySetupDialog({
           {mode === 'new' ? (
             <>
               <label className="block space-y-1.5" htmlFor={`direct-${signal}-service-name`}>
-                <span className="text-sm font-semibold text-text-secondary">서비스 이름</span>
+                <span className="text-sm font-medium text-text-secondary">서비스 이름</span>
                 <Input id={`direct-${signal}-service-name`} required maxLength={200} value={name} onChange={event => setName(event.target.value)} placeholder="checkout-api" />
-                <span className="block text-xs text-text-dim">수신 payload의 service.name 대신 이 이름으로 고정합니다.</span>
+                <span className="block type-body text-text-muted">수신 payload의 service.name 대신 이 이름으로 고정합니다.</span>
               </label>
               <label className="block space-y-1.5" htmlFor={`direct-${signal}-project`}>
-                <span className="text-sm font-semibold text-text-secondary">Project</span>
+                <span className="text-sm font-medium text-text-secondary">Project</span>
                 <Select id={`direct-${signal}-project`} value={projectId} onChange={event => setProjectId(event.target.value)}>
                   <option value="">미분류</option>
                   {projects.map(project => <option key={project.id} value={project.id}>{project.name}</option>)}
@@ -149,12 +149,12 @@ export function DirectTelemetrySetupDialog({
             </>
           ) : existingServices.length > 0 ? (
             <label className="block space-y-1.5" htmlFor={`direct-${signal}-existing-service`}>
-              <span className="text-sm font-semibold text-text-secondary">Observed Service</span>
+              <span className="text-sm font-medium text-text-secondary">Observed Service</span>
               <Select id={`direct-${signal}-existing-service`} required value={existingId} onChange={event => setExistingId(event.target.value)}>
                 <option value="">서비스 선택</option>
                 {existingServices.map(service => <option key={service.id} value={service.id}>{service.name}</option>)}
               </Select>
-              <span className="block text-xs text-text-dim">{`기존 연결 키의 범위에 ${capabilityLabel}를 추가합니다.`}</span>
+              <span className="block type-body text-text-muted">{`기존 연결 키의 범위에 ${capabilityLabel}를 추가합니다.`}</span>
             </label>
           ) : (
             <div className="rounded-xl border border-ui-border bg-ui-hover-soft p-4 text-sm text-text-muted">{`${capabilityLabel}를 추가할 수 있는 기존 직접 서비스가 없습니다. 새 서비스를 만들어 주세요.`}</div>

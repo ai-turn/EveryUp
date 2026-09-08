@@ -36,7 +36,7 @@ export function ErrorFallback({ error, onReset }: ErrorFallbackProps) {
         <div className="flex gap-4 justify-center">
           <button
             onClick={onReset}
-            className="px-4 py-2 border border-ui-border text-text-secondary font-semibold rounded-lg hover:bg-ui-hover transition-colors"
+            className="px-4 py-2 border border-ui-border text-text-secondary font-medium rounded-lg hover:bg-ui-hover transition-colors"
           >
             다시 시도
           </button>

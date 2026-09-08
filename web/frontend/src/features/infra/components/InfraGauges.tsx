@@ -48,12 +48,12 @@ function VitalGaugeCard({ gauge }: { gauge: GaugeData }) {
     <article className="rounded-xl border border-ui-border bg-bg-surface p-4 shadow-sm">
       {/* 상단: 레이블 + 추세 배지 */}
       <div className="flex items-center justify-between gap-2">
-        <p className="truncate text-xs font-semibold uppercase tracking-wider text-text-muted">
+        <p className="truncate text-xs font-medium uppercase tracking-wider text-text-muted">
           {gauge.label}
         </p>
         {gauge.trend && (
           <span className={`inline-flex shrink-0 items-center gap-0.5 rounded text-xs px-1.5 py-0.5 ${trend.soft} ${trend.text}`}>
-            <MaterialIcon name={trend.icon} className="text-sm" />
+            <MaterialIcon size={16} name={trend.icon} />
             {gauge.trend}
           </span>
         )}

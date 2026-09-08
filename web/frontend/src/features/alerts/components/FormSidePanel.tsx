@@ -36,16 +36,16 @@ export function FormSidePanel({ open, icon, title, onClose, footer, children }: 
             >
                 <div className="flex-none flex items-center gap-3 px-5 h-16 border-b border-ui-border">
                     <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary shrink-0">
-                        <MaterialIcon name={icon} className="text-lg" />
+                        <MaterialIcon size={20} name={icon} />
                     </div>
-                    <h3 className="flex-1 min-w-0 truncate text-base font-semibold text-text-base">{title}</h3>
+                    <h3 className="flex-1 min-w-0 truncate type-card-title text-text-base">{title}</h3>
                     <button
                         type="button"
                         onClick={onClose}
                         aria-label="Close panel"
                         className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-text-muted hover:bg-ui-hover hover:text-text-secondary cursor-pointer shrink-0"
                     >
-                        <MaterialIcon name="close" className="text-base" />
+                        <MaterialIcon size={16} name="close" />
                     </button>
                 </div>
 

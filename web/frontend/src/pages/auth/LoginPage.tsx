@@ -68,7 +68,7 @@ export function LoginPage() {
   if (needsSetup === null && !error) {
     return (
       <div className="min-h-screen bg-bg-main flex items-center justify-center">
-        <MaterialIcon name="progress_activity" className="text-4xl text-primary animate-spin" />
+        <MaterialIcon size={36} name="progress_activity" className="text-primary animate-spin" />
       </div>
     )
   }
@@ -84,7 +84,7 @@ export function LoginPage() {
             <IconHealthCheck size={24} className="text-primary" />
           </div>
           <div className="text-2xl text-primary tracking-tight mb-1">EveryUp</div>
-          <h2 className="text-xl text-text-base">
+          <h2 className="type-section-title text-text-base">
             {isSetup ? '초기 설정' : '로그인'}
           </h2>
           <p className="text-text-muted text-sm mt-1">
@@ -100,7 +100,7 @@ export function LoginPage() {
               {error && (
                 <div className="flex items-start gap-2 text-red-500 dark:text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2.5">
                   <span className="w-4 h-5 shrink-0 inline-flex items-center justify-center">
-                    <MaterialIcon name="error_outline" className="text-sm leading-none" />
+                    <MaterialIcon size={16} name="error_outline" className="leading-none" />
                   </span>
                   <span>{error}</span>
                 </div>
@@ -109,7 +109,7 @@ export function LoginPage() {
               {isSetup && (
                 <div className="flex items-start gap-2 text-sky-600 dark:text-sky-400 text-sm bg-sky-500/10 border border-sky-500/20 rounded-lg px-3 py-2.5">
                   <span className="w-4 h-5 shrink-0 inline-flex items-center justify-center">
-                    <MaterialIcon name="info" className="text-sm leading-none" />
+                    <MaterialIcon size={16} name="info" className="leading-none" />
                   </span>
                   <span>처음 실행되었습니다. 관리자 계정을 설정하세요.</span>
                 </div>
@@ -117,7 +117,7 @@ export function LoginPage() {
 
               <form onSubmit={handleSubmit} className="space-y-3">
                 <div>
-                  <label htmlFor="login-username" className="block text-sm font-semibold text-text-muted uppercase tracking-wider mb-1.5">사용자 이름</label>
+                  <label htmlFor="login-username" className="block text-sm font-medium text-text-muted uppercase tracking-wider mb-1.5">사용자 이름</label>
                   <Input
                     id="login-username"
                     type="text"
@@ -130,7 +130,7 @@ export function LoginPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="login-password" className="block text-sm font-semibold text-text-muted uppercase tracking-wider mb-1.5">
+                  <label htmlFor="login-password" className="block text-sm font-medium text-text-muted uppercase tracking-wider mb-1.5">
                     비밀번호{isSetup && ' (최소 8자 이상)'}
                   </label>
                   <Input
@@ -155,7 +155,7 @@ export function LoginPage() {
                   </div>
                 )}
                 <Button type="submit" size="lg" disabled={loading} className="w-full mt-2">
-                  {loading && <MaterialIcon name="progress_activity" className="text-sm animate-spin" />}
+                  {loading && <MaterialIcon size={16} name="progress_activity" className="animate-spin" />}
                   {loading ? '처리 중...' : isSetup ? '계정 생성' : '로그인'}
                 </Button>
               </form>
@@ -164,7 +164,7 @@ export function LoginPage() {
             {/* Recovery panel — outside card div, bottom-aligned with card border */}
             {!isSetup && showForgot && (
               <div className="animate-slide-in-right absolute bottom-0 left-full ml-4 w-[26rem] bg-bg-surface border border-ui-border rounded-xl shadow-sm p-5 space-y-4">
-                <p className="text-sm font-semibold text-text-secondary">
+                <p className="text-sm font-medium text-text-secondary">
                   계정 정보를 잊으셨나요?
                 </p>
                 <p className="text-sm text-text-muted">
@@ -173,7 +173,7 @@ export function LoginPage() {
 
                 {/* Method 1: Env var */}
                 <div className="space-y-1.5">
-                  <p className="text-sm font-semibold text-text-secondary">
+                  <p className="text-sm font-medium text-text-secondary">
                     방법 1: 환경 변수로 임시 접근 후 초기화 (권장)
                   </p>
                   <p className="text-sm text-text-muted">
@@ -196,7 +196,7 @@ docker compose restart`}
 
                 {/* Method 2: Remove data volume */}
                 <div className="space-y-1.5">
-                  <p className="text-sm font-semibold text-text-secondary">
+                  <p className="text-sm font-medium text-text-secondary">
                     방법 2: 계정 데이터 삭제 후 초기화
                   </p>
                   <p className="text-sm text-text-muted">
@@ -219,7 +219,7 @@ docker compose up -d`}
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 text-sm text-text-dim hover:text-primary dark:hover:text-primary transition-colors"
                 >
-                  <MaterialIcon name="open_in_new" className="text-xs" />
+                  <MaterialIcon size={16} name="open_in_new" />
                   GitHub README
                 </a>
               </div>

@@ -42,10 +42,10 @@ export function AgentFailureHistory({ agentId, serviceKey, refreshKey }: AgentFa
     <div className="mb-8 p-6 rounded-xl border border-ui-border bg-bg-surface">
       <div className="flex items-center gap-3 mb-5">
         <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-status-error/10 shrink-0">
-          <MaterialIcon name="history" className="text-lg text-status-error" />
+          <MaterialIcon size={20} name="history" className="text-status-error" />
         </div>
         <div>
-          <h2 className="text-text-base text-xl tracking-tight">
+          <h2 className="type-section-title text-text-base tracking-tight">
             최근 장애 기록
           </h2>
           <p className="text-text-muted text-sm">
@@ -57,7 +57,7 @@ export function AgentFailureHistory({ agentId, serviceKey, refreshKey }: AgentFa
       {events.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-10 gap-3">
           <div className="flex items-center justify-center w-12 h-12 rounded-full bg-status-healthy/10">
-            <MaterialIcon name="check_circle" className="text-2xl text-status-healthy" />
+            <MaterialIcon size={24} name="check_circle" className="text-status-healthy" />
           </div>
           <p className="text-text-muted text-sm">장애 기록이 없습니다</p>
         </div>
@@ -70,12 +70,12 @@ export function AgentFailureHistory({ agentId, serviceKey, refreshKey }: AgentFa
                 key={event.id}
                 className="flex items-start gap-3 p-4 rounded-xl border border-ui-border bg-ui-hover-soft/50"
               >
-                <MaterialIcon
+                <MaterialIcon size={20}
                   name={isAlert ? 'error' : 'check_circle'}
-                  className={`text-xl shrink-0 mt-0.5 ${isAlert ? 'text-status-error' : 'text-status-healthy'}`}
+                  className={`shrink-0 mt-0.5 ${isAlert ? 'text-status-error' : 'text-status-healthy'}`}
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-text-base truncate">
+                  <p className="text-sm font-medium text-text-base truncate">
                     {event.message || (isAlert ? '장애 감지' : '복구 감지')}
                   </p>
                   <p className="text-xs text-text-muted mt-0.5">

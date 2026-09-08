@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { MaterialIcon, Pagination, SegmentedControl, SearchInput } from '../../../components/common';
+import { MaterialIcon, Pagination, SegmentedControl, SearchInput, ListToolbar, Select } from '../../../components/common';
 import { ChannelIcon } from '../../../components/icons/ChannelIcons';
 import { api, NotificationChannel, NotificationHistory, NotificationStats } from '../../../services/api';
 import { getChannelStyle } from '../utils/channelMeta';
@@ -121,12 +121,30 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
     return rows;
   }, [history]);
 
-  const thClass = 'px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider';
+  const thClass = 'px-4 py-3 text-left text-xs font-medium text-text-muted uppercase tracking-wider';
 
   return (
     <div className="space-y-3">
       {/* Filter bar — status segments + type/channel/period + search */}
-      <div className="flex flex-wrap items-center gap-2">
+      <ListToolbar search={
+        <div className="relative">
+          <SearchInput
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="메시지 검색" aria-label="알림 메시지 검색"
+            className="pr-7"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-700"
+              aria-label="검색어 지우기" title="검색어 지우기"
+            >
+              <MaterialIcon size={16} name="close" />
+            </button>
+          )}
+        </div>
+      }>
         <SegmentedControl
           size="md"
           ariaLabel="상태"
@@ -139,11 +157,11 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
           ]}
         />
 
-        <select
+        <Select
           aria-label="전체 타입"
           value={typeFilter}
           onChange={e => setTypeFilter(e.target.value)}
-          className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm text-text-secondary cursor-pointer"
+          wrapperClassName="w-36"
         >
           <option value="all">전체 타입</option>
           <option value="resource">리소스</option>
@@ -152,49 +170,31 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
           <option value="log">로그</option>
           <option value="scheduled">스케줄</option>
           <option value="system">시스템</option>
-        </select>
+        </Select>
 
-        <select
+        <Select
           aria-label="전체 채널"
           value={channelFilter}
           onChange={e => setChannelFilter(e.target.value)}
-          className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm text-text-secondary cursor-pointer"
+          wrapperClassName="w-36"
         >
           <option value="all">전체 채널</option>
           {channels.map(ch => (
             <option key={ch.id} value={ch.id}>{ch.name}</option>
           ))}
-        </select>
+        </Select>
 
-        <select
+        <Select
           aria-label="최근 7일"
           value={periodDays}
           onChange={e => setPeriodDays(Number(e.target.value) as PeriodDays)}
-          className="px-2 py-1.5 bg-bg-surface border border-ui-border rounded-md text-sm text-text-secondary cursor-pointer"
+          wrapperClassName="w-36"
         >
           <option value={1}>최근 24시간</option>
           <option value={7}>최근 7일</option>
           <option value={30}>최근 30일</option>
-        </select>
-
-        <div className="ml-auto relative w-64">
-          <SearchInput
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="메시지 검색"
-            className="pr-7"
-          />
-          {search && (
-            <button
-              onClick={() => setSearch('')}
-              className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-700"
-              aria-label="Clear"
-            >
-              <MaterialIcon name="close" className="text-sm" />
-            </button>
-          )}
-        </div>
-      </div>
+        </Select>
+      </ListToolbar>
 
       {/* History Table */}
       <div className="bg-bg-surface rounded-xl border border-ui-border overflow-hidden">
@@ -214,14 +214,14 @@ export function NotificationHistoryTab({ channels, initialStatus }: Notification
               {loading ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-text-muted">
-                    <MaterialIcon name="sync" className="text-4xl animate-spin mx-auto mb-2" />
+                    <MaterialIcon size={36} name="sync" className="animate-spin mx-auto mb-2" />
                     <p>로딩 중...</p>
                   </td>
                 </tr>
               ) : history.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-text-dim">
-                    <MaterialIcon name="inbox" className="text-4xl mx-auto mb-2" />
+                    <MaterialIcon size={36} name="inbox" className="mx-auto mb-2" />
                     <p className="text-sm">알림 히스토리가 없습니다</p>
                   </td>
                 </tr>

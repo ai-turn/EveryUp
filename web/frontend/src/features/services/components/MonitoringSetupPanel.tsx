@@ -122,21 +122,21 @@ function SetupStep({
       <div className="flex items-start gap-2.5">
         <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs ${appearance.circle}`}>
           {state === 'ready' || state === 'issue' ? (
-            <MaterialIcon name={appearance.icon} className="text-base" />
+            <MaterialIcon size={16} name={appearance.icon} />
           ) : appearance.icon}
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-1.5">
-            <h3 className="text-xs text-text-base">{title}</h3>
+            <h3 className="type-label text-text-base">{title}</h3>
             <span className={`shrink-0 rounded px-1.5 py-0.5 text-xs ${appearance.badge}`}>
               {stateLabel}
             </span>
           </div>
-          <p className="mt-1 text-xs leading-relaxed text-text-muted">{description}</p>
+          <p className="mt-1 type-body text-text-muted">{description}</p>
         </div>
       </div>
       {detail && (
-        <p className={`mt-2 rounded-md px-2 py-1.5 text-xs ${state === 'issue' ? 'bg-status-warn/5 text-status-warn' : 'bg-ui-hover-soft text-text-dim'}`}>
+        <p className={`mt-2 rounded-md px-2 py-1.5 type-body ${state === 'issue' ? 'bg-status-warn/5 text-status-warn' : 'bg-ui-hover-soft text-text-muted'}`}>
           {detail}
         </p>
       )}
@@ -144,10 +144,10 @@ function SetupStep({
         <button
           type="button"
           onClick={onAction}
-          className="mt-2 inline-flex items-center justify-center gap-1 rounded-lg border border-ui-border bg-bg-surface px-2.5 py-1.5 text-xs font-semibold text-text-secondary transition-colors hover:border-primary/40 hover:text-primary"
+          className="mt-2 inline-flex items-center justify-center gap-1 rounded-lg border border-ui-border bg-bg-surface px-2.5 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:border-primary/40 hover:text-primary"
         >
           {actionLabel}
-          <MaterialIcon name="arrow_forward" className="text-sm" />
+          <MaterialIcon size={16} name="arrow_forward" />
         </button>
       )}
     </div>
@@ -215,17 +215,17 @@ export function MonitoringSetupPanel({ agent, services, onInstall, onInstrument,
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-sm text-text-base">모니터링 설정 가이드</h2>
+            <h2 className="type-label text-text-base">모니터링 설정 가이드</h2>
             <span className={`rounded-full px-2 py-0.5 text-xs ${requiredComplete ? 'bg-status-healthy/10 text-status-healthy' : 'bg-primary/10 text-primary'}`}>
               필수 {requiredReady}/{requiredTotal}
             </span>
           </div>
-          <p className="mt-0.5 text-xs text-text-muted">
+          <p className="mt-0.5 type-body text-text-muted">
             {requiredComplete
               ? '기본 모니터링 설정이 완료됐습니다. 필요할 때 상세 계측을 추가하세요.'
               : '위에서 아래 순서로 확인하면 별도 앱 수정 없이 기본 모니터링을 시작할 수 있습니다.'}
           </p>
-          <p className="mt-2 text-xs text-text-dim">
+          <p className="mt-2 type-body text-text-muted">
             수집 프로필: {profileLabels[profile?.kind ?? 'all-in-one']} · 사용 {enabledCapabilityLabels.join(', ')}
             {unavailableCapabilityLabels.length > 0 && ` · 미선택 ${unavailableCapabilityLabels.join(', ')}`}
           </p>

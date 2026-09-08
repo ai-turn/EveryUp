@@ -47,7 +47,7 @@ export function SidePanel() {
                 <div className="flex-none flex items-center justify-between px-6 h-16 border-b border-ui-border bg-bg-surface z-10 transition-colors duration-200">
                     <div className="flex items-center gap-3 min-w-0">
                         <MaterialIcon name="apps" className="text-text-dim shrink-0" />
-                        <h2 id="side-panel-title" className="text-base font-semibold text-text-base truncate">
+                        <h2 id="side-panel-title" className="type-card-title text-text-base truncate">
                             {title}
                         </h2>
                     </div>
@@ -57,7 +57,7 @@ export function SidePanel() {
                         onClick={closePanel}
                         aria-label="Close panel"
                     >
-                        <MaterialIcon name="close" className="text-xl" />
+                        <MaterialIcon size={20} name="close" />
                         <span className="sr-only">Close panel</span>
                     </button>
                 </div>

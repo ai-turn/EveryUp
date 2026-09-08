@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button, EmptyState, MaterialIcon, PageHeader, Pagination, SearchInput, Select } from '../../components/common';
+import { Button, EmptyState, ListToolbar, MaterialIcon, PageHeader, Pagination, ResourceCardHeader, SearchInput, Select } from '../../components/common';
 import { DirectLogsSetupDialog } from '../../features/logs/components/DirectLogsSetupDialog';
 import { LEVEL_STYLE } from '../../features/healthcheck/logLevelStyle';
 import { CapabilityAgentSetup } from '../../features/services/components/CapabilityAgentSetup';
@@ -115,43 +115,42 @@ export function LogsPage() {
   return (
     <div>
       <PageHeader title="로그" subtitle="Docker 수집기 또는 직접 OpenTelemetry 연결에서 수집한 최신 로그입니다.">
-        <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
-          <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />Logs 직접 추가</Button>
-          <CapabilityAgentSetup capability="logs" buttonVariant="secondary" />
-        </div>
+        <CapabilityAgentSetup capability="logs" buttonVariant="secondary" />
+        <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />Logs 직접 추가</Button>
       </PageHeader>
 
-      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center">
-        <Select
-          value={serviceFilter}
-          onChange={event => { setServiceFilter(event.target.value); setPage(1); }}
-          aria-label="서비스 필터"
-          className="w-full sm:w-48"
-        >
-          <option value="">전체 서비스</option>
-          {serviceNames.map(name => <option key={name} value={name}>{name}</option>)}
-        </Select>
-        <form onSubmit={event => { event.preventDefault(); setSearch(inputValue); setPage(1); }} className="flex w-full gap-1.5 sm:w-72">
+      <ListToolbar search={
+        <form onSubmit={event => { event.preventDefault(); setSearch(inputValue); setPage(1); }} className="flex w-full gap-2">
           <SearchInput
             value={inputValue}
             onChange={event => setInputValue(event.target.value)}
             placeholder="메시지 검색 후 Enter"
             aria-label="로그 검색"
-            wrapperClassName="flex-1"
+            wrapperClassName="min-w-0 flex-1"
           />
           {search && (
-            <Button type="button" variant="ghost" onClick={() => { setSearch(''); setInputValue(''); setPage(1); }} aria-label="검색어 지우기">
+            <Button type="button" variant="ghost" onClick={() => { setSearch(''); setInputValue(''); setPage(1); }} aria-label="검색어 지우기" title="검색어 지우기">
               <MaterialIcon name="close" />
             </Button>
           )}
         </form>
-      </div>
+      }>
+        <Select
+          value={serviceFilter}
+          onChange={event => { setServiceFilter(event.target.value); setPage(1); }}
+          aria-label="서비스 필터"
+          wrapperClassName="w-full sm:w-48"
+        >
+          <option value="">전체 서비스</option>
+          {serviceNames.map(name => <option key={name} value={name}>{name}</option>)}
+        </Select>
+      </ListToolbar>
 
       {!loading && directServices.length > 0 && (
         <section className="mb-6">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-base text-text-base">직접 연결 서비스</h2>
+              <h2 className="type-section-title text-text-base">직접 연결 서비스</h2>
               <p className="mt-0.5 text-sm text-text-muted">OTLP Logs를 직접 받는 Observed Service입니다.</p>
             </div>
             <span className="font-mono text-xs text-text-dim">{directServices.length}</span>
@@ -159,14 +158,18 @@ export function LogsPage() {
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {directServices.map(service => (
               <Link key={service.id} to={`/logs/${service.id}`} className="card-interactive rounded-xl border border-ui-border bg-bg-surface p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <h3 className="min-w-0 truncate text-sm text-text-base">{service.name}</h3>
-                  <span
-                    className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${service.isActive ? 'bg-status-healthy' : 'bg-status-error'}`}
-                    role="img"
-                    aria-label={service.isActive ? '수집 가능' : '중지됨'}
-                  />
-                </div>
+                <ResourceCardHeader
+                  icon="article"
+                  title={<h3 className="truncate type-card-title text-text-base">{service.name}</h3>}
+                  subtitle="Direct"
+                  status={
+                    <span
+                      className={`mt-1 block h-2.5 w-2.5 shrink-0 rounded-full ${service.isActive ? 'bg-status-healthy' : 'bg-status-error'}`}
+                      role="img"
+                      aria-label={service.isActive ? '수집 가능' : '중지됨'}
+                    />
+                  }
+                />
                 <p className="mt-3 text-xs text-text-secondary">
                   {service.lastSeenAt
                     ? `마지막 수집: ${new Date(service.lastSeenAt).toLocaleString()}`
@@ -183,7 +186,7 @@ export function LogsPage() {
         <section className="mb-6">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-base text-text-base">Docker 서비스</h2>
+              <h2 className="type-section-title text-text-base">Docker 서비스</h2>
               <p className="mt-0.5 text-sm text-text-muted">EveryUp Docker 수집기가 전달한 서비스입니다.</p>
             </div>
             <span className="font-mono text-xs text-text-dim">{agentCards.length}</span>
@@ -195,10 +198,11 @@ export function LogsPage() {
                 to={`/services/${service.agentId}/${encodeURIComponent(service.key)}?tab=logs`}
                 className="card-interactive rounded-xl border border-ui-border bg-bg-surface p-4"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <h3 className="min-w-0 truncate text-sm text-text-base">{service.name}</h3>
-                  <span className="shrink-0 text-xs text-text-muted">{service.agentName}</span>
-                </div>
+                <ResourceCardHeader
+                  icon="article"
+                  title={<h3 className="truncate type-card-title text-text-base">{service.name}</h3>}
+                  subtitle={service.agentName}
+                />
                 <p className="mt-3 text-xs text-text-secondary">
                   {`최근 ${total}건 · ERROR ${error} · WARN ${warn}`}
                 </p>
@@ -228,10 +232,10 @@ export function LogsPage() {
               <table className="min-w-full text-left">
                 <thead className="border-b border-ui-border bg-ui-hover-soft">
                   <tr>
-                    <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-muted">시간</th>
-                    <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-muted">레벨</th>
-                    <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-muted">서비스</th>
-                    <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-muted">메시지</th>
+                    <th scope="col" className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-text-muted">시간</th>
+                    <th scope="col" className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-text-muted">레벨</th>
+                    <th scope="col" className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-text-muted">서비스</th>
+                    <th scope="col" className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-text-muted">메시지</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ui-border-soft">
@@ -244,12 +248,12 @@ export function LogsPage() {
                     return (
                       <tr key={log.id} className="hover:bg-ui-hover-soft">
                         <td className="whitespace-nowrap px-4 py-3 align-top font-mono text-xs text-text-dim">{formatTime(log.createdAt)}</td>
-                        <td className="px-4 py-3 align-top"><span className={`inline-flex rounded px-1.5 py-0.5 text-xs ${LEVEL_STYLE[log.level] ?? LEVEL_STYLE.info}`}>{log.level.toUpperCase()}</span></td>
+                        <td className="px-4 py-3 align-top"><span className={`badge ${LEVEL_STYLE[log.level] ?? LEVEL_STYLE.info}`}>{log.level.toUpperCase()}</span></td>
                         <td className="whitespace-nowrap px-4 py-3 align-top">
-                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-text-secondary">
-                            <MaterialIcon
+                          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-text-secondary">
+                            <MaterialIcon size={16}
                               name={log.agentId ? 'deployed_code' : 'sensors'}
-                              className="text-sm text-text-dim"
+                              className="text-text-dim"
                             />
                             {serviceHref
                               ? <Link to={serviceHref} className="hover:text-primary">{log.serviceName}</Link>

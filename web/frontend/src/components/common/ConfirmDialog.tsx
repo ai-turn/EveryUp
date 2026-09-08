@@ -76,9 +76,9 @@ export function ConfirmDialog({
     >
       <div className="px-6 py-4 border-b border-ui-border flex items-center gap-3">
         <div className={`flex items-center justify-center w-10 h-10 rounded-full ${styles.iconBg}`}>
-          <MaterialIcon name={icon ?? styles.defaultIcon} className={`${styles.iconText} text-xl`} />
+          <MaterialIcon size={20} name={icon ?? styles.defaultIcon} className={`${styles.iconText}`} />
         </div>
-        <h2 id="confirm-dialog-title" className="text-xl text-text-base">
+        <h2 id="confirm-dialog-title" className="type-section-title text-text-base">
           {title}
         </h2>
       </div>
@@ -109,10 +109,10 @@ export function ConfirmDialog({
           className="flex-1"
         >
           {isProcessing ? (
-            <MaterialIcon name="sync" className="text-lg animate-spin" />
+            <MaterialIcon size={20} name="sync" className="animate-spin" />
           ) : (
             <>
-              {variant === 'danger' && <MaterialIcon name="delete" className="text-lg" />}
+              {variant === 'danger' && <MaterialIcon size={20} name="delete" />}
               {confirmLabel ?? '삭제'}
             </>
           )}

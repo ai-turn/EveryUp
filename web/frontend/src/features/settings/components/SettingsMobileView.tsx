@@ -81,13 +81,13 @@ export function SettingsMobileView({
               <button
                 key={t_}
                 onClick={() => onThemeChange(t_)}
-                className={`flex-1 cursor-pointer flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold transition-all ${
+                className={`flex-1 cursor-pointer flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all ${
                   theme === t_
                     ? 'bg-ui-raised text-primary shadow-sm'
                     : 'text-text-muted'
                 }`}
               >
-                <MaterialIcon name={t_ === 'light' ? 'light_mode' : 'dark_mode'} className="text-base" />
+                <MaterialIcon size={16} name={t_ === 'light' ? 'light_mode' : 'dark_mode'} />
                 {t_ === 'light' ? '라이트' : '다크'}
               </button>
             ))}
@@ -116,7 +116,7 @@ export function SettingsMobileView({
                   <button
                     key={sec}
                     onClick={() => onCollectIntervalChange(sec)}
-                    className={`flex-1 cursor-pointer px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${
+                    className={`flex-1 cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                       collectInterval === sec
                         ? 'bg-ui-raised text-primary shadow-sm'
                         : 'text-text-muted'
@@ -139,7 +139,7 @@ export function SettingsMobileView({
                   <button
                     key={opt}
                     onClick={() => onMetricsRetentionChange(opt)}
-                    className={`flex-1 cursor-pointer px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${
+                    className={`flex-1 cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                       metricsRetention === opt
                         ? 'bg-ui-raised text-primary shadow-sm'
                         : 'text-text-muted'
@@ -162,7 +162,7 @@ export function SettingsMobileView({
                   <button
                     key={opt}
                     onClick={() => onLogsRetentionChange(opt)}
-                    className={`flex-1 cursor-pointer px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${
+                    className={`flex-1 cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                       logsRetention === opt
                         ? 'bg-ui-raised text-primary shadow-sm'
                         : 'text-text-muted'
@@ -174,7 +174,7 @@ export function SettingsMobileView({
               </div>
             </div>
 
-            <p className="mt-3 text-xs text-text-muted">
+            <p className="mt-3 type-body text-text-muted">
               보존 기간을 줄이면 기간을 초과한 기존 데이터는 다음 정리 주기에 삭제됩니다.
             </p>
           </>
@@ -190,13 +190,13 @@ export function SettingsMobileView({
       {/* Account Reset — ver2 프로토타입 오마주: 중립 카드 + 붉은 텍스트 액션 */}
       <SectionCard title="계정 초기화" subtitle="관리자 계정을 삭제하고 최초 설정 상태로 초기화합니다">
         <div className="flex items-center justify-between gap-4">
-          <p className="text-xs text-text-muted">
+          <p className="type-body text-text-muted">
             {env.useMock ? '데모 환경에서는 계정 초기화를 사용할 수 없습니다.' : '모든 계정 정보가 삭제되며, 다시 계정을 생성해야 합니다. 이 작업은 되돌릴 수 없습니다.'}
           </p>
           <button
             onClick={onResetClick}
             disabled={env.useMock}
-            className="shrink-0 text-xs font-semibold text-red-600 dark:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="shrink-0 text-xs font-medium text-red-600 dark:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
             계정 초기화
           </button>

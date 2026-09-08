@@ -48,7 +48,7 @@ function TabBar({ active, onChange, serviceKey }: { active: DetailTab; onChange:
           aria-selected={selected}
           aria-controls={`service-panel-${serviceKey}-${tab.key}`}
           onClick={() => onChange(tab.key)}
-          className={`-mb-px shrink-0 border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
+          className={`-mb-px shrink-0 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
             selected
               ? 'border-primary text-primary'
               : 'border-transparent text-text-muted hover:text-text-secondary'

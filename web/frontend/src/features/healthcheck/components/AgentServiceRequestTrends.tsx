@@ -118,7 +118,7 @@ function ServiceRequestTrends({
     <div className={`p-6 ${chartCardClass}`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex flex-wrap items-center gap-3">
-          <h3 className="text-base text-text-base">요청 추이</h3>
+          <h3 className="type-card-title text-text-base">요청 추이</h3>
           <ChartLegend
             items={[
               { label: '요청 수', color: theme.primaryColor },

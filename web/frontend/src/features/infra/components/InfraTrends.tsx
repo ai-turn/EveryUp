@@ -48,7 +48,7 @@ export function InfraTrends({ hostId, refreshKey = 0, range }: InfraTrendsProps)
     <>
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl tracking-tight text-text-base">
+          <h2 className="type-section-title tracking-tight text-text-base">
             인프라 추세
           </h2>
           <p className="mt-1 text-sm text-text-muted">
@@ -107,7 +107,7 @@ function ChartCard({
 
       {isEmpty ? (
         <div className="flex h-60 flex-col items-center justify-center gap-2 text-text-dim">
-          <MaterialIcon name="show_chart" className="text-4xl opacity-30" />
+          <MaterialIcon size={36} name="show_chart" className="opacity-30" />
           <p className="text-sm">
             {`${rangeLabel} 동안 활동 없음`}
           </p>

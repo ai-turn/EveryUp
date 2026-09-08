@@ -66,12 +66,12 @@ export function ApiKeyModal({ agentId, agentName, onClose, onRotated }: Props) {
       <div className="w-full max-w-md bg-bg-surface rounded-xl shadow-2xl border border-ui-border overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-ui-border-soft">
-          <h2 className="text-base font-semibold text-text-base truncate">
+          <h2 className="type-card-title text-text-base truncate">
             {agentName} · API 키
           </h2>
           <button onClick={onClose} aria-label="닫기" title="닫기"
             className="p-1 rounded-lg text-slate-400 hover:text-text-base transition-colors">
-            <MaterialIcon name="close" className="text-xl" />
+            <MaterialIcon size={20} name="close" />
           </button>
         </div>
 
@@ -87,12 +87,12 @@ export function ApiKeyModal({ agentId, agentName, onClose, onRotated }: Props) {
                     {apiKey}
                   </code>
                   <button onClick={handleCopy} aria-label="API 키 복사"
-                    className={`shrink-0 flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                    className={`shrink-0 flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                       copied
                         ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                         : 'bg-ui-hover text-text-secondary hover:bg-ui-active'
                     }`}>
-                    <MaterialIcon name={copied ? 'check' : 'content_copy'} className="text-base" />
+                    <MaterialIcon size={16} name={copied ? 'check' : 'content_copy'} />
                   </button>
                 </div>
               </div>
@@ -103,7 +103,7 @@ export function ApiKeyModal({ agentId, agentName, onClose, onRotated }: Props) {
             </>
           ) : (
             <div className="flex items-start gap-3 p-4 rounded-xl bg-ui-hover-soft border border-ui-border">
-              <MaterialIcon name="info" className="text-amber-500 text-lg shrink-0 mt-0.5" />
+              <MaterialIcon size={20} name="info" className="text-amber-500 shrink-0 mt-0.5" />
               <p className="text-sm text-text-muted">
                 이 Docker 환경은 키 저장 기능 이전에 생성되어 기존 키를 조회할 수 없습니다. 재발급하면 새 키가 발급됩니다.
               </p>
@@ -112,8 +112,8 @@ export function ApiKeyModal({ agentId, agentName, onClose, onRotated }: Props) {
 
           {!loading && (
             <button onClick={handleRotate} disabled={rotating}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold bg-ui-hover text-text-secondary hover:bg-ui-active disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-              <MaterialIcon name="autorenew" className="text-base" />
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium bg-ui-hover text-text-secondary hover:bg-ui-active disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              <MaterialIcon size={16} name="autorenew" />
               {rotating ? '재발급 중...' : 'API 키 재발급'}
             </button>
           )}

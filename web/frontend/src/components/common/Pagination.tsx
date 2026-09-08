@@ -46,7 +46,7 @@ export function Pagination({
             key={p}
             onClick={() => onChange(p)}
             aria-current={p === page ? 'page' : undefined}
-            className={`flex h-7 min-w-7 items-center justify-center rounded-md px-1 text-xs font-semibold ${
+            className={`flex h-7 min-w-7 items-center justify-center rounded-md px-1 text-xs font-medium ${
               p === page
                 ? 'bg-primary text-white'
                 : 'border border-ui-border text-text-muted hover:bg-ui-hover'

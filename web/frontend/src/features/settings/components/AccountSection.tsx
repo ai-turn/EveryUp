@@ -18,7 +18,7 @@ export function AccountSection() {
           {initials}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-text-base truncate">{user.username}</p>
+          <p className="text-sm font-medium text-text-base truncate">{user.username}</p>
           <p className="text-xs text-text-dim mt-0.5">
             역할 {user.role} · 세션 JWT 7일 · 로컬 비밀번호
           </p>

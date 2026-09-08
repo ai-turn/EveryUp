@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from 'react';
 import { Button, ConfirmDialog, MaterialIcon } from '../../../components/common';
 import { useAuth } from '../../../contexts/AuthContext';
 import { SectionCard } from './SectionCard';
@@ -13,12 +12,9 @@ const METRICS_RETENTION_OPTIONS = ['7d', '30d', '90d', '1y'];
 const LOGS_RETENTION_OPTIONS = ['1d', '3d', '7d', '30d'];
 const COLLECT_INTERVAL_OPTIONS = [15, 30, 60, 300];
 
-// 스크롤스파이 대상 = 좌측 서브내비 항목. 지금은 '일반' 하나로 통일 — 섹션이 늘면 여기에 추가.
-const NAV_IDS = ['sec-ui'] as const;
-
-// ver2 프로토타입 오마주: 컴팩트 세그먼티드 (text-xs, 얇은 컨테이너).
+// 트랙 패딩을 포함해 40px로 맞춘 설정 선택 버튼.
 const segmentedButtonClass = (active: boolean) =>
-  `cursor-pointer px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+  `cursor-pointer h-9 px-3 rounded-md type-label transition-all ${
     active
       ? 'bg-ui-raised text-primary shadow-sm'
       : 'text-text-muted hover:text-text-secondary'
@@ -66,44 +62,12 @@ export function SettingsDesktopView({
   onRetryLoad,
 }: SettingsDesktopViewProps) {
   const { user } = useAuth();
-  const [active, setActive] = useState<string>(NAV_IDS[0]);
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  // 스크롤 컨테이너(overflow-y-auto 조상)를 기준으로 현재 섹션을 추적한다.
-  useEffect(() => {
-    const scroller = rootRef.current?.closest('.overflow-y-auto') ?? window;
-    const onScroll = () => {
-      let act: string = NAV_IDS[0];
-      for (const id of NAV_IDS) {
-        const el = document.getElementById(id);
-        if (el && el.getBoundingClientRect().top < 160) act = id;
-      }
-      setActive(act);
-    };
-    onScroll();
-    scroller.addEventListener('scroll', onScroll, { passive: true });
-    return () => scroller.removeEventListener('scroll', onScroll);
-  }, []);
-
-  // 중첩 스크롤 컨테이너에서 scrollIntoView는 불안정 — 컨테이너를 직접 스크롤한다.
-  const jumpTo = (id: string) => {
-    const el = document.getElementById(id);
-    const scroller = rootRef.current?.closest('.overflow-y-auto');
-    if (!el || !(scroller instanceof HTMLElement)) return;
-    const top = el.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - 8;
-    scroller.scrollTo({ top }); // 부드러움은 컨테이너의 CSS scroll-smooth가 처리
-  };
-
-  const navItems: [string, string][] = [
-    ['sec-ui', '일반'],
-  ];
-
   const collectOptions = COLLECT_INTERVAL_OPTIONS.includes(collectInterval)
     ? COLLECT_INTERVAL_OPTIONS
     : [...COLLECT_INTERVAL_OPTIONS, collectInterval].sort((a, b) => a - b);
 
   return (
-    <div ref={rootRef}>
+    <div>
       {/* Page Header */}
       <div className="mb-5">
         <h1 className="text-2xl font-bold text-text-base">환경 설정</h1>
@@ -117,29 +81,8 @@ export function SettingsDesktopView({
         </div>
       )}
 
-      <div className="flex gap-10 items-start">
-        {/* 좌측 서브내비 (lg+) — 스크롤스파이 */}
-        <nav className="hidden lg:flex sticky top-2 w-44 shrink-0 flex-col gap-0.5">
-          {navItems.map(([id, label]) => {
-            const on = active === id;
-            return (
-              <button
-                key={id}
-                onClick={() => jumpTo(id)}
-                className={`cursor-pointer text-left px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                  on
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-text-muted hover:bg-ui-hover'
-                }`}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* 우측 콘텐츠 — ver2: 탭 없는 단일 컬럼 스크롤 */}
-        <div className="flex-1 min-w-0 max-w-3xl space-y-3.5">
+      <div>
+        <div className="min-w-0 w-full max-w-4xl space-y-5">
           {user && (
             <div id="sec-account" className="scroll-mt-4">
               <AccountSection />
@@ -156,7 +99,7 @@ export function SettingsDesktopView({
                       onClick={() => onThemeChange(t_)}
                       className={`flex items-center gap-1.5 ${segmentedButtonClass(theme === t_)}`}
                     >
-                      <MaterialIcon name={t_ === 'light' ? 'light_mode' : 'dark_mode'} className="text-sm" />
+                      <MaterialIcon size={16} name={t_ === 'light' ? 'light_mode' : 'dark_mode'} />
                       {t_ === 'light' ? '라이트' : '다크'}
                     </button>
                   ))}
@@ -216,7 +159,7 @@ export function SettingsDesktopView({
                     </div>
                   </SettingRow>
 
-                  <p className="pt-3 text-xs text-text-muted">
+                  <p className="pt-3 type-body text-text-muted">
                     보존 기간을 줄이면 기간을 초과한 기존 데이터는 다음 정리 주기에 삭제됩니다.
                   </p>
                 </>
@@ -236,13 +179,13 @@ export function SettingsDesktopView({
           <section id="sec-danger" className="scroll-mt-4">
             <SectionCard title="계정 초기화" subtitle="관리자 계정을 삭제하고 최초 설정 상태로 초기화합니다">
               <div className="flex items-center justify-between gap-4">
-                <p className="text-xs text-text-muted">
+                <p className="type-body text-text-muted">
                   {env.useMock ? '데모 환경에서는 계정 초기화를 사용할 수 없습니다.' : '모든 계정 정보가 삭제되며, 다시 계정을 생성해야 합니다. 이 작업은 되돌릴 수 없습니다.'}
                 </p>
                 <button
                   onClick={onResetClick}
                   disabled={env.useMock}
-                  className="shrink-0 text-xs font-semibold text-red-600 dark:text-red-400 hover:underline disabled:opacity-40 disabled:cursor-not-allowed disabled:no-underline cursor-pointer"
+                  className="shrink-0 text-xs font-medium text-red-600 dark:text-red-400 hover:underline disabled:opacity-40 disabled:cursor-not-allowed disabled:no-underline cursor-pointer"
                 >
                   계정 초기화
                 </button>

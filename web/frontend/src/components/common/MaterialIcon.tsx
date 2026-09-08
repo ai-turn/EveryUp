@@ -3,11 +3,12 @@ import { iconMarkup } from './materialIconPaths';
 
 interface MaterialIconProps {
   name: string;
+  size?: 16 | 20 | 24 | 32 | 36 | 48;
   className?: string;
   style?: CSSProperties;
 }
 
-export function MaterialIcon({ name, className = '', style }: MaterialIconProps) {
+export function MaterialIcon({ name, size = 16, className = '', style }: MaterialIconProps) {
   // Static markup generated from @mui/icons-material at build time — safe to inject.
   const markup = iconMarkup[name] ?? iconMarkup.help_outline;
 
@@ -21,7 +22,9 @@ export function MaterialIcon({ name, className = '', style }: MaterialIconProps)
         viewBox="0 0 24 24"
         fill="currentColor"
         focusable="false"
-        className="h-[1em] w-[1em] shrink-0"
+        width={size}
+        height={size}
+        className="shrink-0"
         dangerouslySetInnerHTML={{ __html: markup }}
       />
     </span>

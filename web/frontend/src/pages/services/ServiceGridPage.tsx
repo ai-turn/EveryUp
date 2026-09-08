@@ -7,6 +7,7 @@ import { MaterialIcon } from '../../components/common/MaterialIcon';
 import { PageHeader } from '../../components/common/PageHeader';
 import { CollectionStatusBadge } from '../../components/common/CollectionStatusBadge';
 import { SearchInput } from '../../components/common/SearchInput';
+import { ListToolbar, ResourceCardHeader } from '../../components/common';
 import { api, type AgentOverview, type AgentServiceFlat, type ConnectedAgent } from '../../services/api';
 import { PendingServiceCard } from '../../features/services/components/PendingServiceCard';
 import { AddServiceModal } from '../../features/services/components/AddServiceModal';
@@ -46,16 +47,17 @@ function ProjectCard({ agentId, agent, agentName, services, overview }: ProjectC
       className="card-interactive bg-bg-surface border border-ui-border rounded-xl p-4 cursor-pointer flex flex-col gap-3"
     >
       {/* Header: collection state + environment name */}
-      <div className="flex items-center gap-2.5 min-w-0">
-        <h3 className="text-base text-text-base truncate leading-tight">{agentName}</h3>
-        <CollectionStatusBadge status={online ? 'collecting' : 'delayed'} />
-      </div>
+      <ResourceCardHeader
+        icon="dns"
+        title={<h2 className="type-card-title text-text-base truncate">{agentName}</h2>}
+        status={<CollectionStatusBadge status={online ? 'collecting' : 'delayed'} />}
+      />
 
       {/* Summary: service count + health */}
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm text-text-muted">{`서비스 ${total}개`}</span>
         <span className={`flex items-center gap-1 text-sm ${allHealthy ? 'text-status-healthy' : 'text-status-error'}`}>
-          <MaterialIcon name={allHealthy ? 'check_circle' : 'cancel'} className="text-sm" />
+          <MaterialIcon size={16} name={allHealthy ? 'check_circle' : 'cancel'} />
           {healthy}/{total} 정상
         </span>
       </div>
@@ -72,13 +74,13 @@ function ProjectCard({ agentId, agent, agentName, services, overview }: ProjectC
         <div className="flex items-center gap-4 text-sm">
           <div>
             <div className="text-xs text-text-dim">가동률 30일</div>
-            <div className="font-mono font-semibold text-text-base">
+            <div className="font-mono font-medium text-text-base">
               {overview.uptimePct != null ? `${overview.uptimePct.toFixed(2)}%` : '—'}
             </div>
           </div>
           <div>
             <div className="text-xs text-text-dim">요청 24h</div>
-            <div className="font-mono font-semibold text-text-base">
+            <div className="font-mono font-medium text-text-base">
               {overview.requests24h > 0
                 ? Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(overview.requests24h)
                 : '—'}
@@ -86,7 +88,7 @@ function ProjectCard({ agentId, agent, agentName, services, overview }: ProjectC
           </div>
           <div>
             <div className="text-xs text-text-dim">p95</div>
-            <div className={`font-mono font-semibold ${
+            <div className={`font-mono font-medium ${
               overview.p95Ms != null && overview.p95Ms > 500
                 ? 'text-status-warn'
                 : 'text-text-base'
@@ -201,25 +203,28 @@ export function ServiceGridPage() {
         title="Docker 환경"
         subtitle="연결된 Docker 환경과 모니터링 서비스 현황"
       >
-        <Button className="w-full md:w-auto" onClick={() => setShowAddModal(true)}>
-          <MaterialIcon name="add" className="text-base" />
+        <Button onClick={() => setShowAddModal(true)}>
+          <MaterialIcon size={16} name="add" />
           Docker 연결
         </Button>
       </PageHeader>
 
-      <div className="space-y-5">
-
       {/* Search */}
-      <SearchInput
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="서비스 또는 Docker 환경 이름으로 검색"
-      />
+      <ListToolbar search={
+        <SearchInput
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="서비스 또는 Docker 환경 이름으로 검색"
+          aria-label="서비스 또는 Docker 환경 검색"
+        />
+      } />
+
+      <div className="space-y-5">
 
       {/* Content */}
       {error && (
         <section className="flex flex-col gap-3 rounded-xl border border-ui-border bg-bg-surface p-4 sm:flex-row sm:items-center sm:justify-between" role="alert">
-          <div className="flex items-start gap-3"><MaterialIcon name="sync_problem" className="mt-0.5 text-lg text-status-warn" /><div><p className="text-sm font-semibold text-text-base">Docker 환경을 불러오지 못했습니다</p><p className="mt-0.5 text-xs text-text-muted">{error}</p></div></div>
+          <div className="flex items-start gap-3"><MaterialIcon size={20} name="sync_problem" className="mt-0.5 text-status-warn" /><div><p className="text-sm font-medium text-text-base">Docker 환경을 불러오지 못했습니다</p><p className="mt-0.5 text-xs text-text-muted">{error}</p></div></div>
           <Button variant="secondary" size="sm" onClick={() => void load()}>다시 시도</Button>
         </section>
       )}

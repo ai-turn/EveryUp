@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button, EmptyState, MaterialIcon, PageHeader, StatusBadge } from '../../components/common';
+import { Button, EmptyState, MaterialIcon, PageHeader, ResourceCardHeader, StatusBadge } from '../../components/common';
 import { DirectApiSetupDialog } from '../../features/api/components/DirectApiSetupDialog';
 import { CapabilityAgentSetup } from '../../features/services/components/CapabilityAgentSetup';
 import {
@@ -46,16 +46,12 @@ function ApiCard({
   const hasErrors = summary.count5xx > 0;
   return (
     <Link to={to} className="card-interactive group rounded-xl border border-ui-border bg-bg-surface p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <MaterialIcon name="api" className="text-lg text-primary" />
-          <div className="min-w-0">
-            <h2 className="truncate text-base text-text-base group-hover:text-primary">{name}</h2>
-            <p className="mt-0.5 truncate text-xs text-text-muted">{source}</p>
-          </div>
-        </div>
-        <StatusBadge healthy={active} />
-      </div>
+      <ResourceCardHeader
+        icon="api"
+        title={<h3 className="truncate type-card-title text-text-base group-hover:text-primary">{name}</h3>}
+        subtitle={source}
+        status={<StatusBadge healthy={active} />}
+      />
       <div className="mt-5 grid grid-cols-2 gap-3">
         <div><p className="text-xs text-text-dim">요청</p><p className="font-mono text-lg text-text-base">{total.toLocaleString()}</p></div>
         <div><p className="text-xs text-text-dim">5xx</p><p className={`font-mono text-lg ${hasErrors ? 'text-status-error' : 'text-text-base'}`}>{summary.count5xx.toLocaleString()}</p></div>
@@ -63,7 +59,7 @@ function ApiCard({
       {summary.top5xxPath ? (
         <p className="mt-4 truncate font-mono text-xs text-text-muted">{summary.top5xxMethod} {summary.top5xxPath}</p>
       ) : (
-        <p className="mt-4 text-xs text-text-dim">{total > 0 ? '아직 오류 요청이 없습니다' : '첫 trace 수신을 기다리는 중입니다.'}</p>
+        <p className="mt-4 type-body text-text-muted">{total > 0 ? '아직 오류 요청이 없습니다' : '첫 trace 수신을 기다리는 중입니다.'}</p>
       )}
     </Link>
   );
@@ -105,10 +101,8 @@ export function ApiPage() {
   return (
     <div>
       <PageHeader title="API" subtitle="Docker 수집기 또는 직접 OpenTelemetry 연결에서 수집한 API 요청과 오류 추이입니다.">
-        <div className="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
-          <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />API 직접 추가</Button>
-          <CapabilityAgentSetup capability="api" buttonVariant="secondary" />
-        </div>
+        <CapabilityAgentSetup capability="api" buttonVariant="secondary" />
+        <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />API 직접 추가</Button>
       </PageHeader>
       {loading ? (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -124,7 +118,7 @@ export function ApiPage() {
             <section>
               <div className="mb-3 flex items-end justify-between gap-3">
                 <div>
-                  <h2 className="text-base text-text-base">직접 연결 서비스</h2>
+                  <h2 className="type-section-title text-text-base">직접 연결 서비스</h2>
                   <p className="mt-0.5 text-sm text-text-muted">애플리케이션이 전송하는 OTLP traces를 직접 받습니다.</p>
                 </div>
                 <span className="font-mono text-xs text-text-dim">{directRows.length}</span>
@@ -141,7 +135,7 @@ export function ApiPage() {
             <section>
               <div className="mb-3 flex items-end justify-between gap-3">
                 <div>
-                  <h2 className="text-base text-text-base">Docker 서비스</h2>
+                  <h2 className="type-section-title text-text-base">Docker 서비스</h2>
                   <p className="mt-0.5 text-sm text-text-muted">EveryUp Docker 수집기가 발견하고 전달한 API 요청입니다.</p>
                 </div>
                 <span className="font-mono text-xs text-text-dim">{agentRows.length}</span>

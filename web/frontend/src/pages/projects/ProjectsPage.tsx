@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { Button, ConfirmDialog, EmptyState, Input, MaterialIcon, PageHeader, Select } from '../../components/common';
+import { Button, ConfirmDialog, EmptyState, Input, MaterialIcon, PageHeader, ResourceCardHeader, Select } from '../../components/common';
 import { SCRIM_MODAL_DIALOG } from '../../hooks/useOverlay';
 import {
   api,
@@ -44,10 +44,10 @@ function ProjectDialog({ project, onClose, onSave }: {
       className={`m-auto w-full max-w-md overflow-hidden rounded-xl border border-ui-border bg-bg-surface shadow-lg ${SCRIM_MODAL_DIALOG}`}
     >
       <form onSubmit={submit}>
-        <div className="border-b border-ui-border px-6 py-4"><h2 id="project-dialog-title" className="text-base font-semibold text-text-base">{project ? 'Project 수정' : 'Project 추가'}</h2></div>
+        <div className="border-b border-ui-border px-6 py-4"><h2 id="project-dialog-title" className="type-card-title text-text-base">{project ? 'Project 수정' : 'Project 추가'}</h2></div>
         <div className="space-y-4 p-6">
-          <label className="block space-y-1.5" htmlFor="project-name"><span className="text-sm font-semibold text-text-secondary">이름</span><Input id="project-name" required value={name} onChange={event => setName(event.target.value)} placeholder="예: Production" /></label>
-          <label className="block space-y-1.5" htmlFor="project-description"><span className="text-sm font-semibold text-text-secondary">설명</span><Input id="project-description" value={description} onChange={event => setDescription(event.target.value)} placeholder="선택 사항" /></label>
+          <label className="block space-y-1.5" htmlFor="project-name"><span className="text-sm font-medium text-text-secondary">이름</span><Input id="project-name" required value={name} onChange={event => setName(event.target.value)} placeholder="예: Production" /></label>
+          <label className="block space-y-1.5" htmlFor="project-description"><span className="text-sm font-medium text-text-secondary">설명</span><Input id="project-description" value={description} onChange={event => setDescription(event.target.value)} placeholder="선택 사항" /></label>
         </div>
         <div className="flex justify-end gap-2 border-t border-ui-border px-6 py-4"><Button type="button" variant="secondary" onClick={onClose} disabled={saving}>취소</Button><Button type="submit" disabled={saving}>{project ? '저장' : '추가'}</Button></div>
       </form>
@@ -88,10 +88,12 @@ function ProjectCard({ project, agents, monitors, directServices, infrastructure
 
   return (
     <article className="rounded-xl border border-ui-border bg-bg-surface p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0"><Link to={`/projects/${project.id}`} className="block truncate text-base text-text-base hover:text-primary">{project.name}</Link><p className="mt-1 text-sm text-text-muted">{project.description || '설명이 없습니다'}</p></div>
-        <div className="flex gap-1"><Button variant="ghost" size="sm" aria-label="Project 수정" onClick={onEdit}><MaterialIcon name="edit" /></Button><Button variant="ghost" size="sm" aria-label="Project 삭제" onClick={onDelete}><MaterialIcon name="delete" className="text-status-error" /></Button></div>
-      </div>
+      <ResourceCardHeader
+        icon="folder_open"
+        title={<h2 className="truncate type-card-title text-text-base"><Link to={`/projects/${project.id}`} className="hover:text-primary">{project.name}</Link></h2>}
+        status={<div className="flex gap-1"><Button variant="ghost" size="sm" aria-label="Project 수정" title="Project 수정" onClick={onEdit}><MaterialIcon name="edit" /></Button><Button variant="ghost" size="sm" aria-label="Project 삭제" title="Project 삭제" onClick={onDelete}><MaterialIcon name="delete" className="text-status-error" /></Button></div>}
+      />
+      <p className="mt-3 type-body text-text-muted">{project.description || '설명이 없습니다'}</p>
       <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[['Docker 환경', agents.length], ['업타임', monitors.length], ['직접 서비스', directServices.length], ['Collector', infrastructureResources.length]].map(([label, count]) => <div key={String(label)} className="rounded-lg bg-ui-hover-soft p-3"><p className="text-xs text-text-dim">{label}</p><p className="mt-1 font-mono text-lg text-text-base">{count}</p></div>)}
       </div>

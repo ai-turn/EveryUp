@@ -52,7 +52,7 @@ export function AuditLogSection() {
             const count = bodyCountOf(event.metadata);
             return (
               <li key={event.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 text-sm">
-                <span className="font-semibold text-text-secondary">{event.username}</span>
+                <span className="font-medium text-text-secondary">{event.username}</span>
                 <span className="min-w-0 flex-1 truncate text-text-muted" title={event.traceId}>
                   {`Trace ${(event.traceId ?? '').slice(0, 12)} 본문 열람`}
                 </span>

@@ -7,17 +7,16 @@ export function SectionCard({
   subtitle?: string;
   children: React.ReactNode;
 }) {
-  // ver2 프로토타입 오마주: 아이콘 칩 없는 컴팩트 헤더 (14px bold + 12px muted).
   // 파괴적 작업도 카드는 중립 — 색은 액션 텍스트에만 싣는다.
   return (
     <div className="bg-bg-surface border border-ui-border rounded-xl p-5">
-      <div className="mb-3">
-        <h2 className="text-base text-text-base">{title}</h2>
+      <div className="mb-4">
+        <h2 className="type-card-title text-text-base">{title}</h2>
         {subtitle && (
-          <p className="text-xs text-text-muted mt-0.5">{subtitle}</p>
+          <p className="type-body text-text-muted mt-1">{subtitle}</p>
         )}
       </div>
-      {children}
+      <div>{children}</div>
     </div>
   );
 }

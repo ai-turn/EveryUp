@@ -103,7 +103,7 @@ export function AlertsDesktopView({
       >
         {activeTab !== 'history' && (
           <Button onClick={activeTab === 'rules' ? onAddRule : () => openChannelForm()}>
-            <MaterialIcon name="add" className="text-lg" />
+            <MaterialIcon size={16} name="add" />
             {activeTab === 'rules' ? '규칙 추가' : '채널 추가'}
           </Button>
         )}
@@ -124,7 +124,7 @@ export function AlertsDesktopView({
             {totalFailed > 0 && (
               <button
                 onClick={viewFailedLogs}
-                className="text-xs font-semibold text-primary hover:underline"
+                className="text-xs font-medium text-primary hover:underline"
               >
                 실패 로그 보기 →
               </button>
@@ -165,7 +165,7 @@ export function AlertsDesktopView({
               role="tab"
               aria-selected={activeTab === tab.key}
               onClick={() => selectTab(tab.key)}
-              className={`relative px-4 py-2.5 text-sm font-semibold transition-colors -mb-px border-b-2 ${
+              className={`relative px-4 py-2.5 text-sm font-medium transition-colors -mb-px border-b-2 ${
                 activeTab === tab.key
                   ? 'text-text-base border-primary'
                   : 'text-text-muted border-transparent hover:text-text-base'
@@ -240,10 +240,10 @@ function ChannelFormActions({ isSubmitting, isEdit, onCancel }: { isSubmitting: 
       </Button>
       <Button type="submit" form="channel-form" disabled={isSubmitting}>
         {isSubmitting ? (
-          <MaterialIcon name="sync" className="text-base animate-spin" />
+          <MaterialIcon size={16} name="sync" className="animate-spin" />
         ) : (
           <>
-            <MaterialIcon name="check" className="text-sm" />
+            <MaterialIcon size={16} name="check" />
             {isEdit ? '저장' : '채널 추가'}
           </>
         )}
@@ -311,12 +311,12 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
       <table className="w-full min-w-[960px] table-fixed">
         <thead className="bg-ui-hover-soft/40">
           <tr className="border-b border-ui-border">
-            <th className="w-[280px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">채널</th>
-            <th className="w-[90px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">상태</th>
-            <th className="w-[150px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">7일 발송 / 실패</th>
-            <th className="w-[110px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">연결 규칙</th>
-            <th className="w-[160px] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">최근 발송</th>
-            <th className="w-[180px] px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-text-muted">작업</th>
+            <th className="w-[280px] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-muted">채널</th>
+            <th className="w-[90px] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-muted">상태</th>
+            <th className="w-[150px] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-muted">7일 발송 / 실패</th>
+            <th className="w-[110px] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-muted">연결 규칙</th>
+            <th className="w-[160px] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-muted">최근 발송</th>
+            <th className="w-[180px] px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-text-muted">작업</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-ui-border-soft">
@@ -355,7 +355,7 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
                     ariaLabel={`${channel.name} ${channel.isEnabled ? '비활성화' : '활성화'}`}
                   />
                 </td>
-                <td className="px-4 py-3 text-sm font-semibold tabular-nums">
+                <td className="px-4 py-3 text-sm font-medium tabular-nums">
                   {total > 0 ? (
                     <span className="text-text-base">
                       {sent}
@@ -367,7 +367,7 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
                     <span className="font-normal text-text-dim">이력 없음</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-sm font-semibold text-text-secondary">
+                <td className="px-4 py-3 text-sm font-medium text-text-secondary">
                   {`규칙 ${health?.ruleCount ?? 0}개`}
                 </td>
                 <td className="px-4 py-3 text-sm text-text-muted">
@@ -380,9 +380,9 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
                     <button
                       onClick={() => onTest(channel.id)}
                       disabled={!channel.isEnabled}
-                      className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-ui-border-dark dark:bg-bg-surface-dark dark:text-text-base-dark dark:hover:bg-ui-hover-dark"
+                      className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-ui-border-dark dark:bg-bg-surface-dark dark:text-text-base-dark dark:hover:bg-ui-hover-dark"
                     >
-                      <MaterialIcon name="send" className="text-sm" />
+                      <MaterialIcon size={16} name="send" />
                       테스트
                     </button>
                     <button
@@ -390,14 +390,14 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
                       className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-ui-hover-dark dark:hover:text-white"
                       aria-label="수정" title="수정"
                     >
-                      <MaterialIcon name="edit" className="text-base" />
+                      <MaterialIcon size={16} name="edit" />
                     </button>
                     <button
                       onClick={() => onDelete(channel.id)}
                       className="flex h-8 w-8 items-center justify-center rounded-md text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
                       aria-label="삭제" title="삭제"
                     >
-                      <MaterialIcon name="delete_outline" className="text-base" />
+                      <MaterialIcon size={16} name="delete_outline" />
                     </button>
                   </div>
                 </td>

@@ -87,7 +87,7 @@ function LogRow({ log, onOpenTrace }: { log: LogEntry; onOpenTrace: (traceId: st
       aria-expanded={hasMeta ? expanded : undefined}
     >
       <div className="flex items-start gap-3">
-        <span className={`mt-0.5 shrink-0 px-1.5 py-0.5 rounded text-xs uppercase ${LEVEL_STYLE[log.level] ?? LEVEL_STYLE.info}`}>
+        <span className={`badge mt-0.5 uppercase ${LEVEL_STYLE[log.level] ?? LEVEL_STYLE.info}`}>
           {log.level}
         </span>
         <div className="min-w-0 flex-1">
@@ -101,14 +101,14 @@ function LogRow({ log, onOpenTrace }: { log: LogEntry; onOpenTrace: (traceId: st
             className="shrink-0 inline-flex items-center gap-1 rounded-lg border border-primary/20 bg-primary/5 px-2 py-1 text-xs text-primary hover:bg-primary/10 cursor-pointer"
             title="트레이스 보기"
           >
-            <MaterialIcon name="timeline" className="text-sm" />
+            <MaterialIcon size={16} name="timeline" />
             트레이스
           </button>
         )}
         {hasMeta && (
-          <MaterialIcon
+          <MaterialIcon size={16}
             name={expanded ? 'expand_less' : 'expand_more'}
-            className="text-base text-text-dim shrink-0 mt-0.5"
+            className="text-text-dim shrink-0 mt-0.5"
           />
         )}
       </div>
@@ -255,7 +255,7 @@ function ServiceLogsPanel(props: Props) {
             <button type="button" onClick={() => { setSearch(''); setInputValue(''); setPage(1); }}
               aria-label="검색어 지우기" title="검색어 지우기"
               className="px-2 py-1.5 rounded-lg text-xs text-slate-500 hover:text-red-500 transition-colors">
-              <MaterialIcon name="close" className="text-sm" />
+              <MaterialIcon size={16} name="close" />
             </button>
           )}
         </form>
@@ -280,13 +280,13 @@ function ServiceLogsPanel(props: Props) {
           type="button"
           onClick={() => setShowSettings(v => !v)}
           title="수집 설정"
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             showSettings
               ? 'bg-primary/10 text-primary'
               : 'bg-ui-hover text-text-muted hover:bg-ui-active'
           }`}
         >
-          <MaterialIcon name="tune" className="text-sm" />
+          <MaterialIcon size={16} name="tune" />
           수집 설정
         </button>
       </div>
@@ -295,8 +295,8 @@ function ServiceLogsPanel(props: Props) {
       {showSettings && (
         <div className="rounded-xl border border-ui-border bg-ui-hover-soft p-4 space-y-3">
           <div>
-            <p className="text-sm font-semibold text-text-base">수집할 로그 레벨</p>
-            <p className="text-xs text-text-dim mt-0.5">
+            <p className="text-sm font-medium text-text-base">수집할 로그 레벨</p>
+            <p className="type-body text-text-muted mt-0.5">
               선택한 레벨만 저장됩니다. 모두 해제하면 전체 저장. (앞으로 들어오는 로그에만 적용)
             </p>
           </div>
@@ -321,7 +321,7 @@ function ServiceLogsPanel(props: Props) {
           </div>
           <div className="flex items-center gap-3">
             <Button type="button" size="sm" onClick={saveIngestFilter} disabled={savingFilter}>
-              <MaterialIcon name="save" className="text-sm" />
+              <MaterialIcon size={16} name="save" />
               {savingFilter ? '저장 중...' : '저장'}
             </Button>
             <span className="text-xs text-text-dim">
@@ -373,7 +373,7 @@ function ServiceLogsPanel(props: Props) {
         </div>
       ) : logs.length === 0 ? (
         <div className="py-16 text-center">
-          <MaterialIcon name="article" className="text-4xl text-text-dim mb-2" />
+          <MaterialIcon size={36} name="article" className="text-text-dim mb-2" />
           <p className="text-sm text-text-dim">
             {search || level ? '조건에 맞는 로그가 없습니다' : '이 기간에 수집된 로그가 없습니다'}
           </p>

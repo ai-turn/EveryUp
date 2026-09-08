@@ -56,7 +56,7 @@ export function ChannelFormPage() {
           >
             알림
           </button>
-          <MaterialIcon name="chevron_right" className="text-sm opacity-50" />
+          <MaterialIcon size={16} name="chevron_right" className="opacity-50" />
           <button
             type="button"
             onClick={goBack}
@@ -64,7 +64,7 @@ export function ChannelFormPage() {
           >
             채널
           </button>
-          <MaterialIcon name="chevron_right" className="text-sm opacity-50" />
+          <MaterialIcon size={16} name="chevron_right" className="opacity-50" />
           <span className="text-text-base truncate max-w-50">
             {loading ? '...' : isEdit ? (channel?.name ?? '수정') : '새 채널'}
           </span>
@@ -91,7 +91,7 @@ export function ChannelFormPage() {
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  <MaterialIcon name="save" className="text-sm" />
+                  <MaterialIcon size={16} name="save" />
                   저장
                 </>
               )}

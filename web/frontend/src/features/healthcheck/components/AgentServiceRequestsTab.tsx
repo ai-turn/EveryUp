@@ -155,13 +155,13 @@ function ServiceRequestsPanel({
         {/* Error-only toggle */}
         <button
           onClick={() => { setErrorsOnly(v => !v); setPage(1); }}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
             errorsOnly
               ? 'bg-red-500 text-white'
               : 'bg-ui-hover text-text-muted hover:bg-ui-active'
           }`}
         >
-          <MaterialIcon name="error_outline" className="text-sm" />
+          <MaterialIcon size={16} name="error_outline" />
           에러만
         </button>
 
@@ -177,7 +177,7 @@ function ServiceRequestsPanel({
             <button type="button" onClick={() => { setSearch(''); setInputValue(''); setPage(1); }}
               aria-label="검색어 지우기" title="검색어 지우기"
               className="px-2 py-1.5 rounded-lg text-xs text-slate-500 hover:text-red-500 transition-colors">
-              <MaterialIcon name="close" className="text-sm" />
+              <MaterialIcon size={16} name="close" />
             </button>
           )}
         </form>
@@ -192,13 +192,13 @@ function ServiceRequestsPanel({
         </div>
       ) : requests.length === 0 ? (
         <div className="py-16 text-center">
-          <MaterialIcon name="http" className="text-4xl text-text-dim mb-2" />
+          <MaterialIcon size={36} name="http" className="text-text-dim mb-2" />
           <p className="text-sm text-text-dim">
             {search || errorsOnly ? '조건에 맞는 요청이 없습니다' : '이 기간에 수집된 API 요청이 없습니다'}
           </p>
           {!search && !errorsOnly && (
             <div className="mt-6 mx-auto max-w-md text-left p-4 rounded-xl bg-bg-surface border border-ui-border">
-              <p className="text-sm font-semibold text-text-secondary mb-2">
+              <p className="text-sm font-medium text-text-secondary mb-2">
                 {source.kind === 'agent' && source.runtime
                   ? `${runtimeLabel(source.runtime)} 서비스로 감지되었습니다. 트레이스를 수집하려면:`
                   : source.kind === 'direct'
@@ -255,7 +255,7 @@ function ServiceRequestsPanel({
                 <span className="shrink-0 text-xs text-text-dim">{req.durationMs}ms</span>
                 <span className="shrink-0 text-xs text-text-dim">{formatTime(req.createdAt)}</span>
                 {clickable && (
-                  <MaterialIcon name="timeline" className="shrink-0 text-base text-text-dim" />
+                  <MaterialIcon size={16} name="timeline" className="shrink-0 text-text-dim" />
                 )}
               </div>
             );

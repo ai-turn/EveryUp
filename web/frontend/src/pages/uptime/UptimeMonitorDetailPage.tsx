@@ -31,7 +31,7 @@ function ResponseTimeChart({ metrics }: { metrics: UptimeMonitorMetric[] }) {
 
   return (
     <div className={`p-6 ${chartCardClass}`}>
-      <h2 className="mb-6 text-base text-text-base">응답 시간</h2>
+      <h2 className="mb-6 type-card-title text-text-base">응답 시간</h2>
       {chartData.length === 0 ? (
         <div className="flex h-48 items-center justify-center text-sm text-text-dim">데이터 없음</div>
       ) : (
@@ -74,7 +74,7 @@ function ResponseTimeChart({ metrics }: { metrics: UptimeMonitorMetric[] }) {
 function RecentChecks({ metrics }: { metrics: UptimeMonitorMetric[] }) {
   return (
     <section className="rounded-xl border border-ui-border bg-bg-surface p-6">
-      <h2 className="mb-4 text-base text-text-base">최근 체크 기록</h2>
+      <h2 className="mb-4 type-card-title text-text-base">최근 체크 기록</h2>
       {metrics.length === 0 ? (
         <div className="py-8 text-center text-sm text-text-dim">아직 체크 기록이 없습니다</div>
       ) : (
@@ -172,14 +172,14 @@ export function UptimeMonitorDetailPage() {
   };
 
   if (loading) {
-    return <div className="flex h-64 items-center justify-center gap-3 text-text-muted"><MaterialIcon name="sync" className="animate-spin text-2xl" />불러오는 중</div>;
+    return <div className="flex h-64 items-center justify-center gap-3 text-text-muted"><MaterialIcon size={24} name="sync" className="animate-spin" />불러오는 중</div>;
   }
 
   if (error || !monitor) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4 text-center">
-        <MaterialIcon name="error_outline" className="text-3xl text-status-error" />
-        <div><p className="font-semibold text-text-base">업타임 모니터를 찾을 수 없습니다</p>{error && <p className="mt-1 text-sm text-text-muted">{error}</p>}</div>
+        <MaterialIcon size={32} name="error_outline" className="text-status-error" />
+        <div><p className="font-medium text-text-base">업타임 모니터를 찾을 수 없습니다</p>{error && <p className="mt-1 text-sm text-text-muted">{error}</p>}</div>
         <Button variant="secondary" onClick={() => navigate('/uptime')}>업타임으로 돌아가기</Button>
       </div>
     );
@@ -194,7 +194,7 @@ export function UptimeMonitorDetailPage() {
     <div className="space-y-5">
       <div>
         <Link to="/uptime" className="mb-3 inline-flex items-center gap-1 text-sm text-text-muted transition-colors hover:text-primary">
-          <MaterialIcon name="arrow_back" className="text-lg" />업타임
+          <MaterialIcon size={20} name="arrow_back" />업타임
         </Link>
         <div className="flex flex-col gap-4 md:flex-row md:items-start">
           <div className="min-w-0 flex-1">
