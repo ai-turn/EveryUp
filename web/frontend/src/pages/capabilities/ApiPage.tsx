@@ -102,7 +102,7 @@ export function ApiPage() {
     <div>
       <PageHeader title="API" subtitle="Docker 수집기 또는 직접 OpenTelemetry 연결에서 수집한 API 요청과 오류 추이입니다.">
         <CapabilityAgentSetup capability="api" buttonVariant="secondary" />
-        <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />API 직접 추가</Button>
+        <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />추가하기</Button>
       </PageHeader>
       {loading ? (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">

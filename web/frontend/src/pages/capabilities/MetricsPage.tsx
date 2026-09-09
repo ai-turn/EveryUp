@@ -122,7 +122,7 @@ export function MetricsPage() {
     <div>
       <PageHeader title="메트릭" subtitle="Docker 수집기 또는 직접 OpenTelemetry 연결에서 수집한 서비스 메트릭입니다.">
         <CapabilityAgentSetup capability="metrics" buttonVariant="secondary" />
-        <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />Metrics 직접 추가</Button>
+        <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />추가하기</Button>
       </PageHeader>
 
       {loading ? (

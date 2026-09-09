@@ -76,7 +76,7 @@ export function InfrastructureCollectorSetupDialog({
           </div>
           <div className="flex justify-end gap-2 border-t border-ui-border pt-4">
             <Button type="button" variant="secondary" onClick={onClose} disabled={submitting}>취소</Button>
-            <Button type="submit" disabled={submitting || !name.trim()}><MaterialIcon name="add" />{submitting ? '추가 중...' : 'Collector 추가'}</Button>
+            <Button type="submit" disabled={submitting || !name.trim()}><MaterialIcon name="add" />{submitting ? '추가 중...' : '추가하기'}</Button>
           </div>
         </form>
       )}

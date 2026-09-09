@@ -63,7 +63,7 @@ export function Sidebar() {
     <aside className="hidden w-60 shrink-0 flex-col border-r border-ui-border bg-bg-surface lg:flex">
       <Link to="/" className="group flex h-16 shrink-0 items-center gap-2 px-4">
         <img src={theme === 'dark' ? logoDark : logo} alt="EveryUp" className="h-9 w-9 object-contain" />
-        <span className="text-lg tracking-tight text-text-base transition-colors group-hover:text-primary">EveryUp</span>
+        <span className="text-lg font-bold tracking-tight text-text-base transition-colors group-hover:text-primary">EveryUp</span>
       </Link>
 
       {env.isDemoMode && (

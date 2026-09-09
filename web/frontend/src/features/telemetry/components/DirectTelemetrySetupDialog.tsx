@@ -164,7 +164,7 @@ export function DirectTelemetrySetupDialog({
             <Button type="button" variant="secondary" onClick={onClose} disabled={submitting}>취소</Button>
             <Button type="submit" disabled={submitting || (mode === 'new' ? !name.trim() : !selected)}>
               <MaterialIcon name="add" />
-              {submitting ? '추가 중...' : `${capabilityLabel} 추가`}
+              {submitting ? '추가 중...' : '추가하기'}
             </Button>
           </div>
         </form>

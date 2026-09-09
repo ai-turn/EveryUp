@@ -125,7 +125,7 @@ export function UptimeMonitorDialog({
           <Button type="button" variant="secondary" onClick={onClose} disabled={saving}>취소</Button>
           <Button type="submit" disabled={saving}>
             {saving && <MaterialIcon name="sync" className="animate-spin" />}
-            {monitor ? '저장' : '추가'}
+            {monitor ? '저장' : '추가하기'}
           </Button>
         </div>
       </form>

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import {
-  Button, EmptyState, ListToolbar, MaterialIcon, PageHeader, SearchInput, StatusBadge,
+  Button, EmptyState, ListToolbar, MaterialIcon, PageHeader, SearchInput, StatusBadge, SummaryCard,
 } from '../../components/common';
 import { UptimeMonitorDialog } from '../../features/uptime/components/UptimeMonitorDialog';
 import { UptimeMonitorStatusBadge } from '../../features/uptime/components/UptimeMonitorStatusBadge';
@@ -78,11 +78,25 @@ export function AgentServiceCapabilityPage() {
 
   const empty = filteredAgentServices.length === 0 && filteredMonitors.length === 0;
 
+  const paused = monitors.filter((monitor) => !monitor.isActive || monitor.status === 'unknown');
+  const down = monitors.filter((monitor) => monitor.isActive && monitor.status === 'unhealthy').length
+    + agentServices.filter((service) => !service.healthy).length;
+  const up = monitors.length + agentServices.length - paused.length - down;
+
   return (
     <div>
       <PageHeader title="업타임" subtitle="Docker에서 발견한 서비스와 직접 추가한 업타임 모니터를 확인합니다.">
-        <Button onClick={() => setAdding(true)}><MaterialIcon name="add" />업타임 추가</Button>
+        <Button onClick={() => setAdding(true)}><MaterialIcon name="add" />추가하기</Button>
       </PageHeader>
+
+      {!loading && !error && monitors.length + agentServices.length > 0 && (
+        <section aria-label="업타임 상태 요약" className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <SummaryCard icon="check_circle" label="정상" value={up} detail={`전체 ${monitors.length + agentServices.length}개 대상 중`} tone="healthy" />
+          <SummaryCard icon="error_outline" label="장애" value={down} detail={down === 0 ? '장애 신호 없음' : '지금 확인이 필요합니다'} tone={down === 0 ? 'idle' : 'error'} />
+          <SummaryCard icon="pause" label="일시정지·대기" value={paused.length} detail={paused.length === 0 ? '모든 모니터 동작 중' : '체크가 돌지 않는 대상입니다'} tone="idle" />
+        </section>
+      )}
+
       <ListToolbar search={
         <SearchInput value={query} onChange={(event) => setQuery(event.target.value)} placeholder="서비스 또는 대상 검색" aria-label="서비스 또는 대상 검색" />
       } />
