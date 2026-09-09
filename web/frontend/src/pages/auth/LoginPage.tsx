@@ -83,11 +83,11 @@ export function LoginPage() {
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 mb-4">
             <IconHealthCheck size={24} className="text-primary" />
           </div>
-          <div className="text-2xl text-primary tracking-tight mb-1">EveryUp</div>
-          <h2 className="type-section-title text-text-base">
+          <div className="text-2xl font-bold text-primary tracking-tight mb-1">EveryUp</div>
+          <h1 className="type-section-title text-text-base">
             {isSetup ? '초기 설정' : '로그인'}
-          </h2>
-          <p className="text-text-muted text-sm mt-1">
+          </h1>
+          <p className="type-body text-text-muted mt-1">
             {isSetup ? '관리자 계정을 생성하세요' : '관리자 계정으로 로그인하세요'}
           </p>
         </div>
@@ -98,7 +98,7 @@ export function LoginPage() {
           <div className="relative">
             <div className="bg-bg-surface border border-ui-border rounded-xl shadow-sm p-6 space-y-4">
               {error && (
-                <div className="flex items-start gap-2 text-red-500 dark:text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2.5">
+                <div className="flex items-start gap-2 text-red-500 dark:text-red-400 type-body bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2.5">
                   <span className="w-4 h-5 shrink-0 inline-flex items-center justify-center">
                     <MaterialIcon size={16} name="error_outline" className="leading-none" />
                   </span>
@@ -107,7 +107,7 @@ export function LoginPage() {
               )}
 
               {isSetup && (
-                <div className="flex items-start gap-2 text-sky-600 dark:text-sky-400 text-sm bg-sky-500/10 border border-sky-500/20 rounded-lg px-3 py-2.5">
+                <div className="flex items-start gap-2 text-sky-600 dark:text-sky-400 type-body bg-sky-500/10 border border-sky-500/20 rounded-lg px-3 py-2.5">
                   <span className="w-4 h-5 shrink-0 inline-flex items-center justify-center">
                     <MaterialIcon size={16} name="info" className="leading-none" />
                   </span>
@@ -117,7 +117,7 @@ export function LoginPage() {
 
               <form onSubmit={handleSubmit} className="space-y-3">
                 <div>
-                  <label htmlFor="login-username" className="block text-sm font-medium text-text-muted uppercase tracking-wider mb-1.5">사용자 이름</label>
+                  <label htmlFor="login-username" className="block text-sm font-medium text-text-muted uppercase tracking-wide mb-1.5">사용자 이름</label>
                   <Input
                     id="login-username"
                     type="text"
@@ -130,7 +130,7 @@ export function LoginPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="login-password" className="block text-sm font-medium text-text-muted uppercase tracking-wider mb-1.5">
+                  <label htmlFor="login-password" className="block text-sm font-medium text-text-muted uppercase tracking-wide mb-1.5">
                     비밀번호{isSetup && ' (최소 8자 이상)'}
                   </label>
                   <Input
@@ -148,7 +148,7 @@ export function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowForgot(!showForgot)}
-                      className="text-sm text-primary hover:text-primary/80 underline underline-offset-2 transition-colors"
+                      className="type-body text-primary hover:text-primary/80 underline underline-offset-2 transition-colors"
                     >
                       계정 정보를 잊으셨나요?
                     </button>
@@ -164,23 +164,23 @@ export function LoginPage() {
             {/* Recovery panel — outside card div, bottom-aligned with card border */}
             {!isSetup && showForgot && (
               <div className="animate-slide-in-right absolute bottom-0 left-full ml-4 w-[26rem] bg-bg-surface border border-ui-border rounded-xl shadow-sm p-5 space-y-4">
-                <p className="text-sm font-medium text-text-secondary">
+                <p className="type-label text-text-secondary">
                   계정 정보를 잊으셨나요?
                 </p>
-                <p className="text-sm text-text-muted">
+                <p className="type-body text-text-muted">
                   셀프 호스팅 환경에서는 아래 방법으로 계정을 재설정할 수 있습니다.
                 </p>
 
                 {/* Method 1: Env var */}
                 <div className="space-y-1.5">
-                  <p className="text-sm font-medium text-text-secondary">
+                  <p className="type-label text-text-secondary">
                     방법 1: 환경 변수로 임시 접근 후 초기화 (권장)
                   </p>
-                  <p className="text-sm text-text-muted">
+                  <p className="type-body text-text-muted">
                     환경 변수로 임시 계정을 만들어 로그인한 뒤, 설정 → 계정 초기화에서 계정을 새로 생성하세요.
                   </p>
                   <div className="space-y-1">
-                    <p className="text-sm text-text-muted">① 환경 변수 설정 후 재시작</p>
+                    <p className="type-body text-text-muted">① 환경 변수 설정 후 재시작</p>
                     <pre className="text-xs bg-bg-main border border-ui-border rounded-lg p-2.5 overflow-x-auto text-text-secondary leading-relaxed">
 {`# docker-compose.yml
 environment:
@@ -190,16 +190,16 @@ environment:
 docker compose restart`}
                     </pre>
                   </div>
-                  <p className="text-sm text-text-muted">② 위 계정 정보로 로그인</p>
-                  <p className="text-sm text-text-muted">③ 설정 → 계정 초기화 → 새 계정 생성</p>
+                  <p className="type-body text-text-muted">② 위 계정 정보로 로그인</p>
+                  <p className="type-body text-text-muted">③ 설정 → 계정 초기화 → 새 계정 생성</p>
                 </div>
 
                 {/* Method 2: Remove data volume */}
                 <div className="space-y-1.5">
-                  <p className="text-sm font-medium text-text-secondary">
+                  <p className="type-label text-text-secondary">
                     방법 2: 계정 데이터 삭제 후 초기화
                   </p>
-                  <p className="text-sm text-text-muted">
+                  <p className="type-body text-text-muted">
                     데이터 볼륨을 제거하고 재시작하면 초기 설정 화면으로 돌아갑니다. 모니터링 데이터는 유지됩니다.
                   </p>
                   <pre className="text-xs bg-bg-main border border-ui-border rounded-lg p-2.5 overflow-x-auto text-text-secondary leading-relaxed">
@@ -217,7 +217,7 @@ docker compose up -d`}
                   href="https://github.com/ai-turn/everyup#readme"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-sm text-text-dim hover:text-primary dark:hover:text-primary transition-colors"
+                  className="flex items-center gap-1.5 type-body text-text-dim hover:text-primary dark:hover:text-primary transition-colors"
                 >
                   <MaterialIcon size={16} name="open_in_new" />
                   GitHub README
@@ -226,7 +226,7 @@ docker compose up -d`}
             )}
           </div>{/* end relative wrapper */}
 
-          <p className="text-center text-text-dim text-sm mt-4">
+          <p className="text-center type-body text-text-dim mt-4">
             이 계정으로 모니터링 시스템에 접근합니다
           </p>
         </div>

@@ -67,7 +67,7 @@ export function InfrastructurePage() {
     <div>
       <PageHeader title="인프라" subtitle="EveryUp Docker 수집기 또는 표준 OpenTelemetry Collector로 수집한 호스트 리소스입니다.">
         <CapabilityAgentSetup capability="infrastructure" buttonVariant="secondary" />
-        <Button onClick={() => setShowCollectorSetup(true)}><MaterialIcon name="add" />Collector 직접 추가</Button>
+        <Button onClick={() => setShowCollectorSetup(true)}><MaterialIcon name="add" />추가하기</Button>
       </PageHeader>
       {loading ? (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map(item => <div key={item} className="h-44 animate-pulse rounded-xl border border-ui-border bg-bg-surface" />)}</div>

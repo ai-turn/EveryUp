@@ -116,7 +116,7 @@ export function LogsPage() {
     <div>
       <PageHeader title="로그" subtitle="Docker 수집기 또는 직접 OpenTelemetry 연결에서 수집한 최신 로그입니다.">
         <CapabilityAgentSetup capability="logs" buttonVariant="secondary" />
-        <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />Logs 직접 추가</Button>
+        <Button onClick={() => setShowDirectSetup(true)}><MaterialIcon name="add" />추가하기</Button>
       </PageHeader>
 
       <ListToolbar search={

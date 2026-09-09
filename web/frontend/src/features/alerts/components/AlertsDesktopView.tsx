@@ -104,7 +104,7 @@ export function AlertsDesktopView({
         {activeTab !== 'history' && (
           <Button onClick={activeTab === 'rules' ? onAddRule : () => openChannelForm()}>
             <MaterialIcon size={16} name="add" />
-            {activeTab === 'rules' ? '규칙 추가' : '채널 추가'}
+            추가하기
           </Button>
         )}
       </PageHeader>
@@ -244,7 +244,7 @@ function ChannelFormActions({ isSubmitting, isEdit, onCancel }: { isSubmitting: 
         ) : (
           <>
             <MaterialIcon size={16} name="check" />
-            {isEdit ? '저장' : '채널 추가'}
+            {isEdit ? '저장' : '추가하기'}
           </>
         )}
       </Button>
@@ -300,7 +300,7 @@ function ChannelsTable({ channels, channelHealth, isLoading, togglingIds, onAdd,
           icon="notifications_off"
           title="구성된 알림 채널이 없습니다"
           description="Slack, Discord, Telegram 채널을 추가해 알림을 받아보세요."
-          action={{ label: '채널 추가', onClick: onAdd }}
+          action={{ label: '추가하기', onClick: onAdd }}
         />
       </div>
     );

@@ -356,7 +356,7 @@ export function AlertRulesTab({ addTrigger }: AlertRulesTabProps) {
           <EmptyState
             icon="rule"
             title="구성된 알림 규칙이 없습니다"
-            action={{ label: '규칙 추가', onClick: handleAddRule }}
+            action={{ label: '추가하기', onClick: handleAddRule }}
           />
         </div>
       </>

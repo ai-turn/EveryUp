@@ -82,7 +82,7 @@ export function AlertsMobileView({
         {activeTab === 'channels' && (
           <Button className="w-full" onClick={onAddChannel}>
             <MaterialIcon size={16} name="add" />
-            채널 추가
+            추가하기
           </Button>
         )}
       </PageHeader>
@@ -155,7 +155,7 @@ export function AlertsMobileView({
                 onClick={onAddChannel}
                 className="mt-3 text-sm font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer"
               >
-                채널 추가 →
+                추가하기 →
               </button>
             </div>
           ) : (
